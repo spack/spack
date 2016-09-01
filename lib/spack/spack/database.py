@@ -164,6 +164,9 @@ class Database(object):
         self.lock = Lock(self._lock_path)
         self._data = {}
 
+        # whether there was an error at the start of a read transaction
+        self._error = None
+
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
         return WriteTransaction(self.lock, self._read, self._write, timeout)
@@ -256,7 +259,8 @@ class Database(object):
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(self._index_path, msg)
+                raise CorruptDatabaseError(
+                    "Spack database is corrupt: %s" % msg, self._index_path)
 
         check('database' in yfile, "No 'database' attribute in YAML.")
 
@@ -274,6 +278,12 @@ class Database(object):
         elif version < _db_version:
             self.reindex(spack.install_layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
+
+        def invalid_record(hash_key, error):
+            msg = ("Invalid record in Spack database: "
+                   "hash: %s, cause: %s: %s")
+            msg %= (hash_key, type(e).__name__, str(e))
+            raise CorruptDatabaseError(msg, self._index_path)
 
         # Build up the database in three passes:
         #
@@ -298,15 +308,14 @@ class Database(object):
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
 
             except Exception as e:
-                tty.warn("Invalid database reecord:",
-                         "file:  %s" % self._index_path,
-                         "hash:  %s" % hash_key,
-                         "cause: %s: %s" % (type(e).__name__, str(e)))
-                raise
+                invalid_record(hash_key, e)
 
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
-            self._assign_dependencies(hash_key, installs, data)
+            try:
+                self._assign_dependencies(hash_key, installs, data)
+            except Exception as e:
+                invalid_record(hash_key, e)
 
         # Pass 3: Mark all specs concrete.  Specs representing real
         # installations must be explicitly marked.
@@ -324,7 +333,26 @@ class Database(object):
         Locks the DB if it isn't locked already.
 
         """
-        with self.write_transaction():
+        # Special transaction to avoid recursive reindex calls and to
+        # ignore errors if we need to rebuild a corrupt database.
+        def _read_suppress_error():
+            try:
+                if os.path.isfile(self._index_path):
+                    self._read_from_yaml(self._index_path)
+            except CorruptDatabaseError as e:
+                self._error = e
+                self._data = {}
+
+        transaction = WriteTransaction(
+            self.lock, _read_suppress_error, self._write, _db_lock_timeout)
+
+        with transaction:
+            if self._error:
+                tty.warn(
+                    "Spack database was corrupt. Will rebuild. Error was:",
+                    str(self._error))
+                self._error = None
+
             old_data = self._data
             try:
                 self._data = {}
@@ -333,10 +361,15 @@ class Database(object):
                 for spec in directory_layout.all_specs():
                     # Create a spec for each known package and add it.
                     path = directory_layout.path_for_spec(spec)
-                    old_info = old_data.get(spec.dag_hash())
+
+                    # Try to recover explicit value from old DB, but
+                    # default it to False if DB was corrupt.
                     explicit = False
-                    if old_info is not None:
-                        explicit = old_info.explicit
+                    if old_data is not None:
+                        old_info = old_data.get(spec.dag_hash())
+                        if old_info is not None:
+                            explicit = old_info.explicit
+
                     self._add(spec, path, directory_layout, explicit=explicit)
 
                 self._check_ref_counts()
@@ -621,11 +654,7 @@ class Database(object):
 
 
 class CorruptDatabaseError(SpackError):
-
-    def __init__(self, path, msg=''):
-        super(CorruptDatabaseError, self).__init__(
-            "Spack database is corrupt: %s.  %s." % (path, msg),
-            "Try running `spack reindex` to fix.")
+    """Raised when errors are found while reading the database."""
 
 
 class InvalidDatabaseVersionError(SpackError):
