@@ -333,11 +333,14 @@ Compilers Requiring Modules
 Many installed compilers will work regardless of the environment they
 are called with.  However, some installed compilers require
 ``$LD_LIBRARY_PATH`` or other environment variables to be set in order
-to run; Intel compilers are known for this.  In such a case, you
-should tell Spack which module(s) to load in order to run the chosen
-compiler.  Spack will load this module into the environment ONLY when
-the compiler is run, and NOT in general for a package's ``install()``
-method.  See, for example, this ``compilers.yaml`` file:
+to run; this is typcial for Intel and other proprietary compilers
+
+In such a case, you should tell Spack which module(s) to load in order
+to run the chosen compiler (If the compiler does not come with a
+module file, you might consider making one by hand).  Spack will load
+this module into the environment ONLY when the compiler is run, and
+NOT in general for a package's ``install()`` method.  See, for
+example, this ``compilers.yaml`` file:
 
 .. code-block:: yaml
 
@@ -357,8 +360,83 @@ to execute any code built with the compiler, breaking packages that
 execute any bits of code they just compiled.  Such compilers should be
 taken behind the barn and put out of their misery.  If that is not
 possible or practical, the user (and anyone running code built by that
-compiler) will need to load the compiler's module into their
-environment.  And ``spack install --dirty`` will need to be used.
+compiler) will need to load the compiler's module into their general
+environment.  The ``spack install --dirty`` option should be used, to
+ensure that environment is not wiped out.
+
+^^^^^^^^^^^^^^^^
+Mixed Toolchains
+^^^^^^^^^^^^^^^^
+
+Modern compilers typically come with related compilers for C, C++ and
+Fortran bundled together.  When possible, results are best if the same
+compiler is used for all languages.
+
+In some cases, this is not possible.  For example, starting with
+Macintosh OS X El Capitan (10.11), many packages no longer build with
+GCC, but XCode provies no Fortran compilers.  The user is therefore
+forced to use a mixed toolchain: the XCode-provided Clang is used for
+C/C++ code, but GNU ``gfortran`` is used for Fortran code.
+
+One might also need to use mixed toolchains with Intel compilers:
+Intel's C and Fortran compilers work well, but in the past its C++
+compiler was not able to build some basic packages, such as ``boost``.
+
+Follows are instructions on how to hack together hack together
+``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
+should work for other mixed toolchain needs.
+
+#. Edit ``compilers.yaml``:
+
+.. code-block:: yaml
+
+    compilers:
+      darwin-x86_64:
+        clang@7.3.0-apple:
+          cc: /usr/bin/clang
+          cxx: /usr/bin/clang++
+          f77: /path/to/bin/gfortran
+          fc: /path/to/bin/gfortran
+
+#. Create a symlink inside ``clang`` environement:
+
+.. code-block:: console
+
+    $ cd $SPACK_ROOT/lib/spack/env/clang
+    $ ln -s ../cc gfortran
+
+
+#. Patch ``clang`` compiler file:
+
+
+.. code-block:: console
+
+    $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
+    index e406d86..cf8fd01 100644
+    --- a/lib/spack/spack/compilers/clang.py
+    +++ b/lib/spack/spack/compilers/clang.py
+    @@ -35,17 +35,17 @@ class Clang(Compiler):
+         cxx_names = ['clang++']
+     
+         # Subclasses use possible names of Fortran 77 compiler
+    -    f77_names = []
+    +    f77_names = ['gfortran']
+     
+         # Subclasses use possible names of Fortran 90 compiler
+    -    fc_names = []
+    +    fc_names = ['gfortran']
+     
+         # Named wrapper links within spack.build_env_path
+         link_paths = { 'cc'  : 'clang/clang',
+                        'cxx' : 'clang/clang++',
+                        # Use default wrappers for fortran, in case provided in compilers.yaml
+    -                   'f77' : 'f77',
+    -                   'fc'  : 'f90' }
+    +                   'f77' : 'clang/gfortran',
+    +                   'fc'  : 'clang/gfortran' }
+     
+         @classmethod
+         def default_version(self, comp):
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
