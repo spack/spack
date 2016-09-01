@@ -306,7 +306,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        shutil.copy(self.archive_file, destination)
+        shutil.copyfile(self.archive_file, destination)
 
     @_needs_stage
     def check(self):
