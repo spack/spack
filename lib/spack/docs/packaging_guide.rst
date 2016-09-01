@@ -1447,6 +1447,17 @@ Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
 
+Some packages produce a Python extension, but are only compatible with
+Python 3, or with Python 2.  In those cases, a ``depends_on()``
+declaration should be made in addition to the ``extends()`
+declaration:
+
+.. code-block:: python
+
+   class Icebin(Package):
+       extends('python', when='+python')
+       depends_on('python@3:', when='+python')
+
 Many packages produce Python extensions for *some* variants, but not
 others: they should extend ``python`` only if the appropriate
 variant(s) are selected.  This may be accomplished with conditional
