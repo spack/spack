@@ -20,6 +20,7 @@ DOC_DIR="$SPACK_ROOT/lib/spack/docs"
 deps=(
     sphinx-apidoc
     sphinx-build
+    dot
     git
     hg
     svn
