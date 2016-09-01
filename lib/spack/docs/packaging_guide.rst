@@ -1806,6 +1806,46 @@ See the :ref:`concretization-preferences` section for more details.
 
 .. _install-method:
 
+------------------
+Inconsistent Specs
+------------------
+
+Suppose a user needs to install package C, which depends on packages A
+and B.  Package A builds a library with a Python2 extension, and
+pacakge B builds a library with a Python3 extension.  Packages A and B
+cannot be loaded together in the same Python runtime:
+
+.. code-block:: none
+
+    class A(Package):
+        variant('python', default=True, 'enable python bindings')
+        depends_on('python@2.7', when='+python')
+        def patch(self):
+            # do whatever is necessary to enable/disable python
+            # bindings according to variant
+
+    class B(Package):
+        variant('python', default=True, 'enable python bindings')
+        depends_on('python@3.2:', when='+python')
+        def patch(self):
+            # do whatever is necessary to enable/disable python
+            # bindings according to variant
+
+Package C needs to use the libraries from packages A and B, but does
+not need either of the Python extensions.  In this case, pacakge C
+should simply depend no the ``~python`` variant of A and B:
+
+.. code-block:: none
+
+    class C(Package):
+        depends_on('A~python')
+        depends_on('B~python')
+
+This may require that A or B be built twice, if the user wishes to use
+the Python extensions provided by them: once for ``+python`` and once
+for ``~python``.  Other than using a little extra disk space, that
+solution has no serious problems.
+
 -----------------------------------
 Implementing the ``install`` method
 -----------------------------------
