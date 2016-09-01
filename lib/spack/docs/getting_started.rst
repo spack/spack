@@ -378,10 +378,6 @@ GCC, but XCode provies no Fortran compilers.  The user is therefore
 forced to use a mixed toolchain: the XCode-provided Clang is used for
 C/C++ code, but GNU ``gfortran`` is used for Fortran code.
 
-One might also need to use mixed toolchains with Intel compilers:
-Intel's C and Fortran compilers work well, but in the past its C++
-compiler was not able to build some basic packages, such as ``boost``.
-
 Follows are instructions on how to hack together hack together
 ``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
 should work for other mixed toolchain needs.
@@ -437,6 +433,69 @@ should work for other mixed toolchain needs.
      
          @classmethod
          def default_version(self, comp):
+
+
+^^^^^^^^^^^^^^^
+Intel Compilers
+^^^^^^^^^^^^^^^
+
+Intel compilers are unusual because a single Intel compiler version
+can emulate multiple GCC versions.  In order to provide this
+functionality, the Intel compiler needs GCC to be installed.
+Therefore, the following steps are necessary to successfully use Intel
+compilers:
+
+ #. Install a version of GCC that implements the desired language
+    features (``spack install gcc``).
+
+ #. Identify the location of the compiler you just installed:
+
+    .. code-block:: console
+
+        $ spack location -i gcc
+        /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
+
+ #. Tell the Intel compiler how to find that desired GCC.  This may be
+    done in one of two ways: (text taken from `Intel Reference Guide
+    <https://software.intel.com/en-us/node/522750>`_):
+
+    > By default, the compiler determines which version of ``gcc`` or ``g++``
+    > you have installed from the ``PATH`` environment variable.
+    > 
+    > If you want use a version of ``gcc`` or ``g++`` other than the default
+    > version on your system, you need to use either the ``-gcc-name``
+    > or ``-gxx-name`` compiler option to specify the path to the version of
+    > ``gcc`` or ``g++`` that you want to use.
+
+    This is accomplished through a manual compiler setup in
+    ``compilers.yaml``.  For example:
+
+    .. code-block:: yaml
+
+        compilers:
+        - compiler:
+            modules = [intel-15.0.24]
+            operating_system: centos7
+            paths:
+              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
+              cflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+              cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
+              cxxflags: -gxx-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
+              f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+              fflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+            spec: intel@15.0.24.4.9.3
+
+    .. note::
+
+    The version number on the Intel compiler is a combination of the
+    "native" Intel version number and the GNU compiler it is
+    targeting.
+
+    .. warning::
+
+    This solution has not yet been tested.  Details may vary.
+
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
