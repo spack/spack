@@ -488,13 +488,13 @@ compilers:
 
     .. note::
 
-    The version number on the Intel compiler is a combination of the
-    "native" Intel version number and the GNU compiler it is
-    targeting.
+        The version number on the Intel compiler is a combination of
+        the "native" Intel version number and the GNU compiler it is
+        targeting.
 
     .. warning::
 
-    This solution has not yet been tested.  Details may vary.
+        This solution has not yet been tested.  Details may vary.
 
 
 ^^^^^^^^^^^^^^^^^^^^^
