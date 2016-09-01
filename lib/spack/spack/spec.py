@@ -504,6 +504,7 @@ class Spec(object):
         self.variants.spec = self
         self.namespace = other.namespace
         self._hash = other._hash
+        self._cmp_key_cache = other._cmp_key_cache
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -858,9 +859,10 @@ class Spec(object):
         # Edge traversal yields but skips children of visited nodes
         if not (key in visited and cover == 'edges'):
             # This code determines direction and yields the children/parents
+
             successors = deps
             if direction == 'parents':
-                successors = self.dependents_dict()
+                successors = self.dependents_dict()  # TODO: deptype?
 
             visited.add(key)
             for name in sorted(successors):
@@ -1278,15 +1280,15 @@ class Spec(object):
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
-    def _mark_concrete(self):
+    def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
         for s in self.traverse(deptype_query=alldeps):
-            s._normal = True
-            s._concrete = True
+            s._normal = value
+            s._concrete = value
 
     def concretized(self):
         """This is a non-destructive version of concretize().  First clones,
@@ -1532,6 +1534,10 @@ class Spec(object):
 
         if self._normal and not force:
             return False
+
+        # avoid any assumptions about concreteness when forced
+        if force:
+            self._mark_concrete(False)
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
@@ -1865,7 +1871,7 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    def _dup(self, other, **kwargs):
+    def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
            copy.  It does not copy any dependents (parents), but by default
            copies dependencies.
@@ -1896,7 +1902,7 @@ class Spec(object):
         self.versions = other.versions.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
-        if kwargs.get('cleardeps', True):
+        if cleardeps:
             self._dependents = DependencyMap()
             self._dependencies = DependencyMap()
         self.compiler_flags = other.compiler_flags.copy()
@@ -1906,19 +1912,15 @@ class Spec(object):
         self.external_module = other.external_module
         self.namespace = other.namespace
         self._hash = other._hash
+        self._cmp_key_cache = other._cmp_key_cache
 
         # If we copy dependencies, preserve DAG structure in the new spec
-        if kwargs.get('deps', True):
+        if deps:
             # This copies the deps from other using _dup(deps=False)
-            # XXX(deptype): We can keep different instances of specs here iff
-            #               it is only a 'build' dependency (from its parent).
-            #               All other instances must be shared (due to symbol
-            #               and PATH contention). These should probably search
-            #               for any existing installation which can satisfy the
-            #               build and latch onto that because if 3 things need
-            #               the same build dependency and it is *not*
-            #               available, we only want to build it once.
-            new_nodes = other.flat_dependencies(deptype_query=alldeps)
+            deptypes = alldeps
+            if isinstance(deps, (tuple, list)):
+                deptypes = deps
+            new_nodes = other.flat_dependencies(deptypes=deptypes)
             new_nodes[self.name] = self
 
             stack = [other]
@@ -1927,6 +1929,9 @@ class Spec(object):
                 new_spec = new_nodes[cur_spec.name]
 
                 for depspec in cur_spec._dependencies.values():
+                    if not any(d in deptypes for d in depspec.deptypes):
+                        continue
+
                     stack.append(depspec.spec)
 
                     # XXX(deptype): add any new deptypes that may have appeared
@@ -1942,13 +1947,22 @@ class Spec(object):
         self.external_module = other.external_module
         return changed
 
-    def copy(self, **kwargs):
+    def copy(self, deps=True):
         """Return a copy of this spec.
-           By default, returns a deep copy.  Supply dependencies=False
-           to get a shallow copy.
+
+        By default, returns a deep copy. To control how dependencies are
+        copied, supply:
+
+        deps=True:  deep copy
+
+        deps=False: shallow copy (no dependencies)
+
+        deps=('link', 'build'):
+            only build and link dependencies.  Similar for other deptypes.
+
         """
         clone = Spec.__new__(Spec)
-        clone._dup(self, **kwargs)
+        clone._dup(self, deps=deps)
         return clone
 
     @property
@@ -2059,10 +2073,17 @@ class Spec(object):
           1. A tuple describing this node in the DAG.
           2. The hash of each of this node's dependencies' cmp_keys.
         """
-        dep_dict = self.dependencies_dict(deptype=('link', 'run'))
-        return self._cmp_node() + (
-            tuple(hash(dep_dict[name])
-                  for name in sorted(dep_dict)),)
+        if self._cmp_key_cache:
+            return self._cmp_key_cache
+
+        dep_tuple = tuple(
+            (d.spec.name, hash(d.spec), tuple(sorted(d.deptypes)))
+            for name, d in sorted(self._dependencies.items()))
+
+        key = (self._cmp_node(), dep_tuple)
+        if self._concrete:
+            self._cmp_key_cache = key
+        return key
 
     def colorized(self):
         return colorize_spec(self)
@@ -2457,6 +2478,7 @@ class SpecParser(spack.parse.Parser):
         spec._dependencies = DependencyMap()
         spec.namespace = spec_namespace
         spec._hash = None
+        spec._cmp_key_cache = None
 
         spec._normal = False
         spec._concrete = False
