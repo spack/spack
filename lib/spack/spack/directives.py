@@ -212,7 +212,10 @@ def _depends_on(pkg, spec, when=None, type=None):
 
 @directive(('dependencies', '_deptypes'))
 def depends_on(pkg, spec, when=None, type=None):
-    """Creates a dict of deps with specs defining when they apply."""
+    """Creates a dict of deps with specs defining when they apply.
+    This directive is to be used inside a Package definition to declare
+    that the package requires other packages to be built first.
+    @see The section "Dependency specs" in the Spack Packaging Guide."""
     _depends_on(pkg, spec, when=when, type=type)
 
 
