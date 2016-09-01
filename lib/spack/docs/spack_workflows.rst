@@ -702,20 +702,20 @@ The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
    single-tree build environments, in which B and C's include files
    live in the same place.  In order to make it work with Spack as
    well, you must add the following to ``CMakeLists.txt``.  It will
-   have no effect whne building without Spack:
+   have no effect when building without Spack:
 
    .. code-block:: cmake
 
-       # Include all the transitive dependencies determined by EasyBuild.
-       # If we're not running with EasyBuild, this does nothing...
-       include_directories($ENV{CMAKE_TRANSITIVE_INCLUDE_PATH})
+       # Include all the transitive dependencies determined by Spack.
+       # If we're not running with Spack, this does nothing...
+       include_directories($ENV{SPACK_TRANSITIVE_INCLUDE_PATH})
 
    .. note::
 
        Note that this feature is controversial and could break with
-       future versions of GNU ld.  The best practice is that you make
-       sure that anything you #include is listed as a dependency in
-       your CMakeLists.txt (and Spack package).
+       future versions of GNU ld.  The best practice is to make sure
+       anything you ``#include`` is listed as a dependency in your
+       CMakeLists.txt (and Spack package).
 
 
 -----------------------
@@ -972,3 +972,24 @@ Python Distutils is another popular build system that should get
 ``spack diy`` may be used.  Even better is to put the source directory
 directly in the user's ``PYTHONPATH``.  Then, edits in source files
 are immediately available to run without any install process at all!
+
+----------
+Conclusion
+----------
+
+The ``spack setup`` development workflow provides better automation,
+flexibility and safety than workflows relying on environment modules
+or filesystem views.  However, it has some drawbacks:
+
+#. It currently works only with projects that use the CMake build
+   system.  Support for other build systems is not hard to build, but
+   will require a small amount of effort for each build system to be
+   supported.  It might not work well with some IDEs.
+
+#. It only works with packages that sub-class ``StagedPackage``.
+   Currently, most Spack packages do not.  Converting them is not
+   hard; but must be done on a package-by-package basis.
+
+#. It requires that users are comfortable with Spack, as they
+   integrate Spack explicitly in their workflow.  Not all users are
+   willing to do this.
