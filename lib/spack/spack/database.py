@@ -436,7 +436,7 @@ class Database(object):
 
             self._data[key] = InstallRecord(spec.copy(), path, installed)
 
-            for dep in spec.dependencies('link'):
+            for dep in spec.dependencies(('link', 'run')):
                 self._increment_ref_count(dep)
 
         self._data[key].ref_count += 1
