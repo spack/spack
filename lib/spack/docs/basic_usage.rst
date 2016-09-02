@@ -993,26 +993,6 @@ of module files:
        """Set up the compile and runtime environments for a package."""
        pass
 
-"""""""""""""""""
-Recursive Modules
-"""""""""""""""""
-
-In some cases, it is desirable to load not just a module, but also all
-the modules it depends on.  This is not required for most modules
-because Spack builds binaries with RPATH support.  However, not all
-packages use RPATH to find their dependencies: this can be true in
-particular for Python extensions, which are currently *not* built with
-RPATH.
-
-Modules may be loaded recursively with the ``load`` command's
-``--dependencies`` or ``-r`` argument:
-
-.. code-block:: console
-
-   $ spack load --dependencies <spec> ...
-
-More than one spec may be placed on the command line here.
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Regenerating Module files
@@ -1062,7 +1042,20 @@ Scripts to load modules recursively may be made with the command:
 
     $ spack module loads --dependencies <spec>
 
-More than one spec may be placed on the command line here.
+An equivalent alternative is:
+
+.. code-block :: console
+
+    $ source <( spack module loads --dependencies <spec> )
+
+.. warning::
+
+    The ``spack load`` command does not currently accept the
+    ``--dependencies`` flag.  Use ``spack module loads`` instead, for
+    now.
+
+.. See #1662
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Module Commands for Shell Scripts
@@ -1109,11 +1102,6 @@ cut-and-pasted into a shell script.  For example:
     module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
 
 The script may be further edited by removing unnecessary modules.
-This script may be directly executed in bash via:
-
-.. code-block :: console
-
-    source <( spack module loads --dependencies py-numpy git )
 
 
 ^^^^^^^^^^^^^^^
