@@ -1415,11 +1415,14 @@ The dependency types are:
   * **"run"**: the project is used by the project at runtime. The package will
     be added to ``PATH`` and ``PYTHONPATH``.
 
-If not specified, ``type`` is assumed to be ``("build", "link")``. This is the
-common case for compiled language usage. Also available are the aliases
-``"alldeps"`` for all dependency types and ``"nolink"`` (``("build", "run")``)
-for use by dependencies which are not expressed via a linker (e.g., Python or
-Lua module loading).
+Additional hybrid dependency types are:
+
+  * **<not specified>**: ``type`` assumed to be ``("build",
+    "link")``. This is the common case for compiled language usage.
+  * **alldeps**: All dependency types.  **Note:** No quotes here
+  * **nolink**: Equal to ``("build", "run")``, for use by dependencies
+    that are not expressed via a linker (e.g., Python or Lua module
+    loading).  **Note:** No quotes here
 
 """""""""""""""""""
 Dependency Formulas
