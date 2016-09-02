@@ -364,6 +364,8 @@ compiler) will need to load the compiler's module into their general
 environment.  The ``spack install --dirty`` option should be used, to
 ensure that environment is not wiped out.
 
+.. _licensed-compilers:
+
 ^^^^^^^^^^^^^^^^^^
 Licensed Compilers
 ^^^^^^^^^^^^^^^^^^
@@ -573,45 +575,57 @@ flags to the ``icc`` command:
 
     This solution has not yet been tested.  Details may vary.
 
-^^^
-PGI
-^^^
-
-A user report on PGI:
-
-Actually had fewer problems with PGI than I did with Intel. It worked
-out of the box and had no env var problems.
-
-One gotcha that I still haven't fixed is #518. Older PGI compilers
-come with pgf77 and pgf90 but no pgfortran. At some point, they caught
-onto the GCC bandwagon and created a combined pgfortran compiler, but
-kept the old compilers for backwards compatibility. In Spack, we
-detect F77 as pgf77 or pgfortran and FC as pgf90 or pgfortran. Right
-now, order is not important, so if it detects pgf77 before pgfortran,
-it will choose that instead. The only problem I've run into is that
-HDF4 can't be built with pgf77, it needs to be built with
-pgfortran. Until #518 is fixed, you might want to mention that they
-should check their compilers.yaml and replace pgf77 and pgf90 with
-pgfortran.
-
-As far as installation problems, libpciaccess and openssl still cannot
-be built with PGI. Now that I think about it, I should probably raise
-a warning when someone tries to install these packages with PGI...
-
-The env var problem for finding the license has been mitigated by my
-licensed software support.
-
 
 ^^^
 NAG
 ^^^
 
-Still a good example of how to add a new compiler to
-Spack. Unfortunately, I've never gotten NAG to work. It installs just
-fine out of Spack, but I've never gotten it to install anything with
-Spack. If someone could fix it, I would be eternally grateful. See
-#590 for details.
+At this point, the NAG compiler is `known to not
+work<https://github.com/LLNL/spack/issues/590>`.
 
+
+^^^
+PGI
+^^^
+
+PGI comes with two sets of comilers for C++ and Fortran,
+distinguishable by their names.  "Old" compilers:
+
+.. code-block:: yaml
+
+    cc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgcc
+    cxx: /soft/pgi/15.10/linux86-64/15.10/bin/pgCC
+    f77: /soft/pgi/15.10/linux86-64/15.10/bin/pgf77
+    fc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgf90
+
+"New" compilers:
+
+.. code-block:: yaml
+
+    cc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgcc
+    cxx: /soft/pgi/15.10/linux86-64/15.10/bin/pgc++
+    f77: /soft/pgi/15.10/linux86-64/15.10/bin/pgfortran
+    fc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgfortran
+
+Older installations of PGI contains just the old compilers; whereas
+newer installations contain the old and the new.  Thew new compiler is
+considered preferable, as there are results that some packages
+(``hdf4``) will not build with the old compiler.
+
+When auto-detecting a PGI compiler, there are cases where Spack will
+find the old compilers, when you really want it to find the new
+compilers.  It is best to check this ``comilers.yaml``; and if the old
+compilers are being used, chnage ``pgf77`` and ``pgf90`` to
+``pgfortran``.
+
+Other issues:
+
+* There are reports that some packages will not build with PGI,
+  include ``libapiaccess`` and ``openssl``.
+
+
+* PGI requires a license to use; see :ref:`licensed-comilers` for more
+  information on installation.
 
 
 ---------------
