@@ -1911,8 +1911,9 @@ class Spec(object):
         self.external = other.external
         self.external_module = other.external_module
         self.namespace = other.namespace
-        self._hash = other._hash
-        self._cmp_key_cache = other._cmp_key_cache
+
+        self.external = other.external
+        self.external_module = other.external_module
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
@@ -1940,11 +1941,20 @@ class Spec(object):
                         new_spec._add_dependency(
                             new_nodes[depspec.spec.name], depspec.deptypes)
 
-        # Since we preserved structure, we can copy _normal safely.
-        self._normal = other._normal
-        self._concrete = other._concrete
-        self.external = other.external
-        self.external_module = other.external_module
+        # These fields are all cached results of expensive operations.
+        # If we preserved the original structure, we can copy them
+        # safely. If not, they need to be recomputed.
+        if deps == True or deps == alldeps:
+            self._hash = other._hash
+            self._cmp_key_cache = other._cmp_key_cache
+            self._normal = other._normal
+            self._concrete = other._concrete
+        else:
+            self._hash = None
+            self._cmp_key_cache = None
+            self._normal = False
+            self._concrete = False
+
         return changed
 
     def copy(self, deps=True):
