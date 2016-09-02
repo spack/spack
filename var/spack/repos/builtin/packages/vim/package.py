@@ -71,14 +71,14 @@ class Vim(Package):
         for fs in self.feature_sets:
             if "+" + fs in spec:
                 if feature_set is not None:
-                    tty.error(
+                    raise InstallError(
                         "Only one feature set allowed, specified %s and %s"
                         % (feature_set, fs))
                 feature_set = fs
         if '+gui' in spec:
             if feature_set is not None:
-                if feature_set is not 'huge':
-                    tty.error(
+                if feature_set != 'huge':
+                    raise InstallError(
                         "+gui variant requires 'huge' feature set, "
                         "%s was specified" % feature_set)
             feature_set = 'huge'
