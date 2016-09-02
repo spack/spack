@@ -254,7 +254,7 @@ the tarballs in question to it (see :ref:`mirrors`):
 
    .. code-block:: console
 
-   $ mkdir ~/.spack/manual_mirror
+       $ mkdir ~/.spack/manual_mirror
 
 #. Register the mirror with Spack by creating ``~/.spack/mirrors.yaml``:
 
