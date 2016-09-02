@@ -119,6 +119,7 @@ from spack.build_environment import get_path_from_module, load_module
 from spack.util.naming import mod_to_class
 from spack.util.prefix import Prefix
 from spack.util.string import *
+from spack.util.spack_yaml import syaml_dict
 from spack.version import *
 from spack.provider_index import ProviderIndex
 
@@ -911,22 +912,29 @@ class Spec(object):
             return b32_hash
 
     def to_node_dict(self):
-        d = {}
+        ordered_dict = lambda d: syaml_dict(sorted(d.items()))
 
-        params = dict((name, v.value) for name, v in self.variants.items())
-        params.update(dict((name, value)
-                           for name, value in self.compiler_flags.items()))
+        d = syaml_dict()
+
+        params = syaml_dict(sorted(
+            (name, v.value) for name, v in self.variants.items()))
+        params.update(ordered_dict(self.compiler_flags))
 
         if params:
             d['parameters'] = params
 
-        if self.dependencies():
-            deps = self.dependencies_dict(deptype=('link', 'run'))
-            d['dependencies'] = dict(
-                (name, {
-                    'hash': dspec.spec.dag_hash(),
-                    'type': [str(s) for s in dspec.deptypes]})
-                for name, dspec in deps.items())
+        deps = self.dependencies_dict(deptype=('link', 'run'))
+        if deps:
+            d['dependencies'] = syaml_dict(sorted((
+                (
+                    name,
+                    ordered_dict({
+                        'hash': dspec.spec.dag_hash(),
+                        'type': sorted([str(s) for s in dspec.deptypes])
+                    })
+                )
+                for name, dspec in deps.items()
+            )))
 
         if self.namespace:
             d['namespace'] = self.namespace
@@ -934,15 +942,15 @@ class Spec(object):
         if self.architecture:
             # TODO: Fix the target.to_dict to account for the tuple
             # Want it to be a dict of dicts
-            d['arch'] = self.architecture.to_dict()
+            d['arch'] = ordered_dict(self.architecture.to_dict())
 
         if self.compiler:
-            d.update(self.compiler.to_dict())
+            d['compiler'] = syaml_dict(self.compiler.to_dict()['compiler'])
 
         if self.versions:
-            d.update(self.versions.to_dict())
+            d.update(ordered_dict(self.versions.to_dict()))
 
-        return {self.name: d}
+        return syaml_dict({self.name: d})
 
     def to_yaml(self, stream=None):
         node_list = []
