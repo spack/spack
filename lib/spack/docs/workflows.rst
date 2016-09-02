@@ -1125,3 +1125,26 @@ of ``py-proj/package.py`` is instructive here:
    bugfix, then the unofficial ``version()`` line should be removed
    from the Spack package.
 
+^^^^^^^
+Patches
+^^^^^^^
+
+Spack's source patching mechanism provides another way to fix bugs in
+upstream projects.  This has advantages and disadvantages compared to the procedures above.
+
+Advantages:
+
+ 1. It can fix bugs in existing released versions, and (probably)
+    future releases as well.
+
+ 2. It is lightweight, does not require a new fork to be set up.
+
+Disadvantages:
+
+ 1. It is harder to develop and debug a patch, vs. a branch in a
+    respository.  The user loses the automation provided by version
+    control systems.
+
+ 2. Although patches of a few lines work OK, large patch files can be
+    hard to create and maintain.
+
