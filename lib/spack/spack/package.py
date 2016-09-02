@@ -329,6 +329,12 @@ class Package(object):
     """
     sanity_check_is_dir = []
 
+    class __metaclass__(type):
+        """Ensure  attributes required by Spack directives are present."""
+        def __init__(cls, name, bases, dict):
+            type.__init__(cls, name, bases, dict)
+            spack.directives.ensure_dicts(cls)
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -341,9 +347,6 @@ class Package(object):
 
         # Allow custom staging paths for packages
         self.path = None
-
-        # Sanity check attributes required by Spack directives.
-        spack.directives.ensure_dicts(type(self))
 
         # Check versions in the versions dict.
         for v in self.versions:
