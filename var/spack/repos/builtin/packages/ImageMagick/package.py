@@ -36,6 +36,7 @@ class Imagemagick(Package):
     version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
 
     depends_on('jpeg')
+    depends_on('pango')
     depends_on('libtool', type='build')
     depends_on('libpng')
     depends_on('freetype')
