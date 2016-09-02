@@ -1,6 +1,6 @@
-===============
-Spack Workflows
-===============
+=========
+Workflows
+=========
 
 The process of using Spack involves building packages, running
 binaries from those packages, and developing software that depends on

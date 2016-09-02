@@ -44,7 +44,7 @@ or refer to the full manual below.
    features
    getting_started
    basic_usage
-   spack_workflows
+   workflows
 
 
 .. toctree::
