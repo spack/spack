@@ -102,7 +102,6 @@ import sys
 from StringIO import StringIO
 from operator import attrgetter
 
-import yaml
 from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
@@ -119,6 +118,8 @@ from spack.build_environment import get_path_from_module, load_module
 from spack.util.naming import mod_to_class
 from spack.util.prefix import Prefix
 from spack.util.string import *
+import spack.util.spack_yaml as syaml
+from spack.util.spack_yaml import syaml_dict
 from spack.version import *
 from spack.provider_index import ProviderIndex
 
@@ -266,9 +267,10 @@ class CompilerSpec(object):
         return (self.name, self.versions)
 
     def to_dict(self):
-        d = {'name': self.name}
+        d = syaml_dict([('name', self.name)])
         d.update(self.versions.to_dict())
-        return {'compiler': d}
+
+        return syaml_dict([('compiler', d)])
 
     @staticmethod
     def from_dict(d):
@@ -902,7 +904,7 @@ class Spec(object):
             return self._hash[:length]
         else:
             # XXX(deptype): ignore 'build' dependencies here
-            yaml_text = yaml.dump(
+            yaml_text = syaml.dump(
                 self.to_node_dict(), default_flow_style=True, width=sys.maxint)
             sha = hashlib.sha1(yaml_text)
             b32_hash = base64.b32encode(sha.digest()).lower()[:length]
@@ -911,38 +913,37 @@ class Spec(object):
             return b32_hash
 
     def to_node_dict(self):
-        d = {}
-
-        params = dict((name, v.value) for name, v in self.variants.items())
-        params.update(dict((name, value)
-                           for name, value in self.compiler_flags.items()))
-
-        if params:
-            d['parameters'] = params
-
-        if self.dependencies():
-            deps = self.dependencies_dict(deptype=('link', 'run'))
-            d['dependencies'] = dict(
-                (name, {
-                    'hash': dspec.spec.dag_hash(),
-                    'type': [str(s) for s in dspec.deptypes]})
-                for name, dspec in deps.items())
-
-        if self.namespace:
-            d['namespace'] = self.namespace
-
-        if self.architecture:
-            # TODO: Fix the target.to_dict to account for the tuple
-            # Want it to be a dict of dicts
-            d['arch'] = self.architecture.to_dict()
-
-        if self.compiler:
-            d.update(self.compiler.to_dict())
+        d = syaml_dict()
 
         if self.versions:
             d.update(self.versions.to_dict())
 
-        return {self.name: d}
+        if self.compiler:
+            d.update(self.compiler.to_dict())
+
+        if self.namespace:
+            d['namespace'] = self.namespace
+
+        params = syaml_dict(sorted(
+            (name, v.value) for name, v in self.variants.items()))
+        params.update(sorted(self.compiler_flags.items()))
+        if params:
+            d['parameters'] = params
+
+        if self.architecture:
+            d['arch'] = self.architecture.to_dict()
+
+        deps = self.dependencies_dict(deptype=('link', 'run'))
+        if deps:
+            d['dependencies'] = syaml_dict([
+                (name,
+                 syaml_dict([
+                     ('hash', dspec.spec.dag_hash()),
+                     ('type', sorted(str(s) for s in dspec.deptypes))])
+                 ) for name, dspec in sorted(deps.items())
+            ])
+
+        return syaml_dict([(self.name, d)])
 
     def to_yaml(self, stream=None):
         node_list = []
@@ -950,8 +951,9 @@ class Spec(object):
             node = s.to_node_dict()
             node[s.name]['hash'] = s.dag_hash()
             node_list.append(node)
-        return yaml.dump({'spec': node_list},
-                         stream=stream, default_flow_style=False)
+        return syaml.dump(
+            syaml_dict([('spec', node_list)]),
+            stream=stream, default_flow_style=False)
 
     @staticmethod
     def from_node_dict(node):
@@ -1025,7 +1027,7 @@ class Spec(object):
 
         """
         try:
-            yfile = yaml.load(stream)
+            yfile = syaml.load(stream)
         except MarkedYAMLError as e:
             raise SpackYAMLError("error parsing YAML spec:", str(e))
 
@@ -1911,8 +1913,9 @@ class Spec(object):
         self.external = other.external
         self.external_module = other.external_module
         self.namespace = other.namespace
-        self._hash = other._hash
-        self._cmp_key_cache = other._cmp_key_cache
+
+        self.external = other.external
+        self.external_module = other.external_module
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
@@ -1940,11 +1943,20 @@ class Spec(object):
                         new_spec._add_dependency(
                             new_nodes[depspec.spec.name], depspec.deptypes)
 
-        # Since we preserved structure, we can copy _normal safely.
-        self._normal = other._normal
-        self._concrete = other._concrete
-        self.external = other.external
-        self.external_module = other.external_module
+        # These fields are all cached results of expensive operations.
+        # If we preserved the original structure, we can copy them
+        # safely. If not, they need to be recomputed.
+        if deps is True or deps == alldeps:
+            self._hash = other._hash
+            self._cmp_key_cache = other._cmp_key_cache
+            self._normal = other._normal
+            self._concrete = other._concrete
+        else:
+            self._hash = None
+            self._cmp_key_cache = None
+            self._normal = False
+            self._concrete = False
+
         return changed
 
     def copy(self, deps=True):
