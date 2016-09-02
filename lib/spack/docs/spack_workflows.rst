@@ -717,6 +717,7 @@ The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
        anything you ``#include`` is listed as a dependency in your
        CMakeLists.txt (and Spack package).
 
+.. _write-the-spack-package:
 
 -----------------------
 Write the Spack Package
@@ -778,8 +779,9 @@ used for development:
 2. It specifies a non-checksummed version ``develop``.  Running
    ``spack install mylib@develop`` the ``@develop`` version will
    install the latest verison off the develop branch.  This method of
-   downlaod should only be used by developers who control and trust
-   the repository in question!
+   download is useful for the developer of a project while it is in
+   active development; however, it should only be used by developers
+   who control and trust the repository in question!
 
 3. The ``url``, ``url_for_version()`` and ``homepage`` attributes are
    not used in development.  Don't worry if you don't have any, or if
@@ -868,6 +870,7 @@ for example:
 
     $ spack install mylib@develop
 
+.. _release-your-software:
 
 ---------------------
 Release Your Software
@@ -993,3 +996,132 @@ or filesystem views.  However, it has some drawbacks:
 #. It requires that users are comfortable with Spack, as they
    integrate Spack explicitly in their workflow.  Not all users are
    willing to do this.
+
+==================
+Upstream Bug Fixes
+==================
+
+It is not uncommon to discover a bug in an upstream project while
+trying to build with Spack.  Typically, the bug is in a package that
+serves a dependency to something else.  This section describes
+procedure to work around and ultimately resolve these bugs, while not
+delaying the Spack user's main goal.
+
+^^^^^^^^^^^^^^^^^
+Buggy New Version
+^^^^^^^^^^^^^^^^^
+
+Sometimes, the old version of a package works fine, but a new version
+is buggy.  For example, it was once found that `Adios did not build
+with hdf5@1.10<https://github.com/LLNL/spack/issues/1683>_`.  If the
+old version of ``hdf5`` will work with ``adios``, the suggest
+procedure is:
+
+#. Revert ``adios`` to the old verison of ``hdf5``.  Put in its
+   ``adios/package.py``:
+
+   .. code-block::
+       # Adios does not build with HDF5 1.10
+       # See: https://github.com/LLNL/spack/issues/1683
+       depends_on('hdf5@:1.9')
+
+#. Determine whether the problem is with ``hdf5`` or ``adios``, and
+   report the problem to the appropriate upstream project.  In this
+   case, the problem was with ``adios``.
+
+#. Once a new version of ``adios`` comes out with the bugfix, modify
+   ``adios/package.py`` to reflect it:
+
+       # Adios up to v1.10.0 does not build with HDF5 1.10
+       # See: https://github.com/LLNL/spack/issues/1683
+       depends_on('hdf5@:1.9', when='@:1.10.0')
+       depends_on('hdf5', when='@1.10.1:')
+
+^^^^^^^^^^^^^^^^
+No Version Works
+^^^^^^^^^^^^^^^^
+
+Sometimes, *no* existing versions of a dependency work for a build.
+This typically happens when developing a new project: only then does
+the developer notice that existing versions of a dependency are all
+buggy, or the non-buggy versions are all missing a critical feature.
+
+In the long run, the upstream project will hopefully fix the bug and
+release a new version.  But that could take a while, even if a bugfix
+has already been pushed to the project's repository.  In the meantime,
+the Spack user needs things to work.
+
+The solution is to create an unofficial Spack release of the project,
+as soon as the bug is fixed in *some* repository.  A study of the `Git
+history<https://github.com/citibeth/spack/commits/efischer/develop/var/spack/repos/builtin/packages/py-proj/package.py>_`
+of ``py-proj/package.py`` is instructive here:
+
+#. On `April 1<https://github.com/citibeth/spack/commit/44a1d6a96706affe6ef0a11c3a780b91d21d105a>_`, an initial bugfix was identified for the PyProj project
+   and a pull request submitted to PyProj.  Because the upstream
+   authors had not yet fixed the bug, the ``py-proj`` Spack package
+   downloads from a forked repository, set up by the package's author.
+   A non-numeric version number is used to make it easy to upgrade the
+   package without recomputing checksums; however, this is an
+   untrusted download method and should not be distributed.  The
+   package author has now become, temporarily, a maintainer of the
+   upstream project:
+
+   .. code-block:: python
+        # We need the benefits of this PR
+        # https://github.com/jswhit/pyproj/pull/54
+        version('citibeth-latlong2',
+            git='https://github.com/citibeth/pyproj.git',
+            branch='latlong2')
+
+
+#. By May 14, the upstream project had accepted a pull request with
+   the required bugfix.  At this point, the forked repository was
+   deleted.  However, the upstream project still had not released a
+   new version with a bugfix.  Therefore, a Spack-only release was
+   created by specifying the desired hash in the main project
+   repository.  The version number ``@1.9.5.1.1`` was chosen for this
+   "release" because it's a descendent of the officially released
+   version ``@1.9.5.1``.  This is a trusted download method, and can
+   be released to the Spack community:
+
+   ..code-block:: python
+
+       # This is not a tagged release of pyproj.
+       # The changes in this "version" fix some bugs, especially with Python3 use.
+       version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
+           url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
+
+   .. note::
+       It would have been simpler to use Spack's Git download method,
+       which is also a trusted download in this case:
+
+       ..code-block:: python
+           # This is not a tagged release of pyproj.
+           # The changes in this "version" fix some bugs, especially with Python3 use.
+           version('1.9.1.1',
+                git='https://github.com/jswhit/pyproj.git',
+                commit='0be612cc9f972e38b50a90c946a9b353e2ab140f')
+
+   .. note::
+
+      In this case, the upstream project fixed the bug in its
+      repository in a relatively timely manner.  If that had not been
+      the case, the numbered version in this step could have been
+      released from the forked repository.
+
+
+#. The author of the Spack package has now become an unofficial
+   release engineer for the upstream project.  Depending on the
+   situation, it may be advisable to put ``preferred=True`` on the
+   latest *officially released* version.
+
+#. As of August 31, the upstream project still had not made a new
+   release with the bugfix.  In the meantime, Spack-built ``py-proj``
+   provide the bugfix needed by packages depending on it.  As long as
+   this works, there is no particular need for the upstream project to
+   make a new official release.
+
+#. If the upstream project releases a new official version with the
+   bugfix, then the unofficial ``version()`` line should be removed
+   from the Spack package.
+
