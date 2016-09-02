@@ -25,33 +25,13 @@
 from spack import *
 
 
-class Imagemagick(Package):
-    """ImageMagick is a software suite to create, edit, compose,
-    or convert bitmap images."""
+class GhostscriptFonts(Package):
+    """Ghostscript Fonts"""
 
-    homepage = "http://www.imagemagick.org"
-    url = "https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz"
+    homepage = "http://ghostscript.com/"
+    url = "ftp://ftp.imagemagick.org/pub/ImageMagick/delegates/ghostscript-fonts-std-8.11.tar.gz"
 
-    version('7.0.2-7', 'c59cdc8df50e481b2bd1afe09ac24c08')
-    version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
-
-    depends_on('jpeg')
-    depends_on('pango')
-    depends_on('libtool', type='build')
-    depends_on('libpng')
-    depends_on('freetype')
-    depends_on('fontconfig')
-    depends_on('libtiff')
-    depends_on('ghostscript')
-    depends_on('ghostscript-fonts')
-
-    def url_for_version(self, version):
-        return "https://github.com/ImageMagick/ImageMagick/archive/{0}.tar.gz".format(version)
+    version('8.11', '6865682b095f8c4500c54b285ff05ef6')
 
     def install(self, spec, prefix):
-        gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
-        configure('--prefix={0}'.format(prefix),
-                  '--with-gs-font-dir={0}'.format(gs_font_dir))
-        make()
-        make('check')
-        make('install')
+        install_tree('.', join_path(prefix.share, 'font'))
