@@ -35,6 +35,4 @@ class GhostscriptFonts(Package):
     version('8.11', '6865682b095f8c4500c54b285ff05ef6')
 
     def install(self, spec, prefix):
-        font_dir = join_path(prefix.share, 'font')
-        mkdirp(font_dir)
-        which('install')('-t', font_dir, *os.listdir('.'))
+        install_tree('.', join_path(prefix.share, 'font'))
