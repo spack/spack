@@ -373,6 +373,102 @@ some examples:
 In general, you won't have to remember this naming convention because
 :ref:`spack-create` and :ref:`spack-edit` handle the details for you.
 
+-----------------
+Trusted Downloads
+-----------------
+
+Spack verifies that the source code it downloads is not corrupted or
+compromised; or at least, that it is the same version the author of
+the Spack package saw when the package was created.  If Spack uses a
+download method it can verify, we say the download method is
+*trusted*.  Trust is important for *all downloads*: Spack
+has no control over the security of the various sites from which it
+downloads source code, and can never assume that any particular site
+hasn't been compromised.
+
+Trust is established in different ways for different download method.
+For the most common download method --- a single-file tarball --- the
+tarball is checsummed.  Git downloads using ``commit=`` are trusted
+implicitly, as long as a hash is specified.
+
+Spack also provides untrusted download methods: tarball URLs may be
+supplied without a checksum, or Git downloads my specify a branch or
+tag instead of a hash.  If the user does not control or trust the
+source an untrusted download, it is a security risk.  Unless otherwise
+specified by the user for special cases, Spack should by default use
+*only* trusted download methods.
+
+Unfortunately, Spack does not currently provide that guarantee.  It
+does provide the following mechanisms for safety:
+
+#. By default, Spack will only install a tarball package if it has a
+   checksum and that checksum matches.  You can override this with
+   ``spack install --no-checksum``.
+
+#. Numeric versions are almost always tarball downloads, whereas
+   non-numeric versions not named ``develop`` frequently download
+   untrusted branches or tags from a version control system.  As long
+   as a package has at least one numeric version, and no non-numeric
+   version named ``develop``, Spack will prefer it over any
+   non-numeric versions.
+
+^^^^^^^^^
+Checksums
+^^^^^^^^^
+
+For tarball downloads, Spack can currently support checksums using the
+MD5, SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512 algorithms.  It
+determines the algorithm to use based on the hash length.
+
+-----------------------
+Package Version Numbers
+-----------------------
+
+Most Spack versions are numeric, a tuple of integers; for example,
+``windows@3.1`` or ``myprojet@1.9.5.2``.  Spack knows how to compare
+and sort numeric versions.
+
+Spack versions may also be non-numeric; any string here will suffice;
+for example, ``@develop``, ``@master``, ``@local``.  The following
+rules determine the sort order of numeric vs. non-numeric versions:
+
+#. Non-numeric versions starting with ``@develop`` are considered
+   greatest, and are sorted alphabetically.
+
+#. Numeric versions are all less than ``@develop*`` versions, and are
+   sorted numerically.
+
+#. All other non-numeric versions are less than numeric versions, and
+   are sorted alphabetically.
+
+The logic behind this sort order is two-fold:
+
+#. Numeric versions are usually used for special cases while
+   developing or debugging a piece of software.  Keeping most of them
+   less than numeric versions ensures that Spack choose numeric
+   versions by default whenever possible.
+
+#. The most-recent development version of a package will usually be
+   newer than any released numeric versions.  This allows the
+   ``develop`` version to satisfy dependencies like ``depends_on(abc,
+   when="@x.y.z:")``
+
+
+^^^^^^^^^^^^^
+Date Versions
+^^^^^^^^^^^^^
+
+If you wish to use dates as versions, it is best to use the format
+``@date-yyyy-mm-dd``.  This will ensure they sort in the correct
+order.  If you want your date versions to be numeric (assuming they
+don't conflict with other numeric versions), you can use just
+``yyyy.mm.dd``.
+
+Alternately, you might use a hybrid release-version / date scheme.
+For example, ``@1.3.2016.08.31`` would mean the version from the
+``1.3`` branch, as of August 31, 2016.
+
+
 -------------------
 Adding new versions
 -------------------
@@ -459,19 +555,6 @@ it executable, then runs it with some arguments.
        installer = Executable(self.stage.archive_file)
        installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
-^^^^^^^^^
-Checksums
-^^^^^^^^^
-
-Spack uses a checksum to ensure that the downloaded package version is
-not corrupted or compromised.  This is especially important when
-fetching from insecure sources, like unencrypted http.  By default, a
-package will *not* be installed if it doesn't pass a checksum test
-(though you can override this with ``spack install --no-checksum``).
-
-Spack can currently support checksums using the MD5, SHA-1, SHA-224,
-SHA-256, SHA-384, and SHA-512 algorithms.  It determines the algorithm
-to use based on the hash length.
 
 ^^^^^^^^^^^^^
 ``spack md5``
@@ -584,39 +667,6 @@ call to your package with parameters indicating the repository URL and
 any branch, tag, or revision to fetch.  See below for the parameters
 you'll need for each VCS system.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Repositories and versions
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The package author is responsible for coming up with a sensible name
-for each version to be fetched from a repository.  For example, if
-you're fetching from a tag like ``v1.0``, you might call that ``1.0``.
-If you're fetching a nameless git commit or an older subversion
-revision, you might give the commit an intuitive name, like ``develop``
-for a development version, or ``some-fancy-new-feature`` if you want
-to be more specific.
-
-In general, it's recommended to fetch tags or particular
-commits/revisions, NOT branches or the repository mainline, as
-branches move forward over time and you aren't guaranteed to get the
-same thing every time you fetch a particular version.  Life isn't
-always simple, though, so this is not strictly enforced.
-
-When fetching from from the branch corresponding to the development version
-(often called ``master``, ``trunk``, or ``dev``), it is recommended to
-call this version ``develop``. Spack has special treatment for this version so
-that ``@develop`` will satisfy dependencies like
-``depends_on(abc, when="@x.y.z:")``. In other words, ``@develop`` is
-greater than any other version. The rationale is that certain features or
-options first appear in the development branch. Therefore if a package author
-wants to keep the package on the bleeding edge and provide support for new
-features, it is advised to use ``develop`` for such a version which will
-greatly simplify writing dependencies and version-related conditionals.
-
-In some future release, Spack may support extrapolating repository
-versions as it does for tarball URLs, but currently this is not
-supported.
-
 .. _git-fetch:
 
 ^^^
@@ -642,8 +692,7 @@ Default branch
          ...
          version('develop', git='https://github.com/example-project/example.git')
 
-  This is not recommended, as the contents of the default branch
-  change over time.
+  This download method is untrusted, and is not recommended.
 
 Tags
   To fetch from a particular tag, use the ``tag`` parameter along with
@@ -654,6 +703,8 @@ Tags
      version('1.0.1', git='https://github.com/example-project/example.git',
              tag='v1.0.1')
 
+  This download method is untrusted, and is not recommended.
+
 Branches
   To fetch a particular branch, use ``branch`` instead:
 
@@ -662,8 +713,7 @@ Branches
      version('experimental', git='https://github.com/example-project/example.git',
              branch='experimental')
 
-  This is not recommended, as the contents of branches change over
-  time.
+  This download method is untrusted, and is not recommended.
 
 Commits
   Finally, to fetch a particular commit, use ``commit``:
@@ -681,6 +731,9 @@ Commits
      version('2014-10-08', git='https://github.com/example-project/example.git',
              commit='9d38cd')
 
+  This download method *is trusted*.  It is the recommended way to
+  securely download from a Git repository.
+
   It may be useful to provide a saner version for commits like this,
   e.g. you might use the date as the version, as done above.  Or you
   could just use the abbreviated commit hash.  It's up to the package
@@ -696,19 +749,24 @@ Submodules
      version('1.0.1', git='https://github.com/example-project/example.git',
              tag='v1.0.1', submdoules=True)
 
-^^^^^^^^^^
-Installing
-^^^^^^^^^^
 
-You can fetch and install any of the versions above as you'd expect,
-by using ``@<version>`` in a spec:
+.. _github-fetch:
 
-.. code-block:: console
+""""""
+GitHub
+""""""
 
-   $ spack install example@2014-10-08
+If a project is hosted on GitHub, *any* valid Git branch, tag or hash
+may be downloaded as a tarball.  This is accomplished simply by
+constructing an appropriate URL.  Spack can checksum any package
+downloaded this way, thereby producing a trusted download.  For
+example, the following downloads a particular hash, and then applies a
+checksum.
 
-Git and other VCS versions will show up in the list of versions when
-a user runs ``spack info <package name>``.
+.. code-block:: python
+
+       version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
+           url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
 
 .. _hg-fetch:
 
@@ -726,8 +784,7 @@ Default
 
      version('develop', hg='https://jay.grs.rwth-aachen.de/hg/example')
 
-  Note that this is not recommended; try to fetch a particular
-  revision instead.
+  This download method is untrusted, and is not recommended.
 
 Revisions
   Add ``hg`` and ``revision`` parameters:
@@ -736,6 +793,8 @@ Revisions
 
      version('1.0', hg='https://jay.grs.rwth-aachen.de/hg/example',
              revision='v1.0')
+
+  This download method is untrusted, and is not recommended.
 
   Unlike ``git``, which has special parameters for different types of
   revisions, you can use ``revision`` for branches, tags, and commits
@@ -759,7 +818,7 @@ Fetching the head
 
      version('develop', svn='https://outreach.scidac.gov/svn/libmonitor/trunk')
 
-  This is not recommended, as the head will move forward over time.
+  This download method is untrusted, and is not recommended.
 
 Fetching a revision
   To fetch a particular revision, add a ``revision`` to the
@@ -769,6 +828,8 @@ Fetching a revision
 
      version('develop', svn='https://outreach.scidac.gov/svn/libmonitor/trunk',
              revision=128)
+
+  This download method is untrusted, and is not recommended.
 
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
