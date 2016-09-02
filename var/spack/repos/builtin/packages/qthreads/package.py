@@ -54,6 +54,7 @@ class Qthreads(Package):
     patch("trap.patch")
 
     depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
     depends_on("hwloc")
 
     def install(self, spec, prefix):
