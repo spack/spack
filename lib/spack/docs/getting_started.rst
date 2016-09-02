@@ -435,6 +435,25 @@ should work for other mixed toolchain needs.
          def default_version(self, comp):
 
 
+^^^^^^^^^^^^^^^^^^^^^
+Compiler Verification
+^^^^^^^^^^^^^^^^^^^^^
+
+You can verify that your compilers are configured properly by installing a
+simple package.  For example:
+
+.. code-block:: sh
+
+    spack install zlib%gcc@5.3.0
+
+--------------------------------------
+Vendor-Specific Compiler Configuration
+--------------------------------------
+
+With Spack, things usually "just work" with GCC.  Not so for other
+compilers.  This section provides details on how to get specific
+compilers working.
+
 ^^^^^^^^^^^^^^^
 Intel Compilers
 ^^^^^^^^^^^^^^^
@@ -537,17 +556,45 @@ flags to the ``icc`` command:
 
     This solution has not yet been tested.  Details may vary.
 
+^^^
+PGI
+^^^
 
-^^^^^^^^^^^^^^^^^^^^^
-Compiler Verification
-^^^^^^^^^^^^^^^^^^^^^
+A user report on PGI:
 
-You can verify that your compilers are configured properly by installing a
-simple package.  For example:
+Actually had fewer problems with PGI than I did with Intel. It worked
+out of the box and had no env var problems.
 
-.. code-block:: sh
+One gotcha that I still haven't fixed is #518. Older PGI compilers
+come with pgf77 and pgf90 but no pgfortran. At some point, they caught
+onto the GCC bandwagon and created a combined pgfortran compiler, but
+kept the old compilers for backwards compatibility. In Spack, we
+detect F77 as pgf77 or pgfortran and FC as pgf90 or pgfortran. Right
+now, order is not important, so if it detects pgf77 before pgfortran,
+it will choose that instead. The only problem I've run into is that
+HDF4 can't be built with pgf77, it needs to be built with
+pgfortran. Until #518 is fixed, you might want to mention that they
+should check their compilers.yaml and replace pgf77 and pgf90 with
+pgfortran.
 
-    spack install zlib%gcc@5.3.0
+As far as installation problems, libpciaccess and openssl still cannot
+be built with PGI. Now that I think about it, I should probably raise
+a warning when someone tries to install these packages with PGI...
+
+The env var problem for finding the license has been mitigated by my
+licensed software support.
+
+
+^^^
+NAG
+^^^
+
+Still a good example of how to add a new compiler to
+Spack. Unfortunately, I've never gotten NAG to work. It installs just
+fine out of Spack, but I've never gotten it to install anything with
+Spack. If someone could fix it, I would be eternally grateful. See
+#590 for details.
+
 
 
 ---------------
