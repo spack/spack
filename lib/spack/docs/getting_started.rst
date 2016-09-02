@@ -608,23 +608,23 @@ distinguishable by their names.  "Old" compilers:
     fc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgfortran
 
 Older installations of PGI contains just the old compilers; whereas
-newer installations contain the old and the new.  Thew new compiler is
+newer installations contain the old and the new.  The new compiler is
 considered preferable, as there are results that some packages
 (``hdf4``) will not build with the old compiler.
 
 When auto-detecting a PGI compiler, there are cases where Spack will
 find the old compilers, when you really want it to find the new
 compilers.  It is best to check this ``comilers.yaml``; and if the old
-compilers are being used, chnage ``pgf77`` and ``pgf90`` to
+compilers are being used, change ``pgf77`` and ``pgf90`` to
 ``pgfortran``.
 
 Other issues:
 
 * There are reports that some packages will not build with PGI,
-  include ``libapiaccess`` and ``openssl``.
+  including ``libpciaccess`` and ``openssl``.
 
 
-* PGI requires a license to use; see :ref:`licensed-comilers` for more
+* PGI requires a license to use; see :ref:`licensed-compilers` for more
   information on installation.
 
 
