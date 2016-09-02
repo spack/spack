@@ -42,7 +42,6 @@ filesystem.
 import os
 import socket
 
-import yaml
 from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
@@ -54,7 +53,7 @@ from spack.version import Version
 from spack.spec import Spec
 from spack.error import SpackError
 from spack.repository import UnknownPackageError
-
+import spack.util.spack_yaml as syaml
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -197,7 +196,8 @@ class Database(object):
         }
 
         try:
-            return yaml.dump(database, stream=stream, default_flow_style=False)
+            return syaml.dump(
+                database, stream=stream, default_flow_style=False)
         except YAMLError as e:
             raise SpackYAMLError("error writing YAML database:", str(e))
 
@@ -247,9 +247,9 @@ class Database(object):
         try:
             if isinstance(stream, basestring):
                 with open(stream, 'r') as f:
-                    yfile = yaml.load(f)
+                    yfile = syaml.load(f)
             else:
-                yfile = yaml.load(stream)
+                yfile = syaml.load(stream)
 
         except MarkedYAMLError as e:
             raise SpackYAMLError("error parsing YAML database:", str(e))

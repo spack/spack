@@ -49,6 +49,7 @@ from bisect import bisect_left
 from functools import wraps
 
 from functools_backport import total_ordering
+from spack.util.spack_yaml import syaml_dict
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
@@ -593,9 +594,13 @@ class VersionList(object):
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
-            return {'version': str(self[0])}
+            return syaml_dict([
+                ('version', str(self[0]))
+            ])
         else:
-            return {'versions': [str(v) for v in self]}
+            return syaml_dict([
+                ('versions', [str(v) for v in self])
+            ])
 
     @staticmethod
     def from_dict(dictionary):
