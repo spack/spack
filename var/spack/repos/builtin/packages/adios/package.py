@@ -36,6 +36,8 @@ class Adios(Package):
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.10.0.tar.gz"
 
+    version('develop', git='https://github.com/ornladios/ADIOS.git',
+            branch='master')
     version('1.10.0', 'eff450a4c0130479417cfd63186957f3')
     version('1.9.0', '310ff02388bbaa2b1c1710ee970b5678')
 
@@ -51,13 +53,11 @@ class Adios(Package):
     # transforms
     variant('zlib', default=True, description='Enable szip transform support')
     variant('szip', default=False, description='Enable szip transform support')
-    # serial file converters
-    variant('hdf5', default=False, description='Enable bp2h5 converter')
-    variant('netcdf', default=False, description='Enable bp2ncd(3) converter')
+    # transports and serial file converters
+    variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
 
     # Lots of setting up here for this package
     # module swap PrgEnv-intel PrgEnv-$COMP
-    # module load cray-netcdf/4.3.3.1
     # module load cray-hdf5/1.8.14
     # module load python/2.7.10
 
@@ -71,10 +71,8 @@ class Adios(Package):
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('szip', when='+szip')
-    # optional transports
-    # optional serial file converters
-    depends_on('hdf5@1.8:', when='+hdf5')
-    depends_on('netcdf@3', when='+netcdf')
+    # optional transports & file converters
+    depends_on('hdf5@1.8:+mpi', when='+hdf5')
 
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
@@ -122,9 +120,7 @@ class Adios(Package):
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+hdf5' in spec:
-            extra_args.append('--with-hdf5=%s' % spec['hdf5'].prefix)
-        if '+netcdf' in spec:
-            extra_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+            extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
 
         sh = which('sh')
         sh('./autogen.sh')
