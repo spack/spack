@@ -230,6 +230,54 @@ but you risk breaking other installed packages. In general, it is safer to
 remove dependent packages *before* removing their dependencies or use the
 ``--dependents`` option.
 
+
+.. _nondownloadable:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Non-Downloadable Tarballs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The tarballs for some packages cannot be automatically downloaded by
+Spack.  This could be for a number of reasons:
+
+#. The author requires users to manually accept a license agreement
+   before downloading (``jdk`` and ``galahad``).
+
+#. The software is proprietary and cannot be downloaded on the open
+   Internet.
+
+To install these packages, one must create a mirror and manually add
+the tarballs in question to it (see :ref:`mirrors`):
+
+#. Create a directory for the mirror.  You can create this directory
+   anywhere you like, it does not have to be inside ``~/.spack``:
+
+   .. code-block:: console
+
+   $ mkdir ~/.spack/manual_mirror
+
+#. Register the mirror with Spack by creating ``~/.spack/mirrors.yaml``:
+
+   .. code-block:: yaml
+
+       mirrors:
+         manual: file:///home/me/.spack/manual_mirror
+
+#. Put your tarballs in it.  Tarballs should be named
+   ``<package>/<pacakge>-<version>.tar.gz``.  For example:
+
+   .. code-block:: console
+
+       $ ls -l manual_mirror/galahad
+
+       -rw-------. 1 me me 11657206 Jun 21 19:25 galahad-2.60003.tar.gz
+
+#. Install as usual:
+
+   .. code-block:: console
+
+       $ spack install galahad
+
 -------------------------
 Seeing installed packages
 -------------------------
