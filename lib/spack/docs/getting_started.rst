@@ -448,13 +448,6 @@ compilers:
  #. Install a version of GCC that implements the desired language
     features (``spack install gcc``).
 
- #. Identify the location of the compiler you just installed:
-
-    .. code-block:: console
-
-        $ spack location -i gcc
-        /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
-
  #. Tell the Intel compiler how to find that desired GCC.  This may be
     done in one of two ways: (text taken from `Intel Reference Guide
     <https://software.intel.com/en-us/node/522750>`_):
@@ -467,8 +460,62 @@ compilers:
     > or ``-gxx-name`` compiler option to specify the path to the version of
     > ``gcc`` or ``g++`` that you want to use.
 
-    This is accomplished through a manual compiler setup in
-    ``compilers.yaml``.  For example:
+Intel compilers may therefore be configured in one of two ways with
+Spack: using modules, or using compiler flags.
+
+""""""""""""""""""""""""""
+Configuration with Modules
+""""""""""""""""""""""""""
+
+One can control which GCC is seen by the Intel compiler with modules.
+A module must be loaded both for the Intel Compiler (so it will run)
+and GCC (so the compiler can find the intended GCC).  The following
+configuration in ``compilers.yaml`` illustrates this technique:
+
+    .. code-block:: yaml
+
+        compilers:
+        - compiler:
+            modules = [gcc-4.9.3, intel-15.0.24]
+            operating_system: centos7
+            paths:
+              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
+              cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
+              f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+            spec: intel@15.0.24.4.9.3
+
+
+    .. note::
+
+        The version number on the Intel compiler is a combination of
+        the "native" Intel version number and the GNU compiler it is
+        targeting.
+
+    .. warning::
+
+        This solution has not yet been tested.  Details may vary.
+
+""""""""""""""""""""""""""
+Command Line Configuration
+""""""""""""""""""""""""""
+
+. warning::
+
+    As of the writing of this manual, added compilers flags are broken;
+    see `GitHub Issue <https://github.com/LLNL/spack/pull/1532>`_.
+
+One can also control which GCC is seen by the Intel compiler by adding
+flags to the ``icc`` command:
+
+ #. Identify the location of the compiler you just installed:
+
+    .. code-block:: console
+
+        $ spack location -i gcc
+        /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
+
+#. Set up ``compilers.yaml``, for example:
 
     .. code-block:: yaml
 
@@ -486,15 +533,9 @@ compilers:
               fflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
             spec: intel@15.0.24.4.9.3
 
-    .. note::
+.. warning::
 
-        The version number on the Intel compiler is a combination of
-        the "native" Intel version number and the GNU compiler it is
-        targeting.
-
-    .. warning::
-
-        This solution has not yet been tested.  Details may vary.
+    This solution has not yet been tested.  Details may vary.
 
 
 ^^^^^^^^^^^^^^^^^^^^^
