@@ -50,7 +50,8 @@ class Imagemagick(Package):
 
     def install(self, spec, prefix):
         gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
-        configure('--prefix={0}'.format(prefix), '--with-gs-font-dir={0}'.format(gs_font_dir))
+        configure('--prefix={0}'.format(prefix),
+                  '--with-gs-font-dir={0}'.format(gs_font_dir))
         make()
         make('check')
         make('install')

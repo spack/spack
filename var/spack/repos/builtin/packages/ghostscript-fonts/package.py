@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class GhostscriptFonts(Package):
@@ -35,5 +36,4 @@ class GhostscriptFonts(Package):
     def install(self, spec, prefix):
         font_dir = join_path(prefix.share, 'font')
         mkdirp(font_dir)
-        import os
         which('install')('-t', font_dir, *os.listdir('.'))
