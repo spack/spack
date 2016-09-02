@@ -26,7 +26,7 @@ class Rust(Package):
     depends_on("curl")
     depends_on("git")
     depends_on("cmake")
-    depends_on("python@:2.8")
+    depends_on("python@2.0.0:2.999")
 
     # Cargo
     depends_on("openssl")
