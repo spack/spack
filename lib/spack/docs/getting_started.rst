@@ -364,6 +364,24 @@ compiler) will need to load the compiler's module into their general
 environment.  The ``spack install --dirty`` option should be used, to
 ensure that environment is not wiped out.
 
+^^^^^^^^^^^^^^^^^^
+Licensed Compilers
+^^^^^^^^^^^^^^^^^^
+
+Some proprietary compilers require licensing to use.  If you need to
+use a licensed compiler (eg, PGI), the process is similar to a mix of
+build your own, plus modules:
+
+#. Create a Spack package (if it doesn't exist already) to install
+   your compiler.  Follow instructions on installing :ref:`license`.
+
+#. Once the compiler is installed, you should be able to test it by
+   using Spack to load the module it just created, and running simple
+   builds (eg: ``cc helloWorld.c; ./a.out``)
+
+#. Add the newly-installed compiler to ``compilers.yaml`` as shown
+   above.
+
 ^^^^^^^^^^^^^^^^
 Mixed Toolchains
 ^^^^^^^^^^^^^^^^
@@ -433,7 +451,6 @@ should work for other mixed toolchain needs.
      
          @classmethod
          def default_version(self, comp):
-
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
