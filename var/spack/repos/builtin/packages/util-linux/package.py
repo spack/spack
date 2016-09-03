@@ -33,7 +33,7 @@ class UtilLinux(Package):
 
     version('2.25', 'f6d7fc6952ec69c4dc62c8d7c59c1d57')
 
-    depends_on("python@2.7:")
+    depends_on("python@2.7.0:")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,

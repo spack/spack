@@ -43,7 +43,7 @@ class Paraview(Package):
     variant('qt', default=False, description='Enable Qt support')
     variant('opengl2', default=False, description='Enable OpenGL2 backend')
 
-    depends_on('python@2:2.7', when='+python')
+    depends_on('python@2.0.0:2.999', when='+python')
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('tcl', when='+tcl')

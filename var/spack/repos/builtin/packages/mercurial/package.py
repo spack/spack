@@ -37,7 +37,7 @@ class Mercurial(Package):
     version('3.8.2', 'c38daa0cbe264fc621dc3bb05933b0b3')
     version('3.8.1', '172a8c588adca12308c2aca16608d7f4')
 
-    depends_on("python @2.6:2.7.999")
+    depends_on("python @2.6.0:2.999")
     depends_on("py-docutils", type="build")
 
     def install(self, spec, prefix):

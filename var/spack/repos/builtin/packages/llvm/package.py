@@ -73,7 +73,7 @@ class Llvm(Package):
     depends_on('cmake@2.8.12.2:', type='build')
 
     # Universal dependency
-    depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
+    depends_on('python@2.7.0:2.999')  # Seems not to support python 3.X.Y
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')

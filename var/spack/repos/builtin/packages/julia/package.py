@@ -70,7 +70,7 @@ class Julia(Package):
     depends_on("curl")
     depends_on("git")           # I think Julia @0.5: doesn't use git any more
     depends_on("openssl")
-    depends_on("python @2.7:2.999")
+    depends_on("python @2.7.0:2.999")
 
     # Run-time dependencies:
     # depends_on("arpack")
