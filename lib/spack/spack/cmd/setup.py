@@ -48,7 +48,8 @@ def setup_parser(subparser):
         help="specs to use for install.  Must contain package AND version.")
     subparser.add_argument(
         '--dirty', action='store_true', dest='dirty',
-        help="Install a package *without* cleaning the environment.  Or set SPACK_DIRTY environment variable")
+        help="Install a package *without* cleaning the environment.  " +
+        "Or set SPACK_DIRTY environment variable")
 
 
 def setup(self, args):
@@ -96,4 +97,3 @@ def setup(self, args):
             keep_stage=True,   # don't remove source dir for SETUP.
             install_phases=set(['setup', 'provenance']),
             dirty=args.dirty or ('SPACK_DIRTY' in os.environ))
-

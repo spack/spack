@@ -57,7 +57,8 @@ def setup_parser(subparser):
         help="Fake install. Just remove prefix and create a fake file.")
     subparser.add_argument(
         '--dirty', action='store_true', dest='dirty',
-        help="Install a package *without* cleaning the environment.  Or set SPACK_DIRTY environment variable")
+        help="Install a package *without* cleaning the environment.  " +
+        "Or set SPACK_DIRTY environment variable")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install")
