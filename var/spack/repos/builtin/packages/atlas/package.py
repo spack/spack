@@ -51,7 +51,7 @@ class Atlas(Package):
             url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
-    variant('openmp', default=False, description='Use multithreaded libraries')
+    variant('pthread', default=False, description='Use multithreaded libraries')
 
     provides('blas')
     provides('lapack')
@@ -110,13 +110,19 @@ class Atlas(Package):
 
     @property
     def blas_libs(self):
-        is_openmp = '+openmp' in self.spec
+        is_threaded = '+pthread' in self.spec
         if '+shared' in self.spec:
-            to_find = ['libtatlas'] if is_openmp else ['libsatlas']
+            to_find = ['libtatlas'] if is_threaded else ['libsatlas']
             shared = True
         else:
-            # TODO: different libs for multithreaded
-            to_find = ['liblapack', 'libcblas', 'libf77blas', 'libatlas']
+            interfaces = [
+                'libptcblas',
+                'libptf77blas'
+            ] if is_threaded else [
+                'libcblas',
+                'libf77blas'
+            ]
+            to_find = ['liblapack'] + interfaces + ['libatlas']
             shared = False
         return find_libraries(
             to_find, root=self.prefix, shared=shared, recurse=True
