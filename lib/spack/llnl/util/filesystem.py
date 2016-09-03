@@ -46,7 +46,7 @@ __all__ = ['set_install_permissions', 'install', 'install_tree',
            'filter_file',
            'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
            'set_executable', 'copy_mode', 'unset_executable_mode',
-           'remove_dead_links', 'remove_linked_tree', 'find_library_path',
+           'remove_dead_links', 'remove_linked_tree',
            'fix_darwin_install_name', 'find_libraries', 'LibraryList']
 
 
@@ -443,20 +443,6 @@ def fix_darwin_install_name(path):
                         ["install_name_tool", "-change", dep, loc, lib],
                         stdout=subprocess.PIPE).communicate()[0]
                     break
-
-
-def find_library_path(libname, *paths):
-    """Searches for a file called <libname> in each path.
-
-    Return:
-      directory where the library was found, if found.  None otherwise.
-
-    """
-    for path in paths:
-        library = join_path(path, libname)
-        if os.path.exists(library):
-            return path
-    return None
 
 # Utilities for libraries
 
