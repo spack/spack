@@ -106,6 +106,10 @@ def coerced(method):
     return coercing_method
 
 
+def _numeric_lt(self0, other):
+    """Compares two versions, knowing they're both numeric"""
+
+
 @total_ordering
 class Version(object):
     """Class to represent versions"""
@@ -169,6 +173,10 @@ class Version(object):
             myfavoritebranch
         """
         return isinstance(self.version[0], int)
+
+    def isdevelop(self):
+        """Triggers on the special case of the `@develop` version."""
+        return self.string == 'develop'
 
     @coerced
     def satisfies(self, other):
@@ -240,25 +248,8 @@ class Version(object):
     def concrete(self):
         return self
 
-    @coerced
-    def __lt__(self, other):
-        """Version comparison is designed for consistency with the way RPM
-           does things.  If you need more complicated versions in installed
-           packages, you should override your package's version string to
-           express it more sensibly.
-        """
-        if other is None:
-            return False
-
-        # Coerce if other is not a Version
-        # simple equality test first.
-        if self.version == other.version:
-            return False
-
-        # Principle: Non-numeric is less than numeric
-        # (so numeric will always be preferred by default)
-        if self.isnumeric():
-            if other.isnumeric():
+    def _numeric_lt(self0, other):
+        """Compares two versions, knowing they're both numeric"""
                 # Standard comparison of two numeric versions
                 for a, b in zip(self.version, other.version):
                     if a == b:
@@ -278,6 +269,37 @@ class Version(object):
                 # with more segments is bigger.
                 return len(self.version) < len(other.version)
 
+
+    @coerced
+    def __lt__(self, other):
+        """Version comparison is designed for consistency with the way RPM
+           does things.  If you need more complicated versions in installed
+           packages, you should override your package's version string to
+           express it more sensibly.
+        """
+        if other is None:
+            return False
+
+        # Coerce if other is not a Version
+        # simple equality test first.
+        if self.version == other.version:
+            return False
+
+        # First priority: anything < develop
+        skey = self.isdevelop()
+        okey = other.isdevelop()
+        if (skey < okey):
+            return True
+        if (okey <= skey):
+            return False
+
+        # now we know neither self nor other isdevelop().
+
+        # Principle: Non-numeric is less than numeric
+        # (so numeric will always be preferred by default)
+        if self.isnumeric():
+            if other.isnumeric():
+                return self._numeric_lt(other)
             else:    # self = numeric; other = non-numeric
                 # Numeric > Non-numeric (always)
                 return False
