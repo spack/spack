@@ -168,14 +168,16 @@ class DefaultConcretizer(object):
         preferred = spack.pkgsort
         # NOTE: spack.pkgsort == spack.preferred_packages.PreferredPackages()
 
-        yaml_specs = [x[0] for x in \
+        yaml_specs = [
+            x[0] for x in
             preferred._spec_for_pkgname(spec.name, 'version', None)]
         n = len(yaml_specs)
-        yaml_index = dict( \
+        yaml_index = dict(
             [(spc, n - index) for index, spc in enumerate(yaml_specs)])
 
         # List of versions we could consider, in sorted order
-        unsorted_versions = [v for v in pkg.versions \
+        unsorted_versions = [
+            v for v in pkg.versions
             if any(v.satisfies(sv) for sv in spec.versions)]
 
         keys = [(

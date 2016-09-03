@@ -269,7 +269,6 @@ class Version(object):
         # with more segments is bigger.
         return len(self.version) < len(other.version)
 
-
     @coerced
     def __lt__(self, other):
         """Version comparison is designed for consistency with the way RPM
@@ -293,8 +292,7 @@ class Version(object):
         # Now we know !sdev
         odev = other.isdevelop()
         if odev:
-            return True    #  src < dst
-
+            return True    # src < dst
 
         # now we know neither self nor other isdevelop().
 
@@ -307,14 +305,12 @@ class Version(object):
                 # Numeric > Non-numeric (always)
                 return False
         else:
-            if other.isnumeric(): # self = non-numeric, other = numeric
+            if other.isnumeric():  # self = non-numeric, other = numeric
                 # non-numeric < numeric (always)
                 return True
             else:  # Both non-numeric
                 # Maybe consider other ways to compare here...
                 return self.string < other.string
-
-
 
     @coerced
     def __eq__(self, other):
