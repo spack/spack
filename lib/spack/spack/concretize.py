@@ -175,9 +175,15 @@ class DefaultConcretizer(object):
              if any(v.satisfies(sv) for sv in spec.versions)]
 
         keys = [(
+            # Respect order listed in packages.yaml
             yaml_index.get(v,-1),
+            # The preferred=True flag (packages or packages.yaml or both?)
             pkg.versions.get(Version(v)).get('preferred', False),
-            v.isnumeric(),        # Don't rely on Version.__lt__ to get this right
+            # @develop special case
+            v.isdevelop(),
+            # Numeric versions more preferred than non-numeric
+            v.isnumeric(),
+            # Compare the version itself
             v) for v in unsorted_versions]
         keys.sort(reverse=True)
 
