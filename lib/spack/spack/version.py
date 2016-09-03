@@ -250,24 +250,24 @@ class Version(object):
 
     def _numeric_lt(self0, other):
         """Compares two versions, knowing they're both numeric"""
-                # Standard comparison of two numeric versions
-                for a, b in zip(self.version, other.version):
-                    if a == b:
-                        continue
-                    else:
-                        # Numbers are always "newer" than letters.
-                        # This is for consistency with RPM.  See patch
-                        # #60884 (and details) from bugzilla #50977 in
-                        # the RPM project at rpm.org.  Or look at
-                        # rpmvercmp.c if you want to see how this is
-                        # implemented there.
-                        if type(a) != type(b):
-                            return type(b) == int
-                        else:
-                            return a < b
-                # If the common prefix is equal, the one
-                # with more segments is bigger.
-                return len(self.version) < len(other.version)
+        # Standard comparison of two numeric versions
+        for a, b in zip(self.version, other.version):
+            if a == b:
+                continue
+            else:
+                # Numbers are always "newer" than letters.
+                # This is for consistency with RPM.  See patch
+                # #60884 (and details) from bugzilla #50977 in
+                # the RPM project at rpm.org.  Or look at
+                # rpmvercmp.c if you want to see how this is
+                # implemented there.
+                if type(a) != type(b):
+                    return type(b) == int
+                else:
+                    return a < b
+        # If the common prefix is equal, the one
+        # with more segments is bigger.
+        return len(self.version) < len(other.version)
 
 
     @coerced
