@@ -165,18 +165,22 @@ class DefaultConcretizer(object):
 
         # ---------- Produce prioritized list of versions
         # Get list of preferences from packages.yaml
-        preferred = spack.pkgsort  # == spack.preferred_packages.PreferredPackages()
-        yaml_specs = [x[0] for x in preferred._spec_for_pkgname(spec.name, 'version', None)]
+        preferred = spack.pkgsort
+        # NOTE: spack.pkgsort == spack.preferred_packages.PreferredPackages()
+
+        yaml_specs = [x[0] for x in \
+            preferred._spec_for_pkgname(spec.name, 'version', None)]
         n = len(yaml_specs)
-        yaml_index = dict([(spc, n-index) for index,spc in enumerate(yaml_specs)])
+        yaml_index = dict( \
+            [(spc, n - index) for index, spc in enumerate(yaml_specs)])
 
         # List of versions we could consider, in sorted order
-        unsorted_versions = [v for v in pkg.versions
-             if any(v.satisfies(sv) for sv in spec.versions)]
+        unsorted_versions = [v for v in pkg.versions \
+            if any(v.satisfies(sv) for sv in spec.versions)]
 
         keys = [(
             # Respect order listed in packages.yaml
-            yaml_index.get(v,-1),
+            yaml_index.get(v, -1),
             # The preferred=True flag (packages or packages.yaml or both?)
             pkg.versions.get(Version(v)).get('preferred', False),
             # @develop special case
@@ -190,7 +194,6 @@ class DefaultConcretizer(object):
         # List of versions in complete sorted order
         valid_versions = [x[-1] for x in keys]
         # --------------------------
-
 
         if valid_versions:
             spec.versions = ver([valid_versions[0]])
@@ -272,7 +275,7 @@ class DefaultConcretizer(object):
             spec.architecture = spack.architecture.Arch()
             return True
 
-            # Concretize the operating_system and target based of the spec
+        # Concretize the operating_system and target based of the spec
         ret = any((self._concretize_platform(spec),
                    self._concretize_operating_system(spec),
                    self._concretize_target(spec)))

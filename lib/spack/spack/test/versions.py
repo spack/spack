@@ -428,3 +428,6 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(str(b), '1_2-3')
         # Raise TypeError on tuples
         self.assertRaises(TypeError, b.__getitem__, 1, 2)
+
+if __name__ == '__main__':
+    unittest.main()
