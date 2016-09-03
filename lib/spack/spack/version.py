@@ -248,7 +248,7 @@ class Version(object):
     def concrete(self):
         return self
 
-    def _numeric_lt(self0, other):
+    def _numeric_lt(self, other):
         """Compares two versions, knowing they're both numeric"""
         # Standard comparison of two numeric versions
         for a, b in zip(self.version, other.version):
@@ -286,12 +286,15 @@ class Version(object):
             return False
 
         # First priority: anything < develop
-        skey = self.isdevelop()
-        okey = other.isdevelop()
-        if (skey < okey):
-            return True
-        if (okey <= skey):
-            return False
+        sdev = self.isdevelop()
+        if sdev:
+            return False    # source = develop, it can't be < anything
+
+        # Now we know !sdev
+        odev = other.isdevelop()
+        if odev:
+            return True    #  src < dst
+
 
         # now we know neither self nor other isdevelop().
 
