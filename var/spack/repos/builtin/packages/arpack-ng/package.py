@@ -129,12 +129,8 @@ class ArpackNg(Package):
             ])
 
         options.extend([
-            '--with-blas={0}'.format(
-                ' '.join(spec['blas'].blas_libs.ld_flags)
-            ),
-            '--with-lapack={0}'.format(
-                ' '.join(spec['lapack'].lapack_libs.ld_flags)
-            )
+            '--with-blas={0}'.format(spec['blas'].blas_libs.ld_flags),
+            '--with-lapack={0}'.format(spec['lapack'].lapack_libs.ld_flags)
         ])
         if '+shared' not in spec:
             options.append('--enable-shared=no')

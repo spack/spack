@@ -46,7 +46,7 @@ class IntelParallelStudio(IntelInstaller):
             "VTune Amplifier, and Inspector tools")
 
     variant('shared', default=True, description='Builds shared library')
-    variant('ilp64', default=True, description='64 bit integers')
+    variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description='OpenMP multithreading layer')
 
     provides('mpi', when='@cluster:+mpi')

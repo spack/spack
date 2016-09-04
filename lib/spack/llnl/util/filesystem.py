@@ -470,11 +470,11 @@ class LibraryList(collections.Sequence):
         ))
 
     @property
-    def libnames(self):
+    def basenames(self):
         """Stable de-duplication of the base-names in the list
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
-        >>> assert l.libnames == ['liba.a', 'libb.a']
+        >>> assert l.basenames == ['liba.a', 'libb.a']
         """
         return list(dedupe(os.path.basename(x) for x in self.libraries))
 
@@ -485,7 +485,7 @@ class LibraryList(collections.Sequence):
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
         >>> assert l.names == ['a', 'b']
         """
-        return list(dedupe(x.split('.')[0][3:] for x in self.libnames))
+        return list(dedupe(x.split('.')[0][3:] for x in self.basenames))
 
     @property
     def search_flags(self):
@@ -507,6 +507,11 @@ class LibraryList(collections.Sequence):
 
     @property
     def ld_flags(self):
+        """Search flags + link flags
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
+        """
         return self.search_flags + ' ' + self.link_flags
 
     def __getitem__(self, item):

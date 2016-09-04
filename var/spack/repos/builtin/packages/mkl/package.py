@@ -25,7 +25,7 @@ class Mkl(IntelInstaller):
             url="file://%s/l_mkl_11.3.3.210.tgz" % os.getcwd())
 
     variant('shared', default=True, description='Builds shared library')
-    variant('ilp64', default=True, description='64 bit integers')
+    variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description='OpenMP multithreading layer')
 
     # virtual dependency

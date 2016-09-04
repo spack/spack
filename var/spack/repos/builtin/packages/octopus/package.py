@@ -51,8 +51,8 @@ class Octopus(Package):
         args = []
         args.extend([
             '--prefix=%s' % prefix,
-            '--with-blas=%s' % ' '.join(blas.ld_flags),
-            '--with-lapack=%s' % ' '.join(lapack.ld_flags),
+            '--with-blas=%s' % blas.ld_flags,
+            '--with-lapack=%s' % lapack.ld_flags,
             '--with-gsl-prefix=%s' % spec['gsl'].prefix,
             '--with-libxc-prefix=%s' % spec['libxc'].prefix,
             'CC=%s' % spec['mpi'].mpicc,
