@@ -22,35 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Craype(Compiler):
-    """Cray programming environment compiler."""
+class GobjectIntrospection(Package):
+    """The GObject Introspection is used to describe the program APIs and
+    collect them in a uniform, machine readable format.Cairo is a 2D graphics
+    library with support for multiple output"""
 
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+    homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.48/gobject-introspection-1.48.0.tar.xz"
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    # version 1.48.0 build fails with glib 2.49.4
+    depends_on("glib@2.48.1")
+    depends_on("python")
+    depends_on("cairo")
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
-
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'craype'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, r'([Vv]ersion).*(\d+(\.\d+)+)')
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        # we need to filter this file to avoid an overly long hashbang line
+        filter_file('@PYTHON@', 'python',
+                    'tools/g-ir-tool-template.in')
+        make()
+        make("install")

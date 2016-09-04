@@ -27,6 +27,8 @@ from spack.util.environment import *
 
 
 class Cityhash(Package):
+    """CityHash, a family of hash functions for strings."""
+
     homepage = "https://github.com/google/cityhash"
     url      = "https://github.com/google/cityhash"
 

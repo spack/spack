@@ -37,16 +37,32 @@ class Qthreads(Package):
        either full or empty, and a thread can wait for any word to
        attain either state."""
     homepage = "http://www.cs.sandia.gov/qthreads/"
-    url      = "https://qthreads.googlecode.com/files/qthread-1.10.tar.bz2"
 
-    version('1.10', '5af8c8bbe88c2a6d45361643780d1671')
+    # Google Code has stopped serving tarballs
+    # We assume the tarballs will soon be available on Github instead
+    # url = "https://qthreads.googlecode.com/files/qthread-1.10.tar.bz2"
+    # version('1.10', '5af8c8bbe88c2a6d45361643780d1671')
 
-    patch("ldflags.patch")
+    # Temporarily install from a git branch
+    url = "https://github.com/Qthreads/qthreads"
+    version("1.10",
+            git="https://github.com/Qthreads/qthreads",
+            branch="release-1.10")
+
+    # patch("ldflags.patch")
     patch("restrict.patch")
     patch("trap.patch")
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("hwloc")
+
     def install(self, spec, prefix):
+        autogen = Executable("./autogen.sh")
+        autogen()
         configure("--prefix=%s" % prefix,
-                  "--enable-guard-pages")
+                  "--enable-guard-pages",
+                  "--with-topology=hwloc",
+                  "--with-hwloc=%s" % spec["hwloc"].prefix)
         make()
         make("install")

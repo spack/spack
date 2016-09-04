@@ -34,6 +34,10 @@ class Libiconv(Package):
 
     version('1.14', 'e34509b1623cec449dfeb73d7ce9c6c6')
 
+    # We cannot set up a warning for gets(), since gets() is not part
+    # of C11 any more and thus might not exist.
+    patch("gets.patch")
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix),
                   '--enable-extra-encodings')

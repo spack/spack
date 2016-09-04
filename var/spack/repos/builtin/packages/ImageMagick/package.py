@@ -26,38 +26,32 @@ from spack import *
 
 
 class Imagemagick(Package):
-    """ImageMagick is a image processing library"""
-    homepage = "http://www.imagemagic.org"
+    """ImageMagick is a software suite to create, edit, compose,
+    or convert bitmap images."""
 
-    # -------------------------------------------------------------------------
-    # ImageMagick does not keep around anything but *-10 versions, so
-    # this URL may change.  If you want the bleeding edge, you can
-    # uncomment it and see if it works but you may need to try to
-    # fetch a newer version (-6, -7, -8, -9, etc.) or you can stick
-    # wtih the older, stable, archived -10 versions below.
-    #
-    # TODO: would be nice if spack had a way to recommend avoiding a
-    # TODO: bleeding edge version, but not comment it out.
-    # -------------------------------------------------------------------------
-    # version('6.9.0-6', 'c1bce7396c22995b8bdb56b7797b4a1b',
-    # url="http://www.imagemagick.org/download/ImageMagick-6.9.0-6.tar.bz2")
+    homepage = "http://www.imagemagick.org"
+    url = "https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz"
 
-    # -------------------------------------------------------------------------
-    # *-10 versions are archived, so these versions should fetch reliably.
-    # -------------------------------------------------------------------------
-    version(
-        '6.8.9-10',
-        'aa050bf9785e571c956c111377bbf57c',
-        url="http://sourceforge.net/projects/imagemagick/files/old-sources/6.x/6.8/ImageMagick-6.8.9-10.tar.gz/download")
+    version('7.0.2-7', 'c59cdc8df50e481b2bd1afe09ac24c08')
+    version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
 
     depends_on('jpeg')
+    depends_on('pango')
     depends_on('libtool', type='build')
     depends_on('libpng')
     depends_on('freetype')
     depends_on('fontconfig')
     depends_on('libtiff')
+    depends_on('ghostscript')
+    depends_on('ghostscript-fonts')
+
+    def url_for_version(self, version):
+        return "https://github.com/ImageMagick/ImageMagick/archive/{0}.tar.gz".format(version)
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
+        configure('--prefix={0}'.format(prefix),
+                  '--with-gs-font-dir={0}'.format(gs_font_dir))
         make()
-        make("install")
+        make('check')
+        make('install')

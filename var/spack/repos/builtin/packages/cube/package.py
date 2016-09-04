@@ -22,13 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Cube(Package):
-    """
-    Cube the profile viewer for Score-P and Scalasca profiles. It displays a
+    """Cube the profile viewer for Score-P and Scalasca profiles. It displays a
     multi-dimensional performance space consisting of the dimensions:
     - performance metric
     - call path

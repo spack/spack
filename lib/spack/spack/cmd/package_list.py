@@ -32,8 +32,8 @@ description = "Print a list of all packages in reStructuredText."
 
 def github_url(pkg):
     """Link to a package file on github."""
-    url = "https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py"
-    return (url % pkg.name)
+    url = "https://github.com/LLNL/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py"
+    return url.format(pkg.name)
 
 
 def rst_table(elts):
@@ -51,35 +51,41 @@ def print_rst_package_list():
 
     print ".. _package-list:"
     print
+    print "============"
     print "Package List"
-    print "=================="
-
+    print "============"
+    print
     print "This is a list of things you can install using Spack.  It is"
     print "automatically generated based on the packages in the latest Spack"
     print "release."
     print
-
     print "Spack currently has %d mainline packages:" % len(pkgs)
     print
     print rst_table("`%s`_" % p for p in pkg_names)
     print
-    print "-----"
 
     # Output some text for each package.
     for pkg in pkgs:
+        print "-----"
         print
         print ".. _%s:" % pkg.name
         print
+        # Must be at least 2 long, breaks for single letter packages like R.
+        print "-" * max(len(pkg.name), 2)
         print pkg.name
-        print "-" * len(pkg.name)
-        print "Links:"
+        print "-" * max(len(pkg.name), 2)
+        print
+        print "Homepage:"
         print "  * `%s <%s>`__" % (cgi.escape(pkg.homepage), pkg.homepage)
+        print
+        print "Spack package:"
         print "  * `%s/package.py <%s>`__" % (pkg.name, github_url(pkg))
         print
         if pkg.versions:
             print "Versions:"
             print "  " + ", ".join(str(v) for v in
                                    reversed(sorted(pkg.versions)))
+            print
 
         for deptype in spack.alldeps:
             deps = pkg.dependencies_of_type(deptype)
@@ -92,7 +98,6 @@ def print_rst_package_list():
         print "Description:"
         print pkg.format_doc(indent=2)
         print
-        print "-----"
 
 
 def package_list(parser, args):

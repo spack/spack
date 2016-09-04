@@ -22,29 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+from spack import *
 
 
 class PyMarkupsafe(Package):
-    """
-    MarkupSafe is a library for Python that implements a unicode
-    string that is aware of HTML escaping rules and can be used
-    to implement automatic string escaping. It is used by Jinja 2,
-    the Mako templating engine, the Pylons web framework and many more.
-    """
+    """MarkupSafe is a library for Python that implements a unicode
+    string that is aware of HTML escaping rules and can be used to
+    implement automatic string escaping. It is used by Jinja 2, the
+    Mako templating engine, the Pylons web framework and many more."""
 
     homepage = "http://www.pocoo.org/projects/markupsafe/"
-    url      = "https://github.com/pallets/markupsafe/archive/0.23.tar.gz"
+    url      = "https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz"
 
-    version('0.23', '1a0dadc95169832367c9dcf142155cde')
-    version('0.22', '7a2ac7427b58def567628d06dc328396')
-    version('0.21', 'aebcd93ee05269773c8b80bb6c86fc2f')
-    version('0.20', '0c1fef97c8fd6a986d708f08d7f84a02')
-    version('0.19', '64b05361adb92c11839fc470e308c593')
+    version('0.23', 'f5ab3deee4c37cd6a922fb81e730da6e')
+    version('0.22', 'cb3ec29fd5361add24cfd0c6e2953b3e')
+    version('0.21', 'fde838d9337fa51744283f46a1db2e74')
+    version('0.20', '7da066d9cb191a70aa85d0a3d43565d1')
+    version('0.19', 'ccb3f746c807c5500850987006854a6d')
 
-    extends("python")
-    depends_on("py-setuptools", type='build')
+    extends('python')
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

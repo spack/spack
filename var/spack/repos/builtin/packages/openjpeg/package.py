@@ -34,6 +34,7 @@ class Openjpeg(CMakePackage):
     Since April 2015, it is officially recognized by ISO/IEC and
     ITU-T as a JPEG 2000 Reference Software.
     """
+
     homepage = "https://github.com/uclouvain/openjpeg"
     url = "https://github.com/uclouvain/openjpeg/archive/version.2.1.tar.gz"
 

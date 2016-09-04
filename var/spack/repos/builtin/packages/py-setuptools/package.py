@@ -32,6 +32,8 @@ class PySetuptools(Package):
     homepage = "https://pypi.python.org/pypi/setuptools"
     url      = "https://pypi.python.org/packages/source/s/setuptools/setuptools-11.3.tar.gz"
 
+    version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c',
+            url="https://pypi.python.org/packages/9f/32/81c324675725d78e7f6da777483a3453611a427db0145dfb878940469692/setuptools-25.2.0.tar.gz")
     version('20.7.0', '5d12b39bf3e75e80fdce54e44b255615')
     version('20.6.7', '45d6110f3ec14924e44c33411db64fe6')
     version('20.5', 'fadc1e1123ddbe31006e5e43e927362b')
@@ -43,4 +45,4 @@ class PySetuptools(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

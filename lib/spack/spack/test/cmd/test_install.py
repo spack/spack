@@ -30,6 +30,7 @@ import contextlib
 
 import spack
 import spack.cmd
+from spack.cmd import test_install
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
 
@@ -49,11 +50,6 @@ def mock_open(filename, mode):
         handle = FILE_REGISTRY[filename]
         FILE_REGISTRY[filename] = handle.getvalue()
         handle.close()
-
-
-# The use of __import__ is necessary to maintain a name with hyphen (which
-# cannot be an identifier in python)
-test_install = __import__("spack.cmd.test-install", fromlist=['test_install'])
 
 
 class MockSpec(object):

@@ -1,7 +1,8 @@
 .. _developer_guide:
 
+===============
 Developer Guide
-=====================
+===============
 
 This guide is intended for people who want to work on Spack itself.
 If you just want to develop packages, see the :ref:`packaging-guide`.
@@ -11,17 +12,18 @@ It is assumed that you've read the :ref:`basic-usage` and
 concepts discussed there.  If you're not, we recommend reading those
 first.
 
+--------
 Overview
------------------------
+--------
 
 Spack is designed with three separate roles in mind:
 
-   #. **Users**, who need to install software *without* knowing all the
-      details about how it is built.
-   #. **Packagers** who know how a particular software package is
-      built and encode this information in package files.
-   #. **Developers** who work on Spack, add new features, and try to
-      make the jobs of packagers and users easier.
+#. **Users**, who need to install software *without* knowing all the
+   details about how it is built.
+#. **Packagers** who know how a particular software package is
+   built and encode this information in package files.
+#. **Developers** who work on Spack, add new features, and try to
+   make the jobs of packagers and users easier.
 
 Users could be end users installing software in their home directory,
 or administrators installing software to a shared directory on a
@@ -41,9 +43,9 @@ specification.
 
 This gets us to the two key concepts in Spack's software design:
 
-   #. **Specs**: expressions for describing builds of software, and
-   #. **Packages**: Python modules that build software according to a
-      spec.
+#. **Specs**: expressions for describing builds of software, and
+#. **Packages**: Python modules that build software according to a
+   spec.
 
 A package is a template for building particular software, and a spec
 as a descriptor for one or more instances of that template.  Users
@@ -63,75 +65,75 @@ building the software off to the package object.  The rest of this
 document describes all the pieces that come together to make that
 happen.
 
-
+-------------------
 Directory Structure
--------------------------
+-------------------
 
 So that you can familiarize yourself with the project, we'll start
-with a high level view of Spack's directory structure::
+with a high level view of Spack's directory structure:
 
-  spack/                  <- installation root
-     bin/
-        spack             <- main spack executable
+.. code-block:: none
 
-     etc/
-        spack/            <- Spack config files.
-                             Can be overridden by files in ~/.spack.
+   spack/                  <- installation root
+      bin/
+         spack             <- main spack executable
 
-     var/
-        spack/            <- build & stage directories
-            repos/            <- contains package repositories
-               builtin/       <- pkg repository that comes with Spack
-                  repo.yaml   <- descriptor for the builtin repository
-                  packages/   <- directories under here contain packages
-            cache/        <- saves resources downloaded during installs
+      etc/
+         spack/            <- Spack config files.
+                              Can be overridden by files in ~/.spack.
 
-     opt/
-        spack/            <- packages are installed here
+      var/
+         spack/            <- build & stage directories
+             repos/            <- contains package repositories
+                builtin/       <- pkg repository that comes with Spack
+                   repo.yaml   <- descriptor for the builtin repository
+                   packages/   <- directories under here contain packages
+             cache/        <- saves resources downloaded during installs
 
-     lib/
-        spack/
-           docs/          <- source for this documentation
-           env/           <- compiler wrappers for build environment
+      opt/
+         spack/            <- packages are installed here
 
-           external/      <- external libs included in Spack distro
-           llnl/          <- some general-use libraries
+      lib/
+         spack/
+            docs/          <- source for this documentation
+            env/           <- compiler wrappers for build environment
 
-           spack/         <- spack module; contains Python code
-              cmd/        <- each file in here is a spack subcommand
-              compilers/  <- compiler description files
-              test/       <- unit test modules
-              util/       <- common code
+            external/      <- external libs included in Spack distro
+            llnl/          <- some general-use libraries
+
+            spack/         <- spack module; contains Python code
+               cmd/        <- each file in here is a spack subcommand
+               compilers/  <- compiler description files
+               test/       <- unit test modules
+               util/       <- common code
 
 Spack is designed so that it could live within a `standard UNIX
 directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``,
 ``var``, and ``opt`` all contain a ``spack`` subdirectory in case
 Spack is installed alongside other software.  Most of the interesting
-parts of Spack live in ``lib/spack``.  Files under ``var`` are created
-as needed, so there is no ``var`` directory when you initially clone
-Spack from the repository.
+parts of Spack live in ``lib/spack``.
 
 Spack has *one* directory layout and there is no install process.
-version and the source code.  Most Python programs don't look like
-this (they use distutils, ``setup.py``, etc.) but we wanted to make
-Spack *very* easy to use.  The simple layout spares users from the
-need to install Spack into a Python environment.  Many users don't
-have write access to a Python installation, and installing an entire
-new instance of Python to bootstrap Spack would be very complicated.
+Most Python programs don't look like this (they use distutils, ``setup.py``,
+etc.) but we wanted to make Spack *very* easy to use.  The simple layout
+spares users from the need to install Spack into a Python environment.
+Many users don't have write access to a Python installation, and installing
+an entire new instance of Python to bootstrap Spack would be very complicated.
 Users should not have to install install a big, complicated package to
 use the thing that's supposed to spare them from the details of big,
 complicated packages.  The end result is that Spack works out of the
 box: clone it and add ``bin`` to your PATH and you're ready to go.
 
-
+--------------
 Code Structure
--------------------------
+--------------
 
 This section gives an overview of the various Python modules in Spack,
 grouped by functionality.
 
+^^^^^^^^^^^^^^^^^^^^^^^
 Package-related modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.package`
   Contains the :class:`Package <spack.package.Package>` class, which
@@ -158,9 +160,9 @@ Package-related modules
   decorator, which allows :ref:`multimethods <multimethods>` in
   packages.
 
-
+^^^^^^^^^^^^^^^^^^^^
 Spec-related modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
   Contains :class:`Spec <spack.spec.Spec>` and :class:`SpecParser
@@ -208,9 +210,9 @@ Spec-related modules
      Not yet implemented.  Should eventually have architecture
      descriptions for cross-compiling.
 
-
+^^^^^^^^^^^^^^^^^
 Build environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 :mod:`spack.stage`
   Handles creating temporary directories for builds.
@@ -224,15 +226,17 @@ Build environment
   Create more implementations of this to change the hierarchy and
   naming scheme in ``$spack_prefix/opt``
 
+^^^^^^^^^^^^^^^^^
 Spack Subcommands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 :mod:`spack.cmd`
   Each module in this package implements a Spack subcommand.  See
   :ref:`writing commands <writing-commands>` for details.
 
+^^^^^^^^^^
 Unit tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^
 
 :mod:`spack.test`
   Implements Spack's test suite.  Add a module and put its name in
@@ -242,8 +246,9 @@ Unit tests
   This is a fake package hierarchy used to mock up packages for
   Spack's test suite.
 
+^^^^^^^^^^^^^
 Other Modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 :mod:`spack.globals`
   Includes global settings for Spack.  the default policy classes for
@@ -269,51 +274,53 @@ Other Modules
   :class:`SpackError <spack.error.SpackError>`, the base class for
   Spack's exception hierarchy.
 
-
+------------
 Spec objects
--------------------------
+------------
 
+---------------
 Package objects
--------------------------
+---------------
 
+Most spack commands look something like this:
 
-Most spack commands
-look something like this:
-
-   #. Parse an abstract spec (or specs) from the command line,
-   #. *Normalize* the spec based on information in package files,
-   #. *Concretize* the spec according to some customizable policies,
-   #. Instantiate a package based on the spec, and
-   #. Call methods (e.g., ``install()``) on the package object.
-
-
+#. Parse an abstract spec (or specs) from the command line,
+#. *Normalize* the spec based on information in package files,
+#. *Concretize* the spec according to some customizable policies,
+#. Instantiate a package based on the spec, and
+#. Call methods (e.g., ``install()``) on the package object.
 
 The information in Package files is used at all stages in this
 process.
 
+Conceptually, packages are overloaded.  They contain:
 
-Conceptually, packages are overloaded.  They contain
-
+-------------
 Stage objects
--------------------------
+-------------
 
 .. _writing-commands:
 
+----------------
 Writing commands
--------------------------
+----------------
 
+----------
 Unit tests
--------------------------
+----------
 
+------------
 Unit testing
--------------------------
+------------
 
-
+------------------
 Developer commands
--------------------------
+------------------
 
+^^^^^^^^^^^^^
 ``spack doc``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
+^^^^^^^^^^^^^^
 ``spack test``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^

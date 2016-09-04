@@ -39,7 +39,7 @@ class RDatatable(Package):
 
     extends('R')
 
-    depends_on('r-chron')
+    depends_on('r-chron', type='nolink')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

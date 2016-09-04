@@ -37,16 +37,13 @@ class Qhull(CMakePackage):
 
     homepage = "http://www.qhull.org"
 
-    version('7.2.0', 'e6270733a826a6a7c32b796e005ec3dc',
+    version('2015.2', 'e6270733a826a6a7c32b796e005ec3dc',
             url="http://www.qhull.org/download/qhull-2015-src-7.2.0.tgz")
 
-    version('1.0', 'd0f978c0d8dfb2e919caefa56ea2953c',
+    version('2012.1', 'd0f978c0d8dfb2e919caefa56ea2953c',
             url="http://www.qhull.org/download/qhull-2012.1-src.tgz")
 
-    # https://github.com/qhull/qhull/pull/5
-    patch('qhull-iterator.patch', when='@1.0')
-
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.6:', type='build')
 
     @CMakePackage.sanity_check('build')
     @CMakePackage.on_package_attributes(run_tests=True)

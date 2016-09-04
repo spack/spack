@@ -32,6 +32,7 @@ import yaml
 from yaml.error import MarkedYAMLError
 
 import spack
+import spack.error
 
 
 class ProviderIndex(object):
@@ -201,11 +202,10 @@ class ProviderIndex(object):
                 "error parsing YAML ProviderIndex cache:", str(e))
 
         if not isinstance(yfile, dict):
-            raise spack.spec.SpackYAMLError(
-                "YAML ProviderIndex was not a dict.")
+            raise ProviderIndexError("YAML ProviderIndex was not a dict.")
 
         if 'provider_index' not in yfile:
-            raise spack.spec.SpackYAMLError(
+            raise ProviderIndexError(
                 "YAML ProviderIndex does not start with 'provider_index'")
 
         index = ProviderIndex()
@@ -291,3 +291,7 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
         (name, out_mapping_type([
             transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
         for name, mappings in providers.items())
+
+
+class ProviderIndexError(spack.error.SpackError):
+    """Raised when there is a problem with a ProviderIndex."""

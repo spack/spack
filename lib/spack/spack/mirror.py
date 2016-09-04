@@ -120,27 +120,28 @@ def suggest_archive_basename(resource):
 
 def create(path, specs, **kwargs):
     """Create a directory to be used as a spack mirror, and fill it with
-       package archives.
+    package archives.
 
-       Arguments:
-         path    Path to create a mirror directory hierarchy in.
-         specs   Any package versions matching these specs will be added
-                 to the mirror.
+    Arguments:
+        path: Path to create a mirror directory hierarchy in.
+        specs: Any package versions matching these specs will be added \
+            to the mirror.
 
-       Keyword args:
-         no_checksum:  If True, do not checkpoint when fetching (default False)
-         num_versions: Max number of versions to fetch per spec,
-                       if spec is ambiguous (default is 0 for all of them)
+    Keyword args:
+        no_checksum: If True, do not checkpoint when fetching (default False)
+        num_versions: Max number of versions to fetch per spec, \
+            if spec is ambiguous (default is 0 for all of them)
 
-       Return Value:
-         Returns a tuple of lists: (present, mirrored, error)
-         * present:  Package specs that were already present.
-         * mirrored: Package specs that were successfully mirrored.
-         * error:    Package specs that failed to mirror due to some error.
+    Return Value:
+        Returns a tuple of lists: (present, mirrored, error)
 
-       This routine iterates through all known package versions, and
-       it creates specs for those versions.  If the version satisfies any spec
-       in the specs list, it is downloaded and added to the mirror.
+        * present:  Package specs that were already present.
+        * mirrored: Package specs that were successfully mirrored.
+        * error:    Package specs that failed to mirror due to some error.
+
+    This routine iterates through all known package versions, and
+    it creates specs for those versions.  If the version satisfies any spec
+    in the specs list, it is downloaded and added to the mirror.
     """
     # Make sure nothing is in the way.
     if os.path.isfile(path):
