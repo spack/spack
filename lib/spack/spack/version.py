@@ -172,7 +172,7 @@ class Version(object):
             system
             myfavoritebranch
         """
-        return isinstance(self.version[0], int)
+        return isinstance(self.version[0], numbers.Integral)
 
     def isdevelop(self):
         """Triggers on the special case of the `@develop` version."""
