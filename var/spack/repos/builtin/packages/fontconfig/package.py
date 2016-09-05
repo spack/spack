@@ -36,7 +36,9 @@ class Fontconfig(Package):
     depends_on('libxml2')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-libxml2")
+        configure("--prefix=%s" % prefix,
+                  "--enable-libxml2",
+                  "--disable-docs")
 
         make()
         make("install")
