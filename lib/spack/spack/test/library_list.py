@@ -90,12 +90,22 @@ class LibraryListTest(unittest.TestCase):
         self.assertTrue(self.liblist is not b)
 
     def test_add(self):
-        another = LibraryList([
+        pylist = [
             '/dir1/liblapack.a',  # removed from the final list
             '/dir2/libbaz.so',
             '/dir4/libnew.a'
-        ])
+        ]
+        another = LibraryList(pylist)
         l = self.liblist + another
         self.assertEqual(len(l), 7)
         # Invariant : l == l + l
         self.assertEqual(l, l + l)
+        # Always produce an instance of LibraryList
+        self.assertEqual(
+            type(self.liblist),
+            type(self.liblist + pylist)
+        )
+        self.assertEqual(
+            type(self.liblist + pylist),
+            type(self.liblist)
+        )
