@@ -106,6 +106,6 @@ class LibraryListTest(unittest.TestCase):
             type(self.liblist + pylist)
         )
         self.assertEqual(
-            type(self.liblist + pylist),
+            type(pylist + self.liblist),
             type(self.liblist)
         )

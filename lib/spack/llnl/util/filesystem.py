@@ -523,6 +523,9 @@ class LibraryList(collections.Sequence):
     def __add__(self, other):
         return LibraryList(dedupe(self.libraries + list(other)))
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __eq__(self, other):
         return self.libraries == other.libraries
 

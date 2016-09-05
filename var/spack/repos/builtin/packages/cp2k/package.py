@@ -183,7 +183,7 @@ class Cp2k(Package):
             lapack = spec['lapack'].lapack_libs
             blas = spec['blas'].blas_libs
 
-            ldflags.append(lapack.search_flags + blas.search_flags)
+            ldflags.append((lapack + blas).search_flags)
             libs.extend([str(x) for x in (fftw, lapack, blas)])
 
             # Write compiler flags to file
