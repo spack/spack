@@ -20,7 +20,7 @@ written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
-[Feature Overview](http://spack.readthedocs.io/latest/features.html)
+[Feature Overview](http://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
 To install spack and install your first package:
