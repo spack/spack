@@ -66,6 +66,8 @@ class Plumed(Package):
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
 
+    depends_on('autoconf', type='build')
+
     # Dictionary mapping PLUMED versions to the patches it provides
     # interactively
     plumed_patches = {
@@ -98,6 +100,12 @@ class Plumed(Package):
         module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
 
     def install(self, spec, prefix):
+        # This part is needed to avoid linking with gsl cblas
+        # interface which will mask the cblas interface
+        # provided by optimized libraries due to linking order
+        filter_file('-lgslcblas', '', 'configure.ac')
+        autoreconf('-ivf')
+
         # From plumed docs :
         # Also consider that this is different with respect to what some other
         # configure script does in that variables such as MPICXX are
