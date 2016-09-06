@@ -237,12 +237,18 @@ class Qt(Package):
 
     @when('@5.7:')
     def configure(self):
+        args = self.common_config_args
+
+        if not sys.platform == 'darwin':
+            args.extend([
+                    '-qt-xcb',
+                ])
+
         configure('-no-eglfs',
                   '-no-directfb',
-                  '-qt-xcb',
                   '{0}-gtk'.format('' if '+gtk' in self.spec else '-no'),
                   '-skip', 'webengine',
-                  *self.common_config_args)
+                  *args)
 
     def install(self, spec, prefix):
         self.configure()
