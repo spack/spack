@@ -165,6 +165,10 @@ class Openmpi(Package):
                        "--enable-shared",
                        "--enable-static"]
 
+        # for Open-MPI 2.0:, C++ bindings are disabled by default.
+        if self.spec.satisfies('@2.0:'):
+            config_args.extend(['--enable-mpi-cxx'])
+
         if getattr(self, 'config_extra', None) is not None:
             config_args.extend(self.config_extra)
 
