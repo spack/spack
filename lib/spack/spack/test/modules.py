@@ -229,6 +229,28 @@ class TclTests(MockPackagesTest):
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 5)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 5)
 
+        # dtbuild1 has
+        # - 1 ('run',) dependency
+        # - 1 ('build','link') dependency
+        # - 1 ('build',) dependency
+        # Just make sure the 'build' dependency is not there
+        spack.modules.CONFIGURATION = configuration_autoload_direct
+        spec = spack.spec.Spec('dtbuild1')
+        content = self.get_modulefile_content(spec)
+        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
+        self.assertEqual(len([x for x in content if 'module load ' in x]), 2)
+
+        # dtbuild1 has
+        # - 1 ('run',) dependency
+        # - 1 ('build','link') dependency
+        # - 1 ('build',) dependency
+        # Just make sure the 'build' dependency is not there
+        spack.modules.CONFIGURATION = configuration_autoload_all
+        spec = spack.spec.Spec('dtbuild1')
+        content = self.get_modulefile_content(spec)
+        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
+        self.assertEqual(len([x for x in content if 'module load ' in x]), 2)
+
     def test_prerequisites(self):
         spack.modules.CONFIGURATION = configuration_prerequisites_direct
         spec = spack.spec.Spec('mpileaks arch=x86-linux')
