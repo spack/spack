@@ -170,12 +170,11 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
-        possible_files = self.stage.expected_archive_files
         save_file = None
         partial_file = None
-        if possible_files:
-            save_file = self.stage.expected_archive_files[0]
-            partial_file = self.stage.expected_archive_files[0] + '.part'
+        if self.stage.save_filename:
+            save_file = self.stage.save_filename
+            partial_file = self.stage.save_filename + '.part'
 
         tty.msg("Trying to fetch from %s" % self.url)
 
@@ -858,9 +857,9 @@ class FsCache(object):
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
-    def fetcher(self, targetPath, digest):
+    def fetcher(self, targetPath, digest, **kwargs):
         url = "file://" + join_path(self.root, targetPath)
-        return CacheURLFetchStrategy(url, digest)
+        return CacheURLFetchStrategy(url, digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)
