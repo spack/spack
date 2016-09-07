@@ -24,7 +24,7 @@
 ##############################################################################
 """Tests for provider index cache files.
 
-Tests assume that mock packages provide this:
+Tests assume that mock packages provide this::
 
   {'blas':   {
        blas: set([netlib-blas, openblas, openblas-with-lapack])},

@@ -22,15 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-
 import llnl.util.tty as tty
 
 
 class Swiftsim(Package):
-    """
-    SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
+    """SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
     astrophysicists with a state of the art framework to perform
     particle based simulations.
     """

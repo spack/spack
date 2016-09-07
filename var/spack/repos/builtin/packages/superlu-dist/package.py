@@ -30,13 +30,14 @@ class SuperluDist(Package):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
     homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
-    url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
+    url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
     version('5.0.0', '2b53baf1b0ddbd9fcf724992577f0670')
     version('4.3', 'ee66c84e37b4f7cc557771ccc3dc43ae')
     version('4.2', 'ae9fafae161f775fbac6eba11e530a65')
     version('4.1', '4edee38cc29f687bd0c8eb361096a455')
     version('4.0', 'c0b98b611df227ae050bc1635c6940e0')
+    version('3.3', 'f4805659157d93a962500902c219046b')
 
     depends_on('mpi')
     depends_on('blas')
@@ -61,14 +62,13 @@ class SuperluDist(Package):
             'ARCH         = ar',
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
-            'CC           = %s' % spec['mpi'].mpicc,
-            'CFLAGS       = -fPIC -std=c99 -O2 -I%s -I%s' %
-                (spec['parmetis'].prefix.include,
-                 spec['metis'].prefix.include),
+            'CC           = {0}'.format(self.spec['mpi'].mpicc),
+            'CFLAGS       = -fPIC -std=c99 -O2 -I%s -I%s' % (
+                spec['parmetis'].prefix.include, spec['metis'].prefix.include),
             'NOOPTS       = -fPIC -std=c99',
-            'FORTRAN      = %s' % spec['mpi'].mpif77,
+            'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
             'F90FLAGS     = -O2',
-            'LOADER       = %s' % spec['mpi'].mpif77,
+            'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
             'LOADOPTS     =',
             'CDEFS        = -DAdd_'
         ])

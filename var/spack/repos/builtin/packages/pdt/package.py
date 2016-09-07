@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -36,6 +35,7 @@ class Pdt(Package):
 
     """
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
+    url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdt-3.22.1.tar.gz"
 
     version('3.22.1', '29d9b3177468eed61c555ec095439a88')
     version('3.21', '3092ca0d8833b69992c17e63ae66c263')
@@ -47,4 +47,4 @@ class Pdt(Package):
     def install(self, spec, prefix):
         configure('-prefix=%s' % prefix)
         make()
-        make("install")
+        make('install')

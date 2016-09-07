@@ -33,7 +33,7 @@ class BppCore(Package):
 
     version('2.2.0', '5789ed2ae8687d13664140cd77203477')
 
-    depends_on('cmake')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake('-DBUILD_TESTING=FALSE', '.', *std_cmake_args)

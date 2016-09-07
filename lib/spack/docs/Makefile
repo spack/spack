@@ -22,24 +22,6 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 all: html
 
 #
-# This autogenerates a package list.
-#
-package_list:
-	spack package-list > package_list.rst
-
-#
-# Generate a command index
-#
-command_index:
-	cp command_index.in command_index.rst
-	echo >> command_index.rst
-	grep -ho '.. _spack-.*:' *rst \
-	| perl -pe 's/.. _([^:]*):/   * :ref:`\1`/' \
-	| sort >> command_index.rst
-
-custom_targets: package_list command_index
-
-#
 # This creates a git repository and commits generated html docs.
 # It them pushes the new branch into THIS repository as gh-pages.
 #
@@ -58,9 +40,20 @@ gh-pages: _build/html
 	git push -f $$root master:gh-pages && \
 	rm -rf .git
 
+# This version makes gh-pages into a single page that redirects
+# to spack.readthedocs.io
+gh-pages-redirect:
+	root="$$(git rev-parse --show-toplevel)" && \
+	cd _gh_pages_redirect && \
+	rm -rf .git && \
+	git init && \
+	git add . && \
+	git commit -m "Spack Documentation" && \
+	git push -f $$root master:gh-pages && \
+	rm -rf .git
+
 upload:
 	rsync -avz --rsh=ssh --delete _build/html/ cab:/usr/global/web-pages/lc/www/adept/docs/spack
-	git push -f origin gh-pages
 	git push -f github gh-pages
 
 apidoc:
@@ -89,10 +82,10 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -f package_list.rst command_index.rst
+	-rm -f package_list.rst command_index.rst modules.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
-html: apidoc custom_targets
+html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

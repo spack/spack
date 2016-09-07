@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
 
 
@@ -39,4 +41,12 @@ class PyCffi(Package):
     depends_on('libffi')
 
     def install(self, spec, prefix):
+        # This sets the compiler (and flags) that distutils will use
+        # to create the final shared library.  It will use the
+        # compiler specified by the environment variable 'CC' for all
+        # other compilation.  We are setting the 'LDSHARED" to the
+        # spack compiler wrapper plus a few extra flags necessary for
+        # building the shared library.
+        os.environ['LDSHARED'] = "{0} -shared -pthread".format(spack_cc)
+
         python('setup.py', 'install', '--prefix=%s' % prefix)

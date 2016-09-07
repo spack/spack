@@ -49,9 +49,10 @@ def _install_shlib(name, src, dst):
 class Hdf5Blosc(Package):
     """Blosc filter for HDF5"""
     homepage = "https://github.com/Blosc/hdf5-blosc"
-    url      = "https://github.com/Blosc/hdf5-blosc/archive/master.zip"
+    url      = "https://github.com/Blosc/hdf5-blosc"
 
-    version('master', '02c04acbf4bec66ec8a35bf157d1c9de')
+    version('master', git='https://github.com/Blosc/hdf5-blosc',
+            branch='master')
 
     depends_on("c-blosc")
     depends_on("hdf5")

@@ -56,7 +56,7 @@ class MockCache(object):
     def store(self, copyCmd, relativeDst):
         pass
 
-    def fetcher(self, targetPath, digest):
+    def fetcher(self, targetPath, digest, **kwargs):
         return MockCacheFetcher()
 
 

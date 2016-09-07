@@ -24,26 +24,28 @@
 ##############################################################################
 """This module implements Spack's configuration file handling.
 
+=========================
 Configuration file scopes
-===============================
+=========================
 
 When Spack runs, it pulls configuration data from several config
 directories, each of which contains configuration files.  In Spack,
 there are two configuration scopes:
 
- 1. ``site``: Spack loads site-wide configuration options from
+1. ``site``: Spack loads site-wide configuration options from
    ``$(prefix)/etc/spack/``.
 
- 2. ``user``: Spack next loads per-user configuration options from
-    ~/.spack/.
+2. ``user``: Spack next loads per-user configuration options from
+   ``~/.spack/``.
 
 Spack may read configuration files from both of these locations.  When
 configurations conflict, the user config options take precedence over
 the site configurations.  Each configuration directory may contain
 several configuration files, such as compilers.yaml or mirrors.yaml.
 
+=========================
 Configuration file format
-===============================
+=========================
 
 Configuration files are formatted using YAML syntax.  This format is
 implemented by libyaml (included with Spack as an external module),
@@ -63,13 +65,13 @@ Config files are structured as trees, like this ``compiler`` section::
             cc: /usr/local/bin/mpixlc
             ...
 
-In this example, entries like ''compilers'' and ''xlc@12.1'' are used to
+In this example, entries like "compilers" and "xlc@12.1" are used to
 categorize entries beneath them in the tree.  At the root of the tree,
-entries like ''cc'' and ''cxx'' are specified as name/value pairs.
+entries like "cc" and "cxx" are specified as name/value pairs.
 
 ``config.get_config()`` returns these trees as nested dicts, but it
 strips the first level off.  So, ``config.get_config('compilers')``
-would return something like this for the above example:
+would return something like this for the above example::
 
    { 'chaos_5_x86_64_ib' :
        { 'gcc@4.4.7' :
@@ -84,8 +86,9 @@ would return something like this for the above example:
 Likewise, the ``mirrors.yaml`` file's first line must be ``mirrors:``,
 but ``get_config()`` strips that off too.
 
+==========
 Precedence
-===============================
+==========
 
 ``config.py`` routines attempt to recursively merge configuration
 across scopes.  So if there are ``compilers.py`` files in both the
@@ -99,7 +102,7 @@ first.
 
 Sometimes, it is useful to *completely* override a site setting with a
 user one.  To accomplish this, you can use *two* colons at the end of
-a key in a configuration file.  For example, this:
+a key in a configuration file.  For example, this::
 
      compilers::
        chaos_5_x86_64_ib:
@@ -115,8 +118,8 @@ a key in a configuration file.  For example, this:
 
 Will make Spack take compilers *only* from the user configuration, and
 the site configuration will be ignored.
-
 """
+
 import copy
 import os
 import re

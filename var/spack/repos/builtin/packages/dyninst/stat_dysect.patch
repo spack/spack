@@ -1,0 +1,96 @@
+From 3aebb41ce0ea5b578a1ebf6810446c660066c525 Mon Sep 17 00:00:00 2001
+From: Jesper Puge Nielsen <nielsen34@llnl.gov>
+Date: Wed, 12 Aug 2015 21:07:52 -0700
+Subject: [PATCH] =?UTF-8?q?Exposed=20stackwalker=20and=20proc=20callback=20status=20to=20DySect
+=20=C3c?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ dyninstAPI/h/BPatch_process.h   |   13 +++++++++++++
+ dyninstAPI/src/BPatch_process.C |   18 ++++++++++++++++++
+ dyninstAPI/src/dynProcess.h     |    3 ++-
+ 3 files changed, 33 insertions(+), 1 deletions(-)
+
+diff --git a/dyninstAPI/h/BPatch_process.h b/dyninstAPI/h/BPatch_process.h
+index 5e01bbb..1316bb2 100644
+--- a/dyninstAPI/h/BPatch_process.h
++++ b/dyninstAPI/h/BPatch_process.h
+@@ -225,6 +225,10 @@ class BPATCH_DLL_EXPORT BPatch_process : public BPatch_addressSpace {
+   //
+   // this function should go away as soon as Paradyn links against Dyninst
+   PCProcess *lowlevel_process() const { return llproc; }
++
++  // Expose walker from Dyninst proces
++  void *get_walker() const;
++
+   // These internal funcs trigger callbacks registered to matching events
+   bool triggerStopThread(instPoint *intPoint, func_instance *intFunc, 
+ 			 int cb_ID, void *retVal);
+@@ -281,6 +285,15 @@ class BPATCH_DLL_EXPORT BPatch_process : public BPatch_addressSpace {
+ 
+   bool continueExecution();
+ 
++  // BPatch_process::keepStopped
++  // 
++  // Changes the desired process stat to prevent
++  //  Dyninst from resuming the process after
++  //  handling the current event.
++  //  Must be called from an event handler.
++  
++  void keepStopped();
++
+   //  BPatch_process::terminateExecution
+   //  
+   //  Terminate mutatee process
+diff --git a/dyninstAPI/src/BPatch_process.C b/dyninstAPI/src/BPatch_process.C
+index 115f215..809e797 100644
+--- a/dyninstAPI/src/BPatch_process.C
++++ b/dyninstAPI/src/BPatch_process.C
+@@ -507,6 +507,19 @@ bool BPatch_process::continueExecution()
+ }
+ 
+ /*
++ * BPatch_process::keepStopped
++ *
++ * Changes the desired process stat to prevent
++ *  Dyninst from resuming the process after
++ *  handling the current event.
++ *  Must be called from an event handler.
++ */
++void BPatch_process::keepStopped()
++{
++  llproc->setDesiredProcessState(PCProcess::ps_stopped);
++}
++
++/*
+  * BPatch_process::terminateExecution
+  *
+  * Kill the thread.
+@@ -1754,3 +1767,8 @@ bool BPatch_process::protectAnalyzedCode()
+     }
+     return ret;
+ }
++
++void *BPatch_process::get_walker() const
++{
++    return llproc->get_walker();
++}
+diff --git a/dyninstAPI/src/dynProcess.h b/dyninstAPI/src/dynProcess.h
+index 54b0c6e..00721d1 100644
+--- a/dyninstAPI/src/dynProcess.h
++++ b/dyninstAPI/src/dynProcess.h
+@@ -302,7 +302,8 @@ public:
+     // Stackwalking internals
+     bool walkStack(pdvector<Frame> &stackWalk, PCThread *thread);
+     bool getActiveFrame(Frame &frame, PCThread *thread);
+-
++    Dyninst::Stackwalker::Walker *get_walker() { return stackwalker_; }
++    
+     void addSignalHandler(Address, unsigned);
+     bool isInSignalHandler(Address addr);
+ 
+-- 
+1.7.1
+

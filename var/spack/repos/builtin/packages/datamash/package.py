@@ -26,8 +26,7 @@ from spack import *
 
 
 class Datamash(Package):
-    """
-    GNU datamash is a command-line program which performs basic numeric,
+    """GNU datamash is a command-line program which performs basic numeric,
     textual and statistical operations on input textual data files.
     """
 

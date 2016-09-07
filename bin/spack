@@ -56,8 +56,15 @@ with warnings.catch_warnings():
 # Spack, were removed, but shadow system modules that Spack still
 # imports.  If we leave them, Spack will fail in mysterious ways.
 # TODO: more elegant solution for orphaned pyc files.
-orphaned_pyc_files = [os.path.join(SPACK_EXTERNAL_LIBS, n)
-                      for n in ('functools.pyc', 'ordereddict.pyc')]
+orphaned_pyc_files = [
+    os.path.join(SPACK_EXTERNAL_LIBS, 'functools.pyc'),
+    os.path.join(SPACK_EXTERNAL_LIBS, 'ordereddict.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'platforms', 'cray_xc.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'package-list.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'test-install.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'url-parse.pyc')
+]
+
 for pyc_file in orphaned_pyc_files:
     if not os.path.exists(pyc_file):
         continue
@@ -120,7 +127,8 @@ subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
 import spack.cmd
 for cmd in spack.cmd.commands:
     module = spack.cmd.get_module(cmd)
-    subparser = subparsers.add_parser(cmd, help=module.description)
+    cmd_name = cmd.replace('_', '-')
+    subparser = subparsers.add_parser(cmd_name, help=module.description)
     module.setup_parser(subparser)
 
 # Just print help and exit if run with no arguments at all
@@ -156,7 +164,7 @@ def main():
         spack.curl.add_default_arg('-k')
 
     # Try to load the particular command asked for and run it
-    command = spack.cmd.get_command(args.command)
+    command = spack.cmd.get_command(args.command.replace('-', '_'))
     try:
         return_val = command(parser, args)
     except SpackError as e:
@@ -176,7 +184,7 @@ def main():
 
 if args.profile:
     import cProfile
-    cProfile.run('main()', sort='tottime')
+    cProfile.run('main()', sort='time')
 elif args.pdb:
     import pdb
     pdb.run('main()')

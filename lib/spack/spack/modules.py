@@ -120,7 +120,7 @@ def dependencies(spec, request='all'):
         return []
 
     if request == 'direct':
-        return spec.dependencies()
+        return spec.dependencies(deptype=('link', 'run'))
 
     # FIXME : during module file creation nodes seem to be visited multiple
     # FIXME : times even if cover='nodes' is given. This work around permits
@@ -133,6 +133,7 @@ def dependencies(spec, request='all'):
              spec.traverse(order='post',
                            depth=True,
                            cover='nodes',
+                           deptype=('link', 'run'),
                            root=False),
              reverse=True)]
     return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
@@ -530,13 +531,6 @@ class Dotkit(EnvModule):
 class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
-    environment_modifications_formats = {
-        PrependPath: 'prepend-path --delim "{separator}" {name} \"{value}\"\n',
-        AppendPath: 'append-path   --delim "{separator}" {name} \"{value}\"\n',
-        RemovePath: 'remove-path   --delim "{separator}" {name} \"{value}\"\n',
-        SetEnv: 'setenv {name} \"{value}\"\n',
-        UnsetEnv: 'unsetenv {name}\n'
-    }
 
     autoload_format = ('if ![ is-loaded {module_file} ] {{\n'
                        '    puts stderr "Autoloading {module_file}"\n'
@@ -556,11 +550,13 @@ class TclModule(EnvModule):
     def header(self):
         timestamp = datetime.datetime.now()
         # TCL Modulefile header
-        header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp
-        header += '##\n'
-        header += '## %s\n' % self.spec.short_spec
-        header += '##\n'
+        header = """\
+#%%Module1.0
+## Module file created by spack (https://github.com/LLNL/spack) on %s
+##
+## %s
+##
+""" % (timestamp, self.spec.short_spec)
 
         # TODO : category ?
         # Short description
@@ -574,6 +570,44 @@ class TclModule(EnvModule):
                 header += 'puts stderr "%s"\n' % line
             header += '}\n\n'
         return header
+
+    def process_environment_command(self, env):
+        environment_modifications_formats_colon = {
+            PrependPath: 'prepend-path {name} \"{value}\"\n',
+            AppendPath: 'append-path   {name} \"{value}\"\n',
+            RemovePath: 'remove-path   {name} \"{value}\"\n',
+            SetEnv: 'setenv {name} \"{value}\"\n',
+            UnsetEnv: 'unsetenv {name}\n'
+        }
+        environment_modifications_formats_general = {
+            PrependPath:
+            'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+            AppendPath:
+            'append-path   --delim "{separator}" {name} \"{value}\"\n',
+            RemovePath:
+            'remove-path   --delim "{separator}" {name} \"{value}\"\n',
+            SetEnv: 'setenv {name} \"{value}\"\n',
+            UnsetEnv: 'unsetenv {name}\n'
+        }
+        for command in env:
+            # Token expansion from configuration file
+            name = command.args.get('name', '').format(**self.upper_tokens)
+            value = str(command.args.get('value', '')).format(**self.tokens)
+            command.update_args(name=name, value=value)
+            # Format the line int the module file
+            try:
+                if command.args.get('separator', ':') == ':':
+                    yield environment_modifications_formats_colon[type(
+                        command)].format(**command.args)
+                else:
+                    yield environment_modifications_formats_general[type(
+                        command)].format(**command.args)
+            except KeyError:
+                message = ('Cannot handle command of type {command}: '
+                           'skipping request')
+                details = '{context} at {filename}:{lineno}'
+                tty.warn(message.format(command=type(command)))
+                tty.warn(details.format(**command.args))
 
     def module_specific_content(self, configuration):
         naming_tokens = self.tokens

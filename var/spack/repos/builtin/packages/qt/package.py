@@ -29,7 +29,11 @@ import os
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
     homepage = 'http://qt.io'
+    url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
+    list_url = 'http://download.qt.io/archive/qt/'
+    list_depth = 4
 
+    version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
     version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5')
     version('5.4.0',  'e8654e4b37dd98039ba20da7a53877e6')
@@ -40,17 +44,18 @@ class Qt(Package):
 
     # Add patch for compile issues with qt3 found with use in the
     # OpenSpeedShop project
-    variant('krellpatch', default=False,
-            description="Build with openspeedshop based patch.")
+    variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
     variant('mesa',       default=False, description="Depend on mesa.")
     variant('gtk',        default=False, description="Build with gtkplus.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
+    # https://github.com/xboxdrv/xboxdrv/issues/188
+    patch('btn_trigger_happy.patch', when='@5.7.0:')
+
     # Use system openssl for security.
     # depends_on("openssl")
 
-    depends_on("glib")
     depends_on("gtkplus", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
@@ -65,7 +70,7 @@ class Qt(Package):
     # depends_on("gperf")
     # depends_on("flex", type='build')
     # depends_on("bison", type='build')
-    # depends_on("ruby")
+    # depends_on("ruby", type='build')
     # depends_on("icu4c")
 
     # OpenGL hardware acceleration
@@ -73,29 +78,33 @@ class Qt(Package):
     depends_on("libxcb")
 
     def url_for_version(self, version):
-        url = "http://download.qt.io/archive/qt/"
+        # URL keeps getting more complicated with every release
+        url = self.list_url
+
+        if version >= Version('4.0'):
+            url += version.up_to(2) + '/'
+        else:
+            url += version.up_to(1) + '/'
+
+        if version >= Version('4.8'):
+            url += str(version) + '/'
 
         if version >= Version('5'):
-            url += "%s/%s/single/qt-everywhere-opensource-src-%s.tar.gz" % \
-                (version.up_to(2), version, version)
-        elif version >= Version('4.8'):
-            url += "%s/%s/qt-everywhere-opensource-src-%s.tar.gz" % \
-                (version.up_to(2), version, version)
-        elif version >= Version('4.6'):
-            url += "%s/qt-everywhere-opensource-src-%s.tar.gz" % \
-                (version.up_to(2), version)
-        elif version >= Version('4.0'):
-            url += "%s/qt-x11-opensource-src-%s.tar.gz" % \
-                (version.up_to(2), version)
-        elif version >= Version('3'):
-            url += "%s/qt-x11-free-%s.tar.gz" % \
-                (version.up_to(1), version)
+            url += 'single/'
+
+        url += 'qt-'
+
+        if version >= Version('4.6'):
+            url += 'everywhere-'
         elif version >= Version('2.1'):
-            url += "%s/qt-x11-%s.tar.gz" % \
-                (version.up_to(1), version)
-        else:
-            url += "%s/qt-%s.tar.gz" % \
-                (version.up_to(1), version)
+            url += 'x11-'
+
+        if version >= Version('4.0'):
+            url += 'opensource-src-'
+        elif version >= Version('3'):
+            url += 'free-'
+
+        url += str(version) + '.tar.gz'
 
         return url
 
@@ -107,27 +116,34 @@ class Qt(Package):
 
     def patch(self):
         if self.spec.satisfies('@4'):
-            qmake_conf      = 'mkspecs/common/g++-base.conf'
-            qmake_unix_conf = 'mkspecs/common/g++-unix.conf'
-        elif self.spec.satisfies('@5'):
-            qmake_conf      = 'qtbase/mkspecs/common/g++-base.conf'
-            qmake_unix_conf = 'qtbase/mkspecs/common/g++-unix.conf'
-        else:
-            return
+            # Fix qmake compilers in the default mkspec
+            filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
+                        'mkspecs/common/g++-base.conf')
+            filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
+                        'mkspecs/common/g++-base.conf')
 
-        # Fix qmake compilers in the default mkspec
-        filter_file(r'^QMAKE_COMPILER *=.*$',
-                    'QMAKE_COMPILER = cc', qmake_conf)
-        filter_file(r'^QMAKE_CC *=.*$',
-                    'QMAKE_CC = cc',       qmake_conf)
-        filter_file(r'^QMAKE_CXX *=.*$',
-                    'QMAKE_CXX = c++',     qmake_conf)
-        filter_file(r'^QMAKE_LFLAGS_NOUNDEF *\+?=.*$',
-                    'QMAKE_LFLAGS_NOUNDEF =', qmake_unix_conf)
+            # Necessary to build with GCC 6 and other modern compilers
+            # http://stackoverflow.com/questions/10354371/
+            filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
+                        'mkspecs/common/gcc-base.conf')
+
+            filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
+                        'mkspecs/common/g++-unix.conf')
+        elif self.spec.satisfies('@5:'):
+            # Fix qmake compilers in the default mkspec
+            filter_file('^QMAKE_COMPILER .*', 'QMAKE_COMPILER = cc',
+                        'qtbase/mkspecs/common/g++-base.conf')
+            filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
+                        'qtbase/mkspecs/common/g++-base.conf')
+            filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
+                        'qtbase/mkspecs/common/g++-base.conf')
+
+            filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
+                        'qtbase/mkspecs/common/g++-unix.conf')
 
     @property
     def common_config_args(self):
-        config_args = [
+        return [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -144,19 +160,12 @@ class Qt(Package):
             '-no-nis'
         ]
 
-        if '+gtk' in self.spec:
-            config_args.append('-gtkstyle')
-        else:
-            config_args.append('-no-gtkstyle')
-
-        return config_args
-
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
     @when('@3')
     def configure(self):
-        # An user report that this was necessary to link Qt3 on ubuntu
+        # A user reported that this was necessary to link Qt3 on ubuntu
         os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
         configure('-prefix', self.prefix,
                   '-v',
@@ -169,16 +178,25 @@ class Qt(Package):
     def configure(self):
         configure('-fast',
                   '-no-webkit',
+                  '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
                   *self.common_config_args)
 
-    @when('@5')
+    @when('@5.0:5.6')
     def configure(self):
         configure('-no-eglfs',
                   '-no-directfb',
                   '-qt-xcb',
-                  # If someone wants to get a webkit build working, be my
-                  # guest!
+                  '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
                   '-skip', 'qtwebkit',
+                  *self.common_config_args)
+
+    @when('@5.7:')
+    def configure(self):
+        configure('-no-eglfs',
+                  '-no-directfb',
+                  '-qt-xcb',
+                  '{0}-gtk'.format('' if '+gtk' in self.spec else '-no'),
+                  '-skip', 'webengine',
                   *self.common_config_args)
 
     def install(self, spec, prefix):
