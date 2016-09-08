@@ -14,6 +14,7 @@ before Spack is run:
 1. Operating System: GNU/Linux or Macintosh
 2. Python 2.6 or 2.7
 3. A C/C++ compiler
+4. The ``git`` and ``curl`` commands.
 
 These requirements can be easily installed on most modern Linux
 systems; on Macintosh, XCode is required.
@@ -22,7 +23,7 @@ systems; on Macintosh, XCode is required.
 Installation
 ------------
 
-Getting spack is easy.  You can clone it from the `github repository
+Getting Spack is easy.  You can clone it from the `github repository
 <https://github.com/llnl/spack>`_ using this command:
 
 .. code-block:: console
@@ -119,7 +120,7 @@ Next Steps
 ^^^^^^^^^^
 
 In theory, Spack doesn't need any additional installation; just
-downlad and run!  But in real life, additional steps are usually
+download and run!  But in real life, additional steps are usually
 required before Spack can work in a practical sense.  Read on...
 
 
@@ -286,10 +287,10 @@ valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``,
          cppflags: -O3 -fPIC
        spec: intel@15.0.0:
 
-These flags will be treated by spack as if they were enterred from
+These flags will be treated by spack as if they were entered from
 the command line each time this compiler is used. The compiler wrappers
 then inject those flags into the compiler command. Compiler flags
-enterred from the command line will be discussed in more detail in the
+entered from the command line will be discussed in more detail in the
 following section.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -299,31 +300,32 @@ Build Your Own Compiler
 If you are particular about which compiler/version you use, you might
 wish to have Spack build it for you.  For example:
 
-.. code-block::
+.. code-block:: console
 
-    spack install gcc@4.9.3
+    $ spack install gcc@4.9.3
 
 Once that has finished, you will need to add it to your
-``compilers.yaml`` file.  If this is your preferred compiler, in
-general future Spack builds will use it.
+``compilers.yaml`` file.  You can then set Spack to use it by default
+by adding the following to your ``packages.yaml`` file:
+
+..code-block:: yaml
+
+    packages:
+      all:
+        compiler: [gcc@4.9.3]
+
 
 .. note::
 
-    If you are building your own compiler, it can be useful to have a
+    If you are building your own compiler, some users prefer to have a
     Spack instance just for that.  For example, create a new Spack in
     ``~/spack-tools`` and then run ``~/spack-tools/bin/spack install
     gcc@4.9.3``.  Once the compiler is built, don't build anything
     more in that Spack instance; instead, create a new "real" Spack
     instance, configure Spack to use the compiler you've just built,
     and then build your application software in the new Spack
-    instance.
-
-    This tip is useful because sometimes you will find yourself
-    rebuilding may pacakges due to Spack updates.  Sometimes, you
-    might even delete your entire Spack installation and start fresh.
-    If your compiler was built in a separate Spack installation, you
-    will never have to rebuild it --- as long as you wish to continue
-    using that version of the compiler.
+    instance.  Following this tips makes it easy to delete all your
+    Spack packages *except* the compiler.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -333,7 +335,7 @@ Compilers Requiring Modules
 Many installed compilers will work regardless of the environment they
 are called with.  However, some installed compilers require
 ``$LD_LIBRARY_PATH`` or other environment variables to be set in order
-to run; this is typcial for Intel and other proprietary compilers
+to run; this is typical for Intel and other proprietary compilers.
 
 In such a case, you should tell Spack which module(s) to load in order
 to run the chosen compiler (If the compiler does not come with a
@@ -394,65 +396,64 @@ compiler is used for all languages.
 
 In some cases, this is not possible.  For example, starting with
 Macintosh OS X El Capitan (10.11), many packages no longer build with
-GCC, but XCode provies no Fortran compilers.  The user is therefore
+GCC, but XCode provides no Fortran compilers.  The user is therefore
 forced to use a mixed toolchain: the XCode-provided Clang is used for
 C/C++ code, but GNU ``gfortran`` is used for Fortran code.
 
-Follows are instructions on how to hack together hack together
+Follows are instructions on how to hack together
 ``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
 should work for other mixed toolchain needs.
 
 #. Edit ``compilers.yaml``:
 
-.. code-block:: yaml
+   .. code-block:: yaml
 
-    compilers:
-      darwin-x86_64:
-        clang@7.3.0-apple:
-          cc: /usr/bin/clang
-          cxx: /usr/bin/clang++
-          f77: /path/to/bin/gfortran
-          fc: /path/to/bin/gfortran
+       compilers:
+         darwin-x86_64:
+           clang@7.3.0-apple:
+             cc: /usr/bin/clang
+             cxx: /usr/bin/clang++
+             f77: /path/to/bin/gfortran
+             fc: /path/to/bin/gfortran
 
 #. Create a symlink inside ``clang`` environement:
 
-.. code-block:: console
+   .. code-block:: console
 
-    $ cd $SPACK_ROOT/lib/spack/env/clang
-    $ ln -s ../cc gfortran
+       $ cd $SPACK_ROOT/lib/spack/env/clang
+       $ ln -s ../cc gfortran
 
 
 #. Patch ``clang`` compiler file:
 
+   .. code-block:: console
 
-.. code-block:: console
-
-    $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
-    index e406d86..cf8fd01 100644
-    --- a/lib/spack/spack/compilers/clang.py
-    +++ b/lib/spack/spack/compilers/clang.py
-    @@ -35,17 +35,17 @@ class Clang(Compiler):
-         cxx_names = ['clang++']
-     
-         # Subclasses use possible names of Fortran 77 compiler
-    -    f77_names = []
-    +    f77_names = ['gfortran']
-     
-         # Subclasses use possible names of Fortran 90 compiler
-    -    fc_names = []
-    +    fc_names = ['gfortran']
-     
-         # Named wrapper links within spack.build_env_path
-         link_paths = { 'cc'  : 'clang/clang',
-                        'cxx' : 'clang/clang++',
-                        # Use default wrappers for fortran, in case provided in compilers.yaml
-    -                   'f77' : 'f77',
-    -                   'fc'  : 'f90' }
-    +                   'f77' : 'clang/gfortran',
-    +                   'fc'  : 'clang/gfortran' }
-     
-         @classmethod
-         def default_version(self, comp):
+       $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
+       index e406d86..cf8fd01 100644
+       --- a/lib/spack/spack/compilers/clang.py
+       +++ b/lib/spack/spack/compilers/clang.py
+       @@ -35,17 +35,17 @@ class Clang(Compiler):
+            cxx_names = ['clang++']
+        
+            # Subclasses use possible names of Fortran 77 compiler
+       -    f77_names = []
+       +    f77_names = ['gfortran']
+        
+            # Subclasses use possible names of Fortran 90 compiler
+       -    fc_names = []
+       +    fc_names = ['gfortran']
+        
+            # Named wrapper links within spack.build_env_path
+            link_paths = { 'cc'  : 'clang/clang',
+                           'cxx' : 'clang/clang++',
+                           # Use default wrappers for fortran, in case provided in compilers.yaml
+       -                   'f77' : 'f77',
+       -                   'fc'  : 'f90' }
+       +                   'f77' : 'clang/gfortran',
+       +                   'fc'  : 'clang/gfortran' }
+        
+            @classmethod
+            def default_version(self, comp):
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
@@ -461,9 +462,9 @@ Compiler Verification
 You can verify that your compilers are configured properly by installing a
 simple package.  For example:
 
-.. code-block:: sh
+.. code-block:: console
 
-    spack install zlib%gcc@5.3.0
+    $ spack install zlib%gcc@5.3.0
 
 --------------------------------------
 Vendor-Specific Compiler Configuration
@@ -526,13 +527,13 @@ configuration in ``compilers.yaml`` illustrates this technique:
 
     .. note::
 
-        The version number on the Intel compiler is a combination of
-        the "native" Intel version number and the GNU compiler it is
-        targeting.
+       The version number on the Intel compiler is a combination of
+       the "native" Intel version number and the GNU compiler it is
+       targeting.
 
     .. warning::
 
-        This solution has not yet been tested.  Details may vary.
+       This solution has not yet been tested.  Details may vary.
 
 """"""""""""""""""""""""""
 Command Line Configuration
@@ -588,7 +589,7 @@ work<https://github.com/LLNL/spack/issues/590>`.
 PGI
 ^^^
 
-PGI comes with two sets of comilers for C++ and Fortran,
+PGI comes with two sets of compilers for C++ and Fortran,
 distinguishable by their names.  "Old" compilers:
 
 .. code-block:: yaml
@@ -609,23 +610,38 @@ distinguishable by their names.  "Old" compilers:
 
 Older installations of PGI contains just the old compilers; whereas
 newer installations contain the old and the new.  The new compiler is
-considered preferable, as there are results that some packages
+considered preferable, as some packages
 (``hdf4``) will not build with the old compiler.
 
 When auto-detecting a PGI compiler, there are cases where Spack will
 find the old compilers, when you really want it to find the new
-compilers.  It is best to check this ``comilers.yaml``; and if the old
+compilers.  It is best to check this ``compilers.yaml``; and if the old
 compilers are being used, change ``pgf77`` and ``pgf90`` to
 ``pgfortran``.
 
 Other issues:
 
 * There are reports that some packages will not build with PGI,
-  including ``libpciaccess`` and ``openssl``.
+  including ``libpciaccess`` and ``openssl``.  A workaround is to
+  build these packages with another compiler and then use them as
+  dependencies for PGI-build packages.  For example:
+
+  .. code-block:: console
+
+     $ spack install openmpi%pgi ^libpciaccess%gcc
 
 
 * PGI requires a license to use; see :ref:`licensed-compilers` for more
   information on installation.
+
+.. note::
+
+   It is believed the problem with ``hdf4`` is that everything is
+   compiled with the ``F77`` compiler, but at some point some Fortran
+   90 code slipped in there. So compilers that can handle both FORTRAN
+   77 and Fortran 90 (``gfortran``, ``pgfortran``, etc) are fine.  But
+   compilers specific to one or the other (``pgf77``, ``pgf90``) won't
+   work.
 
 
 ---------------
@@ -645,7 +661,7 @@ an OpenMPI installed in /opt/local, one would use:
                 openmpi@1.10.1: /opt/local
             buildable: False
 
-In general, Spack is easier to use and more reliable if it builds all
+In general, Spack is easier to use and more reliable if it builds all of
 its own dependencies.  However, there are two packages for which one
 commonly needs to use system versions:
 
@@ -668,8 +684,8 @@ OpenSSL
 ^^^^^^^
 
 The ``openssl`` package underlies much of modern security in a modern
-OS; an attacker can easily "pwn" any computer on which can modify SSL.
-Therefore, any `openssl` used on a system should be created in a
+OS; an attacker can easily "pwn" any computer on which they can modify SSL.
+Therefore, any ``openssl`` used on a system should be created in a
 "trusted environment" --- for example, that of the OS vendor.
 
 OpenSSL is also updated by the OS vendor from time to time, in
@@ -683,11 +699,13 @@ users generally keep up-to-date on the latest security holes in SSL.
 For these reasons, any Spack-installed OpenSSL should be considered
 untrusted.
 
-As long as the system-provided SSL works, it is better to use it.  One can check if it works by trying to download an ``https://``.  For example:
+As long as the system-provided SSL works, it is better to use it.  One
+can check if it works by trying to download an ``https://``.  For
+example:
 
-.. code-block:: sh
+.. code-block:: console
 
-    curl -O https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz
+    $ curl -O https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz
 
 As long as it works, the recommended way to tell Spack to use the
 system-supplied OpenSSL is to add the following to ``packages.yaml``.
@@ -748,7 +766,7 @@ cases is somewhat different, and is treated separately below.
 Core Spack Utilities
 ^^^^^^^^^^^^^^^^^^^^
 
-Core Spack uses the following packages, aminly to download and unpack
+Core Spack uses the following packages, mainly to download and unpack
 source code, and to load generated environment modules: ``curl``,
 ``env``, ``git``, ``go``, ``hg``, ``svn``, ``tar``, ``unzip``,
 ``patch``, ``environment-modules``.
@@ -778,14 +796,14 @@ until a new cURL has been installed, using the technique above.
     ``curl`` depends on ``openssl`` and ``zlib``, both of which are
     downloadable from non-SSL sources.  Unfortunately, this
     Spack-built cURL should be considered untrustworthy for
-    ``https://`` sources becuase it relies on an OpenSSL built in user
+    ``https://`` sources because it relies on an OpenSSL built in user
     space.  Luckily, Spack verifies checksums of the software it
     installs, and does not rely on a secure SSL implementation.
 
     If your version of ``curl`` is not trustworthy, then you should
     *not* use it outside of Spack.  Instead of putting it in your
     ``.bashrc``, you might wish to create a short shell script that
-    loads the appropariate module(s) and then launches Spack.
+    loads the appropriate module(s) and then launches Spack.
 
 Some packages use source code control systems as their download
 method: ``git``, ``hg``, ``svn`` and occasionally ``go``.  If you had
@@ -808,38 +826,39 @@ For example: """yum install environment-modules``
 (Fedora/RHEL/CentOS).  If your Linux distribution does not have
 Environment Modules, you can get it with Spack:
 
-1. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
-    # Identify its location using ``which tclsh``
-    # Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
-    # Add to ``~/.spack/packages.yaml`` and modify as appropriate:
+#. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
+   #) Identify its location using ``which tclsh``
+   #) Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
+   #) Add to ``~/.spack/packages.yaml`` and modify as appropriate:
 
-       .. code-block:: yaml
+      .. code-block:: yaml
 
-           packages:
-               tcl:
-                   paths:
-                       tcl@8.5: /usr
-                   version: [8.5]
-                   buildable: False
+         packages:
+             tcl:
+                 paths:
+                     tcl@8.5: /usr
+                 version: [8.5]
+                 buildable: False
 
-2. Install with::
+#. Install with:
+
    .. code-block:: console
 
-       $ spack install environment-modules
+      $ spack install environment-modules
 
-3. Activate with the following script (or apply the updates to your
-   ``.bashrc`` file manually)::
+#. Activate with the following script (or apply the updates to your
+   ``.bashrc`` file manually):
 
    .. code-block:: sh
 
-       TMP=`tempfile`
-       echo >$TMP
-       MODULE_HOME=`spack location -i environment-modules`
-       MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-       ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-       cp .bashrc $TMP
-       echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-       cat $TMP >>.bashrc
+      TMP=`tempfile`
+      echo >$TMP
+      MODULE_HOME=`spack location -i environment-modules`
+      MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
+      ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
+      cp .bashrc $TMP
+      echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
+      cat $TMP >>.bashrc
 
 This adds to your ``.bashrc`` (or similar) files, enabling Environment
 Modules when you log in.  Re-load your .bashrc (or log out and in
@@ -847,7 +866,7 @@ again), and then test that the ``module`` command is found with:
 
 .. code-block:: console
 
-    $ module avail
+   $ module avail
 
 
 ^^^^^^^^^^^^^^^^^
@@ -861,8 +880,8 @@ package's dependencies, but none of the environment Spack inherited
 from the user: if you load a module or modify ``$PATH`` before
 launching Spack, it will have no effect.
 
-In this case, you will likley need to use the ``--dirty`` flag when
-running ``spack install``, causing Spack to **not** santize the build
+In this case, you will likely need to use the ``--dirty`` flag when
+running ``spack install``, causing Spack to **not** sanitize the build
 environment.  You are now responsible for making sure that environment
 does not do strange things to Spack or its installs.
 
@@ -885,7 +904,7 @@ binutils
 .. https://groups.google.com/forum/#!topic/spack/i_7l_kEEveI
 
 Sometimes, strange error messages can happen while building a package.
-For exmaple, ``ld`` might crash.  Or one receives a message like:
+For example, ``ld`` might crash.  Or one receives a message like:
 
 .. code-block::
 
@@ -1037,3 +1056,5 @@ for each compiler type for each cray modules. This ensures that for each
 compiler on our system we can use that external module.
 
 For more on external packages check out the section :ref:`sec-external_packages`.
+
+ LocalWords:  github

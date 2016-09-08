@@ -8,7 +8,7 @@ those packages.  For example, one might use Spack to build the
 `netcdf` package, use `spack load` to run the `ncdump` binary, and
 finally, write a small C program to read/write a particular NetCDF file.
 
-Spack supports a variety of workflows to suit a variety of situaions
+Spack supports a variety of workflows to suit a variety of situations
 and user preferences, there is no single way to do all these things.
 This chapter demonstrates different workflows that have been
 developed, pointing out the pros and cons of them.
@@ -123,11 +123,11 @@ variants, versions and virtual dependency choices may be needed.  It
 command line; however, the same choices must be specified repeatedly.
 For example, if you wish to use ``openmpi`` to satisfy the ``mpi``
 dependency, then ``^openmpi`` will have to appear on *every* ``spack
-install`` line that uses MPI.  It can get repetitve fast.
+install`` line that uses MPI.  It can get repetitive fast.
 
-Custimizing Spack installation options is easier to do in the
+Customizing Spack installation options is easier to do in the
 ``~/.spack/packages.yaml`` file.  In this file, you can specify
-preferred versions and variants to use for packages.  For exmaple:
+preferred versions and variants to use for packages.  For example:
 
 .. code-block:: yaml
 
@@ -168,7 +168,7 @@ In the meantime, one could write shell scripts to switch
 ``packages.yaml`` between multiple versions as needed, using symlinks.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Combinatorial Sets of Installas
+Combinatorial Sets of Installs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Suppose that you are now tasked with systematically building many
@@ -185,7 +185,7 @@ Running Binaries from Packages
 ------------------------------
 
 Once Spack packages have been built, the next step is to use them.  As
-with buiding packages, there are many ways to use them, depending on
+with building packages, there are many ways to use them, depending on
 the use case.
 
 ^^^^^^^^^^^^
@@ -209,7 +209,7 @@ Standard UNIX tools can find binaries as well.  For example:
     $ find ~/spack2/opt -name cmake | grep bin
     /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
 
-These methods are suiteable, for example, for setting up build
+These methods are suitable, for example, for setting up build
 processes or GUIs that need to know the location of particular tools.
 However, other more powerful methods are generally preferred for user
 environments.
@@ -244,7 +244,7 @@ have some drawbacks:
    sophisticated concretization algorithm that chooses the "best"
    among several options, taking into account ``packages.yaml`` file.
    The ``spack load`` and ``spack module loads`` commands, on the
-   other thand, are not very smart: if the user-supplied spec matches
+   other hand, are not very smart: if the user-supplied spec matches
    more than one installed package, then ``spack module loads`` will
    fail. This may change in the future.  For now, the workaround is to
    be more specific on any ``spack module loads`` lines that fail.
@@ -341,7 +341,7 @@ some nice features:
     Spack-built compiler can be given to an IDE without requiring the
     IDE to load that compiler's module.
 
-Unfortunately, Spacks' RPATH support does not work in all case.  For example:
+Unfortunately, Spack's RPATH support does not work in all case.  For example:
 
  1. Software comes in many forms --- not just compiled ELF binaries,
     but also as interpreted code in Python, R, JVM bytecode, etc.
@@ -355,7 +355,7 @@ Unfortunately, Spacks' RPATH support does not work in all case.  For example:
     ``LD_LIBRARY_PATH``.`
 
  3. In some cases, Spack-generated binaries end up without a
-    functional RPATH for no discernable reason.
+    functional RPATH for no discernible reason.
 
 In cases where RPATH support doesn't make things "just work," it can
 be necessary to load a module's dependencies as well as the module
@@ -597,7 +597,7 @@ environments:
 * Views and activated extensions maintain state that is semantically
   equivalent to the information in a ``spack module loads`` script.
   Administrators might find things easier to maintain without the
-  added "heavyweight" state of a veiw.
+  added "heavyweight" state of a view.
 
 ==============================
 Developing Software with Spack
@@ -621,7 +621,7 @@ approach, while obvious, has some serious drawbacks:
 
 3. At its core, Spack is a sophisticated concretization algorithm that
    matches up packages with appropriate dependencies and creates a
-   *consistent* environment for the pacakge it's building.  Writing a
+   *consistent* environment for the package it's building.  Writing a
    list of ``spack load`` commands for your dependencies is at least
    as hard as writing the same list of ``depends_on()`` declarations
    in a Spack package.  But it makes no use of Spack concretization
@@ -726,7 +726,7 @@ Write the Spack Package
 The Spack package also needs to be written, in tandem with setting up
 the build (for example, CMake).  The most important part of this task
 is declaring dependencies.  Here is an example of the Spack package
-for the ``mylib`` package (elipses for brevity):
+for the ``mylib`` package (ellipses for brevity):
 
 .. code-block:: python
 
@@ -774,11 +774,11 @@ used for development:
    ``configure_args()`` method.  That method should return the
    arguments needed for the ``cmake`` command (beyond the standard
    CMake arguments, which Spack will include already).  These
-   areguments are typically used to turn features on/off in the build.
+   arguments are typically used to turn features on/off in the build.
 
 2. It specifies a non-checksummed version ``develop``.  Running
    ``spack install mylib@develop`` the ``@develop`` version will
-   install the latest verison off the develop branch.  This method of
+   install the latest version off the develop branch.  This method of
    download is useful for the developer of a project while it is in
    active development; however, it should only be used by developers
    who control and trust the repository in question!
@@ -860,7 +860,7 @@ Note that auto-built software has now been installed *on top of*
 manually-built software, without breaking Spack's "web."  This
 property is useful if you need to debug a package deep in the
 dependency hierarchy of your application.  It is a *big* advantage of
-using ``spack setup`` to build your package's envrionment.
+using ``spack setup`` to build your package's environment.
 
 If you feel your software is stable, you might wish to install it with
 ``spack install`` and skip the source directory.  You can just use,
@@ -958,7 +958,7 @@ Spack is the best way to install it:
 #. Be aware that your users might encounter unexpected bootstrapping
    issues on their machines, especially they are running on older
    systems.  The :ref:`getting_started` section should cover this, but
-   there could alays be issues.
+   there could always be issues.
 
 -------------------
 Other Build Systems
@@ -1017,7 +1017,7 @@ with hdf5@1.10<https://github.com/LLNL/spack/issues/1683>_`.  If the
 old version of ``hdf5`` will work with ``adios``, the suggest
 procedure is:
 
-#. Revert ``adios`` to the old verison of ``hdf5``.  Put in its
+#. Revert ``adios`` to the old version of ``hdf5``.  Put in its
    ``adios/package.py``:
 
    .. code-block::
@@ -1142,7 +1142,7 @@ Advantages:
 Disadvantages:
 
  1. It is harder to develop and debug a patch, vs. a branch in a
-    respository.  The user loses the automation provided by version
+    repository.  The user loses the automation provided by version
     control systems.
 
  2. Although patches of a few lines work OK, large patch files can be

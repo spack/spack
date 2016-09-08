@@ -264,7 +264,7 @@ the tarballs in question to it (see :ref:`mirrors`):
          manual: file:///home/me/.spack/manual_mirror
 
 #. Put your tarballs in it.  Tarballs should be named
-   ``<package>/<pacakge>-<version>.tar.gz``.  For example:
+   ``<package>/<package>-<version>.tar.gz``.  For example:
 
    .. code-block:: console
 
@@ -1109,7 +1109,7 @@ An equivalent alternative is:
 Module Commands for Shell Scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Although Spack is flexbile, the ``module`` command is much faster.
+Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
 commands inside a shell script.  By adding the ``--shell`` flag,
 ``spack module find`` may also be used to generate code that can be
@@ -1175,16 +1175,6 @@ For example, consider the following on one system:
     $ spack module loads --prefix linux-SuSE11-x86_64/ antlr
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
     module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Regenerating Module files
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Module and dotkit files are generated when packages are installed, and
-are placed in the directory ``share/spack/modules`` under the Spack
-root.  The command ``spack refresh`` will regenerate them all without
-re-building the packages; for example, if module format or options
-have changed.
 
 ^^^^^^^^^^^^^^^^^^^
 Configuration files
@@ -1349,23 +1339,14 @@ load two or more versions of the same software at the same time.
    The ``conflict`` option is ``tcl`` specific
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-Regenerating module files
+Regenerating Module files
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes you may need to regenerate the modules files.  For example,
-if newer, fancier module support is added to Spack at some later date,
-you may want to regenerate all the modules to take advantage of these
-new features.
-
-.. _spack-module:
-
-""""""""""""""""""""""""
-``spack module refresh``
-""""""""""""""""""""""""
-
-Running ``spack module refresh`` will remove the
-``share/spack/modules`` and ``share/spack/dotkit`` directories, then
-regenerate all module and dotkit files from scratch:
+Module and dotkit files are generated when packages are installed, and
+are placed in the directory ``share/spack/modules`` under the Spack
+root.  The command ``spack refresh`` will regenerate them all without
+re-building the packages; for example, if module format or options
+have changed:
 
 .. code-block:: console
 
