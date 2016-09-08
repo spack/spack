@@ -1041,11 +1041,6 @@ of module files:
        """Set up the compile and runtime environments for a package."""
        pass
 
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Regenerating Module files
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
 .. code-block:: python
 
    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
