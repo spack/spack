@@ -43,11 +43,15 @@ class Qthreads(Package):
     # url = "https://qthreads.googlecode.com/files/qthread-1.10.tar.bz2"
     # version('1.10', '5af8c8bbe88c2a6d45361643780d1671')
 
-    # Temporarily install from a git branch
-    url = "https://github.com/Qthreads/qthreads"
-    version("1.10",
-            git="https://github.com/Qthreads/qthreads",
-            branch="release-1.10")
+    # # Temporarily install from a git branch
+    # url = "https://github.com/Qthreads/qthreads"
+    # version("1.10",
+    #         git="https://github.com/Qthreads/qthreads",
+    #         branch="release-1.10")
+
+    url = "https://github.com/Qthreads/qthreads/archive/1.10.tar.gz"
+
+    version("1.10", "34e8e6b4572c224c16a94f309da1be21")
 
     # patch("ldflags.patch")
     patch("restrict.patch")
