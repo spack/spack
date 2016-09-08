@@ -7,7 +7,7 @@ SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
 
-export PYTHONPATH = ../../spack
+export PYTHONPATH := ../../spack:$(PYTHONPATH)
 APIDOC_FILES  = spack*.rst
 
 # Internal variables.
