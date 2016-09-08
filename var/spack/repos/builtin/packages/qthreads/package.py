@@ -56,13 +56,13 @@ class Qthreads(Package):
     patch("restrict.patch")
     patch("trap.patch")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
+    # depends_on("autoconf", type="build")
+    # depends_on("automake", type="build")
     depends_on("hwloc")
 
     def install(self, spec, prefix):
-        autogen = Executable("./autogen.sh")
-        autogen()
+        # autogen = Executable("./autogen.sh")
+        # autogen()
         configure("--prefix=%s" % prefix,
                   "--enable-guard-pages",
                   "--with-topology=hwloc",
