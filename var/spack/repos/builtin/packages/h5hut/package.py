@@ -44,6 +44,8 @@ class H5hut(Package):
     depends_on("automake", type="build")
     depends_on("hdf5 +mpi", when="+mpi")
     depends_on("hdf5 @1.8:")
+    # h5hut +mpi uses the obsolete function H5Pset_fapl_mpiposix:
+    depends_on("hdf5 @:1.8.12", when="+mpi")
     depends_on("libtool", type="build")
     depends_on("mpi", when="+mpi")
 
@@ -57,7 +59,12 @@ class H5hut(Package):
                     "Cannot build Fortran variant without a Fortran compiler")
             configopts.append("--enable-fortran")
         if "+mpi" in spec:
-            configopts.append("--enable-parallel")
+            configopts.extend([
+                "--enable-parallel",
+                "CC=%s" % spec["mpi"].mpicc,
+                "CXX=%s" % spec["mpi"].mpicxx])
+            if "+fortran" in spec:
+                configopts.append("FC=%s" % spec["mpi"].mpifc)
         configure(*configopts)
 
         make()
