@@ -27,8 +27,7 @@ from spack import *
 
 
 class H5hut(Package):
-    """
-    H5hut (HDF5 Utility Toolkit)
+    """H5hut (HDF5 Utility Toolkit)
     High-Performance I/O Library for Particle-based Simulations
     """
 
