@@ -50,20 +50,19 @@ class Qthreads(Package):
     #         branch="release-1.10")
 
     url = "https://github.com/Qthreads/qthreads/archive/1.10.tar.gz"
-
     version("1.10", "34e8e6b4572c224c16a94f309da1be21")
 
     # patch("ldflags.patch")
     patch("restrict.patch")
     patch("trap.patch")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
+    # depends_on("autoconf", type="build")
+    # depends_on("automake", type="build")
     depends_on("hwloc")
 
     def install(self, spec, prefix):
-        autogen = Executable("./autogen.sh")
-        autogen()
+        # autogen = Executable("./autogen.sh")
+        # autogen()
         configure("--prefix=%s" % prefix,
                   "--enable-guard-pages",
                   "--with-topology=hwloc",
