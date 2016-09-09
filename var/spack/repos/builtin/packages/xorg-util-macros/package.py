@@ -34,6 +34,6 @@ class XorgUtilMacros(Package):
     version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        configure('--prefix={0}'.format(prefix))
+
+        make('install')

@@ -29,14 +29,15 @@ class Xproto(Package):
     """The Xorg protocol headers provide the header files required to
        build the system, and to allow other applications to build against
        the installed X Window system."""
+
     homepage = "http://www.x.org/"
     url      = "https://www.x.org/archive//individual/proto/xproto-7.0.29.tar.gz"
 
     version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
 
-    depends_on("xorg-util-macros")
+    depends_on('xorg-util-macros')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+        configure('--prefix={0}'.format(prefix))
+
+        make('install')

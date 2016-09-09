@@ -34,14 +34,18 @@ class Libxcb(Package):
     homepage = "http://xcb.freedesktop.org/"
     url      = "http://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
 
+    version('1.12', '95eee7c28798e16ba5443f188b27a476')
     version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
     version('1.11.1', '118623c15a96b08622603a71d8789bf3')
 
-    depends_on("python", type='build')
-    depends_on("xcb-proto")
-    depends_on("pkg-config", type='build')
-    depends_on("libpthread-stubs")
+    depends_on('pkg-config@0.15.0:', type='build')
+    depends_on('python@2:2.8', type='build')
+    depends_on('gperf@3.0.1:')
+
+    # Xorg modules
     depends_on('libxau')
+    depends_on('xcb-proto')
+    depends_on('libpthread-stubs')
 
     def patch(self):
         filter_file(
@@ -50,9 +54,10 @@ class Libxcb(Package):
             'src/xcb.h')
 
     def install(self, spec, prefix):
-        env['PKG_CONFIG_PATH'] = env[
-            'PKG_CONFIG_PATH'] + ':/usr/lib64/pkgconfig'
-        configure("--prefix=%s" % prefix)
+        env['PKG_CONFIG_PATH'] += ':/usr/lib64/pkgconfig'
+
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('check')
+        make('install')

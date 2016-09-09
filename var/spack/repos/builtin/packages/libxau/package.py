@@ -29,6 +29,7 @@ class Libxau(Package):
     """The libXau package contains a library implementing the X11
        Authorization Protocol. This is useful for restricting client
        access to the display."""
+
     homepage = "http://xcb.freedesktop.org/"
     url      = "http://ftp.x.org/pub/individual/lib/libXau-1.0.8.tar.bz2"
 
@@ -38,7 +39,8 @@ class Libxau(Package):
     depends_on('pkg-config', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('check')
+        make('install')

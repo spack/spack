@@ -25,22 +25,17 @@
 from spack import *
 
 
-class Gperf(Package):
-    """GNU gperf is a perfect hash function generator. For a given
-    list of strings, it produces a hash function and hash table, in
-    form of C or C++ code, for looking up a value depending on the
-    input string. The hash function is perfect, which means that the
-    hash table has no collisions, and the hash table lookup needs a
-    single string comparison only."""
+class PyPy(Package):
+    """library with cross-python path, ini-parsing, io, code, log facilities"""
 
-    homepage = "https://www.gnu.org/software/gperf/"
-    url      = "http://ftp.gnu.org/pub/gnu/gperf/gperf-3.0.4.tar.gz"
+    homepage = "http://pylib.readthedocs.io/en/latest/"
+    url      = "https://pypi.python.org/packages/source/p/py/py-1.4.31.tar.gz"
 
-    version('3.0.4', 'c1f1db32fb6598d6a93e6e88796a8632')
+    version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
+
+    extends('python')
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        # make('check')  # fails tests
-        make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))

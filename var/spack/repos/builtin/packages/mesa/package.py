@@ -30,28 +30,28 @@ class Mesa(Package):
     specification - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "ftp://ftp.freedesktop.org/pub/mesa/older-versions/8.x/8.0.5/MesaLib-8.0.5.tar.gz"
+    url      = "ftp://ftp.freedesktop.org/pub/mesa/12.0.2/mesa-12.0.2.tar.gz"
 
-    # version('10.4.4', '8d863a3c209bf5116b2babfccccc68ce')
-    version('8.0.5', 'cda5d101f43b8784fa60bdeaca4056f2')
+    version('12.0.2', 'e9e4b430288e343b5f5310eb559c9858')
 
-    # mesa 7.x, 8.x, 9.x
-    depends_on("libdrm@2.4.33")
-    depends_on("llvm@3.0")
-    depends_on("libxml2+python")
+    # General dependencies
+    depends_on('python@2.6.4:')
+    depends_on('py-mako@0.3.4:')
+    depends_on('flex@2.5.35:', type='build')
+    depends_on('bison@2.4.1:', type='build')
 
-    # patch("llvm-fixes.patch") # using newer llvm
-
-    # mesa 10.x
-    # depends_on("py-mako")
-    # depends_on("flex", type='build')
-    # depends_on("bison", type='build')
-    # depends_on("dri2proto")
-    # depends_on("libxcb")
-    # depends_on("libxshmfence")
+    # For DRI and hardware acceleration
+    depends_on('dri2proto@2.6:')
+    depends_on('dri3proto@1.0:')
+    depends_on('glproto@1.4.14:')
+    depends_on('presentproto@1.0:')
+    depends_on('libdrm@2.4.66:')
+    depends_on('libxcb@1.9.3:')
+    depends_on('libxshmfence@1.1:')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('check')
+        make('install')

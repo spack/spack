@@ -25,22 +25,15 @@
 from spack import *
 
 
-class Gperf(Package):
-    """GNU gperf is a perfect hash function generator. For a given
-    list of strings, it produces a hash function and hash table, in
-    form of C or C++ code, for looking up a value depending on the
-    input string. The hash function is perfect, which means that the
-    hash table has no collisions, and the hash table lookup needs a
-    single string comparison only."""
+class Damageproto(Package):
+    """Damage extension protocol specification and header files."""
 
-    homepage = "https://www.gnu.org/software/gperf/"
-    url      = "http://ftp.gnu.org/pub/gnu/gperf/gperf-3.0.4.tar.gz"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/damageproto"
+    url      = "https://www.x.org/releases/individual/proto/damageproto-1.2.1.tar.gz"
 
-    version('3.0.4', 'c1f1db32fb6598d6a93e6e88796a8632')
+    version('1.2.1', 'bf8c47b7f48625230cff155180f8ddce')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
-        make()
-        # make('check')  # fails tests
         make('install')

@@ -25,22 +25,19 @@
 from spack import *
 
 
-class Gperf(Package):
-    """GNU gperf is a perfect hash function generator. For a given
-    list of strings, it produces a hash function and hash table, in
-    form of C or C++ code, for looking up a value depending on the
-    input string. The hash function is perfect, which means that the
-    hash table has no collisions, and the hash table lookup needs a
-    single string comparison only."""
+class PyPytest(Package):
+    """pytest: simple powerful testing with Python."""
 
-    homepage = "https://www.gnu.org/software/gperf/"
-    url      = "http://ftp.gnu.org/pub/gnu/gperf/gperf-3.0.4.tar.gz"
+    homepage = "http://doc.pytest.org/en/latest/"
+    url      = "https://pypi.python.org/packages/source/p/pytest/pytest-3.0.2.tar.gz"
 
-    version('3.0.4', 'c1f1db32fb6598d6a93e6e88796a8632')
+    version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5',
+            url="https://pypi.python.org/packages/2b/05/e20806c99afaff43331f5fd8770bb346145303882f98ef3275fa1dd66f6d/pytest-3.0.2.tar.gz")
+
+    extends('python')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-py@1.4.29:', type=nolink)
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        # make('check')  # fails tests
-        make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))
