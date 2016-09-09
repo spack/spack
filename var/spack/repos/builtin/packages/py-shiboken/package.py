@@ -64,6 +64,6 @@ class PyShiboken(Package):
             'shiboken_postinstall.py')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install',
+        setup_py('install',
                '--prefix=%s' % prefix,
                '--jobs=%s' % make_jobs)
