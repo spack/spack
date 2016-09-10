@@ -471,7 +471,7 @@ class Package(object):
         version: class Version
             The version for which a URL is sought.
 
-        @see Class Version (version.py)
+        See Class Version (version.py)
         """
         if not isinstance(version, Version):
             version = Version(version)
