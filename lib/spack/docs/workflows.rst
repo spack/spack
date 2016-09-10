@@ -224,7 +224,7 @@ programs, which users now wish to use.  One can in principle put a
 number of ``spack load`` commands into ``.bashrc``, for example, to
 load a set of Spack-generated modules:
 
-.. code-block::
+.. code-block:: sh
 
     spack load modele-utils
     spack load emacs
@@ -262,6 +262,7 @@ modules to load.  These can be put in a script that is run whenever
 installed Spack packages change.  For example:
 
 .. code-block:: sh
+
     #!/bin/sh
     #
     # Generate module load commands in ~/env/spackenv
@@ -1007,9 +1008,9 @@ serves a dependency to something else.  This section describes
 procedure to work around and ultimately resolve these bugs, while not
 delaying the Spack user's main goal.
 
-^^^^^^^^^^^^^^^^^
+-----------------
 Buggy New Version
-^^^^^^^^^^^^^^^^^
+-----------------
 
 Sometimes, the old version of a package works fine, but a new version
 is buggy.  For example, it was once found that `Adios did not build
@@ -1020,10 +1021,11 @@ procedure is:
 #. Revert ``adios`` to the old version of ``hdf5``.  Put in its
    ``adios/package.py``:
 
-   .. code-block::
-       # Adios does not build with HDF5 1.10
-       # See: https://github.com/LLNL/spack/issues/1683
-       depends_on('hdf5@:1.9')
+   .. code-block:: python
+
+      # Adios does not build with HDF5 1.10
+      # See: https://github.com/LLNL/spack/issues/1683
+      depends_on('hdf5@:1.9')
 
 #. Determine whether the problem is with ``hdf5`` or ``adios``, and
    report the problem to the appropriate upstream project.  In this
@@ -1032,14 +1034,16 @@ procedure is:
 #. Once a new version of ``adios`` comes out with the bugfix, modify
    ``adios/package.py`` to reflect it:
 
-       # Adios up to v1.10.0 does not build with HDF5 1.10
-       # See: https://github.com/LLNL/spack/issues/1683
-       depends_on('hdf5@:1.9', when='@:1.10.0')
-       depends_on('hdf5', when='@1.10.1:')
+   .. code-block:: python
 
-^^^^^^^^^^^^^^^^
+      # Adios up to v1.10.0 does not build with HDF5 1.10
+      # See: https://github.com/LLNL/spack/issues/1683
+      depends_on('hdf5@:1.9', when='@:1.10.0')
+      depends_on('hdf5', when='@1.10.1:')
+
+----------------
 No Version Works
-^^^^^^^^^^^^^^^^
+----------------
 
 Sometimes, *no* existing versions of a dependency work for a build.
 This typically happens when developing a new project: only then does
@@ -1067,11 +1071,12 @@ of ``py-proj/package.py`` is instructive here:
    upstream project:
 
    .. code-block:: python
-        # We need the benefits of this PR
-        # https://github.com/jswhit/pyproj/pull/54
-        version('citibeth-latlong2',
-            git='https://github.com/citibeth/pyproj.git',
-            branch='latlong2')
+
+      # We need the benefits of this PR
+      # https://github.com/jswhit/pyproj/pull/54
+      version('citibeth-latlong2',
+          git='https://github.com/citibeth/pyproj.git',
+          branch='latlong2')
 
 
 #. By May 14, the upstream project had accepted a pull request with
@@ -1084,23 +1089,25 @@ of ``py-proj/package.py`` is instructive here:
    version ``@1.9.5.1``.  This is a trusted download method, and can
    be released to the Spack community:
 
-   ..code-block:: python
+   .. code-block:: python
 
-       # This is not a tagged release of pyproj.
-       # The changes in this "version" fix some bugs, especially with Python3 use.
-       version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
-           url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
+      # This is not a tagged release of pyproj.
+      # The changes in this "version" fix some bugs, especially with Python3 use.
+      version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
+          url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
 
    .. note::
-       It would have been simpler to use Spack's Git download method,
-       which is also a trusted download in this case:
 
-       ..code-block:: python
-           # This is not a tagged release of pyproj.
-           # The changes in this "version" fix some bugs, especially with Python3 use.
-           version('1.9.1.1',
-                git='https://github.com/jswhit/pyproj.git',
-                commit='0be612cc9f972e38b50a90c946a9b353e2ab140f')
+      It would have been simpler to use Spack's Git download method,
+      which is also a trusted download in this case:
+
+      .. code-block:: python
+
+         # This is not a tagged release of pyproj.
+         # The changes in this "version" fix some bugs, especially with Python3 use.
+         version('1.9.1.1',
+              git='https://github.com/jswhit/pyproj.git',
+              commit='0be612cc9f972e38b50a90c946a9b353e2ab140f')
 
    .. note::
 
@@ -1125,9 +1132,9 @@ of ``py-proj/package.py`` is instructive here:
    bugfix, then the unofficial ``version()`` line should be removed
    from the Spack package.
 
-^^^^^^^
+-------
 Patches
-^^^^^^^
+-------
 
 Spack's source patching mechanism provides another way to fix bugs in
 upstream projects.  This has advantages and disadvantages compared to the procedures above.

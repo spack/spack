@@ -906,7 +906,7 @@ binutils
 Sometimes, strange error messages can happen while building a package.
 For example, ``ld`` might crash.  Or one receives a message like:
 
-.. code-block::
+.. code-block:: console
 
     ld: final link failed: Nonrepresentable section on output
 

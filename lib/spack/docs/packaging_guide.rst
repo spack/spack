@@ -1524,7 +1524,7 @@ symbolically linked into the prefix of the python package.
 
 Some packages produce a Python extension, but are only compatible with
 Python 3, or with Python 2.  In those cases, a ``depends_on()``
-declaration should be made in addition to the ``extends()`
+declaration should be made in addition to the ``extends()``
 declaration:
 
 .. code-block:: python
