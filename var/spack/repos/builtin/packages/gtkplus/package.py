@@ -30,6 +30,7 @@ class Gtkplus(Package):
        interfaces for applications."""
     homepage = "http://www.gtk.org"
 
+    version('2.24.31', '526a1008586094a2cbb4592fd3f9ee10')
     version(
         '2.24.25', '612350704dd3aacb95355a4981930c6f',
         url="http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.25.tar.xz")
