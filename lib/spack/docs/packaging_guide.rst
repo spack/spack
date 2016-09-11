@@ -425,17 +425,22 @@ Package Version Numbers
 -----------------------
 
 Most Spack versions are numeric, a tuple of integers; for example,
-``windows@3.1`` or ``myprojet@1.9.5.2``.  Spack knows how to compare
-and sort numeric versions.
+``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
+how to compare and sort numeric versions.
 
-Spack versions may also be non-numeric; any string here will suffice;
-for example, ``@develop``, ``@master``, ``@local``.  The following
-rules determine the sort order of numeric vs. non-numeric versions:
+Some Spack versions involve slight extensions of numeric syntax; for
+example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
+always considered to be "newer" than letters.  This is for consistency
+with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`.
 
-#. Non-numeric versions starting with ``@develop`` are considered
-   greatest, and are sorted alphabetically.
+Spack versions may also be arbitrary non-numeric strings; any string
+here will suffice; for example, ``@develop``, ``@master``, ``@local``.
+The following rules determine the sort order of numeric
+vs. non-numeric versions:
 
-#. Numeric versions are all less than ``@develop*`` versions, and are
+#. The non-numeric versions ``@develop`` is considered greatest (newest).
+
+#. Numeric versions are all less than ``@develop`` version, and are
    sorted numerically.
 
 #. All other non-numeric versions are less than numeric versions, and
@@ -443,7 +448,7 @@ rules determine the sort order of numeric vs. non-numeric versions:
 
 The logic behind this sort order is two-fold:
 
-#. Numeric versions are usually used for special cases while
+#. Non-numeric versions are usually used for special cases while
    developing or debugging a piece of software.  Keeping most of them
    less than numeric versions ensures that Spack choose numeric
    versions by default whenever possible.
@@ -1898,30 +1903,30 @@ Inconsistent Specs
 
 Suppose a user needs to install package C, which depends on packages A
 and B.  Package A builds a library with a Python2 extension, and
-pacakge B builds a library with a Python3 extension.  Packages A and B
+package B builds a library with a Python3 extension.  Packages A and B
 cannot be loaded together in the same Python runtime:
 
-.. code-block:: none
+.. code-block:: python
 
     class A(Package):
         variant('python', default=True, 'enable python bindings')
         depends_on('python@2.7', when='+python')
-        def patch(self):
+        def install(self):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
 
     class B(Package):
         variant('python', default=True, 'enable python bindings')
         depends_on('python@3.2:', when='+python')
-        def patch(self):
+        def install(self):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
 
 Package C needs to use the libraries from packages A and B, but does
-not need either of the Python extensions.  In this case, pacakge C
-should simply depend no the ``~python`` variant of A and B:
+not need either of the Python extensions.  In this case, package C
+should simply depend on the ``~python`` variant of A and B:
 
-.. code-block:: none
+.. code-block:: python
 
     class C(Package):
         depends_on('A~python')

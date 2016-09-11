@@ -5,7 +5,7 @@ Workflows
 The process of using Spack involves building packages, running
 binaries from those packages, and developing software that depends on
 those packages.  For example, one might use Spack to build the
-`netcdf` package, use `spack load` to run the `ncdump` binary, and
+``netcdf`` package, use ``spack load`` to run the ``ncdump`` binary, and
 finally, write a small C program to read/write a particular NetCDF file.
 
 Spack supports a variety of workflows to suit a variety of situations
@@ -35,9 +35,9 @@ instantiated from ``curl``:
 
 .. code-block:: console
 
-    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-        ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
 Spack's core concretization algorithm generates concrete specs by
 instantiating packages from its repo, based on a set of "hints",
@@ -47,10 +47,10 @@ example:
 
 .. code-block:: console
 
-    $ spack spec curl
-      curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-          ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-          ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   $ spack spec curl
+     curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
+         ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+         ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
 Every time Spack installs a package, that installation corresponds to
 a concrete spec.  Only a vanishingly small fraction of possible
@@ -67,19 +67,19 @@ variant, compiler, etc.  For example, the following set is consistent:
 
 .. code-block:: console
 
-    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-        ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
 The following set is not consistent:
 
 .. code-block:: console
 
-    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-        ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64    
+   curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64    
 
 The compatibility of a set of installed packages determines what may
 be done with it.  It is always possible to ``spack load`` any set of
@@ -108,13 +108,13 @@ again in the future.  For example:
 
 .. code-block:: sh
 
-    #!/bin/sh
-    spack install modele-utils
-    spack install emacs
-    spack install ncview
-    spack install nco
-    spack install modele-control
-    spack install py-numpy
+   #!/bin/sh
+   spack install modele-utils
+   spack install emacs
+   spack install ncview
+   spack install nco
+   spack install modele-control
+   spack install py-numpy
 
 In most cases, this script will not correctly install software
 according to your specific needs: choices need to be made for
@@ -131,25 +131,25 @@ preferred versions and variants to use for packages.  For example:
 
 .. code-block:: yaml
 
-    packages:
-        python:
-            version: [3.5.1]
-        modele-utils:
-            version: [cmake]
+   packages:
+       python:
+           version: [3.5.1]
+       modele-utils:
+           version: [cmake]
 
-        everytrace:
-            version: [develop]
-        eigen:
-            variants: ~suitesparse
-        netcdf:
-            variants: +mpi
+       everytrace:
+           version: [develop]
+       eigen:
+           variants: ~suitesparse
+       netcdf:
+           variants: +mpi
 
-        all:
-            compiler: [gcc@5.3.0]
-            providers:
-                mpi: [openmpi]
-                blas: [openblas]
-                lapack: [openblas]
+       all:
+           compiler: [gcc@5.3.0]
+           providers:
+               mpi: [openmpi]
+               blas: [openblas]
+               lapack: [openblas]
 
 
 This approach will work as long as you are building packages for just
@@ -177,7 +177,49 @@ incompatible versions of packages.  For example, you need to build
 compilers, in order to support user needs.  In this case, you will
 need to either create 9 different ``packages.yaml`` files; or more
 likely, create 9 different ``spack install`` command lines with the
-correct options in the spec.
+correct options in the spec.  Here is a real-life example of this kind
+of usage:
+
+.. code-block:: sh
+
+   #!/bin/sh
+   #
+
+   compilers=(
+       %gcc
+       %intel
+       %pgi
+   )
+
+   mpis=(
+       openmpi+psm~verbs
+       openmpi~psm+verbs
+       mvapich2+psm~mrail
+       mvapich2~psm+mrail
+       mpich+verbs
+   )
+
+   for compiler in "${compilers[@]}"
+   do
+       # Serial installs
+       spack install szip           $compiler
+       spack install hdf            $compiler
+       spack install hdf5           $compiler
+       spack install netcdf         $compiler
+       spack install netcdf-fortran $compiler
+       spack install ncview         $compiler
+
+       # Parallel installs
+       for mpi in "${mpis[@]}"
+       do
+           spack install $mpi            $compiler
+           spack install hdf5~cxx+mpi    $compiler ^$mpi
+           spack install parallel-netcdf $compiler ^$mpi
+       done
+   done
+
+
+
 
 
 ------------------------------
@@ -199,15 +241,23 @@ location -i`` commands.  For example:
 
 .. code-block:: console
 
-    $ spack location -i cmake
-    /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
+   $ spack location -i cmake
+   /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
+
+This gives the root of the Spack package; relevant binaries may be
+found within it.  For example:
+
+.. code-block:: console
+
+   $ CMAKE=`spack location -i cmake`/bin/cmake
+
 
 Standard UNIX tools can find binaries as well.  For example:
 
 .. code-block:: console
 
-    $ find ~/spack2/opt -name cmake | grep bin
-    /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
+   $ find ~/spack2/opt -name cmake | grep bin
+   /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
 
 These methods are suitable, for example, for setting up build
 processes or GUIs that need to know the location of particular tools.
@@ -226,13 +276,13 @@ load a set of Spack-generated modules:
 
 .. code-block:: sh
 
-    spack load modele-utils
-    spack load emacs
-    spack load ncview
-    spack load nco
-    spack load modele-control
+   spack load modele-utils
+   spack load emacs
+   spack load ncview
+   spack load nco
+   spack load modele-control
 
-Although simple load scripts like this are useful in many cases, the
+Although simple load scripts like this are useful in many cases, they
 have some drawbacks:
 
 1. The set of modules loaded by them will in general not be
@@ -263,57 +313,57 @@ installed Spack packages change.  For example:
 
 .. code-block:: sh
 
-    #!/bin/sh
-    #
-    # Generate module load commands in ~/env/spackenv
+   #!/bin/sh
+   #
+   # Generate module load commands in ~/env/spackenv
 
-    cat <<EOF | /bin/sh >$HOME/env/spackenv
-    FIND='spack module loads --prefix linux-SuSE11-x86_64/'
+   cat <<EOF | /bin/sh >$HOME/env/spackenv
+   FIND='spack module loads --prefix linux-SuSE11-x86_64/'
 
-    \$FIND modele-utils
-    \$FIND emacs
-    \$FIND ncview
-    \$FIND nco
-    \$FIND modele-control
-    EOF
+   \$FIND modele-utils
+   \$FIND emacs
+   \$FIND ncview
+   \$FIND nco
+   \$FIND modele-control
+   EOF
 
 The output of this file is written in ``~/env/spackenv``:
 
 .. code-block:: sh
 
-    # binutils@2.25%gcc@5.3.0+gold~krellpatch~libiberty arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/binutils-2.25-gcc-5.3.0-6w5d2t4
-    # python@2.7.12%gcc@5.3.0~tk~ucs4 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/python-2.7.12-gcc-5.3.0-2azoju2
-    # ncview@2.1.7%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/ncview-2.1.7-gcc-5.3.0-uw3knq2
-    # nco@4.5.5%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/nco-4.5.5-gcc-5.3.0-7aqmimu
-    # modele-control@develop%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/modele-control-develop-gcc-5.3.0-7rddsij
-    # zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/zlib-1.2.8-gcc-5.3.0-fe5onbi
-    # curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/curl-7.50.1-gcc-5.3.0-4vlev55
-    # hdf5@1.10.0-patch1%gcc@5.3.0+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/hdf5-1.10.0-patch1-gcc-5.3.0-pwnsr4w
-    # netcdf@4.4.1%gcc@5.3.0~hdf4+mpi arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/netcdf-4.4.1-gcc-5.3.0-rl5canv
-    # netcdf-fortran@4.4.4%gcc@5.3.0 arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/netcdf-fortran-4.4.4-gcc-5.3.0-stdk2xq
-    # modele-utils@cmake%gcc@5.3.0+aux+diags+ic arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/modele-utils-cmake-gcc-5.3.0-idyjul5
-    # everytrace@develop%gcc@5.3.0+fortran+mpi arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/everytrace-develop-gcc-5.3.0-p5wmb25
+   # binutils@2.25%gcc@5.3.0+gold~krellpatch~libiberty arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/binutils-2.25-gcc-5.3.0-6w5d2t4
+   # python@2.7.12%gcc@5.3.0~tk~ucs4 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/python-2.7.12-gcc-5.3.0-2azoju2
+   # ncview@2.1.7%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/ncview-2.1.7-gcc-5.3.0-uw3knq2
+   # nco@4.5.5%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/nco-4.5.5-gcc-5.3.0-7aqmimu
+   # modele-control@develop%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/modele-control-develop-gcc-5.3.0-7rddsij
+   # zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/zlib-1.2.8-gcc-5.3.0-fe5onbi
+   # curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/curl-7.50.1-gcc-5.3.0-4vlev55
+   # hdf5@1.10.0-patch1%gcc@5.3.0+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/hdf5-1.10.0-patch1-gcc-5.3.0-pwnsr4w
+   # netcdf@4.4.1%gcc@5.3.0~hdf4+mpi arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/netcdf-4.4.1-gcc-5.3.0-rl5canv
+   # netcdf-fortran@4.4.4%gcc@5.3.0 arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/netcdf-fortran-4.4.4-gcc-5.3.0-stdk2xq
+   # modele-utils@cmake%gcc@5.3.0+aux+diags+ic arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/modele-utils-cmake-gcc-5.3.0-idyjul5
+   # everytrace@develop%gcc@5.3.0+fortran+mpi arch=linux-SuSE11-x86_64
+   module load linux-SuSE11-x86_64/everytrace-develop-gcc-5.3.0-p5wmb25
 
 Users may now put ``source ~/env/spackenv`` into ``.bashrc``.
 
 .. note ::
 
-    Some module systems put a prefix on the names of modules created
-    by Spack.  For example, that prefix is ``linux-SuSE11-x86_64/`` in
-    the above case.  If a prefix is not needed, you may omit the
-    ``--prefix`` flag from ``spack module loads``.
+   Some module systems put a prefix on the names of modules created
+   by Spack.  For example, that prefix is ``linux-SuSE11-x86_64/`` in
+   the above case.  If a prefix is not needed, you may omit the
+   ``--prefix`` flag from ``spack module loads``.
 
 
 """""""""""""""""""""""
@@ -322,52 +372,52 @@ Transitive Dependencies
 
 In the script above, each ``spack module loads`` command generates a
 *single* ``module load`` line.  Transitive dependencies do not usually
-need to be load, only modules the user needs in in ``$PATH``.  This is
+need to be loaded, only modules the user needs in in ``$PATH``.  This is
 because Spack builds binaries with RPATH.  Spack's RPATH policy has
 some nice features:
 
- 1. Modules for multiple inconsistent applications may be loaded
-    simultaneously.  In the above example (Multiple Applications),
-    package A and package B can coexist together in the user's $PATH,
-    even though they use different MPIs.
+#. Modules for multiple inconsistent applications may be loaded
+   simultaneously.  In the above example (Multiple Applications),
+   package A and package B can coexist together in the user's $PATH,
+   even though they use different MPIs.
 
- 2. RPATH eliminates a whole class of strange errors that can happen
-    in non-RPATH binaries when the wrong ``LD_LIBRARY_PATH`` is
-    loaded.
+#. RPATH eliminates a whole class of strange errors that can happen
+   in non-RPATH binaries when the wrong ``LD_LIBRARY_PATH`` is
+   loaded.
 
- 3. Recursive module systems such as LMod are not necessary.
+#. Recursive module systems such as LMod are not necessary.
 
- 4. Modules are not needed at all to execute binaries.  If a path to a
-    binary is known, it may be executed.  For example, the path for a
-    Spack-built compiler can be given to an IDE without requiring the
-    IDE to load that compiler's module.
+#. Modules are not needed at all to execute binaries.  If a path to a
+   binary is known, it may be executed.  For example, the path for a
+   Spack-built compiler can be given to an IDE without requiring the
+   IDE to load that compiler's module.
 
 Unfortunately, Spack's RPATH support does not work in all case.  For example:
 
- 1. Software comes in many forms --- not just compiled ELF binaries,
-    but also as interpreted code in Python, R, JVM bytecode, etc.
-    Those systems almost universally use an environment variable
-    analogous to ``LD_LIBRARY_PATH`` to dynamically load libraries.
+#. Software comes in many forms --- not just compiled ELF binaries,
+   but also as interpreted code in Python, R, JVM bytecode, etc.
+   Those systems almost universally use an environment variable
+   analogous to ``LD_LIBRARY_PATH`` to dynamically load libraries.
 
- 2. Although Spack generally builds binaries with RPATH, it does not
-    currently do so for compiled Python extensions (for example,
-    ``py-numpy``).  Any libraries that these extensions depend on
-    (``openblas`` in this case, for example) must be specified in the
-    ``LD_LIBRARY_PATH``.`
+#. Although Spack generally builds binaries with RPATH, it does not
+   currently do so for compiled Python extensions (for example,
+   ``py-numpy``).  Any libraries that these extensions depend on
+   (``blas`` in this case, for example) must be specified in the
+   ``LD_LIBRARY_PATH``.`
 
- 3. In some cases, Spack-generated binaries end up without a
-    functional RPATH for no discernible reason.
+#. In some cases, Spack-generated binaries end up without a
+   functional RPATH for no discernible reason.
 
 In cases where RPATH support doesn't make things "just work," it can
 be necessary to load a module's dependencies as well as the module
 itself.  This is done by adding the ``--dependencies`` flag to the
 ``spack module loads`` command.  For example, the following line,
-added to the script above, would be used to load Numpy, along with
-core Python, Setup Tools and a number of other packages:
+added to the script above, would be used to load SciPy, along with
+Numpy, core Python, BLAS/LAPACK and anything else needed:
 
 .. code-block:: sh
 
-    \$FIND --dependencies py-numpy
+   spack module loads --dependencies py-scipy
 
 ^^^^^^^^^^^^^^^^^^
 Extension Packages
@@ -381,17 +431,17 @@ for users to load a large number of modules.
 
 However, Spack extensions have two potential drawbacks:
 
-1. Activated packages that involve compiled C extensions may still
+#. Activated packages that involve compiled C extensions may still
    need their dependencies to be loaded manually.  For example,
    ``spack load openblas`` might be required to make ``py-numpy``
    work.
 
-2. Extensions "break" a core feature of Spack, which is that multiple
+#. Extensions "break" a core feature of Spack, which is that multiple
    versions of a package can co-exist side-by-side.  For example,
-   suppose you wish to run a Python in two different environments but
-   the same basic Python --- one with ``py-numpy@1.7`` and one with
-   ``py-numpy@1.8``.  Spack extensions will not support this potential
-   debugging use case.
+   suppose you wish to run a Python package in two different
+   environments but the same basic Python --- one with
+   ``py-numpy@1.7`` and one with ``py-numpy@1.8``.  Spack extensions
+   will not support this potential debugging use case.
 
 
 ^^^^^^^^^^^^^^
@@ -495,15 +545,15 @@ files in the ``cmake`` package while retaining its dependencies.
 Fine-Grain Control
 """"""""""""""""""
 
-The ``-e`` and ``-d`` option flags allow for fine-grained control over
-which packages and dependencies do or not get included in a view.  For
-example, suppose you are developing the ``appsy`` package.  You wish
-to build against a view of all ``appsy`` dependencies, but not
-``appsy`` itself:
+The ``--exclude`` and ``--dependencies`` option flags allow for
+fine-grained control over which packages and dependencies do or not
+get included in a view.  For example, suppose you are developing the
+``appsy`` package.  You wish to build against a view of all ``appsy``
+dependencies, but not ``appsy`` itself:
 
 .. code-block:: console
 
-    $ spack view symlink -d yes -e appsy appsy
+   $ spack view symlink --dependencies yes --exclude appsy appsy
 
 Alternately, you wish to create a view whose purpose is to provide
 binary executables to end users.  You only need to include
@@ -512,7 +562,7 @@ dependencies.  In this case, you might use:
 
 .. code-block:: console
 
-    $ spack view symlink -d no cmake
+   $ spack view symlink --dependencies no cmake
 
 
 """""""""""""""""""""""
@@ -525,28 +575,28 @@ view, created by Spack, that looks something like:
 
 .. code-block:: console
 
-  /path/to/MYVIEW/bin/programA -> /path/to/spack/.../bin/programA
-  /path/to/MYVIEW/lib/libA.so -> /path/to/spack/.../lib/libA.so
+   /path/to/MYVIEW/bin/programA -> /path/to/spack/.../bin/programA
+   /path/to/MYVIEW/lib/libA.so -> /path/to/spack/.../lib/libA.so
 
 Now, the user may add to this view by non-Spack means; for example, by
 running a classic install script.  For example:
 
 .. code-block:: console
 
-  tar -xf B.tar.gz
-  cd B/
-  ./configure --prefix=/path/to/MYVIEW \
-              --with-A=/path/to/MYVIEW
-  make && make install
+   $ tar -xf B.tar.gz
+   $ cd B/
+   $ ./configure --prefix=/path/to/MYVIEW \
+               --with-A=/path/to/MYVIEW
+   $ make && make install
 
 The result is a hybrid view:
 
 .. code-block:: console
 
-  /path/to/MYVIEW/bin/programA -> /path/to/spack/.../bin/programA
-  /path/to/MYVIEW/bin/programB
-  /path/to/MYVIEW/lib/libA.so -> /path/to/spack/.../lib/libA.so
-  /path/to/MYVIEW/lib/libB.so
+   /path/to/MYVIEW/bin/programA -> /path/to/spack/.../bin/programA
+   /path/to/MYVIEW/bin/programB
+   /path/to/MYVIEW/lib/libA.so -> /path/to/spack/.../lib/libA.so
+   /path/to/MYVIEW/lib/libB.so
 
 In this case, real files coexist, interleaved with the "view"
 symlinks.  At any time one can delete ``/path/to/MYVIEW`` or use
@@ -634,7 +684,7 @@ approach, while obvious, has some serious drawbacks:
    package, offering a powerful vision of software re-use.  If you
    build your package A outside of Spack, then your ability to use it
    as a building block for other packages in an automated way is
-   diminished: other packages needing depending on package A will not
+   diminished: other packages depending on package A will not
    be able to use Spack to fulfill that dependency.
 
 5. If you are reading this manual, you probably love Spack.  You're
@@ -663,35 +713,35 @@ to build your project.
 The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
 
 1. Your project should produce binaries with RPATHs.  This will ensure
-   that they work the same whether build manually or automatically by
+   that they work the same whether built manually or automatically by
    Spack.  For example:
 
 .. code-block:: cmake
 
-    # enable @rpath in the install name for any shared library being built
-    # note: it is planned that a future version of CMake will enable this by default
-    set(CMAKE_MACOSX_RPATH 1)
+   # enable @rpath in the install name for any shared library being built
+   # note: it is planned that a future version of CMake will enable this by default
+   set(CMAKE_MACOSX_RPATH 1)
 
-    # Always use full RPATH
-    # http://www.cmake.org/Wiki/CMake_RPATH_handling
-    # http://www.kitware.com/blog/home/post/510
+   # Always use full RPATH
+   # http://www.cmake.org/Wiki/CMake_RPATH_handling
+   # http://www.kitware.com/blog/home/post/510
 
-    # use, i.e. don't skip the full RPATH for the build tree
-    SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+   # use, i.e. don't skip the full RPATH for the build tree
+   SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
-    # when building, don't use the install RPATH already
-    # (but later on when installing)
-    SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+   # when building, don't use the install RPATH already
+   # (but later on when installing)
+   SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
 
-    # add the automatically determined parts of the RPATH
-    # which point to directories outside the build tree to the install RPATH
-    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+   # add the automatically determined parts of the RPATH
+   # which point to directories outside the build tree to the install RPATH
+   SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-    # the RPATH to be used when installing, but only if it's not a system directory
-    LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-    IF("${isSystemDir}" STREQUAL "-1")
-       SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    ENDIF("${isSystemDir}" STREQUAL "-1")
+   # the RPATH to be used when installing, but only if it's not a system directory
+   LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+   IF("${isSystemDir}" STREQUAL "-1")
+      SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+   ENDIF("${isSystemDir}" STREQUAL "-1")
 
 
 2. Spack provides a CMake variable called
@@ -707,16 +757,16 @@ The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
 
    .. code-block:: cmake
 
-       # Include all the transitive dependencies determined by Spack.
-       # If we're not running with Spack, this does nothing...
-       include_directories($ENV{SPACK_TRANSITIVE_INCLUDE_PATH})
+      # Include all the transitive dependencies determined by Spack.
+      # If we're not running with Spack, this does nothing...
+      include_directories($ENV{SPACK_TRANSITIVE_INCLUDE_PATH})
 
    .. note::
 
-       Note that this feature is controversial and could break with
-       future versions of GNU ld.  The best practice is to make sure
-       anything you ``#include`` is listed as a dependency in your
-       CMakeLists.txt (and Spack package).
+      Note that this feature is controversial and could break with
+      future versions of GNU ld.  The best practice is to make sure
+      anything you ``#include`` is listed as a dependency in your
+      CMakeLists.txt (and Spack package).
 
 .. _write-the-spack-package:
 
@@ -731,37 +781,37 @@ for the ``mylib`` package (ellipses for brevity):
 
 .. code-block:: python
 
-    class Mylib(CMakePackage):
-        """Misc. reusable utilities used by Myapp."""
+   class Mylib(CMakePackage):
+       """Misc. reusable utilities used by Myapp."""
 
-        homepage = "https://github.com/citibeth/mylib"
-        url = "https://github.com/citibeth/mylib/tarball/123"
+       homepage = "https://github.com/citibeth/mylib"
+       url = "https://github.com/citibeth/mylib/tarball/123"
 
-        version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
-        version('develop', git='https://github.com/citibeth/mylib.git',
-            branch='develop')
+       version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
+       version('develop', git='https://github.com/citibeth/mylib.git',
+           branch='develop')
 
-        variant('everytrace', default=False,
-                description='Report errors through Everytrace')
-        ...
+       variant('everytrace', default=False,
+               description='Report errors through Everytrace')
+       ...
 
-        extends('python')
+       extends('python')
 
-        depends_on('eigen')
-        depends_on('everytrace', when='+everytrace')
-        depends_on('proj', when='+proj')
-        ...
-        depends_on('cmake', type='build')
-        depends_on('doxygen', type='build')
+       depends_on('eigen')
+       depends_on('everytrace', when='+everytrace')
+       depends_on('proj', when='+proj')
+       ...
+       depends_on('cmake', type='build')
+       depends_on('doxygen', type='build')
 
-        def configure_args(self):
-            spec = self.spec
-            return [
-                '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-                '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
-                ...
-                '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
-                '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+       def configure_args(self):
+           spec = self.spec
+           return [
+               '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+               '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
+               ...
+               '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
+               '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
 
 This is a standard Spack package that can be used to install
 ``mylib`` in a production environment.  The list of dependencies in
@@ -809,21 +859,22 @@ a stand-in for the ``cmake`` command.
 
 .. note::
 
-    You can invent any "version" you like for the ``spack setup``
-    command.
+   You can invent any "version" you like for the ``spack setup``
+   command.
 
 .. note::
 
-    Although ``spack setup`` does not build your package, it does
-    create and install a module file, and mark in the database that
-    your package has been installed.  This can lead to errors, of
-    course, if you don't subsequently install your package.
-    Also... you will need to ``spack uninstall`` before you run
-    ``spack setup`` again.
+   Although ``spack setup`` does not build your package, it does
+   create and install a module file, and mark in the database that
+   your package has been installed.  This can lead to errors, of
+   course, if you don't subsequently install your package.
+   Also... you will need to ``spack uninstall`` before you run
+   ``spack setup`` again.
 
 
-You can now build your project
-as usual with CMake:
+You can now build your project as usual with CMake:
+
+.. code-block:: console
 
    $ mkdir build; cd build
    $ ../spconfig.py ..   # Instead of cmake ..
@@ -837,11 +888,11 @@ into Git or downloading tarballs.
 
 .. note::
 
-    The build you get this way will be *almost* the same as the build
-    from ``spack install``.  The only difference is, you will not be
-    using Spack's compiler wrappers.  This difference has not caused
-    problems in the our experience, as long as your project sets
-    RPATHs as shown above.  You DO use RPATHs, right?
+   The build you get this way will be *almost* the same as the build
+   from ``spack install``.  The only difference is, you will not be
+   using Spack's compiler wrappers.  This difference has not caused
+   problems in our experience, as long as your project sets
+   RPATHs as shown above.  You DO use RPATHs, right?
 
     
 
@@ -855,7 +906,7 @@ is accomplished easily enough:
 
 .. code-block:: console
 
-    $ spack install myapp ^mylib@local
+   $ spack install myapp ^mylib@local
 
 Note that auto-built software has now been installed *on top of*
 manually-built software, without breaking Spack's "web."  This
@@ -869,7 +920,7 @@ for example:
 
 .. code-block:: console
 
-    $ spack install mylib@develop
+   $ spack install mylib@develop
 
 .. _release-your-software:
 
@@ -890,23 +941,23 @@ hosted on GitHub, this process will be a bit easier.
 
    .. code-block:: python
 
-       url = 'https://github.com/citibeth/mylib/tarball/v0.1.2'
+      url = 'https://github.com/citibeth/mylib/tarball/v0.1.2'
 
 #. Use Spack to determine your version's hash, and cut'n'paste it into
    your ``package.py``:
 
    .. code-block:: console
 
-       $ spack checksum mylib 0.1.2
-       ==> Found 1 versions of mylib
-         0.1.2     https://github.com/citibeth/mylib/tarball/v0.1.2
+      $ spack checksum mylib 0.1.2
+      ==> Found 1 versions of mylib
+        0.1.2     https://github.com/citibeth/mylib/tarball/v0.1.2
 
-       How many would you like to checksum? (default is 5, q to abort) 
-       ==> Downloading...
-       ==> Trying to fetch from https://github.com/citibeth/mylib/tarball/v0.1.2
-       ######################################################################## 100.0%
-       ==> Checksummed new versions of mylib:
-             version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
+      How many would you like to checksum? (default is 5, q to abort) 
+      ==> Downloading...
+      ==> Trying to fetch from https://github.com/citibeth/mylib/tarball/v0.1.2
+      ######################################################################## 100.0%
+      ==> Checksummed new versions of mylib:
+            version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
 
 #. You should now be able to install released version 0.1.2 of your package with:
 
@@ -954,10 +1005,10 @@ Spack is the best way to install it:
    #. Run ``spack install mylib``.
 
    #. Run this script to generate the ``module load`` commands or
-      filesystem view that needed to use this software.
+      filesystem view needed to use this software.
 
 #. Be aware that your users might encounter unexpected bootstrapping
-   issues on their machines, especially they are running on older
+   issues on their machines, especially if they are running on older
    systems.  The :ref:`getting_started` section should cover this, but
    there could always be issues.
 
@@ -1014,8 +1065,8 @@ Buggy New Version
 
 Sometimes, the old version of a package works fine, but a new version
 is buggy.  For example, it was once found that `Adios did not build
-with hdf5@1.10<https://github.com/LLNL/spack/issues/1683>_`.  If the
-old version of ``hdf5`` will work with ``adios``, the suggest
+with hdf5@1.10 <https://github.com/LLNL/spack/issues/1683>`_.  If the
+old version of ``hdf5`` will work with ``adios``, the suggested
 procedure is:
 
 #. Revert ``adios`` to the old version of ``hdf5``.  Put in its
@@ -1057,10 +1108,10 @@ the Spack user needs things to work.
 
 The solution is to create an unofficial Spack release of the project,
 as soon as the bug is fixed in *some* repository.  A study of the `Git
-history<https://github.com/citibeth/spack/commits/efischer/develop/var/spack/repos/builtin/packages/py-proj/package.py>_`
+history <https://github.com/citibeth/spack/commits/efischer/develop/var/spack/repos/builtin/packages/py-proj/package.py>`_
 of ``py-proj/package.py`` is instructive here:
 
-#. On `April 1<https://github.com/citibeth/spack/commit/44a1d6a96706affe6ef0a11c3a780b91d21d105a>_`, an initial bugfix was identified for the PyProj project
+#. On `April 1 <https://github.com/citibeth/spack/commit/44a1d6a96706affe6ef0a11c3a780b91d21d105a>`_, an initial bugfix was identified for the PyProj project
    and a pull request submitted to PyProj.  Because the upstream
    authors had not yet fixed the bug, the ``py-proj`` Spack package
    downloads from a forked repository, set up by the package's author.
@@ -1105,7 +1156,7 @@ of ``py-proj/package.py`` is instructive here:
 
          # This is not a tagged release of pyproj.
          # The changes in this "version" fix some bugs, especially with Python3 use.
-         version('1.9.1.1',
+         version('1.9.5.1.1',
               git='https://github.com/jswhit/pyproj.git',
               commit='0be612cc9f972e38b50a90c946a9b353e2ab140f')
 
@@ -1124,7 +1175,7 @@ of ``py-proj/package.py`` is instructive here:
 
 #. As of August 31, the upstream project still had not made a new
    release with the bugfix.  In the meantime, Spack-built ``py-proj``
-   provide the bugfix needed by packages depending on it.  As long as
+   provides the bugfix needed by packages depending on it.  As long as
    this works, there is no particular need for the upstream project to
    make a new official release.
 

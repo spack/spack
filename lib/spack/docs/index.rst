@@ -60,10 +60,10 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Contributing to Spack
 
-..   contribution_guide
    packaging_guide
    developer_guide
    API Docs <spack>
+
 
 ==================
 Indices and tables
