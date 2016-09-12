@@ -172,7 +172,7 @@ class Version(object):
             system
             myfavoritebranch
         """
-        return isinstance(self.version[0], int)
+        return isinstance(self.version[0], numbers.Integral)
 
     def isdevelop(self):
         """Triggers on the special case of the `@develop` version."""
@@ -248,27 +248,26 @@ class Version(object):
     def concrete(self):
         return self
 
-    def _numeric_lt(self0, other):
+    def _numeric_lt(self, other):
         """Compares two versions, knowing they're both numeric"""
-                # Standard comparison of two numeric versions
-                for a, b in zip(self.version, other.version):
-                    if a == b:
-                        continue
-                    else:
-                        # Numbers are always "newer" than letters.
-                        # This is for consistency with RPM.  See patch
-                        # #60884 (and details) from bugzilla #50977 in
-                        # the RPM project at rpm.org.  Or look at
-                        # rpmvercmp.c if you want to see how this is
-                        # implemented there.
-                        if type(a) != type(b):
-                            return type(b) == int
-                        else:
-                            return a < b
-                # If the common prefix is equal, the one
-                # with more segments is bigger.
-                return len(self.version) < len(other.version)
-
+        # Standard comparison of two numeric versions
+        for a, b in zip(self.version, other.version):
+            if a == b:
+                continue
+            else:
+                # Numbers are always "newer" than letters.
+                # This is for consistency with RPM.  See patch
+                # #60884 (and details) from bugzilla #50977 in
+                # the RPM project at rpm.org.  Or look at
+                # rpmvercmp.c if you want to see how this is
+                # implemented there.
+                if type(a) != type(b):
+                    return type(b) == int
+                else:
+                    return a < b
+        # If the common prefix is equal, the one
+        # with more segments is bigger.
+        return len(self.version) < len(other.version)
 
     @coerced
     def __lt__(self, other):
@@ -286,12 +285,14 @@ class Version(object):
             return False
 
         # First priority: anything < develop
-        skey = self.isdevelop()
-        okey = other.isdevelop()
-        if (skey < okey):
-            return True
-        if (okey <= skey):
-            return False
+        sdev = self.isdevelop()
+        if sdev:
+            return False    # source = develop, it can't be < anything
+
+        # Now we know !sdev
+        odev = other.isdevelop()
+        if odev:
+            return True    # src < dst
 
         # now we know neither self nor other isdevelop().
 
@@ -304,14 +305,12 @@ class Version(object):
                 # Numeric > Non-numeric (always)
                 return False
         else:
-            if other.isnumeric(): # self = non-numeric, other = numeric
+            if other.isnumeric():  # self = non-numeric, other = numeric
                 # non-numeric < numeric (always)
                 return True
             else:  # Both non-numeric
                 # Maybe consider other ways to compare here...
                 return self.string < other.string
-
-
 
     @coerced
     def __eq__(self, other):
