@@ -48,6 +48,8 @@ class Libevent(Package):
     version('2.0.13', 'af786b4b3f790c9d3279792edf7867fc')
     version('2.0.12', '42986228baf95e325778ed328a93e070')
 
+    patch('update_config_guess.patch')
+
     variant('openssl', default=True,
             description="Build with encryption enabled at the libevent level.")
     depends_on('openssl', when='+openssl')
