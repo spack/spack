@@ -11,6 +11,8 @@ class ModeleControl(Package):
     extends('python')
     depends_on('python@:2.8')
 
+    depends_on('netcdf', type='run')
+
     # depends_on('binutils', type='run')    # ldd; assume already installed on system
     depends_on('netcdf', type='run')    # ncdump
 
