@@ -26,17 +26,26 @@ from spack import *
 
 
 class GitLfs(Package):
-    """Tool for managing large files with Git."""
+    """Git LFS is a system for managing and versioning large files in
+       association with a Git repository.  Instead of storing the large files
+       within the Git repository as blobs, Git LFS stores special "pointer
+       files" in the repository, while storing the actual file contents on a
+       Git LFS server.  The contents of the large file are downloaded
+       automatically when needed, for example when a Git branch containing
+       the large file is checked out."""
 
     homepage = "https://git-lfs.github.com"
-    url      = "https://github.com/github/git-lfs/archive/v1.4.1.tar.gz"
+    git_url  = "https://github.com/github/git-lfs.git"
 
-    version('1.4.1', 'c62a314d96d3a30af4d98fa3305ad317')
+    version('1.4.1', git=git_url, tag='v1.4.1')
+    version('1.3.1', git=git_url, tag='v1.3.1')
 
     depends_on('go@1.5:', type='build')
     depends_on('git@1.8.2:', type='run')
 
     def install(self, spec, prefix):
-        bootstrap = Executable('./scripts/bootstrap')
+        bootstrap = Executable(join_path('script', 'bootstrap'))
         bootstrap()
-        install('bin/git-lfs', prefix.bin)
+
+        mkdirp(prefix.bin)
+        install(join_path('bin', 'git-lfs'), prefix.bin)
