@@ -111,6 +111,11 @@ class Llvm(Package):
             'destination': 'projects',
             'placement': 'libcxxabi',
         },
+        'cfe': {
+            'url':  base_url % {'pkg': 'cfe'},
+            'destination': 'tools',
+            'placement': 'clang',
+        },
         'clang': {
             'url':  base_url % {'pkg': 'cfe'},
             'destination': 'tools',
