@@ -25,25 +25,35 @@
 from spack import *
 
 
-class Gmp(Package):
-    """GMP is a free library for arbitrary precision arithmetic, operating
-    on signed integers, rational numbers, and floating-point numbers."""
+class Ghc(Package):
+    """The Glasgow Haskell Compiler is a state-of-the-art, open source
+       compiler and interactive environment for the functional language
+       Haskell."""
+    homepage = "https://www.haskell.org/ghc/"
+    url      = "http://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-src.tar.xz"
 
-    homepage = "https://gmplib.org"
-    url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
-    list_url = "https://gmplib.org/download/gmp/archive/"
+    version('8.0.1', 'c185b8a1f3e67e43533ec590b751c2ff')
 
-    version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
-    version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
-    version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
-    version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
-    # This old version is needed to support a binary package in
-    # ghc-bootstrap.
-    version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
-
-    depends_on("m4", type='build')
+    depends_on('gmp')
+    depends_on('ncurses')
+    depends_on('libffi')
+    depends_on('libedit')       # docs say, but I can't see where.
+    depends_on('perl')
+    depends_on('python')
+    depends_on('py-sphinx')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        bootstrap_ghc = which('ghc')
+        configure_args = [
+            "--prefix=%s" % prefix,
+            "--with-ghc=%s" % bootstrap_ghc,
+            "--with-gmp-includes=%s" % spec['gmp'].prefix.include,
+            "--with-gmp-libraries=%s" % spec['gmp'].prefix.lib,
+            "--with-curses-includes=%s" % spec['ncurses'].prefix.include,
+            "--with-curses-libraries=%s" % spec['ncurses'].prefix.lib,
+            "--with-ffi-includes=%s" % spec['libffi'].prefix.include,
+            "--with-ffi-libraries=%s" % spec['libffi'].prefix.lib,
+        ]
+        configure(*configure_args)
         make()
-        make("install")
+        make('install')

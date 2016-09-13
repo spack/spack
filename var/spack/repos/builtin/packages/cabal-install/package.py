@@ -25,25 +25,27 @@
 from spack import *
 
 
-class Gmp(Package):
-    """GMP is a free library for arbitrary precision arithmetic, operating
-    on signed integers, rational numbers, and floating-point numbers."""
+class CabalInstall(Package):
+    """The 'cabal' command-line program simplifies the process of managing
+       Haskell software by automating the fetching, configuration,
+       compilation and installation of Haskell libraries and programs."""
 
-    homepage = "https://gmplib.org"
-    url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
-    list_url = "https://gmplib.org/download/gmp/archive/"
+    homepage = "http://www.haskell.org/cabal/"
+    url      = "http://hackage.haskell.org/package/cabal-install-1.24.0.0/cabal-install-1.24.0.0.tar.gz"
 
-    version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
-    version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
-    version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
-    version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
-    # This old version is needed to support a binary package in
-    # ghc-bootstrap.
-    version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
+    version('1.24.0.0', 'beb998cdc385523935620381abe393f4')
 
-    depends_on("m4", type='build')
+    depends_on('zlib')
+    depends_on('ghc')
+
+    # @mvkorpel's fix from:
+    # https://github.com/haskell/cabal/issues/3440
+    # It works around problem deciding whether to use collect2 or ld.
+    # The symptom is a complaint about "Setup: Unrecognized flags:..."
+    patch('bootstrap.patch')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        bash = which("bash")
+        bash("bootstrap.sh", "--sandbox", prefix)
+        # TODO
+        # install "bash-completion/cabal"
