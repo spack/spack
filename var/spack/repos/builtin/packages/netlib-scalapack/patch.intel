@@ -1,0 +1,11 @@
+--- CMakeLists.txt	2016-09-13 23:10:59.518011754 +0200
++++ CMakeLists.txt	2016-09-13 23:08:24.429298164 +0200
+@@ -121,7 +121,7 @@
+ include(FortranMangling)
+ COMPILE(install_COMPILED)
+ 
+-FORTRAN_MANGLING(CDEFS)
++#FORTRAN_MANGLING(CDEFS)
+ #MESSAGE(STATUS "Setting CDEFS = ${CDEFS}")
+ #set(CDEFS ${CDEFS} CACHE STRING "Fortran Mangling" FORCE)
+ MESSAGE(STATUS "=========")
