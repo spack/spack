@@ -37,6 +37,8 @@ class Libsplash(Package):
     homepage = "https://github.com/ComputationalRadiationPhysics/libSplash"
     url      = "https://github.com/ComputationalRadiationPhysics/libSplash/archive/v1.4.0.tar.gz"
 
+    version('dev', branch='dev',
+            git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
     version('1.4.0', '2de37bcef6fafa1960391bf44b1b50e0')
