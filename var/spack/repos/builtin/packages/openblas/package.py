@@ -32,6 +32,8 @@ class Openblas(Package):
     homepage = "http://www.openblas.net"
     url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
+    #temporarily setting master ad 0.2.19 for testing with intel compiler, remove this after verify
+    #version('0.2.19', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
@@ -49,6 +51,9 @@ class Openblas(Package):
     provides('lapack')
 
     patch('make.patch')
+
+    #see issue on github with intel compiler
+    patch('intel.patch', when='%intel')
 
     def install(self, spec, prefix):
         # As of 06/2016 there is no mechanism to specify that packages which
@@ -147,6 +152,10 @@ class Openblas(Package):
                       "-lpthread"]
         if '+openmp' in spec:
             link_flags.extend([self.compiler.openmp_flag])
+
+        #see issue http://icl.cs.utk.edu/lapack-forum/viewtopic.php?f=12&t=4283
+        if spec.satisfies('%intel'):
+            link_flags.extend(['-lifcore'])
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)
         compare_output_file(output, blessed_file)
