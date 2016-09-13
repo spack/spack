@@ -30,9 +30,7 @@ class GitLfs(Package):
        association with a Git repository.  Instead of storing the large files
        within the Git repository as blobs, Git LFS stores special "pointer
        files" in the repository, while storing the actual file contents on a
-       Git LFS server.  The contents of the large file are downloaded
-       automatically when needed, for example when a Git branch containing
-       the large file is checked out."""
+       Git LFS server."""
 
     homepage = "https://git-lfs.github.com"
     git_url  = "https://github.com/github/git-lfs.git"
@@ -40,12 +38,16 @@ class GitLfs(Package):
     version('1.4.1', git=git_url, tag='v1.4.1')
     version('1.3.1', git=git_url, tag='v1.3.1')
 
+    # TODO: Implement this by following the instructions at this location:
+    # https://github.com/github/git-lfs/blob/master/CONTRIBUTING.md#building
+    # variant('test', default=True, description='Build and run tests as part of the build.')
+
     depends_on('go@1.5:', type='build')
     depends_on('git@1.8.2:', type='run')
 
     def install(self, spec, prefix):
-        bootstrap = Executable(join_path('script', 'bootstrap'))
-        bootstrap()
+        bootstrap_script = Executable(join_path('script', 'bootstrap'))
+        bootstrap_script()
 
         mkdirp(prefix.bin)
         install(join_path('bin', 'git-lfs'), prefix.bin)
