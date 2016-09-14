@@ -32,8 +32,7 @@ class PyPillow(Package):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url = "https://pypi.python.org/packages/source" + \
-        "/P/Pillow/Pillow-3.0.0.tar.gz"
+    url = "https://pypi.python.org/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
 
     # TODO: This version should be deleted once the next release comes out.
     # TODO: It fixes a bug that prevented us from linking to Tk/Tcl.
