@@ -40,7 +40,7 @@ class GitLfs(Package):
 
     # TODO: Implement this by following the instructions at this location:
     # https://github.com/github/git-lfs/blob/master/CONTRIBUTING.md#building
-    # variant('test', default=True, description='Build and run tests as part of the build.')
+    # variant('test', default=True, description='Build and run tests as part of the build.')  # NOQA: E501
 
     depends_on('go@1.5:', type='build')
     depends_on('git@1.8.2:', type='run')
