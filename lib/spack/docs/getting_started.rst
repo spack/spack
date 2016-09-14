@@ -302,17 +302,17 @@ wish to have Spack build it for you.  For example:
 
 .. code-block:: console
 
-    $ spack install gcc@4.9.3
+   $ spack install gcc@4.9.3
 
 Once that has finished, you will need to add it to your
 ``compilers.yaml`` file.  You can then set Spack to use it by default
 by adding the following to your ``packages.yaml`` file:
 
-..code-block:: yaml
+.. code-block:: yaml
 
-    packages:
-      all:
-        compiler: [gcc@4.9.3]
+   packages:
+     all:
+       compiler: [gcc@4.9.3]
 
 
 .. note::
@@ -346,16 +346,16 @@ example, this ``compilers.yaml`` file:
 
 .. code-block:: yaml
 
-    compilers:
-    - compiler:
-        modules: [other/comp/gcc-5.3-sp3]
-        operating_system: SuSE11
-        paths:
-          cc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gcc
-          cxx: /usr/local/other/SLES11.3/gcc/5.3.0/bin/g++
-          f77: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
-          fc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
-        spec: gcc@5.3.0
+   compilers:
+   - compiler:
+       modules: [other/comp/gcc-5.3-sp3]
+       operating_system: SuSE11
+       paths:
+         cc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gcc
+         cxx: /usr/local/other/SLES11.3/gcc/5.3.0/bin/g++
+         f77: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
+         fc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
+       spec: gcc@5.3.0
 
 Some compilers require a module to be loaded not just to run, but also
 to execute any code built with the compiler, breaking packages that
@@ -408,52 +408,52 @@ should work for other mixed toolchain needs.
 
    .. code-block:: yaml
 
-       compilers:
-         darwin-x86_64:
-           clang@7.3.0-apple:
-             cc: /usr/bin/clang
-             cxx: /usr/bin/clang++
-             f77: /path/to/bin/gfortran
-             fc: /path/to/bin/gfortran
+      compilers:
+        darwin-x86_64:
+          clang@7.3.0-apple:
+            cc: /usr/bin/clang
+            cxx: /usr/bin/clang++
+            f77: /path/to/bin/gfortran
+            fc: /path/to/bin/gfortran
 
 #. Create a symlink inside ``clang`` environement:
 
    .. code-block:: console
 
-       $ cd $SPACK_ROOT/lib/spack/env/clang
-       $ ln -s ../cc gfortran
+      $ cd $SPACK_ROOT/lib/spack/env/clang
+      $ ln -s ../cc gfortran
 
 
 #. Patch ``clang`` compiler file:
 
    .. code-block:: console
 
-       $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
-       index e406d86..cf8fd01 100644
-       --- a/lib/spack/spack/compilers/clang.py
-       +++ b/lib/spack/spack/compilers/clang.py
-       @@ -35,17 +35,17 @@ class Clang(Compiler):
-            cxx_names = ['clang++']
-        
-            # Subclasses use possible names of Fortran 77 compiler
-       -    f77_names = []
-       +    f77_names = ['gfortran']
-        
-            # Subclasses use possible names of Fortran 90 compiler
-       -    fc_names = []
-       +    fc_names = ['gfortran']
-        
-            # Named wrapper links within spack.build_env_path
-            link_paths = { 'cc'  : 'clang/clang',
-                           'cxx' : 'clang/clang++',
-                           # Use default wrappers for fortran, in case provided in compilers.yaml
-       -                   'f77' : 'f77',
-       -                   'fc'  : 'f90' }
-       +                   'f77' : 'clang/gfortran',
-       +                   'fc'  : 'clang/gfortran' }
-        
-            @classmethod
-            def default_version(self, comp):
+      $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
+      index e406d86..cf8fd01 100644
+      --- a/lib/spack/spack/compilers/clang.py
+      +++ b/lib/spack/spack/compilers/clang.py
+      @@ -35,17 +35,17 @@ class Clang(Compiler):
+           cxx_names = ['clang++']
+       
+           # Subclasses use possible names of Fortran 77 compiler
+      -    f77_names = []
+      +    f77_names = ['gfortran']
+       
+           # Subclasses use possible names of Fortran 90 compiler
+      -    fc_names = []
+      +    fc_names = ['gfortran']
+       
+           # Named wrapper links within spack.build_env_path
+           link_paths = { 'cc'  : 'clang/clang',
+                          'cxx' : 'clang/clang++',
+                          # Use default wrappers for fortran, in case provided in compilers.yaml
+      -                   'f77' : 'f77',
+      -                   'fc'  : 'f90' }
+      +                   'f77' : 'clang/gfortran',
+      +                   'fc'  : 'clang/gfortran' }
+       
+           @classmethod
+           def default_version(self, comp):
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
@@ -464,7 +464,7 @@ simple package.  For example:
 
 .. code-block:: console
 
-    $ spack install zlib%gcc@5.3.0
+   $ spack install zlib%gcc@5.3.0
 
 --------------------------------------
 Vendor-Specific Compiler Configuration
@@ -484,20 +484,20 @@ functionality, the Intel compiler needs GCC to be installed.
 Therefore, the following steps are necessary to successfully use Intel
 compilers:
 
- #. Install a version of GCC that implements the desired language
-    features (``spack install gcc``).
+#. Install a version of GCC that implements the desired language
+   features (``spack install gcc``).
 
- #. Tell the Intel compiler how to find that desired GCC.  This may be
-    done in one of two ways: (text taken from `Intel Reference Guide
-    <https://software.intel.com/en-us/node/522750>`_):
+#. Tell the Intel compiler how to find that desired GCC.  This may be
+   done in one of two ways: (text taken from `Intel Reference Guide
+   <https://software.intel.com/en-us/node/522750>`_):
 
-    > By default, the compiler determines which version of ``gcc`` or ``g++``
-    > you have installed from the ``PATH`` environment variable.
-    > 
-    > If you want use a version of ``gcc`` or ``g++`` other than the default
-    > version on your system, you need to use either the ``-gcc-name``
-    > or ``-gxx-name`` compiler option to specify the path to the version of
-    > ``gcc`` or ``g++`` that you want to use.
+   > By default, the compiler determines which version of ``gcc`` or ``g++``
+   > you have installed from the ``PATH`` environment variable.
+   > 
+   > If you want use a version of ``gcc`` or ``g++`` other than the default
+   > version on your system, you need to use either the ``-gcc-name``
+   > or ``-gxx-name`` compiler option to specify the path to the version of
+   > ``gcc`` or ``g++`` that you want to use.
 
 Intel compilers may therefore be configured in one of two ways with
 Spack: using modules, or using compiler flags.
@@ -511,29 +511,29 @@ A module must be loaded both for the Intel Compiler (so it will run)
 and GCC (so the compiler can find the intended GCC).  The following
 configuration in ``compilers.yaml`` illustrates this technique:
 
-    .. code-block:: yaml
+.. code-block:: yaml
 
-        compilers:
-        - compiler:
-            modules = [gcc-4.9.3, intel-15.0.24]
-            operating_system: centos7
-            paths:
-              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
-              cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
-              f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-            spec: intel@15.0.24.4.9.3
+   compilers:
+   - compiler:
+       modules = [gcc-4.9.3, intel-15.0.24]
+       operating_system: centos7
+       paths:
+         cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
+         cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
+         f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+         fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+       spec: intel@15.0.24.4.9.3
 
 
-    .. note::
+.. note::
 
-       The version number on the Intel compiler is a combination of
-       the "native" Intel version number and the GNU compiler it is
-       targeting.
+   The version number on the Intel compiler is a combination of
+   the "native" Intel version number and the GNU compiler it is
+   targeting.
 
-    .. warning::
+.. warning::
 
-       This solution has not yet been tested.  Details may vary.
+   This solution has not yet been tested.  Details may vary.
 
 """"""""""""""""""""""""""
 Command Line Configuration
@@ -547,34 +547,34 @@ Command Line Configuration
 One can also control which GCC is seen by the Intel compiler by adding
 flags to the ``icc`` command:
 
- #. Identify the location of the compiler you just installed:
+#. Identify the location of the compiler you just installed:
 
-    .. code-block:: console
+   .. code-block:: console
 
-        $ spack location -i gcc
-        /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
+       $ spack location -i gcc
+       /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
 
 #. Set up ``compilers.yaml``, for example:
 
-    .. code-block:: yaml
+   .. code-block:: yaml
 
-        compilers:
-        - compiler:
-            modules = [intel-15.0.24]
-            operating_system: centos7
-            paths:
-              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
-              cflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
-              cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
-              cxxflags: -gxx-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
-              f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-              fflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
-            spec: intel@15.0.24.4.9.3
+       compilers:
+       - compiler:
+           modules = [intel-15.0.24]
+           operating_system: centos7
+           paths:
+             cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
+             cflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+             cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
+             cxxflags: -gxx-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
+             f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+             fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+             fflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+           spec: intel@15.0.24.4.9.3
 
 .. warning::
 
-    This solution has not yet been tested.  Details may vary.
+   This solution has not yet been tested.  Details may vary.
 
 
 ^^^
@@ -890,7 +890,7 @@ that something to a package that needs it.  For example:
 
 .. code-block:: python
 
-    depends_on('binutils', type='build')
+   depends_on('binutils', type='build')
 
 This is considered best practice for some common build dependencies,
 such as ``autotools`` (if the ``autoreconf`` command is needed) and
@@ -908,7 +908,14 @@ For example, ``ld`` might crash.  Or one receives a message like:
 
 .. code-block:: console
 
-    ld: final link failed: Nonrepresentable section on output
+   ld: final link failed: Nonrepresentable section on output
+
+
+or:
+
+.. code-block:: console
+
+   ld: .../_fftpackmodule.o: unrecognized relocation (0x2a) in section `.text'
 
 These problems are often caused by an outdated ``binutils`` on your
 system.  Unlike CMake or Autotools, adding ``depends_on('binutils')``
