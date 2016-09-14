@@ -191,6 +191,11 @@ class Metis(Package):
             make()
             make('install')
 
+            # FIXME: On some systems, the installed binaries for METIS cannot
+            # be executed without first being read.
+            ls = which('ls')
+            ls('-all', prefix.bin)
+
             # now run some tests:
             for f in ['4elt', 'copter2', 'mdual']:
                 graph = join_path(source_directory, 'graphs', '%s.graph' % f)
