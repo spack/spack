@@ -1466,7 +1466,8 @@ class Spec(object):
             changed = True
         # Constrain package information with spec info
         try:
-            changed |= spec_deps[dep.name].spec.constrain(dep, deptypes=deptypes)
+            changed |= spec_deps[dep.name].spec.constrain(
+                dep, deptypes=deptypes)
 
         except UnsatisfiableSpecError as e:
             e.message = "Invalid spec: '%s'. "
@@ -1481,7 +1482,7 @@ class Spec(object):
             self._add_dependency(dependency.spec, dependency.deptypes)
 
         changed |= dependency.spec._normalize_helper(
-            visited, spec_deps, provider_index, level=level+1)
+            visited, spec_deps, provider_index, level=level + 1)
         return changed
 
     def _normalize_helper(self, visited, spec_deps, provider_index, level=0):
@@ -1509,9 +1510,10 @@ class Spec(object):
                 deptypes = pkg._deptypes[dep_name]
                 # If pkg_dep is a dependency, merge it.
                 if pkg_dep:
-                    if True:#level==0 or 'link' in deptypes or 'run' in deptypes:
+                    if level == 0 or 'link' in deptypes or 'run' in deptypes:
                         changed |= self._merge_dependency(
-                            pkg_dep, deptypes, visited, spec_deps, provider_index, level=level)
+                            pkg_dep, deptypes, visited, spec_deps,
+                            provider_index, level=level)
             any_change |= changed
 
         return any_change
@@ -1557,7 +1559,9 @@ class Spec(object):
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
-        any_change = self._normalize_helper(visited, spec_deps, provider_index, level=0)
+        any_change = self._normalize_helper(
+            visited, spec_deps,
+            provider_index, level=0)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
