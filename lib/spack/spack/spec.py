@@ -95,6 +95,7 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
+from __future__ import print_function
 import base64
 import hashlib
 import imp
@@ -1415,7 +1416,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(self, dep, deptypes, visited, spec_deps,
-                          provider_index):
+                          provider_index, level=0):
         """Merge the dependency into this spec.
 
         This is the core of normalize().  There are some basic steps:
@@ -1461,7 +1462,7 @@ class Spec(object):
             changed = True
         # Constrain package information with spec info
         try:
-            changed |= spec_deps[dep.name].spec.constrain(dep)
+            changed |= spec_deps[dep.name].spec.constrain(dep, deptypes=deptypes)
 
         except UnsatisfiableSpecError as e:
             e.message = "Invalid spec: '%s'. "
@@ -1476,10 +1477,10 @@ class Spec(object):
             self._add_dependency(dependency.spec, dependency.deptypes)
 
         changed |= dependency.spec._normalize_helper(
-            visited, spec_deps, provider_index)
+            visited, spec_deps, provider_index, level=level+1)
         return changed
 
-    def _normalize_helper(self, visited, spec_deps, provider_index):
+    def _normalize_helper(self, visited, spec_deps, provider_index, level=0):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return False
@@ -1504,8 +1505,9 @@ class Spec(object):
                 deptypes = pkg._deptypes[dep_name]
                 # If pkg_dep is a dependency, merge it.
                 if pkg_dep:
-                    changed |= self._merge_dependency(
-                        pkg_dep, deptypes, visited, spec_deps, provider_index)
+                    if True:#level==0 or 'link' in deptypes or 'run' in deptypes:
+                        changed |= self._merge_dependency(
+                            pkg_dep, deptypes, visited, spec_deps, provider_index, level=level)
             any_change |= changed
 
         return any_change
@@ -1547,7 +1549,7 @@ class Spec(object):
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
-        any_change = self._normalize_helper(visited, spec_deps, provider_index)
+        any_change = self._normalize_helper(visited, spec_deps, provider_index, level=0)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
@@ -1588,7 +1590,7 @@ class Spec(object):
                 if vname not in spec.package_class.variants:
                     raise UnknownVariantError(spec.name, vname)
 
-    def constrain(self, other, deps=True):
+    def constrain(self, other, deps=True, deptypes=None):
         """Merge the constraints of other with self.
 
         Returns True if the spec changed as a result, False if not.
