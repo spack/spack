@@ -43,16 +43,12 @@ class Metis(Package):
     version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
     version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
 
-    variant('shared', default=True,
-            description='Enables the build of shared libraries')
-    variant('debug', default=False,
-            description='Builds the library in debug mode')
-    variant('gdb', default=False, description='Enables gdb support')
+    variant('shared', default=True, description='Enables the build of shared libraries.')
+    variant('debug', default=False, description='Builds the library in debug mode.')
+    variant('gdb', default=False, description='Enables gdb support.')
 
-    variant('idx64', default=False,
-            description='Use int64_t as default index type')
-    variant('real64', default=False,
-            description='Use double precision floating point types')
+    variant('idx64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
+    variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
 
@@ -63,12 +59,37 @@ class Metis(Package):
         return '%s/%smetis-%s.tar.gz' % (Metis.base_url, verdir, version)
 
     @when('@:4')
+    def patch(self):
+        pass
+
+    @when('@5:')
+    def patch(self):
+        source_path = self.stage.source_path
+        metis_header = FileFilter(join_path(source_path, 'include', 'metis.h'))
+
+        metis_header.filter(
+            r'(\b)(IDXTYPEWIDTH )(\d+)(\b)',
+            r'\1\2{0}\4'.format('64' if '+idx64' in self.spec else '32'),
+        )
+        metis_header.filter(
+            r'(\b)(REALTYPEWIDTH )(\d+)(\b)',
+            r'\1\2{0}\4'.format('64' if '+real64' in self.spec else '32'),
+        )
+
+        # Make clang 7.3 happy.
+        # Prevents "ld: section __DATA/__thread_bss extends beyond end of file"
+        # See upstream LLVM issue https://llvm.org/bugs/show_bug.cgi?id=27059
+        # and https://github.com/Homebrew/homebrew-science/blob/master/metis.rb
+        if self.spec.satisfies('%clang@7.3.0'):
+            filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24',
+                        join_path(source_path, 'GKlib', 'error.c'))
+
+    @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
-        unsupp_vars = [v for v in ('+gdb', '+idx64', '+real64') if v in spec]
-        if unsupp_vars:
-            msg = 'Given variants %s are unsupported by METIS 4!' % unsupp_vars
-            raise InstallError(msg)
+        if any('+{0}'.format(v) in spec for v in ['gdb', 'idx64', 'real64']):
+            raise InstallError('METIS@:4 does not support the following '
+                               'variants: gdb, idx64, real64.')
 
         options = ['COPTIONS=-fPIC']
         if '+debug' in spec:
@@ -155,12 +176,10 @@ class Metis(Package):
 
     @when('@5:')
     def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
 
+        options = std_cmake_args[:]
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
@@ -171,20 +190,6 @@ class Metis(Package):
                             '-DCMAKE_BUILD_TYPE:STRING=Debug'])
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
-
-        metis_header = join_path(source_directory, 'include', 'metis.h')
-        if '+idx64' in spec:
-            filter_file('IDXTYPEWIDTH 32', 'IDXTYPEWIDTH 64', metis_header)
-        if '+real64' in spec:
-            filter_file('REALTYPEWIDTH 32', 'REALTYPEWIDTH 64', metis_header)
-
-        # Make clang 7.3 happy.
-        # Prevents "ld: section __DATA/__thread_bss extends beyond end of file"
-        # See upstream LLVM issue https://llvm.org/bugs/show_bug.cgi?id=27059
-        # and https://github.com/Homebrew/homebrew-science/blob/master/metis.rb
-        if spec.satisfies('%clang@7.3.0'):
-            filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24',
-                        join_path(source_directory, 'GKlib', 'error.c'))
 
         with working_dir(build_directory, create=True):
             cmake(source_directory, *options)
