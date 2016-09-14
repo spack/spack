@@ -32,7 +32,8 @@ class PyPillow(Package):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url      = "https://pypi.python.org/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
+    url = "https://pypi.python.org/packages/source" + \
+        "/P/Pillow/Pillow-3.0.0.tar.gz"
 
     # TODO: This version should be deleted once the next release comes out.
     # TODO: It fixes a bug that prevented us from linking to Tk/Tcl.
@@ -65,7 +66,8 @@ class PyPillow(Package):
 
     # Required dependencies
     extends('python')
-    depends_on('binutils', type='build')
+    # Known not to work with 2.23, 2.25
+    depends_on('binutils@2.26:', type='build')
     depends_on('py-setuptools', type='build')
 
     # Recommended dependencies

@@ -28,7 +28,7 @@ from spack import *
 class PyScipy(Package):
     """Scientific Library for Python."""
     homepage = "http://www.scipy.org/"
-    url      = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
+    url = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
 
     version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
     version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
@@ -36,6 +36,7 @@ class PyScipy(Package):
 
     extends('python')
     depends_on('py-nose', type='build')
+    depends_on('binutils@2.26:', type='build')
     depends_on('py-numpy+blas+lapack', type=nolink)
 
     def install(self, spec, prefix):
