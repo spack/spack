@@ -66,8 +66,7 @@ class PyPillow(Package):
 
     # Required dependencies
     extends('python')
-    # Known not to work with 2.23, 2.25
-    depends_on('binutils@2.26:', type='build')
+    depends_on('binutils', type='build')
     depends_on('py-setuptools', type='build')
 
     # Recommended dependencies
