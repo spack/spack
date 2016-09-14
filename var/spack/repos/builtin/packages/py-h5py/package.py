@@ -56,8 +56,7 @@ class PyH5py(Package):
     depends_on('py-six', type=nolink)
 
     def install(self, spec, prefix):
-        setup_py('configure',
-               '--hdf5={0}'.format(spec['hdf5'].prefix))
+        setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
 
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
