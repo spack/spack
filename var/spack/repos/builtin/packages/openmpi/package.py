@@ -65,6 +65,7 @@ class Openmpi(Package):
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('2.0.1', '6f78155bd7203039d2448390f3b51c96')
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')
     version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
@@ -73,6 +74,7 @@ class Openmpi(Package):
     version('1.8.8', '0dab8e602372da1425e9242ae37faf8c')
     version('1.6.5', '03aed2a4aa4d0b27196962a2a65fc475')
 
+    patch('pgi16x_ppc64.patch', when="@2.0.1")
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.0:1.10.1")
@@ -85,6 +87,7 @@ class Openmpi(Package):
     variant('verbs', default=_verbs_dir() is not None,
             description='Build support for OpenFabrics verbs.')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
+    variant('cxx', default=False, description='Enable deprecated C++ bindings.')
 
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
@@ -166,7 +169,7 @@ class Openmpi(Package):
                        "--enable-static"]
 
         # for Open-MPI 2.0:, C++ bindings are disabled by default.
-        if self.spec.satisfies('@2.0:'):
+        if self.spec.satisfies('@2.0:+cxx'):
             config_args.extend(['--enable-mpi-cxx'])
 
         if getattr(self, 'config_extra', None) is not None:
