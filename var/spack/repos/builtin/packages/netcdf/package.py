@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
 
 
@@ -94,7 +95,10 @@ class Netcdf(Package):
             config_args.append('--enable-parallel4')
 
         CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
-        LDFLAGS.append("-L%s/lib"     % spec['hdf5'].prefix)
+        LDFLAGS.append("-L%s/lib" % spec['hdf5'].prefix)
+        for lib in os.listdir(join_path(spec['hdf5'].prefix, 'lib')):
+            if lib.endswith('.so'):
+                LIBS.append("-l%s" % lib[3:-3])
 
         # HDF4 support
         # As of NetCDF 4.1.3, "--with-hdf4=..." is no longer a valid option
@@ -102,13 +106,13 @@ class Netcdf(Package):
         if '+hdf4' in spec:
             config_args.append("--enable-hdf4")
             CPPFLAGS.append("-I%s/include" % spec['hdf'].prefix)
-            LDFLAGS.append("-L%s/lib"     % spec['hdf'].prefix)
-            LIBS.append("-l%s"         % "jpeg")
+            LDFLAGS.append("-L%s/lib" % spec['hdf'].prefix)
+            LIBS.append("-l%s" % "jpeg")
 
         if 'szip' in spec:
             CPPFLAGS.append("-I%s/include" % spec['szip'].prefix)
-            LDFLAGS.append("-L%s/lib"     % spec['szip'].prefix)
-            LIBS.append("-l%s"         % "sz")
+            LDFLAGS.append("-L%s/lib" % spec['szip'].prefix)
+            LIBS.append("-l%s" % "sz")
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
