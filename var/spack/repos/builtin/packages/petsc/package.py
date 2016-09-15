@@ -65,9 +65,6 @@ class Petsc(Package):
     variant('batch', default=False,
             description='Enable batch mode to disable running job')
 
-    #lib auto-detect is failing, need to investigate!
-    patch('patch.intel', when='%intel', level=0)
-
     # Virtual dependencies
     depends_on('blas')
     depends_on('lapack')
@@ -122,9 +119,7 @@ class Petsc(Package):
         return compiler_opts
 
     def install(self, spec, prefix):
-
         options = ['--with-ssl=0']
-
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -162,6 +157,13 @@ class Petsc(Package):
             options.append(
                 '--with-superlu_dist=0'
             )
+
+        if '%intel' in spec:
+            options.extend([
+                '--with-clib-autodetect=0',
+                '--with-fortranlib-autodetect=0',
+                '--with-cxxlib-autodetect=0'
+            ])
 
 
         if 'batch' in spec:
