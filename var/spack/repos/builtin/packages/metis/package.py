@@ -176,8 +176,8 @@ class Metis(Package):
 
     @when('@5:')
     def install(self, spec, prefix):
-        build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
+        build_directory = join_path(source_directory, 'build')
 
         options = std_cmake_args[:]
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)

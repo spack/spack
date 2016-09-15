@@ -60,12 +60,10 @@ class Parmetis(Package):
         return '%s/%sparmetis-%s.tar.gz' % (Parmetis.base_url, verdir, version)
 
     def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-
-        build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
+        build_directory = join_path(source_directory, 'build')
 
+        options = std_cmake_args[:]
         options.extend([
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,
