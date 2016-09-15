@@ -32,6 +32,7 @@ class Dealii(Package):
     homepage = "https://www.dealii.org"
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
+    version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
     version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
     version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
@@ -67,11 +68,11 @@ class Dealii(Package):
     # Boost 1.58 is blacklisted, see
     # https://github.com/dealii/dealii/issues/1591
     # Require at least 1.59
-    # +python won't affect @:8.4.1
+    # +python won't affect @:8.4.2
     depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
-               when='@:8.4.1~mpi')
+               when='@:8.4.2~mpi')
     depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
-               when='@:8.4.1+mpi')
+               when='@:8.4.2+mpi')
     # since @8.5.0: (and @develop) python bindings are introduced:
     depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
                when='@8.5.0:~mpi~python')
@@ -102,8 +103,8 @@ class Dealii(Package):
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi",        when='@8.5.0:+petsc+mpi')
-    depends_on("slepc",            when='@8.5.0:+slepc+petsc+mpi')
+    depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi')
+    depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi')
     depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("trilinos",         when='+trilinos+mpi')
