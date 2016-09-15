@@ -25,17 +25,14 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Printproto(Package):
+    """Xprint extension to the X11 protocol - a portable, network-transparent
+    printing system."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "http://cgit.freedesktop.org/xorg/proto/printproto"
+    url      = "https://www.x.org/archive/individual/proto/printproto-1.0.5.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
-
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.0.5', '5afeb3a7de8a14b417239a14ea724268')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -25,17 +25,13 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xextproto(Package):
+    """X Protocol Extensions."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "http://cgit.freedesktop.org/xorg/proto/xextproto"
+    url      = "https://www.x.org/archive/individual/proto/xextproto-7.3.0.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
-
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('7.3.0', '37b700baa8c8ea7964702d948dd13821')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

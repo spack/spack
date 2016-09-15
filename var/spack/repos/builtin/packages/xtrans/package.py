@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xtrans(Package):
+    """xtrans is a library of code that is shared among various X packages to
+    handle network protocol transport in a modular fashion, allowing a
+    single place to add new transport types.  It is used by the X server,
+    libX11, libICE, the X font server, and related components."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "https://www.x.org/"
+    url      = "https://www.x.org/archive//individual/lib/xtrans-1.3.5.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
-
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.3.5', '6e4eac1b7c6591da0753052e1eccfb58')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xf86vidmodeproto(Package):
+    """XFree86 Video Mode Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protocol for dynamically configuring modelines
+    and gamma."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/xf86vidmodeproto"
+    url      = "https://www.x.org/archive/individual/proto/xf86vidmodeproto-2.3.1.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('2.3.1', '99016d0fe355bae0bb23ce00fb4d4a2c')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

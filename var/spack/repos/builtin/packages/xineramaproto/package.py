@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xineramaproto(Package):
+    """X Xinerama Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This is an X extension that allows multiple physical screens controlled
+    by a single X server to appear as a single screen."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/xineramaproto"
+    url      = "https://www.x.org/archive/individual/proto/xineramaproto-1.2.1.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.2.1', 'e0e148b11739e144a546b8a051b17dde')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

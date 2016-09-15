@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Kbproto(Package):
+    """X Keyboard Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protcol to provide a number of new capabilities
+    and controls for text keyboards."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/kbproto"
+    url      = "https://www.x.org/archive/individual/proto/kbproto-1.0.7.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.0.7', '19acc5f02ae80381e216f443134e0bbb')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

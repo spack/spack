@@ -25,19 +25,20 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Libxext(Package):
+    """library for common extensions to the X11 protocol."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "https://www.x.org/"
+    url      = "https://www.x.org/archive/individual/lib/libXext-1.3.3.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    version('1.3.3', '93f5ec084c998efbfb0befed22f9b57f')
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    depends_on('libx11')
+    depends_on('libxcb')
+    depends_on('libxau')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
+        make()
         make('install')

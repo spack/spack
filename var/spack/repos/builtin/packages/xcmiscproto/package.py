@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xcmiscproto(Package):
+    """XC-MISC Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protocol that provides Xlib two ways to query
+    the server for available resource IDs."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/xcmiscproto"
+    url      = "https://www.x.org/archive/individual/proto/xcmiscproto-1.2.2.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.2.2', 'ded6cd23fb2800df93ebf2b3f3b01119')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Videoproto(Package):
+    """X Video Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension provides a protocol for a video output mechanism,
+    mainly to rescale video playback in the video controller hardware."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/videoproto"
+    url      = "https://www.x.org/archive/individual/proto/videoproto-2.3.3.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('2.3.3', 'd984100603ee2420072f27bb491f4b7d')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

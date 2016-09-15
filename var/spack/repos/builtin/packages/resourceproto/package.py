@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Resourceproto(Package):
+    """X Resource Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protocol that allows a client to query the  X  server
+    about its usage of various resources."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/resourceproto"
+    url      = "https://www.x.org/archive/individual/proto/resourceproto-1.2.0.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.2.0', '33091d5358ec32dd7562a1aa225a70aa')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -26,7 +26,10 @@ from spack import *
 
 
 class Damageproto(Package):
-    """Damage extension protocol specification and header files."""
+    """X Damage Extension.
+
+    This package contains header files and documentation for the X Damage
+    extension.  Library and server implementations are separate."""
 
     homepage = "https://cgit.freedesktop.org/xorg/proto/damageproto"
     url      = "https://www.x.org/releases/individual/proto/damageproto-1.2.1.tar.gz"

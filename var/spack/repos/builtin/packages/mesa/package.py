@@ -46,8 +46,15 @@ class Mesa(Package):
     depends_on('glproto@1.4.14:')
     depends_on('presentproto@1.0:')
     depends_on('libdrm@2.4.66:')
-    depends_on('libxcb@1.9.3:')
     depends_on('libxshmfence@1.1:')
+    depends_on('libx11')
+    depends_on('libxext')
+    depends_on('libxdamage')
+    depends_on('libxfixes')
+    depends_on('libx11-xcb')
+    depends_on('libxcb@1.9.3:')
+    depends_on('libxcb-glx@1.8.1:')
+    depends_on('libxcb-dri2@1.8:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

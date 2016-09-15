@@ -25,17 +25,18 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Windowswmproto(Package):
+    """This module provides the definition of the WindowsWM extension to the
+    X11 protocol, used for coordination between an X11 server and the
+    Microsoft Windows native window manager.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    WindowsWM is only intended to be used on Cygwin when running a
+    rootless XWin server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/windowswmproto"
+    url      = "https://www.x.org/archive/individual/proto/windowswmproto-1.0.4.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.0.4', '558db92a8e4e1b07e9c62eca3f04dd8d')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

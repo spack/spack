@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xf86miscproto(Package):
+    """This package includes the protocol definitions of the "XFree86-Misc"
+    extension to the X11 protocol.  The "XFree86-Misc" extension is
+    supported by the XFree86 X server and versions of the Xorg X server
+    prior to Xorg 1.6."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "http://cgit.freedesktop.org/xorg/proto/xf86miscproto"
+    url      = "https://www.x.org/archive/individual/proto/xf86miscproto-0.9.3.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
-
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('0.9.3', 'c6432f04f84929c94fa05b3a466c489d')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

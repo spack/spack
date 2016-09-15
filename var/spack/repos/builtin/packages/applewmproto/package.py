@@ -25,17 +25,17 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Applewmproto(Package):
+    """Apple Rootless Window Management Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protcol that allows X window managers
+    to better interact with the Mac OS X Aqua user interface when
+    running X11 in a rootless mode."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/applewmproto"
+    url      = "https://www.x.org/archive/individual/proto/applewmproto-1.4.2.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.4.2', 'ecc8a4424a893ce120f5652dba62e9e6')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

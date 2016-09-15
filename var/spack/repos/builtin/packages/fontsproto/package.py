@@ -25,17 +25,13 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Fontsproto(Package):
+    """X Fonts Extension."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "http://cgit.freedesktop.org/xorg/proto/fontsproto"
+    url      = "https://www.x.org/archive/individual/proto/fontsproto-2.1.3.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
-
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('2.1.3', '0415f0360e33f3202af67c6c46782251')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

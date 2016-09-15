@@ -25,19 +25,20 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Randrproto(Package):
+    """X Resize and Rotate Extension (RandR).
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protocol for clients to dynamically change X
+    screens, so as to resize, rotate and reflect the root window of a screen.
+    """
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/randrproto"
+    url      = "https://www.x.org/archive/individual/proto/randrproto-1.5.0.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.5.0', '863d6ee3e0b2708f75d968470ed31eb9')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
+        make()
         make('install')

@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Inputproto(Package):
+    """X Input Extension.
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protocol to provide additional input devices
+    management such as graphic tablets."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/inputproto"
+    url      = "https://www.x.org/archive/individual/proto/inputproto-2.3.2.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('2.3.2', '6450bad6f8d5ebe354b01b734d1fd7ca')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

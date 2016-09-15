@@ -26,7 +26,11 @@ from spack import *
 
 
 class Dri3proto(Package):
-    """X11 Direct Rendering Infrastructure 2 Protocol Headers."""
+    """Direct Rendering Infrastructure 3 Extension.
+
+    This extension defines a protocol to securely allow user applications to
+    access the video hardware without requiring data to be passed through the
+    X server."""
 
     homepage = "https://cgit.freedesktop.org/xorg/proto/dri3proto/"
     url      = "https://www.x.org/releases/individual/proto/dri3proto-1.0.tar.gz"

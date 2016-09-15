@@ -25,17 +25,13 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Xf86rushproto(Package):
+    """X.org XF86RushProto protocol headers."""
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    homepage = "https://cgit.freedesktop.org/xorg/proto/xf86rushproto"
+    url      = "https://www.x.org/archive/individual/proto/xf86rushproto-1.1.2.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
-
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.1.2', '6a6389473332ace01146cccfef228576')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

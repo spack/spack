@@ -25,17 +25,16 @@
 from spack import *
 
 
-class Dri2proto(Package):
-    """Direct Rendering Infrastructure 2 Extension.
+class Evieext(Package):
+    """Extended Visual Information Extension (XEVIE).
 
-    This extension defines a protocol to securely allow user applications to
-    access the video hardware without requiring data to be passed through the
-    X server."""
+    This extension defines a protocol for a client to determine information
+    about core X visuals beyond what the core protocol provides."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/proto/evieproto"
+    url      = "https://www.x.org/archive/individual/proto/evieext-1.1.1.tar.gz"
 
-    version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
+    version('1.1.1', '018a7d24d0c7926d594246320bcb6a86')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -26,7 +26,10 @@ from spack import *
 
 
 class Glproto(Package):
-    """X11 OpenGL extension wire protocol."""
+    """OpenGL Extension to the X Window System.
+
+    This extension defines a protocol for the client to send 3D rendering
+    commands to the X server."""
 
     homepage = "https://www.x.org/wiki/"
     url      = "https://www.x.org/archive/individual/proto/glproto-1.4.17.tar.gz"
