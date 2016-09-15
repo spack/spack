@@ -62,6 +62,11 @@ class Petsc(Package):
             description='Activates support for MUMPS (only parallel)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
+    variant('batch', default=False,
+            description='Enable batch mode to disable running job')
+
+    #lib auto-detect is failing, need to investigate!
+    patch('patch.intel', when='%intel', level=0)
 
     # Virtual dependencies
     depends_on('blas')
@@ -117,7 +122,9 @@ class Petsc(Package):
         return compiler_opts
 
     def install(self, spec, prefix):
+
         options = ['--with-ssl=0']
+
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -155,6 +162,13 @@ class Petsc(Package):
             options.append(
                 '--with-superlu_dist=0'
             )
+
+
+        if 'batch' in spec:
+            options.extend([
+                '--with-batch',
+                '--known-mpi-shared-libraries=0'
+            ])
 
         configure('--prefix=%s' % prefix, *options)
 
