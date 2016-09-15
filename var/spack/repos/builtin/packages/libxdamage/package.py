@@ -25,19 +25,23 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxdamage(Package):
+    """This package contains the library for the X Damage extension."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXdamage"
+    url      = "https://www.x.org/archive/individual/lib/libXdamage-1.1.4.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.1.4', '95867778da012623815214769007c0d7')
+
+    depends_on('libxfixes')
+    depends_on('libx11')
+
+    depends_on('damageproto@1.1:')
+    depends_on('fixesproto')
+    depends_on('xextproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

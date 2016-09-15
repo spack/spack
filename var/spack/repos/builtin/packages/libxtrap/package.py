@@ -25,19 +25,32 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxtrap(Package):
+    """libXTrap is the Xlib-based client API for the DEC-XTRAP extension.
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    XTrap was a proposed standard extension for X11R5 which facilitated the
+    capturing of server protocol and synthesizing core input events.
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    Digital participated in the X Consortium's xtest working group which chose
+    to evolve XTrap functionality into the XTEST & RECORD extensions for X11R6.
+
+    As X11R6 was released in 1994, XTrap has now been deprecated for over
+    15 years, and uses of it should be quite rare."""
+
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXTrap"
+    url      = "https://www.x.org/archive/individual/lib/libXTrap-1.0.1.tar.gz"
+
+    version('1.0.1', 'fde266b82ee14da3e4f4f81c9584c1ea')
+
+    depends_on('libx11')
+    depends_on('libxt')
+    depends_on('libxext')
+
+    depends_on('trapproto')
+    depends_on('xextproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

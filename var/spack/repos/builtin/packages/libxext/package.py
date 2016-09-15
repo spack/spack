@@ -26,16 +26,17 @@ from spack import *
 
 
 class Libxext(Package):
-    """library for common extensions to the X11 protocol."""
+    """libXext - library for common extensions to the X11 protocol."""
 
-    homepage = "https://www.x.org/"
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXext"
     url      = "https://www.x.org/archive/individual/lib/libXext-1.3.3.tar.gz"
 
     version('1.3.3', '93f5ec084c998efbfb0befed22f9b57f')
 
-    depends_on('libx11')
-    depends_on('libxcb')
-    depends_on('libxau')
+    depends_on('libx11@1.6:')
+
+    depends_on('xproto@7.0.13:')
+    depends_on('xextproto@7.1.99:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

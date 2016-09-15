@@ -25,19 +25,22 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxscrnsaver(Package):
+    """XScreenSaver - X11 Screen Saver extension client library"""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXScrnSaver"
+    url      = "https://www.x.org/archive/individual/lib/libXScrnSaver-1.2.2.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.2.2', '79227e7d8c0dad27654c526de3d6fef3')
+
+    depends_on('libx11')
+    depends_on('libxext')
+
+    depends_on('xextproto')
+    depends_on('scrnsaverproto@1.2:')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

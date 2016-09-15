@@ -25,19 +25,26 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxaw(Package):
+    """Xaw is the X Athena Widget Set.
+    Xaw is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXaw"
+    url      = "https://www.x.org/archive/individual/lib/libXaw-1.0.13.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.0.13', '6c522476024df5872cddc5f1562fb656')
+
+    depends_on('libx11')
+    depends_on('libxext')
+    depends_on('libxt')
+    depends_on('libxmu')
+    depends_on('libxpm')
+
+    depends_on('xproto')
+    depends_on('xextproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

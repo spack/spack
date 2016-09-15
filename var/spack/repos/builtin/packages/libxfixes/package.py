@@ -25,19 +25,23 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxfixes(Package):
+    """This package contains header files and documentation for the XFIXES
+    extension.  Library and server implementations are separate."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfixes"
+    url      = "https://www.x.org/archive/individual/lib/libXfixes-5.0.2.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('5.0.2', '3636e59f8f5fa2e469d556d49f30e98d')
+
+    depends_on('libx11@1.6:')
+
+    depends_on('xproto')
+    depends_on('fixesproto@5.0:')
+    depends_on('xextproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

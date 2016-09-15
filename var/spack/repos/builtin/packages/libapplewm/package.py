@@ -25,19 +25,28 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libapplewm(Package):
+    """AppleWM is a simple library designed to interface with the Apple-WM
+    extension. This extension allows X window managers to better interact with
+    the Mac OS X Aqua user interface when running X11 in a rootless mode."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libAppleWM"
+    url      = "https://www.x.org/archive/individual/lib/libAppleWM-1.4.1.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.4.1', '52c587641eb57f00978d28d98d487af8')
+
+    depends_on('libx11')
+    depends_on('libxext')
+
+    depends_on('xextproto')
+    depends_on('applewmproto@1.4:')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
+        # Crashes with this error message on Linux:
+        # HIServices/Processes.h: No such file or directory
+        # May only build properly on macOS?
+
         make()
-        make("install")
+        make('install')

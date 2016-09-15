@@ -25,19 +25,23 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libfs(Package):
+    """libFS - X Font Service client library.
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    This library is used by clients of X Font Servers (xfs), such as
+    xfsinfo, fslsfonts, and the X servers themselves."""
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libFS"
+    url      = "https://www.x.org/archive/individual/lib/libFS-1.0.7.tar.gz"
+
+    version('1.0.7', 'd8c1246f5b3d0e7ccf2190d3bf2ecb73')
+
+    depends_on('xproto@7.0.17:')
+    depends_on('fontsproto')
+    depends_on('xtrans')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

@@ -25,19 +25,23 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxt(Package):
+    """libXt - X Toolkit Intrinsics library."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
+    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.1.5', '77d317fbc508dd6adefb59d57a663032')
+
+    depends_on('libsm')
+    depends_on('libice')
+    depends_on('libx11')
+
+    depends_on('xproto')
+    depends_on('kbproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

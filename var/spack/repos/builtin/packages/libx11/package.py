@@ -26,15 +26,15 @@ from spack import *
 
 
 class Libx11(Package):
-    """Core X11 protocol client library."""
+    """libX11 - Core X11 protocol client library."""
 
     homepage = "https://www.x.org/"
-    url      = "https://www.x.org/archive//individual/lib/libX11-1.6.3.tar.gz"
+    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.3.tar.gz"
 
     version('1.6.3', '7d16653fe7c36209799175bb3dc1ae46')
 
-    depends_on('libxau')
     depends_on('libxcb@1.1.92:')
+
     depends_on('xproto@7.0.17:')
     depends_on('xextproto')
     depends_on('xtrans')

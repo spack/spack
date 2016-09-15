@@ -25,19 +25,25 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxmu(Package):
+    """This library contains miscellaneous utilities and is not part of the
+    Xlib standard.  It contains routines which only use public interfaces so
+    that it may be layered on top of any proprietary implementation of Xlib
+    or Xt."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXmu"
+    url      = "https://www.x.org/archive/individual/lib/libXmu-1.1.2.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.1.2', 'd5be323b02e6851607205c8e941b4e61')
+
+    depends_on('libxt')
+    depends_on('libxext')
+    depends_on('libx11')
+
+    depends_on('xextproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

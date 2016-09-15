@@ -28,8 +28,8 @@ from spack import *
 class Resourceproto(Package):
     """X Resource Extension.
 
-    This extension defines a protocol that allows a client to query the  X  server
-    about its usage of various resources."""
+    This extension defines a protocol that allows a client to query the
+    X server about its usage of various resources."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/resourceproto"
     url      = "https://www.x.org/archive/individual/proto/resourceproto-1.2.0.tar.gz"

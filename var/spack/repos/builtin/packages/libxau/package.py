@@ -27,16 +27,15 @@ from spack import *
 
 class Libxau(Package):
     """The libXau package contains a library implementing the X11
-       Authorization Protocol. This is useful for restricting client
-       access to the display."""
+    Authorization Protocol. This is useful for restricting client
+    access to the display."""
 
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://ftp.x.org/pub/individual/lib/libXau-1.0.8.tar.bz2"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXau/"
+    url      = "https://www.x.org/archive/individual/lib/libXau-1.0.8.tar.gz"
 
-    version('1.0.8', '685f8abbffa6d145c0f930f00703b21b')
+    version('1.0.8', 'a85cd601d82bc79c0daa280917572e20')
 
     depends_on('xproto')
-    depends_on('pkg-config', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

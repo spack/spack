@@ -25,19 +25,28 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libxfont2(Package):
+    """libXfont provides the core of the legacy X11 font system, handling the
+    index files (fonts.dir, fonts.alias, fonts.scale), the various font file
+    formats, and rasterizing them.   It is used by the X servers, the
+    X Font Server (xfs), and some font utilities (bdftopcf for instance),
+    but should not be used by normal X11 clients.  X11 clients access fonts
+    via either the new API's in libXft, or the legacy API's in libX11."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfont"
+    url      = "https://www.x.org/archive/individual/lib/libXfont2-2.0.1.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('2.0.1', '6ae5ae1f9fb1213b04f14a802a1d721c')
+
+    depends_on('xtrans')
+    depends_on('libfontenc')
+    depends_on('freetype')
+
+    depends_on('xproto')
+    depends_on('fontsproto@2.1.3:')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

@@ -31,7 +31,7 @@ class Xtrans(Package):
     single place to add new transport types.  It is used by the X server,
     libX11, libICE, the X font server, and related components."""
 
-    homepage = "https://www.x.org/"
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libxtrans"
     url      = "https://www.x.org/archive//individual/lib/xtrans-1.3.5.tar.gz"
 
     version('1.3.5', '6e4eac1b7c6591da0753052e1eccfb58')

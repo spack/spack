@@ -25,19 +25,27 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Libwindowswm(Package):
+    """WindowsWM - Cygwin/X rootless window management extension.
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    WindowsWM is a simple library designed to interface with the
+    Windows-WM extension.  This extension allows X window managers to
+    better interact with the Cygwin XWin server when running X11 in a
+    rootless mode."""
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libWindowsWM"
+    url      = "https://www.x.org/archive/individual/lib/libWindowsWM-1.0.1.tar.gz"
+
+    version('1.0.1', 'f260e124706ff6209c566689528667c6')
+
+    depends_on('libx11')
+    depends_on('libxext')
+
+    depends_on('xextproto')
+    depends_on('windowswmproto')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

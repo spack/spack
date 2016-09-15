@@ -25,19 +25,17 @@
 from spack import *
 
 
-class Ncview(Package):
-    """Simple viewer for NetCDF files."""
-    homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+class Hsakmt(Package):
+    """hsakmt is a thunk library that provides a userspace interface to amdkfd
+    (AMD's HSA Linux kernel driver). It is the HSA equivalent of libdrm."""
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    homepage = "https://cgit.freedesktop.org/amd/hsakmt/"
+    url      = "https://www.x.org/archive/individual/lib/hsakmt-1.0.0.tar.gz"
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-    depends_on("libxaw")
+    version('1.0.0', '9beb20104e505300daf541266c4c3c3d')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

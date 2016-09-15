@@ -51,10 +51,7 @@ class Mesa(Package):
     depends_on('libxext')
     depends_on('libxdamage')
     depends_on('libxfixes')
-    depends_on('libx11-xcb')
     depends_on('libxcb@1.9.3:')
-    depends_on('libxcb-glx@1.8.1:')
-    depends_on('libxcb-dri2@1.8:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
