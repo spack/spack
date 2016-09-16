@@ -291,9 +291,10 @@ def set_build_environment_variables(pkg, env, dirty=False):
     bin_dirs = reversed(
         filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
 
-    # Filter out dirs already present in PATH to prevent prepending /usr/bin and similar from external depnedencies
+    # Filter out dirs already present in PATH to prevent prepending
+    # /usr/bin and similar from external depnedencies
     path = get_path('PATH')
-    bin_dirs_new=[]
+    bin_dirs_new = []
     for item in bin_dirs:
         if item not in path:
             bin_dirs_new.append(item)
