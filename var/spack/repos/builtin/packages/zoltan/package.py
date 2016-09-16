@@ -87,8 +87,10 @@ class Zoltan(Package):
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
             config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
             config_args.append('FC={0}'.format(spec['mpi'].mpifc))
+
+            mpi_libs = ' -l'.join(self.get_mpi_libs())
             config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
-            config_args.append('--with-mpi-libs={0}'.format('-lmpich'))
+            config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
@@ -114,12 +116,31 @@ class Zoltan(Package):
             make(parallel=not spec.satisfies('@:3.6+fortran'))
             make('install')
 
+        # NOTE: Unfortunately, Zoltan doesn't provide any configuration
+        # options for the extension of the output library files, so this
+        # script must change these extensions as a post-processing step.
         if '+shared' in spec:
             for lib_path in glob.glob(join_path(prefix, 'lib', '*.a')):
                 lib_static_name = os.path.basename(lib_path)
-                lib_shared_name = re.sub(r'\.a$', '.so', lib_static_name)
+                lib_shared_name = re.sub(r'\.a$', '.{0}'.format(dso_suffix),
+                                         lib_static_name)
                 move(lib_path, join_path(prefix, 'lib', lib_shared_name))
 
     def get_config_flag(self, flag_name, flag_variant):
         flag_pre = 'en' if '+{0}'.format(flag_variant) in self.spec else 'dis'
         return '--{0}able-{1}'.format(flag_pre, flag_name)
+
+    # NOTE: Zoltan assumes that it's linking against an MPI library that can
+    # be found with '-lmpi,' which isn't the case for many MPI packages.  This
+    # function finds the names of the actual libraries for Zoltan's MPI dep.
+    def get_mpi_libs(self):
+        mpi_libs = set()
+
+        for lib_path in glob.glob(join_path(self.spec['mpi'].prefix.lib, '*')):
+            mpi_lib_match = re.match(
+                r'^(lib)((\w*)mpi(\w*))\.((a)|({0}))$'.format(dso_suffix),
+                os.path.basename(lib_path))
+            if mpi_lib_match:
+                mpi_libs.add(mpi_lib_match.group(2))
+
+        return list(mpi_libs)
