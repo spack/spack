@@ -25,23 +25,23 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxvmc(Package):
+    """X.org libXvMC library."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXvMC"
+    url      = "https://www.x.org/archive/individual/lib/libXvMC-1.0.9.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.0.9', 'a28c0780373537f4774565309b31a69e')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11@1.6:')
+    depends_on('libxext')
+    depends_on('libxv')
 
-    depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('videoproto')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

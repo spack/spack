@@ -25,19 +25,17 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxkbfile(Package):
+    """XKB file handling routines."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libxkbfile"
+    url      = "https://www.x.org/archive/individual/lib/libxkbfile-1.0.9.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.0.9', '5aab87eba67f37dd910a19be5c1129ee')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11')
 
-    depends_on('xproto')
+    depends_on('kbproto')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

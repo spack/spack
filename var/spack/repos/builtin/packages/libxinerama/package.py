@@ -25,23 +25,22 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxinerama(Package):
+    """libXinerama - API for Xinerama extension to X11 Protocol."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXinerama"
+    url      = "https://www.x.org/archive/individual/lib/libXinerama-1.1.3.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.1.3', '7224a1baa9733a54053550a3fb4be118')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11')
+    depends_on('libxext')
 
-    depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('xineramaproto@1.1.99.1:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

@@ -25,23 +25,23 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxxf86dga(Package):
+    """libXxf86dga - Client library for the XFree86-DGA extension."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXxf86dga"
+    url      = "https://www.x.org/archive/individual/lib/libXxf86dga-1.1.4.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.1.4', '8ed1c8674e730e8d333dfe4b9f2097d9')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11')
+    depends_on('libxext')
 
     depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('xf86dgaproto@2.0.99.2:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

@@ -25,23 +25,25 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Liblbxutil(Package):
+    """liblbxutil - Low Bandwith X extension (LBX) utility routines."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "http://cgit.freedesktop.org/xorg/lib/liblbxutil"
+    url      = "https://www.x.org/archive/individual/lib/liblbxutil-1.1.0.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.1.0', '2735cd23625d4cc870ec4eb7ca272788')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
-
+    depends_on('xextproto@7.0.99.1:')
     depends_on('xproto')
+
+    # There is a bug in the library that causes the following messages:
+    # undefined symbol: Xfree
+    # undefined symbol: Xalloc
+    # See https://bugs.freedesktop.org/show_bug.cgi?id=8421
+    # Adding a dependency on libxdmcp and adding LIBS=-lXdmcp did not fix it
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

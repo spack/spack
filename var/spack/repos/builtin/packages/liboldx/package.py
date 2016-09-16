@@ -25,23 +25,18 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Liboldx(Package):
+    """X version 10 backwards compatibility."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "https://cgit.freedesktop.org/xorg/lib/liboldX/"
+    url      = "https://www.x.org/archive/individual/lib/liboldX-1.0.1.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.0.1', 'ea7c4b6a19bf2d04100e2580abf83fae')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
-
-    depends_on('xproto')
+    depends_on('libx11')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

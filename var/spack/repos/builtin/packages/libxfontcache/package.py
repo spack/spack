@@ -25,23 +25,22 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxfontcache(Package):
+    """Xfontcache - X-TrueType font cache extension client library."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfontcache"
+    url      = "https://www.x.org/archive/individual/lib/libXfontcache-1.0.5.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.0.5', '5030fc9c7f16dbb52f92a8ba2c574f5c')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11')
+    depends_on('libxext')
 
-    depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('fontcacheproto')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

@@ -25,23 +25,33 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxtst(Package):
+    """libXtst provides the Xlib-based client API for the XTEST & RECORD
+    extensions.
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    The XTEST extension is a minimal set of client and server extensions
+    required to completely test the X11 server with no user intervention.
+    This extension is not intended to support general journaling and
+    playback of user actions.
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    The RECORD extension supports the recording and reporting of all
+    core X protocol and arbitrary X extension protocol."""
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXtst"
+    url      = "https://www.x.org/archive/individual/lib/libXtst-1.2.2.tar.gz"
 
-    depends_on('xproto')
+    version('1.2.2', 'efef3b1e44bd8074a601c0c5ce0788f4')
+
+    depends_on('libx11')
+    depends_on('libxext@1.0.99.4:')
+    depends_on('libxi')
+
+    depends_on('recordproto@1.13.99.1:')
+    depends_on('xextproto@7.0.99.3:')
+    depends_on('inputproto')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

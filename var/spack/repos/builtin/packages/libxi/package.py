@@ -25,23 +25,24 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxi(Package):
+    """libXi - library for the X Input Extension."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXi"
+    url      = "https://www.x.org/archive/individual/lib/libXi-1.7.6.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.7.6', 'f3828f9d7893068f6f6f10fe15b31afa')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11@1.6:')
+    depends_on('libxext@1.0.99.1:')
+    depends_on('libxfixes@5:')
 
-    depends_on('xproto')
+    depends_on('xproto@7.0.13:')
+    depends_on('xextproto@7.0.3:')
+    depends_on('inputproto@2.2.99.1:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

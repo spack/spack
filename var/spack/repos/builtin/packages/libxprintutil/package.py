@@ -25,23 +25,23 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxprintutil(Package):
+    """Xprint application utility routines."""
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXprintUtil/"
+    url      = "https://www.x.org/archive/individual/lib/libXprintUtil-1.0.1.tar.gz"
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    version('1.0.1', '2f02e812f3e419534ced6fcb5860825f')
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    depends_on('libx11')
+    depends_on('libxp')
+    depends_on('libxt')
+    depends_on('libxau')
 
-    depends_on('xproto')
+    depends_on('printproto')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

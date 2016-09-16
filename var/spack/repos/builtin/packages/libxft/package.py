@@ -25,23 +25,25 @@
 from spack import *
 
 
-class Libxshmfence(Package):
-    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
+class Libxft(Package):
+    """X FreeType library.
 
-    This library offers a CPU-based synchronization primitive compatible
-    with the X SyncFence objects that can be shared between processes
-    using file descriptor passing."""
+    Xft version 2.1 was the first stand alone release of Xft, a library that
+    connects X applications with the FreeType font rasterization library. Xft
+    uses fontconfig to locate fonts so it has no configuration files."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libXft"
+    url      = "https://www.x.org/archive/individual/lib/libXft-2.3.2.tar.gz"
 
-    version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
+    version('2.3.2', '3a2c1ce2641817dace55cd2bfe10b0f0')
 
-    depends_on('xproto')
+    depends_on('freetype@2.1.6:')
+    depends_on('fontconfig@2.5.92:')
+    depends_on('libx11')
+    depends_on('libxrender@0.8.2:')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')
