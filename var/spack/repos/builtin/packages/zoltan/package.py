@@ -22,10 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+from spack import *
 import re
 import os
 import glob
-from spack import *
 
 
 class Zoltan(Package):
@@ -47,23 +48,21 @@ class Zoltan(Package):
     version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
 
-    variant('debug', default=False,
-            description='Builds a debug version of the library')
-    variant('shared', default=True,
-            description='Builds a shared version of the library')
+    variant('debug', default=False, description='Builds a debug version of the library.')
+    variant('shared', default=True, description='Builds a shared version of the library.')
 
-    variant('fortran', default=True, description='Enable Fortran support')
-    variant('mpi', default=False, description='Enable MPI support')
+    variant('fortran', default=True, description='Enable Fortran support.')
+    variant('mpi', default=True, description='Enable MPI support.')
 
     depends_on('mpi', when='+mpi')
 
+    def url_for_version(self, version):
+        return '%s/zoltan_distrib_v%s.tar.gz' % (Zoltan.base_url, version)
+
     def install(self, spec, prefix):
         config_args = [
-            '--enable-f90interface'
-            if '+fortan' in spec else '--disable-f90interface',
-
-            '--enable-mpi'
-            if '+mpi' in spec else '--disable-mpi',
+            self.get_config_flag('f90interface', 'fortran'),
+            self.get_config_flag('mpi', 'mpi'),
         ]
         config_cflags = [
             '-O0' if '+debug' in spec else '-O3',
@@ -76,44 +75,37 @@ class Zoltan(Package):
             config_cflags.append('-fPIC')
 
         if '+mpi' in spec:
-            config_args.append('CC=%s/mpicc' % spec['mpi'].prefix.bin)
-            config_args.append('CXX=%s/mpicxx' % spec['mpi'].prefix.bin)
-            config_args.append('--with-mpi=%s' % spec['mpi'].prefix)
-            config_args.append('--with-mpi-compilers=%s' %
-                               spec['mpi'].prefix.bin)
+            config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
+            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
+            config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
+        source_directory = self.stage.source_path
         if spec.satisfies('@:3.6'):
-            cd('Zoltan_v%s' % self.version)
+            zoltan_directory = 'Zoltan_v{0}'.format(self.version)
+            source_directory = join_path(source_directory, zoltan_directory)
 
-        mkdirp('build')
-        cd('build')
+        build_directory = join_path(source_directory, 'build')
+        with working_dir(build_directory, create=True):
+            config = Executable(join_path(source_directory, 'configure'))
+            config(
+                '--prefix={0}'.format(prefix),
+                '--with-cflags={0}'.format(' '.join(config_cflags)),
+                '--with-cxxflags={0}'.format(' '.join(config_cflags)),
+                *config_args
+            )
 
-        config_zoltan = Executable('../configure')
-        config_zoltan(
-            '--prefix=%s' % pwd(),
-            '--with-cflags=%s' % ' '.join(config_cflags),
-            '--with-cxxflags=%s' % ' '.join(config_cflags),
-            *config_args)
+            make()
+            make('install')
 
-        make()
-        make('install')
-
-        # NOTE: Unfortunately, Zoltan doesn't provide any configuration
-        # options for the extension of the output library files, so this
-        # script must change these extensions as a post-processing step.
         if '+shared' in spec:
-            for libpath in glob.glob('lib/*.a'):
-                libdir, libname = (os.path.dirname(libpath),
-                                   os.path.basename(libpath))
-                move(libpath, os.path.join(
-                    libdir, re.sub(r'\.a$', '.so', libname)))
+            for lib_path in glob.glob(join_path(prefix, 'lib', '*.a')):
+                lib_static_name = os.path.basename(lib_path)
+                lib_shared_name = re.sub(r'\.a$', '.so', lib_static_name)
+                move(lib_path, join_path(prefix, 'lib', lib_shared_name))
 
-        mkdirp(prefix)
-        move('include', prefix)
-        move('lib', prefix)
-
-    def url_for_version(self, version):
-        return '%s/zoltan_distrib_v%s.tar.gz' % (Zoltan.base_url, version)
+    def get_config_flag(self, flag_name, flag_variant):
+        flag_pre = 'en' if '+{0}'.format(flag_variant) in self.spec else 'dis'
+        return '--{0}able-{1}'.format(flag_pre, flag_name)
