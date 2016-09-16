@@ -161,7 +161,7 @@ def main():
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
-        spack.curl.add_default_arg('-k')
+        spack.insecure = True
 
     # Try to load the particular command asked for and run it
     command = spack.cmd.get_command(args.command.replace('-', '_'))

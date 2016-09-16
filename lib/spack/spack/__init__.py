@@ -129,8 +129,9 @@ from spack.util.executable import Executable, which
 # User's editor from the environment
 editor = Executable(os.environ.get("EDITOR", "vi"))
 
-# Curl tool for fetching files.
-curl = which("curl", required=True)
+# If this is enabled, tools that use SSL should not verify
+# certifiates. e.g., curl should use the -k option.
+insecure = False
 
 # Whether to build in tmp space or directly in the stage_path.
 # If this is true, then spack will make stage directories in
