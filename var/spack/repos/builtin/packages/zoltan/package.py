@@ -49,6 +49,8 @@ class Zoltan(Package):
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
 
     variant('debug', default=False, description='Builds a debug version of the library.')
+    variant('shared', default=True, description='Builds a shared version of the library.')
+
     variant('fortran', default=True, description='Enable Fortran support.')
     variant('mpi', default=True, description='Enable MPI support.')
 
@@ -74,6 +76,13 @@ class Zoltan(Package):
             '-g' if '+debug' in spec else '-g0',
         ]
 
+        if '+shared' in spec:
+            config_args.append('RANLIB=echo')
+            config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
+            config_cflags.append('-fPIC')
+            if spec.satisfies('%gcc'):
+                config_args.append('--with-libs={0}'.format('-lgfortran'))
+
         if '+mpi' in spec:
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
             config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
@@ -96,13 +105,20 @@ class Zoltan(Package):
                 '--prefix={0}'.format(prefix),
                 '--with-cflags={0}'.format(' '.join(config_cflags)),
                 '--with-cxxflags={0}'.format(' '.join(config_cflags)),
+                '--with-fcflags={0}'.format(' '.join(config_cflags)),
                 *config_args
             )
 
             # NOTE: Earlier versions of Zoltan cannot be built in parallel
             # because they contain nested Makefile dependency bugs.
-            make(parallel=not (spec.satisfies('@:3.6') and '+fortran' in spec))
+            make(parallel=not spec.satisfies('@:3.6+fortran'))
             make('install')
+
+        if '+shared' in spec:
+            for lib_path in glob.glob(join_path(prefix, 'lib', '*.a')):
+                lib_static_name = os.path.basename(lib_path)
+                lib_shared_name = re.sub(r'\.a$', '.so', lib_static_name)
+                move(lib_path, join_path(prefix, 'lib', lib_shared_name))
 
     def get_config_flag(self, flag_name, flag_variant):
         flag_pre = 'en' if '+{0}'.format(flag_variant) in self.spec else 'dis'
