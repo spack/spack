@@ -25,37 +25,23 @@
 from spack import *
 
 
-class Libxcb(Package):
-    """The X protocol C-language Binding (XCB) is a replacement
-    for Xlib featuring a small footprint, latency hiding, direct
-    access to the protocol, improved threading support, and
-    extensibility."""
+class Xpyb(Package):
+    """xpyb provides a Python binding to the X Window System protocol
+    via libxcb."""
 
     homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
+    url      = "https://xcb.freedesktop.org/dist/xpyb-1.3.1.tar.gz"
 
-    version('1.12', '95eee7c28798e16ba5443f188b27a476')
-    version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
-    version('1.11.1', '118623c15a96b08622603a71d8789bf3')
+    version('1.3.1', '75d567e25517fb883a56f10b77fd2757')
 
-    depends_on('libpthread-stubs')
-    depends_on('libxau@0.99.2:')
-    depends_on('libxdmcp')
+    extends('python')
 
-    depends_on('xcb-proto', type='build')
-    depends_on('python@2:2.8', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('util-macros', type='build')
+    depends_on('libxcb@1.5:')
 
-    def patch(self):
-        filter_file(
-            'typedef struct xcb_auth_info_t {',
-            'typedef struct {',
-            'src/xcb.h')
+    depends_on('xcb-proto@1.7.1:', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')

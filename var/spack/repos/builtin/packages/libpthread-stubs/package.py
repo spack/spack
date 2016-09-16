@@ -27,13 +27,12 @@ from spack import *
 
 class LibpthreadStubs(Package):
     """The libpthread-stubs package provides weak aliases for pthread
-       functions not provided in libc or otherwise available by
-       default."""
+    functions not provided in libc or otherwise available by default."""
 
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/libpthread-stubs-0.1.tar.bz2"
+    homepage = "https://xcb.freedesktop.org/"
+    url      = "https://xcb.freedesktop.org/dist/libpthread-stubs-0.3.tar.gz"
 
-    version('0.3', 'e8fa31b42e13f87e8f5a7a2b731db7ee')
+    version('0.3', 'a09d928c4af54fe5436002345ef71138')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -25,36 +25,26 @@
 from spack import *
 
 
-class Libxcb(Package):
-    """The X protocol C-language Binding (XCB) is a replacement
-    for Xlib featuring a small footprint, latency hiding, direct
-    access to the protocol, improved threading support, and
-    extensibility."""
+class XcbDemo(Package):
+    """xcb-demo: A collection of demo programs that use the XCB library."""
 
     homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
+    url      = "https://xcb.freedesktop.org/dist/xcb-demo-0.1.tar.gz"
 
-    version('1.12', '95eee7c28798e16ba5443f188b27a476')
-    version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
-    version('1.11.1', '118623c15a96b08622603a71d8789bf3')
+    version('0.1', '803c5c91d54e734e6f6fa3f04f2463ff')
 
-    depends_on('libpthread-stubs')
-    depends_on('libxau@0.99.2:')
-    depends_on('libxdmcp')
+    depends_on('libxcb')
+    depends_on('xcb-util')
+    depends_on('xcb-util-image')
+    depends_on('xcb-util-wm')
 
-    depends_on('xcb-proto', type='build')
-    depends_on('python@2:2.8', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('util-macros', type='build')
-
-    def patch(self):
-        filter_file(
-            'typedef struct xcb_auth_info_t {',
-            'typedef struct {',
-            'src/xcb.h')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
+
+        # FIXME: crashes with the following error message
+        # X11/XCB/xcb.h: No such file or directory
 
         make()
         make('check')

@@ -26,7 +26,8 @@ from spack import *
 
 
 class XcbProto(Package):
-    """Protocol for libxcb"""
+    """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to
+    generate the majority of its code and API."""
 
     homepage = "http://xcb.freedesktop.org/"
     url      = "http://xcb.freedesktop.org/dist/xcb-proto-1.11.tar.gz"
