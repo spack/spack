@@ -34,8 +34,7 @@ class Lndir(Package):
 
     version('1.0.3', '7173b2e4832658d319c2980a7c834205')
 
-    depends_on('xproto@7.0.17:')
-
+    depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
 
     def install(self, spec, prefix):
