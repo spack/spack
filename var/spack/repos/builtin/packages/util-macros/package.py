@@ -25,11 +25,13 @@
 from spack import *
 
 
-class XorgUtilMacros(Package):
-    """The m4 macros used by all of the Xorg packages."""
+class UtilMacros(Package):
+    """This is a set of autoconf macros used by the configure.ac scripts in
+    other Xorg modular packages, and is needed to generate new versions
+    of their configure scripts with autoconf."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/util/macros/"
-    url = "http://ftp.x.org/pub/individual/util/util-macros-1.19.0.tar.bz2"
+    homepage = "http://cgit.freedesktop.org/xorg/util/macros/"
+    url = "https://www.x.org/archive/individual/util/util-macros-1.19.0.tar.bz2"
 
     version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
 
