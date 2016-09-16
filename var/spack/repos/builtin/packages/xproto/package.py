@@ -40,6 +40,9 @@ class Xproto(Package):
 
     version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

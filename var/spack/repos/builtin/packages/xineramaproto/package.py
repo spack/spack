@@ -36,6 +36,9 @@ class Xineramaproto(Package):
 
     version('1.2.1', 'e0e148b11739e144a546b8a051b17dde')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

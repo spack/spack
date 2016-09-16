@@ -36,6 +36,9 @@ class Resourceproto(Package):
 
     version('1.2.0', '33091d5358ec32dd7562a1aa225a70aa')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

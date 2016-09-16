@@ -37,6 +37,9 @@ class Applewmproto(Package):
 
     version('1.4.2', 'ecc8a4424a893ce120f5652dba62e9e6')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

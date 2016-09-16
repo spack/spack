@@ -37,6 +37,9 @@ class Dri3proto(Package):
 
     version('1.0', '25e84a49a076862277ee12aebd49ff5f')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

@@ -36,6 +36,9 @@ class Videoproto(Package):
 
     version('2.3.3', 'd984100603ee2420072f27bb491f4b7d')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

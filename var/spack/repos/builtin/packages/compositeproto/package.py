@@ -36,6 +36,9 @@ class Compositeproto(Package):
 
     version('0.4.2', '2dea7c339432b3363faf2d29c208e7b5')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

@@ -37,6 +37,9 @@ class Xf86driproto(Package):
 
     version('2.1.1', '3ba16a48d8d9f9f746f9bd281ba8fb3f')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

@@ -37,6 +37,9 @@ class Fixesproto(Package):
 
     version('5.0', '1b3115574cadd4cbea1f197faa7c1de4')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

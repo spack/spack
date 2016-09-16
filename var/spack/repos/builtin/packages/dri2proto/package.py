@@ -37,6 +37,9 @@ class Dri2proto(Package):
 
     version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 

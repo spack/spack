@@ -33,6 +33,9 @@ class Xextproto(Package):
 
     version('7.3.0', '37b700baa8c8ea7964702d948dd13821')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
