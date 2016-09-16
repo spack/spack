@@ -36,9 +36,11 @@ class Libxdamage(Package):
     depends_on('libxfixes')
     depends_on('libx11')
 
-    depends_on('damageproto@1.1:')
-    depends_on('fixesproto')
-    depends_on('xextproto')
+    depends_on('damageproto@1.1:', type='build')
+    depends_on('fixesproto', type='build')
+    depends_on('xextproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -46,9 +46,11 @@ class Libxtst(Package):
     depends_on('libxext@1.0.99.4:')
     depends_on('libxi')
 
-    depends_on('recordproto@1.13.99.1:')
-    depends_on('xextproto@7.0.99.3:')
-    depends_on('inputproto')
+    depends_on('recordproto@1.13.99.1:', type='build')
+    depends_on('xextproto@7.0.99.3:', type='build')
+    depends_on('inputproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -33,8 +33,10 @@ class Liblbxutil(Package):
 
     version('1.1.0', '2735cd23625d4cc870ec4eb7ca272788')
 
-    depends_on('xextproto@7.0.99.1:')
-    depends_on('xproto')
+    depends_on('xextproto@7.0.99.1:', type='build')
+    depends_on('xproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     # There is a bug in the library that causes the following messages:
     # undefined symbol: Xfree

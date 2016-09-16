@@ -35,8 +35,10 @@ class Libxext(Package):
 
     depends_on('libx11@1.6:')
 
-    depends_on('xproto@7.0.13:')
-    depends_on('xextproto@7.1.99:')
+    depends_on('xproto@7.0.13:', type='build')
+    depends_on('xextproto@7.1.99:', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

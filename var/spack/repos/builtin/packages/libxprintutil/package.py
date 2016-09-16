@@ -38,7 +38,9 @@ class Libxprintutil(Package):
     depends_on('libxt')
     depends_on('libxau')
 
-    depends_on('printproto')
+    depends_on('printproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

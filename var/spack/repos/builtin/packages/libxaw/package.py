@@ -40,8 +40,10 @@ class Libxaw(Package):
     depends_on('libxmu')
     depends_on('libxpm')
 
-    depends_on('xproto')
-    depends_on('xextproto')
+    depends_on('xproto', type='build')
+    depends_on('xextproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

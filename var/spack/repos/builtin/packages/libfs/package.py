@@ -36,9 +36,11 @@ class Libfs(Package):
 
     version('1.0.7', 'd8c1246f5b3d0e7ccf2190d3bf2ecb73')
 
-    depends_on('xproto@7.0.17:')
-    depends_on('fontsproto')
-    depends_on('xtrans')
+    depends_on('xproto@7.0.17:', type='build')
+    depends_on('fontsproto', type='build')
+    depends_on('xtrans', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

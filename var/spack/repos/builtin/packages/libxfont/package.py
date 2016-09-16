@@ -38,12 +38,14 @@ class Libxfont(Package):
 
     version('1.5.2', 'e8c616db0e59df4614980915e79bb05e')
 
-    depends_on('xtrans')
     depends_on('libfontenc')
     depends_on('freetype')
 
-    depends_on('xproto')
-    depends_on('fontsproto@2.1.3:')
+    depends_on('xtrans', type='build')
+    depends_on('xproto', type='build')
+    depends_on('fontsproto@2.1.3:', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

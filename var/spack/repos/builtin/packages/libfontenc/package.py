@@ -33,7 +33,11 @@ class Libfontenc(Package):
 
     version('1.1.3', '0ffa28542aa7d246299b1f7211cdb768')
 
-    depends_on('xproto')
+    depends_on('zlib')
+
+    depends_on('xproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

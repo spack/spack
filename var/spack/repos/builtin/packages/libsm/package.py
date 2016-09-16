@@ -34,8 +34,11 @@ class Libsm(Package):
     version('1.2.2', '18e5084ed9500b1b47719fd1758f0ec8')
 
     depends_on('libice@1.0.5:')
-    depends_on('xproto')
-    depends_on('xtrans')
+
+    depends_on('xproto', type='build')
+    depends_on('xtrans', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

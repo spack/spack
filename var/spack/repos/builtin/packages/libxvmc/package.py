@@ -37,8 +37,10 @@ class Libxvmc(Package):
     depends_on('libxext')
     depends_on('libxv')
 
-    depends_on('xextproto')
-    depends_on('videoproto')
+    depends_on('xextproto', type='build')
+    depends_on('videoproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
