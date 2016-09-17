@@ -96,5 +96,6 @@ def setup(self, args):
             verbose=args.verbose,
             keep_stage=True,   # don't remove source dir for SETUP.
             install_phases=set(['setup', 'provenance']),
+            force=True,
             dirty=args.dirty or ('SPACK_DIRTY' in os.environ))
 
