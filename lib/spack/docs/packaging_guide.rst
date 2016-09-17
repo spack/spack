@@ -1911,14 +1911,14 @@ cannot be loaded together in the same Python runtime:
     class A(Package):
         variant('python', default=True, 'enable python bindings')
         depends_on('python@2.7', when='+python')
-        def install(self):
+        def install(self, spec, prefix):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
 
     class B(Package):
         variant('python', default=True, 'enable python bindings')
         depends_on('python@3.2:', when='+python')
-        def install(self):
+        def install(self, spec, prefix):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
 
