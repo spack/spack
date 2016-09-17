@@ -87,9 +87,9 @@ class Gmsh(Package):
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        options.append('-DBLAS_LAPACK_LIBRARIES=%s %s' %
-                       (to_link_flags(spec['lapack'].lapack_shared_lib),
-                        to_link_flags(spec['blas'].blas_shared_lib)))
+        blas_lapack = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        options.append(
+            '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 
         # Gmsh does not have an option to compile against external metis.
         # Its own Metis, however, fails to build

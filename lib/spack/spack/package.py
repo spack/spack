@@ -329,6 +329,12 @@ class Package(object):
     """
     sanity_check_is_dir = []
 
+    class __metaclass__(type):
+        """Ensure  attributes required by Spack directives are present."""
+        def __init__(cls, name, bases, dict):
+            type.__init__(cls, name, bases, dict)
+            spack.directives.ensure_dicts(cls)
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -341,9 +347,6 @@ class Package(object):
 
         # Allow custom staging paths for packages
         self.path = None
-
-        # Sanity check attributes required by Spack directives.
-        spack.directives.ensure_dicts(type(self))
 
         # Check versions in the versions dict.
         for v in self.versions:
@@ -407,6 +410,20 @@ class Package(object):
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
+
+    def possible_dependencies(self, visited=None):
+        """Return set of possible transitive dependencies of this package."""
+        if visited is None:
+            visited = set()
+
+        visited.add(self.name)
+        for name in self.dependencies:
+            if name not in visited and not spack.spec.Spec(name).virtual:
+                pkg = spack.repo.get(name)
+                for name in pkg.possible_dependencies(visited):
+                    visited.add(name)
+
+        return visited
 
     @property
     def package_dir(self):
@@ -724,7 +741,7 @@ class Package(object):
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
-                                 self.spec.format('$_$@'), checksum_msg)
+                                 self.spec.format('$_$@'), ck_msg)
 
         self.stage.fetch(mirror_only)
 
@@ -918,7 +935,8 @@ class Package(object):
                                          skip_patch=skip_patch,
                                          verbose=verbose,
                                          make_jobs=make_jobs,
-                                         run_tests=run_tests)
+                                         run_tests=run_tests,
+                                         dirty=dirty)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1040,7 +1058,8 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
+        spack.installed_db.add(
+            self.spec, spack.install_layout, explicit=explicit)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""

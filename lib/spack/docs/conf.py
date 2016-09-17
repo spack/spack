@@ -42,13 +42,16 @@ import re
 import shutil
 import subprocess
 from glob import glob
+from sphinx.apidoc import main as sphinx_apidoc
+
+# -- Spack customizations -----------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
-sys.path.append(os.path.abspath('../spack'))
+sys.path.append(os.path.abspath('..'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 spack_root = '../../..'
@@ -59,6 +62,10 @@ os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
 spack_version =  subprocess.Popen(
     [spack_root + '/bin/spack', '-V'],
     stderr=subprocess.PIPE).communicate()[1].strip().split('.')
+
+# Set an environment variable so that colify will print output like it would to
+# a terminal.
+os.environ['COLIFY_SIZE'] = '25x120'
 
 #
 # Generate package list using spack command
@@ -81,8 +88,13 @@ for filename in glob('*rst'):
 shutil.copy('command_index.in', 'command_index.rst')
 with open('command_index.rst', 'a') as index:
     index.write('\n')
-    for cmd in command_names:
+    for cmd in sorted(command_names):
         index.write('   * :ref:`%s`\n' % cmd)
+
+
+# Run sphinx-apidoc
+sphinx_apidoc(['-T', '-o', '.', '../spack'])
+os.remove('modules.rst')
 
 #
 # Exclude everything in spack.__all__ from indexing.  All of these
@@ -105,10 +117,6 @@ for line in fileinput.input('spack.rst', inplace=1):
         handling_spack = (line == '.. automodule:: spack\n')
 
     print line,
-
-# Set an environment variable so that colify will print output like it would to
-# a terminal.
-os.environ['COLIFY_SIZE'] = '25x80'
 
 # Enable todo items
 todo_include_todos = True

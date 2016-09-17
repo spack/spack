@@ -25,7 +25,6 @@
 import argparse
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
 
 import spack
 import spack.cmd
@@ -77,7 +76,7 @@ def location(parser, args):
         print spack.prefix
 
     elif args.packages:
-        print spack.repo.root
+        print spack.repo.first_repo().root
 
     elif args.stages:
         print spack.stage_path
@@ -99,7 +98,7 @@ def location(parser, args):
 
             if args.package_dir:
                 # This one just needs the spec name.
-                print join_path(spack.repo.root, spec.name)
+                print spack.repo.dirname_for_package_name(spec.name)
 
             else:
                 # These versions need concretized specs.
