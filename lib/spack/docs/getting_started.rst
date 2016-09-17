@@ -721,9 +721,17 @@ which has a stable API.
         # Do not install OpenSSL as non-root user.
         openssl:
             paths:
-                openssl@system: /usr
+                openssl@system: /false/path
             version: [system]
             buildable: False
+
+.. note::
+
+   Even though OpenSSL is located in ``/usr``, We have told Spack to
+   look for it in ``/false/path``.  This prevents ``/usr`` from being
+   added to compilation paths and RPATHs, where it could cause
+   unrelated system libraries to be used instead of their Spack
+   equivalents.
 
 ^^^
 Git
@@ -755,6 +763,14 @@ SSL certificates.  Add the following to ``~/.gitconfig``:
 
    [http]
        sslVerify = false
+
+.. warning::
+
+   This workaround is NOT recommended, and should be used ONLY as a
+   last resort!  Wihout SSL verification, Git is unable to verify the
+   source of the code it downloads, and the user could be subject to a
+   a man-in-the-middle attack.  This is especially problematic when
+   downloading from name Git branches or tags, rather than Git hashes.
 
 -----------------------
 Utilities Configuration
