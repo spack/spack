@@ -725,6 +725,36 @@ which has a stable API.
             version: [system]
             buildable: False
 
+^^^
+Git
+^^^
+
+Some Spack packages use ``git`` to download, which might not work on
+some computers.  For example, the following error was
+encountered on a Macintosn during ``spack install julia-master``:
+
+.. code-block:: console
+
+   ==> Trying to clone git repository:
+     https://github.com/JuliaLang/julia.git
+     on branch master
+   Cloning into 'julia'...
+   fatal: unable to access 'https://github.com/JuliaLang/julia.git/':
+       SSL certificate problem: unable to get local issuer certificate
+
+This problem is related to OpenSSL, and in some cases might be solved
+by installing a new version of ``git`` and ``openssl``:
+
+#. Run ``spack install git``
+#. Add the output of ``spack module loads git`` to your ``.bahsrc``.
+
+If this doesn't work, it is also possible to disable Git's checking of
+SSL certificates.  Add the following to ``~/.gitconfig``:
+
+.. code-block:: console
+
+   [http]
+       sslVerify = false
 
 -----------------------
 Utilities Configuration
