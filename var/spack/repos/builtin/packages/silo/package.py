@@ -41,7 +41,8 @@ class Silo(Package):
     variant('silex', default=False,
             description='Builds Silex, a GUI for viewing Silo files')
 
-    depends_on('hdf5')
+    # silo uses the obsolete function H5Pset_fapl_mpiposix:
+    depends_on("hdf5 @:1.8.12")
     depends_on('qt', when='+silex')
 
     def install(self, spec, prefix):
