@@ -33,7 +33,8 @@ class FontMuttMisc(Package):
 
     version('1.0.3', '6c2de53ba514f720e02af48eef28ff32')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

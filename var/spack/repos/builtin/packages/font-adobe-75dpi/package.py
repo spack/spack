@@ -33,7 +33,8 @@ class FontAdobe75dpi(Package):
 
     version('1.0.3', '7a414bb661949cec938938fd678cf649')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

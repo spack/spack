@@ -33,7 +33,8 @@ class FontMiscMeltho(Package):
 
     version('1.0.3', '8380696483478449c39b04612f20eea8')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

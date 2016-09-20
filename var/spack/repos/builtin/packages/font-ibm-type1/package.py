@@ -33,7 +33,8 @@ class FontIbmType1(Package):
 
     version('1.0.3', '2806116e4adcb89d3d5ff5faf65e57c1')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

@@ -33,7 +33,8 @@ class FontCronyxCyrillic(Package):
 
     version('1.0.3', '3119ba1bc7f775c162c96e17a912fe30')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

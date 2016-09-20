@@ -33,7 +33,8 @@ class FontBitstreamType1(Package):
 
     version('1.0.3', 'ff91738c4d3646d7999e00aa9923f2a0')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

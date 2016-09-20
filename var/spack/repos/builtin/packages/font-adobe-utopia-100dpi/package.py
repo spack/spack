@@ -33,7 +33,8 @@ class FontAdobeUtopia100dpi(Package):
 
     version('1.0.4', '128416eccd59b850f77a9b803681da3c')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

@@ -33,7 +33,8 @@ class FontBitstreamSpeedo(Package):
 
     version('1.0.2', 'f0a777b351cf5adefefcf4823e0c1c01')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

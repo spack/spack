@@ -33,7 +33,8 @@ class FontSonyMisc(Package):
 
     version('1.0.3', '4026cb88e2253efc0b8376003780ccb6')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

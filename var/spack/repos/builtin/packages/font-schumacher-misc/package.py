@@ -33,7 +33,8 @@ class FontSchumacherMisc(Package):
 
     version('1.1.2', '1f3386a0a690ba8117fc05b501f9f91b')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

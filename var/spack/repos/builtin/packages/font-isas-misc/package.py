@@ -33,7 +33,8 @@ class FontIsasMisc(Package):
 
     version('1.0.3', 'ecc3b6fbe8f5721ddf5c7fc66f73e76f')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

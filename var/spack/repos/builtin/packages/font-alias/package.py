@@ -33,7 +33,8 @@ class FontAlias(Package):
 
     version('1.0.3', '535138efe0a95f5fe521be6a6b9c4888')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 

@@ -33,7 +33,8 @@ class FontWinitzkiCyrillic(Package):
 
     version('1.0.3', '777c667b080b33793528d5abf3247a48')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

@@ -33,7 +33,8 @@ class FontBhType1(Package):
 
     version('1.0.3', '62d4e8f782a6a0658784072a5df5ac98')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

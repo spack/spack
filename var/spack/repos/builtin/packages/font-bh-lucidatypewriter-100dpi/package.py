@@ -33,7 +33,8 @@ class FontBhLucidatypewriter100dpi(Package):
 
     version('1.0.3', '5f716f54e497fb4ec1bb3a5d650ac6f7')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

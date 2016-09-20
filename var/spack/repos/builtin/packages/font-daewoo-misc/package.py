@@ -33,7 +33,8 @@ class FontDaewooMisc(Package):
 
     version('1.0.3', '71a7e2796f045c9d217a19c4e6c25bc1')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

@@ -33,7 +33,8 @@ class FontAdobeUtopia75dpi(Package):
 
     version('1.0.4', '74c73a5b73c6c3224b299f1fc033e508')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

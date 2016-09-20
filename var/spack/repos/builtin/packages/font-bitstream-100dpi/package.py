@@ -33,7 +33,8 @@ class FontBitstream100dpi(Package):
 
     version('1.0.3', 'c27bf37e9b8039f93bd90b8131ed37ad')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

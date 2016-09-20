@@ -33,7 +33,8 @@ class Encodings(Package):
 
     version('1.0.4', '1a631784ce204d667abcc329b851670c')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('mkfontscale', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')

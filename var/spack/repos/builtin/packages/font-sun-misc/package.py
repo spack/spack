@@ -33,7 +33,7 @@ class FontSunMisc(Package):
 
     version('1.0.3', '87ce97ce0582e76bc4064a4d4d10db09')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

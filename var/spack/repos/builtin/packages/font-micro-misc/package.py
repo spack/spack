@@ -33,7 +33,8 @@ class FontMicroMisc(Package):
 
     version('1.0.3', '4de3f0ce500aef85f198c52ace5e66ac')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

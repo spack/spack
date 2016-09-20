@@ -33,7 +33,8 @@ class FontBh75dpi(Package):
 
     version('1.0.3', '88fec4ebc4a265684bff3abdd066f14f')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

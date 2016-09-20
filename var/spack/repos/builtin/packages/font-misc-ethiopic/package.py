@@ -33,7 +33,8 @@ class FontMiscEthiopic(Package):
 
     version('1.0.3', '02ddea9338d9d36804ad38f3daadb55a')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

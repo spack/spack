@@ -33,7 +33,8 @@ class FontMiscCyrillic(Package):
 
     version('1.0.3', 'e7b13da5325f62dd3f630beade6d2656')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

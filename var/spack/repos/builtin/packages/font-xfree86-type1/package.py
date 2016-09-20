@@ -33,7 +33,8 @@ class FontXfree86Type1(Package):
 
     version('1.0.4', '89c33c5176cd580de6636ad50ce7777b')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('mkfontscale', type='build')

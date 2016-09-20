@@ -33,7 +33,8 @@ class FontAdobe100dpi(Package):
 
     version('1.0.3', 'ba61e7953f4f5cec5a8e69c262bbc7f9')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

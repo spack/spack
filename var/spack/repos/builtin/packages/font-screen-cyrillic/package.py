@@ -33,7 +33,8 @@ class FontScreenCyrillic(Package):
 
     version('1.0.4', '4cadaf2ba4c4d0f4cb9b4e7b8f0a3019')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

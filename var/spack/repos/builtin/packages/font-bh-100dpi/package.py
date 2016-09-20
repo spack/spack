@@ -33,7 +33,8 @@ class FontBh100dpi(Package):
 
     version('1.0.3', '09e63a5608000531179e1ab068a35878')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

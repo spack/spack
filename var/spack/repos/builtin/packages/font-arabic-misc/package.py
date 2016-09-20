@@ -33,7 +33,8 @@ class FontArabicMisc(Package):
 
     version('1.0.3', '918457df65ef93f09969c6ab01071789')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

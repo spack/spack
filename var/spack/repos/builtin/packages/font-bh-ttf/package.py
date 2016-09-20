@@ -33,7 +33,8 @@ class FontBhTtf(Package):
 
     version('1.0.3', '4ce741ec4edaa11cd38988d355a7578b')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')

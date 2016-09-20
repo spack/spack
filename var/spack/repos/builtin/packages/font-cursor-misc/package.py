@@ -33,7 +33,8 @@ class FontCursorMisc(Package):
 
     version('1.0.3', 'a0bf70c7e498f1cd8e3fdf6154f2bb00')
 
-    depends_on('font-util', type='build')
+    depends_on('font-util')
+
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')
