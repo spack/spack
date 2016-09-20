@@ -251,7 +251,7 @@ class TclTests(ModuleFileGeneratorTests):
         # - 1 ('build','link') dependency
         # - 1 ('build',) dependency
         # Just make sure the 'build' dependency is not there
-        spack.modules.CONFIGURATION = configuration_autoload_direct
+        spack.modules.CONFIGURATION = self.configuration_autoload_direct
         spec = spack.spec.Spec('dtbuild1')
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
@@ -262,7 +262,7 @@ class TclTests(ModuleFileGeneratorTests):
         # - 1 ('build','link') dependency
         # - 1 ('build',) dependency
         # Just make sure the 'build' dependency is not there
-        spack.modules.CONFIGURATION = configuration_autoload_all
+        spack.modules.CONFIGURATION = self.configuration_autoload_all
         spec = spack.spec.Spec('dtbuild1')
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
