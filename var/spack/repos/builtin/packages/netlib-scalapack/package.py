@@ -41,12 +41,14 @@ class NetlibScalapack(Package):
 
     variant('shared', default=True,
             description='Build the shared library version')
-    variant('fpic', default=False, description="Build with -fpic compiler option")
+    variant('fpic', default=False,
+            description="Build with -fpic compiler option")
 
     provides('scalapack')
 
     depends_on('mpi')
     depends_on('lapack')
+    depends_on('blas')
     depends_on('cmake', when='@2.0.0:', type='build')
 
     def install(self, spec, prefix):
@@ -54,18 +56,18 @@ class NetlibScalapack(Package):
             "-DBUILD_SHARED_LIBS:BOOL=%s" % ('ON' if '+shared' in spec else
                                              'OFF'),
             "-DBUILD_STATIC_LIBS:BOOL=%s" % ('OFF' if '+shared' in spec else
-                                             'ON'),
-            # forces scalapack to use find_package(LAPACK):
-            "-DUSE_OPTIMIZED_LAPACK_BLAS:BOOL=ON",
+                                             'ON')
         ]
 
         # Make sure we use Spack's Lapack:
         options.extend([
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
             '-DLAPACK_LIBRARIES=%s' % (
                 spec['lapack'].lapack_shared_lib if '+shared' in spec else
                 spec['lapack'].lapack_static_lib),
+            '-DBLAS_LIBRARIES=%s' % (
+                spec['blas'].blas_shared_lib if '+shared' in spec else
+                spec['blas'].blas_static_lib)
         ])
 
         if '+fpic' in spec:
