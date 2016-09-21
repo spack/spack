@@ -110,6 +110,9 @@ class Atlas(Package):
 
     @property
     def blas_libs(self):
+        # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
+        # serial BLAS), and all ATLAS symbols needed to support them. Whereas
+        # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
         is_threaded = '+pthread' in self.spec
         if '+shared' in self.spec:
             to_find = ['libtatlas'] if is_threaded else ['libsatlas']
