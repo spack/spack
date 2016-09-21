@@ -32,7 +32,7 @@ class Psi4(Package):
     a variety of molecular properties."""
 
     homepage = "http://www.psicode.org/"
-    url      = "https://github.com/psi4/psi4/archive/0.5.tar.gz"
+    url = "https://github.com/psi4/psi4/archive/0.5.tar.gz"
 
     version('0.5', '53041b8a9be3958384171d0d22f9fdd0')
 
@@ -62,9 +62,10 @@ class Psi4(Package):
     def install(self, spec, prefix):
         cmake_args = [
             '-DBLAS_TYPE={0}'.format(spec['blas'].name.upper()),
-            '-DBLAS_LIBRARIES={0}'.format(spec['blas'].blas_shared_lib),
+            '-DBLAS_LIBRARIES={0}'.format(spec['blas'].blas_libs.joined()),
             '-DLAPACK_TYPE={0}'.format(spec['lapack'].name.upper()),
-            '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].lapack_shared_lib),
+            '-DLAPACK_LIBRARIES={0}'.format(
+                spec['lapack'].lapack_libs.joined()),
             '-DBOOST_INCLUDEDIR={0}'.format(spec['boost'].prefix.include),
             '-DBOOST_LIBRARYDIR={0}'.format(spec['boost'].prefix.lib),
             '-DENABLE_CHEMPS2=OFF'
@@ -90,9 +91,9 @@ class Psi4(Package):
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
-        cc_files  = ['bin/psi4-config']
+        cc_files = ['bin/psi4-config']
         cxx_files = ['bin/psi4-config', 'include/psi4/psiconfig.h']
-        template  = 'share/psi4/plugin/Makefile.template'
+        template = 'share/psi4/plugin/Makefile.template'
 
         for filename in cc_files:
             filter_file(os.environ['CC'], self.compiler.cc,

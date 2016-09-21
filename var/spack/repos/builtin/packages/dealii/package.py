@@ -123,6 +123,7 @@ class Dealii(Package):
                 options.remove(word)
 
         dsuf = 'dylib' if sys.platform == 'darwin' else 'so'
+        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
         options.extend([
             '-DCMAKE_BUILD_TYPE=DebugRelease',
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
@@ -135,9 +136,7 @@ class Dealii(Package):
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
                 spec['lapack'].prefix.include, spec['blas'].prefix.include),
-            '-DLAPACK_LIBRARIES=%s;%s' % (
-                spec['lapack'].lapack_shared_lib,
-                spec['blas'].blas_shared_lib),
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
             '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,

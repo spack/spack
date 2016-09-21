@@ -60,13 +60,14 @@ class Hypre(Package):
         # to command the linker to include whole static libs' content into the
         # shared lib
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
+        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].blas_libs
+
         configure_args = [
             '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % to_lib_name(
-                spec['lapack'].lapack_shared_lib),
+            '--with-lapack-libs=%s' % lapack.names,
             '--with-lapack-lib-dirs=%s' % spec['lapack'].prefix.lib,
-            '--with-blas-libs=%s' % to_lib_name(
-                spec['blas'].blas_shared_lib),
+            '--with-blas-libs=%s' % blas.names,
             '--with-blas-lib-dirs=%s' % spec['blas'].prefix.lib
         ]
 

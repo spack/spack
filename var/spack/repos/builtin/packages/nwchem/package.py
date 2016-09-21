@@ -66,6 +66,9 @@ class Nwchem(Package):
     patch('Gcc6_macs_optfix.patch', when='@6.6', level=0)
 
     def install(self, spec, prefix):
+        scalapack = spec['scalapack'].scalapack_libs
+        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].blas_libs
         # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
         args = []
         args.extend([
@@ -79,13 +82,11 @@ class Nwchem(Package):
             'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
             'PYTHONHOME=%s' % spec['python'].prefix,
-            'BLASOPT=%s %s' % (
-                to_link_flags(spec['lapack'].lapack_shared_lib),
-                to_link_flags(spec['blas'].blas_shared_lib)),
-            'BLAS_LIB=%s' % to_link_flags(spec['blas'].blas_shared_lib),
-            'LAPACK_LIB=%s' % to_link_flags(spec['lapack'].lapack_shared_lib),
+            'BLASOPT=%s' % ((lapack + blas).ld_flags),
+            'BLAS_LIB=%s' % blas.ld_flags,
+            'LAPACK_LIB=%s' % lapack.ld_flags,
             'USE_SCALAPACK=y',
-            'SCALAPACK=%s' % spec['scalapack'].fc_link,
+            'SCALAPACK=%s' % scalapack.ld_flags,
             'NWCHEM_MODULES=all python',
             'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
         ])

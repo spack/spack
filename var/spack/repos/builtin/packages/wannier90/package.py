@@ -47,13 +47,12 @@ class Wannier90(Package):
 
     def install(self, spec, prefix):
 
+        lapack = self.spec['lapack'].lapack_libs
+        blas = self.spec['blas'].blas_libs
         substitutions = {
             '@F90': spack_fc,
             '@MPIF90': self.spec['mpi'].mpifc,
-            '@LIBS': ' '.join([
-                self.spec['lapack'].lapack_shared_lib,
-                self.spec['lapack'].blas_shared_lib
-            ])
+            '@LIBS': (lapack + blas).joined()
         }
         #######
         # TODO : this part is replicated in PEXSI

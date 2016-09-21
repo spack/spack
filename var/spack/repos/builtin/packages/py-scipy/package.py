@@ -47,7 +47,7 @@ class PyScipy(Package):
             env['ATLAS'] = join_path(
                 spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
         else:
-            env['BLAS']   = spec['blas'].blas_shared_lib
-            env['LAPACK'] = spec['lapack'].lapack_shared_lib
+            env['BLAS'] = spec['blas'].blas_libs.joined()
+            env['LAPACK'] = spec['lapack'].lapack_libs.joined()
 
         python('setup.py', 'install', '--prefix=%s' % prefix)

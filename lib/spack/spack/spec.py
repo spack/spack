@@ -527,6 +527,13 @@ class Spec(object):
             # XXX(deptype): default deptypes
             self._add_dependency(spec, ('build', 'link'))
 
+    def __getattr__(self, item):
+        """Delegate to self.package if the attribute is not in the spec"""
+        # This line is to avoid infinite recursion in case package is
+        # not present among self attributes
+        package = super(Spec, self).__getattribute__('package')
+        return getattr(package, item)
+
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
         if dep is not None:
