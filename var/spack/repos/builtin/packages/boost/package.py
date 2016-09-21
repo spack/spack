@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack
 import sys
 import os
 
@@ -138,15 +139,13 @@ class Boost(Package):
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):
             return 'darwin'
-        else:
-            platform = 'linux'
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang'}
 
         if spec.satisfies('@1.47:'):
-            toolsets['icpc'] += '-' + platform
+            toolsets['icpc'] += '-linux'
         for cc, toolset in toolsets.iteritems():
             if cc in self.compiler.cxx_names:
                 return toolset
@@ -164,6 +163,11 @@ class Boost(Package):
                            join_path(spec['python'].prefix.bin, 'python'))
 
         with open('user-config.jam', 'w') as f:
+            # Boost may end up using gcc even though clang+gfortran is set in
+            # compilers.yaml. Make sure this does not happen:
+            compiler_wrapper = join_path(spack.build_env_path, 'c++')
+            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                                                   compiler_wrapper))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
@@ -203,6 +207,7 @@ class Boost(Package):
                                multithreaded} must be enabled""")
 
         options.extend([
+            'toolset=%s' % self.determine_toolset(spec),
             'link=%s' % ','.join(linkTypes),
             '--layout=tagged'])
 
