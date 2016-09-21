@@ -47,6 +47,7 @@ class Qt(Package):
     variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
     variant('mesa',       default=False, description="Depend on mesa.")
     variant('gtk',        default=False, description="Build with gtkplus.")
+    variant('examples',   default=False, description="Build examples.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -143,7 +144,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
-        return [
+        common_arg_list = [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -159,6 +160,11 @@ class Qt(Package):
             # NIS is deprecated in more recent glibc
             '-no-nis'
         ]
+
+        if '~examples' in self.spec:
+            common_arg_list.extend(['-nomake', 'examples'])
+
+        return common_arg_list
 
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
