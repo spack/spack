@@ -36,6 +36,8 @@ class Adios(Package):
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.10.0.tar.gz"
 
+    version('develop', git='https://github.com/ornladios/ADIOS.git',
+            branch='master')
     version('1.10.0', 'eff450a4c0130479417cfd63186957f3')
     version('1.9.0', '310ff02388bbaa2b1c1710ee970b5678')
 
@@ -48,14 +50,14 @@ class Adios(Package):
     variant('mpi', default=True, description='Enable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
 
+    # transforms
     variant('zlib', default=True, description='Enable szip transform support')
     variant('szip', default=False, description='Enable szip transform support')
-    variant('hdf5', default=False, description='Enable HDF5 transport support')
-    variant('netcdf', default=False, description='Enable NetCDF transport support')
+    # transports and serial file converters
+    variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
 
     # Lots of setting up here for this package
     # module swap PrgEnv-intel PrgEnv-$COMP
-    # module load cray-netcdf/4.3.3.1
     # module load cray-hdf5/1.8.14
     # module load python/2.7.10
 
@@ -69,9 +71,13 @@ class Adios(Package):
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('szip', when='+szip')
-    # optional transports
-    depends_on('hdf5', when='+hdf5')
-    depends_on('netcdf', when='+netcdf')
+    # optional transports & file converters
+    depends_on('hdf5@1.8:+mpi', when='+hdf5')
+
+    # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
+    #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
+    #   https://github.com/LLNL/spack/issues/1683
+    patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
 
     def validate(self, spec):
         """
@@ -114,9 +120,7 @@ class Adios(Package):
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+hdf5' in spec:
-            extra_args.append('--with-hdf5=%s' % spec['hdf5'].prefix)
-        if '+netcdf' in spec:
-            extra_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+            extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
 
         sh = which('sh')
         sh('./autogen.sh')
