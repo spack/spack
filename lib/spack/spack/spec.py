@@ -2129,10 +2129,12 @@ class Spec(object):
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
             ${SHA1}          Dependencies 8-char sha1 prefix
+            ${HASH:len}      DAG hash with optional length specifier
 
             ${SPACK_ROOT}    The spack root directory
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
+            ${PREFIX}        The package prefix
 
         Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
@@ -2255,6 +2257,15 @@ class Spec(object):
                     out.write(fmt % spack.prefix)
                 elif named_str == 'SPACK_INSTALL':
                     out.write(fmt % spack.install_path)
+                elif named_str == 'PREFIX':
+                    out.write(fmt % self.prefix)
+                elif named_str.startswith('HASH'):
+                    if named_str.startswith('HASH:'):
+                        _, hashlen = named_str.split(':')
+                        hashlen = int(hashlen)
+                    else:
+                        hashlen = None
+                    out.write(fmt % (self.dag_hash(hashlen)))
 
                 named = False
 
