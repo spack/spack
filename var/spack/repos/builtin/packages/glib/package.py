@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Glib(Package):
@@ -38,14 +39,20 @@ class Glib(Package):
     version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('pkg-config', type='build')
     depends_on('libffi')
     depends_on('zlib')
-    depends_on('pkg-config', type='build')
     depends_on('gettext')
     depends_on('pcre+utf', when='@2.48:')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
+    # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
+    # around a legitimate usage.
+    patch('no-Werror=format-security.patch')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
@@ -53,6 +60,16 @@ class Glib(Package):
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
     def install(self, spec, prefix):
+        autoreconf = which("autoreconf")
+        autoreconf("--install", "--verbose", "--force",
+                   "-I", "config",
+                   "-I", os.path.join(spec['pkg-config'].prefix,
+                                      "share", "aclocal"),
+                   "-I", os.path.join(spec['automake'].prefix,
+                                      "share", "aclocal"),
+                   "-I", os.path.join(spec['libtool'].prefix,
+                                      "share", "aclocal"),
+                   )
         configure("--prefix=%s" % prefix)
         make()
         make("install", parallel=False)
