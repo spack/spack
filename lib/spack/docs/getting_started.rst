@@ -11,13 +11,15 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Operating System: GNU/Linux or Macintosh
-2. Python 2.6 or 2.7
-3. A C/C++ compiler
-4. The ``git`` and ``curl`` commands.
+1. Python 2.6 or 2.7
+2. A C/C++ compiler
+3. The ``git`` and ``curl`` commands.
 
-These requirements can be easily installed on most modern Linux
-systems; on Macintosh, XCode is required.
+These requirements can be easily installed on most modern Linux systems;
+on Macintosh, XCode is required.  Spack is designed to run on HPC
+platforms like Cray and BlueGene/Q.  Not all packages should be expected
+to work on all platforms.  A build matrix showing which packages are
+working on which systems is planned but not yet available.
 
 ------------
 Installation
@@ -30,13 +32,11 @@ Getting Spack is easy.  You can clone it from the `github repository
 
    $ git clone https://github.com/llnl/spack.git
 
-This will create a directory called ``spack``.  If you are using Spack
-for a specific purpose, you might have received different instructions
-on how to download Spack; if so, please follow those instructions.
+This will create a directory called ``spack``.
 
-^^^^^^^^^^^^^^^^^^
-Add Spack to Shell
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+Add Spack to the Shell
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 We'll assume that the full path to your downloaded Spack directory is
 in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
@@ -193,7 +193,7 @@ where the compiler is installed.  For example:
 Or you can run ``spack compiler find`` with no arguments to force
 auto-detection.  This is useful if you do not know where compilers are
 installed, but you know that new compilers have been added to your
-``PATH``.  For example, using dotkit, you might do this:
+``PATH``.  For example, you might load a module, like this:
 
 .. code-block:: console
 
@@ -324,7 +324,7 @@ by adding the following to your ``packages.yaml`` file:
     more in that Spack instance; instead, create a new "real" Spack
     instance, configure Spack to use the compiler you've just built,
     and then build your application software in the new Spack
-    instance.  Following this tips makes it easy to delete all your
+    instance.  Following this tip makes it easy to delete all your
     Spack packages *except* the compiler.
 
 
@@ -357,14 +357,17 @@ example, this ``compilers.yaml`` file:
          fc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
        spec: gcc@5.3.0
 
-Some compilers require a module to be loaded not just to run, but also
-to execute any code built with the compiler, breaking packages that
-execute any bits of code they just compiled.  Such compilers should be
-taken behind the barn and put out of their misery.  If that is not
-possible or practical, the user (and anyone running code built by that
-compiler) will need to load the compiler's module into their general
-environment.  The ``spack install --dirty`` option should be used, to
-ensure that environment is not wiped out.
+Some compilers require special environment settings to be loaded not just
+to run, but also to execute the code they build, breaking packages that
+need to execute code they just compiled.  If it's not possible or
+practical to use a better compiler, you'll need to ensure that
+environment settings are preserved for compilers like this (i.e., you'll
+need to load the module or source the compiler's shell script).
+
+By default, Spack tries to ensure that builds are reproducible by
+cleaning the environment before building.  If this interferes with your
+compiler settings, you CAN use ``spack install --dirty`` as a workaround.
+Note that this MAY interfere with package builds.
 
 .. _licensed-compilers:
 
@@ -394,17 +397,13 @@ Modern compilers typically come with related compilers for C, C++ and
 Fortran bundled together.  When possible, results are best if the same
 compiler is used for all languages.
 
-In some cases, this is not possible.  For example, starting with
-Macintosh OS X El Capitan (10.11), many packages no longer build with
-GCC, but XCode provides no Fortran compilers.  The user is therefore
-forced to use a mixed toolchain: the XCode-provided Clang is used for
-C/C++ code, but GNU ``gfortran`` is used for Fortran code.
+In some cases, this is not possible.  For example, starting with macOS El
+Capitan (10.11), many packages no longer build with GCC, but XCode
+provides no Fortran compilers.  The user is therefore forced to use a
+mixed toolchain: XCode-provided Clang for C/C++ and GNU ``gfortran`` for
+Fortran.
 
-Follows are instructions on how to hack together
-``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
-should work for other mixed toolchain needs.
-
-#. Edit ``compilers.yaml``:
+In the simplest case, you can just edit ``compilers.yaml``:
 
    .. code-block:: yaml
 
@@ -416,44 +415,57 @@ should work for other mixed toolchain needs.
             f77: /path/to/bin/gfortran
             fc: /path/to/bin/gfortran
 
-#. Create a symlink inside ``clang`` environement:
+.. note::
 
-   .. code-block:: console
+   If you are building packages that are sensitive to the compiler's
+   name, you may also need to slightly modify a few more files so that
+   Spack uses compiler names the build system will recognize.
 
-      $ cd $SPACK_ROOT/lib/spack/env/clang
-      $ ln -s ../cc gfortran
+   Following are instructions on how to hack together
+   ``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
+   should work for other mixed toolchain needs.
+
+   Better support for mixed compiler toolchains is planned in forthcoming
+   Spack versions.
+
+   #. Create a symlink inside ``clang`` environment:
+
+      .. code-block:: console
+
+         $ cd $SPACK_ROOT/lib/spack/env/clang
+         $ ln -s ../cc gfortran
 
 
-#. Patch ``clang`` compiler file:
+   #. Patch ``clang`` compiler file:
 
-   .. code-block:: console
+      .. code-block:: diff
 
-      $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
-      index e406d86..cf8fd01 100644
-      --- a/lib/spack/spack/compilers/clang.py
-      +++ b/lib/spack/spack/compilers/clang.py
-      @@ -35,17 +35,17 @@ class Clang(Compiler):
-           cxx_names = ['clang++']
-       
-           # Subclasses use possible names of Fortran 77 compiler
-      -    f77_names = []
-      +    f77_names = ['gfortran']
-       
-           # Subclasses use possible names of Fortran 90 compiler
-      -    fc_names = []
-      +    fc_names = ['gfortran']
-       
-           # Named wrapper links within spack.build_env_path
-           link_paths = { 'cc'  : 'clang/clang',
-                          'cxx' : 'clang/clang++',
-                          # Use default wrappers for fortran, in case provided in compilers.yaml
-      -                   'f77' : 'f77',
-      -                   'fc'  : 'f90' }
-      +                   'f77' : 'clang/gfortran',
-      +                   'fc'  : 'clang/gfortran' }
-       
-           @classmethod
-           def default_version(self, comp):
+         $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
+         index e406d86..cf8fd01 100644
+         --- a/lib/spack/spack/compilers/clang.py
+         +++ b/lib/spack/spack/compilers/clang.py
+         @@ -35,17 +35,17 @@ class Clang(Compiler):
+              cxx_names = ['clang++']
+
+              # Subclasses use possible names of Fortran 77 compiler
+         -    f77_names = []
+         +    f77_names = ['gfortran']
+
+              # Subclasses use possible names of Fortran 90 compiler
+         -    fc_names = []
+         +    fc_names = ['gfortran']
+
+              # Named wrapper links within spack.build_env_path
+              link_paths = { 'cc'  : 'clang/clang',
+                             'cxx' : 'clang/clang++',
+                             # Use default wrappers for fortran, in case provided in compilers.yaml
+         -                   'f77' : 'f77',
+         -                   'fc'  : 'f90' }
+         +                   'f77' : 'clang/gfortran',
+         +                   'fc'  : 'clang/gfortran' }
+
+              @classmethod
+              def default_version(self, comp):
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
@@ -493,7 +505,7 @@ compilers:
 
    > By default, the compiler determines which version of ``gcc`` or ``g++``
    > you have installed from the ``PATH`` environment variable.
-   > 
+   >
    > If you want use a version of ``gcc`` or ``g++`` other than the default
    > version on your system, you need to use either the ``-gcc-name``
    > or ``-gxx-name`` compiler option to specify the path to the version of
@@ -531,10 +543,6 @@ configuration in ``compilers.yaml`` illustrates this technique:
    the "native" Intel version number and the GNU compiler it is
    targeting.
 
-.. warning::
-
-   This solution has not yet been tested.  Details may vary.
-
 """"""""""""""""""""""""""
 Command Line Configuration
 """"""""""""""""""""""""""
@@ -571,18 +579,6 @@ flags to the ``icc`` command:
              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
              fflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
            spec: intel@15.0.24.4.9.3
-
-.. warning::
-
-   This solution has not yet been tested.  Details may vary.
-
-
-^^^
-NAG
-^^^
-
-At this point, the NAG compiler is `known to not
-work<https://github.com/LLNL/spack/issues/590>`.
 
 
 ^^^
@@ -644,6 +640,14 @@ Other issues:
    work.
 
 
+^^^
+NAG
+^^^
+
+At this point, the NAG compiler is `known to not
+work<https://github.com/LLNL/spack/issues/590>`.
+
+
 ---------------
 System Packages
 ---------------
@@ -695,11 +699,10 @@ soon as they come out.  Modern Linux installations have standard
 procedures for security updates without user involvement.
 
 Spack running at user-level is not a trusted environment, nor do Spack
-users generally keep up-to-date on the latest security holes in SSL.
-For these reasons, any Spack-installed OpenSSL should be considered
-untrusted.
+users generally keep up-to-date on the latest security holes in SSL.  For
+these reasons, a Spack-installed OpenSSL should likely not be trusted.
 
-As long as the system-provided SSL works, it is better to use it.  One
+As long as the system-provided SSL works, you can use it instead.  One
 can check if it works by trying to download an ``https://``.  For
 example:
 
@@ -707,18 +710,15 @@ example:
 
     $ curl -O https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz
 
-As long as it works, the recommended way to tell Spack to use the
-system-supplied OpenSSL is to add the following to ``packages.yaml``.
-Note that the ``@system`` "version" means "I don't care what version
-it is, just use what is there."  This is appropriate for OpenSSL,
-which has a stable API.
+The recommended way to tell Spack to use the system-supplied OpenSSL is
+to add the following to ``packages.yaml``.  Note that the ``@system``
+"version" means "I don't care what version it is, just use what is
+there."  This is reasonable for OpenSSL, which has a stable API.
 
 
 .. code-block:: yaml
 
     packages:
-        # Recommended for security reasons
-        # Do not install OpenSSL as non-root user.
         openssl:
             paths:
                 openssl@system: /false/path
@@ -732,6 +732,10 @@ which has a stable API.
    added to compilation paths and RPATHs, where it could cause
    unrelated system libraries to be used instead of their Spack
    equivalents.
+
+   The adding of ``/usr`` to ``RPATH`` in this sitution is a known issue
+   and will be fixed in a future release.
+
 
 ^^^
 Git
@@ -756,21 +760,26 @@ by installing a new version of ``git`` and ``openssl``:
 #. Run ``spack install git``
 #. Add the output of ``spack module loads git`` to your ``.bahsrc``.
 
-If this doesn't work, it is also possible to disable Git's checking of
-SSL certificates.  Add the following to ``~/.gitconfig``:
+If this doesn't work, it is also possible to disable checking of SSL
+certificates by using either of:
 
 .. code-block:: console
 
-   [http]
-       sslVerify = false
+   $ spack -k install
+   $ spack --insecure install
+
+Using ``-k/--insecure`` makes Spack disable SSL checking when fetching
+from websites and from git.
 
 .. warning::
 
-   This workaround is NOT recommended, and should be used ONLY as a
-   last resort!  Wihout SSL verification, Git is unable to verify the
-   source of the code it downloads, and the user could be subject to a
-   a man-in-the-middle attack.  This is especially problematic when
-   downloading from name Git branches or tags, rather than Git hashes.
+   This workaround should be used ONLY as a last resort!  Wihout SSL
+   certificate verification, spack and git will download from sites you
+   wouldn't normally trust.  The code you download and run may then be
+   compromised!  While this is not a major issue for archives that will
+   be checksummed, it is especially problematic when downloading from
+   name Git branches or tags, which relies entirely on trusting a
+   certificate for security (no verification).
 
 -----------------------
 Utilities Configuration
@@ -839,24 +848,15 @@ until a new cURL has been installed, using the technique above.
 
 .. warning::
 
-    ``curl`` depends on ``openssl`` and ``zlib``, both of which are
-    downloadable from non-SSL sources.  Unfortunately, this
-    Spack-built cURL should be considered untrustworthy for
-    ``https://`` sources because it relies on an OpenSSL built in user
-    space.  Luckily, Spack verifies checksums of the software it
-    installs, and does not rely on a secure SSL implementation.
+   remember that if you install ``curl`` via Spack that it may rely on a
+   user-space OpenSSL that is not upgraded regularly.  It may fall out of
+   date faster than your system OpenSSL.
 
-    If your version of ``curl`` is not trustworthy, then you should
-    *not* use it outside of Spack.  Instead of putting it in your
-    ``.bashrc``, you might wish to create a short shell script that
-    loads the appropriate module(s) and then launches Spack.
-
-Some packages use source code control systems as their download
-method: ``git``, ``hg``, ``svn`` and occasionally ``go``.  If you had
-to install a new ``curl``, then chances are the system-supplied
-version of these other programs will also not work, because they also
-rely on OpenSSL.  Once ``curl`` has been installed, the others should
-also be installable.
+Some packages use source code control systems as their download method:
+``git``, ``hg``, ``svn`` and occasionally ``go``.  If you had to install
+a new ``curl``, then chances are the system-supplied version of these
+other programs will also not work, because they also rely on OpenSSL.
+Once ``curl`` has been installed, you can similarly install the others.
 
 
 .. _InstallEnvironmentModules:
@@ -866,11 +866,11 @@ Environment Modules
 """""""""""""""""""
 
 In order to use Spack's generated environment modules, you must have
-installed the *Environment Modules* package.  On many Linux
-distributions, this can be installed from the vendor's repository.
-For example: """yum install environment-modules``
-(Fedora/RHEL/CentOS).  If your Linux distribution does not have
-Environment Modules, you can get it with Spack:
+installed one of *Environment Modules* or *Lmod*.  On many Linux
+distributions, this can be installed from the vendor's repository.  For
+example: """yum install environment-modules`` (Fedora/RHEL/CentOS).  If
+your Linux distribution does not have Environment Modules, you can get it
+with Spack:
 
 #. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
    #) Identify its location using ``which tclsh``
@@ -964,10 +964,10 @@ or:
    ld: .../_fftpackmodule.o: unrecognized relocation (0x2a) in section `.text'
 
 These problems are often caused by an outdated ``binutils`` on your
-system.  Unlike CMake or Autotools, adding ``depends_on('binutils')``
-to every package is not considered a best practice because every
-package written in C/C++/Fortran would need it.  Instead, load a
-recent ``binutils`` into your environment and use the ``--dirty``
+system.  Unlike CMake or Autotools, adding ``depends_on('binutils')`` to
+every package is not considered a best practice because every package
+written in C/C++/Fortran would need it.  A potential workaround is to
+load a recent ``binutils`` into your environment and use the ``--dirty``
 flag.
 
 
@@ -1109,5 +1109,3 @@ for each compiler type for each cray modules. This ensures that for each
 compiler on our system we can use that external module.
 
 For more on external packages check out the section :ref:`sec-external_packages`.
-
- LocalWords:  github
