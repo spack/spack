@@ -40,18 +40,33 @@ class Libgd(Package):
     homepage = "https://github.com/libgd/libgd"
     url      = "https://github.com/libgd/libgd/archive/gd-2.1.1.tar.gz"
 
+    version('2.2.3', 'a67bd15fa33d4aac0a1c7904aed19f49')
     version('2.1.1', 'e91a1a99903e460e7ba00a794e72cc1e')
 
+    # Build dependencies
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+    depends_on('gettext', type='build')
+    depends_on('pkg-config', type='build')
+
     depends_on('libpng')
-    depends_on('cmake', type='build')
+    depends_on('libtiff')
+    depends_on('fontconfig')
 
     def install(self, spec, prefix):
-
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DENABLE_JPEG:BOOL=ON',
-                  '-DENABLE_PNG:BOOL=ON',
-                  '-DENABLE_TIFF:BOOL=ON',
-                  *std_cmake_args)
-            make()
-            make("install")
+        autoreconf("--install", "--force",
+                   "-I", "m4",
+                   "-I", join_path(spec['gettext'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['pkg-config'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['automake'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['libtool'].prefix,
+                                   "share", "aclocal")
+                   )
+        configure('--prefix={0}'.format(prefix))
+        make()
+        make("install")
