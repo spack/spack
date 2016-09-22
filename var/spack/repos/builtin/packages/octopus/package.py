@@ -46,13 +46,13 @@ class Octopus(Package):
     # FEAST, Libfm, PFFT, ISF, PNFFT
 
     def install(self, spec, prefix):
+        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].blas_libs
         args = []
         args.extend([
             '--prefix=%s' % prefix,
-            '--with-blas=%s' % to_link_flags(
-                spec['blas'].blas_shared_lib),
-            '--with-lapack=%s' % to_link_flags(
-                spec['lapack'].lapack_shared_lib),
+            '--with-blas=%s' % blas.ld_flags,
+            '--with-lapack=%s' % lapack.ld_flags,
             '--with-gsl-prefix=%s' % spec['gsl'].prefix,
             '--with-libxc-prefix=%s' % spec['libxc'].prefix,
             'CC=%s' % spec['mpi'].mpicc,

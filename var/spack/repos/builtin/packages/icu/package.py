@@ -31,8 +31,8 @@ class Icu(Package):
        Globalization support for software applications. ICU is widely
        portable and gives applications the same results on all
        platforms."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+
+    homepage = "http://site.icu-project.org/"
     url      = "http://download.icu-project.org/files/icu4c/54.1/icu4c-54_1-src.tgz"
 
     version('54.1', 'e844caed8f2ca24c088505b0d6271bc0')

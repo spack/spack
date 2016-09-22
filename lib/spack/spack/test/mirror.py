@@ -52,9 +52,10 @@ class MirrorTest(MockPackagesTest):
 
     def set_up_package(self, name, MockRepoClass, url_attr):
         """Set up a mock package to be mirrored.
-           Each package needs us to:
-             1. Set up a mock repo/archive to fetch from.
-             2. Point the package's version args at that repo.
+        Each package needs us to:
+
+        1. Set up a mock repo/archive to fetch from.
+        2. Point the package's version args at that repo.
         """
         # Set up packages to point at mock repos.
         spec = Spec(name)

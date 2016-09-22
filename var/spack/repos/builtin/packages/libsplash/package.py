@@ -26,10 +26,9 @@ from spack import *
 
 
 class Libsplash(Package):
-    """
-    libSplash aims at developing a HDF5-based I/O library for HPC simulations.
-    It is created as an easy-to-use frontend for the standard HDF5 library
-    with support for MPI processes in a cluster environment. While the
+    """libSplash aims at developing a HDF5-based I/O library for HPC
+    simulations. It is created as an easy-to-use frontend for the standard HDF5
+    library with support for MPI processes in a cluster environment. While the
     standard HDF5 library provides detailed low-level control, libSplash
     simplifies tasks commonly found in large-scale HPC simulations, such as
     iterative computations and MPI distributed processes.

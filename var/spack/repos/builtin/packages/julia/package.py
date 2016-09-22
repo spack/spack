@@ -37,9 +37,11 @@ class Julia(Package):
             git='https://github.com/JuliaLang/julia.git', branch='master')
     version('release-0.5',
             git='https://github.com/JuliaLang/julia.git', branch='release-0.5')
+    version('0.5.0', 'b61385671ba74767ab452363c43131fb', preferred=True)
     version('release-0.4',
             git='https://github.com/JuliaLang/julia.git', branch='release-0.4')
-    version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d', preferred=True)
+    version('0.4.7', '75a7a7dd882b7840829d8f165e9b9078')
+    version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d')
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
@@ -162,7 +164,7 @@ class Julia(Package):
         # Configure Julia
         with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
                   "a") as juliarc:
-            if "@master" in spec or "@release-0.5" in spec:
+            if "@master" in spec or "@release-0.5" in spec or "@0.5:" in spec:
                 # This is required for versions @0.5:
                 juliarc.write(
                     '# Point package manager to working certificates\n')

@@ -29,10 +29,10 @@ import os
 import shutil
 import sys
 
+import llnl.util.filesystem as filesystem
 import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import llnl.util.filesystem as filesystem
 from spack.modules import module_types
 
 description = "Manipulate module files"

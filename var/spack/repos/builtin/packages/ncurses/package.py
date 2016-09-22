@@ -50,7 +50,10 @@ class Ncurses(Package):
             "--enable-widec",
             "--enable-overwrite",
             "--disable-lib-suffixes",
-            "--without-ada"]
+            "--without-ada",
+            "--enable-pc-files",
+            "--with-pkg-config-libdir={0}/lib/pkgconfig".format(prefix)
+        ]
         configure(*opts)
         make()
         make("install")

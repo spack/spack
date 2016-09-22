@@ -87,6 +87,7 @@ import spack.compilers
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
+from spack.util.spack_yaml import syaml_dict
 import spack.error as serr
 
 
@@ -407,12 +408,13 @@ class Arch(object):
         return (platform, platform_os, target)
 
     def to_dict(self):
-        d = {}
-        d['platform'] = str(self.platform) if self.platform else None
-        d['platform_os'] = str(self.platform_os) if self.platform_os else None
-        d['target'] = str(self.target) if self.target else None
-
-        return d
+        return syaml_dict((
+            ('platform',
+             str(self.platform) if self.platform else None),
+            ('platform_os',
+             str(self.platform_os) if self.platform_os else None),
+            ('target',
+             str(self.target) if self.target else None)))
 
 
 def _target_from_dict(target_name, plat=None):

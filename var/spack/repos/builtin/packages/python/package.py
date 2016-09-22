@@ -75,6 +75,8 @@ class Python(Package):
     depends_on("tk",  when="+tk")
     depends_on("tcl", when="+tk")
 
+    patch('ncurses.patch')
+
     @when('@2.7,3.4:')
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
@@ -111,6 +113,8 @@ class Python(Package):
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
+        if spec.satisfies("platform=darwin") and ('%gcc' in spec):
+            config_args.append('--disable-toolbox-glue')
 
         if '+ucs4' in spec:
             if spec.satisfies('@:2.7'):

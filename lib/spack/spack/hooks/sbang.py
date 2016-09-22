@@ -81,8 +81,10 @@ def filter_shebang(path):
     tty.warn("Patched overlong shebang in %s" % path)
 
 
-def filter_shebangs_in_directory(directory):
-    for file in os.listdir(directory):
+def filter_shebangs_in_directory(directory, filenames=None):
+    if filenames is None:
+        filenames = os.listdir(directory)
+    for file in filenames:
         path = os.path.join(directory, file)
 
         # only handle files
@@ -104,6 +106,6 @@ def post_install(pkg):
     """This hook edits scripts so that they call /bin/bash
        $spack_prefix/bin/sbang instead of something longer than the
        shebang limit."""
-    if not os.path.isdir(pkg.prefix.bin):
-        return
-    filter_shebangs_in_directory(pkg.prefix.bin)
+
+    for directory, _, filenames in os.walk(pkg.prefix):
+        filter_shebangs_in_directory(directory, filenames)

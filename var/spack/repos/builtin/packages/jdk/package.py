@@ -68,3 +68,9 @@ class Jdk(Package):
 
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('JAVA_HOME', self.spec.prefix)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('JAVA_HOME', self.spec.prefix)

@@ -70,10 +70,10 @@ class Nag(Compiler):
     @classmethod
     def default_version(self, comp):
         """The '-V' option works for nag compilers.
-           Output looks like this::
+        Output looks like this::
 
-           NAG Fortran Compiler Release 6.0(Hibiya) Build 1037
-           Product NPL6A60NA for x86-64 Linux
+            NAG Fortran Compiler Release 6.0(Hibiya) Build 1037
+            Product NPL6A60NA for x86-64 Linux
         """
         return get_compiler_version(
             comp, '-V', r'NAG Fortran Compiler Release ([0-9.]+)')

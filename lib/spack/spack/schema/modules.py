@@ -139,7 +139,20 @@ schema = {
                     'default': [],
                     'items': {
                         'type': 'string',
-                        'enum': ['tcl', 'dotkit']}},
+                        'enum': ['tcl', 'dotkit', 'lmod']}},
+                'lmod': {
+                    'allOf': [
+                        # Base configuration
+                        {'$ref': '#/definitions/module_type_configuration'},
+                        {
+                            'core_compilers': {
+                                '$ref': '#/definitions/array_of_strings'
+                            },
+                            'hierarchical_scheme': {
+                                '$ref': '#/definitions/array_of_strings'
+                            }
+                        }  # Specific lmod extensions
+                    ]},
                 'tcl': {
                     'allOf': [
                         # Base configuration

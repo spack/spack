@@ -198,15 +198,19 @@ class RepoPath(object):
 
     def get_repo(self, namespace, default=NOT_PROVIDED):
         """Get a repository by namespace.
-        Arguments
-          namespace
-            Look up this namespace in the RepoPath, and return
-            it if found.
 
-        Optional Arguments
-          default
-            If default is provided, return it when the namespace
-            isn't found.  If not, raise an UnknownNamespaceError.
+        Arguments:
+
+            namespace:
+
+                Look up this namespace in the RepoPath, and return it if found.
+
+        Optional Arguments:
+
+            default:
+
+                If default is provided, return it when the namespace
+                isn't found.  If not, raise an UnknownNamespaceError.
         """
         fullspace = '%s.%s' % (self.super_namespace, namespace)
         if fullspace not in self.by_namespace:

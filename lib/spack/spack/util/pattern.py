@@ -31,15 +31,15 @@ def composite(interface=None, method_list=None, container=list):
     """Returns a class decorator that patches a class adding all the methods
     it needs to be a composite for a given interface.
 
-    :param interface: class exposing the interface to which the composite
-    object must conform. Only non-private and non-special methods will be
-    taken into account
+    :param interface: class exposing the interface to which the composite \
+        object must conform. Only non-private and non-special methods will \
+        be taken into account
 
     :param method_list: names of methods that should be part of the composite
 
-    :param container: container for the composite object (default = list).
-    Must fulfill the MutableSequence contract. The composite class will expose
-    the container API to manage object composition
+    :param container: container for the composite object (default = list). \
+        Must fulfill the MutableSequence contract. The composite class will \
+        expose the container API to manage object composition
 
     :return: class decorator
     """
