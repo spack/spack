@@ -138,15 +138,13 @@ class Boost(Package):
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):
             return 'darwin'
-        else:
-            platform = 'linux'
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang'}
 
         if spec.satisfies('@1.47:'):
-            toolsets['icpc'] += '-' + platform
+            toolsets['icpc'] += '-linux'
         for cc, toolset in toolsets.iteritems():
             if cc in self.compiler.cxx_names:
                 return toolset
@@ -164,6 +162,16 @@ class Boost(Package):
                            join_path(spec['python'].prefix.bin, 'python'))
 
         with open('user-config.jam', 'w') as f:
+            # Boost may end up using gcc even though clang+gfortran is set in
+            # compilers.yaml. Make sure this does not happen:
+            if not spec.satisfies('%intel'):
+                # using intel-linux : : spack_cxx in user-config.jam leads to
+                # error: at project-config.jam:12
+                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
+                # error: version = <unspecified>
+                # error: previous initialization at ./user-config.jam:1
+                f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                                                       spack_cxx))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
@@ -204,7 +212,13 @@ class Boost(Package):
 
         options.extend([
             'link=%s' % ','.join(linkTypes),
-            '--layout=tagged'])
+            '--layout=tagged'
+        ])
+
+        if not spec.satisfies('%intel'):
+            options.extend([
+                'toolset=%s' % self.determine_toolset(spec)
+            ])
 
         return threadingOpts
 
