@@ -722,7 +722,7 @@ class Package(object):
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
-                                 self.spec.format('$_$@'), checksum_msg)
+                                 self.spec.format('$_$@'), ck_msg)
 
         self.stage.fetch(mirror_only)
 
