@@ -878,8 +878,6 @@ class Package(object):
             even with exceptions.
         :param ignore_deps: Don't install dependencies before installing this \
                        package
-        :param fetch_binary -- Whether to download a pre-compiled package \
-                          or build from scratch
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
         :param verbose: Display verbose build output (by default, suppresses \
@@ -888,6 +886,8 @@ class Package(object):
         :param make_jobs: Number of make jobs to use for install. Default is \
             ncpus
         :param run_tests: Run tests within the package's install()
+        :param fetch_binary: Whether to download a pre-compiled package \
+                          or build from scratch
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
