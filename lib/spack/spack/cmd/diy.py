@@ -54,8 +54,7 @@ def setup_parser(subparser):
         help="specs to use for install.  Must contain package AND version.")
     subparser.add_argument(
         '--dirty', action='store_true', dest='dirty',
-        help="Install a package *without* cleaning the environment.  " +
-        "Or set SPACK_DIRTY environment variable")
+        help="Install a package *without* cleaning the environment.")
 
 
 def diy(self, args):
@@ -105,4 +104,4 @@ def diy(self, args):
             ignore_deps=args.ignore_deps,
             verbose=not args.quiet,
             keep_stage=True,   # don't remove source dir for DIY.
-            dirty=args.dirty or ('SPACK_DIRTY' in os.environ))
+            dirty=args.dirty)
