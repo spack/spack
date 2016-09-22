@@ -269,6 +269,9 @@ class Compiler(object):
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
+    def setup_custom_environment(self, env):
+        pass
+
     def __repr__(self):
         """Return a string representation of the compiler toolchain."""
         return self.__str__()
