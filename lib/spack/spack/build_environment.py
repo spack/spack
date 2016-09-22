@@ -290,7 +290,16 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(
         filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+
+    # Filter out dirs already present in PATH to prevent prepending
+    # /usr/bin and similar from external depnedencies
+    path = get_path('PATH')
+    bin_dirs_new = []
     for item in bin_dirs:
+        if item not in path:
+            bin_dirs_new.append(item)
+
+    for item in bin_dirs_new:
         env.prepend_path('PATH', item)
 
     # Working directory for the spack command itself, for debug logs.
