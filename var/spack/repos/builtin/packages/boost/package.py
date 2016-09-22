@@ -165,9 +165,15 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            compiler_wrapper = join_path(spack.build_env_path, 'c++')
-            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
-                                                   compiler_wrapper))
+            if not spec.satisfies('%intel'):
+                # using intel-linux : : spack_cxx in user-config.jam leads to
+                # error: at project-config.jam:12
+                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
+                # error: version = <unspecified>
+                # error: previous initialization at ./user-config.jam:1
+                compiler_wrapper = join_path(spack.build_env_path, 'c++')
+                f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                                                       compiler_wrapper))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
@@ -207,9 +213,15 @@ class Boost(Package):
                                multithreaded} must be enabled""")
 
         options.extend([
-            'toolset=%s' % self.determine_toolset(spec),
             'link=%s' % ','.join(linkTypes),
-            '--layout=tagged'])
+            '--layout=tagged'
+        ])
+
+        if not spec.satisfies('%intel'):
+            options.extend([
+                'toolset=%s' % self.determine_toolset(spec)
+            ])
+
 
         return threadingOpts
 
