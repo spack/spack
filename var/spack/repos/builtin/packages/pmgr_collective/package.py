@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PmgrCollective(Package):
     """PMGR_COLLECTIVE provides a scalable network for bootstrapping
        MPI jobs."""

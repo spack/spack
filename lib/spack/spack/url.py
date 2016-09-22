@@ -56,12 +56,12 @@ import spack.error
 import spack.util.compression as comp
 from spack.version import Version
 
+
 #
 # Note: We call the input to most of these functions a "path" but the functions
 # work on paths and URLs.  There's not a good word for both of these, but
 # "path" seemed like the most generic term.
 #
-
 def find_list_url(url):
     """Finds a good list URL for the supplied URL.  This depends on
        the site.  By default, just assumes that a good list URL is the
@@ -71,8 +71,8 @@ def find_list_url(url):
 
     url_types = [
         # e.g. https://github.com/llnl/callpath/archive/v1.0.1.tar.gz
-        (r'^(https://github.com/[^/]+/[^/]+)/archive/', lambda m: m.group(1) + '/releases')
-        ]
+        (r'^(https://github.com/[^/]+/[^/]+)/archive/',
+         lambda m: m.group(1) + '/releases')]
 
     for pattern, fun in url_types:
         match = re.search(pattern, url)
@@ -89,8 +89,10 @@ def strip_query_and_fragment(path):
 
         query, frag = components[3:5]
         suffix = ''
-        if query: suffix += '?' + query
-        if frag:  suffix += '#' + frag
+        if query:
+            suffix += '?' + query
+        if frag:
+            suffix += '#' + frag
 
         return (urlunsplit(stripped), suffix)
 
@@ -152,8 +154,10 @@ def downloaded_file_extension(path):
     """
     match = re.search(r'github.com/.+/(zip|tar)ball/', path)
     if match:
-        if   match.group(1) == 'zip': return 'zip'
-        elif match.group(1) == 'tar': return 'tar.gz'
+        if match.group(1) == 'zip':
+            return 'zip'
+        elif match.group(1) == 'tar':
+            return 'tar.gz'
 
     prefix, ext, suffix = split_url_extension(path)
     if not ext:
@@ -193,7 +197,8 @@ def parse_version_offset(path):
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
 
         # e.g., https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz
-        # e.g., https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
+        # e.g.,
+        # https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
         (r'github.com/[^/]+/[^/]+/releases/download/v?([^/]+)/.*$', path),
 
         # e.g. boost_1_39_0
@@ -201,7 +206,7 @@ def parse_version_offset(path):
 
         # e.g. foobar-4.5.1-1
         # e.g. ruby-1.9.1-p243
-        (r'-((\d+\.)*\d\.\d+-(p|rc|RC)?\d+)(?:[-._](?:bin|dist|stable|src|sources))?$', stem),
+        (r'-((\d+\.)*\d\.\d+-(p|rc|RC)?\d+)(?:[-._](?:bin|dist|stable|src|sources))?$', stem),  # noqa
 
         # e.g. lame-398-1
         (r'-((\d)+-\d)', stem),
@@ -275,7 +280,8 @@ def parse_name_offset(path, v=None):
 
     name_types = [
         (r'/sourceforge/([^/]+)/', path),
-        (r'github.com/[^/]+/[^/]+/releases/download/%s/(.*)-%s$' % (v, v), path),
+        (r'github.com/[^/]+/[^/]+/releases/download/%s/(.*)-%s$' %
+         (v, v), path),
         (r'/([^/]+)/(tarball|zipball)/', path),
         (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
         (r'github.com/[^/]+/([^/]+)/archive', path),
@@ -283,7 +289,8 @@ def parse_name_offset(path, v=None):
         (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
         (r'([^/]+)%s' % v, stem),
 
-        (r'/([^/]+)[_.-]v?%s' % v, path),   # accept the path if name is not in stem.
+        # accept the path if name is not in stem.
+        (r'/([^/]+)[_.-]v?%s' % v, path),
         (r'/([^/]+)%s' % v, path),
 
         (r'^([^/]+)[_.-]v?%s' % v, path),
@@ -326,7 +333,7 @@ def insensitize(string):
     return re.sub(r'([a-zA-Z])', to_ins, string)
 
 
-def cumsum(elts, init=0, fn=lambda x:x):
+def cumsum(elts, init=0, fn=lambda x: x):
     """Return cumulative sum of result of fn on each element in elts."""
     sums = []
     s = init
@@ -337,21 +344,20 @@ def cumsum(elts, init=0, fn=lambda x:x):
 
 
 def substitution_offsets(path):
-    """This returns offsets for substituting versions and names in the provided path.
-       It is a helper for substitute_version().
+    """This returns offsets for substituting versions and names in the
+       provided path.  It is a helper for substitute_version().
     """
     # Get name and version offsets
     try:
         ver,  vs, vl = parse_version_offset(path)
         name, ns, nl = parse_name_offset(path, ver)
-    except UndetectableNameError, e:
+    except UndetectableNameError:
         return (None, -1, -1, (), ver, vs, vl, (vs,))
-    except UndetectableVersionError, e:
+    except UndetectableVersionError:
         return (None, -1, -1, (), None, -1, -1, ())
 
     # protect extensions like bz2 from getting inadvertently
     # considered versions.
-    ext = comp.extension(path)
     path = comp.strip_extension(path)
 
     # Construct a case-insensitive regular expression for the package name.
@@ -449,7 +455,7 @@ def color_url(path, **kwargs):
           Cyan: The version found by parse_version_offset().
           Red:  The name found by parse_name_offset().
 
-          Green:   Instances of version string substituted by substitute_version().
+          Green:   Instances of version string from substitute_version().
           Magenta: Instances of the name (protected from substitution).
 
        Optional args:
@@ -469,31 +475,46 @@ def color_url(path, **kwargs):
     nerr = verr = 0
     out = StringIO()
     for i in range(len(path)):
-        if   i == vs:    out.write('@c'); verr += 1
-        elif i == ns:    out.write('@r'); nerr += 1
+        if i == vs:
+            out.write('@c')
+            verr += 1
+        elif i == ns:
+            out.write('@r')
+            nerr += 1
         elif subs:
-            if i in voffs: out.write('@g')
-            elif i in noffs: out.write('@m')
+            if i in voffs:
+                out.write('@g')
+            elif i in noffs:
+                out.write('@m')
 
         out.write(path[i])
 
-        if   i == vs + vl - 1:  out.write('@.'); verr += 1
-        elif i == ns + nl - 1:  out.write('@.'); nerr += 1
+        if i == vs + vl - 1:
+            out.write('@.')
+            verr += 1
+        elif i == ns + nl - 1:
+            out.write('@.')
+            nerr += 1
         elif subs:
             if i in vends or i in nends:
                 out.write('@.')
 
     if errors:
-        if nerr == 0: out.write(" @r{[no name]}")
-        if verr == 0: out.write(" @r{[no version]}")
-        if nerr == 1: out.write(" @r{[incomplete name]}")
-        if verr == 1: out.write(" @r{[incomplete version]}")
+        if nerr == 0:
+            out.write(" @r{[no name]}")
+        if verr == 0:
+            out.write(" @r{[no version]}")
+        if nerr == 1:
+            out.write(" @r{[incomplete name]}")
+        if verr == 1:
+            out.write(" @r{[incomplete version]}")
 
     return colorize(out.getvalue())
 
 
 class UrlParseError(spack.error.SpackError):
     """Raised when the URL module can't parse something correctly."""
+
     def __init__(self, msg, path):
         super(UrlParseError, self).__init__(msg)
         self.path = path
@@ -501,6 +522,7 @@ class UrlParseError(spack.error.SpackError):
 
 class UndetectableVersionError(UrlParseError):
     """Raised when we can't parse a version from a string."""
+
     def __init__(self, path):
         super(UndetectableVersionError, self).__init__(
             "Couldn't detect version in: " + path, path)
@@ -508,6 +530,7 @@ class UndetectableVersionError(UrlParseError):
 
 class UndetectableNameError(UrlParseError):
     """Raised when we can't parse a package name from a string."""
+
     def __init__(self, path):
         super(UndetectableNameError, self).__init__(
             "Couldn't parse package name in: " + path, path)

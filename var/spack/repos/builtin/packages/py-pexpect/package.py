@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPexpect(Package):
     """Pexpect allows easy control of interactive console applications."""
     homepage = "https://pypi.python.org/pypi/pexpect"

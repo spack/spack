@@ -68,6 +68,7 @@ NOT_PROVIDED = object()
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
        function to a Spec."""
+
     def converter(self, spec_like, *args, **kwargs):
         if not isinstance(spec_like, spack.spec.Spec):
             spec_like = spack.spec.Spec(spec_like)
@@ -77,8 +78,9 @@ def _autospec(function):
 
 class SpackNamespace(ModuleType):
     """ Allow lazy loading of modules."""
+
     def __init__(self, namespace):
-        super(ModuleType, self).__init__(self, namespace)
+        super(SpackNamespace, self).__init__(namespace)
         self.__file__ = "(spack namespace)"
         self.__path__ = []
         self.__name__ = namespace
@@ -112,6 +114,7 @@ class RepoPath(object):
        combined results of the Repos in its list instead of on a
        single package repository.
     """
+
     def __init__(self, *repo_dirs, **kwargs):
         # super-namespace for all packages in the RepoPath
         self.super_namespace = kwargs.get('namespace', repo_namespace)
@@ -195,15 +198,19 @@ class RepoPath(object):
 
     def get_repo(self, namespace, default=NOT_PROVIDED):
         """Get a repository by namespace.
-        Arguments
-          namespace
-            Look up this namespace in the RepoPath, and return
-            it if found.
 
-        Optional Arguments
-          default
-            If default is provided, return it when the namespace
-            isn't found.  If not, raise an UnknownNamespaceError.
+        Arguments:
+
+            namespace:
+
+                Look up this namespace in the RepoPath, and return it if found.
+
+        Optional Arguments:
+
+            default:
+
+                If default is provided, return it when the namespace
+                isn't found.  If not, raise an UnknownNamespaceError.
         """
         fullspace = '%s.%s' % (self.super_namespace, namespace)
         if fullspace not in self.by_namespace:
@@ -360,6 +367,7 @@ class Repo(object):
         A Python namespace where the repository's packages should live.
 
     """
+
     def __init__(self, root, namespace=repo_namespace):
         """Instantiate a package repository from a filesystem path.
 
@@ -923,6 +931,7 @@ class PackageLoadError(spack.error.SpackError):
 
 class UnknownPackageError(PackageLoadError):
     """Raised when we encounter a package spack doesn't have."""
+
     def __init__(self, name, repo=None):
         msg = None
         if repo:
@@ -935,6 +944,7 @@ class UnknownPackageError(PackageLoadError):
 
 class UnknownNamespaceError(PackageLoadError):
     """Raised when we encounter an unknown namespace"""
+
     def __init__(self, namespace):
         super(UnknownNamespaceError, self).__init__(
             "Unknown namespace: %s" % namespace)
@@ -942,6 +952,7 @@ class UnknownNamespaceError(PackageLoadError):
 
 class FailedConstructorError(PackageLoadError):
     """Raised when a package's class constructor fails."""
+
     def __init__(self, name, exc_type, exc_obj, exc_tb):
         super(FailedConstructorError, self).__init__(
             "Class constructor failed for package '%s'." % name,

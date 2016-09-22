@@ -25,10 +25,8 @@
 import os
 import re
 import itertools
-from datetime import datetime
 
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path
 
 import spack.error
@@ -37,9 +35,9 @@ import spack.architecture
 from spack.util.multiproc import parmap
 from spack.util.executable import *
 from spack.util.environment import get_path
-from spack.version import Version
 
 __all__ = ['Compiler', 'get_compiler_version']
+
 
 def _verify_executables(*paths):
     for path in paths:
@@ -49,8 +47,9 @@ def _verify_executables(*paths):
 
 _version_cache = {}
 
+
 def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
-    if not compiler_path in _version_cache:
+    if compiler_path not in _version_cache:
         compiler = Executable(compiler_path)
         output = compiler(version_arg, output=str, error=str)
 
@@ -113,7 +112,7 @@ class Compiler(object):
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
 
-    def __init__(self, cspec, operating_system, 
+    def __init__(self, cspec, operating_system,
                  paths, modules=[], alias=None, **kwargs):
         def check(exe):
             if exe is None:
@@ -129,11 +128,6 @@ class Compiler(object):
                 self.fc = self.f77
             else:
                 self.fc  = check(paths[3])
-
-        #self.cc  = check(cc)
-        #self.cxx = check(cxx)
-        #self.f77 = check(f77)
-        #self.fc  = check(fc)
 
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
@@ -158,31 +152,30 @@ class Compiler(object):
     @property
     def openmp_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support OpenMP.",
-                "If you think it should, please edit the compiler subclass and",
-                "submit a pull request or issue.")
-
+        tty.die(
+            "The compiler you have chosen does not currently support OpenMP.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
     # This property should be overridden in the compiler subclass if
     # C++11 is supported by that compiler
     @property
     def cxx11_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support C++11.",
-                "If you think it should, please edit the compiler subclass and",
-                "submit a pull request or issue.")
-
+        tty.die(
+            "The compiler you have chosen does not currently support C++11.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
     # This property should be overridden in the compiler subclass if
     # C++14 is supported by that compiler
     @property
     def cxx14_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support C++14.",
-                "If you think it should, please edit the compiler subclass and",
-                "submit a pull request or issue.")
-
-
+        tty.die(
+            "The compiler you have chosen does not currently support C++14.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
     #
     # Compiler classes have methods for querying the version of
@@ -191,7 +184,6 @@ class Compiler(object):
     # Compiler *instances* are just data objects, and can only be
     # constructed from an actual set of executables.
     #
-
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
@@ -258,16 +250,19 @@ class Compiler(object):
                 version = detect_version(full_path)
                 return (version, prefix, suffix, full_path)
             except ProcessError, e:
-                tty.debug("Couldn't get version for compiler %s" % full_path, e)
+                tty.debug(
+                    "Couldn't get version for compiler %s" % full_path, e)
                 return None
             except Exception, e:
                 # Catching "Exception" here is fine because it just
                 # means something went wrong running a candidate executable.
-                tty.debug("Error while executing candidate compiler %s" % full_path,
-                          "%s: %s" %(e.__class__.__name__, e))
+                tty.debug("Error while executing candidate compiler %s"
+                          % full_path,
+                          "%s: %s" % (e.__class__.__name__, e))
                 return None
 
-        successful = [key for key in parmap(check, checks) if key is not None]
+        successful = [k for k in parmap(check, checks) if k is not None]
+
         # The 'successful' list is ordered like the input paths.
         # Reverse it here so that the dict creation (last insert wins)
         # does not spoil the intented precedence.
@@ -278,20 +273,23 @@ class Compiler(object):
         """Return a string representation of the compiler toolchain."""
         return self.__str__()
 
-
     def __str__(self):
         """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
-            self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc, self.modules, str(self.operating_system)))))
+            self.name, '\n     '.join((str(s) for s in (
+                self.cc, self.cxx, self.f77, self.fc, self.modules,
+                str(self.operating_system)))))
 
 
 class CompilerAccessError(spack.error.SpackError):
+
     def __init__(self, path):
         super(CompilerAccessError, self).__init__(
             "'%s' is not a valid compiler." % path)
 
 
 class InvalidCompilerError(spack.error.SpackError):
+
     def __init__(self):
         super(InvalidCompilerError, self).__init__(
             "Compiler has no executables.")

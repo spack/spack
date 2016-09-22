@@ -26,9 +26,11 @@ from spack import *
 
 
 class Netcdf(Package):
-    """NetCDF is a set of software libraries and self-describing, machine-independent
-    data formats that support the creation, access, and sharing of array-oriented
-    scientific data."""
+    """NetCDF is a set of software libraries and self-describing,
+    machine-independent data formats that support the creation, access,
+    and sharing of array-oriented scientific data.
+
+    """
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz"
@@ -48,12 +50,18 @@ class Netcdf(Package):
 
     # Required for NetCDF-4 support
     depends_on("zlib")
-    depends_on('hdf5@:1.8+mpi', when='@:4.4.0+mpi')
-    depends_on('hdf5+mpi', when='@4.4.1:+mpi')
-    depends_on('hdf5@:1.8~mpi', when='@:4.4.0~mpi')
-    depends_on('hdf5~mpi', when='@4.4.1:~mpi')
+    depends_on('hdf5')
+
+    # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
+    # https://github.com/Unidata/netcdf-c/issues/250
+    depends_on('hdf5@:1.8', when='@:4.4.0')
 
     def install(self, spec, prefix):
+        # Workaround until variant forwarding works properly
+        if '+mpi' in spec and spec.satisfies('^hdf5~mpi'):
+            raise RuntimeError('Invalid spec. Package netcdf requires '
+                               'hdf5+mpi, but spec asked for hdf5~mpi.')
+
         # Environment variables
         CPPFLAGS = []
         LDFLAGS  = []
@@ -74,18 +82,19 @@ class Netcdf(Package):
             "--enable-dap"
         ]
 
-        # Make sure Netcdf links against Spack's curl
-        # Otherwise it may pick up system's curl, which could lead to link errors:
-        # /usr/lib/x86_64-linux-gnu/libcurl.so: undefined reference to `SSL_CTX_use_certificate_chain_file@OPENSSL_1.0.0'
+        # Make sure Netcdf links against Spack's curl, otherwise
+        # otherwise it may pick up system's curl, which can give link
+        # errors, e.g.:
+        # undefined reference to `SSL_CTX_use_certificate_chain_file`
         LIBS.append("-lcurl")
         CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-        LDFLAGS.append( "-L%s" % spec['curl'].prefix.lib)
+        LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
 
         CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
-        LDFLAGS.append( "-L%s/lib"     % spec['hdf5'].prefix)
+        LDFLAGS.append("-L%s/lib"     % spec['hdf5'].prefix)
 
         # HDF4 support
         # As of NetCDF 4.1.3, "--with-hdf4=..." is no longer a valid option
@@ -93,13 +102,13 @@ class Netcdf(Package):
         if '+hdf4' in spec:
             config_args.append("--enable-hdf4")
             CPPFLAGS.append("-I%s/include" % spec['hdf'].prefix)
-            LDFLAGS.append( "-L%s/lib"     % spec['hdf'].prefix)
-            LIBS.append(    "-l%s"         % "jpeg")
+            LDFLAGS.append("-L%s/lib"     % spec['hdf'].prefix)
+            LIBS.append("-l%s"         % "jpeg")
 
         if 'szip' in spec:
             CPPFLAGS.append("-I%s/include" % spec['szip'].prefix)
-            LDFLAGS.append( "-L%s/lib"     % spec['szip'].prefix)
-            LIBS.append(    "-l%s"         % "sz")
+            LDFLAGS.append("-L%s/lib"     % spec['szip'].prefix)
+            LIBS.append("-l%s"         % "sz")
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.

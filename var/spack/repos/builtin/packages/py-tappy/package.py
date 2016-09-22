@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyTappy(Package):
     """Python TAP interface module for unit tests"""
     homepage = "https://github.com/mblayman/tappy"

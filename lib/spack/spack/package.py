@@ -34,6 +34,7 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
+import sys
 import re
 import textwrap
 import time
@@ -85,9 +86,9 @@ class Package(object):
     with the package itself.  Packages are written in pure python.
 
     Packages are all submodules of spack.packages.  If spack is installed
-    in $prefix, all of its python files are in $prefix/lib/spack.  Most
-    of them are in the spack module, so all the packages live in
-    $prefix/lib/spack/spack/packages.
+    in ``$prefix``, all of its python files are in ``$prefix/lib/spack``.
+    Most of them are in the spack module, so all the packages live in
+    ``$prefix/lib/spack/spack/packages``.
 
     All you have to do to create a package is make a new subclass of Package
     in this directory.  Spack automatically scans the python files there
@@ -96,7 +97,7 @@ class Package(object):
     **An example package**
 
     Let's look at the cmake package to start with.  This package lives in
-    $prefix/lib/spack/spack/packages/cmake.py:
+    ``$prefix/var/spack/repos/builtin/packages/cmake/package.py``:
 
     .. code-block:: python
 
@@ -119,19 +120,21 @@ class Package(object):
     1. The module name, ``cmake``.
 
        * User will refers to this name, e.g. 'spack install cmake'.
-       * Corresponds to the name of the file, 'cmake.py', and it can
-         include ``_``, ``-``, and numbers (it can even start with a
+       * It can include ``_``, ``-``, and numbers (it can even start with a
          number).
 
     2. The class name, "Cmake".  This is formed by converting `-` or
        ``_`` in the module name to camel case.  If the name starts with
        a number, we prefix the class name with ``_``. Examples:
 
-         Module Name       Class Name
-          foo_bar           FooBar
-          docbook-xml       DocbookXml
-          FooBar            Foobar
-          3proxy            _3proxy
+          ===========  ==========
+          Module Name  Class Name
+          ===========  ==========
+          foo_bar      FooBar
+          docbook-xml  DocbookXml
+          FooBar       Foobar
+          3proxy       _3proxy
+          ===========  ==========
 
         The class name is what spack looks for when it loads a package module.
 
@@ -140,28 +143,30 @@ class Package(object):
     Aside from proper naming, here is the bare minimum set of things you
     need when you make a package:
 
-    homepage
-      informational URL, so that users know what they're
-      installing.
+    homepage:
+        informational URL, so that users know what they're
+        installing.
 
-    url
-      URL of the source archive that spack will fetch.
+    url or url_for_version(self, version):
+      If url, then the URL of the source archive that spack will fetch.
+      If url_for_version(), then a method returning the URL required
+      to fetch a particular version.
 
-    install()
-      This function tells spack how to build and install the
-      software it downloaded.
+    install():
+        This function tells spack how to build and install the
+        software it downloaded.
 
     **Optional Attributes**
 
     You can also optionally add these attributes, if needed:
 
-        list_url
+        list_url:
             Webpage to scrape for available version strings. Default is the
             directory containing the tarball; use this if the default isn't
             correct so that invoking 'spack versions' will work for this
             package.
 
-        url_version(self, version)
+        url_version(self, version):
             When spack downloads packages at particular versions, it just
             converts version to string with str(version).  Override this if
             your package needs special version formatting in its URL.  boost
@@ -178,11 +183,12 @@ class Package(object):
 
     **spack create**
 
-    Most software comes in nicely packaged tarballs, like this one:
-        http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
+    Most software comes in nicely packaged tarballs, like this one
+
+    http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
 
     Taking a page from homebrew, spack deduces pretty much everything it
-    needs to know from the URL above.  If you simply type this:
+    needs to know from the URL above.  If you simply type this::
 
         spack create http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
 
@@ -217,7 +223,6 @@ class Package(object):
     you can just run configure or cmake without any additional arguments and
     it will find the dependencies automatically.
 
-
     **The Install Function**
 
     The install function is designed so that someone not too terribly familiar
@@ -242,13 +247,12 @@ class Package(object):
     add_commands_to_module() function in this class. This is where most of
     them are created and set on the module.
 
-
     **Parallel Builds**
 
     By default, Spack will run make in parallel when you run make() in your
     install function.  Spack figures out how many cores are available on
-    your system and runs make with -j<cores>.  If you do not want this behavior,
-    you can explicitly mark a package not to use parallel make:
+    your system and runs make with -j<cores>.  If you do not want this
+    behavior, you can explicitly mark a package not to use parallel make:
 
     .. code-block:: python
 
@@ -258,14 +262,15 @@ class Package(object):
            ...
 
     This changes thd default behavior so that make is sequential.  If you still
-    want to build some parts in parallel, you can do this in your install function:
+    want to build some parts in parallel, you can do this in your install
+    function:
 
     .. code-block:: python
 
        make(parallel=True)
 
-    Likewise, if you do not supply parallel = True in your Package, you can keep
-    the default parallel behavior and run make like this when you want a
+    Likewise, if you do not supply parallel = True in your Package, you can
+    keep the default parallel behavior and run make like this when you want a
     sequential build:
 
     .. code-block:: python
@@ -296,14 +301,13 @@ class Package(object):
        p.do_restage()            # removes the build directory and
                                  # re-expands the archive.
 
-    The convention used here is that a do_* function is intended to be called
-    internally by Spack commands (in spack.cmd).  These aren't for package
-    writers to override, and doing so may break the functionality of the Package
-    class.
+    The convention used here is that a ``do_*`` function is intended to be
+    called internally by Spack commands (in spack.cmd).  These aren't for
+    package writers to override, and doing so may break the functionality
+    of the Package class.
 
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
-
     """
     #
     # These are default values for instance variables.
@@ -327,6 +331,12 @@ class Package(object):
     """
     sanity_check_is_dir = []
 
+    class __metaclass__(type):
+        """Ensure  attributes required by Spack directives are present."""
+        def __init__(cls, name, bases, dict):
+            type.__init__(cls, name, bases, dict)
+            spack.directives.ensure_dicts(cls)
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -339,9 +349,6 @@ class Package(object):
 
         # Allow custom staging paths for packages
         self.path = None
-
-        # Sanity check attributes required by Spack directives.
-        spack.directives.ensure_dicts(type(self))
 
         # Check versions in the versions dict.
         for v in self.versions:
@@ -707,13 +714,13 @@ class Package(object):
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
-            checksum_msg = "Add a checksum or use --no-checksum to skip this check."  # NOQA: ignore=E501
+            ck_msg = "Add a checksum or use --no-checksum to skip this check."
             ignore_checksum = False
             if sys.stdout.isatty():
                 ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
                                                     default=False)
                 if ignore_checksum:
-                    tty.msg("Fetching with no checksum.", checksum_msg)
+                    tty.msg("Fetching with no checksum.", ck_msg)
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
@@ -864,20 +871,22 @@ class Package(object):
         Package implementations should override install() to describe
         their build process.
 
-        Args:
-        keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- By default, stage is destroyed only if there are no
-                       exceptions during build. Set to True to keep the stage
-                       even with exceptions.
-        ignore_deps -- Don't install dependencies before installing this
+        :param keep_prefix: Keep install prefix on failure. By default, \
+            destroys it.
+        :param keep_stage: By default, stage is destroyed only if there are \
+            no exceptions during build. Set to True to keep the stage
+            even with exceptions.
+        :param ignore_deps: Don't install dependencies before installing this \
                        package
-        fake        -- Don't really build -- install fake stub files instead.
-        skip_patch  -- Skip patch stage of build if True.
-        verbose     -- Display verbose build output (by default, suppresses it)
-        dirty       -- Don't clean the build environment before installing.
-        make_jobs   -- Number of make jobs to use for install. Default is ncpus
-        run_tests   -- Runn tests within the package's install()
-        fetch_binary -- Whether to download a pre-compiled package
+        :param fake: Don't really build; install fake stub files instead.
+        :param skip_patch: Skip patch stage of build if True.
+        :param verbose: Display verbose build output (by default, suppresses \
+            it)
+        :param dirty: Don't clean the build environment before installing.
+        :param make_jobs: Number of make jobs to use for install. Default is \
+            ncpus
+        :param run_tests: Run tests within the package's install()
+        :param fetch_binary: Whether to download a pre-compiled package \
                           or build from scratch
         """
         if not self.spec.concrete:
@@ -913,7 +922,8 @@ class Package(object):
                                          verbose=verbose,
                                          fetch_binary=fetch_binary,
                                          make_jobs=make_jobs,
-                                         run_tests=run_tests)
+                                         run_tests=run_tests,
+                                         dirty=dirty)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1136,20 +1146,20 @@ class Package(object):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set up the environment of packages that depend on this one.
 
-        This is similar to `setup_environment`, but it is used to
+        This is similar to ``setup_environment``, but it is used to
         modify the compile and runtime environments of packages that
         *depend* on this one. This gives packages like Python and
         others that follow the extension model a way to implement
         common environment or compile-time settings for dependencies.
 
-        By default, this delegates to self.setup_environment()
+        By default, this delegates to ``self.setup_environment()``
 
-        Example :
+        Example:
 
             1. Installing python modules generally requires
-              `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
-              directory in the module's install prefix.  This could
-              set that variable.
+               `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
+               directory in the module's install prefix.  This could
+               set that variable.
 
         Args:
 
@@ -1168,7 +1178,6 @@ class Package(object):
 
         This is useful if there are some common steps to installing
         all extensions for a certain package.
-
         """
         self.setup_environment(spack_env, run_env)
 
@@ -1332,9 +1341,10 @@ class Package(object):
                     continue
                 for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
+                        msg = ("Cannot deactivate %s because %s is activated "
+                               "and depends on it.")
                         raise ActivationError(
-                            "Cannot deactivate %s because %s is activated and depends on it."  # NOQA: ignore=E501
-                            % (self.spec.short_spec, aspec.short_spec))
+                            msg % (self.spec.short_spec, aspec.short_spec))
 
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
@@ -1591,6 +1601,7 @@ def make_executable(path):
 
 
 class CMakePackage(StagedPackage):
+
     def make_make(self):
         import multiprocessing
         # number of jobs spack will to build with.
@@ -1767,12 +1778,14 @@ class ExtensionError(PackageError):
 
 
 class ExtensionConflictError(ExtensionError):
+
     def __init__(self, path):
         super(ExtensionConflictError, self).__init__(
             "Extension blocked by file: %s" % path)
 
 
 class ActivationError(ExtensionError):
+
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 

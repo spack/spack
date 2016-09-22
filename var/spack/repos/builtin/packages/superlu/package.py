@@ -42,7 +42,7 @@ class Superlu(Package):
             '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
             # BLAS support
             '-Denable_blaslib=OFF',
-            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_shared_lib)
+            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_libs.joined())
         ]
 
         cmake_args.extend(std_cmake_args)

@@ -39,9 +39,11 @@ class Hypre(Package):
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
     # hypre does not know how to build shared libraries on Darwin
-    variant('shared', default=(sys.platform != 'darwin'), description="Build shared library version (disables static library)")
+    variant('shared', default=(sys.platform != 'darwin'),
+            description="Build shared library (disables static library)")
     # SuperluDist have conflicting headers with those in Hypre
-    variant('internal-superlu', default=True, description="Use internal Superlu routines")
+    variant('internal-superlu', default=True,
+            description="Use internal Superlu routines")
 
     depends_on("mpi")
     depends_on("blas")
@@ -58,13 +60,14 @@ class Hypre(Package):
         # to command the linker to include whole static libs' content into the
         # shared lib
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
+        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].blas_libs
+
         configure_args = [
             '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % to_lib_name(
-                spec['lapack'].lapack_shared_lib),
+            '--with-lapack-libs=%s' % lapack.names,
             '--with-lapack-lib-dirs=%s' % spec['lapack'].prefix.lib,
-            '--with-blas-libs=%s' % to_lib_name(
-                spec['blas'].blas_shared_lib),
+            '--with-blas-libs=%s' % blas.names,
             '--with-blas-lib-dirs=%s' % spec['blas'].prefix.lib
         ]
 

@@ -27,15 +27,15 @@ from glob import glob
 
 
 class Lmod(Package):
-    """
-    Lmod is a Lua based module system that easily handles the MODULEPATH
+    """Lmod is a Lua based module system that easily handles the MODULEPATH
     Hierarchical problem. Environment Modules provide a convenient way to
     dynamically change the users' environment through modulefiles. This
     includes easily adding or removing directories to the PATH environment
     variable. Modulefiles for Library packages provide environment variables
     that specify where the library and header files can be found.
     """
-    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'  # NOQA: ignore=E501
+
+    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
 
     version('6.4.5', '14f6c58dbc0a5a75574d795eac2c1e3c')

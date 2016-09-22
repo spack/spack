@@ -29,6 +29,7 @@ from spack.util.executable import *
 import llnl.util.tty as tty
 from spack.version import ver
 
+
 class Clang(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['clang']
@@ -43,11 +44,12 @@ class Clang(Compiler):
     fc_names = []
 
     # Named wrapper links within spack.build_env_path
-    link_paths = { 'cc'  : 'clang/clang',
-                   'cxx' : 'clang/clang++',
-                   # Use default wrappers for fortran, in case provided in compilers.yaml
-                   'f77' : 'f77',
-                   'fc'  : 'f90' }
+    link_paths = {'cc': 'clang/clang',
+                  'cxx': 'clang/clang++',
+                  # Use default wrappers for fortran, in case provided in
+                  # compilers.yaml
+                  'f77': 'f77',
+                  'fc': 'f90'}
 
     @property
     def is_apple(self):
@@ -75,18 +77,17 @@ class Clang(Compiler):
     @classmethod
     def default_version(cls, comp):
         """The '--version' option works for clang compilers.
-           On most platforms, output looks like this::
+        On most platforms, output looks like this::
 
-               clang version 3.1 (trunk 149096)
-               Target: x86_64-unknown-linux-gnu
-               Thread model: posix
+            clang version 3.1 (trunk 149096)
+            Target: x86_64-unknown-linux-gnu
+            Thread model: posix
 
-          On Mac OS X, it looks like this:
+        On Mac OS X, it looks like this::
 
-               Apple LLVM version 7.0.2 (clang-700.1.81)
-               Target: x86_64-apple-darwin15.2.0
-               Thread model: posix
-
+            Apple LLVM version 7.0.2 (clang-700.1.81)
+            Target: x86_64-apple-darwin15.2.0
+            Thread model: posix
         """
         if comp not in cpr._version_cache:
             compiler = Executable(comp)
@@ -99,7 +100,7 @@ class Clang(Compiler):
                 ver = match.group(1) + '-apple'
             else:
                 # Normal clang compiler versions are left as-is
-                match = re.search(r'^clang version ([^ )]+)', output)
+                match = re.search(r'clang version ([^ )]+)', output)
                 if match:
                     ver = match.group(1)
 

@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class UtilLinux(Package):
     """Util-linux is a suite of essential utilities for any Linux system."""
@@ -36,9 +36,9 @@ class UtilLinux(Package):
     depends_on("python@2.7:")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, 
-                "PKG_CONFIG_PATH=%s/pkgconfig" % spec['python'].prefix.lib,
-                "--disable-use-tty-group")
+        configure("--prefix=%s" % prefix,
+                  "PKG_CONFIG_PATH=%s/pkgconfig" % spec['python'].prefix.lib,
+                  "--disable-use-tty-group")
 
         make()
         make("install")

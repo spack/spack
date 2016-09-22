@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -24,9 +25,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-if not sys.version_info[:2] >= (2,6):
+if not sys.version_info[:2] >= (2, 6):
     v_info = sys.version_info[:3]
-    sys.exit("Spack requires Python 2.6 or higher.  This is Python %d.%d.%d." % v_info)
+    sys.exit("Spack requires Python 2.6 or higher. "
+             "This is Python %d.%d.%d." % v_info)
 
 import os
 
@@ -54,15 +56,23 @@ with warnings.catch_warnings():
 # Spack, were removed, but shadow system modules that Spack still
 # imports.  If we leave them, Spack will fail in mysterious ways.
 # TODO: more elegant solution for orphaned pyc files.
-orphaned_pyc_files = [os.path.join(SPACK_EXTERNAL_LIBS, n)
-                      for n in ('functools.pyc', 'ordereddict.pyc')]
+orphaned_pyc_files = [
+    os.path.join(SPACK_EXTERNAL_LIBS, 'functools.pyc'),
+    os.path.join(SPACK_EXTERNAL_LIBS, 'ordereddict.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'platforms', 'cray_xc.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'package-list.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'test-install.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'url-parse.pyc')
+]
+
 for pyc_file in orphaned_pyc_files:
     if not os.path.exists(pyc_file):
         continue
     try:
         os.remove(pyc_file)
     except OSError as e:
-        print "WARNING: Spack may fail mysteriously. Couldn't remove orphaned .pyc file: %s" % pyc_file
+        print ("WARNING: Spack may fail mysteriously. "
+               "Couldn't remove orphaned .pyc file: %s" % pyc_file)
 
 # If there is no working directory, use the spack prefix.
 try:
@@ -117,7 +127,8 @@ subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
 import spack.cmd
 for cmd in spack.cmd.commands:
     module = spack.cmd.get_module(cmd)
-    subparser = subparsers.add_parser(cmd, help=module.description)
+    cmd_name = cmd.replace('_', '-')
+    subparser = subparsers.add_parser(cmd_name, help=module.description)
     module.setup_parser(subparser)
 
 # Just print help and exit if run with no arguments at all
@@ -127,6 +138,7 @@ if len(sys.argv) == 1:
 
 # actually parse the args.
 args = parser.parse_args()
+
 
 def main():
     # Set up environment based on args.
@@ -148,11 +160,11 @@ def main():
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
-        tty.warn("You asked for --insecure, which does not check SSL certificates.")
+        tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.curl.add_default_arg('-k')
 
     # Try to load the particular command asked for and run it
-    command = spack.cmd.get_command(args.command)
+    command = spack.cmd.get_command(args.command.replace('-', '_'))
     try:
         return_val = command(parser, args)
     except SpackError as e:
@@ -167,11 +179,12 @@ def main():
     elif isinstance(return_val, int):
         sys.exit(return_val)
     else:
-        tty.die("Bad return value from command %s: %s" % (args.command, return_val))
+        tty.die("Bad return value from command %s: %s"
+                % (args.command, return_val))
 
 if args.profile:
     import cProfile
-    cProfile.run('main()', sort='tottime')
+    cProfile.run('main()', sort='time')
 elif args.pdb:
     import pdb
     pdb.run('main()')

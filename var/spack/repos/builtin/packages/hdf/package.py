@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Hdf(Package):
     """HDF4 (also known as HDF) is a library and multi-object
     file format for storing and managing data between machines."""
@@ -37,14 +38,12 @@ class Hdf(Package):
 
     variant('szip', default=False, description="Enable szip support")
 
-    depends_on("jpeg")
-    depends_on("szip", when='+szip')
-    depends_on("zlib")
+    depends_on('jpeg')
+    depends_on('szip', when='+szip')
+    depends_on('zlib')
 
-
-    def url_for_version(self, version):
-       return "https://www.hdfgroup.org/ftp/HDF/releases/HDF" + str(version) + "/src/hdf-" + str(version) + ".tar.gz"
-
+    depends_on('bison', type='build')
+    depends_on('flex',  type='build')
 
     def install(self, spec, prefix):
         config_args = [
@@ -52,9 +51,9 @@ class Hdf(Package):
             '--prefix=%s' % prefix,
             '--with-jpeg=%s' % spec['jpeg'].prefix,
             '--with-zlib=%s' % spec['zlib'].prefix,
-            '--disable-netcdf',  # must be disabled to build NetCDF with HDF4 support
+            '--disable-netcdf',  # must be disabled to build NetCDF with HDF4
             '--enable-fortran',
-            '--disable-shared',  # fortran and shared libraries are not compatible
+            '--disable-shared',  # fortran and shared libs are not compatible
             '--enable-static',
             '--enable-production'
         ]
@@ -66,4 +65,5 @@ class Hdf(Package):
         configure(*config_args)
 
         make()
-        make("install")
+        make('check')
+        make('install')

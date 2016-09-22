@@ -33,6 +33,7 @@ from spack.util.executable import *
 
 description = "Query packages associated with particular git revisions."
 
+
 def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='pkg_command')
@@ -46,22 +47,28 @@ def setup_parser(subparser):
                              help="Revision to list packages for.")
 
     diff_parser = sp.add_parser('diff', help=pkg_diff.__doc__)
-    diff_parser.add_argument('rev1', nargs='?', default='HEAD^',
-                             help="Revision to compare against.")
-    diff_parser.add_argument('rev2', nargs='?', default='HEAD',
-                             help="Revision to compare to rev1 (default is HEAD).")
+    diff_parser.add_argument(
+        'rev1', nargs='?', default='HEAD^',
+        help="Revision to compare against.")
+    diff_parser.add_argument(
+        'rev2', nargs='?', default='HEAD',
+        help="Revision to compare to rev1 (default is HEAD).")
 
     add_parser = sp.add_parser('added', help=pkg_added.__doc__)
-    add_parser.add_argument('rev1', nargs='?', default='HEAD^',
-                             help="Revision to compare against.")
-    add_parser.add_argument('rev2', nargs='?', default='HEAD',
-                            help="Revision to compare to rev1 (default is HEAD).")
+    add_parser.add_argument(
+        'rev1', nargs='?', default='HEAD^',
+        help="Revision to compare against.")
+    add_parser.add_argument(
+        'rev2', nargs='?', default='HEAD',
+        help="Revision to compare to rev1 (default is HEAD).")
 
     rm_parser = sp.add_parser('removed', help=pkg_removed.__doc__)
-    rm_parser.add_argument('rev1', nargs='?', default='HEAD^',
-                           help="Revision to compare against.")
-    rm_parser.add_argument('rev2', nargs='?', default='HEAD',
-                           help="Revision to compare to rev1 (default is HEAD).")
+    rm_parser.add_argument(
+        'rev1', nargs='?', default='HEAD^',
+        help="Revision to compare against.")
+    rm_parser.add_argument(
+        'rev2', nargs='?', default='HEAD',
+        help="Revision to compare to rev1 (default is HEAD).")
 
 
 def get_git():
@@ -88,7 +95,8 @@ def pkg_add(args):
     for pkg_name in args.packages:
         filename = spack.repo.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
-            tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
+            tty.die("No such package: %s.  Path does not exist:" %
+                    pkg_name, filename)
 
         git = get_git()
         git('-C', spack.packages_path, 'add', filename)
@@ -112,7 +120,8 @@ def pkg_diff(args):
     if u1:
         print "%s:" % args.rev1
         colify(sorted(u1), indent=4)
-        if u1: print
+        if u1:
+            print
 
     if u2:
         print "%s:" % args.rev2
@@ -122,19 +131,21 @@ def pkg_diff(args):
 def pkg_removed(args):
     """Show packages removed since a commit."""
     u1, u2 = diff_packages(args.rev1, args.rev2)
-    if u1: colify(sorted(u1))
+    if u1:
+        colify(sorted(u1))
 
 
 def pkg_added(args):
     """Show packages added since a commit."""
     u1, u2 = diff_packages(args.rev1, args.rev2)
-    if u2: colify(sorted(u2))
+    if u2:
+        colify(sorted(u2))
 
 
 def pkg(parser, args):
-    action = { 'add'    : pkg_add,
-               'diff'    : pkg_diff,
-               'list'    : pkg_list,
-               'removed' : pkg_removed,
-               'added'   : pkg_added }
+    action = {'add': pkg_add,
+              'diff': pkg_diff,
+              'list': pkg_list,
+              'removed': pkg_removed,
+              'added': pkg_added}
     action[args.pkg_command](args)

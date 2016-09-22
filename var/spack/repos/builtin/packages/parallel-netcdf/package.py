@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class ParallelNetcdf(Package):
     """Parallel netCDF (PnetCDF) is a library providing high-performance
     parallel I/O while still maintaining file-format compatibility with
@@ -37,12 +38,14 @@ class ParallelNetcdf(Package):
 
     variant('cxx', default=True, description='Build the C++ Interface')
     variant('fortran', default=True, description='Build the Fortran Interface')
-    variant('fpic', default=True, description='Produce position-independent code (for use with shared libraries)')
+    variant('fpic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on("m4", type='build')
     depends_on("mpi")
 
-    # See: https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL
+    # See:
+    # https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL
     def install(self, spec, prefix):
         args = list()
         if '+fpic' in spec:
@@ -53,7 +56,7 @@ class ParallelNetcdf(Package):
             args.append('--disable-fortran')
 
         args.extend(["--prefix=%s" % prefix,
-                  "--with-mpi=%s" % spec['mpi'].prefix])
+                     "--with-mpi=%s" % spec['mpi'].prefix])
         configure(*args)
         make()
         make("install")

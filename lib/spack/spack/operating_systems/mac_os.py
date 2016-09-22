@@ -1,6 +1,7 @@
 import platform as py_platform
 from spack.architecture import OperatingSystem
 
+
 class MacOs(OperatingSystem):
     """This class represents the macOS operating system. This will be
     auto detected using the python platform.mac_ver. The macOS
@@ -21,7 +22,7 @@ class MacOs(OperatingSystem):
                         "10.11": "elcapitan",
                         "10.12": "sierra"}
 
-        mac_ver = py_platform.mac_ver()[0][:-2]
+        mac_ver = '.'.join(py_platform.mac_ver()[0].split('.')[:2])
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

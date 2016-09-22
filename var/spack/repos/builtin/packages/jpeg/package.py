@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Jpeg(Package):
     """libjpeg is a widely used free library with functions for handling the
     JPEG image data format. It implements a JPEG codec (encoding and decoding)

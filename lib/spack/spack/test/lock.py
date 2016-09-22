@@ -329,6 +329,7 @@ class LockTest(unittest.TestCase):
 
     def test_transaction_with_context_manager(self):
         class TestContextManager(object):
+
             def __enter__(self):
                 vals['entered'] = True
 
@@ -388,6 +389,7 @@ class LockTest(unittest.TestCase):
 
     def test_transaction_with_context_manager_and_exception(self):
         class TestContextManager(object):
+
             def __enter__(self):
                 vals['entered'] = True
 

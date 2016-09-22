@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyIpython(Package):
-    """IPython provides a rich toolkit to help you make the most out of using Python interactively."""
+    """IPython provides a rich toolkit to help you make the most out of using
+       Python interactively."""
     homepage = "https://pypi.python.org/pypi/ipython"
     url      = "https://pypi.python.org/packages/source/i/ipython/ipython-2.3.1.tar.gz"
 

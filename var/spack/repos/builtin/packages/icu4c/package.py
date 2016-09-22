@@ -24,9 +24,12 @@
 ##############################################################################
 from spack import *
 
+
 class Icu4c(Package):
-    """ICU is a mature, widely used set of C/C++ and Java libraries 
-    providing Unicode and Globalization support for software applications."""
+    """ICU is a mature, widely used set of C/C++ and Java libraries providing
+       Unicode and Globalization support for software applications.
+
+    """
 
     homepage = "http://site.icu-project.org/"
     url      = "http://downloads.sourceforge.net/project/icu/ICU4C/54.1/icu4c-54_1-src.tgz"

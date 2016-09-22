@@ -32,7 +32,9 @@ PRE_EXTS = ["tar"]
 EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(PRE_EXTS, EXTS)] + PRE_EXTS + EXTS
+ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(
+    PRE_EXTS, EXTS)] + PRE_EXTS + EXTS
+
 
 def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)

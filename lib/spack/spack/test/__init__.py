@@ -53,6 +53,7 @@ test_names = [
     'git_fetch',
     'hg_fetch',
     'install',
+    'library_list',
     'link_tree',
     'lock',
     'make_executable',

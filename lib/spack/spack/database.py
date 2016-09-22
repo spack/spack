@@ -42,7 +42,6 @@ filesystem.
 import os
 import socket
 
-import yaml
 from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
@@ -54,7 +53,7 @@ from spack.version import Version
 from spack.spec import Spec
 from spack.error import SpackError
 from spack.repository import UnknownPackageError
-
+import spack.util.spack_yaml as syaml
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -119,6 +118,7 @@ class InstallRecord(object):
 
 
 class Database(object):
+
     def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
@@ -163,6 +163,9 @@ class Database(object):
         self.lock = Lock(self._lock_path)
         self._data = {}
 
+        # whether there was an error at the start of a read transaction
+        self._error = None
+
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
         return WriteTransaction(self.lock, self._read, self._write, timeout)
@@ -193,11 +196,12 @@ class Database(object):
         }
 
         try:
-            return yaml.dump(database, stream=stream, default_flow_style=False)
+            return syaml.dump(
+                database, stream=stream, default_flow_style=False)
         except YAMLError as e:
             raise SpackYAMLError("error writing YAML database:", str(e))
 
-    def _read_spec_from_yaml(self, hash_key, installs, parent_key=None):
+    def _read_spec_from_yaml(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -211,19 +215,27 @@ class Database(object):
 
         # Build spec from dict first.
         spec = Spec.from_node_dict(spec_dict)
+        return spec
 
+    def _assign_dependencies(self, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
+        spec = data[hash_key].spec
+        spec_dict = installs[hash_key]['spec']
+
         if 'dependencies' in spec_dict[spec.name]:
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                child = self._read_spec_from_yaml(dhash, installs, hash_key)
-                spec._add_dependency(child, dtypes)
+                if dhash not in data:
+                    tty.warn("Missing dependency not in database: ",
+                             "%s needs %s-%s" % (
+                                 spec.format('$_$#'), dname, dhash[:7]))
+                    continue
 
-        # Specs from the database need to be marked concrete because
-        # they represent actual installations.
-        spec._mark_concrete()
-        return spec
+                # defensive copy (not sure everything handles extra
+                # parent links yet)
+                child = data[dhash].spec
+                spec._add_dependency(child, dtypes)
 
     def _read_from_yaml(self, stream):
         """
@@ -235,9 +247,9 @@ class Database(object):
         try:
             if isinstance(stream, basestring):
                 with open(stream, 'r') as f:
-                    yfile = yaml.load(f)
+                    yfile = syaml.load(f)
             else:
-                yfile = yaml.load(stream)
+                yfile = syaml.load(stream)
 
         except MarkedYAMLError as e:
             raise SpackYAMLError("error parsing YAML database:", str(e))
@@ -247,7 +259,8 @@ class Database(object):
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(self._index_path, msg)
+                raise CorruptDatabaseError(
+                    "Spack database is corrupt: %s" % msg, self._index_path)
 
         check('database' in yfile, "No 'database' attribute in YAML.")
 
@@ -266,21 +279,27 @@ class Database(object):
             self.reindex(spack.install_layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
-        # Iterate through database and check each record.
+        def invalid_record(hash_key, error):
+            msg = ("Invalid record in Spack database: "
+                   "hash: %s, cause: %s: %s")
+            msg %= (hash_key, type(e).__name__, str(e))
+            raise CorruptDatabaseError(msg, self._index_path)
+
+        # Build up the database in three passes:
+        #
+        #   1. Read in all specs without dependencies.
+        #   2. Hook dependencies up among specs.
+        #   3. Mark all specs concrete.
+        #
+        # The database is built up so that ALL specs in it share nodes
+        # (i.e., its specs are a true Merkle DAG, unlike most specs.)
+
+        # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
                 spec = self._read_spec_from_yaml(hash_key, installs)
-
-                # Validate the spec by ensuring the stored and actual
-                # hashes are the same.
-                spec_hash = spec.dag_hash()
-                if not spec_hash == hash_key:
-                    tty.warn(
-                        "Hash mismatch in database: %s -> spec with hash %s" %
-                        (hash_key, spec_hash))
-                    continue  # TODO: is skipping the right thing to do?
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -289,11 +308,22 @@ class Database(object):
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
 
             except Exception as e:
-                tty.warn("Invalid database reecord:",
-                         "file:  %s" % self._index_path,
-                         "hash:  %s" % hash_key,
-                         "cause: %s: %s" % (type(e).__name__, str(e)))
-                raise
+                invalid_record(hash_key, e)
+
+        # Pass 2: Assign dependencies once all specs are created.
+        for hash_key in data:
+            try:
+                self._assign_dependencies(hash_key, installs, data)
+            except Exception as e:
+                invalid_record(hash_key, e)
+
+        # Pass 3: Mark all specs concrete.  Specs representing real
+        # installations must be explicitly marked.
+        # We do this *after* all dependencies are connected because if we
+        # do it *while* we're constructing specs,it causes hashes to be
+        # cached prematurely.
+        for hash_key, rec in data.items():
+            rec.spec._mark_concrete()
 
         self._data = data
 
@@ -303,7 +333,26 @@ class Database(object):
         Locks the DB if it isn't locked already.
 
         """
-        with self.write_transaction():
+        # Special transaction to avoid recursive reindex calls and to
+        # ignore errors if we need to rebuild a corrupt database.
+        def _read_suppress_error():
+            try:
+                if os.path.isfile(self._index_path):
+                    self._read_from_yaml(self._index_path)
+            except CorruptDatabaseError as e:
+                self._error = e
+                self._data = {}
+
+        transaction = WriteTransaction(
+            self.lock, _read_suppress_error, self._write, _db_lock_timeout)
+
+        with transaction:
+            if self._error:
+                tty.warn(
+                    "Spack database was corrupt. Will rebuild. Error was:",
+                    str(self._error))
+                self._error = None
+
             old_data = self._data
             try:
                 self._data = {}
@@ -312,10 +361,15 @@ class Database(object):
                 for spec in directory_layout.all_specs():
                     # Create a spec for each known package and add it.
                     path = directory_layout.path_for_spec(spec)
-                    old_info = old_data.get(spec.dag_hash())
+
+                    # Try to recover explicit value from old DB, but
+                    # default it to False if DB was corrupt.
                     explicit = False
-                    if old_info is not None:
-                        explicit = old_info.explicit
+                    if old_data is not None:
+                        old_info = old_data.get(spec.dag_hash())
+                        if old_info is not None:
+                            explicit = old_info.explicit
+
                     self._add(spec, path, directory_layout, explicit=explicit)
 
                 self._check_ref_counts()
@@ -435,7 +489,7 @@ class Database(object):
 
             self._data[key] = InstallRecord(spec.copy(), path, installed)
 
-            for dep in spec.dependencies('link'):
+            for dep in spec.dependencies(('link', 'run')):
                 self._increment_ref_count(dep)
 
         self._data[key].ref_count += 1
@@ -600,13 +654,11 @@ class Database(object):
 
 
 class CorruptDatabaseError(SpackError):
-    def __init__(self, path, msg=''):
-        super(CorruptDatabaseError, self).__init__(
-            "Spack database is corrupt: %s.  %s." % (path, msg),
-            "Try running `spack reindex` to fix.")
+    """Raised when errors are found while reading the database."""
 
 
 class InvalidDatabaseVersionError(SpackError):
+
     def __init__(self, expected, found):
         super(InvalidDatabaseVersionError, self).__init__(
             "Expected database version %s but found version %s."

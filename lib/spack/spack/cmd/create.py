@@ -120,7 +120,8 @@ dependencies_dict = {
     extends('python')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('py-foo', type=nolink)""",
+    # depends_on('py-setuptools', type='build')
+    # depends_on('py-foo',        type=nolink)""",
 
     'R': """\
     extends('R')
@@ -217,6 +218,7 @@ def setup_parser(subparser):
 
 
 class BuildSystemGuesser(object):
+
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""

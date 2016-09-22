@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class IndirectMpich(Package):
     """Test case for a package that depends on MPI and one of its
        dependencies requires a *particular version* of MPI.

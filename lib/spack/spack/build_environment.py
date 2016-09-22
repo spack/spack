@@ -476,14 +476,12 @@ def setup_package(pkg, dirty=False):
 def fork(pkg, function, dirty=False):
     """Fork a child process to do part of a spack build.
 
-    Arguments:
+    :param pkg: pkg whose environemnt we should set up the forked process for.
+    :param function: arg-less function to run in the child process.
+    :param dirty: If True, do NOT clean the environment before building.
 
-    pkg -- pkg whose environemnt we should set up the
-           forked process for.
-    function -- arg-less function to run in the child process.
-    dirty -- If True, do NOT clean the environment before building.
+    Usage::
 
-    Usage:
        def child_fun():
            # do stuff
        build_env.fork(pkg, child_fun)
@@ -498,6 +496,7 @@ def fork(pkg, function, dirty=False):
     well. If things go well, the child exits and the parent
     carries on.
     """
+
     try:
         pid = os.fork()
     except OSError as e:

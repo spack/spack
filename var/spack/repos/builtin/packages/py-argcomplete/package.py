@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyArgcomplete(Package):
     """Bash tab completion for argparse."""
 

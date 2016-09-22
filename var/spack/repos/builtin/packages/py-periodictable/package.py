@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPeriodictable(Package):
     """nose extends the test loading and running features of unittest,
     making it easier to write, find and run tests."""

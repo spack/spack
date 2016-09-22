@@ -17,19 +17,19 @@ class IntelParallelStudio(IntelInstaller):
 
     # TODO: can also try the online installer (will download files on demand)
     version('composer.2016.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
         % os.getcwd())
     version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
     version('cluster.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
     version('composer.2016.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
         % os.getcwd())
     version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
     version('cluster.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
@@ -45,6 +45,10 @@ class IntelParallelStudio(IntelInstaller):
     variant('tools', default=True, description="Install the Intel Advisor, "
             "VTune Amplifier, and Inspector tools")
 
+    variant('shared', default=True, description='Builds shared library')
+    variant('ilp64', default=False, description='64 bit integers')
+    variant('openmp', default=False, description='OpenMP multithreading layer')
+
     provides('mpi', when='@cluster:+mpi')
     provides('mkl', when='+mkl')
     provides('daal', when='+daal')
@@ -54,6 +58,28 @@ class IntelParallelStudio(IntelInstaller):
     provides('blas', when='+mkl')
     provides('lapack', when='+mkl')
     # TODO: MKL also provides implementation of Scalapack.
+
+    @property
+    def blas_libs(self):
+        shared = True if '+shared' in self.spec else False
+        suffix = dso_suffix if '+shared' in self.spec else 'a'
+        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        mkl_threading = ['libmkl_intel_thread'] if '+openmp' in self.spec else ['libmkl_sequential']  # NOQA: ignore=E501
+        mkl_libs = find_libraries(
+            mkl_integer + ['libmkl_core'] + mkl_threading,
+            root=join_path(self.prefix.lib, 'intel64'),
+            shared=shared
+        )
+        system_libs = [
+            'libpthread.{0}'.format(suffix),
+            'libm.{0}'.format(suffix),
+            'libdl.{0}'.format(suffix)
+        ]
+        return mkl_libs + system_libs
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
 
     def check_variants(self, spec):
         error_message = '\t{variant} can not be turned off if "+all" is set'
@@ -104,7 +130,7 @@ class IntelParallelStudio(IntelInstaller):
             if spec.satisfies('+ipp'):
                 components += ipp_components
             if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
-               spec.satisfies('@professional')):
+                                             spec.satisfies('@professional')):
                 components += tool_components
 
         if spec.satisfies('+all'):
@@ -113,10 +139,11 @@ class IntelParallelStudio(IntelInstaller):
             self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)
 
-        absbindir = os.path.dirname(os.path.realpath(os.path.join(
-            self.prefix.bin, "icc")))
-        abslibdir = os.path.dirname(os.path.realpath(os.path.join
-                                    (self.prefix.lib, "intel64", "libimf.a")))
+        absbindir = os.path.dirname(
+            os.path.realpath(os.path.join(self.prefix.bin, "icc")))
+        abslibdir = os.path.dirname(
+            os.path.realpath(os.path.join(
+                self.prefix.lib, "intel64", "libimf.a")))
 
         os.symlink(self.global_license_file, os.path.join(absbindir,
                                                           "license.lic"))
@@ -134,31 +161,31 @@ class IntelParallelStudio(IntelInstaller):
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
                 spec.satisfies('@cluster'):
-                for ifile in os.listdir(os.path.join(self.prefix, "itac")):
-                    if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
-                        os.symlink(self.global_license_file,
-                                   os.path.join(self.prefix, "itac", ifile,
-                                                "license.lic"))
-                    if os.path.isdir(os.path.join(self.prefix, "itac",
-                                     ifile, "intel64")):
-                        os.symlink(self.global_license_file,
-                                   os.path.join(self.prefix, "itac",
-                                                ifile, "intel64",
-                                                "license.lic"))
-                if spec.satisfies('~newdtags'):
-                    wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
-                                "mpigcc", "mpigcc", "mpigxx", "mpigxx",
-                                "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
-                                "mpiifort", "mpiifort"]
-                    wrapper_paths = []
-                    for root, dirs, files in os.walk(spec.prefix):
-                        for name in files:
-                            if name in wrappers:
-                                wrapper_paths.append(os.path.join(spec.prefix,
-                                                                  root, name))
-                    for wrapper in wrapper_paths:
-                        filter_file(r'-Xlinker --enable-new-dtags', r' ',
-                                    wrapper)
+            for ifile in os.listdir(os.path.join(self.prefix, "itac")):
+                if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
+                    os.symlink(self.global_license_file,
+                               os.path.join(self.prefix, "itac", ifile,
+                                            "license.lic"))
+                if os.path.isdir(os.path.join(self.prefix, "itac",
+                                              ifile, "intel64")):
+                    os.symlink(self.global_license_file,
+                               os.path.join(self.prefix, "itac",
+                                            ifile, "intel64",
+                                            "license.lic"))
+            if spec.satisfies('~newdtags'):
+                wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
+                            "mpigcc", "mpigcc", "mpigxx", "mpigxx",
+                            "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
+                            "mpiifort", "mpiifort"]
+                wrapper_paths = []
+                for root, dirs, files in os.walk(spec.prefix):
+                    for name in files:
+                        if name in wrappers:
+                            wrapper_paths.append(os.path.join(spec.prefix,
+                                                              root, name))
+                for wrapper in wrapper_paths:
+                    filter_file(r'-Xlinker --enable-new-dtags', r' ',
+                                wrapper)
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
@@ -169,24 +196,6 @@ class IntelParallelStudio(IntelInstaller):
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
                    os.path.join(self.prefix.man, "man1"))
-
-    def setup_dependent_package(self, module, dspec):
-        # For now use Single Dynamic Library:
-        # To set the threading layer at run time, use the
-        # mkl_set_threading_layer function or set MKL_THREADING_LAYER
-        # variable to one of the following values: INTEL, SEQUENTIAL, PGI.
-        # To set interface layer at run time, use the mkl_set_interface_layer
-        # function or set the MKL_INTERFACE_LAYER variable to LP64 or ILP64.
-
-        # Otherwise one would need to specify several libraries
-        # (e.g. mkl_intel_lp64;mkl_sequential;mkl_core), which reflect
-        # different interface and threading layers.
-
-        name = 'libmkl_rt.%s' % dso_suffix
-        libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib)
-
-        self.spec.blas_shared_lib   = join_path(libdir, name)
-        self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def setup_environment(self, spack_env, run_env):
         # TODO: Determine variables needed for the professional edition.

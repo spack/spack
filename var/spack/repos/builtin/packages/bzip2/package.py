@@ -51,15 +51,23 @@ class Bzip2(Package):
             kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
 
             mf = FileFilter('Makefile-libbz2_so')
-            mf.filter('$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'.format(v2, v3),  # NOQA ignore=E501
-                      '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib -current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'.format(v1, v2, v3, v3), **kwargs)  # NOQA ignore=E501
+            mf.filter('$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'  # noqa
+                      .format(v2, v3),
+                      '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib -current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'  # noqa
+                      .format(v1, v2, v3, v3),
+                      **kwargs)
 
-            mf.filter('$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}'.format(v3),  # NOQA ignore=E501
-                      '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.{0}.dylib'.format(v3), **kwargs)  # NOQA ignore=E501
-            mf.filter('rm -f libbz2.so.{0}'.format(v2),
-                      'rm -f libbz2.{0}.dylib'.format(v2), **kwargs)
-            mf.filter('ln -s libbz2.so.{0} libbz2.so.{1}'.format(v3, v2),
-                      'ln -s libbz2.{0}.dylib libbz2.{1}.dylib'.format(v3, v2), **kwargs)  # NOQA ignore=E501
+            mf.filter(
+                '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}'.format(v3),  # noqa
+                '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.{0}.dylib'
+                .format(v3), **kwargs)
+            mf.filter(
+                'rm -f libbz2.so.{0}'.format(v2),
+                'rm -f libbz2.{0}.dylib'.format(v2), **kwargs)
+            mf.filter(
+                'ln -s libbz2.so.{0} libbz2.so.{1}'.format(v3, v2),
+                'ln -s libbz2.{0}.dylib libbz2.{1}.dylib'.format(v3, v2),
+                **kwargs)
 
     def install(self, spec, prefix):
         # Build the dynamic library first
@@ -73,10 +81,12 @@ class Bzip2(Package):
         v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))
         if 'darwin' in self.spec.architecture:
             lib = 'libbz2.dylib'
-            lib1, lib2, lib3 = ('libbz2.{0}.dylib'.format(v) for v in (v1, v2, v3))  # NOQA ignore=E501
+            lib1, lib2, lib3 = ('libbz2.{0}.dylib'.format(v)
+                                for v in (v1, v2, v3))
         else:
             lib = 'libbz2.so'
-            lib1, lib2, lib3 = ('libbz2.so.{0}'.format(v) for v in (v1, v2, v3))  # NOQA ignore=E501
+            lib1, lib2, lib3 = ('libbz2.so.{0}'.format(v)
+                                for v in (v1, v2, v3))
 
         install(lib3, join_path(prefix.lib, lib3))
         with working_dir(prefix.lib):

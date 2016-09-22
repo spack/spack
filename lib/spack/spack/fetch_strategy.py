@@ -170,12 +170,11 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
-        possible_files = self.stage.expected_archive_files
         save_file = None
         partial_file = None
-        if possible_files:
-            save_file = self.stage.expected_archive_files[0]
-            partial_file = self.stage.expected_archive_files[0] + '.part'
+        if self.stage.save_filename:
+            save_file = self.stage.save_filename
+            partial_file = self.stage.save_filename + '.part'
 
         tty.msg("Trying to fetch from %s" % self.url)
 
@@ -307,7 +306,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        shutil.copy(self.archive_file, destination)
+        shutil.copyfile(self.archive_file, destination)
 
     @_needs_stage
     def check(self):
@@ -356,6 +355,7 @@ class URLFetchStrategy(FetchStrategy):
 
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
+
     def __init__(self, *args, **kwargs):
         super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
 
@@ -836,6 +836,7 @@ def for_package_version(pkg, version):
 
 
 class FsCache(object):
+
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
@@ -856,9 +857,9 @@ class FsCache(object):
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
-    def fetcher(self, targetPath, digest):
+    def fetcher(self, targetPath, digest, **kwargs):
         url = "file://" + join_path(self.root, targetPath)
-        return CacheURLFetchStrategy(url, digest)
+        return CacheURLFetchStrategy(url, digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)

@@ -24,6 +24,8 @@
 ##############################################################################
 
 from spack import *
+import os
+import sys
 
 
 class Julia(Package):
@@ -33,31 +35,44 @@ class Julia(Package):
 
     version('master',
             git='https://github.com/JuliaLang/julia.git', branch='master')
+    version('release-0.5',
+            git='https://github.com/JuliaLang/julia.git', branch='release-0.5')
+    version('0.5.0', 'b61385671ba74767ab452363c43131fb', preferred=True)
     version('release-0.4',
             git='https://github.com/JuliaLang/julia.git', branch='release-0.4')
-    version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d', preferred=True)
+    version('0.4.7', '75a7a7dd882b7840829d8f165e9b9078')
+    version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d')
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
+    # TODO: Split these out into jl-hdf5, jl-mpi packages etc.
+    variant("cxx", default=False, description="Prepare for Julia Cxx package")
+    variant("hdf5", default=False, description="Install Julia HDF5 package")
+    variant("mpi", default=False, description="Install Julia MPI package")
+    variant("plot", default=False,
+            description="Install Julia plotting packages")
+    variant("python", default=False,
+            description="Install Julia Python package")
+
     patch('gc.patch', when='@0.4:0.4.5')
-    patch('gc.patch', when='@release-0.4')
     patch('openblas.patch', when='@0.4:0.4.5')
 
+    variant('binutils', default=sys.platform != 'darwin',
+            description="Build via binutils")
+
     # Build-time dependencies:
-    # depends_on("awk", type='build')
-    # depends_on("m4", type='build')
-    # depends_on("pkg-config", type='build')
+    # depends_on("awk")
+    depends_on("m4", type="build")
+    # depends_on("pkg-config")
 
     # Combined build-time and run-time dependencies:
-    depends_on("binutils", type=nolink)
-    depends_on("cmake @2.8:", type=nolink)
-    depends_on("git", type=nolink)
-    depends_on("openssl", type=nolink)
-    depends_on("python @2.7:2.999", type=nolink)
-
-    # I think that Julia requires the dependencies above, but it
-    # builds fine (on my system) without these. We should enable them
-    # as necessary.
+    # (Yes, these are run-time dependencies used by Julia's package manager.)
+    depends_on("binutils", when='+binutils')
+    depends_on("cmake @2.8:")
+    depends_on("curl")
+    depends_on("git")           # I think Julia @0.5: doesn't use git any more
+    depends_on("openssl")
+    depends_on("python @2.7:2.999")
 
     # Run-time dependencies:
     # depends_on("arpack")
@@ -93,10 +108,15 @@ class Julia(Package):
     # USE_SYSTEM_LIBGIT2=0
 
     # Run-time dependencies for Julia packages:
-    depends_on("hdf5", type='run')
-    depends_on("mpi", type='run')
+    depends_on("hdf5", when="+hdf5", type="run")
+    depends_on("mpi", when="+mpi", type="run")
+    depends_on("py-matplotlib", when="+plot", type="run")
 
     def install(self, spec, prefix):
+        # Julia needs git tags
+        if os.path.isfile(".git/shallow"):
+            git = which("git")
+            git("fetch", "--unshallow")
         # Explicitly setting CC, CXX, or FC breaks building libuv, one
         # of Julia's dependencies. This might be a Darwin-specific
         # problem. Given how Spack sets up compilers, Julia should
@@ -107,12 +127,109 @@ class Julia(Package):
             # "CXX=c++",
             # "FC=fc",
             # "USE_SYSTEM_ARPACK=1",
+            "override USE_SYSTEM_CURL=1",
             # "USE_SYSTEM_FFTW=1",
             # "USE_SYSTEM_GMP=1",
             # "USE_SYSTEM_MPFR=1",
             # "USE_SYSTEM_PCRE=1",
             "prefix=%s" % prefix]
+        if "+cxx" in spec:
+            if "@master" not in spec:
+                raise InstallError(
+                    "Variant +cxx requires the @master version of Julia")
+            options += [
+                "BUILD_LLVM_CLANG=1",
+                "LLVM_ASSERTIONS=1",
+                "USE_LLVM_SHLIB=1"]
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
         make()
         make("install")
+
+        # Julia's package manager needs a certificate
+        curl = which("curl")
+        cacert_file = join_path(prefix, "etc", "curl", "cacert.pem")
+        curl("--create-dirs",
+             "--output", cacert_file,
+             "https://curl.haxx.se/ca/cacert.pem")
+
+        # Put Julia's compiler cache into a private directory
+        cachedir = join_path(prefix, "var", "julia", "cache")
+        mkdirp(cachedir)
+
+        # Store Julia packages in a private directory
+        pkgdir = join_path(prefix, "var", "julia", "pkg")
+        mkdirp(pkgdir)
+
+        # Configure Julia
+        with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+                  "a") as juliarc:
+            if "@master" in spec or "@release-0.5" in spec or "@0.5:" in spec:
+                # This is required for versions @0.5:
+                juliarc.write(
+                    '# Point package manager to working certificates\n')
+                juliarc.write('LibGit2.set_ssl_cert_locations("%s")\n' %
+                              cacert_file)
+                juliarc.write('\n')
+            juliarc.write('# Put compiler cache into a private directory\n')
+            juliarc.write('empty!(Base.LOAD_CACHE_PATH)\n')
+            juliarc.write('unshift!(Base.LOAD_CACHE_PATH, "%s")\n' % cachedir)
+            juliarc.write('\n')
+            juliarc.write('# Put Julia packages into a private directory\n')
+            juliarc.write('ENV["JULIA_PKGDIR"] = "%s"\n' % pkgdir)
+            juliarc.write('\n')
+
+        # Install some commonly used packages
+        julia = Executable(join_path(prefix.bin, "julia"))
+        julia("-e", 'Pkg.init(); Pkg.update()')
+
+        # Install HDF5
+        if "+hdf5" in spec:
+            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+                      "a") as juliarc:
+                juliarc.write('# HDF5\n')
+                juliarc.write('push!(Libdl.DL_LOAD_PATH, "%s")\n' %
+                              spec["hdf5"].prefix.lib)
+                juliarc.write('\n')
+            julia("-e", 'Pkg.add("HDF5"); using HDF5')
+            julia("-e", 'Pkg.add("JLD"); using JLD')
+
+        # Install MPI
+        if "+mpi" in spec:
+            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+                      "a") as juliarc:
+                juliarc.write('# MPI\n')
+                juliarc.write('ENV["JULIA_MPI_C_COMPILER"] = "%s"\n' %
+                              join_path(spec["mpi"].prefix.bin, "mpicc"))
+                juliarc.write('ENV["JULIA_MPI_Fortran_COMPILER"] = "%s"\n' %
+                              join_path(spec["mpi"].prefix.bin, "mpifort"))
+                juliarc.write('\n')
+            julia("-e", 'Pkg.add("MPI"); using MPI')
+
+        # Install Python
+        if "+python" in spec or "+plot" in spec:
+            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+                      "a") as juliarc:
+                juliarc.write('# Python\n')
+                juliarc.write('ENV["PYTHON"] = "%s"\n' % spec["python"].prefix)
+                juliarc.write('\n')
+            # Python's OpenSSL package installer complains:
+            # Error: PREFIX too long: 166 characters, but only 128 allowed
+            # Error: post-link failed for: openssl-1.0.2g-0
+            julia("-e", 'Pkg.add("PyCall"); using PyCall')
+
+        if "+plot" in spec:
+            julia("-e", 'Pkg.add("PyPlot"); using PyPlot')
+            julia("-e", 'Pkg.add("Colors"); using Colors')
+            # These require maybe Gtk and ImageMagick
+            julia("-e", 'Pkg.add("Plots"); using Plots')
+            julia("-e", 'Pkg.add("PlotRecipes"); using PlotRecipes')
+            julia("-e", 'Pkg.add("UnicodePlots"); using UnicodePlots')
+            julia("-e", """\
+using Plots
+using UnicodePlots
+unicodeplots()
+plot(x->sin(x)*cos(x), linspace(0, 2pi))
+""")
+
+        julia("-e", 'Pkg.status()')

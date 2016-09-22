@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyMock(Package):
     """mock is a library for testing in Python. It allows you to replace parts
     of your system under test with mock objects and make assertions about how

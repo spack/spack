@@ -75,25 +75,27 @@ To output an @, use '@@'.  To output a } inside braces, use '}}'.
 import re
 import sys
 
+
 class ColorParseError(Exception):
     """Raised when a color format fails to parse."""
+
     def __init__(self, message):
         super(ColorParseError, self).__init__(message)
 
 # Text styles for ansi codes
-styles = {'*'  : '1',       # bold
-          '_'  : '4',       # underline
-          None : '0' }      # plain
+styles = {'*': '1',       # bold
+          '_': '4',       # underline
+          None: '0'}      # plain
 
 # Dim and bright ansi colors
-colors = {'k' : 30, 'K' : 90,  # black
-          'r' : 31, 'R' : 91,  # red
-          'g' : 32, 'G' : 92,  # green
-          'y' : 33, 'Y' : 93,  # yellow
-          'b' : 34, 'B' : 94,  # blue
-          'm' : 35, 'M' : 95,  # magenta
-          'c' : 36, 'C' : 96,  # cyan
-          'w' : 37, 'W' : 97 } # white
+colors = {'k': 30, 'K': 90,  # black
+          'r': 31, 'R': 91,  # red
+          'g': 32, 'G': 92,  # green
+          'y': 33, 'Y': 93,  # yellow
+          'b': 34, 'B': 94,  # blue
+          'm': 35, 'M': 95,  # magenta
+          'c': 36, 'C': 96,  # cyan
+          'w': 37, 'W': 97}  # white
 
 # Regex to be used for color formatting
 color_re = r'@(?:@|\.|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)'
@@ -104,6 +106,7 @@ _force_color = False
 
 
 class match_to_ansi(object):
+
     def __init__(self, color=True):
         self.color = color
 
@@ -179,12 +182,14 @@ def cprint(string, stream=sys.stdout, color=None):
     """Same as cwrite, but writes a trailing newline to the stream."""
     cwrite(string + "\n", stream, color)
 
+
 def cescape(string):
     """Replace all @ with @@ in the string provided."""
     return str(string).replace('@', '@@')
 
 
 class ColorStream(object):
+
     def __init__(self, stream, color=None):
         self._stream = stream
         self._color = color
@@ -196,7 +201,7 @@ class ColorStream(object):
         color = self._color
         if self._color is None:
             if raw:
-                color=True
+                color = True
             else:
                 color = self._stream.isatty() or _force_color
         raw_write(colorize(string, color=color))

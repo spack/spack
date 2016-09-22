@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-#import os
+
 
 class Subversion(Package):
     """Apache Subversion - an open source version control system."""
@@ -41,39 +41,40 @@ class Subversion(Package):
 
     # Optional: We need swig if we want the Perl, Python or Ruby
     # bindings.
-    #depends_on('swig')
-    #depends_on('python')
-    #depends_on('perl')
-    #depends_on('ruby')
+    # depends_on('swig')
+    # depends_on('python')
+    # depends_on('perl')
+    # depends_on('ruby')
 
     def install(self, spec, prefix):
 
         # configure, build, install:
-        # Ref: http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
+        # Ref:
+        # http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
         options = ['--prefix=%s' % prefix]
         options.append('--with-apr=%s' % spec['apr'].prefix)
         options.append('--with-apr-util=%s' % spec['apr-util'].prefix)
         options.append('--with-zlib=%s' % spec['zlib'].prefix)
         options.append('--with-sqlite=%s' % spec['sqlite'].prefix)
         options.append('--with-serf=%s' % spec['serf'].prefix)
-        #options.append('--with-swig=%s' % spec['swig'].prefix)
+        # options.append('--with-swig=%s' % spec['swig'].prefix)
 
         configure(*options)
         make()
         make('install')
 
         # python bindings
-        #make('swig-py',
+        # make('swig-py',
         #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
         #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
-        #make('install-swig-py',
+        # make('install-swig-py',
         #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
         #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
 
         # perl bindings
-        #make('swig-pl')
-        #make('install-swig-pl')
+        # make('swig-pl')
+        # make('install-swig-pl')
 
         # ruby bindings
-        #make('swig-rb')
-        #make('isntall-swig-rb')
+        # make('swig-rb')
+        # make('isntall-swig-rb')

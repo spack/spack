@@ -22,15 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
 import spack
 
-description ="List available versions of a package"
+description = "List available versions of a package"
+
 
 def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE', help='Package to list versions for')
+    subparser.add_argument('package', metavar='PACKAGE',
+                           help='Package to list versions for')
 
 
 def versions(parser, args):

@@ -22,15 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Gdb(Package):
+    """GDB, the GNU Project debugger, allows you to see what is going on
+    'inside' another program while it executes -- or what another
+    program was doing at the moment it crashed.
     """
-    GDB, the GNU Project debugger, allows you to see what is going on `inside' another program while it executes
-    -- or what another program was doing at the moment it crashed.
-    """
+
     homepage = "https://www.gnu.org/software/gdb"
     url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
 
@@ -41,9 +41,18 @@ class Gdb(Package):
     version('7.9', '8f8ced422fe462a00e0135a643544f17')
     version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
 
+    variant('python', default=True, description='Compile with Python support')
+
+    # Required dependency
     depends_on('texinfo', type='build')
 
+    # Optional dependency
+    depends_on('python', when='+python')
+
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        options = ['--prefix=%s' % prefix]
+        if '+python' in spec:
+            options.extend(['--with-python'])
+        configure(*options)
         make()
         make("install")

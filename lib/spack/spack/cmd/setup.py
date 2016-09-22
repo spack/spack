@@ -35,6 +35,7 @@ from spack.stage import DIYStage
 
 description = "Create a configuration script and module, but don't build."
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
@@ -45,6 +46,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND version.")
+    subparser.add_argument(
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
 
 
 def setup(self, args):
@@ -70,7 +74,9 @@ def setup(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack setup spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die(
+                "spack setup spec must have a single, concrete version. "
+                "Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
@@ -84,8 +90,9 @@ def setup(self, args):
         spack.do_checksum = False
 
         package.do_install(
-            keep_prefix=True,        # Don't remove install directory, even if you think you should
+            keep_prefix=True,  # Don't remove install directory
             ignore_deps=args.ignore_deps,
             verbose=args.verbose,
             keep_stage=True,   # don't remove source dir for SETUP.
-            install_phases = set(['setup', 'provenance']))
+            install_phases=set(['setup', 'provenance']),
+            dirty=args.dirty)

@@ -34,7 +34,11 @@ class Cdo(Package):
 
     version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2')
 
+    variant('mpi', default=True)
+
     depends_on('netcdf')
+    depends_on('netcdf+mpi', when='+mpi')
+    depends_on('netcdf~mpi', when='~mpi')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

@@ -30,18 +30,22 @@ import platform
 
 import spack
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-c', dest='python_command', help='Command to execute.')
     subparser.add_argument(
-        'python_args', nargs=argparse.REMAINDER, help="File to run plus arguments.")
+        'python_args', nargs=argparse.REMAINDER,
+        help="File to run plus arguments.")
+
 
 description = "Launch an interpreter as spack would launch a command"
 
+
 def python(parser, args):
     # Fake a main python shell by setting __name__ to __main__.
-    console = code.InteractiveConsole({'__name__' : '__main__',
-                                       'spack'    : spack})
+    console = code.InteractiveConsole({'__name__': '__main__',
+                                       'spack': spack})
 
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]

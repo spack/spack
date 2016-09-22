@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyMpmath(Package):
     """A Python library for arbitrary-precision floating-point arithmetic."""
     homepage = "http://mpmath.org"

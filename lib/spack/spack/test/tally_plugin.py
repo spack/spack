@@ -26,6 +26,7 @@ import os
 
 from nose.plugins import Plugin
 
+
 class Tally(Plugin):
     name = 'tally'
 

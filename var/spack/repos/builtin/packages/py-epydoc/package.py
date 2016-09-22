@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyEpydoc(Package):
-    """Epydoc is a tool for generating API documentation documentation for Python modules, based on their docstrings."""
+    """Epydoc is a tool for generating API documentation documentation for
+       Python modules, based on their docstrings."""
     homepage = "https://pypi.python.org/pypi/epydoc"
     url      = "https://pypi.python.org/packages/source/e/epydoc/epydoc-3.0.1.tar.gz"
 

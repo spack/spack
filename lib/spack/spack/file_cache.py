@@ -41,6 +41,7 @@ class FileCache(object):
       client code need not manage locks for cache entries.
 
     """
+
     def __init__(self, root):
         """Create a file cache object.
 
@@ -131,6 +132,7 @@ class FileCache(object):
 
         """
         class WriteContextManager(object):
+
             def __enter__(cm):
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None

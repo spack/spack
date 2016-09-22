@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Externalprereq(Package):
     homepage = "http://somewhere.com"
     url      = "http://somewhere.com/prereq-1.0.tar.gz"

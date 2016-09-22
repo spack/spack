@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyqt(Package):
     """PyQt is a set of Python v2 and v3 bindings for Digia's Qt
        application framework and runs on all platforms supported by Qt

@@ -22,15 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-
 import llnl.util.tty as tty
 
 
 class Swiftsim(Package):
-    """
-    SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
+    """SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
     astrophysicists with a state of the art framework to perform
     particle based simulations.
     """
@@ -38,9 +35,11 @@ class Swiftsim(Package):
     homepage = 'http://icc.dur.ac.uk/swift/'
     url = 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'
 
-    version('0.3.0', git='https://gitlab.cosma.dur.ac.uk/swift/swiftsim.git', commit='254cc1b563b2f88ddcf437b1f71da123bb9db733')
+    version('0.3.0', git='https://gitlab.cosma.dur.ac.uk/swift/swiftsim.git',
+            commit='254cc1b563b2f88ddcf437b1f71da123bb9db733')
 
-    variant('mpi', default=True, description='Enable distributed memory parallelism')
+    variant('mpi', default=True,
+            description='Enable distributed memory parallelism')
 
     # Build dependencies
     depends_on('autoconf', type='build')

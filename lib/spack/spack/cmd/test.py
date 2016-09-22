@@ -52,14 +52,16 @@ def setup_parser(subparser):
 
 
 class MockCache(object):
+
     def store(self, copyCmd, relativeDst):
         pass
 
-    def fetcher(self, targetPath, digest):
+    def fetcher(self, targetPath, digest, **kwargs):
         return MockCacheFetcher()
 
 
 class MockCacheFetcher(object):
+
     def set_stage(self, stage):
         pass
 

@@ -35,6 +35,7 @@ from spack.stage import DIYStage
 
 description = "Do-It-Yourself: build from an existing source directory."
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
@@ -51,6 +52,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND version.")
+    subparser.add_argument(
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
 
 
 def diy(self, args):
@@ -76,14 +80,17 @@ def diy(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die(
+                "spack diy spec must have a single, concrete version. "
+                "Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
 
         if package.installed:
             tty.error("Already installed in %s" % package.prefix)
-            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+            tty.msg("Uninstall or try adding a version suffix for this "
+                    "DIY build.")
             sys.exit(1)
 
         # Forces the build to run out of the current directory.
@@ -96,4 +103,5 @@ def diy(self, args):
             keep_prefix=args.keep_prefix,
             ignore_deps=args.ignore_deps,
             verbose=not args.quiet,
-            keep_stage=True)   # don't remove source dir for DIY.
+            keep_stage=True,   # don't remove source dir for DIY.
+            dirty=args.dirty)

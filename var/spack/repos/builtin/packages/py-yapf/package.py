@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyYapf(Package):
     """ Yet Another Python Formatter """
     homepage = "https://github.com/google/yapf"
