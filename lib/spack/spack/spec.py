@@ -531,8 +531,9 @@ class Spec(object):
         """Delegate to self.package if the attribute is not in the spec"""
         # This line is to avoid infinite recursion in case package is
         # not present among self attributes
-        package = super(Spec, self).__getattribute__('package')
-        return getattr(package, item)
+        if item.endswith('libs'):
+            return getattr(self.package, item)
+        raise AttributeError()
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
