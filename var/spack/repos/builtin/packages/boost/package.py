@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import spack
 import sys
 import os
 
@@ -171,9 +170,8 @@ class Boost(Package):
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
-                compiler_wrapper = join_path(spack.build_env_path, 'c++')
                 f.write("using {0} : : {1} ;\n".format(boostToolsetId,
-                                                       compiler_wrapper))
+                                                       spack_cxx))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
@@ -221,7 +219,6 @@ class Boost(Package):
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
-
 
         return threadingOpts
 
