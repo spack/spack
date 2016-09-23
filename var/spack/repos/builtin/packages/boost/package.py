@@ -111,12 +111,12 @@ class Boost(Package):
             description="Build multi-threaded versions of libraries")
     variant('singlethreaded', default=True,
             description="Build single-threaded versions of libraries")
-    variant('icu_support', default=False,
-            description="Include ICU support (for regex/locale libraries)")
+    variant('icu', default=False,
+            description="Build with Unicode and ICU suport")
     variant('graph', default=False,
             description="Build the Boost Graph library")
 
-    depends_on('icu', when='+icu_support')
+    depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')

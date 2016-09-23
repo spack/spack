@@ -33,7 +33,7 @@ class Harfbuzz(Package):
     version('0.9.37', 'bfe733250e34629a188d82e3b971bc1e')
 
     depends_on("glib")
-    depends_on("icu")
+    depends_on("icu4c")
     depends_on("freetype")
     depends_on("cairo")
     depends_on("zlib")
