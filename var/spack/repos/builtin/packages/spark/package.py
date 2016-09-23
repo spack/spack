@@ -39,8 +39,8 @@ class Spark(Package):
     variant('hadoop', default=False,
             description='Build with Hadoop')
 
-    depends_on('jdk') # needed to run `hadoop classpath` in `setup_environment`
-    depends_on('hadoop', when='+hadoop', type='build')
+    depends_on('jdk')
+    depends_on('hadoop', when='+hadoop')
 
     version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
     version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
@@ -59,11 +59,16 @@ class Spark(Package):
         install_dir('sbin')
         install_dir('yarn')
 
-        shutil.copy('RELEASE', prefix) # required for spark to recognize binary distribution
+        # required for spark to recognize binary distribution
+        shutil.copy('RELEASE', prefix)
 
     @when('+hadoop')
     def setup_environment(self, spack_env, run_env):
-        env['JAVA_HOME'] = self.spec['jdk'].prefix # not set by `depends_on('jdk')`
-        hadoop_bin = Executable(join_path(self.spec['hadoop'].prefix.bin, 'hadoop'))
+
+        env['JAVA_HOME'] = self.spec['jdk'].prefix
+
+        hadoop_bin_path = join_path(self.spec['hadoop'].prefix.bin, 'hadoop')
+        hadoop_bin = Executable(hadoop_bin_path)
         hadoop_classpath = hadoop_bin('classpath', return_output=True)
+
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
