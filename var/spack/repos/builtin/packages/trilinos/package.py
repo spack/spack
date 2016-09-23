@@ -45,6 +45,7 @@ class Trilinos(Package):
     homepage = "https://trilinos.org/"
     base_url = "https://github.com/trilinos/Trilinos/archive"
 
+    version('12.8.1', '01c0026f1e2050842857db941060ecd5')
     version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
     version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
     version('12.6.2', 'dc7f9924872778798149ecadd81605a5')
