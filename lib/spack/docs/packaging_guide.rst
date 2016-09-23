@@ -386,15 +386,15 @@ has no control over the security of the various sites from which it
 downloads source code, and can never assume that any particular site
 hasn't been compromised.
 
-Trust is established in different ways for different download method.
+Trust is established in different ways for different download methods.
 For the most common download method --- a single-file tarball --- the
-tarball is checsummed.  Git downloads using ``commit=`` are trusted
+tarball is checksummed.  Git downloads using ``commit=`` are trusted
 implicitly, as long as a hash is specified.
 
 Spack also provides untrusted download methods: tarball URLs may be
-supplied without a checksum, or Git downloads my specify a branch or
+supplied without a checksum, or Git downloads may specify a branch or
 tag instead of a hash.  If the user does not control or trust the
-source an untrusted download, it is a security risk.  Unless otherwise
+source of an untrusted download, it is a security risk.  Unless otherwise
 specified by the user for special cases, Spack should by default use
 *only* trusted download methods.
 
