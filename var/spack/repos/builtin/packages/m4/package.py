@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class M4(Package):
@@ -46,6 +47,11 @@ class M4(Package):
                                   spec['libsigsegv'].prefix)
         else:
             configure_args.append('--without-libsigsegv-prefix')
+
+        # TODO: this happens on Sierra only, see
+        # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
+        if (sys.platform == "darwin") and (spec.satisfies('%gcc')):
+            configure_args.append('ac_cv_type_struct_sched_param=yes')
 
         configure("--prefix=%s" % prefix, *configure_args)
         make()
