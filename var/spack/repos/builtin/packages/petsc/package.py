@@ -22,7 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 import os
+import sys
 from spack import *
 
 
@@ -90,8 +92,6 @@ class Petsc(Package):
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
             compiler_opts = [
-                '--with-cpp=cpp',
-                '--with-cxxcpp=cpp',
                 '--with-cc=%s' % os.environ['CC'],
                 '--with-cxx=%s' % (os.environ['CXX']
                                    if self.compiler.cxx is not None else '0'),
@@ -113,11 +113,14 @@ class Petsc(Package):
                 raise RuntimeError('\n'.join(errors))
         else:
             compiler_opts = [
-                '--with-cpp=cpp',
-                '--with-cxxcpp=cpp',
                 '--with-mpi=1',
                 '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
             ]
+        if sys.platform != "darwin":
+            compiler_opts.extend([
+                '--with-cpp=cpp',
+                '--with-cxxcpp=cpp',
+            ])
         return compiler_opts
 
     def install(self, spec, prefix):
