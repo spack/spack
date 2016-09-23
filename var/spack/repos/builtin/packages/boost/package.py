@@ -116,7 +116,7 @@ class Boost(Package):
     variant('graph', default=False,
             description="Build the Boost Graph library")
 
-    depends_on('icu', when='+icu_support')
+    depends_on('icu4c', when='+icu_support')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
