@@ -25,24 +25,19 @@
 from spack import *
 
 
-class Icu(Package):
-    """The International Components for Unicode (ICU) package is a
-       mature, widely used set of C/C++ libraries providing Unicode and
-       Globalization support for software applications. ICU is widely
-       portable and gives applications the same results on all
-       platforms."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "http://download.icu-project.org/files/icu4c/54.1/icu4c-54_1-src.tgz"
+class Bedtools2(Package):
+    """Collectively, the bedtools utilities are a swiss-army knife of
+       tools for a wide-range of genomics analysis tasks. The most
+       widely-used tools enable genome arithmetic: that is, set theory
+       on the genome."""
 
-    version('54.1', 'e844caed8f2ca24c088505b0d6271bc0')
+    homepage = "https://github.com/arq5x/bedtools2"
+    url      = "https://github.com/arq5x/bedtools2/archive/v2.26.0.tar.gz"
 
-    def url_for_version(self, version):
-        return "http://download.icu-project.org/files/icu4c/%s/icu4c-%s-src.tgz" % (
-            version, str(version).replace('.', '_'))
+    version('2.26.0', '52227e7efa6627f0f95d7d734973233d')
+    version('2.25.0', '534fb4a7bf0d0c3f05be52a0160d8e3d')
+
+    depends_on('zlib')
 
     def install(self, spec, prefix):
-        with working_dir("source"):
-            configure("--prefix=%s" % prefix)
-            make()
-            make("install")
+        make("prefix=%s" % prefix, "install")

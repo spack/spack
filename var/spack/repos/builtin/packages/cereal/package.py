@@ -39,6 +39,7 @@ class Cereal(Package):
     homepage = "http://uscilab.github.io/cereal/"
     url      = "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
 
+    version('1.2.1', '64476ed74c19068ee543b53ad3992261')
     version('1.2.0', 'e372c9814696481dbdb7d500e1410d2b')
     version('1.1.2', '34d4ad174acbff005c36d4d10e48cbb9')
     version('1.1.1', '0ceff308c38f37d5b5f6df3927451c27')

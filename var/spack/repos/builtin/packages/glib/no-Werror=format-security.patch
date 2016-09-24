@@ -1,0 +1,16 @@
+--- a/configure.ac	2016-08-16 11:57:34.000000000 -0400
++++ b/configure.ac	2016-08-16 11:57:36.000000000 -0400
+@@ -3357,11 +3357,11 @@
+ 			      enable_compile_warnings=yes)
+ AS_IF([test "x$enable_compile_warnings" = xyes], [
+   CC_CHECK_FLAGS_APPEND([GLIB_WARN_CFLAGS], [CFLAGS], [\
+    -Wall -Wstrict-prototypes -Werror=declaration-after-statement \
+    -Werror=missing-prototypes -Werror=implicit-function-declaration \
+-   -Werror=pointer-arith -Werror=init-self -Werror=format-security \
+-   -Werror=format=2 -Werror=missing-include-dirs])
++   -Werror=pointer-arith -Werror=init-self \
++   -Werror=missing-include-dirs])
+ ])
+ AC_SUBST(GLIB_WARN_CFLAGS)
+ 
+ #

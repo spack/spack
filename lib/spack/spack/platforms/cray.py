@@ -8,37 +8,21 @@ from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
 
-# Craype- module prefixes that are not valid CPU targets.
-NON_TARGETS = ('hugepages', 'network', 'target', 'accel', 'xtpe')
+
+def _get_modules_in_modulecmd_output(output):
+    '''Return list of valid modules parsed from modulecmd output string.'''
+    return [i for i in output.splitlines()
+            if len(i.split()) == 1]
 
 
-def _target_from_clean_env(name):
-    '''Return the default back_end target as loaded in a clean login session.
-
-    A bash subshell is launched with a wiped environment and the list of loaded
-    modules is parsed for the first acceptable CrayPE target.
-    '''
-    # Based on the incantation:
-    # echo "$(env - USER=$USER /bin/bash -l -c 'module list -lt')"
-    targets = []
-    if name != 'front_end':
-        env = which('env')
-        env.add_default_arg('-')
-        # CAUTION - $USER is generally needed to initialize the environment.
-        # There may be other variables needed for general success.
-        output = env('USER=%s' % os.environ['USER'],
-                     '/bin/bash', '--noprofile', '--norc', '-c',
-                     '. /etc/profile; module list -lt',
-                     output=str, error=str)
-        default_modules = [i for i in output.splitlines()
-                           if len(i.split()) == 1]
-        tty.debug("Found default modules:",
-                  *["      " + mod for mod in default_modules])
-        pattern = 'craype-(?!{0})(\S*)'.format('|'.join(NON_TARGETS))
-        for mod in default_modules:
-            if 'craype-' in mod:
-                targets.extend(re.findall(pattern, mod))
-    return targets[0] if targets else None
+def _fill_craype_targets_from_modules(targets, modules):
+    '''Extend CrayPE CPU targets list with those found in list of modules.'''
+    # Craype- module prefixes that are not valid CPU targets.
+    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe')
+    pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
+    for mod in modules:
+        if 'craype-' in mod:
+            targets.extend(re.findall(pattern, mod))
 
 
 class Cray(Platform):
@@ -56,7 +40,12 @@ class Cray(Platform):
         '''
         super(Cray, self).__init__('cray')
 
-        # Get targets from config or make best guess from environment:
+        # Make all craype targets available.
+        for target in self._avail_targets():
+            name = target.replace('-', '_')
+            self.add_target(name, Target(name, 'craype-%s' % target))
+
+        # Get aliased targets from config or best guess from environment:
         conf = spack.config.get_config('targets')
         for name in ('front_end', 'back_end'):
             _target = getattr(self, name, None)
@@ -64,18 +53,16 @@ class Cray(Platform):
                 _target = os.environ.get('SPACK_' + name.upper())
             if _target is None:
                 _target = conf.get(name)
-            if _target is None:
-                _target = _target_from_clean_env(name)
-            setattr(self, name, _target)
-
+            if _target is None and name == 'back_end':
+                _target = self._default_target_from_env()
             if _target is not None:
-                self.add_target(name, Target(_target, 'craype-' + _target))
-                self.add_target(_target, Target(_target, 'craype-' + _target))
+                safe_name = _target.replace('-', '_')
+                setattr(self, name, safe_name)
+                self.add_target(name, self.targets[safe_name])
 
         if self.back_end is not None:
             self.default = self.back_end
-            self.add_target(
-                'default', Target(self.default, 'craype-' + self.default))
+            self.add_target('default', self.targets[self.back_end])
         else:
             raise NoPlatformError()
 
@@ -90,7 +77,7 @@ class Cray(Platform):
         self.add_operating_system(self.front_os, front_distro)
 
     @classmethod
-    def setup_platform_environment(self, pkg, env):
+    def setup_platform_environment(cls, pkg, env):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
@@ -101,5 +88,43 @@ class Cray(Platform):
             env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         return os.environ.get('CRAYPE_VERSION') is not None
+
+    def _default_target_from_env(self):
+        '''Set and return the default CrayPE target loaded in a clean login
+        session.
+
+        A bash subshell is launched with a wiped environment and the list of
+        loaded modules is parsed for the first acceptable CrayPE target.
+        '''
+        # Based on the incantation:
+        # echo "$(env - USER=$USER /bin/bash -l -c 'module list -lt')"
+        if getattr(self, 'default', None) is None:
+            env = which('env')
+            env.add_default_arg('-')
+            # CAUTION - $USER is generally needed in the sub-environment.
+            # There may be other variables needed for general success.
+            output = env('USER=%s' % os.environ['USER'],
+                         'HOME=%s' % os.environ['HOME'],
+                         '/bin/bash', '--noprofile', '--norc', '-c',
+                         '. /etc/profile; module list -lt',
+                         output=str, error=str)
+            self._defmods = _get_modules_in_modulecmd_output(output)
+            targets = []
+            _fill_craype_targets_from_modules(targets, self._defmods)
+            self.default = targets[0] if targets else None
+            tty.debug("Found default modules:",
+                      *["     %s" % mod for mod in self._defmods])
+        return self.default
+
+    def _avail_targets(self):
+        '''Return a list of available CrayPE CPU targets.'''
+        if getattr(self, '_craype_targets', None) is None:
+            module = which('modulecmd', required=True)
+            module.add_default_arg('python')
+            output = module('avail', '-t', 'craype-', output=str, error=str)
+            craype_modules = _get_modules_in_modulecmd_output(output)
+            self._craype_targets = targets = []
+            _fill_craype_targets_from_modules(targets, craype_modules)
+        return self._craype_targets

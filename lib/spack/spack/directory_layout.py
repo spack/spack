@@ -423,7 +423,7 @@ class RemoveFailedError(DirectoryLayoutError):
     def __init__(self, installed_spec, prefix, error):
         super(RemoveFailedError, self).__init__(
             'Could not remove prefix %s for %s : %s'
-            % prefix, installed_spec.short_spec, error)
+            % (prefix, installed_spec.short_spec, error))
         self.cause = error
 
 

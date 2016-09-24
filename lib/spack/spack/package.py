@@ -722,7 +722,7 @@ class Package(object):
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
-                                 self.spec.format('$_$@'), checksum_msg)
+                                 self.spec.format('$_$@'), ck_msg)
 
         self.stage.fetch(mirror_only)
 
@@ -916,7 +916,8 @@ class Package(object):
                                          skip_patch=skip_patch,
                                          verbose=verbose,
                                          make_jobs=make_jobs,
-                                         run_tests=run_tests)
+                                         run_tests=run_tests,
+                                         dirty=dirty)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests

@@ -24,13 +24,40 @@ class Mkl(IntelInstaller):
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
             url="file://%s/l_mkl_11.3.3.210.tgz" % os.getcwd())
 
+    variant('shared', default=True, description='Builds shared library')
+    variant('ilp64', default=False, description='64 bit integers')
+    variant('openmp', default=False, description='OpenMP multithreading layer')
+
     # virtual dependency
     provides('blas')
     provides('lapack')
     # TODO: MKL also provides implementation of Scalapack.
 
-    def install(self, spec, prefix):
+    @property
+    def blas_libs(self):
+        shared = True if '+shared' in self.spec else False
+        suffix = dso_suffix if '+shared' in self.spec else 'a'
+        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        mkl_threading = ['libmkl_sequential']
+        if '+openmp' in spec:
+            mkl_threading = ['libmkl_intel_thread'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+        mkl_libs = find_libraries(
+            mkl_integer + ['libmkl_core'] + mkl_threading,
+            root=join_path(self.prefix.lib, 'intel64'),
+            shared=shared
+        )
+        system_libs = [
+            'libpthread.{0}'.format(suffix),
+            'libm.{0}'.format(suffix),
+            'libdl.{0}'.format(suffix)
+        ]
+        return mkl_libs + system_libs
 
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
+
+    def install(self, spec, prefix):
         self.intel_prefix = os.path.join(prefix, "pkg")
         IntelInstaller.install(self, spec, prefix)
 

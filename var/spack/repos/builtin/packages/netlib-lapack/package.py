@@ -67,6 +67,20 @@ class NetlibLapack(Package):
                 '${CMAKE_CURRENT_SOURCE_DIR}/cmake/',
                 'CBLAS/CMakeLists.txt', string=True)
 
+    @property
+    def blas_libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            ['libblas'], root=self.prefix, shared=shared, recurse=True
+        )
+
+    @property
+    def lapack_libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            ['liblapack'], root=self.prefix, shared=shared, recurse=True
+        )
+
     def install_one(self, spec, prefix, shared):
         cmake_args = [
             '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
@@ -100,18 +114,3 @@ class NetlibLapack(Package):
         # Build shared libraries if requested.
         if '+shared' in spec:
             self.install_one(spec, prefix, True)
-
-    def setup_dependent_package(self, module, dspec):
-        # This is WIP for a prototype interface for virtual packages.
-        # We can update this as more builds start depending on BLAS/LAPACK.
-        libdir = find_library_path(
-            'libblas.a', self.prefix.lib64, self.prefix.lib)
-
-        self.spec.blas_static_lib   = join_path(libdir, 'libblas.a')
-        self.spec.lapack_static_lib = join_path(libdir, 'liblapack.a')
-
-        if '+shared' in self.spec:
-            self.spec.blas_shared_lib   = join_path(
-                libdir, 'libblas.%s' % dso_suffix)
-            self.spec.lapack_shared_lib = join_path(
-                libdir, 'liblapack.%s' % dso_suffix)

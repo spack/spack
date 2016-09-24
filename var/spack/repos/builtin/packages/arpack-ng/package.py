@@ -88,17 +88,16 @@ class ArpackNg(Package):
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Make sure we use Spack's blas/lapack:
+        lapack_libs = spec['lapack'].lapack_libs.joined()
+        blas_libs = spec['blas'].blas_libs.joined()
+
         options.extend([
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
-            '-DLAPACK_LIBRARIES=%s' % (
-                spec['lapack'].lapack_shared_lib if '+shared' in spec else
-                spec['lapack'].lapack_static_lib),
+            '-DLAPACK_INCLUDE_DIRS={0}'.format(spec['lapack'].prefix.include),
+            '-DLAPACK_LIBRARIES={0}'.format(lapack_libs),
             '-DBLAS_FOUND=true',
-            '-DBLAS_INCLUDE_DIRS=%s' % spec['blas'].prefix.include,
-            '-DBLAS_LIBRARIES=%s' % (
-                spec['blas'].blas_shared_lib if '+shared' in spec else
-                spec['blas'].blas_static_lib)
+            '-DBLAS_INCLUDE_DIRS={0}'.format(spec['blas'].prefix.include),
+            '-DBLAS_LIBRARIES={0}'.format(blas_libs)
         ])
 
         if '+mpi' in spec:
@@ -129,19 +128,12 @@ class ArpackNg(Package):
                 'F77=%s' % spec['mpi'].mpif77
             ])
 
-        if '+shared' in spec:
-            options.extend([
-                '--with-blas=%s' % to_link_flags(
-                    spec['blas'].blas_shared_lib),
-                '--with-lapack=%s' % to_link_flags(
-                    spec['lapack'].lapack_shared_lib)
-            ])
-        else:
-            options.extend([
-                '--with-blas=%s' % spec['blas'].blas_static_lib,
-                '--with-lapack=%s' % spec['lapack'].lapack_static_lib,
-                '--enable-shared=no'
-            ])
+        options.extend([
+            '--with-blas={0}'.format(spec['blas'].blas_libs.ld_flags),
+            '--with-lapack={0}'.format(spec['lapack'].lapack_libs.ld_flags)
+        ])
+        if '+shared' not in spec:
+            options.append('--enable-shared=no')
 
         bootstrap()
         configure(*options)
