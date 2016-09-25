@@ -39,7 +39,7 @@ class Mkl(IntelInstaller):
         suffix = dso_suffix if '+shared' in self.spec else 'a'
         mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
         mkl_threading = ['libmkl_sequential']
-        if '+openmp' in spec:
+        if '+openmp' in self.spec:
             mkl_threading = ['libmkl_intel_thread'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
