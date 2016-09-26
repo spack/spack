@@ -64,7 +64,10 @@ class IntelParallelStudio(IntelInstaller):
         shared = True if '+shared' in self.spec else False
         suffix = dso_suffix if '+shared' in self.spec else 'a'
         mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
-        mkl_threading = ['libmkl_intel_thread'] if '+openmp' in self.spec else ['libmkl_sequential']  # NOQA: ignore=E501
+        mkl_threading = ['libmkl_sequential']
+        if '+openmp' in self.spec:
+            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
             root=join_path(self.prefix.lib, 'intel64'),
