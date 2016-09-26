@@ -91,12 +91,9 @@ class NetlibLapack(Package):
             cmake_args.extend(['-DCBLAS=ON'])  # always build CBLAS
 
         if '+external-blas' in spec:
-            # TODO : mechanism to specify the library should be more general,
-            # TODO : but this allows to have an hook to an external blas
             cmake_args.extend([
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
-                '-DBLAS_LIBRARIES:PATH=%s' % join_path(
-                    spec['blas'].prefix.lib, 'libblas.a')
+                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].blas_libs.joined(';')
             ])
 
         cmake_args.extend(std_cmake_args)
