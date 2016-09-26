@@ -1,0 +1,26 @@
+diff --git a/opal/asm/base/POWERPC64.asm b/opal/asm/base/POWERPC64.asm
+index 28da3f4..13d071d 100644
+--- a/opal/asm/base/POWERPC64.asm
++++ b/opal/asm/base/POWERPC64.asm
+@@ -120,6 +120,21 @@ START_FUNC(opal_atomic_cmpset_rel_64)
+ END_FUNC(opal_atomic_cmpset_rel_64)
+
+
++START_FUNC(opal_atomic_swap_64)
++       LSYM(12) ldarx   r0, 0, r3
++           stdcx.  r5, 0, r3
++          bne-    REFLSYM(12)
++       blr
++END_FUNC(opal_atomic_swap_64)
++
++START_FUNC(opal_atomic_swap_32)
++       LSYM(13) lwarx   r0, 0, r3
++           stwcx.  r5, 0, r3
++          bne-    REFLSYM(13)
++       blr
++END_FUNC(opal_atomic_swap_64)
++
++
+ START_FUNC(opal_atomic_add_32)
+         LSYM(5) lwarx r0, 0, r3
+                      add  r0, r4, r0
