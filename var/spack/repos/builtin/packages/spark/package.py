@@ -39,8 +39,8 @@ class Spark(Package):
     variant('hadoop', default=False,
             description='Build with Hadoop')
 
-    depends_on('jdk')
-    depends_on('hadoop', when='+hadoop')
+    depends_on('jdk', type=('build', 'run'))
+    depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
     version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
     version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
@@ -66,6 +66,7 @@ class Spark(Package):
     def setup_environment(self, spack_env, run_env):
 
         env['JAVA_HOME'] = self.spec['jdk'].prefix
+        # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
         hadoop_bin_path = join_path(self.spec['hadoop'].prefix.bin, 'hadoop')
         hadoop_bin = Executable(hadoop_bin_path)
