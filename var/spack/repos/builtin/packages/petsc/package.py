@@ -131,11 +131,11 @@ class Petsc(Package):
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0')
         ])
-        # Make sure we use exactly the same Blas/Lapack libraries (threaded/non-threaded etc)
+        # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
         lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
         options.extend([
-          '--with-blas-lapack-lib=%s' % lapack_blas.joined()
+            '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
         # Activates library support if needed
