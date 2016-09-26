@@ -111,24 +111,6 @@ class Openblas(Package):
         # no quotes around prefix (spack doesn't use a shell)
         make('install', "PREFIX=%s" % prefix, *make_defs)
 
-        # TODO : the links below are mainly there because client
-        # TODO : packages are wrongly written. Check if they can be removed
-
-        # Blas virtual package should provide blas.a and libblas.a
-        with working_dir(prefix.lib):
-            symlink('libopenblas.a', 'blas.a')
-            symlink('libopenblas.a', 'libblas.a')
-            if '+shared' in spec:
-                symlink('libopenblas.%s' % dso_suffix,
-                        'libblas.%s' % dso_suffix)
-
-        # Lapack virtual package should provide liblapack.a
-        with working_dir(prefix.lib):
-            symlink('libopenblas.a', 'liblapack.a')
-            if '+shared' in spec:
-                symlink('libopenblas.%s' % dso_suffix,
-                        'liblapack.%s' % dso_suffix)
-
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
@@ -141,10 +123,8 @@ class Openblas(Package):
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = ["-L%s" % join_path(spec.prefix, "lib"),
-                      "-llapack",
-                      "-lblas",
-                      "-lpthread"]
+        link_flags = self.lapack_libs.ld_flags.split()
+        link_flags.extend(["-lpthread"])
         if '+openmp' in spec:
             link_flags.extend([self.compiler.openmp_flag])
 
