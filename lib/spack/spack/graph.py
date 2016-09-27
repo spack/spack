@@ -67,8 +67,7 @@ from heapq import *
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
-import spack
-from spack.spec import Spec
+from spack.spec import *
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
@@ -501,7 +500,7 @@ def graph_ascii(spec, **kwargs):
     graph.write(spec, color=color, out=out)
 
 
-def graph_dot(*specs, **kwargs):
+def graph_dot(specs, deptype=None, static=False, out=None):
     """Generate a graph in dot format of all provided specs.
 
     Print out a dot formatted graph of all the dependencies between
@@ -510,42 +509,73 @@ def graph_dot(*specs, **kwargs):
         spack graph --dot qt | dot -Tpdf > spack-graph.pdf
 
     """
-    out = kwargs.pop('out', sys.stdout)
-    check_kwargs(kwargs, graph_dot)
+    if out is None:
+        out = sys.stdout
+
+    if deptype is None:
+        deptype = alldeps
 
     out.write('digraph G {\n')
-    out.write('  label = "Spack Dependencies"\n')
     out.write('  labelloc = "b"\n')
     out.write('  rankdir = "LR"\n')
     out.write('  ranksep = "5"\n')
+    out.write('node[\n')
+    out.write('     fontname=Monaco,\n')
+    out.write('     penwidth=2,\n')
+    out.write('     fontsize=12,\n')
+    out.write('     margin=.1,\n')
+    out.write('     shape=box,\n')
+    out.write('     fillcolor=lightblue,\n')
+    out.write('     style="rounded,filled"]\n')
+
     out.write('\n')
 
-    def quote(string):
+    def q(string):
         return '"%s"' % string
 
     if not specs:
-        specs = [p.name for p in spack.repo.all_packages()]
-    else:
-        roots = specs
-        specs = set()
-        for spec in roots:
-            specs.update(Spec(s.name) for s in spec.normalized().traverse())
+        raise ValueError("Must provide specs ot graph_dot")
 
-    deps = []
+    # Static graph includes anything a package COULD depend on.
+    if static:
+        names = set.union(*[s.package.possible_dependencies() for s in specs])
+        specs = [Spec(name) for name in names]
+
+    labeled = set()
+
+    def label(key, label):
+        if key not in labeled:
+            out.write('  "%s" [label="%s"]\n' % (key, label))
+            labeled.add(key)
+
+    deps = set()
     for spec in specs:
-        out.write('  %-30s [label="%s"]\n' % (quote(spec.name), spec.name))
+        if static:
+            out.write('  "%s" [label="%s"]\n' % (spec.name, spec.name))
 
-        # Skip virtual specs (we'll find out about them from concrete ones.
-        if spec.virtual:
-            continue
+            # Skip virtual specs (we'll find out about them from concrete ones.
+            if spec.virtual:
+                continue
 
-        # Add edges for each depends_on in the package.
-        for dep_name, dep in spec.package.dependencies.iteritems():
-            deps.append((spec.name, dep_name))
+            # Add edges for each depends_on in the package.
+            for dep_name, dep in spec.package.dependencies.iteritems():
+                deps.add((spec.name, dep_name))
 
-        # If the package provides something, add an edge for that.
-        for provider in set(s.name for s in spec.package.provided):
-            deps.append((provider, spec.name))
+            # If the package provides something, add an edge for that.
+            for provider in set(s.name for s in spec.package.provided):
+                deps.add((provider, spec.name))
+
+        else:
+            def key_label(s):
+                return s.dag_hash(), "%s-%s" % (s.name, s.dag_hash(7))
+
+            for s in spec.traverse(deptype=deptype):
+                skey, slabel = key_label(s)
+                out.write('  "%s" [label="%s"]\n' % (skey, slabel))
+
+                for d in s.dependencies(deptype=deptype):
+                    dkey, _ = key_label(d)
+                    deps.add((skey, dkey))
 
     out.write('\n')
 
