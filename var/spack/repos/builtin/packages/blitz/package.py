@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Blitz(Package):
     """N-dimensional arrays for C++"""
     homepage = "http://github.com/blitzpp/blitz"

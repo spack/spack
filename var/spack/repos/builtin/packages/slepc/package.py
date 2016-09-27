@@ -28,7 +28,7 @@ from spack import *
 
 class Slepc(Package):
     """
-    Scalable Library for Eigenvalue Computations.
+    Scalable Library for Eigenvalue Problem Computations.
     """
 
     homepage = "http://www.grycap.upv.es/slepc"
@@ -45,9 +45,13 @@ class Slepc(Package):
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi')
 
+    patch('install_name_371.patch', when='@3.7.1')
+
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
-        os.environ['SLEPC_DIR'] = self.stage.source_path
+        # Note that one should set the current (temporary) directory instead
+        # its symlink in spack/stage/ !
+        os.environ['SLEPC_DIR'] = os.getcwd()
 
         options = []
 
@@ -67,9 +71,10 @@ class Slepc(Package):
         configure('--prefix=%s' % prefix, *options)
 
         make('MAKE_NP=%s' % make_jobs, parallel=False)
-        # FIXME:
-        # make('test')
-        make('install')
+        if self.run_tests:
+            make('test', parallel=False)
+
+        make('install', parallel=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package

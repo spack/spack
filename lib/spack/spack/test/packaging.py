@@ -77,7 +77,7 @@ class PackagingTest(MockPackagesTest):
         pkg.do_uninstall(force=True)
 
         # Install it again from binary mirror
-        pkg.do_install(install_policy="download")
+        pkg.do_install(fetch_binary="always")
 
         # Validate the relocation information
         buildinfo = read_buildinfo_file(spec)

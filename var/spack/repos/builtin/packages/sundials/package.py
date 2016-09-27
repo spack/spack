@@ -31,17 +31,22 @@ class Sundials(Package):
     Solvers)"""
 
     homepage = "http://computation.llnl.gov/casc/sundials/"
-    url      = "http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/download/sundials-2.6.2.tar.gz"
+    url = "http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/download/sundials-2.6.2.tar.gz"
 
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
 
     variant('mpi',     default=True,  description='Enable MPI support')
-    variant('lapack',  default=True,  description='Build with external BLAS/LAPACK libraries')
-    variant('klu',     default=False, description='Build with SuiteSparse KLU libraries')
-    variant('superlu', default=False, description='Build with SuperLU_MT libraries')
+    variant('lapack',  default=True,
+            description='Build with external BLAS/LAPACK libraries')
+    variant('klu',     default=False,
+            description='Build with SuiteSparse KLU libraries')
+    variant('superlu', default=False,
+            description='Build with SuperLU_MT libraries')
     variant('openmp',  default=False, description='Enable OpenMP support')
-    variant('pthread', default=True,  description='Enable POSIX threads support')
+    variant('pthread', default=True,
+            description='Enable POSIX threads support')
 
+    depends_on('cmake', type='build')
     depends_on('mpi',                when='+mpi')
     depends_on('blas',               when='+lapack')
     depends_on('lapack',             when='+lapack')
@@ -74,9 +79,9 @@ class Sundials(Package):
         if '+lapack' in spec:
             cmake_args.extend([
                 '-DLAPACK_ENABLE=ON',
-                '-DLAPACK_LIBRARIES={0};{1}'.format(
-                    spec['lapack'].lapack_shared_lib,
-                    spec['blas'].blas_shared_lib
+                '-DLAPACK_LIBRARIES={0}'.format(
+                    (spec['lapack'].lapack_libs +
+                     spec['blas'].blas_libs).joined(';')
                 )
             ])
         else:
@@ -108,7 +113,7 @@ class Sundials(Package):
             elif '+pthread' in spec:
                 cmake_args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
             else:
-                msg  = 'You must choose either +openmp or +pthread when '
+                msg = 'You must choose either +openmp or +pthread when '
                 msg += 'building with SuperLU_MT'
                 raise RuntimeError(msg)
         else:

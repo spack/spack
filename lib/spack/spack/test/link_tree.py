@@ -53,15 +53,12 @@ class LinkTreeTest(unittest.TestCase):
     def tearDown(self):
         self.stage.destroy()
 
-
     def check_file_link(self, filename):
         self.assertTrue(os.path.isfile(filename))
         self.assertTrue(os.path.islink(filename))
 
-
     def check_dir(self, filename):
         self.assertTrue(os.path.isdir(filename))
-
 
     def test_merge_to_new_directory(self):
         with working_dir(self.stage.path):
@@ -78,7 +75,6 @@ class LinkTreeTest(unittest.TestCase):
             self.link_tree.unmerge('dest')
 
             self.assertFalse(os.path.exists('dest'))
-
 
     def test_merge_to_existing_directory(self):
         with working_dir(self.stage.path):
@@ -112,7 +108,6 @@ class LinkTreeTest(unittest.TestCase):
             self.assertFalse(os.path.isfile('dest/c/d/6'))
             self.assertFalse(os.path.isfile('dest/c/d/e/7'))
 
-
     def test_merge_with_empty_directories(self):
         with working_dir(self.stage.path):
             mkdirp('dest/f/g')
@@ -131,7 +126,6 @@ class LinkTreeTest(unittest.TestCase):
 
             self.assertTrue(os.path.isdir('dest/a/b/h'))
             self.assertTrue(os.path.isdir('dest/f/g'))
-
 
     def test_ignore(self):
         with working_dir(self.stage.path):

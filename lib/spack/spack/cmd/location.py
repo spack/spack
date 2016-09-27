@@ -22,26 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import sys
 import argparse
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
 
 import spack
 import spack.cmd
 
-description="Print out locations of various directories used by Spack"
+description = "Print out locations of various directories used by Spack"
+
 
 def setup_parser(subparser):
     global directories
     directories = subparser.add_mutually_exclusive_group()
 
     directories.add_argument(
-        '-m', '--module-dir', action='store_true', help="Spack python module directory.")
+        '-m', '--module-dir', action='store_true',
+        help="Spack python module directory.")
     directories.add_argument(
-        '-r', '--spack-root', action='store_true', help="Spack installation root.")
+        '-r', '--spack-root', action='store_true',
+        help="Spack installation root.")
 
     directories.add_argument(
         '-i', '--install-dir', action='store_true',
@@ -53,15 +53,19 @@ def setup_parser(subparser):
         '-P', '--packages', action='store_true',
         help="Top-level packages directory for Spack.")
     directories.add_argument(
-        '-s', '--stage-dir', action='store_true', help="Stage directory for a spec.")
+        '-s', '--stage-dir', action='store_true',
+        help="Stage directory for a spec.")
     directories.add_argument(
-        '-S', '--stages', action='store_true', help="Top level Stage directory.")
+        '-S', '--stages', action='store_true',
+        help="Top level Stage directory.")
     directories.add_argument(
         '-b', '--build-dir', action='store_true',
-        help="Checked out or expanded source directory for a spec (requires it to be staged first).")
+        help="Checked out or expanded source directory for a spec "
+             "(requires it to be staged first).")
 
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec of package to fetch directory for.")
+        'spec', nargs=argparse.REMAINDER,
+        help="spec of package to fetch directory for.")
 
 
 def location(parser, args):
@@ -72,7 +76,7 @@ def location(parser, args):
         print spack.prefix
 
     elif args.packages:
-        print spack.repo.root
+        print spack.repo.first_repo().root
 
     elif args.stages:
         print spack.stage_path
@@ -94,7 +98,7 @@ def location(parser, args):
 
             if args.package_dir:
                 # This one just needs the spec name.
-                print join_path(spack.repo.root, spec.name)
+                print spack.repo.dirname_for_package_name(spec.name)
 
             else:
                 # These versions need concretized specs.
@@ -104,9 +108,9 @@ def location(parser, args):
                 if args.stage_dir:
                     print pkg.stage.path
 
-                else:  #  args.build_dir is the default.
+                else:  # args.build_dir is the default.
                     if not pkg.stage.source_path:
-                        tty.die("Build directory does not exist yet. Run this to create it:",
+                        tty.die("Build directory does not exist yet. "
+                                "Run this to create it:",
                                 "spack stage " + " ".join(args.spec))
                     print pkg.stage.source_path
-

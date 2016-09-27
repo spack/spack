@@ -22,11 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Author: Justin Too <too1@llnl.gov>
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from spack import *
+
 
 class Rose(Package):
     """A compiler infrastructure to build source-to-source program
@@ -36,13 +37,14 @@ class Rose(Package):
     homepage = "http://rosecompiler.org/"
     url      = "https://github.com/rose-compiler/edg4x-rose"
 
-    version('master', branch='master', git='https://github.com/rose-compiler/edg4x-rose.git')
+    version('master', branch='master',
+            git='https://github.com/rose-compiler/edg4x-rose.git')
 
     patch('add_spack_compiler_recognition.patch')
 
-    depends_on("autoconf@2.69")
-    depends_on("automake@1.14")
-    depends_on("libtool@2.4")
+    depends_on("autoconf@2.69", type='build')
+    depends_on("automake@1.14", type='build')
+    depends_on("libtool@2.4", type='build')
     depends_on("boost@1.54.0")
     depends_on("jdk@8u25-linux-x64")
 
@@ -60,4 +62,3 @@ class Rose(Package):
                       "--with-boost=" + boost.prefix,
                       "--disable-boost-version-check")
             make("install-core")
-

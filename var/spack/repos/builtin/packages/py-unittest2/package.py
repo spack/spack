@@ -35,7 +35,7 @@ class PyUnittest2(Package):
     version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

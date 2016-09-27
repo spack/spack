@@ -37,7 +37,7 @@ class Moab(Package):
     homepage = "https://bitbucket.org/fathomteam/moab"
     url      = "http://ftp.mcs.anl.gov/pub/fathom/moab-4.6.3.tar.gz"
 
-    version('4.9.1', 'bcb8bee3e58c076c7f31884db119088e')
+    version('4.9.1', '19cc2189fa266181ad9109b18d0b2ab8')
     version('4.9.0', '40695d0a159040683cfa05586ad4a7c2')
     version('4.8.2', '1dddd10f162fce3cfffaedc48f6f467d')
 

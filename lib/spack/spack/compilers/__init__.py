@@ -26,15 +26,9 @@
 system and configuring Spack to use multiple compilers.
 """
 import imp
-import os
 import platform
-import copy
-import hashlib
-import base64
-import yaml
-import sys
 
-from llnl.util.lang import memoized, list_modules
+from llnl.util.lang import list_modules
 from llnl.util.filesystem import join_path
 
 import spack
@@ -43,11 +37,7 @@ import spack.spec
 import spack.config
 import spack.architecture
 
-from spack.util.multiproc import parmap
-from spack.compiler import Compiler
-from spack.util.executable import which
 from spack.util.naming import mod_to_class
-from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
@@ -73,7 +63,8 @@ def _to_dict(compiler):
     """Return a dict version of compiler suitable to insert in YAML."""
     d = {}
     d['spec'] = str(compiler.spec)
-    d['paths'] = dict( (attr, getattr(compiler, attr, None)) for attr in _path_instance_vars )
+    d['paths'] = dict((attr, getattr(compiler, attr, None))
+                      for attr in _path_instance_vars)
     d['operating_system'] = str(compiler.operating_system)
     d['modules'] = compiler.modules if compiler.modules else []
 
@@ -93,7 +84,7 @@ def get_compiler_config(scope=None, init_config=True):
         for compiler in compilers:
             compilers_dict.append(_to_dict(compiler))
         spack.config.update_config('compilers', compilers_dict, scope=scope)
-    
+
     config = spack.config.get_config('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
@@ -140,15 +131,19 @@ def remove_compiler_from_config(compiler_spec, scope=None):
       - compiler_specs: a list of CompilerSpec objects.
       - scope:          configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope)
-    config_length = len(compiler_config)
-    
-    filtered_compiler_config = [comp for comp in compiler_config 
-               if spack.spec.CompilerSpec(comp['compiler']['spec']) != compiler_spec]
     # Need a better way for this
     global _cache_config_file
-    _cache_config_file = filtered_compiler_config # Update the cache for changes
-    if len(filtered_compiler_config) == config_length: # No items removed
+
+    compiler_config = get_compiler_config(scope)
+    config_length = len(compiler_config)
+
+    filtered_compiler_config = [
+        comp for comp in compiler_config
+        if spack.spec.CompilerSpec(comp['compiler']['spec']) != compiler_spec]
+
+    # Update the cache for changes
+    _cache_config_file = filtered_compiler_config
+    if len(filtered_compiler_config) == config_length:  # No items removed
         CompilerSpecInsufficientlySpecificError(compiler_spec)
     spack.config.update_config('compilers', filtered_compiler_config, scope)
 
@@ -158,7 +153,8 @@ def all_compilers_config(scope=None, init_config=True):
        available to build with.  These are instances of CompilerSpec.
     """
     # Get compilers for this architecture.
-    global _cache_config_file #Create a cache of the config file so we don't load all the time.
+    # Create a cache of the config file so we don't load all the time.
+    global _cache_config_file
     if not _cache_config_file:
         _cache_config_file = get_compiler_config(scope, init_config)
         return _cache_config_file
@@ -236,7 +232,8 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
                 continue
             items = items['compiler']
 
-            if not ('paths' in items and all(n in items['paths'] for n in _path_instance_vars)):
+            if not ('paths' in items and
+                    all(n in items['paths'] for n in _path_instance_vars)):
                 raise InvalidCompilerConfigurationError(cspec)
 
             cls  = class_for_compiler_name(cspec.name)
@@ -254,10 +251,10 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
                 mods = []
 
             if 'operating_system' in items:
-                operating_system = spack.architecture._operating_system_from_dict(items['operating_system'], platform)
+                os = spack.architecture._operating_system_from_dict(
+                    items['operating_system'], platform)
             else:
-                operating_system = None
-
+                os = None
 
             alias = items['alias'] if 'alias' in items else None
 
@@ -266,7 +263,8 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
                 if f in items:
                     flags[f] = items[f]
 
-            compilers.append(cls(cspec, operating_system, compiler_paths, mods, alias, **flags))
+            compilers.append(
+                cls(cspec, os, compiler_paths, mods, alias, **flags))
 
         return compilers
 
@@ -275,7 +273,6 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
     for cspec in matches:
         compilers.extend(get_compilers(cspec))
     return compilers
-#    return [get_compilers(cspec) for cspec in matches]
 
 
 @_auto_compiler_spec
@@ -285,8 +282,9 @@ def compiler_for_spec(compiler_spec, arch):
     operating_system = arch.platform_os
     assert(compiler_spec.concrete)
 
-    compilers = [c for c in compilers_for_spec(compiler_spec, platform=arch.platform)
-                if c.operating_system == operating_system]
+    compilers = [
+        c for c in compilers_for_spec(compiler_spec, platform=arch.platform)
+        if c.operating_system == operating_system]
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, operating_system)
     if len(compilers) > 1:
@@ -315,17 +313,19 @@ def all_os_classes():
     """
     classes = []
 
-    platform = spack.architecture.sys_type()
+    platform = spack.architecture.platform()
     for os_class in platform.operating_sys.values():
         classes.append(os_class)
 
     return classes
+
 
 def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):
+
     def __init__(self, compiler_spec):
         super(InvalidCompilerConfigurationError, self).__init__(
             "Invalid configuration for [compiler \"%s\"]: " % compiler_spec,
@@ -335,14 +335,18 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
 
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
-        super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+        super(NoCompilersError, self).__init__(
+            "Spack could not find any compilers!")
+
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
-        super(NoCompilerForSpecError, self).__init__("No compilers for operating system %s satisfy spec %s" % (
-                                                     target, compiler_spec))
+        super(NoCompilerForSpecError, self).__init__(
+            "No compilers for operating system %s satisfy spec %s"
+            % (target, compiler_spec))
+
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super(CompilerSpecInsufficientlySpecificError, self).__init__("Multiple compilers satisfy spec %s",
-                                                                      compiler_spec)
+        super(CompilerSpecInsufficientlySpecificError, self).__init__(
+            "Multiple compilers satisfy spec %s" % compiler_spec)

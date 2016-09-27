@@ -24,8 +24,9 @@
 ##############################################################################
 from spack import *
 
+
 class Rsync(Package):
-    """rsync is an open source utility that provides fast incremental file transfer."""
+    """An open source utility that provides fast incremental file transfer."""
     homepage = "https://rsync.samba.org"
     url      = "https://download.samba.org/pub/rsync/rsync-3.1.1.tar.gz"
 

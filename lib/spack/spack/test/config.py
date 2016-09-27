@@ -32,79 +32,80 @@ from ordereddict_backport import OrderedDict
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
-a_comps =  [
+a_comps = [
     {'compiler': {
         'paths': {
-            "cc" : "/gcc473",
+            "cc": "/gcc473",
             "cxx": "/g++473",
             "f77": None,
-            "fc" : None 
-            },
+            "fc": None
+        },
         'modules': None,
         'spec': 'gcc@4.7.3',
         'operating_system': 'CNL10'
-        }},
+    }},
     {'compiler': {
         'paths': {
-            "cc" : "/gcc450",
+            "cc": "/gcc450",
             "cxx": "/g++450",
             "f77": 'gfortran',
-            "fc" : 'gfortran'
-            },
+            "fc": 'gfortran'
+        },
         'modules': None,
         'spec': 'gcc@4.5.0',
         'operating_system': 'CNL10'
-        }},
+    }},
     {'compiler': {
         'paths': {
-            "cc" : "<overwritten>",
+            "cc": "<overwritten>",
             "cxx": "<overwritten>",
             "f77": '<overwritten>',
-            "fc" : '<overwritten>' },
+            "fc": '<overwritten>'},
         'modules': None,
         'spec': 'clang@3.3',
         'operating_system': 'CNL10'
-        }}
+    }}
 ]
 
 b_comps = [
     {'compiler': {
         'paths': {
-            "cc" : "/icc100",
+            "cc": "/icc100",
             "cxx": "/icp100",
             "f77": None,
-            "fc" : None
-            },
+            "fc": None
+        },
         'modules': None,
         'spec': 'icc@10.0',
         'operating_system': 'CNL10'
-        }},
+    }},
     {'compiler': {
         'paths': {
-            "cc" : "/icc111",
+            "cc": "/icc111",
             "cxx": "/icp111",
             "f77": 'ifort',
-            "fc" : 'ifort'
-            },
+            "fc": 'ifort'
+        },
         'modules': None,
         'spec': 'icc@11.1',
         'operating_system': 'CNL10'
-        }},
+    }},
     {'compiler': {
         'paths': {
-            "cc" : "<overwritten>",
+            "cc": "<overwritten>",
             "cxx": "<overwritten>",
             "f77": '<overwritten>',
-            "fc" : '<overwritten>' },
+            "fc": '<overwritten>'},
         'modules': None,
         'spec': 'clang@3.3',
         'operating_system': 'CNL10'
-        }}
+    }}
 ]
 
 # Some Sample repo data
-repos_low = [ "/some/path" ]
-repos_high = [ "/some/other/path" ]
+repos_low = ["/some/path"]
+repos_high = ["/some/other/path"]
+
 
 class ConfigTest(MockPackagesTest):
 
@@ -112,13 +113,14 @@ class ConfigTest(MockPackagesTest):
         super(ConfigTest, self).setUp()
         self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
         spack.config.config_scopes = OrderedDict()
-        spack.config.ConfigScope('test_low_priority', os.path.join(self.tmp_dir, 'low'))
-        spack.config.ConfigScope('test_high_priority', os.path.join(self.tmp_dir, 'high'))
+        spack.config.ConfigScope(
+            'test_low_priority', os.path.join(self.tmp_dir, 'low'))
+        spack.config.ConfigScope('test_high_priority',
+                                 os.path.join(self.tmp_dir, 'high'))
 
     def tearDown(self):
         super(ConfigTest, self).tearDown()
         shutil.rmtree(self.tmp_dir, True)
-
 
     def check_config(self, comps, *compiler_names):
         """Check that named compilers in comps match Spack's config."""
@@ -146,7 +148,7 @@ class ConfigTest(MockPackagesTest):
         spack.config.update_config('repos', repos_low, 'test_low_priority')
         spack.config.update_config('repos', repos_high, 'test_high_priority')
         config = spack.config.get_config('repos')
-        self.assertEqual(config, repos_high+repos_low)
+        self.assertEqual(config, repos_high + repos_low)
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.
@@ -156,7 +158,6 @@ class ConfigTest(MockPackagesTest):
         # Make sure the config looks how we expect.
         self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
         self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
-
 
     def test_write_key_to_disk(self):
         # Write b_comps "on top of" a_comps.

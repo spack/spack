@@ -34,7 +34,16 @@ class Elpa(Package):
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
-    version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6', url='http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz')
+    version(
+        '2016.05.003',
+        '88a9f3f3bfb63e16509dd1be089dcf2c',
+        url='http://elpa.mpcdf.mpg.de/html/Releases/2016.05.003/elpa-2016.05.003.tar.gz'
+    )
+    version(
+        '2015.11.001',
+        'de0f35b7ee7c971fd0dca35c900b87e6',
+        url='http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
+    )
 
     variant('openmp', default=False, description='Activates OpenMP support')
 
@@ -45,7 +54,12 @@ class Elpa(Package):
 
     def install(self, spec, prefix):
 
-        options = ["--prefix=%s" % prefix]
+        options = [
+            'CC={0}'.format(self.spec['mpi'].mpicc),
+            'FC={0}'.format(self.spec['mpi'].mpifc),
+            'CXX={0}'.format(self.spec['mpi'].mpicxx),
+            '--prefix={0}'.format(self.prefix)
+        ]
 
         if '+openmp' in spec:
             options.append("--enable-openmp")

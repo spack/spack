@@ -53,17 +53,21 @@ def setup_parser(subparser):
         help="Display verbose build output while installing.")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install. Just remove the prefix " +
-             "and touch a fake file in it.")
+        help="Fake install. Just remove prefix and create a fake file.")
+    subparser.add_argument(
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install")
     subparser.add_argument(
-        '-p', '--install-policy', action='store', dest="install_policy",
-        default="build", choices=["build", "download", "lazy"],
+        '--run-tests', action='store_true', dest='run_tests',
+        help="Run tests during installation of a package.")
+    subparser.add_argument(
+        '-fb', '--fetch-binary', action='store', dest="fetch_binary",
+        default="never", choices=["never", "always", "lazy"],
         help="Build from source, download binaries, " +
              "or build if binary not available.")
-
 
 def install(parser, args):
     if not args.packages:
@@ -85,7 +89,9 @@ def install(parser, args):
                 keep_stage=args.keep_stage,
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
+                run_tests=args.run_tests,
                 verbose=args.verbose,
                 fake=args.fake,
-                install_policy=args.install_policy,
+                dirty=args.dirty,
+                fetch_binary=args.fetch_binary,
                 explicit=True)

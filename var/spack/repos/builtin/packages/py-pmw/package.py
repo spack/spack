@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyPmw(Package):
-    """Pmw is a toolkit for building high-level compound widgets, or megawidgets, constructed using other widgets as component parts."""
+    """Pmw is a toolkit for building high-level compound widgets, or
+       megawidgets, constructed using other widgets as component parts."""
     homepage = "https://pypi.python.org/pypi/Pmw"
     url      = "https://pypi.python.org/packages/source/P/Pmw/Pmw-2.0.0.tar.gz"
 

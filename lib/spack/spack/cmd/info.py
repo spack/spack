@@ -29,9 +29,11 @@ import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
 
+
 def padder(str_list, extra=0):
     """Return a function to pad elements of a list."""
     length = max(len(str(s)) for s in str_list) + extra
+
     def pad(string):
         string = str(string)
         padding = max(0, length - len(string))
@@ -40,7 +42,8 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    subparser.add_argument('name', metavar="PACKAGE", help="Name of package to get info for.")
+    subparser.add_argument(
+        'name', metavar="PACKAGE", help="Name of package to get info for.")
 
 
 def print_text_info(pkg):
@@ -81,12 +84,14 @@ def print_text_info(pkg):
 
             print "    " + fmt % (name, default, desc)
 
-    print
-    print "Dependencies:"
-    if pkg.dependencies:
-        colify(pkg.dependencies, indent=4)
-    else:
-        print "    None"
+    for deptype in ('build', 'link', 'run'):
+        print
+        print "%s Dependencies:" % deptype.capitalize()
+        deps = sorted(pkg.dependencies_of_type(deptype))
+        if deps:
+            colify(deps, indent=4)
+        else:
+            print "    None"
 
     print
     print "Virtual packages: "

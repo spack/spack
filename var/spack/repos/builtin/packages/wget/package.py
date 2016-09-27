@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Wget(Package):
     """GNU Wget is a free software package for retrieving files using
        HTTP, HTTPS and FTP, the most widely-used Internet protocols. It
@@ -40,9 +41,11 @@ class Wget(Package):
     depends_on("openssl")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-ssl=openssl",
-                  "OPENSSL_CFLAGS=-I%s" % spec['openssl'].prefix.include,
-                  "OPENSSL_LIBS=-L%s -lssl -lcrypto -lz" % spec['openssl'].prefix.lib)
+        configure(
+            "--prefix=%s" % prefix,
+            "--with-ssl=openssl",
+            "OPENSSL_CFLAGS=-I%s" % spec['openssl'].prefix.include,
+            "OPENSSL_LIBS=-L%s -lssl -lcrypto -lz" % spec[
+                'openssl'].prefix.lib)
         make()
         make("install")

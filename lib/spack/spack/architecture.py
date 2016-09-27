@@ -76,7 +76,6 @@ attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
 import os
-import imp
 import inspect
 
 from llnl.util.lang import memoized, list_modules, key_ordering
@@ -88,19 +87,15 @@ import spack.compilers
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
+from spack.util.spack_yaml import syaml_dict
 import spack.error as serr
 
 
-class InvalidSysTypeError(serr.SpackError):
-    def __init__(self, sys_type):
-        super(InvalidSysTypeError, self).__init__(
-            "Invalid sys_type value for Spack: " + sys_type)
+class NoPlatformError(serr.SpackError):
 
-
-class NoSysTypeError(serr.SpackError):
     def __init__(self):
-        super(NoSysTypeError, self).__init__(
-            "Could not determine sys_type for this machine.")
+        super(NoPlatformError, self).__init__(
+            "Could not determine a platform for this machine.")
 
 
 @key_ordering
@@ -196,6 +191,12 @@ class Platform(object):
 
         return self.operating_sys.get(name, None)
 
+    @classmethod
+    def setup_platform_environment(self, pkg, env):
+        """ Subclass can override this method if it requires any
+            platform-specific build environment modifications.
+        """
+        pass
 
     @classmethod
     def detect(self):
@@ -206,14 +207,11 @@ class Platform(object):
         """
         raise NotImplementedError()
 
-
     def __repr__(self):
         return self.__str__()
 
-
     def __str__(self):
         return self.name
-
 
     def _cmp_key(self):
         t_keys = ''.join(str(t._cmp_key()) for t in
@@ -285,7 +283,7 @@ class OperatingSystem(object):
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
-        clist = reduce(lambda x, y: x+y, compiler_lists)
+        clist = reduce(lambda x, y: x + y, compiler_lists)
         return clist
 
     def find_compiler(self, cmp_cls, *path):
@@ -326,7 +324,7 @@ class OperatingSystem(object):
 
                 # prefer the one with more compilers.
                 prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount = len([p for p in paths       if p is not None])
+                newcount = len([p for p in paths if p is not None])
                 prevcount = len([p for p in prev_paths if p is not None])
 
                 # Don't add if it's not an improvement over prev compiler.
@@ -343,16 +341,20 @@ class OperatingSystem(object):
         d['version'] = self.version
         return d
 
+
 @key_ordering
 class Arch(object):
-    "Architecture is now a class to help with setting attributes"
+    """Architecture is now a class to help with setting attributes.
 
-    def __init__(self, platform=None, platform_os=None, target=None):
-        self.platform = platform
-        if platform and platform_os:
-                platform_os = self.platform.operating_system(platform_os)
-        self.platform_os = platform_os
-        if platform and target:
+    TODO: refactor so that we don't need this class.
+    """
+
+    def __init__(self, plat=None, os=None, target=None):
+        self.platform = plat
+        if plat and os:
+            os = self.platform.operating_system(os)
+        self.platform_os = os
+        if plat and target:
             target = self.platform.target(target)
         self.target = target
 
@@ -380,10 +382,15 @@ class Arch(object):
         else:
             return ''
 
-
     def __contains__(self, string):
         return string in str(self)
 
+    # TODO: make this unnecessary: don't include an empty arch on *every* spec.
+    def __nonzero__(self):
+        return (self.platform is not None or
+                self.platform_os is not None or
+                self.target is not None)
+    __bool__ = __nonzero__
 
     def _cmp_key(self):
         if isinstance(self.platform, Platform):
@@ -401,35 +408,36 @@ class Arch(object):
         return (platform, platform_os, target)
 
     def to_dict(self):
-        d = {}
-        d['platform'] = str(self.platform) if self.platform else None
-        d['platform_os'] = str(self.platform_os) if self.platform_os else None
-        d['target'] = str(self.target) if self.target else None
+        return syaml_dict((
+            ('platform',
+             str(self.platform) if self.platform else None),
+            ('platform_os',
+             str(self.platform_os) if self.platform_os else None),
+            ('target',
+             str(self.target) if self.target else None)))
 
-        return d
 
-
-def _target_from_dict(target_name, platform=None):
+def _target_from_dict(target_name, plat=None):
     """ Creates new instance of target and assigns all the attributes of
         that target from the dictionary
     """
-    if not platform:
-        platform = sys_type()
-    return platform.target(target_name)
+    if not plat:
+        plat = platform()
+    return plat.target(target_name)
 
 
-def _operating_system_from_dict(os_name, platform=None):
+def _operating_system_from_dict(os_name, plat=None):
     """ uses platform's operating system method to grab the constructed
         operating systems that are valid on the platform.
     """
-    if not platform:
-        platform = sys_type()
+    if not plat:
+        plat = platform()
     if isinstance(os_name, dict):
         name = os_name['name']
         version = os_name['version']
-        return platform.operating_system(name+version)
+        return plat.operating_system(name + version)
     else:
-        return platform.operating_system(os_name)
+        return plat.operating_system(os_name)
 
 
 def _platform_from_dict(platform_name):
@@ -525,16 +533,35 @@ def all_platforms():
 
 
 @memoized
-def sys_type():
-    """ Gather a list of all available subclasses of platforms.
-        Sorts the list according to their priority looking. Priority is
-        an arbitrarily set number. Detects platform either using uname or
-        a file path (/opt/cray...)
+def platform():
+    """Detects the platform for this machine.
+
+    Gather a list of all available subclasses of platforms.
+    Sorts the list according to their priority looking. Priority is
+    an arbitrarily set number. Detects platform either using uname or
+    a file path (/opt/cray...)
     """
     # Try to create a Platform object using the config file FIRST
     platform_list = all_platforms()
     platform_list.sort(key=lambda a: a.priority)
 
-    for platform in platform_list:
-        if platform.detect():
-            return platform()
+    for platform_cls in platform_list:
+        if platform_cls.detect():
+            return platform_cls()
+
+
+@memoized
+def sys_type():
+    """Print out the "default" platform-os-target tuple for this machine.
+
+    On machines with only one target OS/target, prints out the
+    platform-os-target for the frontend.  For machines with a frontend
+    and a backend, prints the default backend.
+
+    TODO: replace with use of more explicit methods to get *all* the
+    backends, as client code should really be aware of cross-compiled
+    architectures.
+
+    """
+    arch = Arch(platform(), 'default_os', 'default_target')
+    return str(arch)

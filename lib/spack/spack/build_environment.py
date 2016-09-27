@@ -224,9 +224,12 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_build_environment_variables(pkg, env):
+def set_build_environment_variables(pkg, env, dirty=False):
     """
-    This ensures a clean install environment when we build packages
+    This ensures a clean install environment when we build packages.
+
+    Arguments:
+    dirty -- skip unsetting the user's environment settings.
     """
     # Add spack build environment path with compiler wrappers first in
     # the path. We add both spack.env_path, which includes default
@@ -251,7 +254,8 @@ def set_build_environment_variables(pkg, env):
     env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
+    dep_prefixes = [d.prefix
+                    for d in pkg.spec.traverse(root=False, deptype='build')]
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
@@ -262,12 +266,26 @@ def set_build_environment_variables(pkg, env):
     # Install root prefix
     env.set(SPACK_INSTALL, spack.install_path)
 
-    # Remove these vars from the environment during build because they
-    # can affect how some packages find libraries.  We want to make
-    # sure that builds never pull in unintended external dependencies.
-    env.unset('LD_LIBRARY_PATH')
-    env.unset('LD_RUN_PATH')
-    env.unset('DYLD_LIBRARY_PATH')
+    # Stuff in here sanitizes the build environemnt to eliminate
+    # anything the user has set that may interfere.
+    if not dirty:
+        # Remove these vars from the environment during build because they
+        # can affect how some packages find libraries.  We want to make
+        # sure that builds never pull in unintended external dependencies.
+        env.unset('LD_LIBRARY_PATH')
+        env.unset('LIBRARY_PATH')
+        env.unset('CPATH')
+        env.unset('LD_RUN_PATH')
+        env.unset('DYLD_LIBRARY_PATH')
+
+        # Remove any macports installs from the PATH.  The macports ld can
+        # cause conflicts with the built-in linker on el capitan.  Solves
+        # assembler issues, e.g.:
+        #    suffix or operands invalid for `movq'"
+        path = get_path('PATH')
+        for p in path:
+            if '/macports/' in p:
+                env.remove_path('PATH', p)
 
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(
@@ -320,10 +338,6 @@ def set_module_variables_for_package(pkg, module):
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable('./configure')
 
-    # TODO: shouldn't really use "which" here.  Consider adding notion
-    # TODO: of build dependencies, as opposed to link dependencies.
-    # TODO: Currently, everything is a link dependency, but tools like
-    # TODO: this shouldn't be.
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
 
@@ -371,9 +385,10 @@ def set_module_variables_for_package(pkg, module):
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    rpaths.extend(d.prefix.lib for d in pkg.spec.dependencies.values()
+    deps = pkg.spec.dependencies(deptype='link')
+    rpaths.extend(d.prefix.lib for d in deps
                   if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
+    rpaths.extend(d.prefix.lib64 for d in deps
                   if os.path.isdir(d.prefix.lib64))
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
@@ -405,7 +420,7 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg):
+def setup_package(pkg, dirty=False):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
@@ -428,11 +443,12 @@ def setup_package(pkg):
         s.package.spec = s
 
     set_compiler_environment_variables(pkg, spack_env)
-    set_build_environment_variables(pkg, spack_env)
+    set_build_environment_variables(pkg, spack_env, dirty)
+    pkg.spec.architecture.platform.setup_platform_environment(pkg, spack_env)
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False):
+    for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,
@@ -457,16 +473,15 @@ def setup_package(pkg):
     spack_env.apply_modifications()
 
 
-def fork(pkg, function):
+def fork(pkg, function, dirty=False):
     """Fork a child process to do part of a spack build.
 
-    Arguments:
+    :param pkg: pkg whose environemnt we should set up the forked process for.
+    :param function: arg-less function to run in the child process.
+    :param dirty: If True, do NOT clean the environment before building.
 
-    pkg -- pkg whose environemnt we should set up the
-           forked process for.
-    function -- arg-less function to run in the child process.
+    Usage::
 
-    Usage:
        def child_fun():
            # do stuff
        build_env.fork(pkg, child_fun)
@@ -481,6 +496,7 @@ def fork(pkg, function):
     well. If things go well, the child exits and the parent
     carries on.
     """
+
     try:
         pid = os.fork()
     except OSError as e:
@@ -488,7 +504,7 @@ def fork(pkg, function):
 
     if pid == 0:
         # Give the child process the package's build environment.
-        setup_package(pkg)
+        setup_package(pkg, dirty=dirty)
 
         try:
             # call the forked function.

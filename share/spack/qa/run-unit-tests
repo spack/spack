@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+# Description:
+#     Runs Spack unit tests.
+#
+# Usage:
+#     run-unit-tests [test ...]
+#
+# Options:
+#     Optionally add one or more unit tests
+#     to only run these tests.
+#
+# Notes:
+#     Requires coverage, git, mercurial, and subversion.
+#
+
+QA_DIR="$(dirname "$0")"
+SPACK_ROOT="$QA_DIR/../../.."
+
+# Array of dependencies
+deps=(
+    coverage
+    git
+    hg
+    svn
+)
+
+# Check for dependencies
+"$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
+
+# Add Spack to the PATH.
+export PATH="$SPACK_ROOT/bin:$PATH"
+
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+cd "$SPACK_ROOT"
+
+# Run integration tests
+# TODO: should these be separated into a different test suite?
+source "$SPACK_ROOT/share/spack/setup-env.sh"
+spack compilers
+spack config get compilers
+spack install -v libdwarf
+
+# Run unit tests with code coverage
+coverage run bin/spack test "$@"

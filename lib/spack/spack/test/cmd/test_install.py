@@ -22,18 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import collections
-from contextlib import contextmanager
-
 import StringIO
+import collections
+import os
+import unittest
+import contextlib
+
+import spack
+import spack.cmd
+from spack.cmd import test_install
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
 
+
 # Monkey-patch open to write module files to a StringIO instance
-@contextmanager
+@contextlib.contextmanager
 def mock_open(filename, mode):
     if not mode == 'wb':
-        raise RuntimeError('test.test_install : unexpected opening mode for monkey-patched open')
+        message = 'test.test_install : unexpected opening mode for mock_open'
+        raise RuntimeError(message)
 
     FILE_REGISTRY[filename] = StringIO.StringIO()
 
@@ -44,31 +51,40 @@ def mock_open(filename, mode):
         FILE_REGISTRY[filename] = handle.getvalue()
         handle.close()
 
-import os
-import itertools
-import unittest
-
-import spack
-import spack.cmd
-
-
-# The use of __import__ is necessary to maintain a name with hyphen (which cannot be an identifier in python)
-test_install = __import__("spack.cmd.test-install", fromlist=['test_install'])
-
 
 class MockSpec(object):
+
     def __init__(self, name, version, hashStr=None):
-        self.dependencies = {}
+        self._dependencies = {}
         self.name = name
         self.version = version
         self.hash = hashStr if hashStr else hash((name, version))
 
+    def _deptype_norm(self, deptype):
+        if deptype is None:
+            return spack.alldeps
+        # Force deptype to be a tuple so that we can do set intersections.
+        if isinstance(deptype, str):
+            return (deptype,)
+        return deptype
+
+    def _find_deps(self, where, deptype):
+        deptype = self._deptype_norm(deptype)
+
+        return [dep.spec
+                for dep in where.values()
+                if deptype and any(d in deptype for d in dep.deptypes)]
+
+    def dependencies(self, deptype=None):
+        return self._find_deps(self._dependencies, deptype)
+
+    def dependents(self, deptype=None):
+        return self._find_deps(self._dependents, deptype)
+
     def traverse(self, order=None):
-        for _, spec in self.dependencies.items():
-            yield spec
+        for _, spec in self._dependencies.items():
+            yield spec.spec
         yield self
-        #allDeps = itertools.chain.from_iterable(i.traverse() for i in self.dependencies.itervalues())
-        #return set(itertools.chain([self], allDeps))
 
     def dag_hash(self):
         return self.hash
@@ -79,6 +95,7 @@ class MockSpec(object):
 
 
 class MockPackage(object):
+
     def __init__(self, spec, buildLogPath):
         self.name = spec.name
         self.spec = spec
@@ -90,6 +107,7 @@ class MockPackage(object):
 
 
 class MockPackageDb(object):
+
     def __init__(self, init=None):
         self.specToPkg = {}
         if init:
@@ -104,12 +122,13 @@ def mock_fetch_log(path):
 
 specX = MockSpec('X', "1.2.0")
 specY = MockSpec('Y', "2.3.8")
-specX.dependencies['Y'] = specY
+specX._dependencies['Y'] = spack.DependencySpec(specY, spack.alldeps)
 pkgX = MockPackage(specX, 'logX')
 pkgY = MockPackage(specY, 'logY')
 
 
 class MockArgs(object):
+
     def __init__(self, package):
         self.package = package
         self.jobs = None
@@ -145,7 +164,7 @@ class TestInstallTest(unittest.TestCase):
         test_install.open = mock_open
 
         # Clean FILE_REGISTRY
-        FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
+        FILE_REGISTRY.clear()
 
         pkgX.installed = False
         pkgY.installed = False
@@ -171,7 +190,7 @@ class TestInstallTest(unittest.TestCase):
         spack.repo = self.saved_db
 
     def test_installing_both(self):
-        test_install.test_install(None, MockArgs('X') )
+        test_install.test_install(None, MockArgs('X'))
         self.assertEqual(len(FILE_REGISTRY), 1)
         for _, content in FILE_REGISTRY.items():
             self.assertTrue('tests="2"' in content)
@@ -187,4 +206,5 @@ class TestInstallTest(unittest.TestCase):
             self.assertTrue('tests="2"' in content)
             self.assertTrue('failures="0"' in content)
             self.assertTrue('errors="0"' in content)
-            self.assertEqual(sum('skipped' in line for line in content.split('\n')), 2)
+            self.assertEqual(
+                sum('skipped' in line for line in content.split('\n')), 2)

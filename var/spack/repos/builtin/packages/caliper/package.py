@@ -24,9 +24,9 @@
 ##############################################################################
 from spack import *
 
+
 class Caliper(Package):
-    """
-    Caliper is a generic context annotation system. It gives programmers the
+    """Caliper is a generic context annotation system. It gives programmers the
     ability to provide arbitrary program context information to (performance)
     tools at runtime.
     """
@@ -41,9 +41,10 @@ class Caliper(Package):
     depends_on('libunwind')
     depends_on('papi')
     depends_on('mpi', when='+mpi')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
-      with working_dir('build', create=True):
-        cmake('..', *std_cmake_args)
-        make()
-        make("install")
+        with working_dir('build', create=True):
+            cmake('..', *std_cmake_args)
+            make()
+            make("install")

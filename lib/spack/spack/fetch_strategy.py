@@ -170,12 +170,11 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
-        possible_files = self.stage.expected_archive_files
         save_file = None
         partial_file = None
-        if possible_files:
-            save_file = self.stage.expected_archive_files[0]
-            partial_file = self.stage.expected_archive_files[0] + '.part'
+        if self.stage.save_filename:
+            save_file = self.stage.save_filename
+            partial_file = self.stage.save_filename + '.part'
 
         tty.msg("Trying to fetch from %s" % self.url)
 
@@ -307,10 +306,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        if not extension(destination) == extension(self.archive_file):
-            raise ValueError("Cannot archive without matching extensions.")
-
-        shutil.move(self.archive_file, destination)
+        shutil.copyfile(self.archive_file, destination)
 
     @_needs_stage
     def check(self):
@@ -348,13 +344,32 @@ class URLFetchStrategy(FetchStrategy):
 
     def __repr__(self):
         url = self.url if self.url else "no url"
-        return "URLFetchStrategy<%s>" % url
+        return "%s<%s>" % (self.__class__.__name__, url)
 
     def __str__(self):
         if self.url:
             return self.url
         else:
             return "[no url]"
+
+
+class CacheURLFetchStrategy(URLFetchStrategy):
+    """The resource associated with a cache URL may be out of date."""
+
+    def __init__(self, *args, **kwargs):
+        super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
+
+    @_needs_stage
+    def fetch(self):
+        super(CacheURLFetchStrategy, self).fetch()
+        if self.digest:
+            try:
+                self.check()
+            except ChecksumError:
+                # Future fetchers will assume they don't need to
+                # download if the file remains
+                os.remove(self.archive_file)
+                raise
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -502,6 +517,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         super(GitFetchStrategy, self).__init__(
             'git', 'tag', 'branch', 'commit', **forwarded_args)
         self._git = None
+        self.submodules = kwargs.get('submodules', False)
 
     @property
     def git_version(self):
@@ -579,6 +595,10 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # see: https://github.com/git/git/commit/19d122b
                 self.git('pull', '--tags', ignore_errors=1)
                 self.git('checkout', self.tag)
+
+        # Init submodules if the user asked for them.
+        if self.submodules:
+            self.git('submodule', 'update', '--init')
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
@@ -813,6 +833,36 @@ def for_package_version(pkg, version):
             return fetcher(**attrs)
 
     raise InvalidArgsError(pkg, version)
+
+
+class FsCache(object):
+
+    def __init__(self, root):
+        self.root = os.path.abspath(root)
+
+    def store(self, fetcher, relativeDst):
+        unique = False
+        uidGroups = [['tag', 'commit'], ['digest'], ['revision']]
+        for grp in uidGroups:
+            try:
+                unique |= any(getattr(fetcher, x) for x in grp)
+            except AttributeError:
+                pass
+            if unique:
+                break
+        if not unique:
+            return
+
+        dst = join_path(self.root, relativeDst)
+        mkdirp(os.path.dirname(dst))
+        fetcher.archive(dst)
+
+    def fetcher(self, targetPath, digest, **kwargs):
+        url = "file://" + join_path(self.root, targetPath)
+        return CacheURLFetchStrategy(url, digest, **kwargs)
+
+    def destroy(self):
+        shutil.rmtree(self.root, ignore_errors=True)
 
 
 class FetchError(spack.error.SpackError):

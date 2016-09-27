@@ -43,8 +43,8 @@ class Nag(Package):
     def url_for_version(self, version):
         # TODO: url and checksum are architecture dependent
         # TODO: We currently only support x86_64
-        return 'http://www.nag.com/downloads/impl/npl6a%sna_amd64.tgz' % \
-               str(version).replace('.', '')
+        return 'http://www.nag.com/downloads/impl/npl6a%sna_amd64.tgz' % str(
+            version).replace('.', '')
 
     def install(self, spec, prefix):
         # Set installation directories

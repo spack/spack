@@ -34,8 +34,10 @@ class Autoconf(Package):
 
     version('2.69', '82d05e03b93e45f5a39b828dc9c6c29b')
     version('2.62', '6c1f3b3734999035d77da5024aab4fbd')
+    version('2.59', 'd4d45eaa1769d45e59dcb131a4af17a0')
+    version('2.13', '9de56d4a161a723228220b0f425dc711')
 
-    depends_on('m4')
+    depends_on('m4', type='build')
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

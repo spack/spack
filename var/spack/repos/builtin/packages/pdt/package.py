@@ -22,24 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Pdt(Package):
-    """
-    Program Database Toolkit (PDT) is a framework for analyzing source code written in several programming languages
-    and for making rich program knowledge accessible to developers of static and dynamic analysis tools. PDT implements
-    a standard program representation, the program database (PDB), that can be accessed in a uniform way through a
-    class library supporting common PDB operations.
+    """Program Database Toolkit (PDT) is a framework for analyzing source
+       code written in several programming languages and for making rich
+       program knowledge accessible to developers of static and dynamic
+       analysis tools. PDT implements a standard program representation,
+       the program database (PDB), that can be accessed in a uniform way
+       through a class library supporting common PDB operations.
+
     """
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
-    url      = "https://www.cs.uoregon.edu/research/tau/pdt_releases/pdt-3.21.tar.gz"
+    url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdt-3.22.1.tar.gz"
 
-    version('3.21', '8df94298b71703decf680709a4ddf68f')
-    version('3.19', 'ba5591994998771fdab216699e362228')
+    version('3.22.1', 'be6fac0b1edb3e3287b0cb78741a24b6')
+    version('3.22',   'e6c7879fc49ac5ff67a76ce31ef9e251')
+    version('3.21',   '8df94298b71703decf680709a4ddf68f')
+    version('3.19',   'ba5591994998771fdab216699e362228')
+    version('3.18.1', '05281b5c82a4754df936df99ad7eec0f')
 
     def install(self, spec, prefix):
         configure('-prefix=%s' % prefix)
         make()
-        make("install")
+        make('install')

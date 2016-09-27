@@ -24,11 +24,12 @@
 ##############################################################################
 from spack import *
 
-class XorgUtilMacros(Package):
-    """The util-macros package contains the m4 macros used by all of the Xorg packages."""
 
-    homepage = "http://www.example.com"
-    url      = "http://ftp.x.org/pub/individual/util/util-macros-1.19.0.tar.bz2"
+class XorgUtilMacros(Package):
+    """The m4 macros used by all of the Xorg packages."""
+
+    homepage = "https://cgit.freedesktop.org/xorg/util/macros/"
+    url = "http://ftp.x.org/pub/individual/util/util-macros-1.19.0.tar.bz2"
 
     version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
 

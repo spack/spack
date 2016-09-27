@@ -31,16 +31,16 @@ class Binutils(Package):
     homepage = "http://www.gnu.org/software/binutils/"
     url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2"
 
-    # 2.26 is incompatible with py-pillow build for some reason.
+    version('2.27', '2869c9bf3e60ee97c74ac2a6bf4e9d68')
     version('2.26', '64146a0faa3b411ba774f47d41de239f')
-    version('2.25', 'd9f3303f802a5b6b0bb73a335ab89d66', preferred=True)
+    version('2.25', 'd9f3303f802a5b6b0bb73a335ab89d66')
     version('2.24', 'e0f71a7b2ddab0f8612336ac81d9636b')
     version('2.23.2', '4f8fa651e35ef262edc01d60fb45702e')
     version('2.20.1', '2b9dc8f2b7dbd5ec5992c6e29de0b764')
 
-    depends_on('m4')
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('m4', type='build')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
 
     # Add a patch that creates binutils libiberty_pic.a which is preferred by
     # OpenSpeedShop and cbtf-krell

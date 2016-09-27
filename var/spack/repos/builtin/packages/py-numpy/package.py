@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import platform
+
 
 class PyNumpy(Package):
     """NumPy is the fundamental package for scientific computing with Python.
@@ -38,14 +40,26 @@ class PyNumpy(Package):
     version('1.9.2',  'a1ed53432dbcd256398898d35bc8e645')
     version('1.9.1',  '78842b73560ec378142665e712ae4ad9')
 
-
     variant('blas',   default=True)
     variant('lapack', default=True)
 
     extends('python')
-    depends_on('py-nose')
+    depends_on('py-nose', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
+
+    def setup_dependent_package(self, module, dep_spec):
+        python_version = self.spec['python'].version.up_to(2)
+        arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
+
+        self.spec.include = join_path(
+            self.prefix.lib,
+            'python{0}'.format(python_version),
+            'site-packages',
+            'numpy-{0}-py{1}-{2}.egg'.format(
+                self.spec.version, python_version, arch),
+            'numpy/core/include')
 
     def install(self, spec, prefix):
         libraries    = []
@@ -63,6 +77,6 @@ class PyNumpy(Package):
                 f.write('[DEFAULT]\n')
                 f.write('libraries=%s\n'    % ','.join(libraries))
                 f.write('library_dirs=%s\n' % ':'.join(library_dirs))
+                f.write('rpath=%s\n' % ':'.join(library_dirs))
 
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

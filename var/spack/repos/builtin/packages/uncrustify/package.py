@@ -24,8 +24,9 @@
 ##############################################################################
 from spack import *
 
+
 class Uncrustify(Package):
-    """Source Code Beautifier for C, C++, C#, ObjectiveC, D, Java, Pawn and VALA"""
+    """Source Code Beautifier for C, C++, C#, ObjectiveC, Java, and others."""
 
     homepage = "http://uncrustify.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/uncrustify/uncrustify/uncrustify-0.61/uncrustify-0.61.tar.gz"

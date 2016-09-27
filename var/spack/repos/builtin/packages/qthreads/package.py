@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Qthreads(Package):
     """The qthreads API is designed to make using large numbers of
        threads convenient and easy, and to allow portable access to
@@ -36,16 +37,19 @@ class Qthreads(Package):
        either full or empty, and a thread can wait for any word to
        attain either state."""
     homepage = "http://www.cs.sandia.gov/qthreads/"
-    url      = "https://qthreads.googlecode.com/files/qthread-1.10.tar.bz2"
 
-    version('1.10', '5af8c8bbe88c2a6d45361643780d1671')
+    url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    version("1.10", "d1cf3cf3f30586921359f7840171e551")
 
-    patch("ldflags.patch")
     patch("restrict.patch")
     patch("trap.patch")
 
+    depends_on("hwloc")
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
-                  "--enable-guard-pages")
+                  "--enable-guard-pages",
+                  "--with-topology=hwloc",
+                  "--with-hwloc=%s" % spec["hwloc"].prefix)
         make()
         make("install")

@@ -24,9 +24,11 @@
 ##############################################################################
 import os
 import re
+import sys
 from contextlib import closing
 
 import spack
+import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from spack import *
 from spack.util.environment import *
@@ -38,14 +40,31 @@ class Python(Package):
     homepage = "http://www.python.org"
     url      = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
 
+    version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
     version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
-    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b', preferred=True)
+    version('3.4.3', '4281ff86778db65892c05151d5de738d')
+    version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
+    version('3.2.6', '23815d82ae706e9b781ca65865353d39')
+    version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
+    version('2.7.12', '88d61f82e3616a4be952828b3694109d', preferred=True)
+    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
     extendable = True
+
+    variant('tk',   default=False, description='Provide support for Tkinter')
+    variant('ucs4', default=False,
+            description='Enable UCS4 (wide) unicode strings')
+    # From https://docs.python.org/2/c-api/unicode.html: Python's default
+    # builds use a 16-bit type for Py_UNICODE and store Unicode values
+    # internally as UCS2. It is also possible to build a UCS4 version of Python
+    # (most recent Linux distributions come with UCS4 builds of Python).  These
+    # builds then use a 32-bit type for Py_UNICODE and store Unicode data
+    # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
+    # compatible.
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -53,44 +72,91 @@ class Python(Package):
     depends_on("ncurses")
     depends_on("sqlite")
     depends_on("zlib")
+    depends_on("tk",  when="+tk")
+    depends_on("tcl", when="+tk")
+
+    patch('ncurses.patch')
+
+    @when('@2.7,3.4:')
+    def patch(self):
+        # NOTE: Python's default installation procedure makes it possible for a
+        # user's local configurations to change the Spack installation.  In
+        # order to prevent this behavior for a full installation, we must
+        # modify the installation script so that it ignores user files.
+        ff = FileFilter('Makefile.pre.in')
+        ff.filter(
+            r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
+            r'\1setup.py\2 --no-user-cfg \3\6'
+        )
 
     def install(self, spec, prefix):
+        # TODO: The '--no-user-cfg' option for Python installation is only in
+        # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
+        # adding support for ignoring user configuration will require
+        # significant changes to this package for other Python versions.
+        if not spec.satisfies('@2.7,3.4:'):
+            tty.warn(('Python v{0} may not install properly if Python '
+                      'user configurations are present.').format(self.version))
+
         # Need this to allow python build to find the Python installation.
-        env['PYTHONHOME'] = prefix
+        env['PYTHONHOME'], env['PYTHONPATH'] = prefix, prefix
         env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
         # Rest of install is pretty standard except setup.py needs to
         # be able to read the CPPFLAGS and LDFLAGS as it scans for the
         # library and headers to build
-        cppflags = ' -I'.join([
-            spec['openssl'].prefix.include,  spec['bzip2'].prefix.include,
-            spec['readline'].prefix.include, spec['ncurses'].prefix.include,
-            spec['sqlite'].prefix.include,   spec['zlib'].prefix.include
-        ])
-
-        ldflags = ' -L'.join([
-            spec['openssl'].prefix.lib,  spec['bzip2'].prefix.lib,
-            spec['readline'].prefix.lib, spec['ncurses'].prefix.lib,
-            spec['sqlite'].prefix.lib,   spec['zlib'].prefix.lib
-        ])
-
+        dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
         config_args = [
-            "--prefix={0}".format(prefix),
-            "--with-threads",
-            "--enable-shared",
-            "CPPFLAGS=-I{0}".format(cppflags),
-            "LDFLAGS=-L{0}".format(ldflags)
+            '--prefix={0}'.format(prefix),
+            '--with-threads',
+            '--enable-shared',
+            'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
+            'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
+        if spec.satisfies("platform=darwin") and ('%gcc' in spec):
+            config_args.append('--disable-toolbox-glue')
+
+        if '+ucs4' in spec:
+            if spec.satisfies('@:2.7'):
+                config_args.append('--enable-unicode=ucs4')
+            elif spec.satisfies('@3.0:3.2'):
+                config_args.append('--with-wide-unicode')
+            elif spec.satisfies('@3.3:'):
+                # https://docs.python.org/3.3/whatsnew/3.3.html
+                raise ValueError(
+                    '+ucs4 variant not compatible with Python 3.3 and beyond')
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
+        if sys.platform == 'darwin':
+            config_args.append('--disable-toolbox-glue')
 
         configure(*config_args)
-
         make()
-        make("install")
+        make('install')
 
         self.filter_compilers(spec, prefix)
+
+    # TODO: Once better testing support is integrated, add the following tests
+    # https://wiki.python.org/moin/TkInter
+    #
+    # Note: Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
+    #
+    #    if '+tk' in spec:
+    #        env['TK_LIBRARY']  = join_path(spec['tk'].prefix.lib,
+    #            'tk{0}'.format(spec['tk'].version.up_to(2)))
+    #        env['TCL_LIBRARY'] = join_path(spec['tcl'].prefix.lib,
+    #            'tcl{0}'.format(spec['tcl'].version.up_to(2)))
+    #
+    #        $ python
+    #        >>> import _tkinter
+    #
+    #        if spec.satisfies('@3:')
+    #            >>> import tkinter
+    #            >>> tkinter._test()
+    #        else:
+    #            >>> import Tkinter
+    #            >>> Tkinter._test()
 
     def filter_compilers(self, spec, prefix):
         """Run after install to tell the configuration files and Makefiles
@@ -139,9 +205,11 @@ class Python(Package):
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         """Set PYTHONPATH to include site-packages dir for the
         extension and any other python extensions it depends on."""
+        pythonhome = self.prefix
+        spack_env.set('PYTHONHOME', pythonhome)
 
         python_paths = []
-        for d in extension_spec.traverse():
+        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))
@@ -160,15 +228,14 @@ class Python(Package):
 
         In most cases, extensions will only need to have one line::
 
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))"""
+        setup_py('install', '--prefix={0}'.format(prefix))"""
+        python_path = join_path(
+            self.spec.prefix.bin,
+            'python{0}'.format('3' if self.spec.satisfies('@3') else '')
+        )
 
-        # Python extension builds can have a global python executable function
-        if Version("3.0.0") <= self.version < Version("4.0.0"):
-            module.python = Executable(join_path(self.spec.prefix.bin,
-                                                 'python3'))
-        else:
-            module.python = Executable(join_path(self.spec.prefix.bin,
-                                                 'python'))
+        module.python = Executable(python_path)
+        module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = join_path(ext_spec.prefix,

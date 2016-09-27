@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ravel(Package):
     """Ravel is a parallel communication trace visualization tool that
        orders events according to logical time."""
@@ -33,8 +34,7 @@ class Ravel(Package):
 
     version('1.0.0', 'b25fece58331c2adfcce76c5036485c2')
 
-    # TODO: make this a build dependency
-    depends_on('cmake@2.8.9:')
+    depends_on('cmake@2.8.9:', type='build')
 
     depends_on('muster@1.0.1:')
     depends_on('otf')

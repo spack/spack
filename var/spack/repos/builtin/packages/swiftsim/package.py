@@ -22,23 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-
-import spack.environment
 import llnl.util.tty as tty
-
-# Needed to be able to download from the Durham gitlab repository
-tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
-tty.warn('This is needed to clone SWIFT repository')
-gitlab_env = spack.environment.EnvironmentModifications()
-gitlab_env.set('GIT_SSL_NO_VERIFY', 1)
-gitlab_env.apply_modifications()
 
 
 class Swiftsim(Package):
-    """
-    SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
+    """SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
     astrophysicists with a state of the art framework to perform
     particle based simulations.
     """
@@ -46,20 +35,28 @@ class Swiftsim(Package):
     homepage = 'http://icc.dur.ac.uk/swift/'
     url = 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'
 
-    version('0.3.0', git='https://gitlab.cosma.dur.ac.uk/swift/swiftsim.git', tag='v0.3.0')
+    version('0.3.0', git='https://gitlab.cosma.dur.ac.uk/swift/swiftsim.git',
+            commit='254cc1b563b2f88ddcf437b1f71da123bb9db733')
 
-    variant('mpi', default=True, description='Enable distributed memory parallelism')
+    variant('mpi', default=True,
+            description='Enable distributed memory parallelism')
 
     # Build dependencies
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
-    depends_on('m4')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     # link-time / run-time dependencies
     depends_on('mpi', when='+mpi')
     depends_on('metis')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+mpi', when='+mpi')
+
+    def setup_environment(self, spack_env, run_env):
+        # Needed to be able to download from the Durham gitlab repository
+        tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
+        tty.warn('This is needed to clone SWIFT repository')
+        spack_env.set('GIT_SSL_NO_VERIFY', 1)
 
     def install(self, spec, prefix):
         # Generate configure from configure.ac
@@ -73,6 +70,7 @@ class Swiftsim(Package):
         # Configure and install
         options = ['--prefix=%s' % prefix,
                    '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
+                   '--with-metis={0}'.format(spec['metis'].prefix),
                    '--enable-optimization']
         configure(*options)
         make()

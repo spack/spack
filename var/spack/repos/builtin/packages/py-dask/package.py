@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyDask(Package):
     """Minimal task scheduling abstraction"""
     homepage = "https://github.com/dask/dask/"
@@ -33,7 +34,7 @@ class PyDask(Package):
 
     extends('python')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

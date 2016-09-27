@@ -38,7 +38,8 @@ class EnvironmentTest(unittest.TestCase):
         os.environ['UNSET_ME'] = 'foo'
         os.environ['EMPTY_PATH_LIST'] = ''
         os.environ['PATH_LIST'] = '/path/second:/path/third'
-        os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
+        os.environ['REMOVE_PATH_LIST'] = \
+            '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
 
     def tearDown(self):
         pass

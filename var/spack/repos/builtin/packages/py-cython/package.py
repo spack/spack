@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCython(Package):
     """The Cython compiler for writing C extensions for the Python language."""
     homepage = "https://pypi.python.org/pypi/cython"

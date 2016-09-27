@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cscope(Package):
     """Cscope is a developer's tool for browsing source code."""
     homepage = "http://http://cscope.sourceforge.net/"

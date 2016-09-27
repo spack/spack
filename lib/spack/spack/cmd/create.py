@@ -95,13 +95,97 @@ class ${class_name}(Package):
     url      = "${url}"
 
 ${versions}
-${extends}
-    # FIXME: Add dependencies if this package requires them.
-    # depends_on("foo")
+
+${dependencies}
 
     def install(self, spec, prefix):
 ${install}
 """)
+
+# Build dependencies and extensions
+dependencies_dict = {
+    'autotools': """\
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')""",
+
+    'cmake': """\
+    # FIXME: Add additional dependencies if required.
+    depends_on('cmake', type='build')""",
+
+    'scons': """\
+    # FIXME: Add additional dependencies if required.
+    depends_on('scons', type='build')""",
+
+    'python': """\
+    extends('python')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('py-setuptools', type='build')
+    # depends_on('py-foo',        type=nolink)""",
+
+    'R': """\
+    extends('R')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('r-foo', type=nolink)""",
+
+    'octave': """\
+    extends('octave')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('octave-foo', type=nolink)""",
+
+    'unknown': """\
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')"""
+}
+
+# Default installation instructions
+install_dict = {
+    'autotools': """\
+        # FIXME: Modify the configure line to suit your build system here.
+        configure('--prefix={0}'.format(prefix))
+
+        # FIXME: Add logic to build and install here.
+        make()
+        make('install')""",
+
+    'cmake': """\
+        with working_dir('spack-build', create=True):
+            # FIXME: Modify the cmake line to suit your build system here.
+            cmake('..', *std_cmake_args)
+
+            # FIXME: Add logic to build and install here.
+            make()
+            make('install')""",
+
+    'scons': """\
+        # FIXME: Add logic to build and install here.
+        scons('prefix={0}'.format(prefix))
+        scons('install')""",
+
+    'python': """\
+        # FIXME: Add logic to build and install here.
+        setup_py('install', '--prefix={0}'.format(prefix))""",
+
+    'R': """\
+        # FIXME: Add logic to build and install here.
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)""",
+
+    'octave': """\
+        # FIXME: Add logic to build and install here.
+        octave('--quiet', '--norc',
+               '--built-in-docstrings-file=/dev/null',
+               '--texi-macros-file=/dev/null',
+               '--eval', 'pkg prefix {0}; pkg install {1}'.format(
+                   prefix, self.stage.archive_file))""",
+
+    'unknown': """\
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
+}
 
 
 def make_version_calls(ver_hash_tuples):
@@ -133,50 +217,18 @@ def setup_parser(subparser):
     setup_parser.subparser = subparser
 
 
-class ConfigureGuesser(object):
-    def __call__(self, stage):
-        """Try to guess the type of build system used by the project.
-        Set the appropriate default installation instructions and any
-        necessary extensions for Python and R."""
+class BuildSystemGuesser(object):
 
-        # Default installation instructions
-        installDict = {
-            'autotools': """\
-        # FIXME: Modify the configure line to suit your build system here.
-        configure('--prefix={0}'.format(prefix))
+    def __call__(self, stage, url):
+        """Try to guess the type of build system used by a project based on
+        the contents of its archive or the URL it was downloaded from."""
 
-        # FIXME: Add logic to build and install here.
-        make()
-        make('install')""",
-
-            'cmake':     """\
-        with working_dir('spack-build', create=True):
-            # FIXME: Modify the cmake line to suit your build system here.
-            cmake('..', *std_cmake_args)
-
-            # FIXME: Add logic to build and install here.
-            make()
-            make('install')""",
-
-            'scons':     """\
-        # FIXME: Add logic to build and install here.
-        scons('prefix={0}'.format(prefix))
-        scons('install')""",
-
-            'python':    """\
-        # FIXME: Add logic to build and install here.
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))""",
-
-            'R':         """\
-        # FIXME: Add logic to build and install here.
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)""",
-
-            'unknown':   """\
-        # FIXME: Unknown build system
-        make()
-        make('install')"""
-        }
+        # Most octave extensions are hosted on Octave-Forge:
+        #     http://octave.sourceforge.net/index.html
+        # They all have the same base URL.
+        if 'downloads.sourceforge.net/octave/' in url:
+            self.build_system = 'octave'
+            return
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
@@ -213,16 +265,6 @@ class ConfigureGuesser(object):
                 build_system = bs
 
         self.build_system = build_system
-
-        # Set the appropriate default installation instructions
-        self.install = installDict[build_system]
-
-        # Set any necessary extensions for Python and R
-        extensions = ''
-        if build_system in ['python', 'R']:
-            extensions = "\n    extends('{0}')\n".format(build_system)
-
-        self.extends = extensions
 
 
 def guess_name_and_version(url, args):
@@ -319,7 +361,7 @@ def create(parser, args):
     # Figure out a name and repo for the package.
     name, version = guess_name_and_version(url, args)
     spec = Spec(name)
-    name = spec.name  # factors out namespace, if any
+    name = spec.name.lower()  # factors out namespace, if any
     repo = find_repository(spec, args)
 
     tty.msg("This looks like a URL for %s version %s" % (name, version))
@@ -328,8 +370,8 @@ def create(parser, args):
     # Fetch tarballs (prompting user if necessary)
     versions, urls = fetch_tarballs(url, name, version)
 
-    # Try to guess what configure system is used.
-    guesser = ConfigureGuesser()
+    # Try to guess what build system is used.
+    guesser = BuildSystemGuesser()
     ver_hash_tuples = spack.cmd.checksum.get_checksums(
         versions, urls,
         first_stage_function=guesser,
@@ -338,13 +380,13 @@ def create(parser, args):
     if not ver_hash_tuples:
         tty.die("Could not fetch any tarballs for %s" % name)
 
-    # Prepend 'py-' to python package names, by convention.
+    # Add prefix to package name if it is an extension.
     if guesser.build_system == 'python':
-        name = 'py-%s' % name
-
-    # Prepend 'r-' to R package names, by convention.
+        name = 'py-{0}'.format(name)
     if guesser.build_system == 'R':
-        name = 'r-%s' % name
+        name = 'r-{0}'.format(name)
+    if guesser.build_system == 'octave':
+        name = 'octave-{0}'.format(name)
 
     # Create a directory for the new package.
     pkg_path = repo.filename_for_package_name(name)
@@ -361,8 +403,8 @@ def create(parser, args):
                 class_name=mod_to_class(name),
                 url=url,
                 versions=make_version_calls(ver_hash_tuples),
-                extends=guesser.extends,
-                install=guesser.install))
+                dependencies=dependencies_dict[guesser.build_system],
+                install=install_dict[guesser.build_system]))
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)

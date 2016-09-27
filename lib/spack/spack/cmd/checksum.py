@@ -42,7 +42,8 @@ def setup_parser(subparser):
         '--keep-stage', action='store_true', dest='keep_stage',
         help="Don't clean up staging area when command completes.")
     subparser.add_argument(
-        'versions', nargs=argparse.REMAINDER, help='Versions to generate checksums for')
+        'versions', nargs=argparse.REMAINDER,
+        help='Versions to generate checksums for')
 
 
 def get_checksums(versions, urls, **kwargs):
@@ -59,10 +60,10 @@ def get_checksums(versions, urls, **kwargs):
             with Stage(url, keep=keep_stage) as stage:
                 stage.fetch()
                 if i == 0 and first_stage_function:
-                    first_stage_function(stage)
+                    first_stage_function(stage, url)
 
-                hashes.append((version,
-                               spack.util.crypto.checksum(hashlib.md5, stage.archive_file)))
+                hashes.append((version, spack.util.crypto.checksum(
+                    hashlib.md5, stage.archive_file)))
                 i += 1
         except FailedDownloadError as e:
             tty.msg("Failed to fetch %s" % url)
@@ -79,12 +80,12 @@ def checksum(parser, args):
     # If the user asked for specific versions, use those.
     if args.versions:
         versions = {}
-        for v in args.versions:
-            v = ver(v)
-            if not isinstance(v, Version):
+        for version in args.versions:
+            version = ver(version)
+            if not isinstance(version, Version):
                 tty.die("Cannot generate checksums for version lists or " +
                         "version ranges.  Use unambiguous versions.")
-            versions[v] = pkg.url_for_version(v)
+            versions[version] = pkg.url_for_version(version)
     else:
         versions = pkg.fetch_remote_versions()
         if not versions:
@@ -111,5 +112,7 @@ def checksum(parser, args):
     if not version_hashes:
         tty.die("Could not fetch any versions for %s" % pkg.name)
 
-    version_lines = ["    version('%s', '%s')" % (v, h) for v, h in version_hashes]
+    version_lines = [
+        "  version('%s', '%s')" % (v, h) for v, h in version_hashes
+    ]
     tty.msg("Checksummed new versions of %s:" % pkg.name, *version_lines)
