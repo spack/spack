@@ -44,10 +44,6 @@ class Mesa(Package):
     depends_on('libpthread-stubs')
     depends_on('libdrm')
     depends_on('openssl')
-    depends_on('glproto@1.4.14:', type='build')
-    depends_on('dri2proto@2.6:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('presentproto@1.0:', type='build')
     depends_on('libxcb@1.9.3:')
     depends_on('libxshmfence@1.1:')
     depends_on('libx11')
@@ -55,25 +51,17 @@ class Mesa(Package):
     depends_on('libxdamage')
     depends_on('libxfixes')
 
-
-
-    # pthread-stubs libglvnd >= 0.1.0 $dri_modules glproto >= $GLPROTO_REQUIRED
-    # dri2proto >= $DRI2PROTO_REQUIRED dri3proto >= $DRI3PROTO_REQUIRED
-    # presentproto >= $PRESENTPROTO_REQUIRED $dri3_modules $dri_modules
-    # libdrm_intel >= $LIBDRM_INTEL_REQUIRED libdrm_nouveau >= $LIBDRM_NVVIEUX_REQUIRED
-    # libdrm_radeon >= $LIBDRM_RADEON_REQUIRED xcb-dri3 xcb-present xcb-sync
-    # xshmfence >= $XSHMFENCE_REQUIRED x11-xcb xcb xcb-dri2 >= $XCBDRI2_REQUIRED
-    # xvmc >= $XVMC_REQUIRED vdpau >= $VDPAU_REQUIRED
-    # libomxil-bellagio >= $LIBOMXIL_BELLAGIO_REQUIRED libva >= $LIBVA_REQUIRED
-    # wayland-client >= $WAYLAND_REQUIRED wayland-server >= $WAYLAND_REQUIRED
-    # xcb-xfixes libdrm_amdgpu >= $LIBDRM_AMDGPU_REQUIRED
-    # libdrm_freedreno >= $LIBDRM_FREEDRENO_REQUIRED
-
+    depends_on('glproto@1.4.14:', type='build')
+    depends_on('dri2proto@2.6:', type='build')
+    depends_on('dri3proto@1.0:', type='build')
+    depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
+
+    # TODO: Add package for systemd, provides libudev
+    # Using the system package manager to install systemd didn't work for me
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')
