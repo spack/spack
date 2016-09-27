@@ -1569,7 +1569,7 @@ class Spec(object):
         # actually deps of this package.  Raise an error.
         extra = set(spec_deps.keys()).difference(visited)
         if extra:
-            raise InvalidDependencyException(
+            raise InvalidDependencyError(
                 self.name + " does not depend on " + comma_or(extra))
 
         # Mark the spec as normal once done.
@@ -2667,17 +2667,11 @@ def parse_anonymous_spec(spec_like, pkg_name):
 
 
 class SpecError(spack.error.SpackError):
-
     """Superclass for all errors that occur while constructing specs."""
-
-    def __init__(self, message):
-        super(SpecError, self).__init__(message)
 
 
 class SpecParseError(SpecError):
-
     """Wrapper for ParseError for when we're parsing specs."""
-
     def __init__(self, parse_error):
         super(SpecParseError, self).__init__(parse_error.message)
         self.string = parse_error.string
@@ -2685,79 +2679,49 @@ class SpecParseError(SpecError):
 
 
 class DuplicateDependencyError(SpecError):
-
     """Raised when the same dependency occurs in a spec twice."""
-
-    def __init__(self, message):
-        super(DuplicateDependencyError, self).__init__(message)
 
 
 class DuplicateVariantError(SpecError):
-
     """Raised when the same variant occurs in a spec twice."""
-
-    def __init__(self, message):
-        super(DuplicateVariantError, self).__init__(message)
 
 
 class DuplicateCompilerSpecError(SpecError):
-
     """Raised when the same compiler occurs in a spec twice."""
-
-    def __init__(self, message):
-        super(DuplicateCompilerSpecError, self).__init__(message)
 
 
 class UnsupportedCompilerError(SpecError):
-
     """Raised when the user asks for a compiler spack doesn't know about."""
-
     def __init__(self, compiler_name):
         super(UnsupportedCompilerError, self).__init__(
             "The '%s' compiler is not yet supported." % compiler_name)
 
 
 class UnknownVariantError(SpecError):
-
     """Raised when the same variant occurs in a spec twice."""
-
     def __init__(self, pkg, variant):
         super(UnknownVariantError, self).__init__(
             "Package %s has no variant %s!" % (pkg, variant))
 
 
 class DuplicateArchitectureError(SpecError):
-
     """Raised when the same architecture occurs in a spec twice."""
-
-    def __init__(self, message):
-        super(DuplicateArchitectureError, self).__init__(message)
 
 
 class InconsistentSpecError(SpecError):
-
     """Raised when two nodes in the same spec DAG have inconsistent
        constraints."""
 
-    def __init__(self, message):
-        super(InconsistentSpecError, self).__init__(message)
 
-
-class InvalidDependencyException(SpecError):
-
+class InvalidDependencyError(SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
 
-    def __init__(self, message):
-        super(InvalidDependencyException, self).__init__(message)
-
 
 class NoProviderError(SpecError):
-
     """Raised when there is no package that provides a particular
        virtual dependency.
     """
-
     def __init__(self, vpkg):
         super(NoProviderError, self).__init__(
             "No providers found for virtual package: '%s'" % vpkg)
@@ -2765,11 +2729,9 @@ class NoProviderError(SpecError):
 
 
 class MultipleProviderError(SpecError):
-
     """Raised when there is no package that provides a particular
        virtual dependency.
     """
-
     def __init__(self, vpkg, providers):
         """Takes the name of the vpkg"""
         super(MultipleProviderError, self).__init__(
@@ -2780,10 +2742,8 @@ class MultipleProviderError(SpecError):
 
 
 class UnsatisfiableSpecError(SpecError):
-
     """Raised when a spec conflicts with package constraints.
        Provide the requirement that was violated when raising."""
-
     def __init__(self, provided, required, constraint_type):
         super(UnsatisfiableSpecError, self).__init__(
             "%s does not satisfy %s" % (provided, required))
@@ -2793,89 +2753,72 @@ class UnsatisfiableSpecError(SpecError):
 
 
 class UnsatisfiableSpecNameError(UnsatisfiableSpecError):
-
     """Raised when two specs aren't even for the same package."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableSpecNameError, self).__init__(
             provided, required, "name")
 
 
 class UnsatisfiableVersionSpecError(UnsatisfiableSpecError):
-
     """Raised when a spec version conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableVersionSpecError, self).__init__(
             provided, required, "version")
 
 
 class UnsatisfiableCompilerSpecError(UnsatisfiableSpecError):
-
     """Raised when a spec comiler conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerSpecError, self).__init__(
             provided, required, "compiler")
 
 
 class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
-
     """Raised when a spec variant conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableVariantSpecError, self).__init__(
             provided, required, "variant")
 
 
 class UnsatisfiableCompilerFlagSpecError(UnsatisfiableSpecError):
-
     """Raised when a spec variant conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerFlagSpecError, self).__init__(
             provided, required, "compiler_flags")
 
 
 class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
-
     """Raised when a spec architecture conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableArchitectureSpecError, self).__init__(
             provided, required, "architecture")
 
 
 class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
-
     """Raised when a provider is supplied but constraints don't match
        a vpkg requirement"""
-
     def __init__(self, provided, required):
         super(UnsatisfiableProviderSpecError, self).__init__(
             provided, required, "provider")
+
 
 # TODO: get rid of this and be more specific about particular incompatible
 # dep constraints
 
 
 class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
-
     """Raised when some dependency of constrained specs are incompatible"""
-
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
 
 
 class SpackYAMLError(spack.error.SpackError):
-
     def __init__(self, msg, yaml_error):
         super(SpackYAMLError, self).__init__(msg, str(yaml_error))
 
 
 class AmbiguousHashError(SpecError):
-
     def __init__(self, msg, *specs):
         super(AmbiguousHashError, self).__init__(msg)
         for spec in specs:
