@@ -25,27 +25,24 @@
 from spack import *
 
 
-class Gconf(Package):
-    """FIXME: Put a proper description of your package here."""
+class Xcmsdb(Package):
+    """xcmsdb is used to load, query, or remove Device Color Characterization
+    data stored in properties on the root window of the screen as
+    specified in section 7, Device Color Characterization, of the
+    X11 Inter-Client Communication Conventions Manual (ICCCM)."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "ftp://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
+    homepage = "http://cgit.freedesktop.org/xorg/app/xcmsdb"
+    url      = "https://www.x.org/archive/individual/app/xcmsdb-1.0.5.tar.gz"
 
-    version('3.2.6', '2b16996d0e4b112856ee5c59130e822c')
+    version('1.0.5', 'e7b1699c831b44d7005bff45977ed56a')
 
-    depends_on('glib@2.14.0:')
-    # gio-2.0 >= 2.31.0
-    # gthread-2.0
-    # gmodule-2.0 >= 2.7.0
-    # gobject-2.0 >= 2.7.0
-    depends_on('libxml2')
+    depends_on('libx11')
+
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix={0}'.format(prefix))
 
-        # FIXME: Add logic to build and install here.
         make()
-        make('check')
         make('install')

@@ -35,11 +35,11 @@ class Bitmap(Package):
 
     depends_on('libx11')
     depends_on('libxmu')
-    depends_on('xbitmaps')
     depends_on('libxaw')
     depends_on('libxmu')
     depends_on('libxt')
 
+    depends_on('xbitmaps', type='build')
     depends_on('xproto@7.0.25:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')

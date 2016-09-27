@@ -25,27 +25,30 @@
 from spack import *
 
 
-class Gconf(Package):
-    """FIXME: Put a proper description of your package here."""
+class Xclock(Package):
+    """xclock is the classic X Window System clock utility.  It displays
+    the time in analog or digital form, continuously updated at a
+    frequency which may be specified by the user."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "ftp://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
+    homepage = "http://cgit.freedesktop.org/xorg/app/xclock"
+    url      = "https://www.x.org/archive/individual/app/xclock-1.0.7.tar.gz"
 
-    version('3.2.6', '2b16996d0e4b112856ee5c59130e822c')
+    version('1.0.7', 'bbade10e6234d8db276212014e8c77fa')
 
-    depends_on('glib@2.14.0:')
-    # gio-2.0 >= 2.31.0
-    # gthread-2.0
-    # gmodule-2.0 >= 2.7.0
-    # gobject-2.0 >= 2.7.0
-    depends_on('libxml2')
+    depends_on('libxaw')
+    depends_on('libxmu')
+    depends_on('libx11')
+    depends_on('libxrender')
+    depends_on('libxft')
+    depends_on('libxkbfile')
+    depends_on('libxt')
+
+    depends_on('xproto@7.0.17:', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix={0}'.format(prefix))
 
-        # FIXME: Add logic to build and install here.
         make()
-        make('check')
         make('install')

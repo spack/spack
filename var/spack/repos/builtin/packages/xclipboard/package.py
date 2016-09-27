@@ -25,27 +25,29 @@
 from spack import *
 
 
-class Gconf(Package):
-    """FIXME: Put a proper description of your package here."""
+class Xclipboard(Package):
+    """xclipboard is used to collect and display text selections that are
+    sent to the CLIPBOARD by other clients.  It is typically used to save
+    CLIPBOARD selections for later use.  It stores each CLIPBOARD
+    selection as a separate string, each of which can be selected."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "ftp://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
+    homepage = "http://cgit.freedesktop.org/xorg/app/xclipboard"
+    url      = "https://www.x.org/archive/individual/app/xclipboard-1.1.3.tar.gz"
 
-    version('3.2.6', '2b16996d0e4b112856ee5c59130e822c')
+    version('1.1.3', 'cee91df9df1b5d63034681546fd78c0b')
 
-    depends_on('glib@2.14.0:')
-    # gio-2.0 >= 2.31.0
-    # gthread-2.0
-    # gmodule-2.0 >= 2.7.0
-    # gobject-2.0 >= 2.7.0
-    depends_on('libxml2')
+    depends_on('libxaw')
+    depends_on('libxmu')
+    depends_on('libxt@1.1:')
+    depends_on('libx11')
+    depends_on('libxkbfile')
+
+    depends_on('xproto@7.0.17:', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix={0}'.format(prefix))
 
-        # FIXME: Add logic to build and install here.
         make()
-        make('check')
         make('install')

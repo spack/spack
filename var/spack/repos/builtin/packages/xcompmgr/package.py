@@ -25,27 +25,27 @@
 from spack import *
 
 
-class Gconf(Package):
-    """FIXME: Put a proper description of your package here."""
+class Xcompmgr(Package):
+    """xcompmgr is a sample compositing manager for X servers supporting the
+    XFIXES, DAMAGE, RENDER, and COMPOSITE extensions.  It enables basic
+    eye-candy effects."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "ftp://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
+    homepage = "http://cgit.freedesktop.org/xorg/app/xcompmgr"
+    url      = "https://www.x.org/archive/individual/app/xcompmgr-1.1.7.tar.gz"
 
-    version('3.2.6', '2b16996d0e4b112856ee5c59130e822c')
+    version('1.1.7', '4992895c8934bbc99bb2447dfe5081f2')
 
-    depends_on('glib@2.14.0:')
-    # gio-2.0 >= 2.31.0
-    # gthread-2.0
-    # gmodule-2.0 >= 2.7.0
-    # gobject-2.0 >= 2.7.0
-    depends_on('libxml2')
+    depends_on('libxcomposite')
+    depends_on('libxfixes')
+    depends_on('libxdamage')
+    depends_on('libxrender')
+    depends_on('libxext')
+
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix={0}'.format(prefix))
 
-        # FIXME: Add logic to build and install here.
         make()
-        make('check')
         make('install')
