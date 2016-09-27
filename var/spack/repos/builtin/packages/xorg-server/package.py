@@ -39,22 +39,21 @@ class XorgServer(Package):
     depends_on('libxshmfence@1.1:')
     depends_on('libdrm@2.3.0:')
     depends_on('libx11')
-    #depends_on('gl@9.2.0:')
-
+    # depends_on('gl@9.2.0:')
 
     depends_on('dri2proto@2.8:', type='build')
     depends_on('dri3proto@1.0:', type='build')
     depends_on('glproto@1.4.17:', type='build')
 
-
-    #depends_on('flex', type='build')
-    #depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 
     # $LIBSELINUX $REQUIRED_MODULES $REQUIRED_LIBS
-    # $LIBPCIACCESS $DGAPROTO $XORG_MODULES epoxy xdmcp xau xfixes x11-xcb xcb-aux
-    # xcb-image xcb-ewmh xcb-icccm $WINDOWSWMPROTO windowsdriproto khronos-opengl-registry
+    # $LIBPCIACCESS $DGAPROTO $XORG_MODULES epoxy xdmcp xau xfixes x11-xcb
+    # xcb-aux xcb-image xcb-ewmh xcb-icccm $WINDOWSWMPROTO windowsdriproto
+    # khronos-opengl-registry
     # $APPLEWMPROTO $LIBAPPLEWM xfixes $LIBDMX $LIBXEXT $LIBDMX xmu $LIBXEXT
     # $LIBDMX $LIBXI $LIBXEXT $LIBXTST $LIBXEXT xres $LIBXEXT $LIBXEXT
     # $XEPHYR_REQUIRED_LIBS
@@ -102,10 +101,7 @@ class XorgServer(Package):
     # LIBDBUS="dbus-1 >= 1.0"
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix={0}'.format(prefix))
 
-        # FIXME: Add logic to build and install here.
         make()
-        make('check')
         make('install')
