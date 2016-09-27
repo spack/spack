@@ -41,22 +41,20 @@ class Mesa(Package):
     depends_on('bison@2.4.1:', type='build')
 
     # For DRI and hardware acceleration
-    depends_on('dri2proto@2.6:')
+    depends_on('libpthread-stubs')
     depends_on('libdrm')
-    depends_on('xorg-server@1.5:')
+    depends_on('openssl')
+    depends_on('glproto@1.4.14:', type='build')
+    depends_on('dri2proto@2.6:', type='build')
+    depends_on('dri3proto@1.0:', type='build')
+    depends_on('presentproto@1.0:', type='build')
+    depends_on('libxcb@1.9.3:')
+    depends_on('libxshmfence@1.1:')
+    depends_on('libx11')
+    depends_on('libxext')
+    depends_on('libxdamage')
+    depends_on('libxfixes')
 
-    # depends_on('libdrm@2.4.66:')
-    # depends_on('libxshmfence@1.1:')
-    # depends_on('libx11')
-    # depends_on('libxext')
-    # depends_on('libxdamage')
-    # depends_on('libxfixes')
-    # depends_on('libxcb@1.9.3:')
-
-    # depends_on('dri2proto@2.6:', type='build')
-    # depends_on('dri3proto@1.0:', type='build')
-    # depends_on('glproto@1.4.14:', type='build')
-    # depends_on('presentproto@1.0:', type='build')
 
 
     # pthread-stubs libglvnd >= 0.1.0 $dri_modules glproto >= $GLPROTO_REQUIRED
@@ -70,6 +68,8 @@ class Mesa(Package):
     # wayland-client >= $WAYLAND_REQUIRED wayland-server >= $WAYLAND_REQUIRED
     # xcb-xfixes libdrm_amdgpu >= $LIBDRM_AMDGPU_REQUIRED
     # libdrm_freedreno >= $LIBDRM_FREEDRENO_REQUIRED
+
+    depends_on('pkg-config@0.9.0:', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
