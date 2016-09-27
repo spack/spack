@@ -123,6 +123,39 @@ from spack.util.spack_yaml import syaml_dict
 from spack.version import *
 from spack.provider_index import ProviderIndex
 
+__all__ = [
+    'Spec',
+    'alldeps',
+    'nolink',
+    'nobuild',
+    'canonical_deptype',
+    'validate_deptype',
+    'parse',
+    'parse_anonymous_spec',
+    'SpecError',
+    'SpecParseError',
+    'DuplicateDependencyError',
+    'DuplicateVariantError',
+    'DuplicateCompilerSpecError',
+    'UnsupportedCompilerError',
+    'UnknownVariantError',
+    'DuplicateArchitectureError',
+    'InconsistentSpecError',
+    'InvalidDependencyError',
+    'InvalidDependencyTypeError',
+    'NoProviderError',
+    'MultipleProviderError',
+    'UnsatisfiableSpecError',
+    'UnsatisfiableSpecNameError',
+    'UnsatisfiableVersionSpecError',
+    'UnsatisfiableCompilerSpecError',
+    'UnsatisfiableVariantSpecError',
+    'UnsatisfiableCompilerFlagSpecError',
+    'UnsatisfiableArchitectureSpecError',
+    'UnsatisfiableProviderSpecError',
+    'UnsatisfiableDependencySpecError',
+    'SpackYAMLError',
+    'AmbiguousHashError']
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -156,11 +189,44 @@ _any_version = VersionList([':'])
 
 # Special types of dependencies.
 alldeps = ('build', 'link', 'run')
-nolink = ('build', 'run')
+nolink  = ('build', 'run')
+nobuild = ('link', 'run')
+norun   = ('link', 'build')
 special_types = {
     'alldeps': alldeps,
     'nolink': nolink,
+    'nobuild': nobuild,
+    'norun': norun,
 }
+
+legal_deps = tuple(special_types) + alldeps
+
+
+def validate_deptype(deptype):
+    if isinstance(deptype, str):
+        if deptype not in legal_deps:
+            raise InvalidDependencyTypeError(
+                "Invalid dependency type: %s" % deptype)
+
+    elif isinstance(deptype, (list, tuple)):
+        for t in deptype:
+            validate_deptype(t)
+
+    elif deptype is None:
+        raise InvalidDependencyTypeError("deptype cannot be None!")
+
+
+def canonical_deptype(deptype):
+    if deptype is None:
+        return alldeps
+
+    elif isinstance(deptype, str):
+        return special_types.get(deptype, (deptype,))
+
+    elif isinstance(deptype, (tuple, list)):
+        return (sum((canonical_deptype(d) for d in deptype), ()))
+
+    return deptype
 
 
 def colorize_spec(spec):
@@ -542,17 +608,8 @@ class Spec(object):
         raise InvalidDependencyException(
             self.name + " does not depend on " + comma_or(name))
 
-    def _deptype_norm(self, deptype):
-        if deptype is None:
-            return alldeps
-        # Force deptype to be a set object so that we can do set intersections.
-        if isinstance(deptype, str):
-            # Support special deptypes.
-            return special_types.get(deptype, (deptype,))
-        return deptype
-
     def _find_deps(self, where, deptype):
-        deptype = self._deptype_norm(deptype)
+        deptype = canonical_deptype(deptype)
 
         return [dep.spec
                 for dep in where.values()
@@ -565,7 +622,7 @@ class Spec(object):
         return self._find_deps(self._dependents, deptype)
 
     def _find_deps_dict(self, where, deptype):
-        deptype = self._deptype_norm(deptype)
+        deptype = canonical_deptype(deptype)
 
         return dict((dep.spec.name, dep)
                     for dep in where.values()
@@ -2718,6 +2775,10 @@ class InvalidDependencyError(SpecError):
        of the package."""
 
 
+class InvalidDependencyTypeError(SpecError):
+    """Raised when a dependency type is not a legal Spack dep type."""
+
+
 class NoProviderError(SpecError):
     """Raised when there is no package that provides a particular
        virtual dependency.
@@ -2804,8 +2865,6 @@ class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
 
 # TODO: get rid of this and be more specific about particular incompatible
 # dep constraints
-
-
 class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
     """Raised when some dependency of constrained specs are incompatible"""
     def __init__(self, provided, required):
