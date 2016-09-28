@@ -43,7 +43,7 @@ class PyPil(Package):
     #     all:
     #         providers:
     #             pil: [py-pillow]
-    extends('python@:2.8')
+    extends('python@1.5.2:2.8')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
