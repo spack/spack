@@ -39,10 +39,11 @@ class Qthreads(Package):
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
     url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
     version("1.10", "d1cf3cf3f30586921359f7840171e551")
 
-    patch("restrict.patch")
-    patch("trap.patch")
+    patch("restrict.patch", when="@:1.10")
+    patch("trap.patch", when="@:1.10")
 
     depends_on("hwloc")
 
