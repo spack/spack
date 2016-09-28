@@ -128,7 +128,7 @@ def find(seq, predicate):
     return -1
 
 
-# Names of different graph line states.  We Record previous line
+# Names of different graph line states.  We record previous line
 # states so that we can easily determine what to do when connecting.
 states = ('node', 'collapse', 'merge-right', 'expand-right', 'back-edge')
 NODE, COLLAPSE, MERGE_RIGHT, EXPAND_RIGHT, BACK_EDGE = states
@@ -161,6 +161,9 @@ class AsciiGraph(object):
 
     def _write_edge(self, string, index, sub=0):
         """Write a colored edge to the output stream."""
+        # Ignore empty frontier entries (they're just collapsed)
+        if not self._frontier[index]:
+            return
         name = self._frontier[index][sub]
         edge = "@%s{%s}" % (self._name_to_color[name], string)
         self._out.write(edge)
@@ -419,20 +422,26 @@ class AsciiGraph(object):
                 if back:
                     back.sort()
                     prev_ends = []
+                    collapse_l1 = False
                     for j, (b, d) in enumerate(back):
                         self._frontier[i].remove(d)
                         if i - b > 1:
-                            self._back_edge_line(prev_ends, b, i, False,
-                                                 'left-1')
+                            collapse_l1 = any(not e for e in self._frontier)
+                            self._back_edge_line(
+                                prev_ends, b, i, collapse_l1, 'left-1')
                             del prev_ends[:]
                         prev_ends.append(b)
 
                     # Check whether we did ALL the deps as back edges,
                     # in which case we're done.
-                    collapse = not self._frontier[i]
-                    if collapse:
+                    pop = not self._frontier[i]
+                    collapse_l2 = pop
+                    if collapse_l1:
+                        collapse_l2 = False
+                    if pop:
                         self._frontier.pop(i)
-                    self._back_edge_line(prev_ends, -1, -1, collapse, 'left-2')
+                    self._back_edge_line(
+                        prev_ends, -1, -1, collapse_l2, 'left-2')
 
                 elif len(self._frontier[i]) > 1:
                     # Expand forward after doing all back connections
