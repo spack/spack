@@ -83,7 +83,7 @@ def graph(parser, args):
         setup_parser.parser.print_help()
         return 1
 
-    deptype = alldeps
+    deptype = nobuild
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
         validate_deptype(deptype)
@@ -93,7 +93,7 @@ def graph(parser, args):
         graph_dot(specs, static=args.static, deptype=deptype)
 
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
-        graph_ascii(specs[0], debug=spack.debug)
+        graph_ascii(specs[0], debug=spack.debug, deptype=deptype)
         for spec in specs[1:]:
             print  # extra line bt/w independent graphs
             graph_ascii(spec, debug=spack.debug)

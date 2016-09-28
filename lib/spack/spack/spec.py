@@ -194,6 +194,7 @@ nobuild = ('link', 'run')
 norun   = ('link', 'build')
 special_types = {
     'alldeps': alldeps,
+    'all': alldeps,  # allow "all" as string but not symbol.
     'nolink': nolink,
     'nobuild': nobuild,
     'norun': norun,
@@ -1418,12 +1419,11 @@ class Spec(object):
             # parser doesn't allow it. Spack must be broken!
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
-    def index(self):
+    def index(self, deptype=None):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
         dm = DependencyMap()
-        # XXX(deptype): use a deptype kwarg.
-        for spec in self.traverse():
+        for spec in self.traverse(deptype=deptype):
             dm[spec.name] = spec
         return dm
 

@@ -72,16 +72,15 @@ from spack.spec import *
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
-def topological_sort(spec, **kwargs):
+def topological_sort(spec, reverse=False, deptype=None):
     """Topological sort for specs.
 
     Return a list of dependency specs sorted topologically.  The spec
     argument is not modified in the process.
 
     """
-    reverse = kwargs.get('reverse', False)
-    # XXX(deptype): iterate over a certain kind of dependency. Maybe color
-    #               edges based on the type of dependency?
+    deptype = canonical_deptype(deptype)
+
     if not reverse:
         parents = lambda s: s.dependents()
         children = lambda s: s.dependencies()
@@ -90,7 +89,7 @@ def topological_sort(spec, **kwargs):
         children = lambda s: s.dependents()
 
     # Work on a copy so this is nondestructive.
-    spec = spec.copy()
+    spec = spec.copy(deps=deptype)
     nodes = spec.index()
 
     topo_order = []
@@ -142,6 +141,7 @@ class AsciiGraph(object):
         self.node_character = '*'
         self.debug = False
         self.indent = 0
+        self.deptype = alldeps
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -388,7 +388,7 @@ class AsciiGraph(object):
         self._out = ColorStream(sys.stdout, color=color)
 
         # We'll traverse the spec in topo order as we graph it.
-        topo_order = topological_sort(spec, reverse=True)
+        topo_order = topological_sort(spec, reverse=True, deptype=self.deptype)
 
         # Work on a copy to be nondestructive
         spec = spec.copy()
@@ -484,27 +484,23 @@ class AsciiGraph(object):
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                if node.dependencies():
-                    deps = sorted((d.name for d in node.dependencies()),
-                                  reverse=True)
+                deps = node.dependencies(self.deptype)
+                if deps:
+                    deps = sorted((d.name for d in deps), reverse=True)
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:
                     self._collapse_line(i)
 
 
-def graph_ascii(spec, **kwargs):
-    node_character = kwargs.get('node', 'o')
-    out            = kwargs.pop('out', None)
-    debug          = kwargs.pop('debug', False)
-    indent         = kwargs.pop('indent', 0)
-    color          = kwargs.pop('color', None)
-    check_kwargs(kwargs, graph_ascii)
-
+def graph_ascii(spec, node='o', out=None, debug=False,
+                indent=0, color=None, deptype=None):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
-    graph.node_character = node_character
+    graph.node_character = node
+    if deptype:
+        graph.deptype = canonical_deptype(deptype)
 
     graph.write(spec, color=color, out=out)
 
