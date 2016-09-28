@@ -39,14 +39,14 @@ def setup_parser(subparser):
 
     method = subparser.add_mutually_exclusive_group()
     method.add_argument(
-        '--ascii', action='store_true',
+        '-a', '--ascii', action='store_true',
         help="Draw graph as ascii to stdout (default).")
     method.add_argument(
-        '--dot', action='store_true',
+        '-d', '--dot', action='store_true',
         help="Generate graph in dot format and print to stdout.")
 
     subparser.add_argument(
-        '--normalize', action='store_true',
+        '-n', '--normalize', action='store_true',
         help="Skip concretization; only print normalized spec.")
 
     subparser.add_argument(
