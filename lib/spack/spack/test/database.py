@@ -124,6 +124,19 @@ class DatabaseTest(MockDatabase):
             self.assertEqual(new_rec.path,      rec.path)
             self.assertEqual(new_rec.installed, rec.installed)
 
+    def _check_merkleiness(self):
+        """Ensure the spack database is a valid merkle graph."""
+        all_specs = spack.installed_db.query(installed=any)
+
+        seen = {}
+        for spec in all_specs:
+            for dep in spec.dependencies():
+                hash_key = dep.dag_hash()
+                if hash_key not in seen:
+                    seen[hash_key] = id(dep)
+                else:
+                    self.assertEqual(seen[hash_key], id(dep))
+
     def _check_db_sanity(self):
         """Utiilty function to check db against install layout."""
         expected = sorted(spack.install_layout.all_specs())
@@ -133,6 +146,8 @@ class DatabaseTest(MockDatabase):
         for e, a in zip(expected, actual):
             self.assertEqual(e, a)
 
+        self._check_merkleiness()
+
     def test_020_db_sanity(self):
         """Make sure query() returns what's actually in the db."""
         self._check_db_sanity()
@@ -140,6 +155,7 @@ class DatabaseTest(MockDatabase):
     def test_025_reindex(self):
         """Make sure reindex works and ref counts are valid."""
         spack.installed_db.reindex(spack.install_layout)
+        self._check_db_sanity()
 
     def test_030_db_sanity_from_another_process(self):
         def read_and_modify():
