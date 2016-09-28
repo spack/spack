@@ -88,12 +88,10 @@ class Cp2k(Package):
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
-                '-I' + spec['fftw'].prefix.include
+                spec['fftw'].cppflags
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
-            fcflags.extend([
-                '-I' + spec['fftw'].prefix.include
-            ])
+            fcflags.append(spec['fftw'].cppflags)
             fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
             ldflags = [fftw.search_flags]
             libs = [
@@ -154,12 +152,14 @@ class Cp2k(Package):
                     '-D__SCALAPACK'
                 ])
                 fcflags.extend([
+                    # spec['elpa:fortran'].cppflags
                     '-I' + join_path(
                         spec['elpa'].prefix,
                         'include',
                         'elpa-{0}'.format(str(spec['elpa'].version)),
                         'modules'
                     ),
+                    # spec[pexsi:fortran].cppflags
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
                 scalapack = spec['scalapack'].scalapack_libs

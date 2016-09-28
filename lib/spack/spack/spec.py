@@ -104,6 +104,7 @@ from operator import attrgetter
 from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path, find_libraries
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
@@ -115,6 +116,7 @@ import spack.error
 import spack.parse
 from spack.build_environment import get_path_from_module, load_module
 from spack.util.prefix import Prefix
+from spack.util.pattern import Bunch
 from spack.util.string import *
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
@@ -750,8 +752,119 @@ class DependencyMap(HashableMap):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
 
 
+def _libs_default_handler(descriptor, spec, cls):
+    """Default handler when looking for 'libs' attribute
+
+    The default tries to search for 'lib{spec.name}' recursively starting
+    from spec.prefix
+
+    Args:
+        descriptor: descriptor that trigdered the call
+        spec: spec that is being queried
+        cls: type(spec)
+    """
+    name = 'lib' + spec.name
+    shared = '+shared' in spec
+    return find_libraries(
+        [name], root=spec.prefix, shared=shared, recurse=True
+    )
+
+
+def _cppflags_default_handler(descriptor, spec, cls):
+    """Default handler when looking for cppflags attribute
+
+    The default just returns '-I{spec.prefix.include}'
+
+    Args:
+        descriptor: descriptor that trigdered the call
+        spec: spec that is being queried
+        cls: type(spec)
+    """
+    return '-I' + spec.prefix.include
+
+
 @key_ordering
 class Spec(object):
+
+    class ForwardQueryToPackage(object):
+        """Descriptor used to forward queries from Spec to Package"""
+
+        def __init__(self, attribute_name, default_handler=None):
+            """
+            Initializes the instance of the descriptor
+
+            Args:
+                attribute_name: name of the attribute to be searched for in \
+                    the Package instance
+                default_handler: [optional] default function to be called \
+                    if the attribute was not found in the Package instance
+            """
+            self.attribute_name = attribute_name
+            # Turn the default handler into a function with the right
+            # signature that always returns None
+            if default_handler is None:
+                default_handler = lambda descriptor, spec, cls: None
+            self.default = default_handler
+
+        def __get__(self, instance, cls):
+            """Retrieves the property from Package using a well defined chain
+            of responsibility.
+
+            The order of call is :
+
+            1. if the query was through the name of a virtual package try to \
+                search for the attribute `{virtual_name}_{attribute_name}` \
+                in Package
+
+            2. try to search for attribute `{attribute_name}` in Package
+
+            3. try to call the default handler
+
+            The first call that produces a value will stop the chain.
+
+            If no call can handle the request or a false-ish value is produced,
+            then AttributeError is raised
+            """
+            pkg = instance.package
+            query = instance.last_query
+            callbacks_chain = []
+            # First in the chain : specialized attribute for virtual packages
+            if query.isvirtual:
+                specialized_name = '{0}_{1}'.format(
+                    query.name, self.attribute_name
+                )
+                callbacks_chain.append(lambda: getattr(pkg, specialized_name))
+            # Try to get the generic method from Package
+            callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
+            # Final resort : default callback
+            callbacks_chain.append(lambda: self.default(self, instance, cls))
+
+            # Trigger the callbacks in order, the first one producing a
+            # value wins
+            value = None
+            for f in callbacks_chain:
+                try:
+                    value = f()
+                    break
+                except AttributeError:
+                    pass
+            # False-ish value raise AttributeError : this permits to 'disable'
+            # the call in a particular package by returning None from the
+            # queried attribute, or will trigger an exception if  things
+            # searched for were not found
+            if not value:
+                fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+                fmt += '\tspec : \'{spec}\'\n'
+                fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
+                fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+                message = fmt.format(
+                    name=pkg.name,
+                    query=self.attribute_name,
+                    spec=instance
+                )
+                raise AttributeError(message)
+
+            return value
 
     def __init__(self, spec_like, *dep_like, **kwargs):
         # Copy if spec_like is a Spec.
@@ -818,13 +931,38 @@ class Spec(object):
             self._add_dependency(spec, deptypes)
             deptypes = ()
 
-    def __getattr__(self, item):
-        """Delegate to self.package if the attribute is not in the spec"""
-        # This line is to avoid infinite recursion in case package is
-        # not present among self attributes
-        if item.endswith('libs'):
-            return getattr(self.package, item)
-        raise AttributeError(item)
+        # Initial state to be restored when asked to 'clear_query'
+        self._query_clear_state = Bunch(
+            name=self.name,
+            extra_parameters=tuple(),
+            isvirtual=False
+        )
+        # Cache for query information to be used
+        self._query_to_package = self._query_clear_state
+
+    libs = ForwardQueryToPackage(
+        'libs',
+        default_handler=_libs_default_handler
+    )
+
+    cppflags = ForwardQueryToPackage(
+        'cppflags',
+        default_handler=_cppflags_default_handler
+    )
+
+    def set_query(self, name, extra_parameters=tuple(), isvirtual=False):
+        self._query_to_package = Bunch(
+            name=name,
+            extra_parameters=extra_parameters,
+            isvirtual=isvirtual
+        )
+
+    def clear_query(self):
+        self._query_to_package = self._query_clear_state
+
+    @property
+    def last_query(self):
+        return self._query_to_package
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -2239,9 +2377,17 @@ class Spec(object):
         return self.versions[0]
 
     def __getitem__(self, name):
-        """Get a dependency from the spec by its name."""
+        """Get a dependency from the spec by its name.
+
+        This call implicitly sets a query to package for the queried spec.
+        """
+        query_parameters = name.split(':')
+        name, query_parameters = query_parameters[0], query_parameters[1:]
+
+        # FIXME : flatten this function to have a single return statement
         for spec in self.traverse():
             if spec.name == name:
+                spec.set_query(name, query_parameters)
                 return spec
 
         if Spec.is_virtual(name):
@@ -2252,6 +2398,7 @@ class Spec(object):
                 if spec.virtual:
                     continue
                 if spec.package.provides(name):
+                    spec.set_query(name, query_parameters, isvirtual=True)
                     return spec
 
         raise KeyError("No spec with name %s in %s" % (name, self))
