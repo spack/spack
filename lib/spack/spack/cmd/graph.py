@@ -24,8 +24,11 @@
 ##############################################################################
 import argparse
 
+import llnl.util.tty as tty
+
 import spack
 import spack.cmd
+from spack.spec import *
 from spack.graph import *
 
 description = "Generate graphs of package dependency relationships."
@@ -43,8 +46,21 @@ def setup_parser(subparser):
         help="Generate graph in dot format and print to stdout.")
 
     subparser.add_argument(
-        '--concretize', action='store_true',
-        help="Concretize specs before graphing.")
+        '--normalize', action='store_true',
+        help="Skip concretization; only print normalized spec.")
+
+    subparser.add_argument(
+        '-s', '--static', action='store_true',
+        help="Use static information from packages, not dynamic spec info.")
+
+    subparser.add_argument(
+        '-i', '--installed', action='store_true',
+        help="Graph all installed specs in dot format (implies --dot).")
+
+    subparser.add_argument(
+        '-t', '--deptype', action='store',
+        help="Comma-separated list of deptypes to traverse. default=%s."
+        % ','.join(alldeps))
 
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
@@ -52,18 +68,32 @@ def setup_parser(subparser):
 
 
 def graph(parser, args):
-    specs = spack.cmd.parse_specs(
-        args.specs, normalize=True, concretize=args.concretize)
+    concretize = not args.normalize
+    if args.installed:
+        if args.specs:
+            tty.die("Can't specify specs with --installed")
+        args.dot = True
+        specs = spack.installed_db.query()
+
+    else:
+        specs = spack.cmd.parse_specs(
+            args.specs, normalize=True, concretize=concretize)
 
     if not specs:
         setup_parser.parser.print_help()
         return 1
 
+    deptype = nobuild
+    if args.deptype:
+        deptype = tuple(args.deptype.split(','))
+        validate_deptype(deptype)
+        deptype = canonical_deptype(deptype)
+
     if args.dot:  # Dot graph only if asked for.
-        graph_dot(*specs)
+        graph_dot(specs, static=args.static, deptype=deptype)
 
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
-        graph_ascii(specs[0], debug=spack.debug)
+        graph_ascii(specs[0], debug=spack.debug, deptype=deptype)
         for spec in specs[1:]:
             print  # extra line bt/w independent graphs
             graph_ascii(spec, debug=spack.debug)

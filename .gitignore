@@ -1,3 +1,4 @@
+/db
 /var/spack/stage
 /var/spack/cache
 /var/spack/repos/*/index.yaml
