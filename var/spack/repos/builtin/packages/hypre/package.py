@@ -54,20 +54,15 @@ class Hypre(Package):
         os.environ['CXX'] = spec['mpi'].mpicxx
         os.environ['F77'] = spec['mpi'].mpif77
 
-        # Since +shared does not build on macOS and also Atlas does not have
-        # a single static lib to build against, link against shared libs with
-        # a hope that --whole-archive linker option (or alike) was used
-        # to command the linker to include whole static libs' content into the
-        # shared lib
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
         lapack = spec['lapack'].lapack_libs
         blas = spec['blas'].blas_libs
 
         configure_args = [
             '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % lapack.names,
+            '--with-lapack-libs=%s' % ' '.join(lapack.names),
             '--with-lapack-lib-dirs=%s' % spec['lapack'].prefix.lib,
-            '--with-blas-libs=%s' % blas.names,
+            '--with-blas-libs=%s' % ' '.join(blas.names),
             '--with-blas-lib-dirs=%s' % spec['blas'].prefix.lib
         ]
 

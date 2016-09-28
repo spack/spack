@@ -207,7 +207,7 @@ supply ``-p`` to Spack on the command line, before any subcommands.
 
 ``spack --profile`` output looks like this:
 
-.. command-output:: spack --profile graph dyninst
+.. command-output:: spack --profile graph --deptype=nobuild dyninst
    :ellipsis: 25
 
 The bottom of the output shows the top most time consuming functions,

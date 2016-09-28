@@ -67,22 +67,20 @@ from heapq import *
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
-import spack
-from spack.spec import Spec
+from spack.spec import *
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
-def topological_sort(spec, **kwargs):
+def topological_sort(spec, reverse=False, deptype=None):
     """Topological sort for specs.
 
     Return a list of dependency specs sorted topologically.  The spec
     argument is not modified in the process.
 
     """
-    reverse = kwargs.get('reverse', False)
-    # XXX(deptype): iterate over a certain kind of dependency. Maybe color
-    #               edges based on the type of dependency?
+    deptype = canonical_deptype(deptype)
+
     if not reverse:
         parents = lambda s: s.dependents()
         children = lambda s: s.dependencies()
@@ -91,7 +89,7 @@ def topological_sort(spec, **kwargs):
         children = lambda s: s.dependents()
 
     # Work on a copy so this is nondestructive.
-    spec = spec.copy()
+    spec = spec.copy(deps=deptype)
     nodes = spec.index()
 
     topo_order = []
@@ -129,7 +127,7 @@ def find(seq, predicate):
     return -1
 
 
-# Names of different graph line states.  We Record previous line
+# Names of different graph line states.  We record previous line
 # states so that we can easily determine what to do when connecting.
 states = ('node', 'collapse', 'merge-right', 'expand-right', 'back-edge')
 NODE, COLLAPSE, MERGE_RIGHT, EXPAND_RIGHT, BACK_EDGE = states
@@ -143,6 +141,7 @@ class AsciiGraph(object):
         self.node_character = '*'
         self.debug = False
         self.indent = 0
+        self.deptype = alldeps
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -162,6 +161,9 @@ class AsciiGraph(object):
 
     def _write_edge(self, string, index, sub=0):
         """Write a colored edge to the output stream."""
+        # Ignore empty frontier entries (they're just collapsed)
+        if not self._frontier[index]:
+            return
         name = self._frontier[index][sub]
         edge = "@%s{%s}" % (self._name_to_color[name], string)
         self._out.write(edge)
@@ -386,7 +388,7 @@ class AsciiGraph(object):
         self._out = ColorStream(sys.stdout, color=color)
 
         # We'll traverse the spec in topo order as we graph it.
-        topo_order = topological_sort(spec, reverse=True)
+        topo_order = topological_sort(spec, reverse=True, deptype=self.deptype)
 
         # Work on a copy to be nondestructive
         spec = spec.copy()
@@ -420,20 +422,26 @@ class AsciiGraph(object):
                 if back:
                     back.sort()
                     prev_ends = []
+                    collapse_l1 = False
                     for j, (b, d) in enumerate(back):
                         self._frontier[i].remove(d)
                         if i - b > 1:
-                            self._back_edge_line(prev_ends, b, i, False,
-                                                 'left-1')
+                            collapse_l1 = any(not e for e in self._frontier)
+                            self._back_edge_line(
+                                prev_ends, b, i, collapse_l1, 'left-1')
                             del prev_ends[:]
                         prev_ends.append(b)
 
                     # Check whether we did ALL the deps as back edges,
                     # in which case we're done.
-                    collapse = not self._frontier[i]
-                    if collapse:
+                    pop = not self._frontier[i]
+                    collapse_l2 = pop
+                    if collapse_l1:
+                        collapse_l2 = False
+                    if pop:
                         self._frontier.pop(i)
-                    self._back_edge_line(prev_ends, -1, -1, collapse, 'left-2')
+                    self._back_edge_line(
+                        prev_ends, -1, -1, collapse_l2, 'left-2')
 
                 elif len(self._frontier[i]) > 1:
                     # Expand forward after doing all back connections
@@ -476,32 +484,28 @@ class AsciiGraph(object):
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                if node.dependencies():
-                    deps = sorted((d.name for d in node.dependencies()),
-                                  reverse=True)
+                deps = node.dependencies(self.deptype)
+                if deps:
+                    deps = sorted((d.name for d in deps), reverse=True)
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:
                     self._collapse_line(i)
 
 
-def graph_ascii(spec, **kwargs):
-    node_character = kwargs.get('node', 'o')
-    out            = kwargs.pop('out', None)
-    debug          = kwargs.pop('debug', False)
-    indent         = kwargs.pop('indent', 0)
-    color          = kwargs.pop('color', None)
-    check_kwargs(kwargs, graph_ascii)
-
+def graph_ascii(spec, node='o', out=None, debug=False,
+                indent=0, color=None, deptype=None):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
-    graph.node_character = node_character
+    graph.node_character = node
+    if deptype:
+        graph.deptype = canonical_deptype(deptype)
 
     graph.write(spec, color=color, out=out)
 
 
-def graph_dot(*specs, **kwargs):
+def graph_dot(specs, deptype=None, static=False, out=None):
     """Generate a graph in dot format of all provided specs.
 
     Print out a dot formatted graph of all the dependencies between
@@ -510,42 +514,73 @@ def graph_dot(*specs, **kwargs):
         spack graph --dot qt | dot -Tpdf > spack-graph.pdf
 
     """
-    out = kwargs.pop('out', sys.stdout)
-    check_kwargs(kwargs, graph_dot)
+    if out is None:
+        out = sys.stdout
+
+    if deptype is None:
+        deptype = alldeps
 
     out.write('digraph G {\n')
-    out.write('  label = "Spack Dependencies"\n')
     out.write('  labelloc = "b"\n')
     out.write('  rankdir = "LR"\n')
     out.write('  ranksep = "5"\n')
+    out.write('node[\n')
+    out.write('     fontname=Monaco,\n')
+    out.write('     penwidth=2,\n')
+    out.write('     fontsize=12,\n')
+    out.write('     margin=.1,\n')
+    out.write('     shape=box,\n')
+    out.write('     fillcolor=lightblue,\n')
+    out.write('     style="rounded,filled"]\n')
+
     out.write('\n')
 
-    def quote(string):
+    def q(string):
         return '"%s"' % string
 
     if not specs:
-        specs = [p.name for p in spack.repo.all_packages()]
-    else:
-        roots = specs
-        specs = set()
-        for spec in roots:
-            specs.update(Spec(s.name) for s in spec.normalized().traverse())
+        raise ValueError("Must provide specs ot graph_dot")
 
-    deps = []
+    # Static graph includes anything a package COULD depend on.
+    if static:
+        names = set.union(*[s.package.possible_dependencies() for s in specs])
+        specs = [Spec(name) for name in names]
+
+    labeled = set()
+
+    def label(key, label):
+        if key not in labeled:
+            out.write('  "%s" [label="%s"]\n' % (key, label))
+            labeled.add(key)
+
+    deps = set()
     for spec in specs:
-        out.write('  %-30s [label="%s"]\n' % (quote(spec.name), spec.name))
+        if static:
+            out.write('  "%s" [label="%s"]\n' % (spec.name, spec.name))
 
-        # Skip virtual specs (we'll find out about them from concrete ones.
-        if spec.virtual:
-            continue
+            # Skip virtual specs (we'll find out about them from concrete ones.
+            if spec.virtual:
+                continue
 
-        # Add edges for each depends_on in the package.
-        for dep_name, dep in spec.package.dependencies.iteritems():
-            deps.append((spec.name, dep_name))
+            # Add edges for each depends_on in the package.
+            for dep_name, dep in spec.package.dependencies.iteritems():
+                deps.add((spec.name, dep_name))
 
-        # If the package provides something, add an edge for that.
-        for provider in set(s.name for s in spec.package.provided):
-            deps.append((provider, spec.name))
+            # If the package provides something, add an edge for that.
+            for provider in set(s.name for s in spec.package.provided):
+                deps.add((provider, spec.name))
+
+        else:
+            def key_label(s):
+                return s.dag_hash(), "%s-%s" % (s.name, s.dag_hash(7))
+
+            for s in spec.traverse(deptype=deptype):
+                skey, slabel = key_label(s)
+                out.write('  "%s" [label="%s"]\n' % (skey, slabel))
+
+                for d in s.dependencies(deptype=deptype):
+                    dkey, _ = key_label(d)
+                    deps.add((skey, dkey))
 
     out.write('\n')
 

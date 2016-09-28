@@ -104,6 +104,7 @@ class Dealii(Package):
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
     depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi')
+    depends_on('python',           when='@8.5.0:+python')
     depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi')
     depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')

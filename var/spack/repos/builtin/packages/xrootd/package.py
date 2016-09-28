@@ -22,25 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Cdo(Package):
-    """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+class Xrootd(Package):
+    """The XROOTD project aims at giving high performance, scalable fault
+       tolerant access to data repositories of many kinds."""
+    homepage = "http://xrootd.org"
+    url      = "http://xrootd.org/download/v4.3.0/xrootd-4.3.0.tar.gz"
 
-    homepage = "https://code.zmaw.de/projects/cdo"
+    version('4.3.0', '39c2fab9f632f35e12ff607ccaf9e16c')
 
-    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
-    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2', url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
-
-    variant('mpi', default=True)
-
-    depends_on('netcdf')
-    depends_on('netcdf+mpi', when='+mpi')
-    depends_on('netcdf~mpi', when='~mpi')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')
+        options = []
+        options.extend(std_cmake_args)
+
+        build_directory = join_path(self.stage.path, 'spack-build')
+        source_directory = self.stage.source_path
+
+        if '+debug' in spec:
+            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
+
+        with working_dir(build_directory, create=True):
+            cmake(source_directory, *options)
+            make()
+            make("install")

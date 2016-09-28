@@ -22,27 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Icu(Package):
-    """The International Components for Unicode (ICU) package is a
-       mature, widely used set of C/C++ libraries providing Unicode and
-       Globalization support for software applications. ICU is widely
-       portable and gives applications the same results on all
-       platforms."""
+class Heppdt(Package):
+    """The HepPID library contains translation methods for particle ID's
+    to and from various Monte Carlo generators and the PDG standard
+    numbering scheme. We realize that the generators adhere closely
+    to the standard, but there are occasional differences."""
+    homepage = "http://lcgapp.cern.ch/project/simu/HepPDT/"
+    url      = "http://lcgapp.cern.ch/project/simu/HepPDT/download/HepPDT-2.06.01.tar.gz"
 
-    homepage = "http://site.icu-project.org/"
-    url      = "http://download.icu-project.org/files/icu4c/54.1/icu4c-54_1-src.tgz"
-
-    version('54.1', 'e844caed8f2ca24c088505b0d6271bc0')
-
-    def url_for_version(self, version):
-        return "http://download.icu-project.org/files/icu4c/%s/icu4c-%s-src.tgz" % (
-            version, str(version).replace('.', '_'))
+    version('3.04.01', 'a8e93c7603d844266b62d6f189f0ac7e')
+    version('3.04.00', '2d2cd7552d3e9539148febacc6287db2')
+    version('3.03.02', '0b85f1809bb8b0b28a46f23c718b2773')
+    version('3.03.01', 'd411f3bfdf9c4350d802241ba2629cc2')
+    version('3.03.00', 'cd84d0a0454be982dcd8c285e060a7b3')
+    version('2.06.01', '5688b4bdbd84b48ed5dd2545a3dc33c0')
 
     def install(self, spec, prefix):
-        with working_dir("source"):
-            configure("--prefix=%s" % prefix)
-            make()
-            make("install")
+        configure('--prefix=%s' % prefix)
+
+        make()
+        make("install")
