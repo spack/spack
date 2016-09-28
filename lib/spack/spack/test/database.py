@@ -137,6 +137,10 @@ class DatabaseTest(MockDatabase):
         """Make sure query() returns what's actually in the db."""
         self._check_db_sanity()
 
+    def test_025_reindex(self):
+        """Make sure reindex works and ref counts are valid."""
+        spack.installed_db.reindex(spack.install_layout)
+
     def test_030_db_sanity_from_another_process(self):
         def read_and_modify():
             self._check_db_sanity()  # check that other process can read DB
@@ -203,9 +207,10 @@ class DatabaseTest(MockDatabase):
         self.assertTrue(concrete_spec not in remaining)
 
         # add it back and make sure everything is ok.
-        self.installed_db.add(concrete_spec, "")
+        self.installed_db.add(concrete_spec, spack.install_layout)
         installed = self.installed_db.query()
-        self.assertEqual(len(installed), len(original))
+        self.assertTrue(concrete_spec in installed)
+        self.assertEqual(installed, original)
 
         # sanity check against direcory layout and check ref counts.
         self._check_db_sanity()
@@ -233,7 +238,7 @@ class DatabaseTest(MockDatabase):
         self.assertEqual(self.installed_db.get_record('mpich').ref_count, 1)
 
         # Put the spec back
-        self.installed_db.add(rec.spec, rec.path)
+        self.installed_db.add(rec.spec, spack.install_layout)
 
         # record is present again
         self.assertEqual(

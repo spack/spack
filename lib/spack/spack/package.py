@@ -1053,7 +1053,8 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
+        spack.installed_db.add(
+            self.spec, spack.install_layout, explicit=explicit)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
