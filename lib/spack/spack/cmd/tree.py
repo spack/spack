@@ -86,6 +86,8 @@ def self_refine_projection(all_specs, base_details):
 #    the MPI implementation if there is a dependency on MPI)
 #TODO: if a projection automatically adds details to disambiguate specs, then
 #    the installation of a new spec could lead to several symlinks being updated
+#TODO: when a user installs a package allow adding symlinks, when they uninstall
+#    allow removing symlinks (and potentially replacing with a conflicting spec)
 
 def tree(parser, args):
     root = args.root
