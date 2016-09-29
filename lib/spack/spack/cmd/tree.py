@@ -71,7 +71,11 @@ def self_refine_projection(all_specs, base_details):
     Refine by: version, compiler, compiler version, differing variants,
     differing dependencies
     
-    TODO: figure out when this is
+    TODO: figure out when a detail should add a directory vs. append to the
+    filename. Some details like +debug probably ought to be in the name.
+    
+    TODO: if specs differ in terms of enabled variants, then should the name
+    include *all* enabled specs, or just those that differ?
     """
     pass
 
