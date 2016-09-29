@@ -67,8 +67,21 @@ def user_projection(all_specs, projection):
 def self_refine_projection(all_specs, base_details):
     """
     This attempts to refine a projection
+    
+    Refine by: version, compiler, compiler version, differing variants,
+    differing dependencies
+    
+    TODO: figure out when this is
     """
     pass
+
+#TODO: allow removing all links associated with a given package
+#TODO: store spec to link so that if link scheme changes you can still remove
+#    (then again you should totally regenerate if scheme changes)
+#TODO: projection which optionally includes details if they apply (e.g. mention
+#    the MPI implementation if there is a dependency on MPI)
+#TODO: if a projection automatically adds details to disambiguate specs, then
+#    the installation of a new spec could lead to several symlinks being updated
 
 def tree(parser, args):
     root = args.root
