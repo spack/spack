@@ -26,6 +26,7 @@ import spack
 from llnl.util.filesystem import join_path
 
 from collections import defaultdict
+import itertools
 
 description = "Project Spack's fully-qualified names to a tree of simplified symlinks"
 
@@ -35,23 +36,26 @@ def setup_parser(subparser):
     subparser.add_argument(
         'root')
 
-class ProjectionSelector(object):
-    def projection_for(self, spec):
-        raise NotImplementedError(self.__class__.__name__ + " does not implement select")
-
 class UniversalProjection(object):
     def __init__(self, projection):
         self.projection = projection
     
-    def projection_for(self, spec):
-        return self.projection
+    def project(self, spec):
+        return spec.format(self.projection)
 
-def user_projection(all_specs, selector):
+def project_all(specs, projection):
     link_to_specs = defaultdict(set)
-    for spec in all_specs:
-        projection = selector.projection_for(spec)
-        link_name = spec.format(projection)
-        link_to_specs[link_name].add(spec)
+    for spec in specs:
+        link = projection.project(spec)
+        link_to_specs[link].add(spec)
+    return link_to_specs
+
+def user_projection(all_specs, projection):
+    """
+    This projects and uses resolution to choose a single spec when there is a
+    collision.
+    """
+    link_to_specs = project_all(all_specs, projection)
     
     link_to_chosen = {}
     for link, specs in link_to_specs.iteritems():
@@ -60,13 +64,19 @@ def user_projection(all_specs, selector):
 
     return link_to_chosen
 
+def self_refine_projection(all_specs, base_details):
+    """
+    This attempts to refine a projection
+    """
+    pass
+
 def tree(parser, args):
     root = args.root
 
     all_specs = spack.install_layout.all_specs()
-    selector = UniversalProjection(args.default_projection)
+    projection = UniversalProjection(args.default_projection)
     
-    link_to_chosen = user_projection(all_specs, selector)
+    link_to_chosen = user_projection(all_specs, projection)
     
     for link, spec in link_to_chosen.iteritems():
         link_path = join_path(root, link)
