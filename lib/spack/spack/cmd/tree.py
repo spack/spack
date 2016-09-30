@@ -50,6 +50,14 @@ def project_all(specs, projection):
         link_to_specs[link].add(spec)
     return link_to_specs
 
+def resolve_conflict(specs):
+    return max(specs, 
+               key=lambda s: (s.compiler, s.version,
+                              get_versions(s), s.dag_hash()))
+    
+def get_versions(spec):
+    return tuple(x.version for x in spec.dependencies(deptype=('link', 'run')))
+
 def user_projection(all_specs, projection):
     """
     This projects and uses resolution to choose a single spec when there is a
@@ -57,18 +65,8 @@ def user_projection(all_specs, projection):
     """
     link_to_specs = project_all(all_specs, projection)
     
-    get_versions = lambda s: tuple(
-        x.version for x in s.dependencies(deptype=('link', 'run')))
-    
-    link_to_chosen = {}
-    for link, specs in link_to_specs.iteritems():
-        chosen = max(
-            specs, 
-            key=lambda s: (s.compiler, s.version,
-                           get_versions(s), s.dag_hash()))
-        link_to_chosen[link] = chosen
-
-    return link_to_chosen
+    return dict(
+        (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
 
 def self_refine_projection(all_specs, base_details):
     """
