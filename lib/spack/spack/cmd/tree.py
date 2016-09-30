@@ -37,11 +37,11 @@ def setup_parser(subparser):
         'root')
 
 class UniversalProjection(object):
-    def __init__(self, projection):
-        self.projection = projection
+    def __init__(self, formatStr):
+        self.formatStr = formatStr
     
     def _project(self, spec):
-        return spec.format(self.projection)
+        return spec.format(self.formatStr)
 
     def project_all(self, specs):
         link_to_specs = map_specs(specs, self._project)
@@ -57,7 +57,7 @@ def map_specs(specs, keyFn):
     return key_to_specs
 
 def resolve_conflict(specs):
-    return max(specs, 
+    return max(specs,
                key=lambda s: (s.compiler, s.version,
                               get_versions(s), s.dag_hash()))
     
@@ -65,13 +65,15 @@ def get_versions(spec):
     return tuple(x.version for x in spec.dependencies(deptype=('link', 'run')))
 
 #To be called after install or uninstall
-def update_install(specs, projection):
+def update_install(specs, config):
+    projection = config.projection
+
     touched = set()
     for spec in specs:
         touched.update(x.name for x in spec.traverse())
     
     # All specs associated with all packages affected, along with the specs
-    # associated with dependency packages
+    # associated with their dependencies
     related_specs = set(itertools.chain.from_iterable(
         spack.installed_db.query(name) for name in touched))
 
@@ -83,7 +85,8 @@ def update_install(specs, projection):
     
     return link_to_spec
 
-def update_uninstall(specs, projection):
+def update_uninstall(specs, config):
+    projection = config.projection
     link_to_spec = projection.project_all(specs)
 
     #TODO: remove existing links
