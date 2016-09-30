@@ -35,7 +35,7 @@ class PyFlake8(Package):
     version('3.0.4', 'cf2a7d8c92070f7b62253404ffb54df7')
     version('2.5.4', '366dd1de6c300254c830b81e66979f06')
 
-    extends('python')
+    extends('python', ignore='bin/(pyflakes|pycodestyle)')
     depends_on('python@2.7:2.8,3.4:')
 
     # Most Python packages only require py-setuptools as a build dependency.
