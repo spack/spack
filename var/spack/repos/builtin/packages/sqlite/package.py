@@ -34,6 +34,8 @@ class Sqlite(Package):
 
     version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
             url='http://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
+    version('3.12.2', 'c552a133aca1ce1d647163d9e43bbcb1',
+            url='http://www.sqlite.org/2016/sqlite-autoconf-3120200.tar.gz')
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
