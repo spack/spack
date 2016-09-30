@@ -25,43 +25,28 @@
 from spack import *
 
 
-class PyFlake8(Package):
-    """Flake8 is a wrapper around PyFlakes, pep8 and Ned Batchelder's
-    McCabe script."""
+class PyPyflakes(Package):
+    """A simple program which checks Python source files for errors.."""
 
-    homepage = "https://github.com/PyCQA/flake8"
-    url      = "https://github.com/PyCQA/flake8/archive/3.0.4.tar.gz"
+    homepage = "https://github.com/PyCQA/pyflakes"
+    url      = "https://github.com/PyCQA/pyflakes/archive/1.3.0.tar.gz"
 
-    version('3.0.4', 'cf2a7d8c92070f7b62253404ffb54df7')
-    version('2.5.4', '366dd1de6c300254c830b81e66979f06')
+    version('1.3.0', 'a76173deb7a84fe860c0b60e2fbcdfe2')
+    version('1.2.3', '2ac2e148a5c46b6bb06c4785be76f7cc')
+    version('1.2.2', 'fe759b9381a6500e67a2ddbbeb5161a4')
+    version('1.2.1', '444a06b256e0a70e41c11698b7190e84')
+    version('1.2.0', '5d1c87bf09696c4c35dc3103f2a1185c')
+    version('1.1.0', '4e18bf78c0455ebcd41e5d6104392c88')
+    version('1.0.0', 'e2ea22a825c5100f12e54b71771cde71')
+    version('0.9.2', 'd02d5f68e944085fd6ec163a34737a96')
+    version('0.9.1', '8108d2248e93ca6a315fa2dd31ee9bb1')
+    version('0.9.0', '43c2bcee88606bde55dbf25a253ef886')
 
     extends('python')
-    depends_on('python@2.7:2.8,3.4:')
 
     # Most Python packages only require py-setuptools as a build dependency.
-    # However, py-flake8 requires py-setuptools during runtime as well.
+    # However, py-pyflakes requires py-setuptools during runtime as well.
     depends_on('py-setuptools', type=nolink)
-
-    # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
-    depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=nolink)  # noqa
-    # pyflakes >= 0.8.1, < 1.1
-    depends_on('py-pyflakes@0.8.1:1.0.0', when='@2.5.4', type=nolink)
-
-    # pycodestyle >= 2.0.0, < 2.1.0
-    depends_on('py-pycodestyle@2.0.0:2.0.999', when='@3.0.4', type=nolink)
-    # pep8 >= 1.5.7, != 1.6.0, != 1.6.1, != 1.6.2
-    depends_on('py-pycodestyle@1.5.7,1.7.0:', when='@2.5.4', type=nolink)
-
-    # mccabe >= 0.5.0, < 0.6.0
-    depends_on('py-mccabe@0.5.0:0.5.999', when='@3.0.4', type=nolink)
-    # mccabe >= 0.2.1, < 0.5
-    depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=nolink)
-
-    depends_on('py-configparser', when='^python@:3.3.999', type=nolink)
-    depends_on('py-enum34', when='^python@:3.1.999', type=nolink)
-
-    # TODO: Add test dependencies
-    # depends_on('py-nose', type='test')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))
