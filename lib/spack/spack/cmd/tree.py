@@ -64,7 +64,6 @@ def resolve_conflict(specs):
 def dependency_versions(spec):
     return tuple(x.version for x in spec.dependencies(deptype=('link', 'run')))
 
-#To be called after install or uninstall
 def update_install(specs, config):
     projection = config.projection
 
@@ -79,26 +78,21 @@ def update_install(specs, config):
 
     link_to_spec = projection.project_all(related_specs)
     
-    #TODO: delete the existing links
-    #TODO: add in the new links
-    #TODO: what to do if the installed specs arent the chosen specs?
+    config.update_links(link_to_spec)
     
-    return link_to_spec
+    #TODO: what to do if the installed specs arent the chosen specs?
 
 def update_uninstall(specs, config):
     projection = config.projection
     link_to_spec = projection.project_all(specs)
-
-    #TODO: remove existing links
+    config.remove_links(set(link_to_spec))
 
     # If all instances of a package are uninstalled, there may be no entries
     # for it here.
     related_specs = set(itertools.chain.from_iterable(
         spack.installed_db.query(s.name) for s in specs))
-    
     link_to_spec = projection.project_all(related_specs)
-    
-    return link_to_spec
+    config.add_links(link_to_spec)
 
 #TODO: store spec to link so that if link scheme changes you can still remove
 #    (then again you should totally regenerate if scheme changes)
