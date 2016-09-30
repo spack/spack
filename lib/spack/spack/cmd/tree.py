@@ -49,6 +49,14 @@ class UniversalProjection(object):
         return dict(
             (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
 
+#TODO: there may conflict resolution schemes which don't just need all instances
+#    of a given package but rather all instances of their dependents as well (if
+#    it is desirable to ensure that you link a dependency when you link its
+#    parent).
+
+#First do an initial sort. Then for each package, choose it if its dependent
+#was chosen. Note that you could have X->Z and Y->Z', then which one do you pick?
+
 class AutoProjection(object):
     def __init__(self, format_str, spec_to_format):
         self.base_format = format_str
@@ -96,6 +104,10 @@ def update_install(specs, config):
     config.update_links(link_to_spec)
     
     #TODO: what to do if the installed specs arent the chosen specs?
+
+#TODO: should there be any attempt to pick the dependencies of a package when
+#    you pick the package? e.g. if X->Y and there is also Y', should I always
+#    choose Y?
 
 def update_uninstall(specs, config):
     projection = config.projection
