@@ -70,7 +70,8 @@ class Lock(object):
         while (time.time() - start_time) < timeout:
             try:
                 if self._fd is None:
-                    self._fd = os.open(self._file_path, os.O_RDWR)
+                    mode = os.O_RDWR if op == fcntl.LOCK_EX else os.O_RDONLY
+                    self._fd = os.open(self._file_path, mode)
 
                 fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
                 if op == fcntl.LOCK_EX:
