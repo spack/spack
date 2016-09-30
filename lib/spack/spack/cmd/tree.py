@@ -40,21 +40,21 @@ class UniversalProjection(object):
     def __init__(self, projection):
         self.projection = projection
     
-    def project(self, spec):
+    def _project(self, spec):
         return spec.format(self.projection)
 
     def project_all(self, specs):
-        link_to_specs = project_all(specs, self)
+        link_to_specs = map_specs(specs, self._project)
         
         return dict(
             (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
 
-def project_all(specs, projection):
-    link_to_specs = defaultdict(set)
+def map_specs(specs, keyFn):
+    key_to_specs = defaultdict(set)
     for spec in specs:
-        link = projection.project(spec)
-        link_to_specs[link].add(spec)
-    return link_to_specs
+        key = keyFn(spec)
+        key_to_specs[key].add(spec)
+    return key_to_specs
 
 def resolve_conflict(specs):
     return max(specs, 
