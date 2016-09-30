@@ -43,6 +43,12 @@ class UniversalProjection(object):
     def project(self, spec):
         return spec.format(self.projection)
 
+    def project_all(self, specs):
+        link_to_specs = project_all(specs, self)
+        
+        return dict(
+            (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
+
 def project_all(specs, projection):
     link_to_specs = defaultdict(set)
     for spec in specs:
@@ -57,31 +63,6 @@ def resolve_conflict(specs):
     
 def get_versions(spec):
     return tuple(x.version for x in spec.dependencies(deptype=('link', 'run')))
-
-def user_projection(all_specs, projection):
-    """
-    This projects and uses resolution to choose a single spec when there is a
-    collision.
-    """
-    link_to_specs = project_all(all_specs, projection)
-    
-    return dict(
-        (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
-
-def self_refine_projection(all_specs, base_details):
-    """
-    This attempts to refine a projection
-    
-    Refine by: version, compiler, compiler version, differing variants,
-    differing dependencies
-    
-    TODO: figure out when a detail should add a directory vs. append to the
-    filename. Some details like +debug probably ought to be in the name.
-    
-    TODO: if specs differ in terms of enabled variants, then should the name
-    include *all* enabled specs, or just those that differ?
-    """
-    pass
 
 #To be called after install or uninstall
 def update_install(specs, projection):
@@ -132,7 +113,7 @@ def tree(parser, args):
     all_specs = spack.install_layout.all_specs()
     projection = UniversalProjection(args.default_projection)
     
-    link_to_chosen = user_projection(all_specs, projection)
+    link_to_chosen = projection.project_all(all_specs)
     
     for link, spec in link_to_chosen.iteritems():
         link_path = join_path(root, link)
