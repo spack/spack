@@ -49,6 +49,21 @@ class UniversalProjection(object):
         return dict(
             (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
 
+class AutoProjection(object):
+    def __init__(self, format_str, spec_to_format):
+        self.base_format = format_str
+        self.spec_to_format = spec_to_format
+        
+    def _project(self, spec):
+        elements = [spec.format(self.base_format)]
+        for extra_spec, format_str in self.spec_to_format.iteritems():
+            if extra_spec in spec:
+                elements.append(spec[extra_spec].format(format_str))
+        #TODO: actually I think this needs to be reversed, because the path
+        #    without augmentations may refer to an existing prefix, so I can't
+        #    later append more things to it.
+        return join_path(elements)
+
 def map_specs(specs, keyFn):
     key_to_specs = defaultdict(set)
     for spec in specs:
