@@ -100,15 +100,12 @@ def update_uninstall(specs, config):
     
     return link_to_spec
 
-#TODO: allow removing all links associated with a given package
 #TODO: store spec to link so that if link scheme changes you can still remove
 #    (then again you should totally regenerate if scheme changes)
 #TODO: projection which optionally includes details if they apply (e.g. mention
 #    the MPI implementation if there is a dependency on MPI)
 #TODO: if a projection automatically adds details to disambiguate specs, then
 #    the installation of a new spec could lead to several symlinks being updated
-#TODO: when a user installs a package allow adding symlinks, when they uninstall
-#    allow removing symlinks (and potentially replacing with a conflicting spec)
 
 def tree(parser, args):
     root = args.root
