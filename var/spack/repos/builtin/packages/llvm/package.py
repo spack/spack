@@ -33,8 +33,8 @@ class Llvm(Package):
        with traditional virtual machines, though it does provide helpful
        libraries that can be used to build them. The name "LLVM" itself
        is not an acronym; it is the full name of the project.
-
     """
+
     homepage = 'http://llvm.org/'
     url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
 
@@ -42,7 +42,7 @@ class Llvm(Package):
 
     # currently required by mesa package
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005',
-            url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')  # currently required by mesa package
+            url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')
 
     variant('debug', default=False,
             description="Build a debug version of LLVM, this increases "
@@ -119,11 +119,6 @@ class Llvm(Package):
             'destination': 'tools',
             'placement': 'clang',
         },
-        'clang': {
-            'url':  base_url % {'pkg': 'cfe'},
-            'destination': 'tools',
-            'placement': 'clang',
-        },
         'clang-tools-extra': {
             'url':  base_url % {'pkg': 'clang-tools-extra'},
             'destination': 'tools/clang/tools',
@@ -155,7 +150,7 @@ class Llvm(Package):
                 'polly': 'http://llvm.org/svn/llvm-project/polly/trunk',
                 'libcxx': 'http://llvm.org/svn/llvm-project/libcxx/trunk',
                 'libcxxabi': 'http://llvm.org/svn/llvm-project/libcxxabi/trunk',
-                'clang': 'http://llvm.org/svn/llvm-project/cfe/trunk',
+                'cfe': 'http://llvm.org/svn/llvm-project/cfe/trunk',
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'llvm-libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
@@ -200,7 +195,7 @@ class Llvm(Package):
                     'polly': '1b3b20f52d34a4024e21a4ea7112caa7',
                     'libcxx': 'd6e0bdbbee39f7907ad74fd56d03b88a',
                     'libcxxabi': 'bbe6b4d72c7c5978550d370af529bcf7',
-                    'clang': 'cc99e7019bb74e6459e80863606250c5',
+                    'cfe': 'cc99e7019bb74e6459e80863606250c5',
                     'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
                     'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
                     'llvm-libunwind': '162ade468607f153cca12be90b5194fa',
@@ -215,7 +210,7 @@ class Llvm(Package):
                     'polly': '3a2a7367002740881637f4d47bca4dc3',
                     'libcxx': 'f9c43fa552a10e14ff53b94d04bea140',
                     'libcxxabi': '52d925afac9f97e9dcac90745255c169',
-                    'clang': '0acd026b5529164197563d135a8fd83e',
+                    'cfe': '0acd026b5529164197563d135a8fd83e',
                     'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
                     'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
                     'llvm-libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
@@ -230,7 +225,7 @@ class Llvm(Package):
                     'polly': '32f93ffc9cc7e042df22089761558f8b',
                     'libcxx': '46aa5175cbe1ad42d6e9c995968e56dd',
                     'libcxxabi': '5aa769e2fca79fa5335cfae8f6258772',
-                    'clang': '8f9d27335e7331cf0a4711e952f21f01',
+                    'cfe': '8f9d27335e7331cf0a4711e952f21f01',
                     'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
                     'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
                     'llvm-libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
@@ -244,7 +239,7 @@ class Llvm(Package):
                 'openmp': '65dd5863b9b270960a96817e9152b123',
                 'libcxx': '22214c90697636ef960a49aef7c1823a',
                 'libcxxabi': '17518e361e4e228f193dd91e8ef54ba2',
-                'clang': 'ff862793682f714bb7862325b9c06e20',
+                'cfe': 'ff862793682f714bb7862325b9c06e20',
                 'clang-tools-extra': '3ebc1dc41659fcec3db1b47d81575e06',
                 'lldb': '51e5eb552f777b950bb0ff326e60d5f0',
             }
@@ -257,7 +252,7 @@ class Llvm(Package):
                 'openmp': '121ddb10167d7fc38b1f7e4b029cf059',
                 'libcxx': '406f09b1dab529f3f7879f4d548329d2',
                 'libcxxabi': 'b22c707e8d474a99865ad3c521c3d464',
-                'clang': '93f9532f8f7e6f1d8e5c1116907051cb',
+                'cfe': '93f9532f8f7e6f1d8e5c1116907051cb',
                 'clang-tools-extra': 'f13f31ed3038acadc6fa63fef812a246',
                 'lldb': 'cc5ea8a414c62c33e760517f8929a204',
             }
