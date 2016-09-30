@@ -28,10 +28,11 @@ import os
 
 class Libquo(Package):
     """A high-level, easy to use programming interface tailored specifically
-for MPI/MPI+X codes that may benefit from evolving process binding policies
-during their execution. QUO allows for arbitrary process binding policies to
-be enacted and reverted during the execution of an MPI/MPI+X application as
-different computational phases are entered and exited, respectively."""
+    for MPI/MPI+X codes that may benefit from evolving process binding
+    policies during their execution. QUO allows for arbitrary process binding
+    policies to be enacted and reverted during the execution of an MPI/MPI+X
+    application as different computational phases are entered and exited,
+    respectively."""
 
     homepage = "https://github.com/losalamos/libquo"
     url      = "https://github.com/losalamos/libquo/archive/v1.2.9.tar.gz"
@@ -44,7 +45,6 @@ different computational phases are entered and exited, respectively."""
     depends_on('libtool', type='build')
 
     def install(self, spec, prefix):
-        autoreconf = which("autoreconf")
         autoreconf_options = [
             '--install',
             '--verbose',
@@ -53,14 +53,15 @@ different computational phases are entered and exited, respectively."""
             '-I', os.path.join(spec['automake'].prefix,
                                'share', 'aclocal'),
             '-I', os.path.join(spec['libtool'].prefix,
-                               'share', 'aclocal'),
-            ]
+                               'share', 'aclocal')
+        ]
         autoreconf(*autoreconf_options)
 
         configure_options = [
             '--prefix={0}'.format(prefix),
             'CC=%s' % join_path(spec['mpi'].prefix.bin, "mpicc"),
-            'FC=%s' % join_path(spec['mpi'].prefix.bin, "mpif90") ]
+            'FC=%s' % join_path(spec['mpi'].prefix.bin, "mpif90")
+        ]
         configure(*configure_options)
 
         make()
