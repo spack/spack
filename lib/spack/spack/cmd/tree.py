@@ -85,6 +85,39 @@ def self_refine_projection(all_specs, base_details):
     """
     pass
 
+#To be called after install or uninstall
+def update_install(specs, projection):
+    touched = set()
+    for spec in specs:
+        touched.update(x.name for x in spec.traverse())
+    
+    # All specs associated with all packages affected, along with the specs
+    # associated with dependency packages
+    related_specs = set(itertools.chain.from_iterable(
+        spack.installed_db.query(name) for name in touched))
+
+    link_to_spec = projection.project_all(related_specs)
+    
+    #TODO: delete the existing links
+    #TODO: add in the new links
+    #TODO: what to do if the installed specs arent the chosen specs?
+    
+    return link_to_spec
+
+def update_uninstall(specs, projection):
+    link_to_spec = projection.project_all(specs)
+
+    #TODO: remove existing links
+
+    # If all instances of a package are uninstalled, there may be no entries
+    # for it here.
+    related_specs = set(itertools.chain.from_iterable(
+        spack.installed_db.query(s.name) for s in specs))
+    
+    link_to_spec = projection.project_all(related_specs)
+    
+    return link_to_spec
+
 #TODO: allow removing all links associated with a given package
 #TODO: store spec to link so that if link scheme changes you can still remove
 #    (then again you should totally regenerate if scheme changes)
