@@ -65,7 +65,7 @@ spack_version =  subprocess.Popen(
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
-os.environ['COLIFY_SIZE'] = '25x80'
+os.environ['COLIFY_SIZE'] = '25x120'
 
 #
 # Generate package list using spack command

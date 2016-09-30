@@ -58,7 +58,7 @@ class R(Package):
     # Concrete dependencies
     depends_on('readline')
     depends_on('ncurses')
-    depends_on('icu')
+    depends_on('icu4c')
     depends_on('glib')
     depends_on('zlib')
     depends_on('bzip2')

@@ -22,25 +22,34 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Cdo(Package):
-    """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+class Hepmc(Package):
+    """The HepMC package is an object oriented, C++ event record for
+       High Energy Physics Monte Carlo generators and simulation."""
 
-    homepage = "https://code.zmaw.de/projects/cdo"
+    homepage = "http://hepmc.web.cern.ch/hepmc/"
+    url      = "http://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.09.tgz"
 
-    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
-    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2', url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
+    version('2.06.09', 'c47627ced4255b40e731b8666848b087')
+    version('2.06.08', 'a2e889114cafc4f60742029d69abd907')
+    version('2.06.07', '11d7035dccb0650b331f51520c6172e7')
+    version('2.06.06', '102e5503537a3ecd6ea6f466aa5bc4ae')
+    version('2.06.05', '2a4a2a945adf26474b8bdccf4f881d9c')
 
-    variant('mpi', default=True)
-
-    depends_on('netcdf')
-    depends_on('netcdf+mpi', when='+mpi')
-    depends_on('netcdf~mpi', when='~mpi')
+    depends_on("cmake", type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')
+        build_directory = join_path(self.stage.path, 'spack-build')
+        source_directory = self.stage.source_path
+        options = [source_directory]
+        options.append('-Dmomentum:STRING=GEV')
+        options.append('-Dlength:STRING=MM')
+        options.extend(std_cmake_args)
+
+        with working_dir(build_directory, create=True):
+            cmake(*options)
+            make()
+            make('install')

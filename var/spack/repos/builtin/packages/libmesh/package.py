@@ -25,22 +25,18 @@
 from spack import *
 
 
-class Cdo(Package):
-    """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+class Libmesh(Package):
+    """The libMesh library provides a framework for the numerical simulation of
+       partial differential equations using arbitrary unstructured
+       discretizations on serial and parallel platforms."""
 
-    homepage = "https://code.zmaw.de/projects/cdo"
+    homepage = "http://libmesh.github.io/"
+    url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
 
-    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
-    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2', url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
-
-    variant('mpi', default=True)
-
-    depends_on('netcdf')
-    depends_on('netcdf+mpi', when='+mpi')
-    depends_on('netcdf~mpi', when='~mpi')
+    version('1.0.0', 'cb464fc63ea0b71b1e69fa3f5d4f93a4')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
+
         make()
         make('install')

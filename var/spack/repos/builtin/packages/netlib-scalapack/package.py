@@ -79,8 +79,8 @@ class NetlibScalapack(Package):
         options.extend([
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
-            '-DLAPACK_LIBRARIES=%s' % (lapack.joined()),
-            '-DBLAS_LIBRARIES=%s' % (blas.joined())
+            '-DLAPACK_LIBRARIES=%s' % (lapack.joined(';')),
+            '-DBLAS_LIBRARIES=%s' % (blas.joined(';'))
         ])
 
         if '+fpic' in spec:
