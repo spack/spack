@@ -65,6 +65,32 @@ for dep in "$@"; do
 
         exit 1
     fi
+
+    # Flake8 requires setuptools in order to run.
+    # Otherwise, it prints out this error message:
+    #
+    #   Traceback (most recent call last):
+    #     File: "/usr/bin/flake8", line 5, in <module>
+    #       from pkg_resources import load_entry_point
+    #   ImportError: No module named pkg_resources
+    #
+    # Print a more useful error message if setuptools not found.
+    if [[ $dep == flake8 ]]; then
+        # Find which Python flake8 is running
+        # Spack-installed flake8 has a hard-coded shebang
+        python_cmd=$(head -n 1 $(which flake8) | cut -c 3-)
+        # Flake8 may not have a shebang
+        if ! [[ $python_cmd == *python* ]]; then
+            python_cmd=python
+        fi
+        # Check if setuptools is in the PYTHONPATH
+        if ! $python_cmd -c "import setuptools" 2> /dev/null; then
+            echo "ERROR: setuptools is required to run flake8."
+            echo "Please add it to your PYTHONPATH."
+
+            exit 1
+        fi
+    fi
 done
 
 echo "Dependencies found."
