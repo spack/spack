@@ -88,11 +88,13 @@ class Cmake(Package):
 
         options = [
             '--prefix={0}'.format(prefix),
-            '--parallel={0}'.format(make_jobs),
-            # jsoncpp requires CMake to build
-            # use CMake-provided library to avoid circular dependency
-            '--no-system-jsoncpp'
-        ]
+            '--parallel={0}'.format(make_jobs)]
+        if spec.satisfies("@3:"):
+            options.append(
+                # jsoncpp requires CMake to build
+                # use CMake-provided library to avoid circular dependency
+                '--no-system-jsoncpp'
+            )
 
         if '+ownlibs' in spec:
             # Build and link to the CMake-provided third-party libraries

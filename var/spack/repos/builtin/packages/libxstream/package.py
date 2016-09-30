@@ -25,24 +25,26 @@
 from spack import *
 
 
-class Icu(Package):
-    """The International Components for Unicode (ICU) package is a
-       mature, widely used set of C/C++ libraries providing Unicode and
-       Globalization support for software applications. ICU is widely
-       portable and gives applications the same results on all
-       platforms."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "http://download.icu-project.org/files/icu4c/54.1/icu4c-54_1-src.tgz"
+class Libxstream(Package):
+    '''LIBXSTREAM is a library to work with streams, events, and code regions
+    that are able to run asynchronous while preserving the usual stream
+    conditions.'''
 
-    version('54.1', 'e844caed8f2ca24c088505b0d6271bc0')
+    homepage = 'https://github.com/hfp/libxstream'
+    url      = 'https://github.com/hfp/libxstream.git'
 
-    def url_for_version(self, version):
-        return "http://download.icu-project.org/files/icu4c/%s/icu4c-%s-src.tgz" % (
-            version, str(version).replace('.', '_'))
+    version('0.9.0', git='https://github.com/hfp/libxstream.git')
+
+    def patch(self):
+        kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
+        makefile = FileFilter('Makefile.inc')
+
+        makefile.filter('CC =',  'CC ?=',  **kwargs)
+        makefile.filter('CXX =', 'CXX ?=', **kwargs)
+        makefile.filter('FC =',  'FC ?=',  **kwargs)
 
     def install(self, spec, prefix):
-        with working_dir("source"):
-            configure("--prefix=%s" % prefix)
-            make()
-            make("install")
+        make()
+        install_tree('lib', prefix.lib)
+        install_tree('include', prefix.include)
+        install_tree('documentation', prefix.share + '/libxstream/doc/')

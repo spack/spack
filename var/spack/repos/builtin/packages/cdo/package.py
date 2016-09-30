@@ -30,9 +30,9 @@ class Cdo(Package):
     Climate and NWP model Data. """
 
     homepage = "https://code.zmaw.de/projects/cdo"
-    url      = "https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz"
 
-    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2')
+    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
+    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2', url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
 
     variant('mpi', default=True)
 

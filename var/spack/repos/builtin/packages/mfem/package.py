@@ -89,8 +89,7 @@ class Mfem(Package):
         options = ['PREFIX=%s' % prefix]
 
         if '+lapack' in spec:
-            lapack_lib = '-L{0} -llapack -L{1} -lblas'.format(
-                spec['lapack'].prefix.lib, spec['blas'].prefix.lib)
+            lapack_lib = (spec['lapack'].lapack_libs + spec['blas'].blas_libs).ld_flags  # NOQA: ignore=E501
             options.extend([
                 'MFEM_USE_LAPACK=YES',
                 'LAPACK_OPT=-I%s' % spec['lapack'].prefix.include,

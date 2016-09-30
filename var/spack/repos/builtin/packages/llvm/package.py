@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
+
+from spack import *
 
 
 class Llvm(Package):
@@ -37,9 +38,11 @@ class Llvm(Package):
     homepage = 'http://llvm.org/'
     url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
 
+    family = 'compiler'  # Used by lmod
+
     # currently required by mesa package
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005',
-            url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')
+            url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')  # currently required by mesa package
 
     variant('debug', default=False,
             description="Build a debug version of LLVM, this increases "

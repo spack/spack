@@ -27,9 +27,10 @@ from spack import Package
 
 
 class PyPy2neo(Package):
-    """FIXME: put a proper description of your package here."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    """Py2neo is a client library and toolkit for working with Neo4j from
+    within Python applications and from the command line."""
+
+    homepage = "http://py2neo.org/"
     url      = "https://github.com/nigelsmall/py2neo/archive/py2neo-2.0.8.tar.gz"
 
     version('2.0.8', 'e3ec5172a9e006515ef4155688a05a55')

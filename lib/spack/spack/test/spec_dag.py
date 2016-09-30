@@ -241,15 +241,15 @@ class SpecDagTest(MockPackagesTest):
 
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
-        self.assertRaises(spack.spec.InvalidDependencyException,
+        self.assertRaises(spack.spec.InvalidDependencyError,
                           spec.normalize)
 
         spec = Spec('libelf ^libdwarf')
-        self.assertRaises(spack.spec.InvalidDependencyException,
+        self.assertRaises(spack.spec.InvalidDependencyError,
                           spec.normalize)
 
         spec = Spec('mpich ^dyninst ^libelf')
-        self.assertRaises(spack.spec.InvalidDependencyException,
+        self.assertRaises(spack.spec.InvalidDependencyError,
                           spec.normalize)
 
     def test_equal(self):

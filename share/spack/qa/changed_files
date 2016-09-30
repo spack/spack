@@ -18,11 +18,11 @@ SPACK_ROOT="$(dirname "$0")/../../.."
 cd "$SPACK_ROOT"
 
 # Add changed files that have been committed since branching off of develop
-changed=($(git diff --name-only --find-renames develop... -- "$@"))
+changed=($(git diff --name-only --diff-filter=ACMR develop... -- "$@"))
 # Add changed files that have been staged but not yet committed
-changed+=($(git diff --name-only --find-renames --cached -- "$@"))
+changed+=($(git diff --name-only --diff-filter=ACMR --cached -- "$@"))
 # Add changed files that are unstaged
-changed+=($(git diff --name-only --find-renames -- "$@"))
+changed+=($(git diff --name-only --diff-filter=ACMR -- "$@"))
 # Add new files that are untracked
 changed+=($(git ls-files --exclude-standard --other -- "$@"))
 

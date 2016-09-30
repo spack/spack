@@ -53,13 +53,13 @@ class Cp2k(Package):
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
     depends_on('pexsi', when='+mpi')
+    depends_on('wannier90', when='+mpi')
+    depends_on('elpa', when='+mpi')
 
     # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
-    # TODO : add dependency on elpa
     # TODO : add dependency on CUDA
     # TODO : add dependency on QUIP
-    # TODO : add dependency on libwannier90
 
     parallel = False
 
@@ -95,7 +95,8 @@ class Cp2k(Package):
             fcflags.extend([
                 '-I' + spec['fftw'].prefix.include
             ])
-            ldflags = ['-L' + spec['fftw'].prefix.lib]
+            fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
+            ldflags = [fftw.search_flags]
             libs = []
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
@@ -109,7 +110,8 @@ class Cp2k(Package):
                 # Add required macro
                 cppflags.extend(['-D__PLUMED2'])
                 libs.extend([
-                    join_path(self.spec['plumed'].prefix.lib, 'libplumed.so')
+                    join_path(self.spec['plumed'].prefix.lib,
+                              'libplumed.{0}'.format(dso_suffix))
                 ])
 
             mkf.write('CC = {0.compiler.cc}\n'.format(self))
@@ -143,15 +145,25 @@ class Cp2k(Package):
             if '+mpi' in self.spec:
                 cppflags.extend([
                     '-D__parallel',
+                    '-D__WANNIER90',
+                    '-D__ELPA3',
                     '-D__SCALAPACK'
                 ])
                 fcflags.extend([
+                    '-I' + join_path(
+                        spec['elpa'].prefix,
+                        'include',
+                        'elpa-{0}'.format(str(spec['elpa'].version)),
+                        'modules'
+                    ),
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
-                ldflags.extend([
-                    '-L' + spec['scalapack'].prefix.lib
-                ])
+                scalapack = spec['scalapack'].scalapack_libs
+                ldflags.append(scalapack.search_flags)
                 libs.extend([
+                    join_path(spec['elpa'].prefix.lib,
+                              'libelpa.{0}'.format(dso_suffix)),
+                    join_path(spec['wannier90'].prefix.lib, 'libwannier.a'),
                     join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
                     join_path(spec['superlu-dist'].prefix.lib,
                               'libsuperlu_dist.a'),
@@ -164,19 +176,15 @@ class Cp2k(Package):
                         'libmetis.{0}'.format(dso_suffix)
                     ),
                 ])
-                libs.extend(spec['scalapack'].scalapack_shared_libs)
+                libs.extend(scalapack)
                 libs.extend(self.spec['mpi'].mpicxx_shared_libs)
                 libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
-            ldflags.extend([
-                '-L' + spec['lapack'].prefix.lib,
-                '-L' + spec['blas'].prefix.lib
-            ])
-            libs.extend([
-                join_path(spec['fftw'].prefix.lib, 'libfftw3.so'),
-                spec['lapack'].lapack_shared_lib,
-                spec['blas'].blas_shared_lib
-            ])
+            lapack = spec['lapack'].lapack_libs
+            blas = spec['blas'].blas_libs
+
+            ldflags.append((lapack + blas).search_flags)
+            libs.extend([str(x) for x in (fftw, lapack, blas)])
 
             # Write compiler flags to file
             mkf.write('CPPFLAGS = {0}\n'.format(' '.join(cppflags)))

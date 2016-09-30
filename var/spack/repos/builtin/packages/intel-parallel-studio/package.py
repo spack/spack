@@ -45,6 +45,10 @@ class IntelParallelStudio(IntelInstaller):
     variant('tools', default=True, description="Install the Intel Advisor, "
             "VTune Amplifier, and Inspector tools")
 
+    variant('shared', default=True, description='Builds shared library')
+    variant('ilp64', default=False, description='64 bit integers')
+    variant('openmp', default=False, description='OpenMP multithreading layer')
+
     provides('mpi', when='@cluster:+mpi')
     provides('mkl', when='+mkl')
     provides('daal', when='+daal')
@@ -54,6 +58,31 @@ class IntelParallelStudio(IntelInstaller):
     provides('blas', when='+mkl')
     provides('lapack', when='+mkl')
     # TODO: MKL also provides implementation of Scalapack.
+
+    @property
+    def blas_libs(self):
+        shared = True if '+shared' in self.spec else False
+        suffix = dso_suffix if '+shared' in self.spec else 'a'
+        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        mkl_threading = ['libmkl_sequential']
+        if '+openmp' in self.spec:
+            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+        mkl_libs = find_libraries(
+            mkl_integer + ['libmkl_core'] + mkl_threading,
+            root=join_path(self.prefix.lib, 'intel64'),
+            shared=shared
+        )
+        system_libs = [
+            'libpthread.{0}'.format(suffix),
+            'libm.{0}'.format(suffix),
+            'libdl.{0}'.format(suffix)
+        ]
+        return mkl_libs + system_libs
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
 
     def check_variants(self, spec):
         error_message = '\t{variant} can not be turned off if "+all" is set'
@@ -170,24 +199,6 @@ class IntelParallelStudio(IntelInstaller):
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
                    os.path.join(self.prefix.man, "man1"))
-
-    def setup_dependent_package(self, module, dspec):
-        # For now use Single Dynamic Library:
-        # To set the threading layer at run time, use the
-        # mkl_set_threading_layer function or set MKL_THREADING_LAYER
-        # variable to one of the following values: INTEL, SEQUENTIAL, PGI.
-        # To set interface layer at run time, use the mkl_set_interface_layer
-        # function or set the MKL_INTERFACE_LAYER variable to LP64 or ILP64.
-
-        # Otherwise one would need to specify several libraries
-        # (e.g. mkl_intel_lp64;mkl_sequential;mkl_core), which reflect
-        # different interface and threading layers.
-
-        name = 'libmkl_rt.%s' % dso_suffix
-        libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib)
-
-        self.spec.blas_shared_lib   = join_path(libdir, name)
-        self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def setup_environment(self, spack_env, run_env):
         # TODO: Determine variables needed for the professional edition.

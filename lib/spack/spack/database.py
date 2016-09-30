@@ -50,7 +50,7 @@ from llnl.util.lock import *
 
 import spack.spec
 from spack.version import Version
-from spack.spec import Spec
+from spack.spec import *
 from spack.error import SpackError
 from spack.repository import UnknownPackageError
 import spack.util.spack_yaml as syaml
@@ -63,6 +63,9 @@ _db_version = Version('0.9.2')
 
 # Default timeout for spack database locks is 5 min.
 _db_lock_timeout = 60
+
+# Types of dependencies tracked by the database
+_tracked_deps = nobuild
 
 
 def _autospec(function):
@@ -232,8 +235,6 @@ class Database(object):
                                  spec.format('$_$#'), dname, dhash[:7]))
                     continue
 
-                # defensive copy (not sure everything handles extra
-                # parent links yet)
                 child = data[dhash].spec
                 spec._add_dependency(child, dtypes)
 
@@ -328,7 +329,7 @@ class Database(object):
         self._data = data
 
     def reindex(self, directory_layout):
-        """Build database index from scratch based from a directory layout.
+        """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
 
@@ -359,9 +360,6 @@ class Database(object):
 
                 # Ask the directory layout to traverse the filesystem.
                 for spec in directory_layout.all_specs():
-                    # Create a spec for each known package and add it.
-                    path = directory_layout.path_for_spec(spec)
-
                     # Try to recover explicit value from old DB, but
                     # default it to False if DB was corrupt.
                     explicit = False
@@ -370,7 +368,7 @@ class Database(object):
                         if old_info is not None:
                             explicit = old_info.explicit
 
-                    self._add(spec, path, directory_layout, explicit=explicit)
+                    self._add(spec, directory_layout, explicit=explicit)
 
                 self._check_ref_counts()
 
@@ -389,10 +387,7 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            # XXX(deptype): This checks all dependencies, but build
-            #               dependencies might be able to be dropped in the
-            #               future.
-            for dep in rec.spec.dependencies():
+            for dep in rec.spec.dependencies(_tracked_deps):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -450,52 +445,62 @@ class Database(object):
             # reindex() takes its own write lock, so no lock here.
             self.reindex(spack.install_layout)
 
-    def _add(self, spec, path, directory_layout=None, explicit=False):
-        """Add an install record for spec at path to the database.
+    def _add(self, spec, directory_layout=None, explicit=False):
+        """Add an install record for this spec to the database.
 
-        This assumes that the spec is not already installed. It
-        updates the ref counts on dependencies of the spec in the DB.
+        Assumes spec is installed in ``layout.path_for_spec(spec)``.
 
-        This operation is in-memory, and does not lock the DB.
+        Also ensures dependencies are present and updated in the DB as
+        either intsalled or missing.
 
         """
-        key = spec.dag_hash()
-        if key in self._data:
-            rec = self._data[key]
-            rec.installed = True
+        if not spec.concrete:
+            raise NonConcreteSpecAddError(
+                "Specs added to DB must be concrete.")
 
-            # TODO: this overwrites a previous install path (when path !=
-            # self._data[key].path), and the old path still has a
-            # dependent in the DB. We could consider re-RPATH-ing the
-            # dependents.  This case is probably infrequent and may not be
-            # worth fixing, but this is where we can discover it.
-            rec.path = path
+        for dep in spec.dependencies(_tracked_deps):
+            dkey = dep.dag_hash()
+            if dkey not in self._data:
+                self._add(dep, directory_layout, explicit=False)
 
-        else:
-            self._data[key] = InstallRecord(spec, path, True,
-                                            explicit=explicit)
-            for dep in spec.dependencies(('link', 'run')):
-                self._increment_ref_count(dep, directory_layout)
-
-    def _increment_ref_count(self, spec, directory_layout=None):
-        """Recursively examine dependencies and update their DB entries."""
         key = spec.dag_hash()
         if key not in self._data:
             installed = False
             path = None
             if directory_layout:
                 path = directory_layout.path_for_spec(spec)
-                installed = os.path.isdir(path)
+                try:
+                    directory_layout.check_installed(spec)
+                    installed = True
+                except DirectoryLayoutError as e:
+                    tty.warn(
+                        'Dependency missing due to corrupt install directory:',
+                        path, str(e))
 
-            self._data[key] = InstallRecord(spec.copy(), path, installed)
+            # Create a new install record with no deps initially.
+            new_spec = spec.copy(deps=False)
+            self._data[key] = InstallRecord(
+                new_spec, path, installed, ref_count=0, explicit=explicit)
 
-            for dep in spec.dependencies(('link', 'run')):
-                self._increment_ref_count(dep)
+            # Connect dependencies from the DB to the new copy.
+            for name, dep in spec.dependencies_dict(_tracked_deps).iteritems():
+                dkey = dep.spec.dag_hash()
+                new_spec._add_dependency(self._data[dkey].spec, dep.deptypes)
+                self._data[dkey].ref_count += 1
 
-        self._data[key].ref_count += 1
+            # Mark concrete once everything is built, and preserve
+            # the original hash of concrete specs.
+            new_spec._mark_concrete()
+            new_spec._hash = key
+
+        else:
+            # If it is already there, mark it as installed.
+            self._data[key].installed = True
+
+        self._data[key].explicit = explicit
 
     @_autospec
-    def add(self, spec, path, explicit=False):
+    def add(self, spec, directory_layout, explicit=False):
         """Add spec at path to database, locking and reading DB to sync.
 
         ``add()`` will lock and read from the DB on disk.
@@ -504,7 +509,7 @@ class Database(object):
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
-            self._add(spec, path, explicit=explicit)
+            self._add(spec, directory_layout, explicit=explicit)
 
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
@@ -534,7 +539,7 @@ class Database(object):
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
-            for dep in spec.dependencies('link'):
+            for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
     def _remove(self, spec):
@@ -548,7 +553,7 @@ class Database(object):
             return rec.spec
 
         del self._data[key]
-        for dep in rec.spec.dependencies('link'):
+        for dep in rec.spec.dependencies(_tracked_deps):
             self._decrement_ref_count(dep)
 
         # Returns the concrete spec so we know it in the case where a
@@ -655,6 +660,10 @@ class Database(object):
 
 class CorruptDatabaseError(SpackError):
     """Raised when errors are found while reading the database."""
+
+
+class NonConcreteSpecAddError(SpackError):
+    """Raised when attemptint to add non-concrete spec to DB."""
 
 
 class InvalidDatabaseVersionError(SpackError):

@@ -75,9 +75,8 @@ class Mumps(Package):
             raise RuntimeError(
                 'You cannot use the variants parmetis or ptscotch without mpi')
 
-        makefile_conf = ["LIBBLAS = %s" % to_link_flags(
-            self.spec['blas'].blas_shared_lib)
-        ]
+        blas = self.spec['blas'].blas_libs
+        makefile_conf = ["LIBBLAS = %s" % blas.ld_flags]
 
         orderings = ['-Dpord']
 
@@ -136,11 +135,12 @@ class Mumps(Package):
                  'OPTC    = %s -O ' % fpic])
 
         if '+mpi' in self.spec:
+            scalapack = self.spec['scalapack'].scalapack_libs
             makefile_conf.extend(
                 ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
                  "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
                  "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "SCALAP = %s" % self.spec['scalapack'].fc_link,
+                 "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
