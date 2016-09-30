@@ -35,13 +35,14 @@ class Pdt(Package):
 
     """
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
-    url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdt-3.22.1.tar.gz"
+    url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.22.1.tar.gz"
 
-    version('3.22.1', 'be6fac0b1edb3e3287b0cb78741a24b6')
-    version('3.22',   'e6c7879fc49ac5ff67a76ce31ef9e251')
-    version('3.21',   '8df94298b71703decf680709a4ddf68f')
-    version('3.19',   'ba5591994998771fdab216699e362228')
-    version('3.18.1', '05281b5c82a4754df936df99ad7eec0f')
+    version('3.22.1', 'b56b9b3e621161c7fd9e4908b944840d')
+    version('3.22',   '982d667617802962a1f7fe6c4c31184f')
+    version('3.21',   '3092ca0d8833b69992c17e63ae66c263')
+    version('3.20',   'c3edabe202926abe04552e33cd39672d')
+    version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
+    version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
 
     def install(self, spec, prefix):
         configure('-prefix=%s' % prefix)
