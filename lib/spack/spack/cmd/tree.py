@@ -59,9 +59,9 @@ def map_specs(specs, keyFn):
 def resolve_conflict(specs):
     return max(specs,
                key=lambda s: (s.compiler, s.version,
-                              get_versions(s), s.dag_hash()))
+                              dependency_versions(s), s.dag_hash()))
     
-def get_versions(spec):
+def dependency_versions(spec):
     return tuple(x.version for x in spec.dependencies(deptype=('link', 'run')))
 
 #To be called after install or uninstall
