@@ -26,7 +26,7 @@ from spack import *
 
 
 class FontBitstreamSpeedo(Package):
-    """FIXME: Put a proper description of your package here."""
+    """X.org bitstream-speedo font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/bitstream-speedo"
     url      = "https://www.x.org/archive/individual/font/font-bitstream-speedo-1.0.2.tar.gz"

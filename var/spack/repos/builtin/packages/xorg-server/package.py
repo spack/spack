@@ -50,6 +50,7 @@ class XorgServer(Package):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 
+    # TODO: add missing dependencies
     # $LIBSELINUX $REQUIRED_MODULES $REQUIRED_LIBS
     # $LIBPCIACCESS $DGAPROTO $XORG_MODULES epoxy xdmcp xau xfixes x11-xcb
     # xcb-aux xcb-image xcb-ewmh xcb-icccm $WINDOWSWMPROTO windowsdriproto

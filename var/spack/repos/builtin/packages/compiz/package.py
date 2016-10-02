@@ -38,24 +38,26 @@ class Compiz(Package):
 
     version('0.7.8', 'e99977d9170a7bd5d571004eed038428')
 
-    # FIXME: add dependencies
-    # x11-xcb
-    # xcomposite
-    # xfixes
-    # xdamage
-    # xrandr
-    # xinerama
-    # ice
-    # sm
-    # libxml-2.0
-    # libxslt
+    depends_on('libxcb')
+    depends_on('libxcomposite')
+    depends_on('libxfixes')
+    depends_on('libxdamage')
+    depends_on('libxrandr')
+    depends_on('libxinerama')
+    depends_on('libice')
+    depends_on('libsm')
+    depends_on('libxml2')
+    depends_on('libxslt')
+
+    # TODO: add dependencies
     # libstartup-notification-1.0 >= 0.7
-    # xrender
-    # libpng
-    # glib-2.0
-    # gconf-2.0
+    depends_on('libxrender')
+    depends_on('libpng')
+    depends_on('glib')
+    depends_on('gconf')
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
+        configure('--prefix={0}'.format(prefix))
+
         make()
         make('install')

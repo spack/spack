@@ -43,5 +43,4 @@ class Xmlto(Package):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')
