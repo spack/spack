@@ -34,23 +34,27 @@ class Xts(Package):
 
     version('0.99.1', '1e5443fede389be606f3745a71483bac')
 
-    # Required libraries
     depends_on('libx11')
-    depends_on('libxau')
     depends_on('libxext')
     depends_on('libxi')
     depends_on('libxtst')
+    depends_on('libxau')
+    depends_on('libxt')
+    depends_on('libxmu')
+    depends_on('libxaw')
 
-    # Required utilities
-    depends_on('xdpyinfo', type='run')
-    depends_on('xset', type='run')
-    depends_on('perl', type='run')
-    depends_on('bdftopcf', type='run')
-    depends_on('mkfontdir', type='run')
+    depends_on('xtrans', type='build')
+    depends_on('bdftopcf', type='build')
+    depends_on('mkfontdir', type='build')
+    depends_on('perl', type='build')
+    depends_on('xset', type='build')
+    depends_on('xdpyinfo', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
+        # FIXME: Crashes during compilation
+        # error: redeclaration of enumerator 'XawChainTop'
+
         make()
-        make('check')
         make('install')

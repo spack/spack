@@ -38,12 +38,14 @@ class XorgGtest(Package):
     depends_on('libxi')
     depends_on('xorg-server')
 
-    # TODO: needs testing once xorg-server is packaged
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
+    # TODO: may be missing evemu package?
     # TODO: what is the difference between xorg-gtest and googletest packages?
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
         make('install')
