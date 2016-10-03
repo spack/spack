@@ -160,8 +160,9 @@ def downloaded_file_extension(path):
             return 'tar.gz'
 
     prefix, ext, suffix = split_url_extension(path)
-    if not ext:
-        raise UrlParseError("Cannot deduce archive type in %s" % path, path)
+    # if not ext:
+    #    raise UrlParseError("Cannot deduce archive type in %s" % path,
+    #                        path)
     return ext
 
 
