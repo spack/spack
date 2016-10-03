@@ -61,7 +61,8 @@ class Libint(Package):
         autoconf()
 
         config_args = [
-            '--prefix={0}'.format(prefix)
+            '--prefix={0}'.format(prefix),
+            '--enable-shared'
         ]
 
         # Optimizations for the Intel compiler, suggested by CP2K
