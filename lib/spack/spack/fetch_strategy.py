@@ -158,6 +158,7 @@ class URLFetchStrategy(FetchStrategy):
             self.digest = digest
 
         self.expand_archive = kwargs.get('expand', True)
+        self.archive_ext = kwargs.get('archive_ext', None)
 
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
