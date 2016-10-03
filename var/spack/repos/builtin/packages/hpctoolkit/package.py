@@ -16,20 +16,16 @@ from spack import *
 
 
 class Hpctoolkit(Package):
-
-    """
-    HPCToolkit is an integrated suite of tools for measurement and analysis
+    """HPCToolkit is an integrated suite of tools for measurement and analysis
     of program performance on computers ranging from multicore desktop systems
     to the nation's largest supercomputers. By using statistical sampling of
     timers and hardware performance counters, HPCToolkit collects accurate
     measurements of a program's work, resource consumption, and inefficiency
-    and attributes them to the full calling context in which they occur.
-    """
+    and attributes them to the full calling context in which they occur."""
 
     homepage = "http://hpctoolkit.org"
 
-    #TODO: No precise release tags/branches provided
-
+    # TODO: No precise release tags/branches provided
     version('5.4', git='https://github.com/HPCToolkit/hpctoolkit.git',
             commit='d9ca2112762e5a06ea31b5295d793e4a83272d19')
 
@@ -49,17 +45,12 @@ class Hpctoolkit(Package):
         if '+mpi' in spec:
             options.extend(['MPICXX=%s' % spec['mpi'].mpicxx])
 
-
         if '+papi' in spec:
             options.extend(['--with-papi=%s' % spec['papi'].prefix])
 
-
-        #TODO: BG-Q configure option
-
+        # TODO: BG-Q configure option
         with working_dir('spack-build', create=True):
-
             configure = Executable('../configure')
             configure('--prefix=%s' % prefix, *options)
-
-            #skip make
+            # skip make
             make('install')
