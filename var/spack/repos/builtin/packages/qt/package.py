@@ -183,7 +183,6 @@ class Qt(Package):
                 '-no-xcb-xlib',
                 '-no-pulseaudio',
                 '-no-alsa',
-                '-no-gtkstyle',
             ])
 
         if '@4' in self.spec and sys.platform == 'darwin':
