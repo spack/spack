@@ -9,7 +9,7 @@ class Mkl(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html.
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
 
     To set the threading layer at run time set MKL_THREADING_LAYER
     variable to one of the following values: INTEL (default), SEQUENTIAL, PGI.
