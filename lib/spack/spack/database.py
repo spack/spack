@@ -49,6 +49,7 @@ from llnl.util.filesystem import *
 from llnl.util.lock import *
 
 import spack.spec
+from spack.directory_layout import DirectoryLayoutError
 from spack.version import Version
 from spack.spec import *
 from spack.error import SpackError
