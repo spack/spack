@@ -35,15 +35,20 @@ class GribApi(Package):
 
     version('1.17.0', 'bca7114d2c3100501a08190a146818d2')
 
+    variant('jpeg', default=True)
+
     depends_on('netcdf')
-    depends_on('jasper')
+    depends_on('jasper', when='+jpeg')
 
     def install(self, spec, prefix):
         configure_options = [
             '--prefix={0}'.format(prefix),
-            '--with-netcdf={0}'.format(spec['netcdf'].prefix),
-            '--with-jasper={0}'.format(spec['jasper'].prefix)
+            '--with-netcdf={0}'.format(spec['netcdf'].prefix)
         ]
+        if '+jpeg' in spec:
+            configure_options.append(
+                '--with-jasper={0}'.format(spec['jasper'].prefix)
+            )
         configure(*configure_options)
 
         make()
