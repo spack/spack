@@ -25,24 +25,28 @@
 from spack import *
 
 
-class Pango(Package):
-    """Pango is a library for laying out and rendering of text, with
-       an emphasis on internationalization. It can be used anywhere
-       that text layout is needed, though most of the work on Pango so
-       far has been done in the context of the GTK+ widget toolkit."""
-    homepage = "http://www.pango.org"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/pango/1.36/pango-1.36.8.tar.xz"
-    list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
-    list_depth = 2
+class Libemos(Package):
+    """The Interpolation library (EMOSLIB) includes Interpolation software and
+       BUFR & CREX encoding/decoding routines."""
 
-    version('1.36.8', '217a9a753006275215fa9fa127760ece')
-    version('1.40.1', '6fc88c6529890d6c8e03074d57a3eceb')
+    homepage = "https://software.ecmwf.int/wiki/display/EMOS/Emoslib"
+    url      = "https://software.ecmwf.int/wiki/download/attachments/3473472/libemos-4.4.2-Source.tar.gz"
 
-    depends_on("pkg-config", type="build")
-    depends_on("harfbuzz")
-    depends_on("cairo")
+    version('4.4.2', 'f15a9aff0f40861f3f046c9088197376')
+
+    depends_on('cmake', type='build')
+    depends_on('grib-api')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install", parallel=False)
+        options = []
+        options.extend(std_cmake_args)
+
+        options.append('-DGRIB_API_PATH=%s' % spec['grib_api'].prefix)
+
+        # To support long pathnames that spack generates
+        options.append('-DCMAKE_Fortran_FLAGS=-ffree-line-length-none')
+
+        with working_dir('spack-build', create=True):
+            cmake('..', *options)
+            make()
+            make('install')
