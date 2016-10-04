@@ -26,25 +26,55 @@ from spack import *
 
 
 class GribApi(Package):
-    """The ECMWF GRIB API is an application program interface accessible from C,
-       FORTRAN and Python programs developed for encoding and decoding WMO
+    """The ECMWF GRIB API is an application program interface accessible from
+       C, FORTRAN and Python programs developed for encoding and decoding WMO
        FM-92 GRIB edition 1 and edition 2 messages."""
 
     homepage = "https://software.ecmwf.int/wiki/display/GRIB/Home"
-    url      = "https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.17.0-Source.tar.gz?api=v2"
+    url      = "https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.17.0-Source.tar.gz"
 
     version('1.17.0', 'bca7114d2c3100501a08190a146818d2')
+    version('1.16.0', '8c7fdee03344e4379d400ae20976a460')
 
-    depends_on('netcdf')
-    depends_on('jasper')
+    variant('netcdf', default=False, description='Enable netcdf encoding/decoding using netcdf library')
+    variant('jpeg', default=True, description='Enable jpeg 2000 for grib 2 decoding/encoding')
+    variant('png', default=False, description='Enable png for decoding/encoding')
+
+    depends_on('cmake', type='build')
+    depends_on('libpng', when='+png')
+    depends_on('netcdf', when='+netcdf')
+    depends_on('jasper', when='+jpeg')
 
     def install(self, spec, prefix):
-        configure_options = [
-            '--prefix={0}'.format(prefix),
-            '--with-netcdf={0}'.format(spec['netcdf'].prefix),
-            '--with-jasper={0}'.format(spec['jasper'].prefix)
-        ]
-        configure(*configure_options)
+        options = []
+        options.extend(std_cmake_args)
+        options.append('-DBUILD_SHARED_LIBS=BOTH')
 
-        make()
-        make('install')
+        # We will add python support later.
+        options.append('-DENABLE_PYTHON=OFF')
+
+        # Disable FORTRAN interface if we don't have it.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            options.append('-DENABLE_FORTRAN=OFF')
+
+        if '+netcdf' in spec:
+            options.append('-DENABLE_NETCDF=ON')
+            options.append('-DNETCDF_PATH=%s' % spec['netcdf'].prefix)
+        else:
+            options.append('-DENABLE_NETCDF=OFF')
+
+        if '+jpeg' in spec:
+            options.append('-DENABLE_JPG=ON')
+            options.append('-DJASPER_PATH=%s' % spec['jasper'].prefix)
+        else:
+            options.append('-DENABLE_JPG=OFF')
+
+        if '+png' in spec:
+            options.append('-DENABLE_PNG=ON')
+        else:
+            options.append('-DENABLE_PNG=OFF')
+
+        with working_dir('spack-build', create=True):
+            cmake('..', *options)
+            make()
+            make('install')
