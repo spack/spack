@@ -21,7 +21,7 @@ class HpctoolkitExternals(Package):
 
     homepage = "http://hpctoolkit.org"
 
-    # TODO: No precise release tags/branches provided
+    # Note: No precise release tags/branches provided
     version('5.4',
             git='https://github.com/HPCToolkit/hpctoolkit-externals.git',
             commit='3d2953623357bb06e9a4b51eca90a4b039c2710e')
@@ -36,5 +36,4 @@ class HpctoolkitExternals(Package):
         with working_dir('spack-build', create=True):
             configure = Executable('../configure')
             configure('--prefix=%s' % prefix, *options)
-            # skip make
             make('install')

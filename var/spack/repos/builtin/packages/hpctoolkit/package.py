@@ -25,7 +25,7 @@ class Hpctoolkit(Package):
 
     homepage = "http://hpctoolkit.org"
 
-    # TODO: No precise release tags/branches provided
+    # Note: No precise release tags/branches provided
     version('5.4', git='https://github.com/HPCToolkit/hpctoolkit.git',
             commit='d9ca2112762e5a06ea31b5295d793e4a83272d19')
 
@@ -52,5 +52,4 @@ class Hpctoolkit(Package):
         with working_dir('spack-build', create=True):
             configure = Executable('../configure')
             configure('--prefix=%s' % prefix, *options)
-            # skip make
             make('install')
