@@ -56,6 +56,10 @@ class Magics(Package):
 
     depends_on('cmake', type='build')
     depends_on('pkg-config', type='build')
+
+    # Currently python is only necessary to run
+    # building preprocessing scripts.
+    depends_on('python', type='build')
     depends_on('grib-api')
     depends_on('proj')
     depends_on('boost')
