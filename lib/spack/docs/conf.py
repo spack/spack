@@ -1,10 +1,7 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
-#
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
@@ -70,9 +67,10 @@ os.environ['COLIFY_SIZE'] = '25x120'
 #
 # Generate package list using spack command
 #
-with open('package_list.rst', 'w') as plist_file:
-    subprocess.Popen(
-        [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
+if not os.path.exists('package_list.rst'):
+    with open('package_list.rst', 'w') as plist_file:
+        subprocess.Popen(
+            [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
 
 #
 # Find all the `spack-*` references and add them to a command index
@@ -85,11 +83,12 @@ for filename in glob('*rst'):
             if match:
                 command_names.append(match.group(1).strip())
 
-shutil.copy('command_index.in', 'command_index.rst')
-with open('command_index.rst', 'a') as index:
-    index.write('\n')
-    for cmd in sorted(command_names):
-        index.write('   * :ref:`%s`\n' % cmd)
+if not os.path.exists('command_index.rst'):
+    shutil.copy('command_index.in', 'command_index.rst')
+    with open('command_index.rst', 'a') as index:
+        index.write('\n')
+        for cmd in sorted(command_names):
+            index.write('   * :ref:`%s`\n' % cmd)
 
 
 # Run sphinx-apidoc
