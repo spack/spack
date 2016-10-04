@@ -62,34 +62,54 @@ class Cdo(Package):
                        "--enable-static"]
 
         if '+szip' in spec:
-            config_args.append('--with-szlib=%s' % spec['szip'].prefix)
+            config_args.append('--with-szlib=' + spec['szip'].prefix)
+        else:
+            config_args.append('--without-szlib')
 
         if '+hdf5' in spec:
-            config_args.append('--with-hdf5=%s' % spec['hdf5'].prefix)
+            config_args.append('--with-hdf5=' + spec['hdf5'].prefix)
+        else:
+            config_args.append('--without-hdf5')
 
         if '+netcdf' in spec:
-            config_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+            config_args.append('--with-netcdf=' + spec['netcdf'].prefix)
+        else:
+            config_args.append('--without-netcdf')
 
         if '+udunits2' in spec:
-            config_args.append('--with-udunits2=%s' % spec['udunits2'].prefix)
+            config_args.append('--with-udunits2=' + spec['udunits2'].prefix)
+        else:
+            config_args.append('--without-udunits2')
 
         if '+grib' in spec:
-            config_args.append('--with-grib_api=%s' % spec['grib-api'].prefix)
+            config_args.append('--with-grib_api=' + spec['grib-api'].prefix)
+        else:
+            config_args.append('--without-grib_api')
 
         if '+libxml2' in spec:
-            config_args.append('--with-libxml2=%s' % spec['libxml2'].prefix)
+            config_args.append('--with-libxml2=' + spec['libxml2'].prefix)
+        else:
+            config_args.append('--without-libxml2')
 
         if '+proj' in spec:
-            config_args.append('--with-proj=%s' % spec['proj'].prefix)
+            config_args.append('--with-proj=' + spec['proj'].prefix)
+        else:
+            config_args.append('--without-proj')
 
         if '+curl' in spec:
-            config_args.append('--with-curl=%s' % spec['curl'].prefix)
+            config_args.append('--with-curl=' + spec['curl'].prefix)
+        else:
+            config_args.append('--without-curl')
 
         if '+fftw' in spec:
             config_args.append('--with-fftw3')
+        else:
+            config_args.append('--without-fftw3')
 
         if '+magics' in spec:
-            config_args.append('--with-magics=%s' % spec['magics'].prefix)
+            config_args.append('--with-magics=' + spec['magics'].prefix)
+        else:
+            config_args.append('--without-magics')
 
         configure(*config_args)
 
