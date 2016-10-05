@@ -11,7 +11,7 @@ class IntelParallelStudio(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html"""
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
@@ -64,7 +64,10 @@ class IntelParallelStudio(IntelInstaller):
         shared = True if '+shared' in self.spec else False
         suffix = dso_suffix if '+shared' in self.spec else 'a'
         mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
-        mkl_threading = ['libmkl_intel_thread'] if '+openmp' in self.spec else ['libmkl_sequential']  # NOQA: ignore=E501
+        mkl_threading = ['libmkl_sequential']
+        if '+openmp' in self.spec:
+            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
             root=join_path(self.prefix.lib, 'intel64'),

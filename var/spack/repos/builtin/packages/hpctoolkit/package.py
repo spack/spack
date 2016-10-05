@@ -16,38 +16,40 @@ from spack import *
 
 
 class Hpctoolkit(Package):
-
-    """
-    HPCToolkit is an integrated suite of tools for measurement and analysis of
-    program performance on computers ranging from multicore desktop systems to
-    the nation's largest supercomputers. By using statistical sampling of timers
-    and hardware performance counters, HPCToolkit collects accurate measurements
-    of a program's work, resource consumption, and inefficiency and attributes
-    them to the full calling context in which they occur.
-    """
+    """HPCToolkit is an integrated suite of tools for measurement and analysis
+    of program performance on computers ranging from multicore desktop systems
+    to the nation's largest supercomputers. By using statistical sampling of
+    timers and hardware performance counters, HPCToolkit collects accurate
+    measurements of a program's work, resource consumption, and inefficiency
+    and attributes them to the full calling context in which they occur."""
 
     homepage = "http://hpctoolkit.org"
-    url      = "https://github.com/HPCToolkit/hpctoolkit.git"
 
-    version('develop', git='https://github.com/HPCToolkit/hpctoolkit.git')
+    # Note: No precise release tags/branches provided
+    version('5.4', git='https://github.com/HPCToolkit/hpctoolkit.git',
+            commit='d9ca2112762e5a06ea31b5295d793e4a83272d19')
 
-    depends_on("hpctoolkit-externals")
-    depends_on("papi")
-    depends_on("mpi")
+    variant('mpi', default=True, description='Enable MPI supoort')
+    variant('papi', default=True, description='Enable PAPI counter support')
+
+    depends_on('hpctoolkit-externals')
+    depends_on('papi', when='+papi')
+    depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
 
-        mkdirp('build')
-        cd('build')
+        options = ['CC=%s' % self.compiler.cc,
+                   'CXX=%s' % self.compiler.cxx,
+                   '--with-externals=%s' % spec['hpctoolkit-externals'].prefix]
 
-        config_hpctoolkit = Executable('../configure')
-        config_hpctoolkit(
-            "--prefix=%s" % prefix,
-            "--with-externals=%s" % spec['hpctoolkit-externals'].prefix,
-            "--with-papi=%s" % spec['papi'].prefix,
-            'CC=cc',
-            'CXX=c++',
-            'CXX={0}'.format(spec['mpi'].mpicxx))
+        if '+mpi' in spec:
+            options.extend(['MPICXX=%s' % spec['mpi'].mpicxx])
 
-        make()
-        make('install')
+        if '+papi' in spec:
+            options.extend(['--with-papi=%s' % spec['papi'].prefix])
+
+        # TODO: BG-Q configure option
+        with working_dir('spack-build', create=True):
+            configure = Executable('../configure')
+            configure('--prefix=%s' % prefix, *options)
+            make('install')

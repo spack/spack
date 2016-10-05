@@ -19,3 +19,4 @@ packages:
       mpi: [openmpi, mpich]
       blas: [openblas]
       lapack: [openblas]
+      pil: [py-pillow]

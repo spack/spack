@@ -16,37 +16,24 @@ from spack import *
 
 
 class HpctoolkitExternals(Package):
-
-    """
-    HPCToolkit has many prerequisites and externals tree is an attempt to deal
-    with these prerequisites.  It scans your system to identify which packages
-    are available and attempts to build the ones that are missing.
-    It contains several external libraries. (Some of these libraries, like libelf and
-    libxml2 are commonly found on Linux systems, but not always. Others, like OpenAnalysis
-    and SymtabAPI are almost never available. Finally, a few packages, like GNU binutils
-    have been heavily patched.) In some cases it may be possible to use versions of these
-    packages that are already installed on your system. However, such configurations are
-    not supported.
-    """
+    """HPCToolkit performance analysis tool has many prerequisites and
+    HpctoolkitExternals package provides all these prerequisites."""
 
     homepage = "http://hpctoolkit.org"
-    url      = "https://github.com/HPCToolkit/hpctoolkit-externals.git"
 
-    version('develop', git='https://github.com/HPCToolkit/hpctoolkit-externals.git')
+    # Note: No precise release tags/branches provided
+    version('5.4',
+            git='https://github.com/HPCToolkit/hpctoolkit-externals.git',
+            commit='3d2953623357bb06e9a4b51eca90a4b039c2710e')
 
-    depends_on("libelf")
-    depends_on("libxml2")
+    parallel = False
 
     def install(self, spec, prefix):
 
-        mkdirp('build')
-        cd('build')
+        options = ['CC=%s' % self.compiler.cc,
+                   'CXX=%s' % self.compiler.cxx]
 
-        config_hpctoolkitext = Executable('../configure')
-        config_hpctoolkitext(
-            "--prefix=%s" % prefix,
-            'CC=cc',
-            'CXX=c++')
-
-        make()
-        make('install')
+        with working_dir('spack-build', create=True):
+            configure = Executable('../configure')
+            configure('--prefix=%s' % prefix, *options)
+            make('install')

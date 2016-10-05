@@ -411,6 +411,20 @@ class Package(object):
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
 
+    def possible_dependencies(self, visited=None):
+        """Return set of possible transitive dependencies of this package."""
+        if visited is None:
+            visited = set()
+
+        visited.add(self.name)
+        for name in self.dependencies:
+            if name not in visited and not spack.spec.Spec(name).virtual:
+                pkg = spack.repo.get(name)
+                for name in pkg.possible_dependencies(visited):
+                    visited.add(name)
+
+        return visited
+
     @property
     def package_dir(self):
         """Return the directory where the package.py file lives."""
@@ -1039,7 +1053,8 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
+        spack.installed_db.add(
+            self.spec, spack.install_layout, explicit=explicit)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""

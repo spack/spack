@@ -9,7 +9,7 @@ class Mkl(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html.
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
 
     To set the threading layer at run time set MKL_THREADING_LAYER
     variable to one of the following values: INTEL (default), SEQUENTIAL, PGI.
@@ -40,7 +40,8 @@ class Mkl(IntelInstaller):
         mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
         mkl_threading = ['libmkl_sequential']
         if '+openmp' in self.spec:
-            mkl_threading = ['libmkl_intel_thread'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
             root=join_path(self.prefix.lib, 'intel64'),
@@ -72,41 +73,9 @@ class Mkl(IntelInstaller):
             os.symlink(os.path.join(mkl_lib_dir, f),
                        os.path.join(self.prefix, "lib", f))
 
-    def setup_dependent_package(self, module, dspec):
-        # For now use Single Dynamic Library:
-        # To set the threading layer at run time, use the
-        # mkl_set_threading_layer function or set MKL_THREADING_LAYER
-        # variable to one of the following values: INTEL, SEQUENTIAL, PGI.
-        # To set interface layer at run time, use the mkl_set_interface_layer
-        # function or set the MKL_INTERFACE_LAYER variable to LP64 or ILP64.
-
-        # Otherwise one would need to specify several libraries
-        # (e.g. mkl_intel_lp64;mkl_sequential;mkl_core), which reflect
-        # different interface and threading layers.
-
-        name = 'libmkl_rt.%s' % dso_suffix
-
-        extra_lib_dir = '%s/intel64' % self.prefix.lib
-        extra_lib64_dir = '%s/intel64' % self.prefix.lib64
-        libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib, extra_lib_dir, extra_lib64_dir)
-
-        # Now set blas/lapack libs:
-        self.spec.blas_shared_lib   = join_path(libdir, name)
-        self.spec.lapack_shared_lib = self.spec.blas_shared_lib
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-
-        # set up MKLROOT for everyone using MKL package during build time
-        spack_env.set ('MKLROOT', join_path (self.prefix, 'mkl'))
-        spack_env.prepend_path ('LD_LIBRARY_PATH', join_path (self.prefix, 'lib', 'intel64'))
-        spack_env.prepend_path ('LIBRARY_PATH', join_path (self.prefix, 'lib', 'intel64'))
-        spack_env.prepend_path ('CPATH', join_path (self.prefix, 'include'))
-
-        #this will be set in module path
-        run_env.set ('MKLROOT', join_path (self.prefix, 'mkl'))
-        run_env.prepend_path ('LD_LIBRARY_PATH', join_path (self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path ('LIBRARY_PATH', join_path (self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path ('CPATH', join_path (self.prefix, 'include'))
+        # set up MKLROOT for everyone using MKL package
+        spack_env.set('MKLROOT', self.prefix)
 
     def setup_environment(self, spack_env, env):
         env.set('MKLROOT', self.prefix)

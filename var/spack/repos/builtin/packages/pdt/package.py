@@ -38,13 +38,11 @@ class Pdt(Package):
     url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.22.1.tar.gz"
 
     version('3.22.1', 'b56b9b3e621161c7fd9e4908b944840d')
-    version('3.22', '982d667617802962a1f7fe6c4c31184f')
-    version('3.21', '3092ca0d8833b69992c17e63ae66c263')
-    version('3.20', 'c3edabe202926abe04552e33cd39672d')
-    version('3.19', '5c5e1e6607086aa13bf4b1b9befc5864')
-
-    def url_for_version(self, version):
-        return 'https://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-%s.tar.gz' % (version)
+    version('3.22',   '982d667617802962a1f7fe6c4c31184f')
+    version('3.21',   '3092ca0d8833b69992c17e63ae66c263')
+    version('3.20',   'c3edabe202926abe04552e33cd39672d')
+    version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
+    version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
 
     def install(self, spec, prefix):
         configure('-prefix=%s' % prefix)
