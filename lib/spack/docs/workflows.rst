@@ -87,10 +87,10 @@ installed packages, whether or not they are consistent, and run their
 binaries from the command line.  However, a set of installed packages
 can only be linked together in one binary if it is consistent.
 
-If the user produces a series of `spack spec` or `spack load`
+If the user produces a series of ``spack spec`` or ``spack load``
 commands, in general there is no guarantee of consistency between
 them.  Spack's concretization procedure guarantees that the results of
-any *single* `spack spec` call will be consistent.  Therefore, the
+any *single* ``spack spec`` call will be consistent.  Therefore, the
 best way to ensure a consistent set of specs is to create a Spack
 package with dependencies, and then instantiate that package.  We will
 use this technique below.
