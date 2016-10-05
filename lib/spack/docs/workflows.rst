@@ -79,7 +79,7 @@ The following set is not consistent:
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
-   zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64    
+   zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
 The compatibility of a set of installed packages determines what may
 be done with it.  It is always possible to ``spack load`` any set of
@@ -153,7 +153,7 @@ preferred versions and variants to use for packages.  For example:
 
 
 This approach will work as long as you are building packages for just
-one application.  
+one application.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Multiple Applications
@@ -237,11 +237,11 @@ Find and Run
 The simplest way to run a Spack binary is to find it and run it!
 In many cases, nothing more is needed because Spack builds binaries
 with RPATHs.  Spack installation directories may be found with ``spack
-location -i`` commands.  For example:
+location --install-dir`` commands.  For example:
 
 .. code-block:: console
 
-   $ spack location -i cmake
+   $ spack location --install-dir cmake
    /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
 
 This gives the root of the Spack package; relevant binaries may be
@@ -249,7 +249,7 @@ found within it.  For example:
 
 .. code-block:: console
 
-   $ CMAKE=`spack location -i cmake`/bin/cmake
+   $ CMAKE=`spack location --install-dir cmake`/bin/cmake
 
 
 Standard UNIX tools can find binaries as well.  For example:
@@ -731,7 +731,7 @@ The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
 
    # when building, don't use the install RPATH already
    # (but later on when installing)
-   SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+   SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
    # add the automatically determined parts of the RPATH
    # which point to directories outside the build tree to the install RPATH
@@ -894,7 +894,7 @@ into Git or downloading tarballs.
    problems in our experience, as long as your project sets
    RPATHs as shown above.  You DO use RPATHs, right?
 
-    
+
 
 --------------------
 Build Other Software
@@ -952,7 +952,7 @@ hosted on GitHub, this process will be a bit easier.
       ==> Found 1 versions of mylib
         0.1.2     https://github.com/citibeth/mylib/tarball/v0.1.2
 
-      How many would you like to checksum? (default is 5, q to abort) 
+      How many would you like to checksum? (default is 5, q to abort)
       ==> Downloading...
       ==> Trying to fetch from https://github.com/citibeth/mylib/tarball/v0.1.2
       ######################################################################## 100.0%
