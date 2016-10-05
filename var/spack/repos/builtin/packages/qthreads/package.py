@@ -38,28 +38,16 @@ class Qthreads(Package):
        attain either state."""
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
-    # Google Code has stopped serving tarballs
-    # We assume the tarballs will soon be available on Github instead
-    # url = "https://qthreads.googlecode.com/files/qthread-1.10.tar.bz2"
-    # version('1.10', '5af8c8bbe88c2a6d45361643780d1671')
+    url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
+    version("1.10", "d1cf3cf3f30586921359f7840171e551")
 
-    # Temporarily install from a git branch
-    url = "https://github.com/Qthreads/qthreads"
-    version("1.10",
-            git="https://github.com/Qthreads/qthreads",
-            branch="release-1.10")
+    patch("restrict.patch", when="@:1.10")
+    patch("trap.patch", when="@:1.10")
 
-    # patch("ldflags.patch")
-    patch("restrict.patch")
-    patch("trap.patch")
-
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
     depends_on("hwloc")
 
     def install(self, spec, prefix):
-        autogen = Executable("./autogen.sh")
-        autogen()
         configure("--prefix=%s" % prefix,
                   "--enable-guard-pages",
                   "--with-topology=hwloc",

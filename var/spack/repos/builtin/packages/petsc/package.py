@@ -22,7 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 import os
+import sys
 from spack import *
 
 
@@ -114,6 +116,11 @@ class Petsc(Package):
                 '--with-mpi=1',
                 '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
             ]
+        if sys.platform != "darwin":
+            compiler_opts.extend([
+                '--with-cpp=cpp',
+                '--with-cxxcpp=cpp',
+            ])
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -125,9 +132,15 @@ class Petsc(Package):
             '--with-scalar-type=%s' % (
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
-            '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
-            '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
+            '--with-debugging=%s' % ('1' if '+debug' in spec else '0')
         ])
+        # Make sure we use exactly the same Blas/Lapack libraries
+        # across the DAG. To that end list them explicitly
+        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        options.extend([
+            '--with-blas-lapack-lib=%s' % lapack_blas.joined()
+        ])
+
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'scalapack'):

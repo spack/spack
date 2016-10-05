@@ -48,6 +48,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND version.")
+    subparser.add_argument(
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
 
 
 def spack_transitive_include_path():

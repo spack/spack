@@ -216,9 +216,9 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
-        if isinstance(self.fetcher, fs.URLFetchStrategy):
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             paths.append(os.path.join(
-                self.path, os.path.basename(self.fetcher.url)))
+                self.path, os.path.basename(self.default_fetcher.url)))
 
         if self.mirror_path:
             paths.append(os.path.join(
@@ -227,18 +227,18 @@ class Stage(object):
         return paths
 
     @property
+    def save_filename(self):
+        possible_filenames = self.expected_archive_files
+        if possible_filenames:
+            # This prefers using the URL associated with the default fetcher if
+            # available, so that the fetched resource name matches the remote
+            # name
+            return possible_filenames[0]
+
+    @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        paths = []
-        if isinstance(self.fetcher, fs.URLFetchStrategy):
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.fetcher.url)))
-
-        if self.mirror_path:
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.mirror_path)))
-
-        for path in paths:
+        for path in self.expected_archive_files:
             if os.path.exists(path):
                 return path
         else:
@@ -301,8 +301,10 @@ class Stage(object):
             # then use the same digest.  `spack mirror` ensures that
             # the checksum will be the same.
             digest = None
+            expand = True
             if isinstance(self.default_fetcher, fs.URLFetchStrategy):
                 digest = self.default_fetcher.digest
+                expand = self.default_fetcher.expand_archive
 
             # Have to skip the checksum for things archived from
             # repositories.  How can this be made safer?
@@ -310,9 +312,11 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
-                fetchers.insert(0, fs.URLFetchStrategy(url, digest))
-            fetchers.insert(0, spack.fetch_cache.fetcher(self.mirror_path,
-                                                         digest))
+                fetchers.insert(
+                    0, fs.URLFetchStrategy(url, digest, expand=expand))
+            fetchers.insert(
+                0, spack.fetch_cache.fetcher(
+                    self.mirror_path, digest, expand=expand))
 
             # Look for the archive in list_url
             package_name = os.path.dirname(self.mirror_path)

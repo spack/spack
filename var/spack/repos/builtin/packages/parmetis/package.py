@@ -38,11 +38,9 @@ class Parmetis(Package):
     version('4.0.3', 'f69c479586bf6bb7aff6a9bc0c739628')
     version('4.0.2', '0912a953da5bb9b5e5e10542298ffdce')
 
-    variant('shared', default=True,
-            description='Enables the build of shared libraries')
-    variant('debug', default=False,
-            description='Builds the library in debug mode')
-    variant('gdb', default=False, description='Enables gdb support')
+    variant('shared', default=True, description='Enables the build of shared libraries.')
+    variant('debug', default=False, description='Builds the library in debug mode.')
+    variant('gdb', default=False, description='Enables gdb support.')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('mpi')
@@ -50,9 +48,9 @@ class Parmetis(Package):
 
     patch('enable_external_metis.patch')
     # bug fixes from PETSc developers
-    # https://bitbucket.org/petsc/pkg-parmetis/commits/1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b/raw/
+    # https://bitbucket.org/petsc/pkg-parmetis/commits/1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b/raw/  # NOQA: E501
     patch('pkg-parmetis-1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b.patch')
-    # https://bitbucket.org/petsc/pkg-parmetis/commits/82409d68aa1d6cbc70740d0f35024aae17f7d5cb/raw/
+    # https://bitbucket.org/petsc/pkg-parmetis/commits/82409d68aa1d6cbc70740d0f35024aae17f7d5cb/raw/  # NOQA: E501
     patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
 
     def url_for_version(self, version):
@@ -60,12 +58,10 @@ class Parmetis(Package):
         return '%s/%sparmetis-%s.tar.gz' % (Parmetis.base_url, verdir, version)
 
     def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-
-        build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
+        build_directory = join_path(source_directory, 'build')
 
+        options = std_cmake_args[:]
         options.extend([
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,

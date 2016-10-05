@@ -69,8 +69,17 @@ class Lock(object):
         start_time = time.time()
         while (time.time() - start_time) < timeout:
             try:
+                # If this is already open read-only and we want to
+                # upgrade to an exclusive write lock, close first.
+                if self._fd is not None:
+                    flags = fcntl.fcntl(self._fd, fcntl.F_GETFL)
+                    if op == fcntl.LOCK_EX and flags | os.O_RDONLY:
+                        os.close(self._fd)
+                        self._fd = None
+
                 if self._fd is None:
-                    self._fd = os.open(self._file_path, os.O_RDWR)
+                    mode = os.O_RDWR if op == fcntl.LOCK_EX else os.O_RDONLY
+                    self._fd = os.open(self._file_path, mode)
 
                 fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
                 if op == fcntl.LOCK_EX:

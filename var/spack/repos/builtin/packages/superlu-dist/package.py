@@ -46,15 +46,14 @@ class SuperluDist(Package):
     depends_on('metis@5:')
 
     def install(self, spec, prefix):
+        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
         makefile_inc = []
         makefile_inc.extend([
             'PLAT         = _mac_x',
             'DSuperLUroot = %s' % self.stage.source_path,
             'DSUPERLULIB  = $(DSuperLUroot)/lib/libsuperlu_dist.a',
             'BLASDEF      = -DUSE_VENDOR_BLAS',
-            'BLASLIB      = %s %s' %
-                (to_link_flags(spec['lapack'].lapack_shared_lib),
-                 to_link_flags(spec['blas'].blas_shared_lib)),
+            'BLASLIB      = %s' % lapack_blas.ld_flags,
             'METISLIB     = -L%s -lmetis' % spec['metis'].prefix.lib,
             'PARMETISLIB  = -L%s -lparmetis' % spec['parmetis'].prefix.lib,
             'FLIBS        =',

@@ -88,7 +88,7 @@ class Espresso(Package):
 
         # Add a list of directories to search
         search_list = []
-        for name, dependency_spec in spec.dependencies.iteritems():
+        for dependency_spec in spec.dependencies():
             search_list.extend([dependency_spec.prefix.lib,
                                 dependency_spec.prefix.lib64])
 

@@ -37,4 +37,7 @@ class Gmp(AutotoolsPackage):
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
 
-    depends_on("m4", type='build')
+    depends_on('m4', type='build')
+
+    def configure_args(self):
+        return ['--enable-cxx']

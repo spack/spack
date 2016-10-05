@@ -34,9 +34,12 @@ class Fontconfig(Package):
 
     depends_on('freetype')
     depends_on('libxml2')
+    depends_on('pkg-config', type='build')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-libxml2")
+        configure("--prefix=%s" % prefix,
+                  "--enable-libxml2",
+                  "--disable-docs")
 
         make()
         make("install")

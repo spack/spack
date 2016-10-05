@@ -75,6 +75,8 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
+SPACK_RPATH_DEPS = 'SPACK_RPATH_DEPS'
+SPACK_LINK_DEPS = 'SPACK_LINK_DEPS'
 SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
@@ -252,9 +254,15 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix
-                    for d in pkg.spec.traverse(root=False, deptype='build')]
+    dep_prefixes = [d.prefix for d in
+                    pkg.spec.traverse(root=False, deptype=('build', 'link'))]
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
+
+    # These variables control compiler wrapper behavior
+    env.set_path(SPACK_RPATH_DEPS, [d.prefix for d in get_rpath_deps(pkg)])
+    env.set_path(SPACK_LINK_DEPS, [
+        d.prefix for d in pkg.spec.traverse(root=False, deptype=('link'))])
+
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
 
@@ -286,8 +294,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
                 env.remove_path('PATH', p)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(
-        filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+    bin_dirs = reversed(filter(os.path.isdir, [
+        '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 
@@ -372,10 +380,15 @@ def set_module_variables_for_package(pkg, module):
     m.dso_suffix = dso_suffix
 
 
+def get_rpath_deps(pkg):
+    """We only need to RPATH immediate dependencies."""
+    return pkg.spec.dependencies(deptype='link')
+
+
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = pkg.spec.dependencies(deptype='link')
+    deps = get_rpath_deps(pkg)
     rpaths.extend(d.prefix.lib for d in deps
                   if os.path.isdir(d.prefix.lib))
     rpaths.extend(d.prefix.lib64 for d in deps

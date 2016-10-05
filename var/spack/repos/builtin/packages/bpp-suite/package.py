@@ -34,7 +34,6 @@ class BppSuite(Package):
 
     version('2.2.0', 'd8b29ad7ccf5bd3a7beb701350c9e2a4')
 
-    # FIXME: Add dependencies if required.
     depends_on('cmake', type='build')
     depends_on('texinfo', type='build')
     depends_on('bpp-core')

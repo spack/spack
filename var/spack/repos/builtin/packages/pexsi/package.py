@@ -67,8 +67,8 @@ class Pexsi(Package):
             '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
             '@LAPACK_PREFIX': self.spec['lapack'].prefix,
             '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].lapack_shared_lib,
-            '@BLAS_LIBS': self.spec['lapack'].blas_shared_lib,
+            '@LAPACK_LIBS': self.spec['lapack'].lapack_libs.joined(),
+            '@BLAS_LIBS': self.spec['lapack'].blas_libs.joined(),
             '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs)
         }
 

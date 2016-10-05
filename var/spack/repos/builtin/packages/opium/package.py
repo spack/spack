@@ -29,7 +29,7 @@ class Opium(Package):
     """DFT pseudopotential generation project"""
 
     homepage = "https://opium.sourceforge.net/index.html"
-    url      = "https://downloads.sourceforge.net/project/opium/opium/opium-v3.8/opium-v3.8-src.tgz"
+    url = "https://downloads.sourceforge.net/project/opium/opium/opium-v3.8/opium-v3.8-src.tgz"
 
     version('3.8', 'f710c0f869e70352b4a510c31e13bf9f')
 
@@ -37,12 +37,8 @@ class Opium(Package):
     depends_on('lapack')
 
     def install(self, spec, prefix):
-        options = [
-            'LDFLAGS=%s %s' % (
-                to_link_flags(spec['lapack'].lapack_shared_lib),
-                to_link_flags(spec['blas'].blas_shared_lib)
-            )
-        ]
+        libs = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        options = ['LDFLAGS=%s' % libs.ld_flags]
 
         configure(*options)
         with working_dir("src", create=False):

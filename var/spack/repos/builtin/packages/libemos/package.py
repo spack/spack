@@ -25,24 +25,28 @@
 from spack import *
 
 
-class Icu(Package):
-    """The International Components for Unicode (ICU) package is a
-       mature, widely used set of C/C++ libraries providing Unicode and
-       Globalization support for software applications. ICU is widely
-       portable and gives applications the same results on all
-       platforms."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "http://download.icu-project.org/files/icu4c/54.1/icu4c-54_1-src.tgz"
+class Libemos(Package):
+    """The Interpolation library (EMOSLIB) includes Interpolation software and
+       BUFR & CREX encoding/decoding routines."""
 
-    version('54.1', 'e844caed8f2ca24c088505b0d6271bc0')
+    homepage = "https://software.ecmwf.int/wiki/display/EMOS/Emoslib"
+    url      = "https://software.ecmwf.int/wiki/download/attachments/3473472/libemos-4.4.2-Source.tar.gz"
 
-    def url_for_version(self, version):
-        return "http://download.icu-project.org/files/icu4c/%s/icu4c-%s-src.tgz" % (
-            version, str(version).replace('.', '_'))
+    version('4.4.2', 'f15a9aff0f40861f3f046c9088197376')
+
+    depends_on('cmake', type='build')
+    depends_on('grib-api')
 
     def install(self, spec, prefix):
-        with working_dir("source"):
-            configure("--prefix=%s" % prefix)
+        options = []
+        options.extend(std_cmake_args)
+
+        options.append('-DGRIB_API_PATH=%s' % spec['grib_api'].prefix)
+
+        # To support long pathnames that spack generates
+        options.append('-DCMAKE_Fortran_FLAGS=-ffree-line-length-none')
+
+        with working_dir('spack-build', create=True):
+            cmake('..', *options)
             make()
-            make("install")
+            make('install')

@@ -2090,12 +2090,11 @@ Blas and Lapack libraries
 
 Different packages provide implementation of ``Blas`` and ``Lapack`` routines.
 The names of the resulting static and/or shared libraries differ from package
-to package. In order to make the ``install()`` method indifferent to the
+to package. In order to make the ``install()`` method independent of the
 choice of ``Blas`` implementation, each package which provides it
-sets up ``self.spec.blas_shared_lib`` and ``self.spec.blas_static_lib`` to
-point to the shared and static ``Blas`` libraries, respectively. The same
-applies to packages which provide ``Lapack``. Package developers are advised to
-use these variables, for example ``spec['blas'].blas_shared_lib`` instead of
+sets up ``self.spec.blas_libs`` to point to the correct ``Blas`` libraries.
+The same applies to packages which provide ``Lapack``. Package developers are advised to
+use these variables, for example ``spec['blas'].blas_libs.joined()`` instead of
 hard-coding ``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -2889,9 +2888,22 @@ dependency graph.  For example:
 
 .. command-output:: spack graph mpileaks
 
-At the top is the root package in the DAG, with dependency edges
-emerging from it.  On a color terminal, the edges are colored by which
-dependency they lead to.
+At the top is the root package in the DAG, with dependency edges emerging
+from it.  On a color terminal, the edges are colored by which dependency
+they lead to.
+
+.. command-output:: spack graph --deptype=all mpileaks
+
+The ``deptype`` argument tells Spack what types of dependencies to graph.
+By default it includes link and run dependencies but not build
+dependencies.  Supplying ``--deptype=all`` will show the build
+dependencies as well.  This is equivalent to
+``--deptype=build,link,run``.  Options for ``deptype`` include:
+
+* Any combination of ``build``, ``link``, and ``run`` separated by
+  commas.
+* ``nobuild``, ``nolink``, ``norun`` to omit one type.
+* ``all`` or ``alldeps`` for all types of dependencies.
 
 You can also use ``spack graph`` to generate graphs in the widely used
 `Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.  For
