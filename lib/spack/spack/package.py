@@ -953,7 +953,8 @@ class Package(object):
                     dirty=dirty,
                     force=False)
 
-        # The rest of this function is to install ourself, once deps have been installed.
+        # The rest of this function is to install ourself,
+        # once deps have been installed.
         if not install_self:
             return
 

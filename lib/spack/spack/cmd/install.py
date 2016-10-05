@@ -29,7 +29,6 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
-import os
 
 description = "Build and install packages"
 
