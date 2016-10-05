@@ -157,6 +157,11 @@ def symlink_license(pkg):
         license_dir = os.path.dirname(link_name)
         if not os.path.exists(license_dir):
             mkdirp(license_dir)
+
+        # If example file already exists, overwrite it with a symlink
+        if os.path.exists(link_name):
+            os.remove(link_name)
+
         if os.path.exists(target):
             os.symlink(target, link_name)
             tty.msg("Added local symlink %s to global license file" %
