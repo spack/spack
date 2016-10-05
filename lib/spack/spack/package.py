@@ -482,8 +482,13 @@ class Package(object):
 
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
-        """
-        Returns a URL that you can download a new version of this package from.
+        """Returns a URL from which the specified version of this package
+        may be downloaded.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
         """
         if not isinstance(version, Version):
             version = Version(version)
