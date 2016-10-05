@@ -17,3 +17,5 @@
 /TAGS
 /htmlcov
 .coverage
+#*
+.#*
