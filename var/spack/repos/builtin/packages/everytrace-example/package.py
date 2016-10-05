@@ -23,32 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
-import os
 
 
-class Everytrace(CMakePackage):
+class EverytraceExample(CMakePackage):
     """Get stack trace EVERY time a program exits."""
 
-    homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
-
-    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
+    homepage = "https://github.com/citibeth/everytrace-example"
     version('develop',
-            git='https://github.com/citibeth/everytrace.git', branch='develop')
+            git='https://github.com/citibeth/everytrace-example.git',
+            branch='develop')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=True,
-            description='Enable use with Fortran programs')
+    depends_on('cmake')
+    depends_on('everytrace+mpi+fortran')
 
-    depends_on('cmake', type='build')
-    depends_on('mpi', when='+mpi')
+    # Currently the only MPI this everytrace works with.
+    depends_on('openmpi')
 
     def configure_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
+        return []
 
     def setup_environment(self, spack_env, env):
         env.prepend_path('PATH', join_path(self.prefix, 'bin'))
