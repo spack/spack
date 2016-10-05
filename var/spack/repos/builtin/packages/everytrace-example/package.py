@@ -33,7 +33,7 @@ class EverytraceExample(CMakePackage):
             git='https://github.com/citibeth/everytrace-example.git',
             branch='develop')
 
-    depends_on('cmake')
+    depends_on('cmake', type='build')
     depends_on('everytrace+mpi+fortran')
 
     # Currently the only MPI this everytrace works with.
