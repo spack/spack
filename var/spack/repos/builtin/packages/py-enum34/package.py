@@ -25,29 +25,21 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class PyEnum34(Package):
+    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://pypi.python.org/pypi/enum34"
+    url      = "https://pypi.python.org/packages/source/e/enum34/enum34-1.1.6.tar.gz"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
+            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
+    extends('python')
+    depends_on('python@2.4:2.8,3.3:')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    depends_on('py-ordereddict', when='^python@:2.6.999', type=nolink)
 
     depends_on('py-setuptools', type='build')
-
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

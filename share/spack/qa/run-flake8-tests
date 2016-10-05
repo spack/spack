@@ -23,10 +23,6 @@ deps=(
 # Check for dependencies
 "$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
 
-# Move to root directory of Spack
-# Allows script to be run from anywhere
-cd "$SPACK_ROOT"
-
 # Gather array of changed files
 changed=($("$QA_DIR/changed_files" "*.py"))
 
@@ -35,6 +31,10 @@ if [[ ! "${changed[@]}" ]]; then
     echo "No Python files were modified."
     exit 0
 fi
+
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+cd "$SPACK_ROOT"
 
 function cleanup {
     # Restore original package files after modifying them.

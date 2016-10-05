@@ -25,29 +25,29 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class PyMccabe(Package):
+    """Ned's script to check McCabe complexity."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://github.com/PyCQA/mccabe"
+    url      = "https://github.com/PyCQA/mccabe/archive/0.5.2.tar.gz"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('0.5.2', '3cdf2d7faa1464b18905fe9a7063a632')
+    version('0.5.1', '864b364829156701bec797712be8ece0')
+    version('0.5.0', '71c0ce5e5c4676753525154f6c5d3af8')
+    version('0.4.0', '9cf5712e5f1785aaa27273a4328babe4')
+    version('0.3.1', '45c48c0978e6fc1f31fedcb918178abb')
+    version('0.3',   'c583f58ea28be12842c001473d77504d')
+    version('0.2.1', 'fcba311ebd999f48359a8ab28da94b30')
+    version('0.2',   '36d4808c37e187dbb1fe2373a0ac6645')
+    version('0.1',   '3c9e8e72612a9c01d865630cc569150a')
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
-
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    extends('python')
+    depends_on('python@2.7:2.8,3.3:')
 
     depends_on('py-setuptools', type='build')
 
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
+    # TODO: Add test dependencies
+    # depends_on('py-pytest', type='test')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

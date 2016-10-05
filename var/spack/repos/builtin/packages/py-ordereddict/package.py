@@ -25,29 +25,17 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class PyOrdereddict(Package):
+    """A drop-in substitute for Py2.7's new collections.
+    OrderedDict that works in Python 2.4-2.6."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://pypi.python.org/pypi/ordereddict"
+    url      = "https://pypi.python.org/packages/source/o/ordereddict/ordereddict-1.1.tar.gz"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('1.1', 'a0ed854ee442051b249bfad0f638bbec')
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
-
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
-
-    depends_on('py-setuptools', type='build')
-
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
+    extends('python')
+    depends_on('python@2.4:2.6.999')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))
