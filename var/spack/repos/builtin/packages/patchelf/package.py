@@ -30,6 +30,7 @@ class Patchelf(Package):
        ELF executables."""
 
     homepage = "https://nixos.org/patchelf.html"
+    url = "http://nixos.org/releases/patchelf/patchelf-0.8/patchelf-0.8.tar.gz"
 
     list_url = "http://nixos.org/releases/patchelf/"
     list_depth = 2
