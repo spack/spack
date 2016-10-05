@@ -45,9 +45,6 @@ class Petsc(Package):
     version('3.5.1', 'a557e029711ebf425544e117ffa44d8f')
     version('3.4.4', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
 
-    # If this has trouble finding BLAS and LAPACK...
-    # Consider using the paths that BLAS and LAPACK now use to export
-    # their shared library.
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,
@@ -139,7 +136,7 @@ class Petsc(Package):
             '--with-scalar-type=%s' % (
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
-            '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-debugging=%s' % ('1' if '+debug' in spec else '0')
         ])
 
         # Make sure we use exactly the same Blas/Lapack libraries
