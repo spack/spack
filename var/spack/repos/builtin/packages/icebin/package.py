@@ -30,6 +30,7 @@ class Icebin(CMakePackage):
     depends_on('python@3:', when='+python')
     depends_on('py-cython', when='+python')
     depends_on('py-numpy', when='+python')
+    depends_on('py-rtree', when='+python')
 
     depends_on('cgal', when='+gridgen')
     depends_on('gmp', when='+gridgen')
