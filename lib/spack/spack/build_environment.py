@@ -522,6 +522,11 @@ def fork(pkg, function, dirty=False):
         raise InstallError("Unable to fork build process: %s" % e)
 
     if pid == 0:
+        # Run as nice priority, to avoid hogging resources on
+        # shared environments.  See:
+        # https://github.com/LLNL/spack/issues/1607
+        os.nice(10)
+
         # Give the child process the package's build environment.
         setup_package(pkg, dirty=dirty)
 

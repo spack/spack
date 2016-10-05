@@ -47,17 +47,21 @@ class Petsc(Package):
 
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
-    variant('mpi',     default=True,  description='Activates MPI support')
+    variant('mpi',     default=True,
+            description='Activates MPI support')
     variant('double',  default=True,
             description='Switches between single and double precision')
-    variant('complex', default=False, description='Build with complex numbers')
-    variant('debug',   default=False, description='Compile in debug mode')
+    variant('complex', default=False,
+            description='Build with complex numbers')
+    variant('debug',   default=False,
+            description='Compile in debug mode')
 
     variant('metis',   default=True,
             description='Activates support for metis and parmetis')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
-    variant('boost',   default=True,  description='Activates support for Boost')
+    variant('boost',   default=True,
+            description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     variant('mumps',   default=True,
@@ -71,7 +75,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7')
+    depends_on('python @2.6:2.8', type='build')
 
     # Other dependencies
     depends_on('boost', when='+boost')
@@ -134,6 +138,7 @@ class Petsc(Package):
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0')
         ])
+
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
         lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs

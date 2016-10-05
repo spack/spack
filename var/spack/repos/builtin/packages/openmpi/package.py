@@ -103,9 +103,13 @@ class Openmpi(Package):
 
     # TODO : support for CUDA is missing
 
-    provides('mpi@:2.2', when='@1.6.5')
-    provides('mpi@:3.0', when='@1.7.5:')
-    provides('mpi@:3.1', when='@2.0.0:')
+#    provides('mpi@3.1', when='@2.0.0')
+#    provides('mpi@3.0', when='@1.10.3')
+#    provides('mpi@3.0', when='@1.10.2')
+    provides('mpi@3.0', when='@1.10.1')
+#    provides('mpi@3.0', when='@1.10.0')
+#    provides('mpi@3.0', when='@1.8.8')
+#    provides('mpi@2.2', when='@1.6.5')
 
     depends_on('hwloc')
     depends_on('sqlite', when='+sqlite3')

@@ -53,8 +53,11 @@ def setup_parser(subparser):
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND version.")
     subparser.add_argument(
+        '--force', '-f', action='store_true', dest='force',
+        help='Install again even if package is already installed.')
+    subparser.add_argument(
         '--dirty', action='store_true', dest='dirty',
-        help="Install a package *without* cleaning the environment.")
+        help="Install a package *without* cleaning the environment.  Or set SPACK_DIRTY environment variable")
 
 
 def diy(self, args):
@@ -104,4 +107,5 @@ def diy(self, args):
             install_deps=not args.ignore_deps,
             verbose=not args.quiet,
             keep_stage=True,   # don't remove source dir for DIY.
-            dirty=args.dirty)
+            force=args.force,
+            dirty=args.dirty or ('SPACK_DIRTY' in os.environ))

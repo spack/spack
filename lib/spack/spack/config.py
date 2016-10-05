@@ -481,6 +481,7 @@ def spec_externals(spec):
             continue
 
         external_spec = spack.spec.Spec(external_spec, external=path)
+        external_spec.namespace = 'builtin'
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
 
@@ -492,6 +493,7 @@ def spec_externals(spec):
 
         external_spec = spack.spec.Spec(
             external_spec, external=path, external_module=module)
+        external_spec.namespace = 'builtin'
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
 

@@ -1,0 +1,11 @@
+--- a/bootstrap.sh  2016-05-02 14:15:09.000000000 +0300
++++ b/bootstrap.sh  2016-07-03 22:35:15.000000000 +0300
+@@ -69,7 +69,7 @@
+ # Find the correct linker/linker-wrapper.
+  LINK="$(for link in collect2 ld; do
+           [ $($CC -print-prog-name=$link) = $link ] && continue ||
+-          $CC -print-prog-name=$link
++          $CC -print-prog-name=$link && break
+         done)"
+
+ # Fall back to "ld"... might work.

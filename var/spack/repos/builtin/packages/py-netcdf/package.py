@@ -33,6 +33,8 @@ class PyNetcdf(Package):
     version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
 
     extends('python')
+    depends_on('binutils', type='build')
+
     depends_on('py-numpy', type=nolink)
     depends_on('py-cython', type=nolink)
     depends_on('netcdf')
