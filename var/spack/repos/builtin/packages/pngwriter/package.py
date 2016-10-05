@@ -38,6 +38,10 @@ class Pngwriter(Package):
     homepage = "http://pngwriter.sourceforge.net/"
     url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
 
+    version('dev', branch='dev',
+            git='https://github.com/pngwriter/pngwriter.git')
+    version('master', branch='master',
+            git='https://github.com/pngwriter/pngwriter.git')
     version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
 
     depends_on('cmake', type='build')
