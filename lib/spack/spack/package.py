@@ -878,7 +878,7 @@ class Package(object):
                    explicit=False,
                    dirty=False,
                    install_phases=install_phases):
-       """Called by commands to install a package and its dependencies.
+        """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
         their build process.
