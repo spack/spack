@@ -45,7 +45,6 @@ class PyScipy(Package):
     depends_on('binutils@2.26:', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=nolink)
 
-
     def install(self, spec, prefix):
         if 'atlas' in spec:
             # libatlas.so actually isn't always installed, but this
