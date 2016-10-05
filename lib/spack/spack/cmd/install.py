@@ -29,6 +29,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import os
 
 description = "Build and install packages"
 
@@ -59,6 +60,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="Fake install. Just remove prefix and create a fake file.")
+    subparser.add_argument(
+        '--force', '-f', action='store_true', dest='force',
+        help='Install again even if package is already installed.')
     subparser.add_argument(
         '--dirty', action='store_true', dest='dirty',
         help="Install a package *without* cleaning the environment.")
@@ -95,4 +99,5 @@ def install(parser, args):
                 verbose=args.verbose,
                 fake=args.fake,
                 dirty=args.dirty,
+                force=args.force,
                 explicit=True)
