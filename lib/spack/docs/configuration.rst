@@ -249,27 +249,3 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
-
----------
-Profiling
----------
-
-Spack has some limited built-in support for profiling, and can report
-statistics using standard Python timing tools.  To use this feature,
-supply ``-p`` to Spack on the command line, before any subcommands.
-
-.. _spack-p:
-
-^^^^^^^^^^^^^^^^^^^
-``spack --profile``
-^^^^^^^^^^^^^^^^^^^
-
-``spack --profile`` output looks like this:
-
-.. command-output:: spack --profile graph --deptype=nobuild dyninst
-   :ellipsis: 25
-
-The bottom of the output shows the top most time consuming functions,
-slowest on top.  The profiling support is from Python's built-in tool,
-`cProfile
-<https://docs.python.org/2/library/profile.html#module-cProfile>`_.
