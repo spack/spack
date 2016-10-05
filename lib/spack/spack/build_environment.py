@@ -350,15 +350,7 @@ def set_module_variables_for_package(pkg, module):
     m.ctest = Executable('ctest')
 
     # standard CMake arguments
-    m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
-    if platform.mac_ver()[0]:
-        m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-    # Set up CMake rpath
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' %
-                            ":".join(get_rpaths(pkg)))
+    m.std_cmake_args = get_std_cmake_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.build_env_path
@@ -408,6 +400,20 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
+
+
+def get_std_cmake_args(cmake_pkg):
+    # standard CMake arguments
+    ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
+           '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
+    if platform.mac_ver()[0]:
+        ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
+
+    # Set up CMake rpath
+    ret.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
+
+    return ret
 
 
 def parent_class_modules(cls):
