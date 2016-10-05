@@ -259,7 +259,7 @@ class Package(object):
            parallel = False
            ...
 
-    This changes thd default behavior so that make is sequential.  If you still
+    This changes the default behavior so that make is sequential.  If you still
     want to build some parts in parallel, you can do this in your install
     function:
 
@@ -878,7 +878,7 @@ class Package(object):
                    explicit=False,
                    dirty=False,
                    install_phases=install_phases):
-        """Called by commands to install a package and its dependencies.
+       """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
         their build process.
@@ -899,6 +899,7 @@ class Package(object):
         :param dirty: Don't clean the build environment before installing.
         :param make_jobs: Number of make jobs to use for install. Default is \
             ncpus
+        :param force: Install again, even if already installed.
         :param run_tests: Run tests within the package's install()
         """
         if not self.spec.concrete:
@@ -925,18 +926,6 @@ class Package(object):
         tty.msg("Installing %s" % self.name)
 
         # First, install dependencies recursively.
-<<<<<<< ac3e21f8d4be5786761b5009690e09f6ec564c79
-        if not ignore_deps:
-            self.do_install_dependencies(keep_prefix=keep_prefix,
-                                         keep_stage=keep_stage,
-                                         ignore_deps=ignore_deps,
-                                         fake=fake,
-                                         skip_patch=skip_patch,
-                                         verbose=verbose,
-                                         make_jobs=make_jobs,
-                                         run_tests=run_tests,
-                                         dirty=dirty)
-=======
         if install_deps:
             for dep in self.spec.dependencies():
                 dep.package.do_install(
@@ -948,12 +937,13 @@ class Package(object):
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
-                    run_tests=run_tests)
+                    run_tests=run_tests,
+                    dirty=dirty)
 
-        # The rest of this function is to install ourself, once deps have been installed.
+        # The rest of this function is to install ourself,
+        # once deps have been installed.
         if not install_self:
             return
->>>>>>> 51f9a517d39c132e5771137c43599ba27603cd35
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
