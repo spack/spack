@@ -34,6 +34,7 @@ class Hdf(Package):
     list_url = "https://www.hdfgroup.org/ftp/HDF/releases/"
     list_depth = 3
 
+    version('4.2.12', '79fd1454c899c05e34a3da0456ab0c1c')
     version('4.2.11', '063f9928f3a19cc21367b71c3b8bbf19')
 
     variant('szip', default=False, description="Enable szip support")
