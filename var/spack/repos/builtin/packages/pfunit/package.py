@@ -52,6 +52,15 @@ class Pfunit(Package):
         description='Test OpenMP-based programs')
 
     def install(self, spec, prefix):
+
+        if '+openmp' in spec:
+            raise ValueError(
+                'pfUnit works with OpenMP-based programs,\n' +
+                'but there is currently no openmp package in Spack.\n' +
+                'If you would like to use pfUnit with OpenMP, please\n'+
+                'add an OpenMP package and remove this message from\n'+
+                'the pfunit package.')
+
         with working_dir('spack-build', create=True):
             options = std_cmake_args + [
                 '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
