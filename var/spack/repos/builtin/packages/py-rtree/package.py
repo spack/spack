@@ -46,7 +46,7 @@ class PyRtree(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('libspatialindex', type=nolink)
+    depends_on('libspatialindex')
 
     def install(self, spec, prefix):
         lib = os.path.join(spec['libspatialindex'].prefix, 'lib')
