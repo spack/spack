@@ -38,6 +38,7 @@ class PyCython(Package):
     version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
 
     extends('python')
+    depends_on('binutils', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
