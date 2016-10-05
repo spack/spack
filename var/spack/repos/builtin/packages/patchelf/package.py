@@ -31,9 +31,6 @@ class Patchelf(Package):
 
     homepage = "https://nixos.org/patchelf.html"
 
-    def url_for_version(self, version):
-        return "http://nixos.org/releases/patchelf/patchelf-%s/patchelf-%s.tar.gz" % (version, version)
-
     list_url = "http://nixos.org/releases/patchelf/"
     list_depth = 2
 
