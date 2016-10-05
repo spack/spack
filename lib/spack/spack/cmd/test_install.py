@@ -180,7 +180,8 @@ def install_single_spec(spec, number_of_jobs):
         start_time = time.time()
         package.do_install(keep_prefix=False,
                            keep_stage=True,
-                           ignore_deps=False,
+                           install_deps=True,
+                           install_self=True,
                            make_jobs=number_of_jobs,
                            verbose=True,
                            fake=False)
