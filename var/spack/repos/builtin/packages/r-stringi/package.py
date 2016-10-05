@@ -44,7 +44,7 @@ class RStringi(Package):
 
     extends('R')
 
-    depends_on('icu')
+    depends_on('icu4c')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

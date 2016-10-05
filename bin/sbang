@@ -111,8 +111,12 @@ while read line && ((lines < 2)) ; do
 done < "$script"
 
 # Invoke any interpreter found, or raise an error if none was found.
-if [ -n "$interpreter" ]; then
-    exec $interpreter "$@"
+if [[ -n "$interpreter" ]]; then
+    if [[ "${interpreter##*/}" = "perl" ]]; then
+        exec $interpreter -x "$@"
+    else
+        exec $interpreter "$@"
+    fi
 else
     echo "error: sbang found no interpreter in $script"
     exit 1

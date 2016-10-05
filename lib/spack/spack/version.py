@@ -49,6 +49,7 @@ from bisect import bisect_left
 from functools import wraps
 
 from functools_backport import total_ordering
+from spack.util.spack_yaml import syaml_dict
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
@@ -180,11 +181,12 @@ class Version(object):
 
     @coerced
     def satisfies(self, other):
-        """A Version 'satisfies' another if it is at least as specific and has a
-           common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
-           gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-           a suitable compiler.
+        """A Version 'satisfies' another if it is at least as specific and has
+        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
+        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
+        a suitable compiler.
         """
+
         nself = len(self.version)
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
@@ -437,12 +439,12 @@ class VersionRange(object):
 
     @coerced
     def satisfies(self, other):
-        """
-        A VersionRange satisfies another if some version in this range
+        """A VersionRange satisfies another if some version in this range
         would satisfy some version in the other range.  To do this it must
         either:
-          a) Overlap with the other range
-          b) The start of this range satisfies the end of the other range.
+
+        a) Overlap with the other range
+        b) The start of this range satisfies the end of the other range.
 
         This is essentially the same as overlaps(), but overlaps assumes
         that its arguments are specific.  That is, 4.7 is interpreted as
@@ -450,6 +452,7 @@ class VersionRange(object):
         by 4.7.3.5, etc.
 
         Rationale:
+
         If a user asks for gcc@4.5:4.7, and a package is only compatible with
         gcc@4.7.3:4.8, then that package should be able to build under the
         constraints.  Just using overlaps() would not work here.
@@ -640,9 +643,13 @@ class VersionList(object):
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
-            return {'version': str(self[0])}
+            return syaml_dict([
+                ('version', str(self[0]))
+            ])
         else:
-            return {'versions': [str(v) for v in self]}
+            return syaml_dict([
+                ('versions', [str(v) for v in self])
+            ])
 
     @staticmethod
     def from_dict(dictionary):

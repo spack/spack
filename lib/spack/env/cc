@@ -266,22 +266,38 @@ for dep in "${deps[@]}"; do
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
-            args=("-L$dep/lib" "${args[@]}")
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib" "${args[@]}")
+            fi
         elif [[ $mode == ld ]]; then
-            $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
-            args=("-L$dep/lib" "${args[@]}")
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib" "${args[@]}")
+            fi
         fi
     fi
 
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
-            args=("-L$dep/lib64" "${args[@]}")
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib64" "${args[@]}")
+            fi
         elif [[ $mode == ld ]]; then
-            $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
-            args=("-L$dep/lib64" "${args[@]}")
+            if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
+                $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
+            fi
+            if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
+                args=("-L$dep/lib64" "${args[@]}")
+            fi
         fi
     fi
 done

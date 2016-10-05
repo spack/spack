@@ -268,6 +268,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         if installed_spec == spec:
             return path
 
+        # DAG hashes currently do not include build dependencies.
+        #
+        # TODO: remove this when we do better concretization and don't
+        # ignore build-only deps in hashes.
+        elif installed_spec == spec.copy(deps=('link', 'run')):
+            return path
+
         if spec.dag_hash() == installed_spec.dag_hash():
             raise SpecHashCollisionError(spec, installed_spec)
         else:
@@ -416,7 +423,7 @@ class RemoveFailedError(DirectoryLayoutError):
     def __init__(self, installed_spec, prefix, error):
         super(RemoveFailedError, self).__init__(
             'Could not remove prefix %s for %s : %s'
-            % prefix, installed_spec.short_spec, error)
+            % (prefix, installed_spec.short_spec, error))
         self.cause = error
 
 

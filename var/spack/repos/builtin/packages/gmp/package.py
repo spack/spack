@@ -41,9 +41,12 @@ class Gmp(Package):
     # ghc-bootstrap.
     version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
 
-    depends_on("m4", type='build')
+    depends_on('m4', type='build')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix),
+                  '--enable-cxx')
+
         make()
-        make("install")
+        make('check')
+        make('install')

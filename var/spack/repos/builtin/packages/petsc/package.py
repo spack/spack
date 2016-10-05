@@ -22,13 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 import os
+import sys
 from spack import *
 
 
 class Petsc(Package):
-    """
-    PETSc is a suite of data structures and routines for the scalable
+    """PETSc is a suite of data structures and routines for the scalable
     (parallel) solution of scientific applications modeled by partial
     differential equations.
     """
@@ -77,7 +78,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7', type='build')
+    depends_on('python @2.6:2.8', type='build')
 
     # Other dependencies
     depends_on('boost', when='+boost')
@@ -122,6 +123,11 @@ class Petsc(Package):
                 '--with-mpi=1',
                 '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
             ]
+        if sys.platform != "darwin":
+            compiler_opts.extend([
+                '--with-cpp=cpp',
+                '--with-cxxcpp=cpp',
+            ])
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -134,10 +140,15 @@ class Petsc(Package):
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
-            '--with-lapack-lib=%s' % spec['lapack'].lapack_static_lib,
-            '--with-blas-lib=%s' % spec['blas'].blas_static_lib
-#            '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
         ])
+
+        # Make sure we use exactly the same Blas/Lapack libraries
+        # across the DAG. To that end list them explicitly
+        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        options.extend([
+            '--with-blas-lapack-lib=%s' % lapack_blas.joined()
+        ])
+
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'scalapack'):

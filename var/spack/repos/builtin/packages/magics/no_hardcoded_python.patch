@@ -1,0 +1,5 @@
+--- a/tools/xml2mv.py	2016-06-27 17:49:27.000000000 +0200
++++ a/tools/xml2mv.py	2016-09-13 16:25:17.246960456 +0200
+@@ -1 +1 @@
+-#!/usr/bin/python
++#!/usr/bin/env python

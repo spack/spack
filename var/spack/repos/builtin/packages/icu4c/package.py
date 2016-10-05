@@ -27,18 +27,23 @@ from spack import *
 
 class Icu4c(Package):
     """ICU is a mature, widely used set of C/C++ and Java libraries providing
-       Unicode and Globalization support for software applications.
-
-    """
+    Unicode and Globalization support for software applications. ICU4C is the
+    C/C++ interface."""
 
     homepage = "http://site.icu-project.org/"
-    url      = "http://downloads.sourceforge.net/project/icu/ICU4C/54.1/icu4c-54_1-src.tgz"
+    url      = "http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz"
 
-    version('54_1', 'e844caed8f2ca24c088505b0d6271bc0')
+    version('57.1', '976734806026a4ef8bdd17937c8898b9')
+
+    def url_for_version(self, version):
+        base_url = "http://download.icu-project.org/files/icu4c"
+        return "{0}/{1}/icu4c-{2}-src.tgz".format(
+            base_url, version, version.underscored)
 
     def install(self, spec, prefix):
-        cd("source")
-        configure("--prefix=%s" % prefix)
+        with working_dir('source'):
+            configure('--prefix={0}'.format(prefix))
 
-        make()
-        make("install")
+            make()
+            make('check')
+            make('install')

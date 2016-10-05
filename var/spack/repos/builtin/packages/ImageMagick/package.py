@@ -36,19 +36,22 @@ class Imagemagick(Package):
     version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
 
     depends_on('jpeg')
+    depends_on('pango')
     depends_on('libtool', type='build')
     depends_on('libpng')
     depends_on('freetype')
     depends_on('fontconfig')
     depends_on('libtiff')
     depends_on('ghostscript')
+    depends_on('ghostscript-fonts')
 
     def url_for_version(self, version):
         return "https://github.com/ImageMagick/ImageMagick/archive/{0}.tar.gz".format(version)
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
+        gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
+        configure('--prefix={0}'.format(prefix),
+                  '--with-gs-font-dir={0}'.format(gs_font_dir))
         make()
         make('check')
         make('install')

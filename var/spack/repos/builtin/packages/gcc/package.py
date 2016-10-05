@@ -3,6 +3,7 @@ from spack import *
 from contextlib import closing
 from glob import glob
 import sys
+from os.path import isfile
 
 
 class Gcc(Package):
@@ -67,6 +68,19 @@ class Gcc(Package):
 
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
             enabled_languages.add('go')
+
+        # Fix a standard header file for OS X Yosemite that
+        # is GCC incompatible by replacing non-GCC compliant macros
+        if 'yosemite' in spec.architecture:
+            if isfile(r'/usr/include/dispatch/object.h'):
+                new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
+                mkdirp(new_dispatch_dir)
+                cp = which('cp')
+                new_header = join_path(new_dispatch_dir, 'object.h')
+                cp(r'/usr/include/dispatch/object.h', new_header)
+                filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
+                            'typedef void* dispatch_block_t',
+                            new_header)
 
         # Generic options to compile GCC
         options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,

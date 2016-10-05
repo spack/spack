@@ -40,6 +40,7 @@ module file.
 """
 import copy
 import datetime
+import itertools
 import os
 import os.path
 import re
@@ -48,6 +49,7 @@ import textwrap
 
 import llnl.util.tty as tty
 import spack
+import spack.compilers  # Needed by LmodModules
 import spack.config
 from llnl.util.filesystem import join_path, mkdirp
 from spack.build_environment import parent_class_modules
@@ -56,7 +58,8 @@ from spack.environment import *
 
 __all__ = ['EnvModule', 'Dotkit', 'TclModule']
 
-# Registry of all types of modules.  Entries created by EnvModule's metaclass
+"""Registry of all types of modules.  Entries created by EnvModule's
+   metaclass."""
 module_types = {}
 
 CONFIGURATION = spack.config.get_config('modules')
@@ -120,7 +123,7 @@ def dependencies(spec, request='all'):
         return []
 
     if request == 'direct':
-        return spec.dependencies()
+        return spec.dependencies(deptype=('link', 'run'))
 
     # FIXME : during module file creation nodes seem to be visited multiple
     # FIXME : times even if cover='nodes' is given. This work around permits
@@ -133,6 +136,7 @@ def dependencies(spec, request='all'):
              spec.traverse(order='post',
                            depth=True,
                            cover='nodes',
+                           deptype=('link', 'run'),
                            root=False),
              reverse=True)]
     return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
@@ -388,6 +392,7 @@ class EnvModule(object):
             for mod in modules:
                 set_module_variables_for_package(package, mod)
             set_module_variables_for_package(package, package.module)
+            package.setup_environment(spack_env, env)
             package.setup_dependent_package(self.pkg.module, self.spec)
             package.setup_dependent_environment(spack_env, env, self.spec)
 
@@ -632,3 +637,237 @@ class TclModule(EnvModule):
                         raise SystemExit('Module generation aborted.')
                 line = line.format(**naming_tokens)
             yield line
+
+# To construct an arbitrary hierarchy of module files:
+# 1. Parse the configuration file and check that all the items in
+#    hierarchical_scheme are indeed virtual packages
+#    This needs to be done only once at start-up
+# 2. Order the stack as `hierarchical_scheme + ['mpi, 'compiler']
+# 3. Check which of the services are provided by the package
+#    -> may be more than one
+# 4. Check which of the services are needed by the package
+#    -> this determines where to write the module file
+# 5. For each combination of services in which we have at least one provider
+#    here add the appropriate conditional MODULEPATH modifications
+
+
+class LmodModule(EnvModule):
+    name = 'lmod'
+    path = join_path(spack.share_path, "lmod")
+
+    environment_modifications_formats = {
+        PrependPath: 'prepend_path("{name}", "{value}")\n',
+        AppendPath: 'append_path("{name}", "{value}")\n',
+        RemovePath: 'remove_path("{name}", "{value}")\n',
+        SetEnv: 'setenv("{name}", "{value}")\n',
+        UnsetEnv: 'unsetenv("{name}")\n'
+    }
+
+    autoload_format = ('if not isloaded("{module_file}") then\n'
+                       '    LmodMessage("Autoloading {module_file}")\n'
+                       '    load("{module_file}")\n'
+                       'end\n\n')
+
+    prerequisite_format = 'prereq("{module_file}")\n'
+
+    family_format = 'family("{family}")\n'
+
+    path_part_with_hash = join_path('{token.name}', '{token.version}-{token.hash}')  # NOQA: ignore=E501
+    path_part_without_hash = join_path('{token.name}', '{token.version}')
+
+    # TODO : Check that extra tokens specified in configuration file
+    # TODO : are actually virtual dependencies
+    configuration = CONFIGURATION.get('lmod', {})
+    hierarchy_tokens = configuration.get('hierarchical_scheme', [])
+    hierarchy_tokens = hierarchy_tokens + ['mpi', 'compiler']
+
+    def __init__(self, spec=None):
+        super(LmodModule, self).__init__(spec)
+        # Sets the root directory for this architecture
+        self.modules_root = join_path(LmodModule.path, self.spec.architecture)
+        # Retrieve core compilers
+        self.core_compilers = self.configuration.get('core_compilers', [])
+        # Keep track of the requirements that this package has in terms
+        # of virtual packages
+        # that participate in the hierarchical structure
+        self.requires = {'compiler': self.spec.compiler}
+        # For each virtual dependency in the hierarchy
+        for x in self.hierarchy_tokens:
+            if x in self.spec and not self.spec.package.provides(
+                    x):  # if I depend on it
+                self.requires[x] = self.spec[x]  # record the actual provider
+        # Check what are the services I need (this will determine where the
+        # module file will be written)
+        self.substitutions = {}
+        self.substitutions.update(self.requires)
+        # TODO : complete substitutions
+        # Check what service I provide to others
+        self.provides = {}
+        # If it is in the list of supported compilers family -> compiler
+        if self.spec.name in spack.compilers.supported_compilers():
+            self.provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+        # Special case for llvm
+        if self.spec.name == 'llvm':
+            self.provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            self.provides['compiler'].name = 'clang'
+
+        for x in self.hierarchy_tokens:
+            if self.spec.package.provides(x):
+                self.provides[x] = self.spec[x]
+
+    def _hierarchy_token_combinations(self):
+        """
+        Yields all the relevant combinations that could appear in the hierarchy
+        """
+        for ii in range(len(self.hierarchy_tokens) + 1):
+            for item in itertools.combinations(self.hierarchy_tokens, ii):
+                if 'compiler' in item:
+                    yield item
+
+    def _hierarchy_to_be_provided(self):
+        """
+        Filters a list of hierarchy tokens and yields only the one that we
+        need to provide
+        """
+        for item in self._hierarchy_token_combinations():
+            if any(x in self.provides for x in item):
+                yield item
+
+    def token_to_path(self, name, value):
+        # If we are dealing with a core compiler, return 'Core'
+        if name == 'compiler' and str(value) in self.core_compilers:
+            return 'Core'
+        # CompilerSpec does not have an hash
+        if name == 'compiler':
+            return self.path_part_without_hash.format(token=value)
+        # For virtual providers add a small part of the hash
+        # to distinguish among different variants in a directory hierarchy
+        value.hash = value.dag_hash(length=6)
+        return self.path_part_with_hash.format(token=value)
+
+    @property
+    def file_name(self):
+        parts = [self.token_to_path(x, self.requires[x])
+                 for x in self.hierarchy_tokens if x in self.requires]
+        hierarchy_name = join_path(*parts)
+        fullname = join_path(self.modules_root, hierarchy_name,
+                             self.use_name + '.lua')
+        return fullname
+
+    @property
+    def use_name(self):
+        return self.token_to_path('', self.spec)
+
+    def modulepath_modifications(self):
+        # What is available is what we require plus what we provide
+        entry = ''
+        available = {}
+        available.update(self.requires)
+        available.update(self.provides)
+        available_parts = [self.token_to_path(x, available[x])
+                           for x in self.hierarchy_tokens if x in available]
+        # Missing parts
+        missing = [x for x in self.hierarchy_tokens if x not in available]
+        # Direct path we provide on top of compilers
+        modulepath = join_path(self.modules_root, *available_parts)
+        env = EnvironmentModifications()
+        env.prepend_path('MODULEPATH', modulepath)
+        for line in self.process_environment_command(env):
+            entry += line
+
+        def local_variable(x):
+            lower, upper = x.lower(), x.upper()
+            fmt = 'local {lower}_name = os.getenv("LMOD_{upper}_NAME")\n'
+            fmt += 'local {lower}_version = os.getenv("LMOD_{upper}_VERSION")\n'  # NOQA: ignore=501
+            return fmt.format(lower=lower, upper=upper)
+
+        def set_variables_for_service(env, x):
+            upper = x.upper()
+            s = self.provides[x]
+            name, version = os.path.split(self.token_to_path(x, s))
+
+            env.set('LMOD_{upper}_NAME'.format(upper=upper), name)
+            env.set('LMOD_{upper}_VERSION'.format(upper=upper), version)
+
+        def conditional_modulepath_modifications(item):
+            entry = 'if '
+            needed = []
+            for x in self.hierarchy_tokens:
+                if x in missing:
+                    needed.append('{x}_name '.format(x=x))
+            entry += 'and '.join(needed) + 'then\n'
+            entry += '  local t = pathJoin("{root}"'.format(
+                root=self.modules_root)
+            for x in item:
+                if x in missing:
+                    entry += ', {lower}_name, {lower}_version'.format(
+                        lower=x.lower())
+                else:
+                    entry += ', "{x}"'.format(
+                        x=self.token_to_path(x, available[x]))
+            entry += ')\n'
+            entry += '  prepend_path("MODULEPATH", t)\n'
+            entry += 'end\n\n'
+            return entry
+
+        if 'compiler' not in self.provides:
+            # Retrieve variables
+            entry += '\n'
+            for x in missing:
+                entry += local_variable(x)
+            entry += '\n'
+            # Conditional modifications
+            conditionals = [x
+                            for x in self._hierarchy_to_be_provided()
+                            if any(t in missing for t in x)]
+            for item in conditionals:
+                entry += conditional_modulepath_modifications(item)
+
+            # Set environment variables for the services we provide
+            env = EnvironmentModifications()
+            for x in self.provides:
+                set_variables_for_service(env, x)
+            for line in self.process_environment_command(env):
+                entry += line
+
+        return entry
+
+    @property
+    def header(self):
+        timestamp = datetime.datetime.now()
+        # Header as in
+        # https://www.tacc.utexas.edu/research-development/tacc-projects/lmod/advanced-user-guide/more-about-writing-module-files
+        header = "-- -*- lua -*-\n"
+        header += '-- Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp  # NOQA: ignore=E501
+        header += '--\n'
+        header += '-- %s\n' % self.spec.short_spec
+        header += '--\n'
+
+        # Short description -> whatis()
+        if self.short_description:
+            header += "whatis([[Name : {name}]])\n".format(name=self.spec.name)
+            header += "whatis([[Version : {version}]])\n".format(
+                version=self.spec.version)
+
+        # Long description -> help()
+        if self.long_description:
+            doc = re.sub(r'"', '\"', self.long_description)
+            header += "help([[{documentation}]])\n".format(documentation=doc)
+
+        # Certain things need to be done only if we provide a service
+        if self.provides:
+            # Add family directives
+            header += '\n'
+            for x in self.provides:
+                header += self.family_format.format(family=x)
+            header += '\n'
+            header += '-- MODULEPATH modifications\n'
+            header += '\n'
+            # Modify MODULEPATH
+            header += self.modulepath_modifications()
+            # Set environment variables for services we provide
+            header += '\n'
+            header += '-- END MODULEPATH modifications\n'
+            header += '\n'
+
+        return header

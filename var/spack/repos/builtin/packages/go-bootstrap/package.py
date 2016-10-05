@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 import os
 import shutil
 import glob
@@ -17,25 +41,37 @@ class GoBootstrap(Package):
 
     extendable = True
 
-    # temporary fix until tags are pulled correctly
+    # NOTE: Go@1.4.2 is the only supported bootstrapping compiler because all
+    # later versions require a Go compiler to build.
+    # See: https://golang.org/doc/install/source
     version('1.4.2', git='https://go.googlesource.com/go', tag='go1.4.2')
 
-    variant('test',
-            default=True,
-            description="Run tests as part of build, a good idea but quite"
-            " time consuming")
+    variant('test', default=True, description='Build and run tests as part of the build.')
 
     provides('golang@:1.4.2')
 
-    depends_on('git')
+    depends_on('git', type='alldeps')
+
+    # NOTE: Older versions of Go attempt to download external files that have
+    # since been moved while running the test suite.  This patch modifies the
+    # test files so that these tests don't cause false failures.
+    # See: https://github.com/golang/go/issues/15694
+    @when('@:1.4.3')
+    def patch(self):
+        test_suite_file = FileFilter(join_path('src', 'run.bash'))
+        test_suite_file.filter(
+            r'^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$',
+            r'# \1\2\3',
+        )
+
+    @when('@1.5.0:')
+    def patch(self):
+        pass
 
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('src'):
-            if '+test' in spec:
-                bash('all.bash')
-            else:
-                bash('make.bash')
+            bash('{0}.bash'.format('all' if '+test' in spec else 'make'))
 
         try:
             os.makedirs(prefix)

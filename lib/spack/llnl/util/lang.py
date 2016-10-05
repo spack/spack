@@ -374,6 +374,22 @@ def DictWrapper(dictionary):
     return wrapper()
 
 
+def dedupe(sequence):
+    """Yields a stable de-duplication of an hashable sequence
+
+    Args:
+        sequence: hashable sequence to be de-duplicated
+
+    Returns:
+        stable de-duplication of the sequence
+    """
+    seen = set()
+    for x in sequence:
+        if x not in seen:
+            yield x
+            seen.add(x)
+
+
 class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
