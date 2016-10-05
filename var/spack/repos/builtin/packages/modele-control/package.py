@@ -9,7 +9,7 @@ class ModeleControl(Package):
     version('develop', git='https://github.com/citibeth/modele-control.git', branch='develop')
 
     extends('python')
-    depends_on('python@:2.8')
+    depends_on('python@3:')
 
     depends_on('netcdf', type='run')
 
