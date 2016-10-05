@@ -1,7 +1,7 @@
 .. _basic-usage:
 
 ===========
-Basic usage
+Basic Usage
 ===========
 
 The ``spack`` command has many *subcommands*.  You'll only need a

@@ -183,7 +183,6 @@ of usage:
 .. code-block:: sh
 
    #!/bin/sh
-   #
 
    compilers=(
        %gcc
@@ -217,10 +216,6 @@ of usage:
            spack install parallel-netcdf $compiler ^$mpi
        done
    done
-
-
-
-
 
 ------------------------------
 Running Binaries from Packages
@@ -650,9 +645,9 @@ environments:
   Administrators might find things easier to maintain without the
   added "heavyweight" state of a view.
 
-==============================
+------------------------------
 Developing Software with Spack
-==============================
+------------------------------
 
 For any project, one needs to assemble an
 environment of that application's dependencies.  You might consider
@@ -700,10 +695,9 @@ can be seamlessly integrated into the Spack ecosystem.  We will show
 how this process works by example, assuming the software you are
 creating is called ``mylib``.
 
-
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 Write the CMake Build
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 For now, the techniques in this section only work for CMake-based
 projects, although they could be easily extended to other build
@@ -770,9 +764,9 @@ The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
 
 .. _write-the-spack-package:
 
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 Write the Spack Package
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The Spack package also needs to be written, in tandem with setting up
 the build (for example, CMake).  The most important part of this task
@@ -838,9 +832,9 @@ used for development:
    not used in development.  Don't worry if you don't have any, or if
    they are behind a firewall.
 
-----------------
+^^^^^^^^^^^^^^^^
 Build with Spack
-----------------
+^^^^^^^^^^^^^^^^
 
 Now that you have a Spack package, you can use Spack to find its
 dependencies automatically.  For example:
@@ -894,11 +888,9 @@ into Git or downloading tarballs.
    problems in our experience, as long as your project sets
    RPATHs as shown above.  You DO use RPATHs, right?
 
-
-
---------------------
+^^^^^^^^^^^^^^^^^^^^
 Build Other Software
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Now that you've built ``mylib`` with Spack, you might want to build
 another package that depends on it --- for example, ``myapp``.  This
@@ -924,9 +916,9 @@ for example:
 
 .. _release-your-software:
 
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 Release Your Software
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 You are now ready to release your software as a tarball with a
 numbered version, and a Spack package that can build it.  If you're
@@ -969,11 +961,9 @@ hosted on GitHub, this process will be a bit easier.
    Spack concretization will always prefer numbered version to
    non-numeric versions.  Users will only get it if they ask for it.
 
-
-
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 Distribute Your Software
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once you've released your software, other people will want to build
 it; and you will need to tell them how.  In the past, that has meant a
@@ -1012,9 +1002,9 @@ Spack is the best way to install it:
    systems.  The :ref:`getting_started` section should cover this, but
    there could always be issues.
 
--------------------
+^^^^^^^^^^^^^^^^^^^
 Other Build Systems
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 ``spack setup`` currently only supports CMake-based builds, in
 packages that subclass ``CMakePackage``.  The intent is that this
@@ -1028,9 +1018,9 @@ Python Distutils is another popular build system that should get
 directly in the user's ``PYTHONPATH``.  Then, edits in source files
 are immediately available to run without any install process at all!
 
-----------
+^^^^^^^^^^
 Conclusion
-----------
+^^^^^^^^^^
 
 The ``spack setup`` development workflow provides better automation,
 flexibility and safety than workflows relying on environment modules
@@ -1049,9 +1039,9 @@ or filesystem views.  However, it has some drawbacks:
    integrate Spack explicitly in their workflow.  Not all users are
    willing to do this.
 
-==================
+------------------
 Upstream Bug Fixes
-==================
+------------------
 
 It is not uncommon to discover a bug in an upstream project while
 trying to build with Spack.  Typically, the bug is in a package that
@@ -1059,9 +1049,9 @@ serves a dependency to something else.  This section describes
 procedure to work around and ultimately resolve these bugs, while not
 delaying the Spack user's main goal.
 
------------------
+^^^^^^^^^^^^^^^^^
 Buggy New Version
------------------
+^^^^^^^^^^^^^^^^^
 
 Sometimes, the old version of a package works fine, but a new version
 is buggy.  For example, it was once found that `Adios did not build
@@ -1092,9 +1082,9 @@ procedure is:
       depends_on('hdf5@:1.9', when='@:1.10.0')
       depends_on('hdf5', when='@1.10.1:')
 
-----------------
+^^^^^^^^^^^^^^^^
 No Version Works
-----------------
+^^^^^^^^^^^^^^^^
 
 Sometimes, *no* existing versions of a dependency work for a build.
 This typically happens when developing a new project: only then does
@@ -1183,9 +1173,9 @@ of ``py-proj/package.py`` is instructive here:
    bugfix, then the unofficial ``version()`` line should be removed
    from the Spack package.
 
--------
+^^^^^^^
 Patches
--------
+^^^^^^^
 
 Spack's source patching mechanism provides another way to fix bugs in
 upstream projects.  This has advantages and disadvantages compared to the procedures above.
