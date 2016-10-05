@@ -45,32 +45,46 @@ _sleep_time = 1e-5
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
 
-    In Python, `lockf` actually calls `fcntl`, so this should work with any
-    filesystem implementation that supports locking through the fcntl calls.
-    This includes distributed filesystems like Lustre (when flock is enabled)
-    and recent NFS versions.
-
+    In Python, `lockf` actually calls `fcntl`, so this should work with
+    any filesystem implementation that supports locking through the fcntl
+    calls.  This includes distributed filesystems like Lustre (when flock
+    is enabled) and recent NFS versions.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, start=0, length=0):
+        """Construct a new lock on the file at ``path``.
+
+        By default, the lock applies to the whole file.  Optionally,
+        caller can specify a byte range beginning ``start`` bytes from
+        the start of the file and extending ``length`` bytes from there.
+
+        This exposes a subset of fcntl locking functionality.  It does
+        not currently expose the ``whence`` parameter -- ``whence`` is
+        always os.SEEK_SET and ``start`` is always evaluated from the
+        beginning of the file.
+        """
         self.path = path
         self._file = None
         self._reads = 0
         self._writes = 0
 
+        # byte range parameters
+        self._start = start
+        self._length = length
+
         # PID and host of lock holder
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
-    def _lock(self, op, timeout):
+    def _lock(self, op, timeout=_default_timeout):
         """This takes a lock using POSIX locks (``fnctl.lockf``).
 
-        The lock is implemented as a spin lock using a nonblocking
-        call to lockf().
+        The lock is implemented as a spin lock using a nonblocking call
+        to lockf().
 
         On acquiring an exclusive lock, the lock writes this process's
-        pid and host to the lock file, in case the holding process
-        needs to be killed later.
+        pid and host to the lock file, in case the holding process needs
+        to be killed later.
 
         If the lock times out, it raises a ``LockError``.
         """
@@ -97,7 +111,8 @@ class Lock(object):
                     self._file = os.fdopen(fd, fd_mode)
 
                 # Try to get the lock (will raise if not available.)
-                fcntl.lockf(self._file, op | fcntl.LOCK_NB)
+                fcntl.lockf(self._file, op | fcntl.LOCK_NB,
+                            self._length, self._start, os.SEEK_SET)
 
                 # All locks read the owner PID and host
                 self._read_lock_data()
@@ -158,7 +173,8 @@ class Lock(object):
         be masquerading as write locks, but this removes either.
 
         """
-        fcntl.lockf(self._file, fcntl.LOCK_UN)
+        fcntl.lockf(self._file, fcntl.LOCK_UN,
+                    self._length, self._start, os.SEEK_SET)
         self._file.close()
         self._file = None
 
@@ -174,8 +190,9 @@ class Lock(object):
 
         """
         if self._reads == 0 and self._writes == 0:
-            tty.debug('READ LOCK : {0.path} [Acquiring]'.format(self))
-            self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
+            tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
+                      .format(self))
+            self._lock(fcntl.LOCK_SH, timeout=timeout)   # can raise LockError.
             self._reads += 1
             return True
         else:
@@ -194,8 +211,10 @@ class Lock(object):
 
         """
         if self._writes == 0:
-            tty.debug('WRITE LOCK : {0.path} [Acquiring]'.format(self))
-            self._lock(fcntl.LOCK_EX, timeout)   # can raise LockError.
+            tty.debug(
+                'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
+                .format(self))
+            self._lock(fcntl.LOCK_EX, timeout=timeout)   # can raise LockError.
             self._writes += 1
             return True
         else:
@@ -215,7 +234,8 @@ class Lock(object):
         assert self._reads > 0
 
         if self._reads == 1 and self._writes == 0:
-            tty.debug('READ LOCK : {0.path} [Released]'.format(self))
+            tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Released]'
+                      .format(self))
             self._unlock()      # can raise LockError.
             self._reads -= 1
             return True
@@ -236,7 +256,8 @@ class Lock(object):
         assert self._writes > 0
 
         if self._writes == 1 and self._reads == 0:
-            tty.debug('WRITE LOCK : {0.path} [Released]'.format(self))
+            tty.debug('WRITE LOCK: {0.path}[{0._start}:{0._length}] [Released]'
+                      .format(self))
             self._unlock()      # can raise LockError.
             self._writes -= 1
             return True
