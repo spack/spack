@@ -50,9 +50,9 @@ class PyRtree(Package):
 
     def install(self, spec, prefix):
         lib = os.path.join(spec['libspatialindex'].prefix, 'lib')
-        os.environ['SPATIALINDEX_LIBRARY'] =
+        os.environ['SPATIALINDEX_LIBRARY'] = \
             os.path.join(lib, 'libspatialindex.%s' % dso_suffix)
-        os.environ['SPATIALINDEX_C_LIBRARY'] =
+        os.environ['SPATIALINDEX_C_LIBRARY'] = \
             os.path.join(lib, 'libspatialindex_c.%s' % dso_suffix)
 
         setup_py('install', '--prefix=%s' % prefix)
