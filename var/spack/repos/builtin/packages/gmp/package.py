@@ -40,8 +40,19 @@ class Gmp(Package):
     depends_on('m4', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-cxx')
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--enable-cxx'
+        ]
+
+        # https://gmplib.org/list-archives/gmp-bugs/2014-July/003508.html
+        if self.compiler.name == 'intel':
+            config_args.extend([
+                'CFLAGS=-fp-model precise',
+                'CXXFLAGS=-fp-model precise'
+            ])
+
+        configure(*config_args)
 
         make()
         make('check')
