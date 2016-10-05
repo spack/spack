@@ -260,7 +260,7 @@ class Package(object):
            parallel = False
            ...
 
-    This changes thd default behavior so that make is sequential.  If you still
+    This changes the default behavior so that make is sequential.  If you still
     want to build some parts in parallel, you can do this in your install
     function:
 
@@ -890,10 +890,10 @@ class Package(object):
         :param keep_stage: By default, stage is destroyed only if there are \
             no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param ignore_deps: Don't install dependencies before installing this \
-                       package
-        :param install_deps: Install dependencies before installing this package
-        install_self -- Install this package once dependencies have been installed.
+        :param install_deps: Install dependencies before installing this \
+            package
+        :param install_self: Install this package once dependencies have \
+            been installed.
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
         :param verbose: Display verbose build output (by default, suppresses \

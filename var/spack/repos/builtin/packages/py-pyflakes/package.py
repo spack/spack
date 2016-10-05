@@ -25,29 +25,28 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class PyPyflakes(Package):
+    """A simple program which checks Python source files for errors.."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://github.com/PyCQA/pyflakes"
+    url      = "https://github.com/PyCQA/pyflakes/archive/1.3.0.tar.gz"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('1.3.0', 'a76173deb7a84fe860c0b60e2fbcdfe2')
+    version('1.2.3', '2ac2e148a5c46b6bb06c4785be76f7cc')
+    version('1.2.2', 'fe759b9381a6500e67a2ddbbeb5161a4')
+    version('1.2.1', '444a06b256e0a70e41c11698b7190e84')
+    version('1.2.0', '5d1c87bf09696c4c35dc3103f2a1185c')
+    version('1.1.0', '4e18bf78c0455ebcd41e5d6104392c88')
+    version('1.0.0', 'e2ea22a825c5100f12e54b71771cde71')
+    version('0.9.2', 'd02d5f68e944085fd6ec163a34737a96')
+    version('0.9.1', '8108d2248e93ca6a315fa2dd31ee9bb1')
+    version('0.9.0', '43c2bcee88606bde55dbf25a253ef886')
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
+    extends('python')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
-
-    depends_on('py-setuptools', type='build')
-
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
+    # Most Python packages only require py-setuptools as a build dependency.
+    # However, py-pyflakes requires py-setuptools during runtime as well.
+    depends_on('py-setuptools', type=nolink)
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

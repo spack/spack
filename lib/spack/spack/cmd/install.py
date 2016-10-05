@@ -40,7 +40,8 @@ def setup_parser(subparser):
         help="Do not try to install dependencies of requested packages.")
     subparser.add_argument(
         '-d', '--dependencies-only', action='store_true', dest='deps_only',
-        help='Install dependencies of this package, but not the package itself.')
+        help='Install dependencies of this package, ' +
+        'but not the package itself.')
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")

@@ -25,29 +25,22 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class PyConfigparser(Package):
+    """This library brings the updated configparser from Python 3.5 to
+    Python 2.6-3.5."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://pypi.python.org/pypi/configparser"
+    url      = "https://pypi.python.org/packages/source/c/configparser/configparser-3.5.0.tar.gz"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538',
+            url="https://pypi.python.org/packages/7c/69/c2ce7e91c89dc073eb1aa74c0621c3eefbffe8216b3f9af9d3885265c01c/configparser-3.5.0.tar.gz")
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
+    extends('python')
+    depends_on('python@2.6:2.7,3.4:')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    depends_on('py-ordereddict', when='^python@2.6:2.6.999', type=nolink)
 
     depends_on('py-setuptools', type='build')
-
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

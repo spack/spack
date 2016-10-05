@@ -25,37 +25,17 @@
 from spack import *
 
 
-class Nco(Package):
-    """The NCO toolkit manipulates and analyzes data stored in
-    netCDF-accessible formats"""
+class PyOrdereddict(Package):
+    """A drop-in substitute for Py2.7's new collections.
+    OrderedDict that works in Python 2.4-2.6."""
 
-    homepage = "https://sourceforge.net/projects/nco"
-    url      = "https://github.com/nco/nco/archive/4.5.5.tar.gz"
+    homepage = "https://pypi.python.org/pypi/ordereddict"
+    url      = "https://pypi.python.org/packages/source/o/ordereddict/ordereddict-1.1.tar.gz"
 
-    version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
-    version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
+    version('1.1', 'a0ed854ee442051b249bfad0f638bbec')
 
-    # See "Compilation Requirements" at:
-    # http://nco.sourceforge.net/#bld
-    variant('mpi', default=True)
-
-    depends_on('netcdf')
-    depends_on('antlr@2.7.7+cxx')  # required for ncap2
-    depends_on('gsl')              # desirable for ncap2
-    depends_on('udunits2')         # allows dimensional unit transformations
-    # depends_on('opendap')        # enables network transparency
+    extends('python')
+    depends_on('python@2.4:2.6.999')
 
     def install(self, spec, prefix):
-        # Workaround until variant forwarding works properly
-        if '+mpi' in spec and spec.satisfies('^netcdf~mpi'):
-            raise RuntimeError('Invalid spec. Package netcdf requires '
-                               'netcdf+mpi, but spec asked for netcdf~mpi.')
-
-        opts = [
-            '--prefix=%s' % prefix,
-            '--disable-openmp',  # TODO: Make this a variant
-            '--disable-dap',     # TODO: Make this a variant
-            '--disable-esmf']
-        configure(*opts)
-        make()
-        make("install")
+        setup_py('install', '--prefix={0}'.format(prefix))
