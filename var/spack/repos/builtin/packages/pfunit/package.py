@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Pfunit(Package):
@@ -35,7 +34,8 @@ class Pfunit(Package):
     version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
 
     # Shared library support.
-    version('3.2.7-citibeth', git='git://git.code.sf.net/u/citibeth2/pfunit',
+    version(
+        '3.2.7-citibeth', git='git://git.code.sf.net/u/citibeth2/pfunit',
         branch='3.2.7-citibeth')
 
     depends_on('mpi', when='+mpi')
@@ -45,11 +45,11 @@ class Pfunit(Package):
     depends_on('doxygen', type='build')
 
     variant('shared', default=True,
-        description='Build shared library in addition to static')
+            description='Build shared library in addition to static')
     variant('mpi', default=True,
-        description='Test MPI-based programs')
+            description='Test MPI-based programs')
     variant('openmp', default=False,
-        description='Test OpenMP-based programs')
+            description='Test OpenMP-based programs')
 
     def install(self, spec, prefix):
 
@@ -57,8 +57,8 @@ class Pfunit(Package):
             raise ValueError(
                 'pfUnit works with OpenMP-based programs,\n' +
                 'but there is currently no openmp package in Spack.\n' +
-                'If you would like to use pfUnit with OpenMP, please\n'+
-                'add an OpenMP package and remove this message from\n'+
+                'If you would like to use pfUnit with OpenMP, please\n' +
+                'add an OpenMP package and remove this message from\n' +
                 'the pfunit package.')
 
         with working_dir('spack-build', create=True):
@@ -76,6 +76,6 @@ class Pfunit(Package):
         self.spec.pfunit_prefix = self.prefix
 
     def setup_environment(self, spack_env, env):
-        super(Pfunit, self).setup_environment(spack_env,env)
+        super(Pfunit, self).setup_environment(spack_env, env)
         env.prepend_path('CPATH', join_path(self.prefix, 'mod'))
-        #env.prepend_path('PFUNIT', self.prefix)
+        # env.prepend_path('PFUNIT', self.prefix)
