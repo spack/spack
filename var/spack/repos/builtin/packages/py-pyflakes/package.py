@@ -25,34 +25,28 @@
 from spack import *
 
 
-class Pngwriter(Package):
-    """PNGwriter is a very easy to use open source graphics library that uses
-    PNG as its output format. The interface has been designed to be as simple
-    and intuitive as possible. It supports plotting and reading pixels in the
-    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
-    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
-    bilinear interpolation, full TrueType antialiased and rotated text support,
-    bezier curves, opening existing PNG images and more.
-    """
+class PyPyflakes(Package):
+    """A simple program which checks Python source files for errors.."""
 
-    homepage = "http://pngwriter.sourceforge.net/"
-    url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    homepage = "https://github.com/PyCQA/pyflakes"
+    url      = "https://github.com/PyCQA/pyflakes/archive/1.3.0.tar.gz"
 
-    version('dev', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
+    version('1.3.0', 'a76173deb7a84fe860c0b60e2fbcdfe2')
+    version('1.2.3', '2ac2e148a5c46b6bb06c4785be76f7cc')
+    version('1.2.2', 'fe759b9381a6500e67a2ddbbeb5161a4')
+    version('1.2.1', '444a06b256e0a70e41c11698b7190e84')
+    version('1.2.0', '5d1c87bf09696c4c35dc3103f2a1185c')
+    version('1.1.0', '4e18bf78c0455ebcd41e5d6104392c88')
+    version('1.0.0', 'e2ea22a825c5100f12e54b71771cde71')
+    version('0.9.2', 'd02d5f68e944085fd6ec163a34737a96')
+    version('0.9.1', '8108d2248e93ca6a315fa2dd31ee9bb1')
+    version('0.9.0', '43c2bcee88606bde55dbf25a253ef886')
 
-    depends_on('cmake', type='build')
-    depends_on('libpng')
-    depends_on('zlib')
-    depends_on('freetype')
+    extends('python')
+
+    # Most Python packages only require py-setuptools as a build dependency.
+    # However, py-pyflakes requires py-setuptools during runtime as well.
+    depends_on('py-setuptools', type=nolink)
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))

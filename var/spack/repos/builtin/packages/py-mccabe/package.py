@@ -25,34 +25,29 @@
 from spack import *
 
 
-class Pngwriter(Package):
-    """PNGwriter is a very easy to use open source graphics library that uses
-    PNG as its output format. The interface has been designed to be as simple
-    and intuitive as possible. It supports plotting and reading pixels in the
-    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
-    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
-    bilinear interpolation, full TrueType antialiased and rotated text support,
-    bezier curves, opening existing PNG images and more.
-    """
+class PyMccabe(Package):
+    """Ned's script to check McCabe complexity."""
 
-    homepage = "http://pngwriter.sourceforge.net/"
-    url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    homepage = "https://github.com/PyCQA/mccabe"
+    url      = "https://github.com/PyCQA/mccabe/archive/0.5.2.tar.gz"
 
-    version('dev', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
+    version('0.5.2', '3cdf2d7faa1464b18905fe9a7063a632')
+    version('0.5.1', '864b364829156701bec797712be8ece0')
+    version('0.5.0', '71c0ce5e5c4676753525154f6c5d3af8')
+    version('0.4.0', '9cf5712e5f1785aaa27273a4328babe4')
+    version('0.3.1', '45c48c0978e6fc1f31fedcb918178abb')
+    version('0.3',   'c583f58ea28be12842c001473d77504d')
+    version('0.2.1', 'fcba311ebd999f48359a8ab28da94b30')
+    version('0.2',   '36d4808c37e187dbb1fe2373a0ac6645')
+    version('0.1',   '3c9e8e72612a9c01d865630cc569150a')
 
-    depends_on('cmake', type='build')
-    depends_on('libpng')
-    depends_on('zlib')
-    depends_on('freetype')
+    extends('python')
+    depends_on('python@2.7:2.8,3.3:')
+
+    depends_on('py-setuptools', type='build')
+
+    # TODO: Add test dependencies
+    # depends_on('py-pytest', type='test')
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))

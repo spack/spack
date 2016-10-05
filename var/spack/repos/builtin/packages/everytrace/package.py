@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,29 +25,28 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class Everytrace(CMakePackage):
+    """Get stack trace EVERY time a program exits."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://github.com/citibeth/everytrace"
+    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
+    version('develop',
+            git='https://github.com/citibeth/everytrace.git', branch='develop')
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
+    variant('mpi', default=True, description='Enables MPI parallelism')
+    variant('fortran', default=True,
+            description='Enable use with Fortran programs')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    depends_on('cmake', type='build')
+    depends_on('mpi', when='+mpi')
 
-    depends_on('py-setuptools', type='build')
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
+            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
 
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    def setup_environment(self, spack_env, env):
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))

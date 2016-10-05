@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,29 +25,22 @@
 from spack import *
 
 
-class PyAutopep8(Package):
-    """autopep8 automatically formats Python code to conform to the
-    PEP 8 style guide."""
+class EverytraceExample(CMakePackage):
+    """Get stack trace EVERY time a program exits."""
 
-    homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    homepage = "https://github.com/citibeth/everytrace-example"
+    version('develop',
+            git='https://github.com/citibeth/everytrace-example.git',
+            branch='develop')
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    depends_on('cmake', type='build')
+    depends_on('everytrace+mpi+fortran')
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.7,3.2:')
+    # Currently the only MPI this everytrace works with.
+    depends_on('openmpi')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    def configure_args(self):
+        return []
 
-    depends_on('py-setuptools', type='build')
-
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    def setup_environment(self, spack_env, env):
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))

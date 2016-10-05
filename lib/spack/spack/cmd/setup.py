@@ -91,7 +91,8 @@ def setup(self, args):
 
         package.do_install(
             keep_prefix=True,  # Don't remove install directory
-            ignore_deps=args.ignore_deps,
+            install_deps=not args.ignore_deps,
+            install_self=True,
             verbose=args.verbose,
             keep_stage=True,   # don't remove source dir for SETUP.
             install_phases=set(['setup', 'provenance']),

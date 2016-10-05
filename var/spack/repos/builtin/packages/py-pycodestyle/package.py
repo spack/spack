@@ -25,34 +25,28 @@
 from spack import *
 
 
-class Pngwriter(Package):
-    """PNGwriter is a very easy to use open source graphics library that uses
-    PNG as its output format. The interface has been designed to be as simple
-    and intuitive as possible. It supports plotting and reading pixels in the
-    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
-    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
-    bilinear interpolation, full TrueType antialiased and rotated text support,
-    bezier curves, opening existing PNG images and more.
-    """
+class PyPycodestyle(Package):
+    """pycodestyle is a tool to check your Python code against some of the
+    style conventions in PEP 8. Note: formerly called pep8."""
 
-    homepage = "http://pngwriter.sourceforge.net/"
-    url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    homepage = "https://github.com/PyCQA/pycodestyle"
+    url      = "https://github.com/PyCQA/pycodestyle/archive/2.0.0.tar.gz"
 
-    version('dev', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
+    version('2.0.0', '5c3e90001f538bf3b7896d60e92eb6f6')
+    version('1.7.0', '31070a3a6391928893cbf5fa523eb8d9')
+    version('1.6.2', '8df18246d82ddd3d19ffe7518f983955')
+    version('1.6.1', '9d59bdc7c60f46f7cee86c732e28aa1a')
+    version('1.6',   '340fa7e39bb44fb08db6eddf7cdc880a')
+    version('1.5.7', '6d0f5fc7d95755999bc9275cad5cbf3e')
+    version('1.5.6', 'c5c30e3d267b48bf3dfe7568e803a813')
+    version('1.5.5', 'cfa12df9b86b3a1dfb13aced1927e12f')
+    version('1.5.4', '3977a760829652543544074c684610ee')
 
-    depends_on('cmake', type='build')
-    depends_on('libpng')
-    depends_on('zlib')
-    depends_on('freetype')
+    extends('python')
+
+    # Most Python packages only require py-setuptools as a build dependency.
+    # However, py-pycodestyle requires py-setuptools during runtime as well.
+    depends_on('py-setuptools', type=nolink)
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))

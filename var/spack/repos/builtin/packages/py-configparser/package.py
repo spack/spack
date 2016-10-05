@@ -25,34 +25,22 @@
 from spack import *
 
 
-class Pngwriter(Package):
-    """PNGwriter is a very easy to use open source graphics library that uses
-    PNG as its output format. The interface has been designed to be as simple
-    and intuitive as possible. It supports plotting and reading pixels in the
-    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
-    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
-    bilinear interpolation, full TrueType antialiased and rotated text support,
-    bezier curves, opening existing PNG images and more.
-    """
+class PyConfigparser(Package):
+    """This library brings the updated configparser from Python 3.5 to
+    Python 2.6-3.5."""
 
-    homepage = "http://pngwriter.sourceforge.net/"
-    url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    homepage = "https://pypi.python.org/pypi/configparser"
+    url      = "https://pypi.python.org/packages/source/c/configparser/configparser-3.5.0.tar.gz"
 
-    version('dev', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
+    version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538',
+            url="https://pypi.python.org/packages/7c/69/c2ce7e91c89dc073eb1aa74c0621c3eefbffe8216b3f9af9d3885265c01c/configparser-3.5.0.tar.gz")
 
-    depends_on('cmake', type='build')
-    depends_on('libpng')
-    depends_on('zlib')
-    depends_on('freetype')
+    extends('python')
+    depends_on('python@2.6:2.7,3.4:')
+
+    depends_on('py-ordereddict', when='^python@2.6:2.6.999', type=nolink)
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))

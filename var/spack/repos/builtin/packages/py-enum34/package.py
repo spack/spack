@@ -25,34 +25,21 @@
 from spack import *
 
 
-class Pngwriter(Package):
-    """PNGwriter is a very easy to use open source graphics library that uses
-    PNG as its output format. The interface has been designed to be as simple
-    and intuitive as possible. It supports plotting and reading pixels in the
-    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
-    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
-    bilinear interpolation, full TrueType antialiased and rotated text support,
-    bezier curves, opening existing PNG images and more.
-    """
+class PyEnum34(Package):
+    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
 
-    homepage = "http://pngwriter.sourceforge.net/"
-    url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    homepage = "https://pypi.python.org/pypi/enum34"
+    url      = "https://pypi.python.org/packages/source/e/enum34/enum34-1.1.6.tar.gz"
 
-    version('dev', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
+    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
+            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
 
-    depends_on('cmake', type='build')
-    depends_on('libpng')
-    depends_on('zlib')
-    depends_on('freetype')
+    extends('python')
+    depends_on('python@2.4:2.8,3.3:')
+
+    depends_on('py-ordereddict', when='^python@:2.6.999', type=nolink)
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')
+        setup_py('install', '--prefix={0}'.format(prefix))
