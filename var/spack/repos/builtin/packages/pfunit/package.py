@@ -7,11 +7,11 @@ class Pfunit(Package):
     homepage = "http://pfunit.sourceforge.net/index.html"
     url = "http://downloads.sourceforge.net/project/pfunit/Source/pFUnit-3.2.7.tar.gz"
 
-    version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
-
     # Shared library support.
-    version('3.2.7-citibeth', git='git://git.code.sf.net/u/citibeth2/pfunit',
-        branch='3.2.7-citibeth')
+    version('3.2.7.1', git='git://git.code.sf.net/u/citibeth2/pfunit',
+        branch='3.2.7-citibeth', preferred=True)
+
+    version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
 
     depends_on('mpi', when='+mpi')
     depends_on('openmp', when='+openmp')
