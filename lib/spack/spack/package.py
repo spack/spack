@@ -310,17 +310,26 @@ class Package(object):
     #
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
+
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
     make_jobs = None
+
     """By default do not run tests within package's install()"""
     run_tests = False
+
     """Most packages are NOT extendable. Set to True if you want extensions."""
     extendable = False
+
+    """When True, add RPATHs for the entire DAG. When False, add RPATHs only
+       for immediate dependencies."""
+    transitive_rpaths = True
+
     """List of prefix-relative file paths (or a single path). If these do
        not exist after install, or if they exist but are not files,
        sanity checks fail.
     """
     sanity_check_is_file = []
+
     """List of prefix-relative directory paths (or a single path). If
        these do not exist after install, or if they exist but are not
        directories, sanity checks will fail.
