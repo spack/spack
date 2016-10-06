@@ -135,21 +135,6 @@ class Openmpi(Package):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-    def setup_environment(self, spack_env, run_env):
-        # As of 06/2016 there is no mechanism to specify that packages which
-        # depends on MPI need C or/and Fortran implementation. For now
-        # require both.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            tty.warn('OpenMPI : FORTRAN compiler not found')
-            tty.warn('OpenMPI : FORTRAN bindings will be disabled')
-            spack_env.unset('FC')
-            spack_env.unset('F77')
-            # Setting an attribute here and using it in the 'install'
-            # method is needed to ensure tty.warn is actually displayed
-            # to user and not redirected to spack-build.out
-            self.config_extra = ['--enable-mpi-fortran=none',
-                                 '--disable-oshmem-fortran']
-
     @property
     def verbs(self):
         # Up through version 1.6, this option was previously named
@@ -161,6 +146,13 @@ class Openmpi(Package):
             return 'verbs'
 
     def install(self, spec, prefix):
+        # Until we can pass variants such as +fortran through virtual
+        # dependencies depends_on('mpi'), require Fortran compiler to
+        # avoid delayed build errors in dependents.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError('OpenMPI requires both C and Fortran ',
+                               'compilers!')
+
         config_args = ["--prefix=%s" % prefix,
                        "--with-hwloc=%s" % spec['hwloc'].prefix,
                        "--enable-shared",
