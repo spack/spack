@@ -183,7 +183,7 @@ class DefaultConcretizer(object):
         # The keys below show the order of precedence of factors used
         # to select a version when concretizing.  The item with
         # the "largest" key will be selected.
-        # 
+        #
         # NOTE: When COMPARING VERSIONS, the '@develop' version is always
         #       larger than other versions.  BUT when CONCRETIZING,
         #       the largest NON-develop version is selected by
