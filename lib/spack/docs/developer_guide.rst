@@ -331,7 +331,7 @@ Profiling
 
 Spack has some limited built-in support for profiling, and can report
 statistics using standard Python timing tools.  To use this feature,
-supply ``-p`` to Spack on the command line, before any subcommands.
+supply ``--profile`` to Spack on the command line, before any subcommands.
 
 .. _spack-p:
 

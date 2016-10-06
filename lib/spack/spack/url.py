@@ -142,7 +142,7 @@ def split_url_extension(path):
     return prefix, ext, suffix
 
 
-def downloaded_file_extension(path):
+def determine_url_file_extension(path):
     """This returns the type of archive a URL refers to.  This is
        sometimes confusing because of URLs like:
 
@@ -160,8 +160,6 @@ def downloaded_file_extension(path):
             return 'tar.gz'
 
     prefix, ext, suffix = split_url_extension(path)
-    if not ext:
-        raise UrlParseError("Cannot deduce archive type in %s" % path, path)
     return ext
 
 

@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Pixman(Package):
@@ -38,8 +39,13 @@ class Pixman(Package):
     depends_on("libpng")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--disable-mmx",
-                  "--disable-gtk")
+        config_args = ["--prefix=" + prefix,
+                       "--disable-gtk"]
+
+        if sys.platform == "darwin":
+            config_args.append("--disable-mmx")
+
+        configure(*config_args)
+
         make()
         make("install")
