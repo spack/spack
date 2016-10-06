@@ -78,6 +78,7 @@ class PyNumpy(Package):
                 f.write('[DEFAULT]\n')
                 f.write('libraries=%s\n'    % ','.join(lapackblas.names))
                 f.write('library_dirs=%s\n' % ':'.join(lapackblas.directories))
-                f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
+                if not platform.system() == "Darwin":
+                    f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
 
         setup_py('install', '--prefix={0}'.format(prefix))
