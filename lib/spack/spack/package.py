@@ -40,7 +40,6 @@ import textwrap
 import time
 import string
 import contextlib
-from urlparse import urlparse
 from StringIO import StringIO
 
 import llnl.util.lock
@@ -63,6 +62,7 @@ import spack.url
 import spack.util.web
 
 from spack.stage import Stage, ResourceStage, StageComposite
+from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError, which
 from spack.version import *
@@ -719,7 +719,7 @@ class Package(object):
             if prefix not in Package.prefix_locks:
                 Package.prefix_locks[prefix] = llnl.util.lock.Lock(
                     spack.installed_db.prefix_lock_path,
-                    self.spec.dag_hash_bit_prefix(sys.maxsize.bit_length()), 1)
+                    self.spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
 
             self._prefix_lock = Package.prefix_locks[prefix]
 

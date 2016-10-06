@@ -41,7 +41,7 @@ import spack.config
 import spack.fetch_strategy as fs
 import spack.error
 from spack.version import *
-from spack.util.crypto import prefix_bits
+from spack.util.crypto import prefix_bits, bit_length
 
 STAGE_PREFIX = 'spack-stage-'
 
@@ -161,7 +161,7 @@ class Stage(object):
         if lock:
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name).digest()
-                lock_id = prefix_bits(sha1, sys.maxsize.bit_length())
+                lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = join_path(spack.stage_path, '.lock')
 
                 Stage.stage_locks[self.name] = llnl.util.lock.Lock(

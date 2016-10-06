@@ -114,3 +114,10 @@ def prefix_bits(byte_array, bits):
 
     result >>= (n - bits)
     return result
+
+
+def bit_length(num):
+    """Number of bits required to represent an integer in binary."""
+    s = bin(num)
+    s = s.lstrip('-0b')
+    return len(s)
