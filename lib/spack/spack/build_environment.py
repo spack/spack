@@ -383,8 +383,11 @@ def set_module_variables_for_package(pkg, module):
 
 
 def get_rpath_deps(pkg):
-    """We only need to RPATH immediate dependencies."""
-    return pkg.spec.dependencies(deptype='link')
+    """Return immediate or transitive RPATHs depending on the package."""
+    if pkg.transitive_rpaths:
+        return [d for d in pkg.spec.traverse(root=False, deptype=('link'))]
+    else:
+        return pkg.spec.dependencies(deptype='link')
 
 
 def get_rpaths(pkg):
