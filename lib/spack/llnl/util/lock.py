@@ -91,21 +91,25 @@ class Lock(object):
         start_time = time.time()
         while (time.time() - start_time) < timeout:
             try:
-                # If this is already open read-only and we want to
-                # upgrade to an exclusive write lock, close first.
-                if self._file is not None:
-                    if op == fcntl.LOCK_EX and self._file.mode == 'r':
-                        self._file.close()
-                        self._file = None
+                # If we could write the file, we'd have opened it 'r+'.
+                # Raise an error when we attempt to upgrade to a write lock.
+                if op == fcntl.LOCK_EX:
+                    if self._file and self._file.mode == 'r':
+                        raise LockError(
+                            "Can't take exclusive lock on read-only file: %s"
+                            % self.path)
 
-                # Open reader locks read-only if possible.
-                # lock doesn't exist, open RW + create if it doesn't exist.
+                # Create file and parent directories if they don't exist.
                 if self._file is None:
                     self._ensure_parent_directory()
 
-                    os_mode, fd_mode = os.O_RDONLY, 'r'
-                    if op == fcntl.LOCK_EX or not os.path.exists(self.path):
-                        os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
+                    # Prefer to open 'r+' to allow upgrading to write
+                    # lock later if possible.  Open read-only if we can't
+                    # write the lock file at all.
+                    os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
+                    if os.path.exists(self.path) and not os.access(
+                            self.path, os.W_OK):
+                        os_mode, fd_mode = os.O_RDONLY, 'r'
 
                     fd = os.open(self.path, os_mode)
                     self._file = os.fdopen(fd, fd_mode)
