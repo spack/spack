@@ -519,7 +519,8 @@ class Database(object):
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise KeyError("No such spec in database! %s\n" +
+                           "Try running spack reindex" % spec)
         return key
 
     @_autospec
