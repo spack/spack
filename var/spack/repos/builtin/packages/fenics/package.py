@@ -143,7 +143,7 @@ class Fenics(Package):
     def install(self, spec, prefix):
         for package in ['ufl', 'ffc', 'fiat', 'instant']:
             with working_dir(join_path('depends', package)):
-                python('setup.py', 'install', '--prefix=%s' % prefix)
+                setup_py('install', '--prefix=%s' % prefix)
 
         cmake_args = [
             '-DCMAKE_BUILD_TYPE:STRING={0}'.format(

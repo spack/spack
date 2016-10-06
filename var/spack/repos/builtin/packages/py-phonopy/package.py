@@ -40,4 +40,4 @@ class PyPhonopy(Package):
     depends_on('py-pyyaml', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--home=%s' % prefix)
+        setup_py('install', '--home=%s' % prefix)
