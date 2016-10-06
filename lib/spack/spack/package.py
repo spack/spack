@@ -53,14 +53,12 @@ import spack.repository
 import spack.url
 import spack.util.web
 
-from urlparse import urlparse
 from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError, which
 from spack.version import *
@@ -1471,16 +1469,6 @@ def flatten_dependencies(spec, flat_dir):
             raise DependencyConflictError(conflict)
 
         dep_files.merge(flat_dir + '/' + name)
-
-
-def validate_package_url(url_string):
-    """Determine whether spack can handle a particular URL or not."""
-    url = urlparse(url_string)
-    if url.scheme not in _ALLOWED_URL_SCHEMES:
-        tty.die("Invalid protocol in URL: '%s'" % url_string)
-
-    if not allowed_archive(url_string):
-        tty.die("Invalid file type in URL: '%s'" % url_string)
 
 
 def dump_packages(spec, path):

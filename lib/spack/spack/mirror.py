@@ -52,7 +52,14 @@ def mirror_archive_filename(spec, fetcher):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = url.downloaded_file_extension(fetcher.url)
+            ext = url.determine_url_file_extension(fetcher.url)
+            ext = ext or spec.package.versions[spec.package.version].get(
+                'extension', None)
+            ext = ext.lstrip('.')
+            if not ext:
+                raise MirrorError(
+                    "%s version does not specify an extension" % spec.name +
+                    " and could not parse extension from %s" % fetcher.url)
         else:
             # If the archive shouldn't be expanded, don't check extension.
             ext = None
