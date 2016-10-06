@@ -135,7 +135,7 @@ compiler versions. Spack searches for compilers on your machine
 automatically the first time it is run. It does this by inspecting
 your ``PATH``.
 
-.. _spack-compilers:
+.. _cmd-spack-compilers:
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack compilers``
@@ -559,7 +559,7 @@ flags to the ``icc`` command:
 
    .. code-block:: console
 
-       $ spack location -i gcc
+       $ spack location --install-dir gcc
        /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
 
 #. Set up ``compilers.yaml``, for example:
@@ -761,14 +761,13 @@ by installing a new version of ``git`` and ``openssl``:
 #. Add the output of ``spack module loads git`` to your ``.bahsrc``.
 
 If this doesn't work, it is also possible to disable checking of SSL
-certificates by using either of:
+certificates by using:
 
 .. code-block:: console
 
-   $ spack -k install
    $ spack --insecure install
 
-Using ``-k/--insecure`` makes Spack disable SSL checking when fetching
+Using ``--insecure`` makes Spack disable SSL checking when fetching
 from websites and from git.
 
 .. warning::
@@ -810,7 +809,7 @@ or if environment modules don't work:
 
 .. code-block:: console
 
-    $ export PATH=`spack location -i curl`/bin:$PATH
+    $ export PATH=`spack location --install-dir curl`/bin:$PATH
 
 
 External commands are used by Spack in two places: within core Spack,
@@ -899,7 +898,7 @@ with Spack:
 
       TMP=`tempfile`
       echo >$TMP
-      MODULE_HOME=`spack location -i environment-modules`
+      MODULE_HOME=`spack location --install-dir environment-modules`
       MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
       ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
       cp .bashrc $TMP

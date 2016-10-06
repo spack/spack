@@ -33,7 +33,7 @@ easy.
 Creating & editing packages
 ---------------------------
 
-.. _spack-create:
+.. _cmd-spack-create:
 
 ^^^^^^^^^^^^^^^^
 ``spack create``
@@ -81,7 +81,7 @@ Spack will automatically download the number of tarballs you specify
 
 You do not *have* to download all of the versions up front. You can
 always choose to download just one tarball initially, and run
-:ref:`spack checksum <spack-checksum>` later if you need more.
+:ref:`cmd-spack-checksum` later if you need more.
 
 .. note::
 
@@ -93,14 +93,14 @@ always choose to download just one tarball initially, and run
       $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
    If it fails entirely, you can get minimal boilerplate by using
-   :ref:`spack-edit-f`, or you can manually create a directory and
+   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a directory and
    ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
 
 .. note::
 
    Spack can fetch packages from source code repositories, but,
    ``spack create`` will *not* currently create a boilerplate package
-   from a repository URL.  You will need to use :ref:`spack-edit-f`
+   from a repository URL.  You will need to use :ref:`spack edit --force <spack-edit-f>`
    and manually edit the ``version()`` directives to fetch from a
    repo.  See :ref:`vcs-fetch` for details.
 
@@ -198,7 +198,7 @@ The rest of the tasks you need to do are as follows:
 
 Before going into details, we'll cover a few more basics.
 
-.. _spack-edit:
+.. _cmd-spack-edit:
 
 ^^^^^^^^^^^^^^
 ``spack edit``
@@ -238,7 +238,7 @@ package:
 
 .. code-block:: console
 
-   $ spack edit -f foo
+   $ spack edit --force foo
 
 Unlike ``spack create``, which infers names and versions, and which
 actually downloads the tarball and checksums it for you, ``spack edit
@@ -271,8 +271,8 @@ Naming & directory structure
 ----------------------------
 
 This section describes how packages need to be named, and where they
-live in Spack's directory structure.  In general, :ref:`spack-create` and
-:ref:`spack-edit` handle creating package files for you, so you can skip
+live in Spack's directory structure.  In general, :ref:`cmd-spack-create` and
+:ref:`cmd-spack-edit` handle creating package files for you, so you can skip
 most of the details here.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -371,7 +371,7 @@ some examples:
 =================  =================
 
 In general, you won't have to remember this naming convention because
-:ref:`spack-create` and :ref:`spack-edit` handle the details for you.
+:ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
 -----------------
 Trusted Downloads
@@ -590,7 +590,7 @@ Doing this for lots of files, or whenever a new package version is
 released, is tedious.  See ``spack checksum`` below for an automated
 version of this process.
 
-.. _spack-checksum:
+.. _cmd-spack-checksum:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack checksum``
@@ -1120,7 +1120,7 @@ function gives you some benefits.  First, spack ensures that the
 ``patch()`` function is run once per code checkout.  That means that
 if you run install, hit ctrl-C, and run install again, the code in the
 patch function is only run once.  Also, you can tell Spack to run only
-the patching part of the build using the :ref:`spack-patch` command.
+the patching part of the build using the :ref:`cmd-spack-patch` command.
 
 ---------------
 Handling RPATHs
@@ -1134,7 +1134,7 @@ dynamic loader where to find its dependencies at runtime. You may be
 familiar with `LD_LIBRARY_PATH
 <http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
 on Linux or `DYLD_LIBRARY_PATH
-<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`
+<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`_
 on Mac OS X.  RPATH is similar to these paths, in that it tells
 the loader where to find libraries.  Unlike them, it is embedded in
 the binary and not set in each user's environment.
@@ -1191,7 +1191,7 @@ information about the package, and to determine where to download its
 source code.
 
 Spack uses the tarball URL to extrapolate where to find other tarballs
-of the same package (e.g. in `spack checksum <spack-checksum_>`_, but
+of the same package (e.g. in :ref:`cmd-spack-checksum`, but
 this does not always work.  This section covers ways you can tell
 Spack to find tarballs elsewhere.
 
@@ -1202,7 +1202,7 @@ Spack to find tarballs elsewhere.
 ^^^^^^^^^^^^
 
 When spack tries to find available versions of packages (e.g. with
-`spack checksum <spack-checksum_>`_), it spiders the parent directory
+:ref:`cmd-spack-checksum`), it spiders the parent directory
 of the tarball in the ``url`` attribute.  For example, for libelf, the
 url is:
 
@@ -1859,7 +1859,7 @@ explicitly.  Concretization policies are discussed in more detail in
 :ref:`configuration`.  Sites using Spack can customize them to match
 the preferences of their own users.
 
-.. _spack-spec:
+.. _cmd-spack-spec:
 
 ^^^^^^^^^^^^^^
 ``spack spec``
@@ -2092,7 +2092,7 @@ discover its dependencies.
 
 If you want to see the environment that a package will build with, or
 if you want to run commands in that environment to test them out, you
-can use the :ref:`spack env <spack-env>` command, documented
+can use the :ref:`cmd-spack-env` command, documented
 below.
 
 .. _compiler-wrappers:
@@ -2871,7 +2871,7 @@ A typical package workflow might look like this:
 Below are some commands that will allow you some finer-grained
 control over the install process.
 
-.. _spack-fetch:
+.. _cmd-spack-fetch:
 
 ^^^^^^^^^^^^^^^
 ``spack fetch``
@@ -2886,7 +2886,7 @@ directory will be located under ``$SPACK_HOME/var/spack``.
 When run after the archive has already been downloaded, ``spack
 fetch`` is idempotent and will not download the archive again.
 
-.. _spack-stage:
+.. _cmd-spack-stage:
 
 ^^^^^^^^^^^^^^^
 ``spack stage``
@@ -2897,7 +2897,7 @@ the downloaded archive in its temporary directory, where it will be
 built by ``spack install``.  Similar to ``fetch``, if the archive has
 already been expanded,  ``stage`` is idempotent.
 
-.. _spack-patch:
+.. _cmd-spack-patch:
 
 ^^^^^^^^^^^^^^^
 ``spack patch``
@@ -2911,7 +2911,7 @@ this step if they have been.  If Spack discovers that patches didn't
 apply cleanly on some previous run, then it will restage the entire
 package before patching.
 
-.. _spack-restage:
+.. _cmd-spack-restage:
 
 ^^^^^^^^^^^^^^^^^
 ``spack restage``
@@ -2927,7 +2927,7 @@ Does this in one of two ways:
 #. If the source was checked out from a repository, this deletes the
    build directory and checks it out again.
 
-.. _spack-clean:
+.. _cmd-spack-clean:
 
 ^^^^^^^^^^^^^^^
 ``spack clean``
@@ -2938,7 +2938,7 @@ expanded/checked out source code *and* any downloaded archive.  If
 ``fetch``, ``stage``, or ``install`` are run again after this, Spack's
 build process will start from scratch.
 
-.. _spack-purge:
+.. _cmd-spack-purge:
 
 ^^^^^^^^^^^^^^^
 ``spack purge``
@@ -2996,7 +2996,7 @@ to get rid of the install prefix before you build again:
 Graphing dependencies
 ---------------------
 
-.. _spack-graph:
+.. _cmd-spack-graph:
 
 ^^^^^^^^^^^^^^^
 ``spack graph``
@@ -3056,7 +3056,7 @@ For ``csh`` and ``tcsh`` run:
 
 ``spack cd`` will then be available.
 
-.. _spack-cd:
+.. _cmd-spack-cd:
 
 ^^^^^^^^^^^^
 ``spack cd``
@@ -3081,14 +3081,14 @@ build it:
 directory containing the expanded ``libelf`` source code.  There are a
 number of other places you can cd to in the spack directory hierarchy:
 
-.. command-output:: spack cd -h
+.. command-output:: spack cd --help
 
 Some of these change directory into package-specific locations (stage
 directory, install directory, package directory) and others change to
-core spack locations.  For example, ``spack cd -m`` will take you to
+core spack locations.  For example, ``spack cd --module-dir`` will take you to
 the main python source directory of your spack install.
 
-.. _spack-env:
+.. _cmd-spack-env:
 
 ^^^^^^^^^^^^^
 ``spack env``
@@ -3117,7 +3117,7 @@ provide them after the spec argument to ``spack env``:
 This will cd to the build directory and then run ``configure`` in the
 package's build environment.
 
-.. _spack-location:
+.. _cmd-spack-location:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack location``
@@ -3129,13 +3129,13 @@ cd'ing to it.  In bash, this:
 
 .. code-block:: console
 
-   $ cd $(spack location -b <spec>)
+   $ cd $(spack location --build-dir <spec>)
 
 is the same as:
 
 .. code-block:: console
 
-   $ spack cd -b <spec>
+   $ spack cd --build-dir <spec>
 
 ``spack location`` is intended for use in scripts or makefiles that
 need to know where packages are installed.  e.g., in a makefile you
@@ -3143,7 +3143,7 @@ might write:
 
 .. code-block:: makefile
 
-   DWARF_PREFIX = $(spack location -i libdwarf)
+   DWARF_PREFIX = $(spack location --install-dir libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
 

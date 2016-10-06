@@ -52,7 +52,7 @@ contains tarballs for each package, named after each package.
    not standardize on a particular compression algorithm, because this
    would potentially require expanding and re-compressing each archive.
 
-.. _spack-mirror:
+.. _cmd-spack-mirror:
 
 ----------------
 ``spack mirror``
@@ -148,7 +148,7 @@ can supply a file with specs in it, one per line:
    boost@1.44:
    boost@1.39.0
    ...
-   $ spack mirror create -f specs.txt
+   $ spack mirror create --file specs.txt
    ...
 
 This is useful if there is a specific suite of software managed by
@@ -237,7 +237,7 @@ as other Spack mirrors (so it can be copied anywhere and referenced with a URL
 like other mirrors). The mirror is maintained locally (within the Spack
 installation directory) at :file:`var/spack/cache/`. It is always enabled (and
 is always searched first when attempting to retrieve files for an installation)
-but can be cleared with :ref:`purge <spack-purge>`; the cache directory can also
+but can be cleared with :ref:`purge <cmd-spack-purge>`; the cache directory can also
 be deleted manually without issue.
 
 Caching includes retrieved tarball archives and source control repositories, but
