@@ -120,6 +120,7 @@ from spack.util.prefix import Prefix
 from spack.util.string import *
 import spack.util.spack_yaml as syaml
 from spack.util.spack_yaml import syaml_dict
+from spack.util.crypto import prefix_bits
 from spack.version import *
 from spack.provider_index import ProviderIndex
 
@@ -2733,17 +2734,7 @@ def base32_prefix_bits(hash_string, bits):
                          % (bits, hash_string))
 
     hash_bytes = base64.b32decode(hash_string, casefold=True)
-
-    result = 0
-    n = 0
-    for i, b in enumerate(hash_bytes):
-        n += 8
-        result = (result << 8) | ord(b)
-        if n >= bits:
-            break
-
-    result >>= (n - bits)
-    return result
+    return prefix_bits(hash_bytes, bits)
 
 
 class SpecError(spack.error.SpackError):

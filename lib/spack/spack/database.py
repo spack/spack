@@ -156,6 +156,9 @@ class Database(object):
         self._index_path = join_path(self._db_dir, 'index.yaml')
         self._lock_path = join_path(self._db_dir, 'lock')
 
+        # This is for other classes to use to lock prefix directories.
+        self.prefix_lock_path = join_path(self._db_dir, 'prefix_lock')
+
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)

@@ -23,7 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 import errno
+import hashlib
 import shutil
 import tempfile
 from urlparse import urljoin
@@ -39,6 +41,7 @@ import spack.config
 import spack.fetch_strategy as fs
 import spack.error
 from spack.version import *
+from spack.util.crypto import prefix_bits
 
 STAGE_PREFIX = 'spack-stage-'
 
@@ -88,6 +91,9 @@ class Stage(object):
     Unnamed stages are created using standard mkdtemp mechanisms or
     similar, and are intended to persist for only one run of spack.
     """
+
+    """Shared dict of all stage locks."""
+    stage_locks = {}
 
     def __init__(
             self, url_or_fetch_strategy,
@@ -149,11 +155,19 @@ class Stage(object):
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
 
-        # File lock for the stage directory
+        # File lock for the stage directory.  We use one file for all
+        # stage locks. See Spec.prefix_lock for details on this approach.
         self._lock = None
         if lock:
-            self._lock = llnl.util.lock.Lock(
-                join_path(spack.stage_path, self.name + '.lock'))
+            if self.name not in Stage.stage_locks:
+                sha1 = hashlib.sha1(self.name).digest()
+                lock_id = prefix_bits(sha1, sys.maxsize.bit_length())
+                stage_lock_path = join_path(spack.stage_path, '.lock')
+
+                Stage.stage_locks[self.name] = llnl.util.lock.Lock(
+                    stage_lock_path, lock_id, 1)
+
+            self._lock = Stage.stage_locks[self.name]
 
     def __enter__(self):
         """
