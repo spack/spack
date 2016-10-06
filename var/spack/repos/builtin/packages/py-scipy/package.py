@@ -49,7 +49,6 @@ class PyScipy(Package):
     depends_on('lapack')
 
     def install(self, spec, prefix):
-        env['BLAS'] = spec['blas'].blas_libs.joined()
-        env['LAPACK'] = spec['lapack'].lapack_libs.joined()
-
+        # NOTE: scipy picks up Blas/Lapack from numpy, see
+        # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
         setup_py('install', '--prefix={0}'.format(prefix))
