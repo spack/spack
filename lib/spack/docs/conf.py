@@ -67,13 +67,12 @@ os.environ['COLIFY_SIZE'] = '25x120'
 #
 # Generate package list using spack command
 #
-if not os.path.exists('package_list.rst'):
-    with open('package_list.rst', 'w') as plist_file:
-        subprocess.Popen(
-            [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
+with open('package_list.rst', 'w') as plist_file:
+    subprocess.Popen(
+        [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
 
 #
-# Find all the `spack-*` references and add them to a command index
+# Find all the `cmd-spack-*` references and add them to a command index
 #
 command_names = []
 for filename in glob('*rst'):
@@ -83,12 +82,11 @@ for filename in glob('*rst'):
             if match:
                 command_names.append(match.group(1).strip())
 
-if not os.path.exists('command_index.rst'):
-    shutil.copy('command_index.in', 'command_index.rst')
-    with open('command_index.rst', 'a') as index:
-        index.write('\n')
-        for cmd in sorted(command_names):
-            index.write('   * :ref:`%s`\n' % cmd)
+shutil.copy('command_index.in', 'command_index.rst')
+with open('command_index.rst', 'a') as index:
+    index.write('\n')
+    for cmd in sorted(command_names):
+        index.write('   * :ref:`%s`\n' % cmd)
 
 
 # Run sphinx-apidoc
