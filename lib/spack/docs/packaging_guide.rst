@@ -431,7 +431,7 @@ how to compare and sort numeric versions.
 Some Spack versions involve slight extensions of numeric syntax; for
 example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
-with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`.
+with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
 Spack versions may also be arbitrary non-numeric strings; any string
 here will suffice; for example, ``@develop``, ``@master``, ``@local``.
@@ -458,6 +458,32 @@ The logic behind this sort order is two-fold:
    ``develop`` version to satisfy dependencies like ``depends_on(abc,
    when="@x.y.z:")``
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Concretization Version Selection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When concretizing, many versions might match a user-supplied spec.
+For example, the spec ``python`` matches all available versions of the
+package ``python``.  Similarly, ``python@3:`` matches all versions of
+Python3.  Given a set of versions that match a spec, Spack
+concretization uses the following priorities to decide which one to
+use:
+
+#. If the user provided a list of versions in ``packages.yaml``, the
+   first matching version in that list will be used.
+
+#. If one or more versions is specified as ``preferred=True``, in
+   either ``packages.yaml`` or ``package.py``, the largest matching
+   version will be used.  ("Latest" is defined by the sort order
+   above).
+
+#. If no preferences in particular are specified in the package or in
+   ``packages.yaml``, then the largest matching non-develop version
+   will be used.  By avoiding ``@develop``, this prevents users from
+   accidentally installing a ``@develop`` version.
+
+#. If all else fails and ``@develop`` is the only matching version, it
+   will be used.
 
 ^^^^^^^^^^^^^
 Date Versions
