@@ -31,15 +31,16 @@ class Pfunit(Package):
     homepage = "http://pfunit.sourceforge.net/index.html"
     url = "http://downloads.sourceforge.net/project/pfunit/Source/pFUnit-3.2.7.tar.gz"
 
+
+    # Shared library support added.
+    # Alt URL: git clone http://git.code.sf.net/p/pfunit/code pfunit-code
+    version('3.2.7.1', git='git://git.code.sf.net/p/pfunit/code',
+        branch='ae0a3c6afd67e8709d062dcdb646ace676aae4ba')
+
+    # Standard release version
     version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
 
-    # Shared library support.
-    version(
-        '3.2.7-citibeth', git='git://git.code.sf.net/u/citibeth2/pfunit',
-        branch='3.2.7-citibeth')
-
     depends_on('mpi', when='+mpi')
-    depends_on('openmp', when='+openmp')
 
     depends_on('cmake', type='build')
     depends_on('doxygen', type='build')
@@ -48,27 +49,22 @@ class Pfunit(Package):
             description='Build shared library in addition to static')
     variant('mpi', default=True,
             description='Test MPI-based programs')
-    variant('openmp', default=False,
-            description='Test OpenMP-based programs')
+
+    # pfUnit supports OpenMP, but this capability has not
+    # yet been tested with Spack.
+    # variant('openmp', default=False,
+    #         description='Test OpenMP-based programs')
 
     def install(self, spec, prefix):
-
-        if '+openmp' in spec:
-            raise ValueError(
-                'pfUnit works with OpenMP-based programs,\n' +
-                'but there is currently no openmp package in Spack.\n' +
-                'If you would like to use pfUnit with OpenMP, please\n' +
-                'add an OpenMP package and remove this message from\n' +
-                'the pfunit package.')
 
         with working_dir('spack-build', create=True):
             options = std_cmake_args + [
                 '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
                 '-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-                '-OPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
+                # '-OPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
                 '-DINSTALL_PATH=%s' % prefix]
             cmake(self.stage.source_path, *options)
-#            make('tests')
+            # make('tests')   # Upstream tests do not work
             make()
             make('install', 'INSTALL_DIR=%s' % prefix)
 
