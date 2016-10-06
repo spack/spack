@@ -180,16 +180,32 @@ class DefaultConcretizer(object):
             v for v in pkg.versions
             if any(v.satisfies(sv) for sv in spec.versions)]
 
+        # The keys below show the order of precedence of factors used
+        # to select a version when concretizing.  The item with
+        # the "largest" key will be selected.
+        #
+        # NOTE: When COMPARING VERSIONS, the '@develop' version is always
+        #       larger than other versions.  BUT when CONCRETIZING,
+        #       the largest NON-develop version is selected by
+        #       default.
         keys = [(
+            # ------- Special direction from the user
             # Respect order listed in packages.yaml
             yaml_index.get(v, -1),
+
             # The preferred=True flag (packages or packages.yaml or both?)
             pkg.versions.get(Version(v)).get('preferred', False),
-            # @develop special case
-            v.isdevelop(),
-            # Numeric versions more preferred than non-numeric
-            v.isnumeric(),
+
+            # ------- Regular case: use latest non-develop version by default.
+            # Avoid @develop version, which would otherwise be the "largest"
+            # in straight version comparisons
+            not v.isdevelop(),
+
             # Compare the version itself
+            # This includes the logic:
+            #    a) develop > everything (disabled by "not v.isdevelop() above)
+            #    b) numeric > non-numeric
+            #    c) Numeric or string comparison
             v) for v in unsorted_versions]
         keys.sort(reverse=True)
 
