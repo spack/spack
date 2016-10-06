@@ -40,8 +40,14 @@ class Gmp(Package):
     depends_on('m4', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-cxx')
+        config_args = ['--prefix=' + prefix,
+                       '--enable-cxx']
+
+        # We need this flag if we want all the following checks to pass.
+        if spec.compiler.name == 'intel':
+            config_args.append('CXXFLAGS=-no-ftz')
+
+        configure(*config_args)
 
         make()
         make('check')
