@@ -743,7 +743,7 @@ Git
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
-encountered on a Macintosn during ``spack install julia-master``:
+encountered on a Macintosh during ``spack install julia-master``:
 
 .. code-block:: console
 
