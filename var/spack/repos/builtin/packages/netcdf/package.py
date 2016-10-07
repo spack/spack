@@ -46,10 +46,10 @@ class Netcdf(Package):
     depends_on("hdf", when='+hdf4')
 
     # Required for DAP support
-    depends_on("curl")
+    depends_on("curl@7.18.0:")
 
     # Required for NetCDF-4 support
-    depends_on("zlib")
+    depends_on("zlib@1.2.5:")
     depends_on('hdf5')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
@@ -105,7 +105,7 @@ class Netcdf(Package):
             LDFLAGS.append("-L%s/lib"     % spec['hdf'].prefix)
             LIBS.append("-l%s"         % "jpeg")
 
-        if 'szip' in spec:
+        if '+szip' in spec:
             CPPFLAGS.append("-I%s/include" % spec['szip'].prefix)
             LDFLAGS.append("-L%s/lib"     % spec['szip'].prefix)
             LIBS.append("-l%s"         % "sz")
@@ -120,4 +120,8 @@ class Netcdf(Package):
 
         configure(*config_args)
         make()
+
+        if self.run_tests:
+            make("check")
+
         make("install")
