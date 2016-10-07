@@ -159,6 +159,8 @@ class URLFetchStrategy(FetchStrategy):
 
         self.expand_archive = kwargs.get('expand', True)
 
+        self.extension = kwargs.get('extension', None)
+
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
 
@@ -270,7 +272,7 @@ class URLFetchStrategy(FetchStrategy):
                 "URLFetchStrategy couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
-        decompress = decompressor_for(self.archive_file)
+        decompress = decompressor_for(self.archive_file, self.extension)
 
         # Expand all tarballs in their own directory to contain
         # exploding tarballs.

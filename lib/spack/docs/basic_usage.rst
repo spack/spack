@@ -1,7 +1,7 @@
 .. _basic-usage:
 
 ===========
-Basic usage
+Basic Usage
 ===========
 
 The ``spack`` command has many *subcommands*.  You'll only need a
@@ -14,7 +14,7 @@ Spack to maintain this colorization.  E.g.:
 
     $ spack find | less -R
 
-It is recommend that the following be put in your ``.bashrc`` file:
+It is recommended that the following be put in your ``.bashrc`` file:
 
 .. code-block:: sh
 
@@ -28,7 +28,7 @@ To install software with Spack, you need to know what software is
 available.  You can see a list of available package names at the
 :ref:`package-list` webpage, or using the ``spack list`` command.
 
-.. _spack-list:
+.. _cmd-spack-list:
 
 ^^^^^^^^^^^^^^
 ``spack list``
@@ -57,13 +57,13 @@ All packages whose names start with a capital M:
 
 All packages whose names or descriptions contain Documentation:
 
-.. command-output:: spack list -d Documentation
+.. command-output:: spack list --search-description Documentation
 
 All packages whose names contain documentation case insensitive:
 
-.. command-output:: spack list -d documentation
+.. command-output:: spack list --search-description documentation
 
-.. _spack-info:
+.. _cmd-spack-info:
 
 ^^^^^^^^^^^^^^
 ``spack info``
@@ -82,7 +82,7 @@ viruses.
 :ref:`Dependencies <sec-specs>` and :ref:`virtual dependencies
 <sec-virtual-dependencies>` are described in more detail later.
 
-.. _spack-versions:
+.. _cmd-spack-versions:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack versions``
@@ -107,7 +107,7 @@ able to find remote versions.
 Installing and uninstalling
 ---------------------------
 
-.. _spack-install:
+.. _cmd-spack-install:
 
 ^^^^^^^^^^^^^^^^^
 ``spack install``
@@ -180,14 +180,14 @@ configuration a **spec**.  In the commands above, ``mpileaks`` and
 ``mpileaks@3.0.4`` are both valid *specs*.  We'll talk more about how
 you can use them to customize an installation in :ref:`sec-specs`.
 
-.. _spack-uninstall:
+.. _cmd-spack-uninstall:
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack uninstall``
 ^^^^^^^^^^^^^^^^^^^
 
 To uninstall a package, type ``spack uninstall <package>``.  This will ask
-the user for confirmation, and in case will completely remove the directory
+the user for confirmation before completely removing the directory
 in which the package was installed.
 
 .. code-block:: console
@@ -285,7 +285,7 @@ Seeing installed packages
 We know that ``spack list`` shows you the names of available packages,
 but how do you figure out which are already installed?
 
-.. _spack-find:
+.. _cmd-spack-find:
 
 ^^^^^^^^^^^^^^
 ``spack find``
@@ -798,7 +798,7 @@ it refers. Otherwise, it will prompt for a more qualified hash.
 Note that this will not work to reinstall a depencency uninstalled by
 ``spack uninstall --force``.
 
-.. _spack-providers:
+.. _cmd-spack-providers:
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack providers``
@@ -1373,7 +1373,7 @@ an *extension*.  Suppose you have Python installed like so:
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    python@2.7.8
 
-.. _spack-extensions:
+.. _cmd-spack-extensions:
 
 ^^^^^^^^^^^^^^^^^^^^
 ``spack extensions``
@@ -1467,7 +1467,7 @@ for this case.  Instead of requiring users to load particular
 environment modules, you can *activate* the package within the Python
 installation:
 
-.. _spack-activate:
+.. _cmd-spack-activate:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack activate``
@@ -1532,19 +1532,19 @@ into the same prefix.  Users who want a different version of a package
 can still get it by using environment modules, but they will have to
 explicitly load their preferred version.
 
-^^^^^^^^^^^^^^^^^^^^^
-``spack activate -f``
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack activate --force``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If, for some reason, you want to activate a package *without* its
-dependencies, you can use ``spack activate -f``:
+dependencies, you can use ``spack activate --force``:
 
 .. code-block:: console
 
-   $ spack activate -f py-numpy
+   $ spack activate --force py-numpy
    ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-debian7-x86_64-66733244 for python@2.7.8%gcc@4.4.7.
 
-.. _spack-deactivate:
+.. _cmd-spack-deactivate:
 
 ^^^^^^^^^^^^^^^^^^^^
 ``spack deactivate``
@@ -1622,7 +1622,7 @@ A nicer error message is TBD in future versions of Spack.
 Getting Help
 ------------
 
-.. _spack-help:
+.. _cmd-spack-help:
 
 ^^^^^^^^^^^^^^
 ``spack help``

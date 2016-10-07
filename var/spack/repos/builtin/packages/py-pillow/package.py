@@ -129,5 +129,5 @@ class PyPillow(Package):
         variants = ['jpeg', 'zlib', 'tiff', 'freetype', 'lcms', 'jpeg2000']
         build_args = list(map(variant_to_flag, variants))
 
-        python('setup.py', 'build_ext', *build_args)
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('build_ext', *build_args)
+        setup_py('install', '--prefix={0}'.format(prefix))

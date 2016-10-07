@@ -39,4 +39,4 @@ class PyPypar(Package):
 
     def install(self, spec, prefix):
         with working_dir('source'):
-            python('setup.py', 'install', '--prefix=%s' % prefix)
+            setup_py('install', '--prefix=%s' % prefix)

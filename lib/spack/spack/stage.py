@@ -302,9 +302,11 @@ class Stage(object):
             # the checksum will be the same.
             digest = None
             expand = True
+            extension = None
             if isinstance(self.default_fetcher, fs.URLFetchStrategy):
                 digest = self.default_fetcher.digest
                 expand = self.default_fetcher.expand_archive
+                extension = self.default_fetcher.extension
 
             # Have to skip the checksum for things archived from
             # repositories.  How can this be made safer?
@@ -313,10 +315,12 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(
-                    0, fs.URLFetchStrategy(url, digest, expand=expand))
+                    0, fs.URLFetchStrategy(
+                        url, digest, expand=expand, extension=extension))
             fetchers.insert(
                 0, spack.fetch_cache.fetcher(
-                    self.mirror_path, digest, expand=expand))
+                    self.mirror_path, digest, expand=expand,
+                    extension=extension))
 
             # Look for the archive in list_url
             package_name = os.path.dirname(self.mirror_path)
@@ -538,7 +542,7 @@ class DIYStage(object):
     def chdir_to_source(self):
         self.chdir()
 
-    def fetch(self, mirror_only):
+    def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
 
     def check(self):

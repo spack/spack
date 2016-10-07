@@ -56,11 +56,10 @@ class PyH5py(Package):
     depends_on('py-six', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'configure',
-               '--hdf5={0}'.format(spec['hdf5'].prefix))
+        setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
 
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
-            python('setup.py', 'configure', '--mpi')
+            setup_py('configure', '--mpi')
 
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

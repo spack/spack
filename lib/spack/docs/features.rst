@@ -1,5 +1,5 @@
 ================
-Feature overview
+Feature Overview
 ================
 
 This is a high-level overview of features that make Spack different
