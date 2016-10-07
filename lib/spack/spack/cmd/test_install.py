@@ -181,7 +181,6 @@ def install_single_spec(spec, number_of_jobs):
         package.do_install(keep_prefix=False,
                            keep_stage=True,
                            install_deps=True,
-                           install_self=True,
                            make_jobs=number_of_jobs,
                            verbose=True,
                            fake=False)

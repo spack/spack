@@ -952,8 +952,6 @@ class Package(object):
             even with exceptions.
         :param install_deps: Install dependencies before installing this \
             package
-        :param install_self: Install this package once dependencies have \
-            been installed.
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
         :param verbose: Display verbose build output (by default, suppresses \
@@ -998,18 +996,12 @@ class Package(object):
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
                     install_deps=install_deps,
-                    install_self=True,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
                     run_tests=run_tests,
                     dirty=dirty)
-
-        # The rest of this function is to install ourself,
-        # once deps have been installed.
-        if not install_self:
-            return
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
