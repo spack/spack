@@ -66,6 +66,7 @@ class PyNumpy(Package):
             'numpy/core/include')
 
     def install(self, spec, prefix):
+        # for build notes see http://www.scipy.org/scipylib/building/linux.html
         lapackblas = LibraryList('')
         if '+lapack' in spec:
             lapackblas += spec['lapack'].lapack_libs
