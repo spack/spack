@@ -31,6 +31,8 @@ class Jemalloc(Package):
     homepage = "http://www.canonware.com/jemalloc/"
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
+    # 4.2.1 doesn't compile with gcc
+    version('master', git='https://github.com/jemalloc/jemalloc.git')
     version('4.2.1', '094b0a7b8c77c464d0dc8f0643fd3901')
     version('4.2.0', 'e6b5d5a1ea93a04207528d274efdd144')
     version('4.1.0', 'c4e53c947905a533d5899e5cc3da1f94')
@@ -47,7 +49,14 @@ class Jemalloc(Package):
         if '+prof' in spec:
             configure_args.append('--enable-prof')
 
-        configure(*configure_args)
+        # master install fails due to incorrect installation of html files
+        if spec.satisfies('@master:'):
+            autoconf = Executable('./autogen.sh')
+            autoconf(*configure_args)
+            filter_file(r'install_doc: install_doc_html install_doc_man',
+                        '', 'Makefile')
+        else:
+            configure(*configure_args)
 
         # Don't use -Werror
         filter_file(r'-Werror=\S*', '', 'Makefile')
