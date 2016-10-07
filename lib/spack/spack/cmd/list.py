@@ -47,11 +47,7 @@ def formatter(func):
 def setup_parser(subparser):
     subparser.add_argument(
         'filter', nargs=argparse.REMAINDER,
-        help='Optional glob patterns to filter results.')
-    subparser.add_argument(
-        '-s', '--sensitive', action='store_true', default=False,
-        help='Use case-sensitive filtering. Default is case insensitive, '
-        'unless the query contains a capital letter.')
+        help='Optional case-insensitive glob patterns to filter results.')
     subparser.add_argument(
         '-d', '--search-description', action='store_true', default=False,
         help='Filtering will also search the description for a match.')
@@ -79,10 +75,7 @@ def filter_by_name(pkgs, args):
             else:
                 r = fnmatch.translate(f)
 
-            re_flags = re.I
-            if any(l.isupper for l in f) or args.sensitive:
-                re_flags = 0
-            rc = re.compile(r, flags=re_flags)
+            rc = re.compile(r, flags=re.IGNORECASE)
             res.append(rc)
 
         if args.search_description:
