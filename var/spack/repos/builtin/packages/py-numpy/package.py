@@ -32,9 +32,12 @@ class PyNumpy(Package):
     sophisticated (broadcasting) functions, tools for integrating C/C++ and
     Fortran code, and useful linear algebra, Fourier transform, and random
     number capabilities"""
+
     homepage = "http://www.numpy.org/"
     url      = "https://pypi.python.org/packages/source/n/numpy/numpy-1.9.1.tar.gz"
 
+    version('1.11.1', '2f44a895a8104ffac140c3a70edbd450',
+            url="https://pypi.python.org/packages/e0/4c/515d7c4ac424ff38cc919f7099bf293dd064ba9a600e1e3835b3edefdb18/numpy-1.11.1.tar.gz")
     version('1.11.0', 'bc56fb9fc2895aa4961802ffbdb31d0b')
     version('1.10.4', 'aed294de0aa1ac7bd3f9745f4f1968ad')
     version('1.9.2',  'a1ed53432dbcd256398898d35bc8e645')
@@ -44,6 +47,7 @@ class PyNumpy(Package):
     variant('lapack', default=True)
 
     extends('python')
+    depends_on('python@2.6:2.8,3.2:')
     depends_on('py-nose', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
@@ -79,4 +83,4 @@ class PyNumpy(Package):
                 f.write('library_dirs=%s\n' % ':'.join(library_dirs))
                 f.write('rpath=%s\n' % ':'.join(library_dirs))
 
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

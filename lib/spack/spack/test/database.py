@@ -124,6 +124,19 @@ class DatabaseTest(MockDatabase):
             self.assertEqual(new_rec.path,      rec.path)
             self.assertEqual(new_rec.installed, rec.installed)
 
+    def _check_merkleiness(self):
+        """Ensure the spack database is a valid merkle graph."""
+        all_specs = spack.installed_db.query(installed=any)
+
+        seen = {}
+        for spec in all_specs:
+            for dep in spec.dependencies():
+                hash_key = dep.dag_hash()
+                if hash_key not in seen:
+                    seen[hash_key] = id(dep)
+                else:
+                    self.assertEqual(seen[hash_key], id(dep))
+
     def _check_db_sanity(self):
         """Utiilty function to check db against install layout."""
         expected = sorted(spack.install_layout.all_specs())
@@ -133,8 +146,15 @@ class DatabaseTest(MockDatabase):
         for e, a in zip(expected, actual):
             self.assertEqual(e, a)
 
+        self._check_merkleiness()
+
     def test_020_db_sanity(self):
         """Make sure query() returns what's actually in the db."""
+        self._check_db_sanity()
+
+    def test_025_reindex(self):
+        """Make sure reindex works and ref counts are valid."""
+        spack.installed_db.reindex(spack.install_layout)
         self._check_db_sanity()
 
     def test_030_db_sanity_from_another_process(self):
@@ -203,9 +223,10 @@ class DatabaseTest(MockDatabase):
         self.assertTrue(concrete_spec not in remaining)
 
         # add it back and make sure everything is ok.
-        self.installed_db.add(concrete_spec, "")
+        self.installed_db.add(concrete_spec, spack.install_layout)
         installed = self.installed_db.query()
-        self.assertEqual(len(installed), len(original))
+        self.assertTrue(concrete_spec in installed)
+        self.assertEqual(installed, original)
 
         # sanity check against direcory layout and check ref counts.
         self._check_db_sanity()
@@ -233,7 +254,7 @@ class DatabaseTest(MockDatabase):
         self.assertEqual(self.installed_db.get_record('mpich').ref_count, 1)
 
         # Put the spec back
-        self.installed_db.add(rec.spec, rec.path)
+        self.installed_db.add(rec.spec, spack.install_layout)
 
         # record is present again
         self.assertEqual(

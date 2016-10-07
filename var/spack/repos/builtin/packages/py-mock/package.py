@@ -40,4 +40,4 @@ class PyMock(Package):
     depends_on('py-setuptools@17.1:', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

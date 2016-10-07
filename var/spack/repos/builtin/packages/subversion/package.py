@@ -46,6 +46,9 @@ class Subversion(Package):
     # depends_on('perl')
     # depends_on('ruby')
 
+    # Installation has race cases.
+    parallel = False
+
     def install(self, spec, prefix):
 
         # configure, build, install:

@@ -158,6 +158,35 @@ class LockTest(unittest.TestCase):
             self.timeout_write, self.timeout_write)
 
     #
+    # Test that read can be upgraded to write.
+    #
+    def test_upgrade_read_to_write(self):
+        # ensure lock file exists the first time, so we open it read-only
+        # to begin wtih.
+        touch(self.lock_path)
+
+        lock = Lock(self.lock_path)
+        self.assertTrue(lock._reads == 0)
+        self.assertTrue(lock._writes == 0)
+
+        lock.acquire_read()
+        self.assertTrue(lock._reads == 1)
+        self.assertTrue(lock._writes == 0)
+
+        lock.acquire_write()
+        self.assertTrue(lock._reads == 1)
+        self.assertTrue(lock._writes == 1)
+
+        lock.release_write()
+        self.assertTrue(lock._reads == 1)
+        self.assertTrue(lock._writes == 0)
+
+        lock.release_read()
+        self.assertTrue(lock._reads == 0)
+        self.assertTrue(lock._writes == 0)
+        self.assertTrue(lock._fd is None)
+
+    #
     # Longer test case that ensures locks are reusable. Ordering is
     # enforced by barriers throughout -- steps are shown with numbers.
     #

@@ -35,9 +35,10 @@ class Tmux(Package):
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
 
-    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
-    version('2.1', '74a2855695bccb51b6e301383ad4818c')
+    version('2.3', 'fcfd1611d705d8b31df3c26ebc93bd3e')
     version('2.2', 'bd95ee7205e489c62c616bb7af040099')
+    version('2.1', '74a2855695bccb51b6e301383ad4818c')
+    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
 
     depends_on('libevent')
     depends_on('ncurses')

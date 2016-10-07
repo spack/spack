@@ -77,6 +77,8 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
+SPACK_RPATH_DEPS = 'SPACK_RPATH_DEPS'
+SPACK_LINK_DEPS = 'SPACK_LINK_DEPS'
 SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
@@ -254,9 +256,15 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix
-                    for d in pkg.spec.traverse(root=False, deptype='build')]
+    dep_prefixes = [d.prefix for d in
+                    pkg.spec.traverse(root=False, deptype=('build', 'link'))]
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
+
+    # These variables control compiler wrapper behavior
+    env.set_path(SPACK_RPATH_DEPS, [d.prefix for d in get_rpath_deps(pkg)])
+    env.set_path(SPACK_LINK_DEPS, [
+        d.prefix for d in pkg.spec.traverse(root=False, deptype=('link'))])
+
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
 
@@ -288,8 +296,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
                 env.remove_path('PATH', p)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(
-        filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+    bin_dirs = reversed(filter(os.path.isdir, [
+        '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 
@@ -342,15 +350,7 @@ def set_module_variables_for_package(pkg, module):
     m.ctest = Executable('ctest')
 
     # standard CMake arguments
-    m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
-    if platform.mac_ver()[0]:
-        m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-    # Set up CMake rpath
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' %
-                            ":".join(get_rpaths(pkg)))
+    m.std_cmake_args = get_std_cmake_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.build_env_path
@@ -382,10 +382,18 @@ def set_module_variables_for_package(pkg, module):
     m.dso_suffix = dso_suffix
 
 
+def get_rpath_deps(pkg):
+    """Return immediate or transitive RPATHs depending on the package."""
+    if pkg.transitive_rpaths:
+        return [d for d in pkg.spec.traverse(root=False, deptype=('link'))]
+    else:
+        return pkg.spec.dependencies(deptype='link')
+
+
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = pkg.spec.dependencies(deptype='link')
+    deps = get_rpath_deps(pkg)
     rpaths.extend(d.prefix.lib for d in deps
                   if os.path.isdir(d.prefix.lib))
     rpaths.extend(d.prefix.lib64 for d in deps
@@ -395,6 +403,20 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
+
+
+def get_std_cmake_args(cmake_pkg):
+    # standard CMake arguments
+    ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
+           '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
+    if platform.mac_ver()[0]:
+        ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
+
+    # Set up CMake rpath
+    ret.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
+
+    return ret
 
 
 def parent_class_modules(cls):

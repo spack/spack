@@ -39,7 +39,7 @@ class Cuda(Package):
     Type, select runfile and click Download. Spack will search your
     current directory for this file. Alternatively, add this file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
 
     Note: This package does not currently install the drivers necessary
     to run CUDA. These will need to be installed manually. See:

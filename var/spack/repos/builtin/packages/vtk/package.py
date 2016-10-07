@@ -42,12 +42,16 @@ class Vtk(Package):
 
     patch("gcc.patch")
 
+    extends('python', when='+python')
+    depends_on('python', when='+python')
     depends_on('cmake', type='build')
     depends_on("qt")
 
     # VTK7 defaults to OpenGL2 rendering backend
     variant('opengl2', default=True,
             description='Build with OpenGL instead of OpenGL2 backend')
+    variant('python', default=False,
+            description='Build the python modules')
 
     def install(self, spec, prefix):
         def feature_to_bool(feature, on='ON', off='OFF'):
@@ -59,8 +63,8 @@ class Vtk(Package):
             cmake_args = [
                 "..",
                 "-DBUILD_SHARED_LIBS=ON",
+                "-DVTK_WRAP_PYTHON=" + ("ON" if "+python" in spec else "OFF"),
                 # Disable wrappers for other languages.
-                "-DVTK_WRAP_PYTHON=OFF",
                 "-DVTK_WRAP_JAVA=OFF",
                 "-DVTK_WRAP_TCL=OFF"]
             cmake_args.extend(std_cmake_args)

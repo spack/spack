@@ -36,6 +36,7 @@ class Nettle(Package):
     version('2.7', '2caa1bd667c35db71becb93c5d89737f')
 
     depends_on('gmp')
+    depends_on('m4', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

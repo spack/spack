@@ -1,10 +1,7 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
-#
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
@@ -75,13 +72,13 @@ with open('package_list.rst', 'w') as plist_file:
         [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
 
 #
-# Find all the `spack-*` references and add them to a command index
+# Find all the `cmd-spack-*` references and add them to a command index
 #
 command_names = []
 for filename in glob('*rst'):
     with open(filename) as f:
         for line in f:
-            match = re.match(r'.. _(spack-[^:]*)', line)
+            match = re.match('.. _(cmd-spack-.*):', line)
             if match:
                 command_names.append(match.group(1).strip())
 

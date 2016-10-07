@@ -85,7 +85,7 @@ class Cgal(Package):
         else:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
 
-        cmake('.', *options)
-
-        make()
-        make('install')
+        with working_dir('spack-build', create=True):
+            cmake('..', *options)
+            make()
+            make('install')

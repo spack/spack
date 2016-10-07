@@ -24,34 +24,34 @@
 ##############################################################################
 import unittest
 
-import spack.spec
+import spack.spec as sp
 from spack.parse import Token
 from spack.spec import *
 
 # Sample output for a complex lexing.
-complex_lex = [Token(ID, 'mvapich_foo'),
-               Token(DEP),
-               Token(ID, '_openmpi'),
-               Token(AT),
-               Token(ID, '1.2'),
-               Token(COLON),
-               Token(ID, '1.4'),
-               Token(COMMA),
-               Token(ID, '1.6'),
-               Token(PCT),
-               Token(ID, 'intel'),
-               Token(AT),
-               Token(ID, '12.1'),
-               Token(COLON),
-               Token(ID, '12.6'),
-               Token(ON),
-               Token(ID, 'debug'),
-               Token(OFF),
-               Token(ID, 'qt_4'),
-               Token(DEP),
-               Token(ID, 'stackwalker'),
-               Token(AT),
-               Token(ID, '8.1_1e')]
+complex_lex = [Token(sp.ID, 'mvapich_foo'),
+               Token(sp.DEP),
+               Token(sp.ID, '_openmpi'),
+               Token(sp.AT),
+               Token(sp.ID, '1.2'),
+               Token(sp.COLON),
+               Token(sp.ID, '1.4'),
+               Token(sp.COMMA),
+               Token(sp.ID, '1.6'),
+               Token(sp.PCT),
+               Token(sp.ID, 'intel'),
+               Token(sp.AT),
+               Token(sp.ID, '12.1'),
+               Token(sp.COLON),
+               Token(sp.ID, '12.6'),
+               Token(sp.ON),
+               Token(sp.ID, 'debug'),
+               Token(sp.OFF),
+               Token(sp.ID, 'qt_4'),
+               Token(sp.DEP),
+               Token(sp.ID, 'stackwalker'),
+               Token(sp.AT),
+               Token(sp.ID, '8.1_1e')]
 
 
 class SpecSyntaxTest(unittest.TestCase):
@@ -74,16 +74,16 @@ class SpecSyntaxTest(unittest.TestCase):
         """
         if spec is None:
             spec = expected
-        output = spack.spec.parse(spec)
+        output = sp.parse(spec)
 
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
-        lex_output = SpecLexer().lex(spec)
+        lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == ID:
+            if tok.type == sp.ID:
                 self.assertEqual(tok, spec_tok)
             else:
                 # Only check the type for non-identifiers.
