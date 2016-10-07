@@ -99,7 +99,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
             has_errors = True
 
         # No installed package matches the query
-        if len(matching) == 0 and not force:
+        if len(matching) == 0:
             tty.error("%s does not match any installed packages." % spec)
             has_errors = True
 
