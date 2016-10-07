@@ -9,6 +9,9 @@ class PyRtree(Package):
 
     # Not an official release yet.  But changes in here are required to work with Spack
     # (Spack installs libspatialindex installed in a non-standard location).
+    version('0.8.2.2', 'b1fe96a73153db49ea6ce45a063d82cb',
+        url='https://github.com/citibeth/rtree/tarball/95a678cc7350857a1bb631bc41254efcd1fc0a0d')
+
     version('0.8.2.1', '394696ca849dd9f3a5ef24fb02a41ef4',
         url='https://github.com/citibeth/rtree/tarball/3a87d86f66a3955676b2507d3bf424ade938a22b')
 
