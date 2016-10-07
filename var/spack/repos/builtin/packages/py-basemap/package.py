@@ -52,13 +52,10 @@ class PyBasemap(Package):
         # legal Python for "Implicit Namespace Packages":
         #     https://www.python.org/dev/peps/pep-0420/
         #     https://github.com/Homebrew/homebrew-python/issues/112
-        # In practice, Python will wee only the basemap version of mpl_toolkits
+        # In practice, Python will see only the basemap version of mpl_toolkits
         path_m = find_package_dir(spec['py-matplotlib'].prefix, 'mpl_toolkits')
         path_b = find_package_dir(spec.prefix, 'mpl_toolkits')
         link_dir(path_m, path_b)
-
-
-
 
 def find_package_dir(spack_package_root, name):
 
@@ -102,7 +99,7 @@ def link_dir(src_root, dest_root, link=os.symlink):
             continue
 
         # Make sure the destination directory exists
-        dest_path = os.path.join(dest_root, src_path[len(src_root)+1:])
+        dest_path = os.path.join(dest_root, src_path[len(src_root) + 1:])
         try:
             os.makedirs(dest_path)
         except:
@@ -113,5 +110,4 @@ def link_dir(src_root, dest_root, link=os.symlink):
             src = os.path.join(src_path, fname)
             dst = os.path.join(dest_path, fname)
             if not os.path.exists(dst):
-                #print('%s -->\n%s' % (src,dst))
                 link(src, dst)
