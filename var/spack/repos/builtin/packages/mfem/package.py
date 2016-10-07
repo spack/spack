@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import glob
-import string
 
 
 class Mfem(Package):
@@ -35,11 +33,11 @@ class Mfem(Package):
 
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
-            url='http://goo.gl/Y9T75B', expand=False, preferred=True)
+            url='http://goo.gl/Y9T75B', preferred=True, extension='.tar.gz')
 
     version('3.1',
             '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
-            url='http://goo.gl/xrScXn', expand=False)
+            url='http://goo.gl/xrScXn', extension='.tar.gz')
 #    version('3.1', git='https://github.com/mfem/mfem.git',
 #            commit='dbae60fe32e071989b52efaaf59d7d0eb2a3b574')
 
@@ -137,13 +135,6 @@ class Mfem(Package):
 
         if '+debug' in spec:
             options.extend(['MFEM_DEBUG=YES'])
-
-        # Dirty hack to cope with URL redirect
-        tgz_file = string.split(self.url, '/')[-1]
-        tar = which('tar')
-        tar('xzvf', tgz_file)
-        cd(glob.glob('mfem*')[0])
-        # End dirty hack to cope with URL redirect
 
         make('config', *options)
         make('all')
