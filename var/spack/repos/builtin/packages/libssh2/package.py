@@ -49,4 +49,3 @@ class Libssh2(Package):
             cmake('..', *cmake_args)
             make()
             make('install')
-
