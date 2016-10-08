@@ -52,7 +52,7 @@ there's very little chance that your changes could cause the unit tests to fail.
 However, if you make changes to Spack's core libraries, you should run the unit
 tests to make sure you didn't break anything.
 
-Since the unit tests test things like fetching from VCS repos, they require
+Since they test things like fetching from VCS repos, the unit tests require
 `git <https://git-scm.com/>`_, `mercurial <https://www.mercurial-scm.org/>`_,
 and `subversion <https://subversion.apache.org/>`_ to run. Make sure these are
 installed on your system and can be found in your ``PATH``. All of these can be
@@ -306,7 +306,7 @@ Edit a few files and commit them by running:
    $ git add <files_to_be_part_of_the_commit>
    $ git commit --message <descriptive_message_of_this_particular_commit>
 
-Now, you can push it to your remote fork and create a PR:
+Next, push it to your remote fork and create a PR:
 
 .. code-block:: console
 
@@ -407,8 +407,8 @@ on top of develop:
    $ git checkout <descriptive_branch_name>
    $ git rebase develop
 
-This will likely crash when it comes to the conflicting commit. Edit the file
-that it says can't be merged automatically and resolve the conflict. Then, run:
+Git will likely ask you to resolve conflicts. Edit the file that it says can't
+be merged automatically and resolve the conflict. Then, run:
 
 .. code-block:: console
 
