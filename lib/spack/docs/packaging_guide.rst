@@ -865,6 +865,36 @@ Fetching a revision
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
+-----------------------------------------
+Standard repositories for python packages
+-----------------------------------------
+
+In addition to their developer websites, many python packages are hosted at the
+`Python Package Index (PyPi) <https://pypi.python.org/pypi>`_. Although links to
+these individual files are typically `generated using a hash
+<https://bitbucket.org/pypa/pypi/issues/438>`_ it is often possible to find a
+reliable link of the format
+
+.. code-block:: sh
+
+  https://pypi.python.org/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
+
+Packages hosted on GitHub and the like are often developer versions that do not
+contain all of the files (e.g. configuration scripts) necessary to support
+compilation. For this reason it is ideal to link to a repository such as PyPi
+if possible.
+
+More recently, sources are being indexed at `pypi.io <https://pypi.io>`_ as
+well. Links obtained from this site follow a similar pattern, namely
+
+.. code-block:: sh
+
+  https://pypi.io/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
+
+These links currently redirect back to `pypi.python.org
+<https://pypi.python.org>`_, but this `may change in the future
+<https://bitbucket.org/pypa/pypi/issues/438#comment-27243225>`_.
+
 -------------------------------------------------
 Expanding additional resources in the source tree
 -------------------------------------------------
