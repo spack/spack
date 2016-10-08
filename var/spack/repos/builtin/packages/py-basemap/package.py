@@ -57,6 +57,7 @@ class PyBasemap(Package):
         path_b = find_package_dir(spec.prefix, 'mpl_toolkits')
         link_dir(path_m, path_b)
 
+
 def find_package_dir(spack_package_root, name):
 
     """Finds directory with a specific name, somewhere inside a Spack
