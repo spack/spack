@@ -25,26 +25,23 @@
 from spack import *
 
 
-class Mpc(Package):
-    """Gnu Mpc is a C library for the arithmetic of complex numbers
-       with arbitrarily high precision and correct rounding of the
-       result."""
-    homepage = "http://www.multiprecision.org"
-    url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
+class PySymengine(Package):
+    """Python wrappers for SymEngine, a symbolic manipulation library."""
 
-    version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
-    version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
+    homepage = "https://github.com/symengine/symengine.py"
+    url = "https://github.com/symengine/symengine.py/archive/v0.2.0.tar.gz"
 
-    depends_on('gmp')   # mpir is a drop-in replacement for this
-    depends_on('mpfr')  # Could also be built against mpir
+    version('0.2.0', 'e1d114fa12be4c8c7e9f24007e07718c')
+    version('develop', git='https://github.com/symengine/symengine.py.git')
 
-    def url_for_version(self, version):
-        if version < Version("1.0.1"):
-            return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version  # NOQA
-        else:
-            return "ftp://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
+    # Build dependencies
+    extends('python')
+    depends_on('python@2.7:2.8,3.3:')
+    depends_on('py-setuptools',     type='build')
+    depends_on('py-cython@0.19.1:')
+    depends_on('cmake@2.8.7:',      type='build')
+    depends_on('symengine@0.2.0:')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        python('setup.py', 'install', '--prefix=%s --symengine-dir=%s' %
+               (prefix, spec['symengine'].prefix))
