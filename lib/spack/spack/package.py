@@ -39,6 +39,7 @@ import re
 import textwrap
 import time
 import string
+import shutil
 
 import llnl.util.tty as tty
 import spack
@@ -889,6 +890,7 @@ class Package(object):
                    fake=False,
                    explicit=False,
                    dirty=False,
+                   force=False,
                    install_phases=install_phases):
         """Called by commands to install a package and its dependencies.
 
@@ -928,12 +930,17 @@ class Package(object):
         layout = spack.install_layout
         if 'install' in install_phases and layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
-            rec = spack.installed_db.get_record(self.spec)
-            if (not rec.explicit) and explicit:
-                with spack.installed_db.write_transaction():
-                    rec = spack.installed_db.get_record(self.spec)
-                    rec.explicit = True
-            return
+
+            if force:    # Delete if installed
+                tty.msg('Deleting it...')
+                shutil.rmtree(layout.path_for_spec(self.spec))
+            else:
+                rec = spack.installed_db.get_record(self.spec)
+                if (not rec.explicit) and explicit:
+                    with spack.installed_db.write_transaction():
+                        rec = spack.installed_db.get_record(self.spec)
+                        rec.explicit = True
+                return
 
         tty.msg("Installing %s" % self.name)
 
@@ -950,7 +957,8 @@ class Package(object):
                     verbose=verbose,
                     make_jobs=make_jobs,
                     run_tests=run_tests,
-                    dirty=dirty)
+                    dirty=dirty,
+                    force=False)
 
         # The rest of this function is to install ourself,
         # once deps have been installed.
