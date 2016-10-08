@@ -297,6 +297,8 @@ class Boost(Package):
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
+        b2('--clean')
+
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
         for threadingOpt in threadingOpts:
