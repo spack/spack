@@ -45,22 +45,6 @@ Alternatively one can decide to install only the package or only
 the dependencies."""
     )
     subparser.add_argument(
-        '-i',
-        '--ignore-dependencies',
-        action='store_const',
-        const='package',
-        dest='things_to_install',
-        help='Shorthand for --only=package.'
-    )
-    subparser.add_argument(
-        '-d',
-        '--dependencies-only',
-        action='store_const',
-        const='dependencies',
-        dest='things_to_install',
-        help='Shorthand for --only=dependencies.'
-    )
-    subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
     subparser.add_argument(
