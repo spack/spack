@@ -1,0 +1,16 @@
+--- old/src/scripts/configure
++++ new/src/scripts/configure
+@@ -2146,13 +2146,6 @@
+ 	test_result $? "$1" "$2" "$3"
+  	strictpass=$pass
+ 	strictfail=$fail
+-        if test $pass -eq 1
+-	then
+- 	  if cat out | grep -i "warn" > /dev/null 2>&1
+-	  then
+-	    strictpass="0" && strictfail="1"
+-          fi
+-        fi
+ 	cat out >> $charmout
+ 	/bin/rm -f out
+ }
