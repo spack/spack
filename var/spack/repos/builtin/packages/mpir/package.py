@@ -25,26 +25,38 @@
 from spack import *
 
 
-class Mpc(Package):
-    """Gnu Mpc is a C library for the arithmetic of complex numbers
-       with arbitrarily high precision and correct rounding of the
-       result."""
-    homepage = "http://www.multiprecision.org"
-    url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
+class Mpir(Package):
+    """Multiple Precision Integers and Rationals."""
 
-    version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
-    version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
+    homepage = "https://github.com/wbhart/mpir"
+    url      = "https://github.com/wbhart/mpir/archive/mpir-2.7.0.tar.gz"
 
-    depends_on('gmp')   # mpir is a drop-in replacement for this
-    depends_on('mpfr')  # Could also be built against mpir
+    version('2.7.0', '985b5d57bd0e74c74125ee885b9c8f71')
+    version('2.6.0', 'ec17d6a7e026114ceb734b2466aa0a91')
+    version('develop', git='https://github.com/wbhart/mpir.git')
 
-    def url_for_version(self, version):
-        if version < Version("1.0.1"):
-            return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version  # NOQA
-        else:
-            return "ftp://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
+    # This setting allows mpir to act as a drop-in replacement for gmp
+    variant('gmp_compat',        default=False,
+            description='Compile with GMP library compatibility')
+
+    # Build dependencies
+    depends_on('autoconf', type='build')
+
+    # Other dependencies
+    depends_on('yasm')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        # We definitely don't want to have MPIR build its
+        # own version of YASM. This tries to install it
+        # to a system directory.
+        options = ['--prefix={0}'.format(prefix),
+                   '--with-system-yasm']
+
+        if '+gmp_compat' in spec:
+            options.extend(['--enable-gmpcompat'])
+
+        configure(*options)
         make()
-        make("install")
+        if self.run_tests:
+            make('check')
+        make('install')

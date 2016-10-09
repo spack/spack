@@ -204,9 +204,9 @@ fi
 # It doesn't work with -rpath.
 # This variable controls whether they are added.
 add_rpaths=true
-if [[ $mode == ld && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
+if [[ ($mode == ld || $mode == ccld) && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
     for arg in "$@"; do
-        if [[ $arg == -r ]]; then
+        if [[ ($arg == -r && $mode == ld) || ($arg == -Wl,-r && $mode == ccld) ]]; then
             add_rpaths=false
             break
         fi
