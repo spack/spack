@@ -1,5 +1,7 @@
 import os
 from spack.architecture import Platform, Target
+from spack.operating_systems.linux_distro import LinuxDistro
+from spack.operating_systems.cnk import Cnk
 
 
 class Bgq(Platform):
@@ -9,9 +11,22 @@ class Bgq(Platform):
     default     = 'powerpc'
 
     def __init__(self):
+        ''' IBM Blue Gene/Q system platform.'''
+
         super(Bgq, self).__init__('bgq')
+
         self.add_target(self.front_end, Target(self.front_end))
-        self.add_target(self.back_end, Target(self.back_end,))
+        self.add_target(self.back_end, Target(self.back_end))
+
+        front_distro = LinuxDistro()
+        back_distro = Cnk()
+
+        self.front_os = str(front_distro)
+        self.back_os = str(back_distro)
+        self.default_os = self.back_os
+
+        self.add_operating_system(str(front_distro), front_distro)
+        self.add_operating_system(str(back_distro), back_distro)
 
     @classmethod
     def detect(self):
