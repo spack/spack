@@ -38,6 +38,9 @@ __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
+# Infinity-like versions. The order in the list implies the comparision rules
+infinity_versions = ['develop']
+
 
 def int_if_int(string):
     """Convert a string to int if possible.  Otherwise, return a string."""
@@ -209,16 +212,23 @@ class Version(object):
             1.1
             1.1a
             1.a.1b
+            develop   == +infinity
+            1.develop == 1.+infinity
         Some non-numeric versions:
-            develop
             system
             myfavoritebranch
         """
-        return isinstance(self.version[0], numbers.Integral)
+        return (isinstance(self.version[0], numbers.Integral) or
+                self.version[0] in infinity_versions)
 
     def isdevelop(self):
-        """Triggers on the special case of the `@develop` version."""
-        return self.string == 'develop'
+        """Triggers on the special case of the `@develop-like` version."""
+        for inf in infinity_versions:
+            for v in self.version:
+                if v == inf:
+                    return True
+
+        return False
 
     @coerced
     def satisfies(self, other):
@@ -279,6 +289,16 @@ class Version(object):
             if a == b:
                 continue
             else:
+                if a in infinity_versions:
+                    if b in infinity_versions:
+                        return (infinity_versions.index(a) >
+                                infinity_versions.index(b))
+                    else:
+                        return False
+                if b in infinity_versions:
+                    return True
+
+                # Neither a nor b is infinity
                 # Numbers are always "newer" than letters.
                 # This is for consistency with RPM.  See patch
                 # #60884 (and details) from bugzilla #50977 in
@@ -289,6 +309,7 @@ class Version(object):
                     return type(b) == int
                 else:
                     return a < b
+
         # If the common prefix is equal, the one
         # with more segments is bigger.
         return len(self.version) < len(other.version)
@@ -307,18 +328,6 @@ class Version(object):
         # simple equality test first.
         if self.version == other.version:
             return False
-
-        # First priority: anything < develop
-        sdev = self.isdevelop()
-        if sdev:
-            return False    # source = develop, it can't be < anything
-
-        # Now we know !sdev
-        odev = other.isdevelop()
-        if odev:
-            return True    # src < dst
-
-        # now we know neither self nor other isdevelop().
 
         # Principle: Non-numeric is less than numeric
         # (so numeric will always be preferred by default)
