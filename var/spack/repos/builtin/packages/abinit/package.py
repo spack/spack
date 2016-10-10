@@ -21,23 +21,25 @@ class Abinit(Package):
 
     version('7.10.5', '276db3ebad3f57952952b5235e5813cc')
 
-    variant('openmp', default=False, description='Use OpenMP threads')
+    variant('openmp', default=False, description='Enables OpenMP threads')
+    #variant('scalapack', default=True, description='Enables scalapack support')
+    #variant('elpa', default=True, description='Uses elpa as an eigenvalue solver')
 
     # Add dependencies
     depends_on("blas")
     depends_on("lapack")
-    depends_on("mpi@2:")
 
-    depends_on("gsl")
-    #depends_on("libxc")
-    depends_on("etsf_io")
+    depends_on("mpi@2:")
 
     depends_on("scalapack")
     #depends_on("elpa", when="+elpa")
+
     depends_on("fftw +float")
 
     depends_on("netcdf-fortran")
     depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
+
+    depends_on("libxc")
 
     #depends_on('mpi', when='+mpi')
     #depends_on('fftw~mpi', when='~mpi')
@@ -91,14 +93,7 @@ class Abinit(Package):
         #    "with_libxc_libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
         #])
 
-        #oapp("--with-trio-flavor=netcdf+etsf_io-fallback")
-        oapp("--with-trio-flavor=netcdf+etsf_io")
-
-        # ETSF_IO
-        options.extend([
-            "--with-etsf-io-incs=-I%s" % spec["etsf_io"].prefix.include,
-            "--with-etsf-io-libs=-L%s -letsf_io_utils -letsf_io" % spec["etsf_io"].prefix.lib,
-        ])
+        oapp("--with-trio-flavor=netcdf")
 
         # Netcdf4/HDF5
         hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
@@ -108,7 +103,6 @@ class Abinit(Package):
         ])
 
         oapp("--with-dft-flavor=atompaw+libxc+wannier90")
-        oapp("--with-math-flavor=gsl")
 
         # Add a list of directories to search
         #search_list = []
