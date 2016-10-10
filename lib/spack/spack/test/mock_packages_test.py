@@ -84,15 +84,6 @@ compilers:
     modules: 'None'
 - compiler:
     spec: clang@3.3
-    operating_system: redhat6
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: clang@3.3
     operating_system: yosemite
     paths:
       cc: /path/to/clang
@@ -116,15 +107,6 @@ compilers:
       f77: /path/to/gfortran
       fc: /path/to/gfortran
     operating_system: SuSE11
-    spec: gcc@4.5.0
-    modules: 'None'
-- compiler:
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    operating_system: redhat6
     spec: gcc@4.5.0
     modules: 'None'
 - compiler:
@@ -173,7 +155,9 @@ packages:
       externalmodule@1.0%gcc@4.5.0: external-module
 """
 
+
 class MockPackagesTest(unittest.TestCase):
+
     def initmock(self):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
@@ -190,7 +174,8 @@ class MockPackagesTest(unittest.TestCase):
         self.mock_user_config = os.path.join(self.temp_config, 'user')
         mkdirp(self.mock_site_config)
         mkdirp(self.mock_user_config)
-        for confs in [('compilers.yaml', mock_compiler_config), ('packages.yaml', mock_packages_config)]:
+        for confs in [('compilers.yaml', mock_compiler_config),
+                      ('packages.yaml', mock_packages_config)]:
             conf_yaml = os.path.join(self.mock_site_config, confs[0])
             with open(conf_yaml, 'w') as f:
                 f.write(confs[1])
@@ -209,8 +194,7 @@ class MockPackagesTest(unittest.TestCase):
         # restore later.
         self.saved_deps = {}
 
-
-    def set_pkg_dep(self, pkg_name, spec):
+    def set_pkg_dep(self, pkg_name, spec, deptypes=spack.alldeps):
         """Alters dependence information for a package.
 
         Adds a dependency on <spec> to pkg.
@@ -224,8 +208,9 @@ class MockPackagesTest(unittest.TestCase):
             self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
         # Change dep spec
-        pkg.dependencies[spec.name] = { Spec(pkg_name) : spec }
-
+        # XXX(deptype): handle deptypes.
+        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
+        pkg._deptypes[spec.name] = set(deptypes)
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
@@ -234,6 +219,7 @@ class MockPackagesTest(unittest.TestCase):
         shutil.rmtree(self.temp_config, ignore_errors=True)
         spack.config.clear_config_caches()
 
+        # XXX(deptype): handle deptypes.
         # Restore dependency changes that happened during the test
         for pkg_name, (pkg, deps) in self.saved_deps.items():
             pkg.dependencies.clear()
@@ -242,10 +228,8 @@ class MockPackagesTest(unittest.TestCase):
         shutil.rmtree(spack.share_path, ignore_errors=True)
         spack.share_path = self.real_share_path
 
-
     def setUp(self):
         self.initmock()
-
 
     def tearDown(self):
         self.cleanmock()

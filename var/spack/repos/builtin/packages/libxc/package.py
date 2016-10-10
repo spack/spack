@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libxc(Package):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
@@ -31,12 +32,27 @@ class Libxc(Package):
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
+    version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
 
-    # This version does not compile due to an include file in F90 code!
-    #version('2.0.0', 'b15303a3c1f82d157e474ec97edafd83')
-
     def install(self, spec, prefix):
-        configure("--enable-fortran", "--enable-static", "--enable-shared", "--prefix=%s" % prefix)
-        make(parallel=False)
-        make("install")
+        # Optimizations for the Intel compiler, suggested by CP2K
+        optflags = '-O2'
+        if self.compiler.name == 'intel':
+            optflags += ' -xAVX -axCORE-AVX2 -ipo'
+            if which('xiar'):
+                env['AR'] = 'xiar'
+
+        env['CFLAGS']  = optflags
+        env['FCFLAGS'] = optflags
+
+        configure('--prefix={0}'.format(prefix),
+                  '--enable-shared')
+
+        make()
+
+        # libxc provides a testsuite, but many tests fail
+        # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
+        # make('check')
+
+        make('install')

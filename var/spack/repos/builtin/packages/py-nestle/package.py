@@ -35,10 +35,10 @@ class PyNestle(Package):
 
     # Required dependencies
     extends('python')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=nolink)
 
     # Optional dependencies
-    depends_on('py-scipy')
+    depends_on('py-scipy', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

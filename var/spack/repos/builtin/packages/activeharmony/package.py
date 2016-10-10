@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Activeharmony(Package):
-    """Active Harmony: a framework for auto-tuning (the automated search for values to improve the performance of a target application)."""
+    """Active Harmony: a framework for auto-tuning (the automated search for
+       values to improve the performance of a target application)."""
     homepage = "http://www.dyninst.org/harmony"
     url      = "http://www.dyninst.org/sites/default/files/downloads/harmony/ah-4.5.tar.gz"
 
@@ -34,6 +36,3 @@ class Activeharmony(Package):
     def install(self, spec, prefix):
         make("CFLAGS=-O3")
         make("install", 'PREFIX=%s' % prefix)
-
-from spack import *
-

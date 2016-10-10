@@ -61,16 +61,16 @@ class Octave(Package):
     variant('qrupdate',   default=False)
     variant('qscintilla', default=False)
     variant('qt',         default=False)
-    variant('suiteparse', default=False)
+    variant('suitesparse', default=False)
     variant('zlib',       default=False)
 
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
     # Octave does not configure with sed from darwin:
-    depends_on('sed', sys.platform == 'darwin')
+    depends_on('sed', when=sys.platform == 'darwin', type='build')
     depends_on('pcre')
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
 
     # Strongly recommended dependencies
     depends_on('readline',     when='+readline')

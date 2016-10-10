@@ -40,9 +40,8 @@ import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
-from spack.stage import Stage
 from spack.version import *
-from spack.util.compression import extension, allowed_archive
+from spack.util.compression import allowed_archive
 
 
 def mirror_archive_filename(spec, fetcher):
@@ -52,10 +51,17 @@ def mirror_archive_filename(spec, fetcher):
 
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
-            # If we fetch this version with a URLFetchStrategy, use URL's archive type
-            ext = url.downloaded_file_extension(fetcher.url)
+            # If we fetch with a URLFetchStrategy, use URL's archive type
+            ext = url.determine_url_file_extension(fetcher.url)
+            ext = ext or spec.package.versions[spec.package.version].get(
+                'extension', None)
+            ext = ext.lstrip('.')
+            if not ext:
+                raise MirrorError(
+                    "%s version does not specify an extension" % spec.name +
+                    " and could not parse extension from %s" % fetcher.url)
         else:
-            # If the archive shouldn't be expanded, don't check for its extension.
+            # If the archive shouldn't be expanded, don't check extension.
             ext = None
     else:
         # Otherwise we'll make a .tar.gz ourselves
@@ -106,7 +112,9 @@ def get_matching_versions(specs, **kwargs):
 
 def suggest_archive_basename(resource):
     """
-    Return a tentative basename for an archive. Raise an exception if the name is among the allowed archive types.
+    Return a tentative basename for an archive.
+
+    Raises an exception if the name is not an allowed archive type.
 
     :param fetcher:
     :return:
@@ -119,27 +127,28 @@ def suggest_archive_basename(resource):
 
 def create(path, specs, **kwargs):
     """Create a directory to be used as a spack mirror, and fill it with
-       package archives.
+    package archives.
 
-       Arguments:
-         path    Path to create a mirror directory hierarchy in.
-         specs   Any package versions matching these specs will be added
-                 to the mirror.
+    Arguments:
+        path: Path to create a mirror directory hierarchy in.
+        specs: Any package versions matching these specs will be added \
+            to the mirror.
 
-       Keyword args:
-         no_checksum:  If True, do not checkpoint when fetching (default False)
-         num_versions: Max number of versions to fetch per spec,
-                       if spec is ambiguous (default is 0 for all of them)
+    Keyword args:
+        no_checksum: If True, do not checkpoint when fetching (default False)
+        num_versions: Max number of versions to fetch per spec, \
+            if spec is ambiguous (default is 0 for all of them)
 
-       Return Value:
-         Returns a tuple of lists: (present, mirrored, error)
-         * present:  Package specs that were already present.
-         * mirrored: Package specs that were successfully mirrored.
-         * error:    Package specs that failed to mirror due to some error.
+    Return Value:
+        Returns a tuple of lists: (present, mirrored, error)
 
-       This routine iterates through all known package versions, and
-       it creates specs for those versions.  If the version satisfies any spec
-       in the specs list, it is downloaded and added to the mirror.
+        * present:  Package specs that were already present.
+        * mirrored: Package specs that were successfully mirrored.
+        * error:    Package specs that failed to mirror due to some error.
+
+    This routine iterates through all known package versions, and
+    it creates specs for those versions.  If the version satisfies any spec
+    in the specs list, it is downloaded and added to the mirror.
     """
     # Make sure nothing is in the way.
     if os.path.isfile(path):
@@ -170,7 +179,7 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
-    # Iterate through packages and download all the safe tarballs for each of them
+    # Iterate through packages and download all safe tarballs for each
     for spec in version_specs:
         add_single_spec(spec, mirror_root, categories, **kwargs)
 
@@ -190,12 +199,15 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 fetcher = stage.fetcher
                 if ii == 0:
                     # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
+                    archive_path = os.path.abspath(join_path(
+                        mirror_root, mirror_archive_path(spec, fetcher)))
                     name = spec.format("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = join_path(subdir, suggest_archive_basename(resource))
-                    name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
+                    archive_path = join_path(
+                        subdir, suggest_archive_basename(resource))
+                    name = "{resource} ({pkg}).".format(
+                        resource=resource.name, pkg=spec.format("$_$@"))
                 subdir = os.path.dirname(archive_path)
                 mkdirp(subdir)
 
@@ -217,15 +229,18 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             categories['present'].append(spec)
         else:
             categories['mirrored'].append(spec)
+
     except Exception as e:
         if spack.debug:
             sys.excepthook(*sys.exc_info())
         else:
-            tty.warn("Error while fetching %s" % spec.format('$_$@'), e.message)
+            tty.warn("Error while fetching %s"
+                     % spec.format('$_$@'), e.message)
         categories['error'].append(spec)
 
 
 class MirrorError(spack.error.SpackError):
     """Superclass of all mirror-creation related errors."""
+
     def __init__(self, msg, long_msg=None):
         super(MirrorError, self).__init__(msg, long_msg)

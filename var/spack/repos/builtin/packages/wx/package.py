@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Wx(Package):
     """wxWidgets is a C++ library that lets developers create
        applications for Windows, Mac OS X, Linux and other platforms
@@ -43,8 +44,8 @@ class Wx(Package):
     depends_on('gtkplus')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-unicode", "--disable-precomp-headers")
+        configure("--prefix=%s" % prefix, "--enable-unicode",
+                  "--disable-precomp-headers")
 
         make(parallel=False)
         make("install")
-

@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
+
 
 class PyVirtualenv(Package):
     """virtualenv is a tool to create isolated Python environments."""
@@ -35,7 +35,7 @@ class PyVirtualenv(Package):
     version('15.0.1', '28d76a0d9cbd5dc42046dd14e76a6ecc')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

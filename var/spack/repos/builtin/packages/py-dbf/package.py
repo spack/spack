@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyDbf(Package):
     """Pure python package for reading/writing dBase, FoxPro, and Visual FoxPro
     .dbf files (including memos)"""
@@ -36,4 +37,4 @@ class PyDbf(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

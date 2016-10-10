@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyNetcdf(Package):
     """Python interface to the netCDF Library."""
     homepage = "http://unidata.github.io/netcdf4-python"
@@ -32,9 +33,9 @@ class PyNetcdf(Package):
     version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
 
     extends('python')
-    depends_on('py-numpy')
-    depends_on('py-cython')
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-cython', type=nolink)
     depends_on('netcdf')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

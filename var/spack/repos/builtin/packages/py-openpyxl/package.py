@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyOpenpyxl(Package):
     """A Python library to read/write Excel 2007 xlsx/xlsm files"""
 
@@ -34,8 +35,8 @@ class PyOpenpyxl(Package):
 
     extends('python')
 
-    depends_on('py-jdcal')
-    depends_on('py-setuptools')
+    depends_on('py-jdcal', type=nolink)
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

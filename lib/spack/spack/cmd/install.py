@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
 import argparse
 
 import llnl.util.tty as tty
@@ -31,10 +32,15 @@ import spack.cmd
 
 description = "Build and install packages"
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="Do not try to install dependencies of requested packages.")
+    subparser.add_argument(
+        '-d', '--dependencies-only', action='store_true', dest='deps_only',
+        help='Install dependencies of this package, ' +
+        'but not the package itself.')
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
@@ -52,9 +58,16 @@ def setup_parser(subparser):
         help="Display verbose build output while installing.")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install.  Just remove the prefix and touch a fake file in it.")
+        help="Fake install. Just remove prefix and create a fake file.")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
+    subparser.add_argument(
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to install")
+    subparser.add_argument(
+        '--run-tests', action='store_true', dest='run_tests',
+        help="Run tests during installation of a package.")
 
 
 def install(parser, args):
@@ -75,8 +88,11 @@ def install(parser, args):
             package.do_install(
                 keep_prefix=args.keep_prefix,
                 keep_stage=args.keep_stage,
-                ignore_deps=args.ignore_deps,
+                install_deps=not args.ignore_deps,
+                install_self=not args.deps_only,
                 make_jobs=args.jobs,
+                run_tests=args.run_tests,
                 verbose=args.verbose,
                 fake=args.fake,
+                dirty=args.dirty,
                 explicit=True)

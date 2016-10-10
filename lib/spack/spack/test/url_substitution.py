@@ -26,37 +26,31 @@
 This test does sanity checks on substituting new versions into URLs
 """
 import unittest
-
 import spack.url as url
 
 
-class PackageSanityTest(unittest.TestCase):
-    def test_hypre_url_substitution(self):
-        base = "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-2.9.0b.tar.gz"
+base = "https://comp.llnl.gov/linear_solvers/download/hypre-2.9.0b.tar.gz"
+stem = "https://comp.llnl.gov/linear_solvers/download/hypre-"
 
+
+class PackageSanityTest(unittest.TestCase):
+
+    def test_hypre_url_substitution(self):
         self.assertEqual(url.substitute_version(base, '2.9.0b'), base)
         self.assertEqual(
-            url.substitute_version(base, '2.8.0b'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-2.8.0b.tar.gz")
+            url.substitute_version(base, '2.8.0b'), stem + "2.8.0b.tar.gz")
         self.assertEqual(
-            url.substitute_version(base, '2.7.0b'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-2.7.0b.tar.gz")
+            url.substitute_version(base, '2.7.0b'), stem + "2.7.0b.tar.gz")
         self.assertEqual(
-            url.substitute_version(base, '2.6.0b'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-2.6.0b.tar.gz")
+            url.substitute_version(base, '2.6.0b'), stem + "2.6.0b.tar.gz")
         self.assertEqual(
-            url.substitute_version(base, '1.14.0b'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-1.14.0b.tar.gz")
+            url.substitute_version(base, '1.14.0b'), stem + "1.14.0b.tar.gz")
         self.assertEqual(
-            url.substitute_version(base, '1.13.0b'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-1.13.0b.tar.gz")
+            url.substitute_version(base, '1.13.0b'), stem + "1.13.0b.tar.gz")
         self.assertEqual(
-            url.substitute_version(base, '2.0.0'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-2.0.0.tar.gz")
+            url.substitute_version(base, '2.0.0'), stem + "2.0.0.tar.gz")
         self.assertEqual(
-            url.substitute_version(base, '1.6.0'),
-            "https://computation-rnd.llnl.gov/linear_solvers/download/hypre-1.6.0.tar.gz")
-
+            url.substitute_version(base, '1.6.0'), stem + "1.6.0.tar.gz")
 
     def test_otf2_url_substitution(self):
         base = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"

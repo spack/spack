@@ -25,18 +25,18 @@
 from spack import *
 import os
 
+
 class PyShiboken(Package):
-    """Shiboken generates bindings for C++ libraries using CPython source code."""
+    """Shiboken generates bindings for C++ libraries using CPython."""
     homepage = "https://shiboken.readthedocs.org/"
     url      = "https://pypi.python.org/packages/source/S/Shiboken/Shiboken-1.2.2.tar.gz"
 
     version('1.2.2', '345cfebda221f525842e079a6141e555')
 
-    # TODO: make build dependency
-    # depends_on("cmake")
+    depends_on('cmake', type='build')
 
     extends('python')
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type='build')
     depends_on("libxml2")
     depends_on("qt@:4.8")
 
@@ -46,7 +46,8 @@ class PyShiboken(Package):
         # They're called BY setup.py so we have to patch it.
         pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'Shiboken'))
+        rpath.append(os.path.join(
+            self.prefix, pypkg.site_packages_dir, 'Shiboken'))
 
         filter_file(
             r'OPTION_CMAKE,',
@@ -62,8 +63,5 @@ class PyShiboken(Package):
             r'#rpath_cmd(shiboken_path, srcpath)',
             'shiboken_postinstall.py')
 
-
     def install(self, spec, prefix):
-        python('setup.py', 'install',
-               '--prefix=%s' % prefix,
-               '--jobs=%s' % make_jobs)
+        setup_py('install', '--prefix=%s' % prefix, '--jobs=%s' % make_jobs)

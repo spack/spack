@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Mpileaks(Package):
-    """Tool to detect and report leaked MPI objects like MPI_Requests and MPI_Datatypes."""
+    """Tool to detect and report leaked MPI objects like MPI_Requests and
+       MPI_Datatypes."""
 
     homepage = "https://github.com/hpc/mpileaks"
     url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"

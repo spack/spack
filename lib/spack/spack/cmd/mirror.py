@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import sys
 from datetime import datetime
 
 import argparse
@@ -39,6 +38,7 @@ from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
 description = "Manage mirrors."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -61,8 +61,9 @@ def setup_parser(subparser):
         '-D', '--dependencies', action='store_true',
         help="Also fetch all dependencies")
     create_parser.add_argument(
-        '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
-        help="Only fetch one 'preferred' version per spec, not all known versions.")
+        '-o', '--one-version-per-spec', action='store_const',
+        const=1, default=0,
+        help="Only fetch one 'preferred' version per spec, not all known.")
 
     scopes = spack.config.config_scopes
 
@@ -70,7 +71,7 @@ def setup_parser(subparser):
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
     add_parser.add_argument('name', help="Mnemonic name for mirror.")
     add_parser.add_argument(
-        'url', help="URL of mirror directory created by 'spack mirror create'.")
+        'url', help="URL of mirror directory from 'spack mirror create'.")
     add_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
         help="Configuration scope to modify.")
@@ -107,7 +108,7 @@ def mirror_add(args):
             tty.die("Mirror with url %s already exists." % url)
         # should only be one item per mirror dict.
 
-    items = [(n,u) for n,u in mirrors.items()]
+    items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (args.name, url))
     mirrors = syaml_dict(items)
     spack.config.update_config('mirrors', mirrors, scope=args.scope)
@@ -121,7 +122,7 @@ def mirror_remove(args):
     if not mirrors:
         mirrors = syaml_dict()
 
-    if not name in mirrors:
+    if name not in mirrors:
         tty.die("No mirror with name %s" % name)
 
     old_value = mirrors.pop(name)
@@ -152,7 +153,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError, e:
-                tty.die("Parse error in %s, line %d:" % (args.file, i+1),
+                tty.die("Parse error in %s, line %d:" % (args.file, i + 1),
                         ">>> " + string, str(e))
     return specs
 
@@ -179,7 +180,7 @@ def mirror_create(args):
         new_specs = set()
         for spec in specs:
             spec.concretize()
-            for s in spec.traverse():
+            for s in spec.traverse(deptype_query=spack.alldeps):
                 new_specs.add(s)
         specs = list(new_specs)
 
@@ -214,10 +215,10 @@ def mirror_create(args):
 
 
 def mirror(parser, args):
-    action = { 'create' : mirror_create,
-               'add'    : mirror_add,
-               'remove' : mirror_remove,
-               'rm'     : mirror_remove,
-               'list'   : mirror_list }
+    action = {'create': mirror_create,
+              'add': mirror_add,
+              'remove': mirror_remove,
+              'rm': mirror_remove,
+              'list': mirror_list}
 
     action[args.mirror_command](args)

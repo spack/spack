@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class GdkPixbuf(Package):
     """The Gdk Pixbuf is a toolkit for image loading and pixel buffer
        manipulation. It is used by GTK+ 2 and GTK+ 3 to load and

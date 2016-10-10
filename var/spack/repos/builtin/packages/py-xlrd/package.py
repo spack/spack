@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyXlrd(Package):
     """Library for developers to extract data from Microsoft Excel (tm)
     spreadsheet files"""
@@ -36,4 +37,4 @@ class PyXlrd(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

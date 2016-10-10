@@ -36,7 +36,7 @@ class PyGenshi(Package):
     version('0.6', '604e8b23b4697655d36a69c2d8ef7187')
 
     extends("python")
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

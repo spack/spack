@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Qrupdate(Package):
     """qrupdate is a Fortran library for fast updates of QR and
     Cholesky decompositions."""

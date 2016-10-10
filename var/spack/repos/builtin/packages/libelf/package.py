@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libelf(Package):
     """libelf lets you read, modify or create ELF object files in an
        architecture-independent way. The library takes care of size

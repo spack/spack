@@ -26,16 +26,20 @@ from spack import *
 
 
 class Ghostscript(Package):
-    """an interpreter for the PostScript language and for PDF. """
+    """An interpreter for the PostScript language and for PDF."""
+
     homepage = "http://ghostscript.com/"
-    url      = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.18.tar.gz"
+    url = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.18.tar.gz"
 
     version('9.18', '33a47567d7a591c00a253caddd12a88a')
 
     parallel = False
 
+    depends_on('libtiff')
+
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-shared")
+        configure('--prefix={0}'.format(prefix),
+                  '--with-system-libtiff')
 
         make()
-        make("install")
+        make('install')

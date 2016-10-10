@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyJdcal(Package):
     """Julian dates from proleptic Gregorian and Julian calendars"""
 
@@ -35,4 +36,4 @@ class PyJdcal(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

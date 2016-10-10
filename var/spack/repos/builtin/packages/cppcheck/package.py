@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cppcheck(Package):
     """A tool for static C/C++ code analysis."""
     homepage = "http://cppcheck.sourceforge.net/"

@@ -49,13 +49,6 @@ class IntelInstaller(Package):
 
     def install(self, spec, prefix):
 
-        # Remove the installation DB, otherwise it will try to install into
-        # location of other Intel builds
-        if os.path.exists(os.path.join(os.environ["HOME"], "intel",
-                          "intel_sdp_products.db")):
-            os.remove(os.path.join(os.environ["HOME"], "intel",
-                      "intel_sdp_products.db"))
-
         if not hasattr(self, "intel_prefix"):
             self.intel_prefix = self.prefix
 
@@ -66,12 +59,14 @@ ACCEPT_EULA=accept
 PSET_MODE=install
 CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
 PSET_INSTALL_DIR=%s
+NONRPM_DB_DIR=%s
 ACTIVATION_LICENSE_FILE=%s
 ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
 CONTINUE_WITH_OPTIONAL_ERROR=yes
 COMPONENTS=%s
-""" % (self.intel_prefix, self.global_license_file, self.intel_components))
+""" % (self.intel_prefix, self.intel_prefix, self.global_license_file,
+                self.intel_components))
 
         install_script = Executable("./install.sh")
         install_script('--silent', silent_config_filename)
@@ -82,16 +77,16 @@ class Intel(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html"""
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
     # TODO: can also try the online installer (will download files on demand)
     version('16.0.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
         % os.getcwd())
     version('16.0.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
         % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
@@ -111,8 +106,8 @@ class Intel(IntelInstaller):
             self.prefix.lib, "intel64", "libimf.a")))[0]
 
         # symlink or copy?
-        os.symlink(self.global_license_file, os.path.join(absbindir,
-                   "license.lic"))
+        os.symlink(self.global_license_file,
+                   os.path.join(absbindir, "license.lic"))
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
@@ -123,3 +118,35 @@ class Intel(IntelInstaller):
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
                    os.path.join(self.prefix.man, "man1"))
+
+    def setup_environment(self, spack_env, run_env):
+
+        # Remove paths that were guessed but are incorrect for this package.
+        run_env.remove_path('LIBRARY_PATH',
+                            join_path(self.prefix, 'lib'))
+        run_env.remove_path('LD_LIBRARY_PATH',
+                            join_path(self.prefix, 'lib'))
+        run_env.remove_path('CPATH',
+                            join_path(self.prefix, 'include'))
+
+        # Add the default set of variables
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'intel64'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'intel64'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb', 'lib',
+                                       'intel64', 'gcc4.4'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb', 'lib',
+                                       'intel64', 'gcc4.4'))
+        run_env.prepend_path('CPATH',
+                             join_path(self.prefix, 'tbb', 'include'))
+        run_env.prepend_path('MIC_LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'mic'))
+        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'mic'))
+        run_env.prepend_path('MIC_LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
+        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb', 'lib', 'mic'))

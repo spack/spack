@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class Cblas(Package):
     """The BLAS (Basic Linear Algebra Subprograms) are routines that
@@ -42,10 +42,10 @@ class Cblas(Package):
     def patch(self):
         mf = FileFilter('Makefile.in')
 
-        mf.filter('^BLLIB =.*', 'BLLIB = %s/libblas.a' % self.spec['blas'].prefix.lib)
+        mf.filter('^BLLIB =.*', 'BLLIB = %s/libblas.a' %
+                  self.spec['blas'].prefix.lib)
         mf.filter('^CC =.*', 'CC = cc')
         mf.filter('^FC =.*', 'FC = f90')
-
 
     def install(self, spec, prefix):
         make('all')
@@ -54,6 +54,5 @@ class Cblas(Package):
 
         # Rename the generated lib file to libcblas.a
         install('./lib/cblas_LINUX.a', '%s/libcblas.a' % prefix.lib)
-        install('./include/cblas.h','%s' % prefix.include)
-        install('./include/cblas_f77.h','%s' % prefix.include)
-
+        install('./include/cblas.h', '%s' % prefix.include)
+        install('./include/cblas_f77.h', '%s' % prefix.include)

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyBlessings(Package):
     """A nicer, kinder way to write to the terminal """
     homepage = "https://github.com/erikrose/blessings"
@@ -31,9 +32,9 @@ class PyBlessings(Package):
 
     version('1.6', '4f552a8ebcd4982693c92571beb99394')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     extends("python")
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

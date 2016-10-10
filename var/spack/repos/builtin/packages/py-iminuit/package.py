@@ -35,12 +35,12 @@ class PyIminuit(Package):
 
     # Required dependencies
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     # Optional dependencies
-    depends_on('py-numpy')
-    depends_on('py-matplotlib')
-    depends_on('py-cython')
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-matplotlib', type=nolink)
+    depends_on('py-cython', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

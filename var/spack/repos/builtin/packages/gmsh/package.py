@@ -26,8 +26,7 @@ from spack import *
 
 
 class Gmsh(Package):
-    """
-    Gmsh is a free 3D finite element grid generator with a built-in CAD engine
+    """Gmsh is a free 3D finite element grid generator with a built-in CAD engine
     and post-processor. Its design goal is to provide a fast, light and
     user-friendly meshing tool with parametric input and advanced visualization
     capabilities. Gmsh is built around four modules: geometry, mesh, solver and
@@ -35,25 +34,32 @@ class Gmsh(Package):
     either interactively using the graphical user interface or in ASCII text
     files using Gmsh's own scripting language.
     """
+
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
 
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
-    variant('shared',      default=True,  description='Enables the build of shared libraries')
-    variant('debug',       default=False, description='Builds the library in debug mode')
-    variant('mpi',         default=False, description='Builds MPI support for parser and solver')
-    variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
+    variant('shared',      default=True,
+            description='Enables the build of shared libraries')
+    variant('debug',       default=False,
+            description='Builds the library in debug mode')
+    variant('mpi',         default=False,
+            description='Builds MPI support for parser and solver')
+    variant('fltk',        default=False,
+            description='Enables the build of the FLTK GUI')
     variant('hdf5',        default=False, description='Enables HDF5 support')
-    variant('compression', default=True,  description='Enables IO compression through zlib')
+    variant('compression', default=True,
+            description='Enables IO compression through zlib')
     variant('oce',         default=False, description='Build with OCE')
     variant('petsc',       default=False, description='Build with PETSc')
-    variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
+    variant('slepc',       default=False,
+            description='Build with SLEPc (only when PETSc is enabled)')
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cmake@2.8:')
+    depends_on('cmake@2.8:', type='build')
     depends_on('gmp')
     depends_on('mpi',  when='+mpi')
     # Assumes OpenGL with GLU is already provided by the system:
@@ -81,9 +87,9 @@ class Gmsh(Package):
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        options.append('-DBLAS_LAPACK_LIBRARIES=%s %s' %
-                       (to_link_flags(spec['lapack'].lapack_shared_lib),
-                        to_link_flags(spec['blas'].blas_shared_lib)))
+        blas_lapack = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        options.append(
+            '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 
         # Gmsh does not have an option to compile against external metis.
         # Its own Metis, however, fails to build

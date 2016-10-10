@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyyaml(Package):
     """PyYAML is a YAML parser and emitter for Python."""
     homepage = "http://pyyaml.org/wiki/PyYAML"
@@ -34,4 +35,4 @@ class PyPyyaml(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

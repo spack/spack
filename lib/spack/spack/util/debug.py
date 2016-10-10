@@ -33,10 +33,11 @@ import code
 import traceback
 import signal
 
+
 def debug_handler(sig, frame):
     """Interrupt running process, and provide a python prompt for
     interactive debugging."""
-    d = {'_frame':frame}         # Allow access to frame object.
+    d = {'_frame': frame}         # Allow access to frame object.
     d.update(frame.f_globals)    # Unless shadowed by global
     d.update(frame.f_locals)
 
@@ -48,5 +49,5 @@ def debug_handler(sig, frame):
 
 
 def register_interrupt_handler():
-    """Register a handler to print a stack trace and enter an interpreter on Ctrl-C"""
+    """Print traceback and enter an interpreter on Ctrl-C"""
     signal.signal(signal.SIGINT, debug_handler)

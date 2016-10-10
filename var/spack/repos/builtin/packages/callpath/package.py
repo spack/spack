@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Callpath(Package):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""
@@ -39,6 +40,7 @@ class Callpath(Package):
     depends_on("dyninst")
     depends_on("adept-utils")
     depends_on("mpi")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         # TODO: offer options for the walker used.

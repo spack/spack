@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import re
+
 
 class PyNumexpr(Package):
     """Fast numerical expression evaluator for NumPy"""
@@ -34,7 +34,7 @@ class PyNumexpr(Package):
     version('2.5', '84f66cced45ba3e30dcf77a937763aaa')
 
     extends('python')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

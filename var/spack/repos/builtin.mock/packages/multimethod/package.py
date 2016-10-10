@@ -22,11 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import imp
-from llnl.util.filesystem import join_path
-from spack.util.naming import mod_to_class
 from spack import *
 import spack.architecture
+
 
 class Multimethod(Package):
     """This package is designed for use with Spack's multimethod test.
@@ -52,7 +50,6 @@ class Multimethod(Package):
     def no_version_2(self):
         return 4
 
-
     #
     # These functions overlap, so there is ambiguity, but we'll take
     # the first one.
@@ -64,7 +61,6 @@ class Multimethod(Package):
     @when('@2:')
     def version_overlap(self):
         return 2
-
 
     #
     # More complicated case with cascading versions.
@@ -84,7 +80,6 @@ class Multimethod(Package):
     def mpi_version(self):
         return 1
 
-
     #
     # Use these to test whether the default method is called when no
     # match is found.  This also tests whether we can switch methods
@@ -101,8 +96,6 @@ class Multimethod(Package):
     def has_a_default(self):
         return 'intel'
 
-
-
     #
     # Make sure we can switch methods on different target
     #
@@ -112,15 +105,16 @@ class Multimethod(Package):
         targets = targets[:-1]
 
     for target in targets:
-        @when('target='+target.name)
+        @when('target=' + target.name)
         def different_by_target(self):
-            if isinstance(self.spec.architecture.target,basestring):
+            if isinstance(self.spec.architecture.target, basestring):
                 return self.spec.architecture.target
             else:
                 return self.spec.architecture.target.name
     #
     # Make sure we can switch methods on different dependencies
     #
+
     @when('^mpich')
     def different_by_dep(self):
         return 'mpich'
@@ -128,7 +122,6 @@ class Multimethod(Package):
     @when('^zmpi')
     def different_by_dep(self):
         return 'zmpi'
-
 
     #
     # Make sure we can switch on virtual dependencies

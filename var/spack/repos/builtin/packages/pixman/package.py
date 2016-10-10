@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
+
 
 class Pixman(Package):
     """The Pixman package contains a library that provides low-level
@@ -33,10 +35,17 @@ class Pixman(Package):
 
     version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
 
+    depends_on("pkg-config", type="build")
     depends_on("libpng")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--disable-gtk")
+        config_args = ["--prefix=" + prefix,
+                       "--disable-gtk"]
+
+        if sys.platform == "darwin":
+            config_args.append("--disable-mmx")
+
+        configure(*config_args)
+
         make()
         make("install")

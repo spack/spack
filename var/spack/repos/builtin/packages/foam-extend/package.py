@@ -16,12 +16,24 @@ class FoamExtend(Package):
     version('3.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.0')
 
     variant('paraview', default=False, description='Enable ParaFOAM')
-    variant('scotch', default=True, description='Activate Scotch as a possible decomposition library')
-    variant('ptscotch', default=True, description='Activate PT-Scotch as a possible decomposition library')
-    variant('metis', default=True, description='Activate Metis as a possible decomposition library')
-    variant('parmetis', default=True, description='Activate Parmetis as a possible decomposition library')
-    variant('parmgridgen', default=True, description='Activate Parmgridgen support')
-    variant('source', default=True, description='Installs also the source folder')
+    variant(
+        'scotch', default=True,
+        description='Activate Scotch as a possible decomposition library')
+    variant(
+        'ptscotch', default=True,
+        description='Activate PT-Scotch as a possible decomposition library')
+    variant(
+        'metis', default=True,
+        description='Activate Metis as a possible decomposition library')
+    variant(
+        'parmetis', default=True,
+        description='Activate Parmetis as a possible decomposition library')
+    variant(
+        'parmgridgen', default=True,
+        description='Activate Parmgridgen support')
+    variant(
+        'source', default=True,
+        description='Installs also the source folder')
 
     supported_compilers = {'clang': 'Clang', 'gcc': 'Gcc', 'intel': 'Icc'}
 
@@ -29,6 +41,7 @@ class FoamExtend(Package):
     depends_on('python')
     depends_on('flex@:2.5.99')
     depends_on('zlib')
+    depends_on('cmake', type='build')
 
     depends_on('scotch ~ metis', when='~ptscotch+scotch')
     depends_on('scotch ~ metis + mpi', when='+ptscotch')
@@ -79,7 +92,7 @@ class FoamExtend(Package):
             filter_file(
                 r'-lMGridGen',
                 r'-lmgrid',
-                'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # NOQA: ignore=501
+                'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # noqa
 
         # Get the wmake arch and compiler
         (arch, foam_compiler) = self.set_arch()

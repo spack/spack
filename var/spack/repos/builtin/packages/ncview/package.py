@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ncview(Package):
     """Simple viewer for NetCDF files."""
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
@@ -33,6 +34,7 @@ class Ncview(Package):
 
     depends_on("netcdf")
     depends_on("udunits2")
+    depends_on("libpng")
 
     # OS Dependencies
     # Ubuntu: apt-get install libxaw7-dev

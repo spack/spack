@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyArgcomplete(Package):
     """Bash tab completion for argparse."""
 
@@ -35,4 +36,4 @@ class PyArgcomplete(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

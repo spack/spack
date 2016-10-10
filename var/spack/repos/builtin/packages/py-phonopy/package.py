@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPhonopy(Package):
     """Phonopy is an open source package for phonon
     calculations at harmonic and quasi-harmonic levels."""
@@ -33,10 +34,10 @@ class PyPhonopy(Package):
     version('1.10.0', '973ed1bcea46e21b9bf747aab9061ff6')
 
     extends('python')
-    depends_on('py-numpy')
-    depends_on('py-scipy')
-    depends_on('py-matplotlib')
-    depends_on('py-pyyaml')
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-scipy', type=nolink)
+    depends_on('py-matplotlib', type=nolink)
+    depends_on('py-pyyaml', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--home=%s' % prefix)
+        setup_py('install', '--home=%s' % prefix)

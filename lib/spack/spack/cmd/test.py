@@ -23,28 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from pprint import pprint
 
 from llnl.util.filesystem import join_path, mkdirp
 from llnl.util.tty.colify import colify
-from llnl.util.lang import list_modules
 
 import spack
 import spack.test
 from spack.fetch_strategy import FetchError
 
-description ="Run unit tests"
+description = "Run unit tests"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
         'names', nargs='*', help="Names of tests to run.")
     subparser.add_argument(
-        '-l', '--list', action='store_true', dest='list', help="Show available tests")
+        '-l', '--list', action='store_true', dest='list',
+        help="Show available tests")
     subparser.add_argument(
-        '--createXmlOutput', action='store_true', dest='createXmlOutput', 
+        '--createXmlOutput', action='store_true', dest='createXmlOutput',
         help="Create JUnit XML from test results")
     subparser.add_argument(
-        '--xmlOutputDir', dest='xmlOutputDir', 
+        '--xmlOutputDir', dest='xmlOutputDir',
         help="Nose creates XML files in this directory")
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
@@ -52,22 +52,25 @@ def setup_parser(subparser):
 
 
 class MockCache(object):
+
     def store(self, copyCmd, relativeDst):
         pass
 
-    def fetcher(self, targetPath, digest):
+    def fetcher(self, targetPath, digest, **kwargs):
         return MockCacheFetcher()
 
 
 class MockCacheFetcher(object):
+
     def set_stage(self, stage):
         pass
-    
+
     def fetch(self):
         raise FetchError("Mock cache always fails for tests")
 
     def __str__(self):
         return "[mock fetcher]"
+
 
 def test(parser, args):
     if args.list:
@@ -82,8 +85,8 @@ def test(parser, args):
                 outputDir = join_path(os.getcwd(), "test-output")
             else:
                 outputDir = os.path.abspath(args.xmlOutputDir)
-            
+
             if not os.path.exists(outputDir):
                 mkdirp(outputDir)
-        spack.cache = MockCache()
+        spack.fetch_cache = MockCache()
         spack.test.run(args.names, outputDir, args.verbose)

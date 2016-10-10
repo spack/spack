@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPychecker(Package):
     """"""
     homepage = "http://pychecker.sourceforge.net/"
@@ -34,4 +35,4 @@ class PyPychecker(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

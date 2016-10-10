@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Vtk(Package):
     """The Visualization Toolkit (VTK) is an open-source, freely
     available software system for 3D computer graphics, image
@@ -31,16 +32,26 @@ class Vtk(Package):
     homepage = "http://www.vtk.org"
     url      = "http://www.vtk.org/files/release/6.1/VTK-6.1.0.tar.gz"
 
-    version("7.0.0", "5fe35312db5fb2341139b8e4955c367d", url="http://www.vtk.org/files/release/7.0/VTK-7.0.0.tar.gz")
+    version("7.0.0", "5fe35312db5fb2341139b8e4955c367d",
+            url="http://www.vtk.org/files/release/7.0/VTK-7.0.0.tar.gz")
 
-    version("6.3.0", '0231ca4840408e9dd60af48b314c5b6d', url="http://www.vtk.org/files/release/6.3/VTK-6.3.0.tar.gz")
+    version("6.3.0", '0231ca4840408e9dd60af48b314c5b6d',
+            url="http://www.vtk.org/files/release/6.3/VTK-6.3.0.tar.gz")
 
     version('6.1.0', '25e4dfb3bad778722dcaec80cd5dab7d')
 
+    patch("gcc.patch")
+
+    extends('python', when='+python')
+    depends_on('python', when='+python')
+    depends_on('cmake', type='build')
     depends_on("qt")
 
     # VTK7 defaults to OpenGL2 rendering backend
-    variant('opengl2', default=True, description='Build with OpenGL instead of OpenGL2 as rendering backend')
+    variant('opengl2', default=True,
+            description='Build with OpenGL instead of OpenGL2 backend')
+    variant('python', default=False,
+            description='Build the python modules')
 
     def install(self, spec, prefix):
         def feature_to_bool(feature, on='ON', off='OFF'):
@@ -52,8 +63,8 @@ class Vtk(Package):
             cmake_args = [
                 "..",
                 "-DBUILD_SHARED_LIBS=ON",
+                "-DVTK_WRAP_PYTHON=" + ("ON" if "+python" in spec else "OFF"),
                 # Disable wrappers for other languages.
-                "-DVTK_WRAP_PYTHON=OFF",
                 "-DVTK_WRAP_JAVA=OFF",
                 "-DVTK_WRAP_TCL=OFF"]
             cmake_args.extend(std_cmake_args)
@@ -66,7 +77,7 @@ class Vtk(Package):
                 "-DVTK_Group_Qt=OFF",
                 "-DModule_vtkGUISupportQt:BOOL=ON",
                 "-DModule_vtkGUISupportQtOpenGL:BOOL=ON"
-                ])
+            ])
 
             if spec['qt'].satisfies('@5'):
                 cmake_args.append("-DVTK_QT_VERSION:STRING=5")
@@ -75,7 +86,8 @@ class Vtk(Package):
                 cmake_args.append("-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY")
                 cmake_args.append("-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY")
 
-            cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=%s' % feature_to_bool('+opengl2', 'OpenGL2', 'OpenGL'))
+            cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=%s' %
+                              feature_to_bool('+opengl2', 'OpenGL2', 'OpenGL'))
 
             cmake(*cmake_args)
             make()

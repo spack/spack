@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import re
+
 
 class PyPylint(Package):
     """array processing for numbers, strings, records, and objects."""
@@ -34,8 +34,8 @@ class PyPylint(Package):
     version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')
 
     extends('python')
-    depends_on('py-nose')
-    depends_on('py-setuptools')
+    depends_on('py-nose', type='build')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)
