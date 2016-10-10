@@ -83,7 +83,7 @@ adding new unit tests or strengthening existing tests.
 
 .. note::
 
-   There is also a ``run-unit-tests`` script in ``share/spack/qa` that runs the
+   There is also a ``run-unit-tests`` script in ``share/spack/qa`` that runs the
    unit tests. Afterwards, it reports back to Coverage with the percentage of Spack
    that is covered by unit tests. This script is designed for Travis CI. If you
    want to run the unit tests yourself, we suggest you use ``spack test``.
@@ -293,7 +293,7 @@ branch of Spack. This is not a requirement and you could also do the same with
 remote branches. But for some it is more convenient to have a local branch that
 tracks upstream.
 
-Normally we prefer that commits pertaining to a package ``<package-name>``` have
+Normally we prefer that commits pertaining to a package ``<package-name>`` have
 a message ``<package-name>: descriptive message``. It is important to add
 descriptive message so that others, who might be looking at your changes later
 (in a year or maybe two), would understand the rationale behind them.
