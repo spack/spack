@@ -81,7 +81,7 @@ class CbtfKrell(Package):
 
     # collectionTool
     depends_on("boost@1.50.0:")
-    #depends_on("boost@1.53.0")
+    # depends_on("boost@1.53.0")
     depends_on("dyninst@8.2.1:")
     depends_on("mrnet@5.0.1:+lwthreads")
 
