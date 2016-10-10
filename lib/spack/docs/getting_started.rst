@@ -246,7 +246,7 @@ Each compiler configuration in the file looks like this:
 
    compilers:
    - compiler:
-       modules = []
+       modules: []
        operating_system: centos6
        paths:
          cc: /usr/local/bin/icc-15.0.024-beta
@@ -262,7 +262,7 @@ For compilers that do not support Fortran (like ``clang``), put
 
    compilers:
    - compiler:
-       modules = []
+       modules: []
        operating_system: centos6
        paths:
          cc: /usr/bin/clang
@@ -283,7 +283,7 @@ specification. The valid flags are ``cflags``, ``cxxflags``, ``fflags``,
 
    compilers:
    - compiler:
-       modules = []
+       modules: []
        operating_system: centos6
        paths:
          cc: /usr/bin/gcc
@@ -536,7 +536,7 @@ configuration in ``compilers.yaml`` illustrates this technique:
 
    compilers:
    - compiler:
-       modules = [gcc-4.9.3, intel-15.0.24]
+       modules: [gcc-4.9.3, intel-15.0.24]
        operating_system: centos7
        paths:
          cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
@@ -577,7 +577,7 @@ flags to the ``icc`` command:
 
        compilers:
        - compiler:
-           modules = [intel-15.0.24]
+           modules: [intel-15.0.24]
            operating_system: centos7
            paths:
              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
