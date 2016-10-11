@@ -25,15 +25,23 @@
 from spack import *
 
 
-class XorgUtilMacros(Package):
-    """The m4 macros used by all of the Xorg packages."""
+class Xlsfonts(Package):
+    """xlsfonts lists fonts available from an X server via the X11
+    core protocol."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/util/macros/"
-    url = "http://ftp.x.org/pub/individual/util/util-macros-1.19.0.tar.bz2"
+    homepage = "http://cgit.freedesktop.org/xorg/app/xlsfonts"
+    url      = "https://www.x.org/archive/individual/app/xlsfonts-1.0.5.tar.gz"
 
-    version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
+    version('1.0.5', '074cc44e5238c6a501523ef06caba517')
+
+    depends_on('libx11')
+
+    depends_on('xproto@7.0.17:', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')
