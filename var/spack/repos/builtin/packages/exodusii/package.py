@@ -27,10 +27,8 @@ from spack import *
 # TODO: Add support for a C++11 enabled installation that filters out the
 # TODO: "C++11-Disabled" flag (but only if the spec compiler supports C++11).
 
-# TODO: Add support for parallel installation that uses MPI.
-
-# TODO: Create installation options for NetCDF that support larger page size
-# TODO: suggested by Exodus (see the repository "README" file).
+# TODO: Use variant forwarding to forward the 'mpi' variant to the direct
+# TODO: dependencies 'hdf5' and 'netcdf'.
 
 
 class Exodusii(Package):
@@ -46,16 +44,16 @@ class Exodusii(Package):
     homepage = "https://github.com/gsjaardema/seacas"
     url      = "https://github.com/gsjaardema/seacas/archive/master.zip"
 
-    version('2016-08-09',
-            git='https://github.com/gsjaardema/seacas.git', commit='2ffeb1b')
+    version('2016-08-09', git='https://github.com/gsjaardema/seacas.git', commit='2ffeb1b')
 
-    variant('mpi', default=False, description='Enables MPI parallelism.')
+    variant('mpi', default=True, description='Enables MPI parallelism.')
 
     depends_on('cmake@2.8.11:', type='build')
     depends_on('mpi', when='+mpi')
+
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
-    depends_on('netcdf~mpi maxdims=65536 maxvars=524288')
-    depends_on('hdf5+shared~mpi')
+    depends_on('netcdf maxdims=65536 maxvars=524288')
+    depends_on('hdf5+shared')
 
     patch('cmake-exodus.patch')
 
