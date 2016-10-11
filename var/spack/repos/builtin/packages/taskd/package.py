@@ -27,7 +27,7 @@ from spack import *
 
 class Taskd(Package):
     """TaskWarrior task synchronization daemon"""
-    # FIXME: add a proper url for your package's homepage here.
+
     homepage = "http://www.taskwarrior.org"
     url      = "http://taskwarrior.org/download/taskd-1.1.0.tar.gz"
 
