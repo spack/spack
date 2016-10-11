@@ -17,7 +17,9 @@ class Atompaw(Package):
 
     depends_on("lapack")
     depends_on("blas")
-    depends_on("libxc")
+
+    # pin libxc version
+    depends_on("libxc@2.2.1")
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
