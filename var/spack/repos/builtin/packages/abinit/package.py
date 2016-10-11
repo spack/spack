@@ -30,18 +30,20 @@ from spack import *
 
 
 class Abinit(Package):
-    """ABINIT is a package whose main program allows one to find the total energy,
-    charge density and electronic structure of systems made of electrons and nuclei
-    (molecules and periodic solids) within Density Functional Theory (DFT), using
-    pseudopotentials and a planewave or wavelet basis. ABINIT also includes options
-    to optimize the geometry according to the DFT forces and stresses, or to perform
-    molecular dynamics simulations using these forces, or to generate dynamical
-    matrices, Born effective charges, and dielectric tensors, based on
-    Density-Functional Perturbation Theory, and many more properties. Excited states
-    can be computed within the Many-Body Perturbation Theory (the GW approximation
-    and the Bethe-Salpeter equation), and Time-Dependent Density Functional Theory
-    (for molecules). In addition to the main ABINIT code, different utility programs
-    are provided."""
+    """ABINIT is a package whose main program allows one to find the total
+    energy, charge density and electronic structure of systems made of
+    electrons and nuclei (molecules and periodic solids) within
+    Density Functional Theory (DFT), using pseudopotentials and a planewave
+    or wavelet basis. ABINIT also includes options to optimize the geometry
+    according to the DFT forces and stresses, or to perform molecular dynamics
+    simulations using these forces, or to generate dynamical matrices,
+    Born effective charges, and dielectric tensors, based on Density-Functional
+    Perturbation Theory, and many more properties. Excited states can be
+    computed within the Many-Body Perturbation Theory (the GW approximation and
+    the Bethe-Salpeter equation), and Time-Dependent Density Functional Theory
+    (for molecules). In addition to the main ABINIT code, different utility
+    programs are provided.
+    """
 
     homepage = "http://www.abinit.org"
     url      = "http://ftp.abinit.org/abinit-8.0.8b.tar.gz"
@@ -49,26 +51,34 @@ class Abinit(Package):
     # Versions before 8.0.8b are not supported.
     version("8.0.8b", "abc9e303bfa7f9f43f95598f87d84d5d")
 
-    variant('mpi', default=True, description='Builds with MPI support. Requires MPI2+')
-    variant('openmp', default=False, description='Enables OpenMP threads. Use threaded FFTW3')
-    variant('scalapack', default=False, description='Enables scalapack support. Requires MPI')
-    #variant('elpa', default=False, description='Uses elpa instead of scalapack. Requires MPI')
+    variant('mpi', default=True,
+            description='Builds with MPI support. Requires MPI2+')
+    variant('openmp', default=False,
+            description='Enables OpenMP threads. Use threaded FFTW3')
+    variant('scalapack', default=False,
+            description='Enables scalapack support. Requires MPI')
+    # variant('elpa', default=False,
+    # description='Uses elpa instead of scalapack. Requires MPI')
 
-    # TODO: To be tested. It was working before the last `git pull` but now all tests crash.
-    # For the time being, the default is netcdf3 and the internal fallbacks provided by Abinit.
-    variant('hdf5', default=False, description='Enables HDF5+Netcdf4 (parallel version). WARNING: experimental')
+    # TODO: To be tested.
+    # It was working before the last `git pull` but now all tests crash.
+    # For the time being, the default is netcdf3 and the internal fallbacks
+    variant('hdf5', default=False,
+            description='Enables HDF5+Netcdf4 with MPI. WARNING: experimental')
 
     # Add dependencies
-    depends_on("blas", when="~openmp")
-    depends_on("blas+openmp", when="+openmp")
+    # currently one cannot forward options to virtual packages, see #1712.
+    # depends_on("blas", when="~openmp")
+    # depends_on("blas+openmp", when="+openmp")
+    depends_on('blas')
     depends_on("lapack")
 
     # Require MPI2+
     depends_on("mpi@2:", when="+mpi")
 
     depends_on("scalapack", when="+scalapack+mpi")
-    #depends_on("elpa", when="+elpa+mpi~openmp")
-    #depends_on("elpa+openmp", when="+elpa+mpi+openmp")
+    # depends_on("elpa", when="+elpa+mpi~openmp")
+    # depends_on("elpa+openmp", when="+elpa+mpi+openmp")
 
     depends_on("fftw+float", when="~openmp")
     depends_on("fftw+float+openmp", when="+openmp")
@@ -101,7 +111,8 @@ class Abinit(Package):
         oapp = options.append
 
         if '+mpi' in spec:
-            # MPI version: let the configure script auto-detect MPI support from mpi_prefix
+            # MPI version:
+            # let the configure script auto-detect MPI support from mpi_prefix
             oapp("--with-mpi-prefix=%s" % spec["mpi"].prefix)
             oapp("--enable-mpi=yes")
             oapp("--enable-mpi-io=yes")
@@ -113,22 +124,21 @@ class Abinit(Package):
         # BLAS/LAPACK
         if '+scalapack' in spec:
             oapp("--with-linalg-flavor=custom+scalapack")
-            linalg_fc_link = "--with-linalg-libs=-L%s -llapack -L%s -lblas " % (
-                spec["lapack"].prefix.lib, spec["blas"].prefix.lib)
-            linalg_fc_link += spec['scalapack'].fc_link
+            linalg = (spec['lapack'].lapack_libs + spec['blas'].blas_libs +
+                      spec['scalapack'].scalapack_libs)
 
-        #elif '+elpa' in spec:
+        # elif '+elpa' in spec:
         else:
             oapp("--with-linalg-flavor=custom")
-            linalg_fc_link = "--with-linalg-libs=-L%s -llapack -L%s -lblas " % (
-                spec["lapack"].prefix.lib, spec["blas"].prefix.lib)
+            linalg = spec['lapack'].lapack_libs + spec['blas'].blas_libs
 
-        oapp(linalg_fc_link)
+        oapp("--with-linalg-libs=%s" % linalg.ld_flags)
 
         # FFTW3: use sequential or threaded version if +openmp
         fftflavor, fftlibs = "fftw3", "-lfftw3 -lfftw3f"
         if '+openmp' in spec:
-            fftflavor, fftlibs = "fftw3-threads", "-lfftw3_omp -lfftw3 -lfftw3f"
+            fftflavor = "fftw3-threads"
+            fftlibs = "-lfftw3_omp -lfftw3 -lfftw3f"
 
         options.extend([
             "--with-fft-flavor=%s" % fftflavor,
@@ -148,9 +158,10 @@ class Abinit(Package):
             oapp("--with-trio-flavor=netcdf")
             hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib
             options.extend([
-                "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
+                "--with-netcdf-incs=-I%s" % (
+                    spec["netcdf-fortran"].prefix.include),
                 "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (
-                   spec["netcdf-fortran"].prefix.lib, hdf_libs),
+                    spec["netcdf-fortran"].prefix.lib, hdf_libs),
             ])
         else:
             # Use internal fallbacks (netcdf3)
@@ -159,6 +170,6 @@ class Abinit(Package):
         configure(*options)
         make()
 
-        #make("check")
-        #make("tests_in")
+        # make("check")
+        # make("tests_in")
         make("install")
