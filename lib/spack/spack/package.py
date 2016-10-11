@@ -39,8 +39,16 @@ import re
 import textwrap
 import time
 import string
+import contextlib
+from StringIO import StringIO
 
+import llnl.util.lock
 import llnl.util.tty as tty
+from llnl.util.filesystem import *
+from llnl.util.lang import *
+from llnl.util.link_tree import LinkTree
+from llnl.util.tty.log import log_output
+
 import spack
 import spack.build_environment
 import spack.compilers
@@ -53,12 +61,8 @@ import spack.repository
 import spack.url
 import spack.util.web
 
-from StringIO import StringIO
-from llnl.util.filesystem import *
-from llnl.util.lang import *
-from llnl.util.link_tree import LinkTree
-from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
+from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError, which
 from spack.version import *
@@ -305,6 +309,7 @@ class Package(object):
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
     """
+
     #
     # These are default values for instance variables.
     #
@@ -336,6 +341,9 @@ class Package(object):
     """
     sanity_check_is_dir = []
 
+    """Per-process lock objects for each install prefix."""
+    prefix_locks = {}
+
     class __metaclass__(type):
         """Ensure  attributes required by Spack directives are present."""
         def __init__(cls, name, bases, dict):
@@ -345,6 +353,9 @@ class Package(object):
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
+
+        # Lock on the prefix shared resource. Will be set in prefix property
+        self._prefix_lock = None
 
         # Name of package is the name of its module, without the
         # containing module names.
@@ -692,6 +703,29 @@ class Package(object):
         return dependents
 
     @property
+    def prefix_lock(self):
+        """Prefix lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``spack.installed_db.prefix_lock`` -- the DB
+        tells us what to call it and it lives alongside the install DB.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        likelihood of collision is very low AND it gives us
+        readers-writer lock semantics with just a single lockfile, so no
+        cleanup required.
+        """
+        if self._prefix_lock is None:
+            prefix = self.spec.prefix
+            if prefix not in Package.prefix_locks:
+                Package.prefix_locks[prefix] = llnl.util.lock.Lock(
+                    spack.installed_db.prefix_lock_path,
+                    self.spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
+
+            self._prefix_lock = Package.prefix_locks[prefix]
+
+        return self._prefix_lock
+
+    @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
@@ -875,6 +909,22 @@ class Package(object):
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
 
+    @contextlib.contextmanager
+    def _prefix_read_lock(self):
+        try:
+            self.prefix_lock.acquire_read(60)
+            yield self
+        finally:
+            self.prefix_lock.release_read()
+
+    @contextlib.contextmanager
+    def _prefix_write_lock(self):
+        try:
+            self.prefix_lock.acquire_write(60)
+            yield self
+        finally:
+            self.prefix_lock.release_write()
+
     install_phases = set(['configure', 'build', 'install', 'provenance'])
 
     def do_install(self,
@@ -926,14 +976,18 @@ class Package(object):
 
         # Ensure package is not already installed
         layout = spack.install_layout
-        if 'install' in install_phases and layout.check_installed(self.spec):
-            tty.msg("%s is already installed in %s" % (self.name, self.prefix))
-            rec = spack.installed_db.get_record(self.spec)
-            if (not rec.explicit) and explicit:
-                with spack.installed_db.write_transaction():
-                    rec = spack.installed_db.get_record(self.spec)
-                    rec.explicit = True
-            return
+        with self._prefix_read_lock():
+            if ('install' in install_phases and
+                layout.check_installed(self.spec)):
+
+                tty.msg(
+                    "%s is already installed in %s" % (self.name, self.prefix))
+                rec = spack.installed_db.get_record(self.spec)
+                if (not rec.explicit) and explicit:
+                    with spack.installed_db.write_transaction():
+                        rec = spack.installed_db.get_record(self.spec)
+                        rec.explicit = True
+                return
 
         tty.msg("Installing %s" % self.name)
 
@@ -983,7 +1037,7 @@ class Package(object):
             self.build_directory = join_path(self.stage.path, 'spack-build')
             self.source_directory = self.stage.source_path
 
-            with self.stage:
+            with contextlib.nested(self.stage, self._prefix_write_lock()):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
@@ -1077,8 +1131,9 @@ class Package(object):
                          wrap=False)
             raise
 
-        # note: PARENT of the build process adds the new package to
+        # Parent of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
+        # NOTE: add() implicitly acquires a write-lock
         spack.installed_db.add(
             self.spec, spack.install_layout, explicit=explicit)
 
@@ -1259,11 +1314,12 @@ class Package(object):
                 raise PackageStillNeededError(self.spec, dependents)
 
         # Pre-uninstall hook runs first.
-        spack.hooks.pre_uninstall(self)
-
-        # Uninstalling in Spack only requires removing the prefix.
-        self.remove_prefix()
-        spack.installed_db.remove(self.spec)
+        with self._prefix_write_lock():
+            spack.hooks.pre_uninstall(self)
+            # Uninstalling in Spack only requires removing the prefix.
+            self.remove_prefix()
+            #
+            spack.installed_db.remove(self.spec)
         tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks

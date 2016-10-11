@@ -120,6 +120,7 @@ from spack.util.prefix import Prefix
 from spack.util.string import *
 import spack.util.spack_yaml as syaml
 from spack.util.spack_yaml import syaml_dict
+from spack.util.crypto import prefix_bits
 from spack.version import *
 from spack.provider_index import ProviderIndex
 
@@ -963,13 +964,10 @@ class Spec(object):
         return Prefix(spack.install_layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
-        """
-        Return a hash of the entire spec DAG, including connectivity.
-        """
+        """Return a hash of the entire spec DAG, including connectivity."""
         if self._hash:
             return self._hash[:length]
         else:
-            # XXX(deptype): ignore 'build' dependencies here
             yaml_text = syaml.dump(
                 self.to_node_dict(), default_flow_style=True, width=sys.maxint)
             sha = hashlib.sha1(yaml_text)
@@ -977,6 +975,10 @@ class Spec(object):
             if self.concrete:
                 self._hash = b32_hash
             return b32_hash
+
+    def dag_hash_bit_prefix(self, bits):
+        """Get the first <bits> bits of the DAG hash as an integer type."""
+        return base32_prefix_bits(self.dag_hash(), bits)
 
     def to_node_dict(self):
         d = syaml_dict()
@@ -999,6 +1001,8 @@ class Spec(object):
         if self.architecture:
             d['arch'] = self.architecture.to_dict()
 
+        # TODO: restore build dependencies here once we have less picky
+        # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
         if deps:
             d['dependencies'] = syaml_dict([
@@ -2721,6 +2725,16 @@ def parse_anonymous_spec(spec_like, pkg_name):
                          % (anon_spec.name, pkg_name))
 
     return anon_spec
+
+
+def base32_prefix_bits(hash_string, bits):
+    """Return the first <bits> bits of a base32 string as an integer."""
+    if bits > len(hash_string) * 5:
+        raise ValueError("Too many bits! Requested %d bit prefix of '%s'."
+                         % (bits, hash_string))
+
+    hash_bytes = base64.b32decode(hash_string, casefold=True)
+    return prefix_bits(hash_bytes, bits)
 
 
 class SpecError(spack.error.SpackError):
