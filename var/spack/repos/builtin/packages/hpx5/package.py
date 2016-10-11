@@ -37,15 +37,16 @@ class Hpx5(Package):
     applications enabling scientists to write code that performs and
     scales better than contemporary runtimes."""
     homepage = "http://hpx.crest.iu.edu"
-    url      = "http://hpx.crest.iu.edu/release/hpx-2.0.0.tar.gz"
+    url      = "http://hpx.crest.iu.edu/release/hpx-3.1.0.tar.gz"
 
+    version('3.1.0', '9e90b8ac46788c009079632828c77628')
     version('2.0.0', '3d2ff3aab6c46481f9ec65c5b2bfe7a6')
     version('1.3.0', '2260ecc7f850e71a4d365a43017d8cee')
     version('1.2.0', '4972005f85566af4afe8b71afbf1480f')
     version('1.1.0', '646afb460ecb7e0eea713a634933ce4f')
     version('1.0.0', '8020822adf6090bd59ed7fe465f6c6cb')
 
-    variant('debug', default=False, description='Build a debug version of HPX-5')
+    variant('debug', default=False, description='Build debug version of HPX-5')
     variant('photon', default=False, description='Enable Photon support')
     variant('mpi', default=False, description='Enable MPI support')
 
