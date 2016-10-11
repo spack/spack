@@ -38,4 +38,4 @@ class PyRestview(Package):
     depends_on('py-pygments', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

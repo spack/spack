@@ -40,4 +40,9 @@ class Gmp(AutotoolsPackage):
     depends_on('m4', type='build')
 
     def configure_args(self):
-        return ['--enable-cxx']
+        args = ['--enable-cxx']
+         # We need this flag if we want all the following checks to pass.
+        if spec.compiler.name == 'intel':
+            args.append('CXXFLAGS=-no-ftz')
+
+        return args

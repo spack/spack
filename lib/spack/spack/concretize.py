@@ -33,6 +33,7 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+from __future__ import print_function
 import spack
 import spack.spec
 import spack.compilers
@@ -42,6 +43,7 @@ from spack.version import *
 from functools import partial
 from itertools import chain
 from spack.config import *
+import spack.preferred_packages
 
 
 class DefaultConcretizer(object):
@@ -160,23 +162,59 @@ class DefaultConcretizer(object):
         # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
-        cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
-        valid_versions = sorted(
-            [v for v in pkg.versions
-             if any(v.satisfies(sv) for sv in spec.versions)],
-            cmp=cmp_versions)
 
-        def prefer_key(v):
-            return pkg.versions.get(Version(v)).get('preferred', False)
-        valid_versions.sort(key=prefer_key, reverse=True)
+        # ---------- Produce prioritized list of versions
+        # Get list of preferences from packages.yaml
+        preferred = spack.pkgsort
+        # NOTE: spack.pkgsort == spack.preferred_packages.PreferredPackages()
+
+        yaml_specs = [
+            x[0] for x in
+            preferred._spec_for_pkgname(spec.name, 'version', None)]
+        n = len(yaml_specs)
+        yaml_index = dict(
+            [(spc, n - index) for index, spc in enumerate(yaml_specs)])
+
+        # List of versions we could consider, in sorted order
+        unsorted_versions = [
+            v for v in pkg.versions
+            if any(v.satisfies(sv) for sv in spec.versions)]
+
+        # The keys below show the order of precedence of factors used
+        # to select a version when concretizing.  The item with
+        # the "largest" key will be selected.
+        #
+        # NOTE: When COMPARING VERSIONS, the '@develop' version is always
+        #       larger than other versions.  BUT when CONCRETIZING,
+        #       the largest NON-develop version is selected by
+        #       default.
+        keys = [(
+            # ------- Special direction from the user
+            # Respect order listed in packages.yaml
+            yaml_index.get(v, -1),
+
+            # The preferred=True flag (packages or packages.yaml or both?)
+            pkg.versions.get(Version(v)).get('preferred', False),
+
+            # ------- Regular case: use latest non-develop version by default.
+            # Avoid @develop version, which would otherwise be the "largest"
+            # in straight version comparisons
+            not v.isdevelop(),
+
+            # Compare the version itself
+            # This includes the logic:
+            #    a) develop > everything (disabled by "not v.isdevelop() above)
+            #    b) numeric > non-numeric
+            #    c) Numeric or string comparison
+            v) for v in unsorted_versions]
+        keys.sort(reverse=True)
+
+        # List of versions in complete sorted order
+        valid_versions = [x[-1] for x in keys]
+        # --------------------------
 
         if valid_versions:
-            # Disregard @develop and take the next valid version
-            if ver(valid_versions[0]) == ver('develop') and \
-                    len(valid_versions) > 1:
-                spec.versions = ver([valid_versions[1]])
-            else:
-                spec.versions = ver([valid_versions[0]])
+            spec.versions = ver([valid_versions[0]])
         else:
             # We don't know of any SAFE versions that match the given
             # spec.  Grab the spec's versions and grab the highest
@@ -255,7 +293,7 @@ class DefaultConcretizer(object):
             spec.architecture = spack.architecture.Arch()
             return True
 
-            # Concretize the operating_system and target based of the spec
+        # Concretize the operating_system and target based of the spec
         ret = any((self._concretize_platform(spec),
                    self._concretize_operating_system(spec),
                    self._concretize_target(spec)))

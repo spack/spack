@@ -1,7 +1,7 @@
 .. _basic-usage:
 
 ===========
-Basic usage
+Basic Usage
 ===========
 
 The ``spack`` command has many *subcommands*.  You'll only need a
@@ -14,7 +14,7 @@ Spack to maintain this colorization.  E.g.:
 
     $ spack find | less -R
 
-It is recommend that the following be put in your ``.bashrc`` file:
+It is recommended that the following be put in your ``.bashrc`` file:
 
 .. code-block:: sh
 
@@ -28,7 +28,7 @@ To install software with Spack, you need to know what software is
 available.  You can see a list of available package names at the
 :ref:`package-list` webpage, or using the ``spack list`` command.
 
-.. _spack-list:
+.. _cmd-spack-list:
 
 ^^^^^^^^^^^^^^
 ``spack list``
@@ -57,13 +57,13 @@ All packages whose names start with a capital M:
 
 All packages whose names or descriptions contain Documentation:
 
-.. command-output:: spack list -d Documentation
+.. command-output:: spack list --search-description Documentation
 
 All packages whose names contain documentation case insensitive:
 
-.. command-output:: spack list -d documentation
+.. command-output:: spack list --search-description documentation
 
-.. _spack-info:
+.. _cmd-spack-info:
 
 ^^^^^^^^^^^^^^
 ``spack info``
@@ -82,7 +82,7 @@ viruses.
 :ref:`Dependencies <sec-specs>` and :ref:`virtual dependencies
 <sec-virtual-dependencies>` are described in more detail later.
 
-.. _spack-versions:
+.. _cmd-spack-versions:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack versions``
@@ -107,7 +107,7 @@ able to find remote versions.
 Installing and uninstalling
 ---------------------------
 
-.. _spack-install:
+.. _cmd-spack-install:
 
 ^^^^^^^^^^^^^^^^^
 ``spack install``
@@ -180,14 +180,14 @@ configuration a **spec**.  In the commands above, ``mpileaks`` and
 ``mpileaks@3.0.4`` are both valid *specs*.  We'll talk more about how
 you can use them to customize an installation in :ref:`sec-specs`.
 
-.. _spack-uninstall:
+.. _cmd-spack-uninstall:
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack uninstall``
 ^^^^^^^^^^^^^^^^^^^
 
 To uninstall a package, type ``spack uninstall <package>``.  This will ask
-the user for confirmation, and in case will completely remove the directory
+the user for confirmation before completely removing the directory
 in which the package was installed.
 
 .. code-block:: console
@@ -230,6 +230,54 @@ but you risk breaking other installed packages. In general, it is safer to
 remove dependent packages *before* removing their dependencies or use the
 ``--dependents`` option.
 
+
+.. _nondownloadable:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Non-Downloadable Tarballs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The tarballs for some packages cannot be automatically downloaded by
+Spack.  This could be for a number of reasons:
+
+#. The author requires users to manually accept a license agreement
+   before downloading (``jdk`` and ``galahad``).
+
+#. The software is proprietary and cannot be downloaded on the open
+   Internet.
+
+To install these packages, one must create a mirror and manually add
+the tarballs in question to it (see :ref:`mirrors`):
+
+#. Create a directory for the mirror.  You can create this directory
+   anywhere you like, it does not have to be inside ``~/.spack``:
+
+   .. code-block:: console
+
+       $ mkdir ~/.spack/manual_mirror
+
+#. Register the mirror with Spack by creating ``~/.spack/mirrors.yaml``:
+
+   .. code-block:: yaml
+
+       mirrors:
+         manual: file:///home/me/.spack/manual_mirror
+
+#. Put your tarballs in it.  Tarballs should be named
+   ``<package>/<package>-<version>.tar.gz``.  For example:
+
+   .. code-block:: console
+
+       $ ls -l manual_mirror/galahad
+
+       -rw-------. 1 me me 11657206 Jun 21 19:25 galahad-2.60003.tar.gz
+
+#. Install as usual:
+
+   .. code-block:: console
+
+       $ spack install galahad
+
 -------------------------
 Seeing installed packages
 -------------------------
@@ -237,7 +285,7 @@ Seeing installed packages
 We know that ``spack list`` shows you the names of available packages,
 but how do you figure out which are already installed?
 
-.. _spack-find:
+.. _cmd-spack-find:
 
 ^^^^^^^^^^^^^^
 ``spack find``
@@ -381,175 +429,6 @@ We can also search for packages that have a certain attribute. For example,
 with the 'debug' compile-time option enabled.
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
-
-.. _compiler-config:
-
-----------------------
-Compiler configuration
-----------------------
-
-Spack has the ability to build packages with multiple compilers and
-compiler versions. Spack searches for compilers on your machine
-automatically the first time it is run. It does this by inspecting
-your ``PATH``.
-
-.. _spack-compilers:
-
-^^^^^^^^^^^^^^^^^^^
-``spack compilers``
-^^^^^^^^^^^^^^^^^^^
-
-You can see which compilers spack has found by running ``spack
-compilers`` or ``spack compiler list``:
-
-.. code-block:: console
-
-   $ spack compilers
-   ==> Available compilers
-   -- gcc ---------------------------------------------------------
-       gcc@4.9.0  gcc@4.8.0  gcc@4.7.0  gcc@4.6.2  gcc@4.4.7
-       gcc@4.8.2  gcc@4.7.1  gcc@4.6.3  gcc@4.6.1  gcc@4.1.2
-   -- intel -------------------------------------------------------
-       intel@15.0.0  intel@14.0.0  intel@13.0.0  intel@12.1.0  intel@10.0
-       intel@14.0.3  intel@13.1.1  intel@12.1.5  intel@12.0.4  intel@9.1
-       intel@14.0.2  intel@13.1.0  intel@12.1.3  intel@11.1
-       intel@14.0.1  intel@13.0.1  intel@12.1.2  intel@10.1
-   -- clang -------------------------------------------------------
-       clang@3.4  clang@3.3  clang@3.2  clang@3.1
-   -- pgi ---------------------------------------------------------
-       pgi@14.3-0   pgi@13.2-0  pgi@12.1-0   pgi@10.9-0  pgi@8.0-1
-       pgi@13.10-0  pgi@13.1-1  pgi@11.10-0  pgi@10.2-0  pgi@7.1-3
-       pgi@13.6-0   pgi@12.8-0  pgi@11.1-0   pgi@9.0-4   pgi@7.0-6
-
-Any of these compilers can be used to build Spack packages.  More on
-how this is done is in :ref:`sec-specs`.
-
-.. _spack-compiler-add:
-
-^^^^^^^^^^^^^^^^^^^^^^
-``spack compiler add``
-^^^^^^^^^^^^^^^^^^^^^^
-
-An alias for ``spack compiler find``.
-
-.. _spack-compiler-find:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-``spack compiler find``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler find`` with the path to
-where the compiler is installed.  For example:
-
-.. code-block:: console
-
-   $ spack compiler find /usr/local/tools/ic-13.0.079
-   ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
-       intel@13.0.079
-
-Or you can run ``spack compiler find`` with no arguments to force
-auto-detection.  This is useful if you do not know where compilers are
-installed, but you know that new compilers have been added to your
-``PATH``.  For example, using dotkit, you might do this:
-
-.. code-block:: console
-
-   $ module load gcc-4.9.0
-   $ spack compiler find
-   ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
-       gcc@4.9.0
-
-This loads the environment module for gcc-4.9.0 to add it to
-``PATH``, and then it adds the compiler to Spack.
-
-.. _spack-compiler-info:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-``spack compiler info``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to see specifics on a particular compiler, you can run
-``spack compiler info`` on it:
-
-.. code-block:: console
-
-   $ spack compiler info intel@15
-   intel@15.0.0:
-           cc  = /usr/local/bin/icc-15.0.090
-           cxx = /usr/local/bin/icpc-15.0.090
-           f77 = /usr/local/bin/ifort-15.0.090
-           fc  = /usr/local/bin/ifort-15.0.090
-           modules  = []
-           operating system  = centos6
-
-This shows which C, C++, and Fortran compilers were detected by Spack.
-Notice also that we didn't have to be too specific about the
-version. We just said ``intel@15``, and information about the only
-matching Intel compiler was displayed.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Manual compiler configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If auto-detection fails, you can manually configure a compiler by
-editing your ``~/.spack/compilers.yaml`` file.  You can do this by running
-``spack config edit compilers``, which will open the file in your ``$EDITOR``.
-
-Each compiler configuration in the file looks like this:
-
-.. code-block:: yaml
-
-   compilers:
-   - compiler:
-       modules = []
-       operating_system: centos6
-       paths:
-         cc: /usr/local/bin/icc-15.0.024-beta
-         cxx: /usr/local/bin/icpc-15.0.024-beta
-         f77: /usr/local/bin/ifort-15.0.024-beta
-         fc: /usr/local/bin/ifort-15.0.024-beta
-       spec: intel@15.0.0:
-
-For compilers, like ``clang``, that do not support Fortran, put
-``None`` for ``f77`` and ``fc``:
-
-.. code-block:: yaml
-
-       paths:
-         cc: /usr/bin/clang
-         cxx: /usr/bin/clang++
-         f77: None
-         fc: None
-       spec: clang@3.3svn:
-
-Once you save the file, the configured compilers will show up in the
-list displayed by ``spack compilers``.
-
-You can also add compiler flags to manually configured compilers. The
-valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``,
-``ldflags``, and ``ldlibs``. For example:
-
-.. code-block:: yaml
-
-   compilers:
-   - compiler:
-       modules = []
-       operating_system: OS
-       paths:
-         cc: /usr/local/bin/icc-15.0.024-beta
-         cxx: /usr/local/bin/icpc-15.0.024-beta
-         f77: /usr/local/bin/ifort-15.0.024-beta
-         fc: /usr/local/bin/ifort-15.0.024-beta
-       parameters:
-         cppflags: -O3 -fPIC
-       spec: intel@15.0.0:
-
-These flags will be treated by spack as if they were enterred from
-the command line each time this compiler is used. The compiler wrappers
-then inject those flags into the compiler command. Compiler flags
-enterred from the command line will be discussed in more detail in the
-following section.
 
 .. _sec-specs:
 
@@ -919,7 +798,7 @@ it refers. Otherwise, it will prompt for a more qualified hash.
 Note that this will not work to reinstall a depencency uninstalled by
 ``spack uninstall --force``.
 
-.. _spack-providers:
+.. _cmd-spack-providers:
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack providers``
@@ -945,51 +824,17 @@ versions are now filtered out.
 Integration with module systems
 -------------------------------
 
+Spack provides some integration with `Environment Modules
+<http://modules.sourceforge.net/>`_ to make it easier to use the
+packages it installs.  If your system does not already have
+Environment Modules, see :ref:`InstallEnvironmentModules`.
+
 .. note::
 
-   Environment module support is currently experimental and should not
-   be considered a stable feature of Spack.  In particular, the
-   interface and/or generated module names may change in future
-   versions.
-
-Spack provides some integration with
-`Environment Modules <http://modules.sourceforge.net/>`__
-and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ to make
-it easier to use the packages it installed.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Installing Environment Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In order to use Spack's generated environment modules, you must have
-installed the *Environment Modules* package.  On many Linux
-distributions, this can be installed from the vendor's repository:
-
-.. code-block:: sh
-
-   $ yum     install environment-modules  # (Fedora/RHEL/CentOS)
-   $ apt-get install environment-modules  # (Ubuntu/Debian)
-
-If your Linux distribution does not have
-Environment Modules, you can get it with Spack:
-
-.. code-block:: console
-
-   $ spack install environment-modules
-
-In this case to activate it automatically you need to add the following two
-lines to your ``.bashrc`` profile (or similar):
-
-.. code-block:: sh
-
-   MODULES_HOME=`spack location -i environment-modules`
-   source ${MODULES_HOME}/Modules/init/bash
-
-If you use a Unix shell other than ``bash``, modify the commands above
-accordingly and source the appropriate file in
-``${MODULES_HOME}/Modules/init/``.
-
-.. TODO : Add a similar section on how to install dotkit ?
+   Spack also supports `Dotkit
+   <https://computing.llnl.gov/?set=jobs&page=dotkit>`_, which is used
+   by some systems.  If you system does not already have a module
+   system installed, you should use Environment Modules or LMod.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Spack and module systems
@@ -1196,81 +1041,6 @@ of module files:
        """Set up the compile and runtime environments for a package."""
        pass
 
-"""""""""""""""""
-Recursive Modules
-"""""""""""""""""
-
-In some cases, it is desirable to load not just a module, but also all
-the modules it depends on.  This is not required for most modules
-because Spack builds binaries with RPATH support.  However, not all
-packages use RPATH to find their dependencies: this can be true in
-particular for Python extensions, which are currently *not* built with
-RPATH.
-
-Modules may be loaded recursively with the ``load`` command's
-``--dependencies`` or ``-r`` argument:
-
-.. code-block:: console
-
-   $ spack load --dependencies <spec> ...
-
-More than one spec may be placed on the command line here.
-
-"""""""""""""""""""""""""""""""""
-Module Commands for Shell Scripts
-"""""""""""""""""""""""""""""""""
-
-Although Spack is flexible, the ``module`` command is much faster.
-This could become an issue when emitting a series of ``spack load``
-commands inside a shell script.  By adding the ``--shell`` flag,
-``spack module find`` may also be used to generate code that can be
-cut-and-pasted into a shell script.  For example:
-
-.. code-block:: console
-
-   $ spack module find tcl --dependencies --shell py-numpy git
-   # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
-   module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
-   # ncurses@6.0%gcc@4.9.3=linux-x86_64
-   module load ncurses-6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
-   # zlib@1.2.8%gcc@4.9.3=linux-x86_64
-   module load zlib-1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
-   # sqlite@3.8.5%gcc@4.9.3=linux-x86_64
-   module load sqlite-3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
-   # readline@6.3%gcc@4.9.3=linux-x86_64
-   module load readline-6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
-   # python@3.5.1%gcc@4.9.3=linux-x86_64
-   module load python-3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
-   # py-setuptools@20.5%gcc@4.9.3=linux-x86_64
-   module load py-setuptools-20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
-   # py-nose@1.3.7%gcc@4.9.3=linux-x86_64
-   module load py-nose-1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
-   # openblas@0.2.17%gcc@4.9.3+shared=linux-x86_64
-   module load openblas-0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
-   # py-numpy@1.11.0%gcc@4.9.3+blas+lapack=linux-x86_64
-   module load py-numpy-1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
-   # curl@7.47.1%gcc@4.9.3=linux-x86_64
-   module load curl-7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
-   # autoconf@2.69%gcc@4.9.3=linux-x86_64
-   module load autoconf-2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
-   # cmake@3.5.0%gcc@4.9.3~doc+ncurses+openssl~qt=linux-x86_64
-   module load cmake-3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
-   # expat@2.1.0%gcc@4.9.3=linux-x86_64
-   module load expat-2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
-   # git@2.8.0-rc2%gcc@4.9.3+curl+expat=linux-x86_64
-   module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
-
-The script may be further edited by removing unnecessary modules.
-This script may be directly executed in bash via:
-
-.. code-block:: sh
-
-   source < (spack module find tcl --dependencies --shell py-numpy git)
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Regenerating Module files
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
 .. code-block:: python
 
    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -1297,6 +1067,109 @@ overrides ``setup_dependent_environment`` in the following way:
 
 to insert the appropriate ``PYTHONPATH`` modifications in the module
 files of python packages.
+
+^^^^^^^^^^^^^^^^^
+Recursive Modules
+^^^^^^^^^^^^^^^^^
+
+In some cases, it is desirable to load not just a module, but also all
+the modules it depends on.  This is not required for most modules
+because Spack builds binaries with RPATH support.  However, not all
+packages use RPATH to find their dependencies: this can be true in
+particular for Python extensions, which are currently *not* built with
+RPATH.
+
+Scripts to load modules recursively may be made with the command:
+
+.. code-block:: console
+
+    $ spack module loads --dependencies <spec>
+
+An equivalent alternative is:
+
+.. code-block :: console
+
+    $ source <( spack module loads --dependencies <spec> )
+
+.. warning::
+
+    The ``spack load`` command does not currently accept the
+    ``--dependencies`` flag.  Use ``spack module loads`` instead, for
+    now.
+
+.. See #1662
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Module Commands for Shell Scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Although Spack is flexible, the ``module`` command is much faster.
+This could become an issue when emitting a series of ``spack load``
+commands inside a shell script.  By adding the ``--shell`` flag,
+``spack module find`` may also be used to generate code that can be
+cut-and-pasted into a shell script.  For example:
+
+.. code-block:: console
+
+    $ spack module loads --dependencies py-numpy git
+    # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
+    module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
+    # ncurses@6.0%gcc@4.9.3=linux-x86_64
+    module load ncurses-6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
+    # zlib@1.2.8%gcc@4.9.3=linux-x86_64
+    module load zlib-1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
+    # sqlite@3.8.5%gcc@4.9.3=linux-x86_64
+    module load sqlite-3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
+    # readline@6.3%gcc@4.9.3=linux-x86_64
+    module load readline-6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
+    # python@3.5.1%gcc@4.9.3=linux-x86_64
+    module load python-3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
+    # py-setuptools@20.5%gcc@4.9.3=linux-x86_64
+    module load py-setuptools-20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
+    # py-nose@1.3.7%gcc@4.9.3=linux-x86_64
+    module load py-nose-1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
+    # openblas@0.2.17%gcc@4.9.3+shared=linux-x86_64
+    module load openblas-0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
+    # py-numpy@1.11.0%gcc@4.9.3+blas+lapack=linux-x86_64
+    module load py-numpy-1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
+    # curl@7.47.1%gcc@4.9.3=linux-x86_64
+    module load curl-7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
+    # autoconf@2.69%gcc@4.9.3=linux-x86_64
+    module load autoconf-2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
+    # cmake@3.5.0%gcc@4.9.3~doc+ncurses+openssl~qt=linux-x86_64
+    module load cmake-3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
+    # expat@2.1.0%gcc@4.9.3=linux-x86_64
+    module load expat-2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
+    # git@2.8.0-rc2%gcc@4.9.3+curl+expat=linux-x86_64
+    module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
+
+The script may be further edited by removing unnecessary modules.
+
+
+^^^^^^^^^^^^^^^
+Module Prefixes
+^^^^^^^^^^^^^^^
+
+On some systems, modules are automatically prefixed with a certain
+string; ``spack module loads`` needs to know about that prefix when it
+issues ``module load`` commands.  Add the ``--prefix`` option to your
+``spack module loads`` commands if this is necessary.
+
+For example, consider the following on one system:
+
+..code-block:: console
+
+    $ module avail
+    linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
+
+    $ spack module loads antlr    # WRONG!
+    # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
+    module load antlr-2.7.7-gcc-5.3.0-bdpl46y
+
+    $ spack module loads --prefix linux-SuSE11-x86_64/ antlr
+    # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
+    module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
 
 ^^^^^^^^^^^^^^^^^^^
 Configuration files
@@ -1461,140 +1334,20 @@ load two or more versions of the same software at the same time.
    The ``conflict`` option is ``tcl`` specific
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-Regenerating module files
+Regenerating Module files
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes you may need to regenerate the modules files.  For example,
-if newer, fancier module support is added to Spack at some later date,
-you may want to regenerate all the modules to take advantage of these
-new features.
-
-.. _spack-module:
-
-""""""""""""""""""""""""
-``spack module refresh``
-""""""""""""""""""""""""
-
-Running ``spack module refresh`` will remove the
-``share/spack/modules`` and ``share/spack/dotkit`` directories, then
-regenerate all module and dotkit files from scratch:
+Module and dotkit files are generated when packages are installed, and
+are placed in the directory ``share/spack/modules`` under the Spack
+root.  The command ``spack refresh`` will regenerate them all without
+re-building the packages; for example, if module format or options
+have changed:
 
 .. code-block:: console
 
    $ spack module refresh
    ==> Regenerating tcl module files.
    ==> Regenerating dotkit module files.
-
-----------------
-Filesystem Views
-----------------
-
-.. Maybe this is not the right location for this documentation.
-
-The Spack installation area allows for many package installation trees
-to coexist and gives the user choices as to what versions and variants
-of packages to use.  To use them, the user must rely on a way to
-aggregate a subset of those packages.  The section on Environment
-Modules gives one good way to do that which relies on setting various
-environment variables.  An alternative way to aggregate is through
-**filesystem views**.
-
-A filesystem view is a single directory tree which is the union of the
-directory hierarchies of the individual package installation trees
-that have been included.  The files of the view's installed packages
-are brought into the view by symbolic or hard links back to their
-location in the original Spack installation area.  As the view is
-formed, any clashes due to a file having the exact same path in its
-package installation tree are handled in a first-come-first-served
-basis and a warning is printed.  Packages and their dependencies can
-be both added and removed.  During removal, empty directories will be
-purged.  These operations can be limited to pertain to just the
-packages listed by the user or to exclude specific dependencies and
-they allow for software installed outside of Spack to coexist inside
-the filesystem view tree.
-
-By its nature, a filesystem view represents a particular choice of one
-set of packages among all the versions and variants that are available
-in the Spack installation area.  It is thus equivalent to the
-directory hiearchy that might exist under ``/usr/local``.  While this
-limits a view to including only one version/variant of any package, it
-provides the benefits of having a simpler and traditional layout which
-may be used without any particular knowledge that its packages were
-built by Spack.
-
-Views can be used for a variety of purposes including:
-
-* A central installation in a traditional layout, eg ``/usr/local`` maintained over time by the sysadmin.
-* A self-contained installation area which may for the basis of a top-level atomic versioning scheme, eg ``/opt/pro`` vs ``/opt/dev``.
-* Providing an atomic and monolithic binary distribution, eg for delivery as a single tarball.
-* Producing ephemeral testing or developing environments.
-
-^^^^^^^^^^^^^^^^^^^^^^
-Using Filesystem Views
-^^^^^^^^^^^^^^^^^^^^^^
-
-A filesystem view is created and packages are linked in by the ``spack
-view`` command's ``symlink`` and ``hardlink`` sub-commands.  The
-``spack view remove`` command can be used to unlink some or all of the
-filesystem view.
-
-The following example creates a filesystem view based
-on an installed ``cmake`` package and then removes from the view the
-files in the ``cmake`` package while retaining its dependencies.
-
-.. code-block:: console
-
-   $ spack view --verbose symlink myview cmake@3.5.2
-   ==> Linking package: "ncurses"
-   ==> Linking package: "zlib"
-   ==> Linking package: "openssl"
-   ==> Linking package: "cmake"
-
-   $ ls myview/
-   bin  doc  etc  include  lib  share
-
-   $ ls myview/bin/
-   captoinfo  clear  cpack     ctest    infotocap        openssl  tabs  toe   tset
-   ccmake     cmake  c_rehash  infocmp  ncurses6-config  reset    tic   tput
-
-   $ spack view --verbose --dependencies false rm myview cmake@3.5.2
-   ==> Removing package: "cmake"
-
-   $ ls myview/bin/
-   captoinfo  c_rehash  infotocap        openssl  tabs  toe   tset
-   clear      infocmp   ncurses6-config  reset    tic   tput
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Limitations of Filesystem Views
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This section describes some limitations that should be considered in
-using filesystems views.
-
-Filesystem views are merely organizational.  The binary executable
-programs, shared libraries and other build products found in a view
-are mere links into the "real" Spack installation area.  If a view is
-built with symbolic links it requires the Spack-installed package to
-be kept in place.  Building a view with hardlinks removes this
-requirement but any internal paths (eg, rpath or ``#!`` interpreter
-specifications) will still require the Spack-installed package files
-to be in place.
-
-.. FIXME: reference the relocation work of Hegner and Gartung.
-
-As described above, when a view is built only a single instance of a
-file may exist in the unified filesystem tree.  If more than one
-package provides a file at the same path (relative to its own root)
-then it is the first package added to the view that "wins".  A warning
-is printed and it is up to the user to determine if the conflict
-matters.
-
-It is up to the user to assure a consistent view is produced.  In
-particular if the user excludes packages, limits the following of
-dependencies or removes packages the view may become inconsistent.  In
-particular, if two packages require the same sub-tree of dependencies,
-removing one package (recursively) will remove its dependencies and
-leave the other package broken.
 
 .. _extensions:
 
@@ -1620,7 +1373,7 @@ an *extension*.  Suppose you have Python installed like so:
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    python@2.7.8
 
-.. _spack-extensions:
+.. _cmd-spack-extensions:
 
 ^^^^^^^^^^^^^^^^^^^^
 ``spack extensions``
@@ -1714,7 +1467,7 @@ for this case.  Instead of requiring users to load particular
 environment modules, you can *activate* the package within the Python
 installation:
 
-.. _spack-activate:
+.. _cmd-spack-activate:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack activate``
@@ -1779,19 +1532,19 @@ into the same prefix.  Users who want a different version of a package
 can still get it by using environment modules, but they will have to
 explicitly load their preferred version.
 
-^^^^^^^^^^^^^^^^^^^^^
-``spack activate -f``
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack activate --force``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If, for some reason, you want to activate a package *without* its
-dependencies, you can use ``spack activate -f``:
+dependencies, you can use ``spack activate --force``:
 
 .. code-block:: console
 
-   $ spack activate -f py-numpy
+   $ spack activate --force py-numpy
    ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-debian7-x86_64-66733244 for python@2.7.8%gcc@4.4.7.
 
-.. _spack-deactivate:
+.. _cmd-spack-deactivate:
 
 ^^^^^^^^^^^^^^^^^^^^
 ``spack deactivate``
@@ -1864,150 +1617,12 @@ This issue typically manifests with the error below:
 
 A nicer error message is TBD in future versions of Spack.
 
-.. _cray-support:
-
--------------
-Spack on Cray
--------------
-
-Spack differs slightly when used on a Cray system. The architecture spec
-can differentiate between the front-end and back-end processor and operating system.
-For example, on Edison at NERSC, the back-end target processor
-is "Ivy Bridge", so you can specify to use the back-end this way:
-
-.. code-block:: console
-
-   $ spack install zlib target=ivybridge
-
-You can also use the operating system to build against the back-end:
-
-.. code-block:: console
-
-   $ spack install zlib os=CNL10
-
-Notice that the name includes both the operating system name and the major
-version number concatenated together.
-
-Alternatively, if you want to build something for the front-end,
-you can specify the front-end target processor. The processor for a login node
-on Edison is "Sandy bridge" so we specify on the command line like so:
-
-.. code-block:: console
-
-   $ spack install zlib target=sandybridge
-
-And the front-end operating system is:
-
-.. code-block:: console
-
-   $ spack install zlib os=SuSE11
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Cray compiler detection
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack can detect compilers using two methods. For the front-end, we treat
-everything the same. The difference lies in back-end compiler detection.
-Back-end compiler detection is made via the Tcl module avail command.
-Once it detects the compiler it writes the appropriate PrgEnv and compiler
-module name to compilers.yaml and sets the paths to each compiler with Cray\'s
-compiler wrapper names (i.e. cc, CC, ftn). During build time, Spack will load
-the correct PrgEnv and compiler module and will call appropriate wrapper.
-
-The compilers.yaml config file will also differ. There is a
-modules section that is filled with the compiler's Programming Environment
-and module name. On other systems, this field is empty []:
-
-.. code-block:: yaml
-
-   - compiler:
-       modules:
-         - PrgEnv-intel
-         - intel/15.0.109
-
-As mentioned earlier, the compiler paths will look different on a Cray system.
-Since most compilers are invoked using cc, CC and ftn, the paths for each
-compiler are replaced with their respective Cray compiler wrapper names:
-
-.. code-block:: yaml
-
-     paths:
-       cc: cc
-       cxx: CC
-       f77: ftn
-       fc: ftn
-
-As opposed to an explicit path to the compiler executable. This allows Spack
-to call the Cray compiler wrappers during build time.
-
-For more on compiler configuration, check out :ref:`compiler-config`.
-
-Spack sets the default Cray link type to dynamic, to better match other
-other platforms. Individual packages can enable static linking (which is the
-default outside of Spack on cray systems) using the ``-static`` flag.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Setting defaults and using Cray modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to use default compilers for each PrgEnv and also be able
-to load cray external modules, you will need to set up a ``packages.yaml``.
-
-Here's an example of an external configuration for cray modules:
-
-.. code-block:: yaml
-
-   packages:
-     mpi:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
-
-This tells Spack that for whatever package that depends on mpi, load the
-cray-mpich module into the environment. You can then be able to use whatever
-environment variables, libraries, etc, that are brought into the environment
-via module load.
-
-You can set the default compiler that Spack can use for each compiler type.
-If you want to use the Cray defaults, then set them under ``all:`` in packages.yaml.
-In the compiler field, set the compiler specs in your order of preference.
-Whenever you build with that compiler type, Spack will concretize to that version.
-
-Here is an example of a full packages.yaml used at NERSC
-
-.. code-block:: yaml
-
-   packages:
-     mpi:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
-       buildable: False
-     netcdf:
-       modules:
-         netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-         netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-       buildable: False
-     hdf5:
-       modules:
-         hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-         hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-       buildable: False
-     all:
-       compiler: [gcc@5.2.0, intel@16.0.0.109]
-
-Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
-if we want to build with intel compilers, use version 16.0.0.109. We add a spec
-for each compiler type for each cray modules. This ensures that for each
-compiler on our system we can use that external module.
-
-For more on external packages check out the section :ref:`sec-external_packages`.
 
 ------------
 Getting Help
 ------------
 
-.. _spack-help:
+.. _cmd-spack-help:
 
 ^^^^^^^^^^^^^^
 ``spack help``

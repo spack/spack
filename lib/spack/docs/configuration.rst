@@ -132,6 +132,65 @@ The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
+.. _system-packages:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+False Paths for System Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes, the externally-installed package one wishes to use with
+Spack comes with the Operating System and is installed in a standard
+place --- ``/usr``, for example.  Many other packages are there as
+well.  If Spack adds it to build paths, then some packages might
+pick up dependencies from ``/usr`` than the intended Spack version.
+
+In order to avoid this problem, it is advisable to specify a fake path
+in ``packages.yaml``, thereby preventing Spack from adding the real
+path to compiler command lines.  This will work becuase compilers
+normally search standard system paths, even if they are not on the
+command line.  For example:
+
+.. code-block:: yaml
+
+    packages:
+        # Recommended for security reasons
+        # Do not install OpenSSL as non-root user.
+        openssl:
+            paths:
+                openssl@system: /false/path
+            version: [system]
+            buildable: False
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extracting System Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some cases, using false paths for system packages will not work.
+Some builds need to run binaries out of their dependencies, not just
+access their libraries: the build needs to know the real location of
+the system package.
+
+In this case, one can create a Spack-like single-package tree by
+creating symlinks to the files related to just that package.
+Depending on the OS, it is possible to obtain a list of the files in a
+single OS-installed package.  For example, on RedHat / Fedora:
+
+.. code-block:: console
+
+   $ repoquery --list openssl-devel
+   ...
+   /usr/lib/libcrypto.so
+   /usr/lib/libssl.so
+   /usr/lib/pkgconfig/libcrypto.pc
+   /usr/lib/pkgconfig/libssl.pc
+   /usr/lib/pkgconfig/openssl.pc
+   ...
+
+Spack currently does not provide an automated way to create a symlink
+tree to these files.
+
+
 .. _concretization-preferences:
 
 --------------------------
@@ -190,27 +249,3 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
-
----------
-Profiling
----------
-
-Spack has some limited built-in support for profiling, and can report
-statistics using standard Python timing tools.  To use this feature,
-supply ``-p`` to Spack on the command line, before any subcommands.
-
-.. _spack-p:
-
-^^^^^^^^^^^^^^^^^^^
-``spack --profile``
-^^^^^^^^^^^^^^^^^^^
-
-``spack --profile`` output looks like this:
-
-.. command-output:: spack --profile graph --deptype=nobuild dyninst
-   :ellipsis: 25
-
-The bottom of the output shows the top most time consuming functions,
-slowest on top.  The profiling support is from Python's built-in tool,
-`cProfile
-<https://docs.python.org/2/library/profile.html#module-cProfile>`_.

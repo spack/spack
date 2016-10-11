@@ -33,6 +33,7 @@ Homebrew makes it very easy to create packages.  For a complete
 rundown on spack and how it differs from homebrew, look at the
 README.
 """
+import contextlib
 import copy
 import functools
 import inspect
@@ -43,8 +44,8 @@ import sys
 import textwrap
 import time
 from StringIO import StringIO
-from urlparse import urlparse
 
+import llnl.util.lock
 import llnl.util.tty as tty
 import spack
 import spack.build_environment
@@ -58,12 +59,14 @@ import spack.repository
 import spack.url
 import spack.util.web
 from llnl.util.filesystem import *
+from llnl.util.filesystem import *
+from llnl.util.lang import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.compression import allowed_archive
+from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError
 from spack.version import *
@@ -426,7 +429,7 @@ class PackageBase(object):
            parallel = False
            ...
 
-    This changes thd default behavior so that make is sequential.  If you still
+    This changes the default behavior so that make is sequential.  If you still
     want to build some parts in parallel, you can do this in your install
     function:
 
@@ -480,26 +483,41 @@ class PackageBase(object):
     #
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
+
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
     make_jobs = None
+
     """By default do not run tests within package's install()"""
     run_tests = False
+
     """Most packages are NOT extendable. Set to True if you want extensions."""
     extendable = False
+
+    """When True, add RPATHs for the entire DAG. When False, add RPATHs only
+       for immediate dependencies."""
+    transitive_rpaths = True
+
     """List of prefix-relative file paths (or a single path). If these do
        not exist after install, or if they exist but are not files,
        sanity checks fail.
     """
     sanity_check_is_file = []
+
     """List of prefix-relative directory paths (or a single path). If
        these do not exist after install, or if they exist but are not
        directories, sanity checks will fail.
     """
     sanity_check_is_dir = []
 
+    """Per-process lock objects for each install prefix."""
+    prefix_locks = {}
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
+
+        # Lock on the prefix shared resource. Will be set in prefix property
+        self._prefix_lock = None
 
         # Name of package is the name of its module, without the
         # containing module names.
@@ -646,8 +664,13 @@ class PackageBase(object):
 
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
-        """
-        Returns a URL that you can download a new version of this package from.
+        """Returns a URL from which the specified version of this package
+        may be downloaded.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
         """
         if not isinstance(version, Version):
             version = Version(version)
@@ -844,6 +867,29 @@ class PackageBase(object):
         return dependents
 
     @property
+    def prefix_lock(self):
+        """Prefix lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``spack.installed_db.prefix_lock`` -- the DB
+        tells us what to call it and it lives alongside the install DB.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        likelihood of collision is very low AND it gives us
+        readers-writer lock semantics with just a single lockfile, so no
+        cleanup required.
+        """
+        if self._prefix_lock is None:
+            prefix = self.spec.prefix
+            if prefix not in Package.prefix_locks:
+                Package.prefix_locks[prefix] = llnl.util.lock.Lock(
+                    spack.installed_db.prefix_lock_path,
+                    self.spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
+
+            self._prefix_lock = Package.prefix_locks[prefix]
+
+        return self._prefix_lock
+
+    @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
@@ -1028,10 +1074,29 @@ class PackageBase(object):
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
 
+    @contextlib.contextmanager
+    def _prefix_read_lock(self):
+        try:
+            self.prefix_lock.acquire_read(60)
+            yield self
+        finally:
+            self.prefix_lock.release_read()
+
+    @contextlib.contextmanager
+    def _prefix_write_lock(self):
+        try:
+            self.prefix_lock.acquire_write(60)
+            yield self
+        finally:
+            self.prefix_lock.release_write()
+
+    install_phases = set(['configure', 'build', 'install', 'provenance'])
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
-                   ignore_deps=False,
+                   install_deps=True,
+                   install_self=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1050,8 +1115,10 @@ class PackageBase(object):
         :param keep_stage: By default, stage is destroyed only if there are \
             no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param ignore_deps: Don't install dependencies before installing this \
-                       package
+        :param install_deps: Install dependencies before installing this \
+            package
+        :param install_self: Install this package once dependencies have \
+            been installed.
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
         :param verbose: Display verbose build output (by default, suppresses \
@@ -1059,6 +1126,7 @@ class PackageBase(object):
         :param dirty: Don't clean the build environment before installing.
         :param make_jobs: Number of make jobs to use for install. Default is \
             ncpus
+        :param force: Install again, even if already installed.
         :param run_tests: Run tests within the package's install()
         """
         if not self.spec.concrete:
@@ -1072,30 +1140,41 @@ class PackageBase(object):
             return
 
         # Ensure package is not already installed
-        if spack.install_layout.check_installed(self.spec):
-            tty.msg("%s is already installed in %s" % (self.name, self.prefix))
-            rec = spack.installed_db.get_record(self.spec)
-            if (not rec.explicit) and explicit:
-                with spack.installed_db.write_transaction():
-                    rec = spack.installed_db.get_record(self.spec)
-                    rec.explicit = True
-            return
+        layout = spack.install_layout
+        with self._prefix_read_lock():
+            if layout.check_installed(self.spec):
+                tty.msg(
+                    "%s is already installed in %s" % (self.name, self.prefix))
+                rec = spack.installed_db.get_record(self.spec)
+                if (not rec.explicit) and explicit:
+                    with spack.installed_db.write_transaction():
+                        rec = spack.installed_db.get_record(self.spec)
+                        rec.explicit = True
+                return
 
         self._do_install_pop_kwargs(kwargs)
 
         tty.msg("Installing %s" % self.name)
 
         # First, install dependencies recursively.
-        if not ignore_deps:
-            self.do_install_dependencies(keep_prefix=keep_prefix,
-                                         keep_stage=keep_stage,
-                                         ignore_deps=ignore_deps,
-                                         fake=fake,
-                                         skip_patch=skip_patch,
-                                         verbose=verbose,
-                                         make_jobs=make_jobs,
-                                         run_tests=run_tests,
-                                         dirty=dirty)
+        if install_deps:
+            for dep in self.spec.dependencies():
+                dep.package.do_install(
+                    keep_prefix=keep_prefix,
+                    keep_stage=keep_stage,
+                    install_deps=install_deps,
+                    install_self=True,
+                    fake=fake,
+                    skip_patch=skip_patch,
+                    verbose=verbose,
+                    make_jobs=make_jobs,
+                    run_tests=run_tests,
+                    dirty=dirty)
+
+        # The rest of this function is to install ourself,
+        # once deps have been installed.
+        if not install_self:
+            return
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1103,6 +1182,7 @@ class PackageBase(object):
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
+        # ------------------- BEGIN def build_process()
         # Then install the package itself.
         def build_process():
             """Forked for each build. Has its own process and python
@@ -1123,7 +1203,7 @@ class PackageBase(object):
             self.source_directory = self.stage.source_path
 
             try:
-                with self.stage:
+                with contextlib.nested(self.stage, self._prefix_write_lock()):
                     # Run the pre-install hook in the child process after
                     # the directory is created.
                     spack.hooks.pre_install(self)
@@ -1266,11 +1346,6 @@ class PackageBase(object):
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
-
-    def do_install_dependencies(self, **kwargs):
-        # Pass along paths of dependencies here
-        for dep in self.spec.dependencies():
-            dep.package.do_install(**kwargs)
 
     @property
     def build_log_path(self):
@@ -1419,11 +1494,12 @@ class PackageBase(object):
                 raise PackageStillNeededError(self.spec, dependents)
 
         # Pre-uninstall hook runs first.
-        spack.hooks.pre_uninstall(self)
-
-        # Uninstalling in Spack only requires removing the prefix.
-        self.remove_prefix()
-        spack.installed_db.remove(self.spec)
+        with self._prefix_write_lock():
+            spack.hooks.pre_uninstall(self)
+            # Uninstalling in Spack only requires removing the prefix.
+            self.remove_prefix()
+            #
+            spack.installed_db.remove(self.spec)
         tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
@@ -1698,7 +1774,8 @@ class CMakePackage(PackageBase):
             build_type = 'RelWithDebInfo'
 
         args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type)]
+                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
+                '-DCMAKE_VERBOSE_MAKEFILE=ON']
         if platform.mac_ver()[0]:
             args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
 
@@ -1760,16 +1837,6 @@ def flatten_dependencies(spec, flat_dir):
             raise DependencyConflictError(conflict)
 
         dep_files.merge(flat_dir + '/' + name)
-
-
-def validate_package_url(url_string):
-    """Determine whether spack can handle a particular URL or not."""
-    url = urlparse(url_string)
-    if url.scheme not in _ALLOWED_URL_SCHEMES:
-        tty.die("Invalid protocol in URL: '%s'" % url_string)
-
-    if not allowed_archive(url_string):
-        tty.die("Invalid file type in URL: '%s'" % url_string)
 
 
 def dump_packages(spec, path):

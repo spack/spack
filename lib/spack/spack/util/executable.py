@@ -185,11 +185,11 @@ class Executable(object):
 
         finally:
             if close_ostream:
-                output.close()
+                ostream.close()
             if close_estream:
-                error.close()
+                estream.close()
             if close_istream:
-                input.close()
+                istream.close()
 
     def __eq__(self, other):
         return self.exe == other.exe

@@ -381,8 +381,11 @@ def set_module_variables_for_package(pkg, module):
 
 
 def get_rpath_deps(pkg):
-    """We only need to RPATH immediate dependencies."""
-    return pkg.spec.dependencies(deptype='link')
+    """Return immediate or transitive RPATHs depending on the package."""
+    if pkg.transitive_rpaths:
+        return [d for d in pkg.spec.traverse(root=False, deptype=('link'))]
+    else:
+        return pkg.spec.dependencies(deptype='link')
 
 
 def get_rpaths(pkg):
@@ -398,6 +401,21 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
+
+
+def get_std_cmake_args(cmake_pkg):
+    # standard CMake arguments
+    ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
+           '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
+           '-DCMAKE_VERBOSE_MAKEFILE=ON']
+    if platform.mac_ver()[0]:
+        ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
+
+    # Set up CMake rpath
+    ret.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
+
+    return ret
 
 
 def parent_class_modules(cls):

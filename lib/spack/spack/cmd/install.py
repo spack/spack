@@ -37,6 +37,10 @@ def setup_parser(subparser):
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="Do not try to install dependencies of requested packages.")
     subparser.add_argument(
+        '-d', '--dependencies-only', action='store_true', dest='deps_only',
+        help='Install dependencies of this package, ' +
+        'but not the package itself.')
+    subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
     subparser.add_argument(
@@ -82,16 +86,16 @@ def install(parser, args):
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         package = spack.repo.get(spec)
-        with spack.installed_db.write_transaction():
-            package.do_install(
-                keep_prefix=args.keep_prefix,
-                keep_stage=args.keep_stage,
-                ignore_deps=args.ignore_deps,
-                make_jobs=args.jobs,
-                run_tests=args.run_tests,
-                verbose=args.verbose,
-                fake=args.fake,
-                dirty=args.dirty,
-                explicit=True,
-                stop_at=args.stop_at
-            )
+        package.do_install(
+            keep_prefix=args.keep_prefix,
+            keep_stage=args.keep_stage,
+            install_deps=not args.ignore_deps,
+            install_self=not args.deps_only,
+            make_jobs=args.jobs,
+            run_tests=args.run_tests,
+            verbose=args.verbose,
+            fake=args.fake,
+            dirty=args.dirty,
+            explicit=True,
+            stop_at=args.stop_at
+        )

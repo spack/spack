@@ -38,4 +38,4 @@ class PyNetcdf(Package):
     depends_on('netcdf')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

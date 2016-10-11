@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import re
 from datetime import datetime
 from glob import glob
 
@@ -53,8 +54,12 @@ def _debug_tarball_suffix():
         if not os.path.isdir('.git'):
             return 'nobranch.nogit.%s' % suffix
 
+        # Get symbolic branch name and strip any special chars (mainly '/')
         symbolic = git(
             'rev-parse', '--abbrev-ref', '--short', 'HEAD', output=str).strip()
+        symbolic = re.sub(r'[^\w.-]', '-', symbolic)
+
+        # Get the commit hash too.
         commit = git(
             'rev-parse', '--short', 'HEAD', output=str).strip()
 
@@ -69,12 +74,23 @@ def create_db_tarball(args):
     tarball_name = "spack-db.%s.tar.gz" % _debug_tarball_suffix()
     tarball_path = os.path.abspath(tarball_name)
 
-    with working_dir(spack.spack_root):
+    base = os.path.basename(spack.install_path)
+    transform_args = []
+    if 'GNU' in tar('--version', output=str):
+        transform_args = ['--transform', 's/^%s/%s/' % (base, tarball_name)]
+    else:
+        transform_args = ['-s', '/^%s/%s/' % (base, tarball_name)]
+
+    wd = os.path.dirname(spack.install_path)
+    with working_dir(wd):
         files = [spack.installed_db._index_path]
-        files += glob('%s/*/*/*/.spack/spec.yaml' % spack.install_path)
+        files += glob('%s/*/*/*/.spack/spec.yaml' % base)
         files = [os.path.relpath(f) for f in files]
 
-        tar('-czf', tarball_path, *files)
+        args = ['-czf', tarball_path]
+        args += transform_args
+        args += files
+        tar(*args)
 
     tty.msg('Created %s' % tarball_name)
 

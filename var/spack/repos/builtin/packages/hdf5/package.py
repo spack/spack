@@ -60,7 +60,7 @@ class Hdf5(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('szip', when='+szip')
-    depends_on('zlib')
+    depends_on('zlib@1.1.2:')
 
     @AutotoolsPackage.precondition('configure')
     def validate(self):
@@ -123,16 +123,14 @@ class Hdf5(AutotoolsPackage):
             # this is not actually a problem.
             extra_args.extend([
                 "--enable-parallel",
-                "CC=%s" % join_path(spec['mpi'].prefix.bin, "mpicc"),
+                "CC=%s" % spec['mpi'].mpicc
             ])
 
             if '+cxx' in spec:
-                extra_args.append("CXX=%s" % join_path(spec['mpi'].prefix.bin,
-                                                       "mpic++"))
+                extra_args.append("CXX=%s" % spec['mpi'].mpicxx)
 
             if '+fortran' in spec:
-                extra_args.append("FC=%s" % join_path(spec['mpi'].prefix.bin,
-                                                      "mpifort"))
+                extra_args.append("FC=%s" % spec['mpi'].mpifc)
 
         if '+szip' in spec:
             extra_args.append("--with-szlib=%s" % spec['szip'].prefix)
@@ -172,7 +170,7 @@ HDF5 version {version} {version}
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
-                cc = which(join_path(spec['mpi'].prefix.bin, "mpicc"))
+                cc = which('%s' % spec['mpi'].mpicc)
             else:
                 cc = which('cc')
             # TODO: Automate these path and library settings

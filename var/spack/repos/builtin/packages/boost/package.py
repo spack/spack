@@ -110,12 +110,14 @@ class Boost(Package):
             description="Additionally build shared libraries")
     variant('multithreaded', default=True,
             description="Build multi-threaded versions of libraries")
-    variant('singlethreaded', default=True,
+    variant('singlethreaded', default=False,
             description="Build single-threaded versions of libraries")
     variant('icu', default=False,
             description="Build with Unicode and ICU suport")
     variant('graph', default=False,
             description="Build the Boost Graph library")
+    variant('taggedlayout', default=False,
+            description="Augment library names with build options")
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
@@ -208,12 +210,20 @@ class Boost(Package):
         if '+singlethreaded' in spec:
             threadingOpts.append('single')
         if not threadingOpts:
-            raise RuntimeError("""At least one of {singlethreaded,
-                               multithreaded} must be enabled""")
+            raise RuntimeError("At least one of {singlethreaded, " +
+                               "multithreaded} must be enabled")
+
+        if '+taggedlayout' in spec:
+            layout = 'tagged'
+        else:
+            if len(threadingOpts) > 1:
+                raise RuntimeError("Cannot build both single and " +
+                                   "multi-threaded targets with system layout")
+            layout = 'system'
 
         options.extend([
             'link=%s' % ','.join(linkTypes),
-            '--layout=tagged'
+            '--layout=%s' % layout
         ])
 
         if not spec.satisfies('%intel'):
@@ -222,6 +232,12 @@ class Boost(Package):
             ])
 
         return threadingOpts
+
+    def add_buildopt_symlinks(self, prefix):
+        with working_dir(prefix.lib):
+            for lib in os.listdir(os.curdir):
+                prefix, remainder = lib.split('.', 1)
+                symlink(lib, '%s-mt.%s' % (prefix, remainder))
 
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
@@ -281,10 +297,15 @@ class Boost(Package):
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
+        b2('--clean')
+
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
         for threadingOpt in threadingOpts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
+
+        if '+multithreaded' in spec and '~taggedlayout' in spec:
+            self.add_buildopt_symlinks(prefix)
 
         # The shared libraries are not installed correctly
         # on Darwin; correct this
