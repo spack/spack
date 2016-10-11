@@ -1,3 +1,31 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
+#
+# Author: Matteo Giantomassi <matteo.giantomassiNOSPAM AT uclouvain.be>
+# Date: October 11, 2016
+
 from spack import *
 
 import os
@@ -22,7 +50,7 @@ class Abinit(Package):
     # Versions before 8.0.8b are not supported.
     version("8.0.8b", "abc9e303bfa7f9f43f95598f87d84d5d")
 
-    variant('mpi', default=True, description='Builds with mpi support. Requires MPI2+')
+    variant('mpi', default=True, description='Builds with MPI support. Requires MPI2+')
     variant('openmp', default=False, description='Enables OpenMP threads. Use threaded FFTW3')
     variant('scalapack', default=False, description='Enables scalapack support. Requires MPI')
     #variant('elpa', default=False, description='Uses elpa instead of scalapack. Requires MPI')
@@ -32,7 +60,7 @@ class Abinit(Package):
     depends_on("blas+openmp", when="+openmp")
     depends_on("lapack")
 
-	# Require MPI2+
+    # Require MPI2+
     depends_on("mpi@2:", when="+mpi")
 
     depends_on("scalapack", when="+scalapack+mpi")
@@ -69,9 +97,9 @@ class Abinit(Package):
             oapp("--enable-mpi=yes")
             oapp("--enable-mpi-io=yes")
 
-		# Activate OpenMP in Abinit Fortran code.
+        # Activate OpenMP in Abinit Fortran code.
         if '+openmp' in spec:
-            options.append('--enable-openmp=yes')
+            oapp('--enable-openmp=yes')
 
         # BLAS/LAPACK
         if '+scalapack' in spec:
@@ -88,17 +116,16 @@ class Abinit(Package):
 
         oapp(linalg_fc_link)
 
-        # FFTW3: select sequential or threaded version if +openmp
-        fftlibs = "-lfftw3 -lfftw3f"
+        # FFTW3: use sequential or threaded version if +openmp
+        fftflavor, fftlibs = "fftw3", "-lfftw3 -lfftw3f"
         if '+openmp' in spec:
-            fftlibs = "-lfftw3_omp -lfftw3 -lfftw3f"
+            fftflavor, fftlibs = "fftw3-threads", "-lfftw3_omp -lfftw3 -lfftw3f"
 
         options.extend([
-            "--with-fft-flavor=fftw3", # threads
+            "--with-fft-flavor=%s" % fftflavor,
             "--with-fft-incs=-I%s" % spec["fftw"].prefix.include,
             "--with-fft-libs=-L%s %s" % (spec["fftw"].prefix.lib, fftlibs),
         ])
-
         oapp("--with-dft-flavor=atompaw+libxc")
 
         # LibXC library
@@ -109,7 +136,7 @@ class Abinit(Package):
 
         # Netcdf4/HDF5
         oapp("--with-trio-flavor=netcdf")
-        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
+        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib
         options.extend([
             "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
             "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (
