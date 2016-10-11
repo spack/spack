@@ -22,38 +22,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Libxc(Package):
-    """Libxc is a library of exchange-correlation functionals for
-    density-functional theory."""
+class Atompaw(Package):
+    """A Projector Augmented Wave (PAW) code for generating
+    atom-centered functions.
 
-    homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
-    url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
+    Official website: http://pwpaw.wfu.edu
 
-    version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
-    version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
-    version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
+    User's guide: ~/doc/atompaw-usersguide.pdf
+    """
+    homepage = "http://users.wfu.edu/natalie/papers/pwpaw/man.html"
+    url = "http://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
+
+    version('4.0.0.13', 'af4a042380356f6780183c4b325aad1d')
+    version('3.1.0.3', 'c996a277e11707887177f47bbb229aa6')
+
+    depends_on("lapack")
+    depends_on("blas")
+
+    # pin libxc version
+    depends_on("libxc@2.2.1")
 
     def install(self, spec, prefix):
-        # Optimizations for the Intel compiler, suggested by CP2K
-        optflags = '-O2'
-        if self.compiler.name == 'intel':
-            optflags += ' -xAVX -axCORE-AVX2 -ipo'
-            if which('xiar'):
-                env['AR'] = 'xiar'
+        options = ['--prefix=%s' % prefix]
 
-        env['CFLAGS']  = optflags
-        env['FCFLAGS'] = optflags
+        linalg = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        options.extend([
+            "--with-linalg-libs=%s" % linalg.ld_flags,
+            "--enable-libxc",
+            "--with-libxc-incs=-I%s" % spec["libxc"].prefix.include,
+            "--with-libxc-libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
+        ])
 
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-shared')
-
-        make()
-
-        # libxc provides a testsuite, but many tests fail
-        # http://www.tddft.org/pipermail/libxc/2013-February/000032.html
-        # make('check')
-
-        make('install')
+        configure(*options)
+        make(parallel=False)  # parallel build fails
+        make("check")
+        make("install")
