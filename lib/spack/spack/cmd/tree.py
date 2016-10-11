@@ -49,7 +49,7 @@ class UniversalProjection(object):
         return dict(
             (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
 
-#TODO: there may conflict resolution schemes which don't just need all instances
+#TODO: there may be conflict resolution schemes which don't just need all instances
 #    of a given package but rather all instances of their dependents as well (if
 #    it is desirable to ensure that you link a dependency when you link its
 #    parent).
@@ -80,12 +80,8 @@ def map_specs(specs, keyFn):
     return key_to_specs
 
 def resolve_conflict(specs):
-    return max(specs,
-               key=lambda s: (s.compiler, s.version,
-                              dependency_versions(s), s.dag_hash()))
-    
-def dependency_versions(spec):
-    return tuple(x.version for x in spec.dependencies(deptype=('link', 'run')))
+    #TODO: optionally omit build dependencies when ordering packages
+    return max(specs)
 
 def update_install(specs, config):
     projection = config.projection
