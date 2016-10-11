@@ -124,8 +124,8 @@ class Abinit(Package):
         # BLAS/LAPACK
         if '+scalapack' in spec:
             oapp("--with-linalg-flavor=custom+scalapack")
-            linalg = (spec['lapack'].lapack_libs + spec['blas'].blas_libs +
-                      spec['scalapack'].scalapack_libs)
+            linalg = (spec['scalapack'].scalapack_libs +
+                      spec['lapack'].lapack_libs + spec['blas'].blas_libs)
 
         # elif '+elpa' in spec:
         else:
