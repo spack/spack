@@ -7,8 +7,8 @@ from spack.operating_systems.cnk import Cnk
 class Bgq(Platform):
     priority    = 30
     front_end   = 'power7'
-    back_end    = 'powerpc'
-    default     = 'powerpc'
+    back_end    = 'ppc64'
+    default     = 'ppc64'
 
     def __init__(self):
         ''' IBM Blue Gene/Q system platform.'''
