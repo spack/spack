@@ -56,8 +56,10 @@ class PyBasemap(Package):
             # legal Python for "Implicit Namespace Packages":
             #     https://www.python.org/dev/peps/pep-0420/
             #     https://github.com/Homebrew/homebrew-python/issues/112
-            # In practice, Python will see only the basemap version of mpl_toolkits
-            path_m = find_package_dir(spec['py-matplotlib'].prefix, 'mpl_toolkits')
+            # In practice, Python will see only the basemap version of
+            # mpl_toolkits
+            path_m = find_package_dir(
+                spec['py-matplotlib'].prefix, 'mpl_toolkits')
             path_b = find_package_dir(spec.prefix, 'mpl_toolkits')
             link_dir(path_m, path_b)
 
