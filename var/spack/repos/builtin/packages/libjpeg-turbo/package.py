@@ -26,20 +26,25 @@ from spack import *
 
 
 class LibjpegTurbo(Package):
-    """libjpeg-turbo is a fork of the original IJG libjpeg which uses
-       SIMD to accelerate baseline JPEG compression and
-       decompression. libjpeg is a library that implements JPEG image
-       encoding, decoding and transcoding."""
+    """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
+       accelerate baseline JPEG compression and decompression. libjpeg is a
+       library that implements JPEG image encoding, decoding and
+       transcoding."""
+
     homepage = "http://libjpeg-turbo.virtualgl.org"
     url      = "http://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-1.3.1.tar.gz"
 
+    version('1.5.0', '3fc5d9b6a8bce96161659ae7a9939257')
     version('1.3.1', '2c3a68129dac443a72815ff5bb374b05')
 
-    # Can use either of these.
-    depends_on("yasm", type='build')
+    # Can use either of these. But in the current version of the package
+    # only nasm is used. In order to use yasm an environmental variable
+    # NASM must be set.
+    # TODO: Implement the selection between two supported assemblers.
+    # depends_on("yasm", type='build')
     depends_on("nasm", type='build')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=" + prefix)
         make()
         make("install")
