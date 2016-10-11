@@ -1,11 +1,12 @@
 from spack import *
 
+
 class EtsfIo(Package):
     """ETSF_IO is a library implementing the Nanoquanta / ETSF file format specifications.
-    
-    ETSF_IO enables an architecture-independent exchange of crystallographic data, 
-    electronic wavefunctions, densities and potentials, as well as spectroscopic data. 
-    It is meant to be used by quantum-physical and quantum-chemical applications relying 
+
+    ETSF_IO enables an architecture-independent exchange of crystallographic data,
+    electronic wavefunctions, densities and potentials, as well as spectroscopic data.
+    It is meant to be used by quantum-physical and quantum-chemical applications relying
     upon the Density Functional Theory (DFT) framework."""
 
     homepage = "http://www.etsf.eu/resources/software/libraries_and_tools"
@@ -25,7 +26,7 @@ class EtsfIo(Package):
         oapp("--with-moduledir=%s" % prefix.include)
 
         # Netcdf4/HDF
-        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
+        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib
         options.extend([
             "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
             "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (spec["netcdf-fortran"].prefix.lib, hdf_libs),

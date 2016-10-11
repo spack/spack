@@ -1,5 +1,6 @@
 from spack import *
 
+
 class Atompaw(Package):
     """
     Atompaw
@@ -13,7 +14,7 @@ class Atompaw(Package):
     url      = "http://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
 
     version('4.0.0.13', 'af4a042380356f6780183c4b325aad1d')
-    version('3.1.0.3' , 'c996a277e11707887177f47bbb229aa6')
+    version('3.1.0.3', 'c996a277e11707887177f47bbb229aa6')
 
     depends_on("lapack")
     depends_on("blas")
@@ -33,6 +34,6 @@ class Atompaw(Package):
         ])
 
         configure(*options)
-        make(parallel=False) # parallel build fails
+        make(parallel=False)  # parallel build fails
         make("check")
         make("install")

@@ -28,7 +28,6 @@
 
 from spack import *
 
-import os
 
 class Abinit(Package):
     """ABINIT is a package whose main program allows one to find the total energy,
@@ -122,7 +121,7 @@ class Abinit(Package):
         else:
             oapp("--with-linalg-flavor=custom")
             linalg_fc_link = "--with-linalg-libs=-L%s -llapack -L%s -lblas " % (
-               spec["lapack"].prefix.lib, spec["blas"].prefix.lib)
+                spec["lapack"].prefix.lib, spec["blas"].prefix.lib)
 
         oapp(linalg_fc_link)
 
@@ -154,12 +153,12 @@ class Abinit(Package):
                    spec["netcdf-fortran"].prefix.lib, hdf_libs),
             ])
         else:
-            # Use internal fallbacks (netcdf3) 
+            # Use internal fallbacks (netcdf3)
             oapp("--with-trio-flavor=netcdf-fallback")
 
         configure(*options)
         make()
-   
+
         #make("check")
         #make("tests_in")
         make("install")
