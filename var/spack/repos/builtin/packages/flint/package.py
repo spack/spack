@@ -25,26 +25,42 @@
 from spack import *
 
 
-class Mpc(Package):
-    """Gnu Mpc is a C library for the arithmetic of complex numbers
-       with arbitrarily high precision and correct rounding of the
-       result."""
-    homepage = "http://www.multiprecision.org"
-    url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
+class Flint(Package):
+    """FLINT (Fast Library for Number Theory)."""
 
-    version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
-    version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
+    homepage = "http://www.flintlib.org"
+    url      = "http://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
 
+    version('2.5.2', 'cda885309362150196aed66a5e0f0383')
+    version('2.4.5', '6504b9deabeafb9313e57153a1730b33')
+    version('develop', git='https://github.com/wbhart/flint2.git')
+
+    # Overlap in functionality between gmp and mpir
+    # All other dependencies must also be built with
+    # one or the other
+    # variant('mpir', default=False,
+    #         description='Compile with the MPIR library')
+
+    # Build dependencies
+    depends_on('autoconf', type='build')
+
+    # Other dependencies
     depends_on('gmp')   # mpir is a drop-in replacement for this
     depends_on('mpfr')  # Could also be built against mpir
 
-    def url_for_version(self, version):
-        if version < Version("1.0.1"):
-            return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version  # NOQA
-        else:
-            return "ftp://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
-
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        options = []
+        options = ["--prefix=%s" % prefix,
+                   "--with-gmp=%s" % spec['gmp'].prefix,
+                   "--with-mpfr=%s" % spec['mpfr'].prefix]
+
+        # if '+mpir' in spec:
+        #     options.extend([
+        #         "--with-mpir=%s" % spec['mpir'].prefix
+        #     ])
+
+        configure(*options)
         make()
+        if self.run_tests:
+            make("check")
         make("install")

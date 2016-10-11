@@ -1,8 +1,8 @@
 import os
-import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
-from spack.operating_systems.bgq import BgqDistro
+from spack.operating_systems.cnk import Cnk
+
 
 class Bgq(Platform):
     priority    = 30
@@ -11,28 +11,22 @@ class Bgq(Platform):
     default     = 'powerpc'
 
     def __init__(self):
+        ''' IBM Blue Gene/Q system platform.'''
+
         super(Bgq, self).__init__('bgq')
 
-        for name in ('front_end', 'back_end'):
-            _target = getattr(self, name, None)
-
-            if _target is not None:
-                self.add_target(name, Target(_target))
-
-        self.default = platform.machine()
-
-        if self.default not in self.targets:
-            self.add_target(self.default, Target(self.default))
+        self.add_target(self.front_end, Target(self.front_end))
+        self.add_target(self.back_end, Target(self.back_end))
 
         front_distro = LinuxDistro()
-        back_distro = BgqDistro()
+        back_distro = Cnk()
 
-        self.default_os = str(back_distro)
-        self.back_os = self.default_os
         self.front_os = str(front_distro)
+        self.back_os = str(back_distro)
+        self.default_os = self.back_os
 
-        self.add_operating_system(self.back_os, back_distro)
-        self.add_operating_system(self.front_os, front_distro)
+        self.add_operating_system(str(front_distro), front_distro)
+        self.add_operating_system(str(back_distro), back_distro)
 
     @classmethod
     def detect(self):
