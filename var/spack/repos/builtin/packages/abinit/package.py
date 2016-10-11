@@ -55,6 +55,10 @@ class Abinit(Package):
     variant('scalapack', default=False, description='Enables scalapack support. Requires MPI')
     #variant('elpa', default=False, description='Uses elpa instead of scalapack. Requires MPI')
 
+    # TODO: To be tested. It was working before the last `git pull` but now all tests crash.
+    # For the time being, the default is netcdf3 and the internal fallbacks provided by Abinit.
+    variant('hdf5', default=False, description='Enables HDF5+Netcdf4 (parallel version). WARNING: experimental')
+
     # Add dependencies
     depends_on("blas", when="~openmp")
     depends_on("blas+openmp", when="+openmp")
@@ -70,13 +74,19 @@ class Abinit(Package):
     depends_on("fftw+float", when="~openmp")
     depends_on("fftw+float+openmp", when="+openmp")
 
-    depends_on("netcdf-fortran")
-    depends_on("hdf5+mpi", when='+mpi')  # required for NetCDF-4 support
+    depends_on("netcdf-fortran", when="+hdf5")
+    depends_on("hdf5+mpi", when='+mpi+hdf5')  # required for NetCDF-4 support
 
     # pin libxc version
     depends_on("libxc@2.2.1")
 
-    def check_variants(self, spec):
+    def validate(self, spec):
+        """
+        Checks if incompatible variants have been activated at the same time
+
+        :param spec: spec of the package
+        :raises RuntimeError: in case of inconsistencies
+        """
         error = 'you cannot ask for \'+{variant}\' when \'+mpi\' is not active'
 
         if '+scalapack' in spec and '~mpi' in spec:
@@ -86,7 +96,7 @@ class Abinit(Package):
             raise RuntimeError(error.format(variant='elpa'))
 
     def install(self, spec, prefix):
-        self.check_variants(spec)
+        self.validate(spec)
 
         options = ['--prefix=%s' % prefix]
         oapp = options.append
@@ -135,14 +145,21 @@ class Abinit(Package):
         ])
 
         # Netcdf4/HDF5
-        oapp("--with-trio-flavor=netcdf")
-        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib
-        options.extend([
-            "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
-            "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (
-               spec["netcdf-fortran"].prefix.lib, hdf_libs),
-        ])
+        if "+hdf5" in spec:
+            oapp("--with-trio-flavor=netcdf")
+            hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib
+            options.extend([
+                "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
+                "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (
+                   spec["netcdf-fortran"].prefix.lib, hdf_libs),
+            ])
+        else:
+            # Use internal fallbacks (netcdf3) 
+            oapp("--with-trio-flavor=netcdf-fallback")
 
         configure(*options)
         make()
+   
+        #make("check")
+        #make("tests_in")
         make("install")

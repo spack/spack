@@ -34,4 +34,5 @@ class Atompaw(Package):
 
         configure(*options)
         make(parallel=False) # parallel build fails
+        make("check")
         make("install")

@@ -34,6 +34,5 @@ class EtsfIo(Package):
         configure(*options)
 
         make()
+        make("check")
         make("install")
-
-
