@@ -523,3 +523,37 @@ class SpecDagTest(MockPackagesTest):
             level = descend_and_check(dag.to_node_dict())
             # level just makes sure we are doing something here
             self.assertTrue(level >= 5)
+
+    def test_hash_bits(self):
+        """Ensure getting first n bits of a base32-encoded DAG hash works."""
+
+        # RFC 4648 base32 decode table
+        b32 = dict((j, i) for i, j in enumerate('abcdefghijklmnopqrstuvwxyz'))
+        b32.update(dict((j, i) for i, j in enumerate('234567', 26)))
+
+        # some package hashes
+        tests = [
+            '35orsd4cenv743hg4i5vxha2lzayycby',
+            '6kfqtj7dap3773rxog6kkmoweix5gpwo',
+            'e6h6ff3uvmjbq3azik2ckr6ckwm3depv',
+            'snz2juf4ij7sv77cq3vs467q6acftmur',
+            '4eg47oedi5bbkhpoxw26v3oe6vamkfd7',
+            'vrwabwj6umeb5vjw6flx2rnft3j457rw']
+
+        for test_hash in tests:
+            # string containing raw bits of hash ('1' and '0')
+            expected = ''.join([format(b32[c], '#07b').replace('0b', '')
+                                for c in test_hash])
+
+            for bits in (1, 2, 3, 4, 7, 8, 9, 16, 64, 117, 128, 160):
+                actual_int = spack.spec.base32_prefix_bits(test_hash, bits)
+                fmt = "#0%sb" % (bits + 2)
+                actual = format(actual_int, fmt).replace('0b', '')
+
+                self.assertEqual(expected[:bits], actual)
+
+            self.assertRaises(
+                ValueError, spack.spec.base32_prefix_bits, test_hash, 161)
+
+            self.assertRaises(
+                ValueError, spack.spec.base32_prefix_bits, test_hash, 256)
