@@ -25,13 +25,13 @@
 ##############################################################################
 # Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
 #
-# This program is free software; you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License as published by the Free 
-# Software Foundation; either version 2 of the License, or (at your option) 
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2 of the License, or (at your option)
 # any later version.
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
 # more details.
 #
@@ -46,16 +46,16 @@ import os.path
 
 
 class Openspeedshop(Package):
-    """OpenSpeedShop is a community effort by The Krell Institute with 
-       current direct funding from DOEs NNSA.  It builds on top of a 
-       broad list of community infrastructures, most notably Dyninst 
-       and MRNet from UW, libmonitor from Rice, and PAPI from UTK. 
+    """OpenSpeedShop is a community effort by The Krell Institute with
+       current direct funding from DOEs NNSA.  It builds on top of a
+       broad list of community infrastructures, most notably Dyninst
+       and MRNet from UW, libmonitor from Rice, and PAPI from UTK.
        OpenSpeedShop is an open source multi platform Linux performance
-       tool which is targeted to support performance analysis of 
-       applications running on both single node and large scale IA64, 
-       IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue Gene and 
-       Cray platforms.  OpenSpeedShop development is hosted by the Krell 
-       Institute. The infrastructure and base components of OpenSpeedShop 
+       tool which is targeted to support performance analysis of
+       applications running on both single node and large scale IA64,
+       IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue Gene and
+       Cray platforms.  OpenSpeedShop development is hosted by the Krell
+       Institute. The infrastructure and base components of OpenSpeedShop
        are released as open source code primarily under LGPL.
     """
 
@@ -63,7 +63,7 @@ class Openspeedshop(Package):
     url		= "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
-    version('2.2', branch='master', 
+    version('2.2', branch='master',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
 
     # Optional mirror template
@@ -72,37 +72,45 @@ class Openspeedshop(Package):
 
     parallel = False
 
-    variant('offline', default=False, 
+    variant('offline', default=False,
             description="build with offline instrumentor enabled.")
-    variant('cbtf', default=True, 
+    variant('cbtf', default=True,
             description="build with cbtf instrumentor enabled.")
-    variant('runtime', default=False, 
+    variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('frontend', default=False, 
-            description="build only the FE tool using the runtime_dir to point to target build.")
-    variant('cuda', default=False, 
+    variant('frontend', default=False,
+            description="build only the FE tool using the runtime_dir \
+                         to point to target build.")
+    variant('cuda', default=False,
             description="build with cuda packages included.")
-    variant('ptgf', default=False, 
+    variant('ptgf', default=False,
             description="build with the PTGF based gui package enabled.")
-    variant('rtfe', default=False, 
-            description="build for clusters heterogeneous processors on fe/be nodes.")
+    variant('rtfe', default=False,
+            description="build for clusters heterogeneous processors \
+                         on fe/be nodes.")
 
     # MPI variants
-    variant('openmpi', default=False, 
-            description="Build mpi collector for openmpi MPI when variant is enabled.")
-    variant('mpt', default=False, 
-            description="Build mpi collector for SGI MPT MPI when variant is enabled.")
-    variant('mvapich2', default=False, 
-            description="Build mpi collector for mvapich2 MPI when variant is enabled.")
-    variant('mvapich', default=False, 
-            description="Build mpi collector for mvapich MPI when variant is enabled.")
-    variant('mpich2', default=False, 
-            description="Build mpi collector for mpich2 MPI when variant is enabled.")
-    variant('mpich', default=False, 
-            description="Build mpi collector for mpich MPI when variant is enabled.")
+    variant('openmpi', default=False,
+            description="Build mpi collector for openmpi \
+                         MPI when variant is enabled.")
+    variant('mpt', default=False,
+            description="Build mpi collector for SGI \
+                         MPT MPI when variant is enabled.")
+    variant('mvapich2', default=False,
+            description="Build mpi collector for mvapich2\
+                         MPI when variant is enabled.")
+    variant('mvapich', default=False,
+            description="Build mpi collector for mvapich\
+                         MPI when variant is enabled.")
+    variant('mpich2', default=False,
+            description="Build mpi collector for mpich2\
+                         MPI when variant is enabled.")
+    variant('mpich', default=False,
+            description="Build mpi collector for mpich\
+                         MPI when variant is enabled.")
 
     depends_on("cmake@3.0.2:", type='build')
-    # Dependencies for openspeedshop that are common to all 
+    # Dependencies for openspeedshop that are common to all
     # the variants of the OpenSpeedShop build
     depends_on("bison", type='build')
     depends_on("flex", type='build')
@@ -141,12 +149,12 @@ class Openspeedshop(Package):
     depends_on("xerces-c@3.1.1:", when='+cbtf')
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the 
+        # Sets build type parameters into cmakeOptions the
         # options that will enable the cbtf-krell built type settings
 
-        compile_flags="-O2 -g"
+        compile_flags = "-O2 -g"
         BuildTypeOptions = []
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it 
+        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it
         # to be, not the stdcmakeargs
         for word in cmakeOptions[:]:
             if word.startswith('-DCMAKE_BUILD_TYPE'):
@@ -155,57 +163,43 @@ class Openspeedshop(Package):
                 cmakeOptions.remove(word)
             if word.startswith('-DCMAKE_C_FLAGS'):
                 cmakeOptions.remove(word)
-        BuildTypeOptions.extend([
-                 '-DCMAKE_BUILD_TYPE=None',
-                 '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
-                 '-DCMAKE_C_FLAGS=%s'           % compile_flags
-        ])
+        BuildTypeOptions.extend(['-DCMAKE_BUILD_TYPE=None',
+                                 '-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                                 '-DCMAKE_C_FLAGS=%s'    % compile_flags])
 
         cmakeOptions.extend(BuildTypeOptions)
 
     def set_mpi_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable 
+        # Appends to cmakeOptions the options that will enable
         # the appropriate MPI implementations
- 
+
         MPIOptions = []
 
         # openmpi
         if '+openmpi' in spec:
-            MPIOptions.extend([
-                 '-DOPENMPI_DIR=%s' % spec['openmpi'].prefix
-            ])
+            MPIOptions.extend(['-DOPENMPI_DIR=%s' % spec['openmpi'].prefix])
         # mpich
         if '+mpich' in spec:
-            MPIOptions.extend([
-                 '-DMPICH_DIR=%s' % spec['mpich'].prefix
-            ])
+            MPIOptions.extend(['-DMPICH_DIR=%s' % spec['mpich'].prefix])
         # mpich2
         if '+mpich2' in spec:
-            MPIOptions.extend([
-                 '-DMPICH2_DIR=%s' % spec['mpich2'].prefix
-            ])
+            MPIOptions.extend(['-DMPICH2_DIR=%s' % spec['mpich2'].prefix])
         # mvapich
         if '+mvapich' in spec:
-            MPIOptions.extend([
-                 '-DMVAPICH_DIR=%s' % spec['mvapich'].prefix
-            ])
+            MPIOptions.extend(['-DMVAPICH_DIR=%s' % spec['mvapich'].prefix])
         # mvapich2
         if '+mvapich2' in spec:
-            MPIOptions.extend([
-                 '-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix
-            ])
+            MPIOptions.extend(['-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix])
         # mpt
         if '+mpt' in spec:
-            MPIOptions.extend([
-                 '-DMPT_DIR=%s' % spec['mpt'].prefix
-            ])
+            MPIOptions.extend(['-DMPT_DIR=%s' % spec['mpt'].prefix])
 
         cmakeOptions.extend(MPIOptions)
 
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
 
-        # Common settings to both offline and cbtf versions 
+        # Common settings to both offline and cbtf versions
         # of OpenSpeedShop
         run_env.prepend_path('PATH', self.prefix.bin)
 
@@ -216,18 +210,18 @@ class Openspeedshop(Package):
         run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
 
         # Find Dyninst library path
-        dyninst_libdir = find_libraries(['libdyninstAPI_RT'], 
-                                        root=self.spec['dyninst'].prefix, 
+        dyninst_libdir = find_libraries(['libdyninstAPI_RT'],
+                                        root=self.spec['dyninst'].prefix,
                                         shared=True, recurse=True)
-        
+
         # Set Dyninst RT library path to support OSS loop resolution code
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = find_libraries(['libopenss-framework'], 
-                                    root=self.spec['openspeedshop'].prefix, 
+        oss_libdir = find_libraries(['libopenss-framework'],
+                                    root=self.spec['openspeedshop'].prefix,
                                     shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH', 
+        run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 
         # This is always python lib everywhere we have seen to date.
@@ -237,114 +231,117 @@ class Openspeedshop(Package):
         run_env.prepend_path('LD_LIBRARY_PATH', self.spec['boost'].prefix.lib)
 
         # Find sqlite library path
-        sqlite_libdir = find_libraries(['libsqlite3'], 
-                                       root=self.spec['sqlite'].prefix, 
+        sqlite_libdir = find_libraries(['libsqlite3'],
+                                       root=self.spec['sqlite'].prefix,
                                        shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH', 
+        run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(sqlite_libdir.joined()))
 
         # see above for dyninst_libdir detection code
-        run_env.prepend_path('LD_LIBRARY_PATH', 
+        run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(dyninst_libdir.joined()))
 
         # Find libelf library path
-        libelf_libdir = find_libraries(['libelf'], 
-                                       root=self.spec['libelf'].prefix, 
+        libelf_libdir = find_libraries(['libelf'],
+                                       root=self.spec['libelf'].prefix,
                                        shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH', 
+        run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(libelf_libdir.joined()))
 
         # Find libdwarf library path
-        libdwarf_libdir = find_libraries(['libdwarf'], 
-                                         root=self.spec['libdwarf'].prefix, 
+        libdwarf_libdir = find_libraries(['libdwarf'],
+                                         root=self.spec['libdwarf'].prefix,
                                          shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH', 
-                              os.path.dirname(libdwarf_libdir.joined()))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             os.path.dirname(libdwarf_libdir.joined()))
 
-        # Settings specific to the version, checking here 
+        # Settings specific to the version, checking here
         # for the cbtf instrumentor
         if '+cbtf' in self.spec:
+            cbtf_mc = '/sbin/cbtf_mrnet_commnode'
+            cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
             run_env.set('XPLAT_RSH', 'ssh')
-            run_env.set('MRNET_COMM_PATH', 
-                        join_path(self.spec['cbtf-krell'].prefix \
-                                  + '/sbin/cbtf_mrnet_commnode'))
+            run_env.set('MRNET_COMM_PATH',
+                        join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
 
-            run_env.set('CBTF_MRNET_BACKEND_PATH', 
-                        join_path(self.spec['cbtf-krell'].prefix \
-                                  + '/sbin/cbtf_libcbtf_mrnet_backend'))
+            run_env.set('CBTF_MRNET_BACKEND_PATH',
+                        join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
 
             run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
 
             # Find cbtf-krell component library path
-            cbtfkrell_libdir = find_libraries(['libcbtf-core'], 
-                                              root=self.spec['cbtf-krell'].prefix, 
-                                              shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(cbtfkrell_libdir.joined()))
+            cbtfkrell_libdir = \
+                find_libraries(['libcbtf-core'],
+                               root=self.spec['cbtf-krell'].prefix,
+                               shared=True, recurse=True)
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(cbtfkrell_libdir.joined()))
 
             # Find cbtf component library path
-            cbtf_libdir = find_libraries(['libcbtf'], 
-                                         root=self.spec['cbtf'].prefix, 
+            cbtf_libdir = find_libraries(['libcbtf'],
+                                         root=self.spec['cbtf'].prefix,
                                          shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(cbtf_libdir.joined()))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(cbtf_libdir.joined()))
 
             # see above for dyninst_libdir detection code
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(dyninst_libdir.joined()))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(dyninst_libdir.joined()))
 
             # Find xercesc component library path
-            xercesc_libdir = find_libraries(['libxerces-c'], 
-                                            root=self.spec['xerces-c'].prefix, 
+            xercesc_libdir = find_libraries(['libxerces-c'],
+                                            root=self.spec['xerces-c'].prefix,
                                             shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(xercesc_libdir.joined()))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(xercesc_libdir.joined()))
 
             # Find mrnet component library path
-            mrnet_libdir = find_libraries(['libmrnet'], 
-                                          root=self.spec['mrnet'].prefix, 
+            mrnet_libdir = find_libraries(['libmrnet'],
+                                          root=self.spec['mrnet'].prefix,
                                           shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(mrnet_libdir.joined()))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(mrnet_libdir.joined()))
 
         elif '+offline' in self.spec:
-            # Had to use this form of syntax self.prefix.lib and 
+            # Had to use this form of syntax self.prefix.lib and
             # self.prefix.lib64 returned None all the time
             run_env.set('OPENSS_RAWDATA_DIR', '.')
-            run_env.set('OPENSS_PLUGIN_PATH', 
+            run_env.set('OPENSS_PLUGIN_PATH',
                         join_path(oss_libdir + '/openspeedshop'))
             run_env.prepend_path('PATH', self.spec['papi'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['libdwarf'].prefix.bin)
 
             # Find papi library path
-            papi_libdir = find_libraries(['libpapi'], 
-                                         root=self.spec['papi'].prefix, 
+            papi_libdir = find_libraries(['libpapi'],
+                                         root=self.spec['papi'].prefix,
                                          shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(papi_libdir.joined()))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(papi_libdir.joined()))
 
             # Find binutils library path
-            binutils_libdir = find_libraries(['libbfd'], 
-                                             root=self.spec['binutils'].prefix, 
+            binutils_libdir = find_libraries(['libbfd'],
+                                             root=self.spec['binutils'].prefix,
                                              shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(binutils_libdir.joined()))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(binutils_libdir.joined()))
 
             # Find libmonitor library path
-            libmonitor_libdir = find_libraries(['libmonitor'], 
-                                               root=self.spec['monitor'].prefix, 
-                                               shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(libmonitor_libdir.joined()))
+            libmonitor_libdir = \
+                find_libraries(['libmonitor'],
+                               root=self.spec['monitor'].prefix,
+                               shared=True, recurse=True)
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(libmonitor_libdir.joined()))
 
             # Find libunwind library path
-            libunwind_libdir = find_libraries(['libunwind'], 
-                                              root=self.spec['libunwind'].prefix, 
-                                              shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH', 
-                                  os.path.dirname(libunwind_libdir.joined()))
+            libunwind_libdir = \
+                find_libraries(['libunwind'],
+                               root=self.spec['libunwind'].prefix,
+                               shared=True, recurse=True)
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 os.path.dirname(libunwind_libdir.joined()))
 
             if '+mpich' in self.spec:
                 run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich')
@@ -363,19 +360,19 @@ class Openspeedshop(Package):
                 with working_dir('build_runtime', create=True):
 
                     cmakeOptions = []
-                    cmakeOptions.extend(
-                       ['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-                        '-DINSTRUMENTOR=%s'           % instrumentor_setting,
-                        '-DLIBMONITOR_DIR=%s'         % spec['libmonitor'].prefix,
-                        '-DLIBUNWIND_DIR=%s'          % spec['libunwind'].prefix,
-                        '-DPAPI_DIR=%s'               % spec['papi'].prefix 
-                       ])
- 
+                    cmakeOptions.extend([
+                        '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+                        '-DINSTRUMENTOR=%s'     % instrumentor_setting,
+                        '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
+                        '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
+                        '-DPAPI_DIR=%s'         % spec['papi'].prefix])
+
                     # Add any MPI implementations coming from variant settings
                     self.set_mpi_cmakeOptions(spec, cmakeOptions)
                     cmakeOptions.extend(std_cmake_args)
 
-                    # Adjust the build options to the favored ones for this build
+                    # Adjust the build options to the favored
+                    # ones for this build
                     self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
 
                     cmake('..', *cmakeOptions)
@@ -386,41 +383,58 @@ class Openspeedshop(Package):
             else:
                 cmake_prefix_path = join_path(spec['dyninst'].prefix)
                 with working_dir('build', create=True):
-
-                    python_vers=format(spec['python'].version.up_to(2))
-
+                    python_vers = format(spec['python'].version.up_to(2))
+                    python_pv = '/python' + python_vers
+                    python_pvs = '/libpython' + python_vers + '.so'
                     cmakeOptions = []
                     cmakeOptions.extend(
-                       ['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-                        '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
-                        '-DINSTRUMENTOR=%s'           % instrumentor_setting,
-                        '-DBINUTILS_DIR=%s'           % spec['binutils'].prefix,
-                        '-DLIBELF_DIR=%s'             % spec['libelf'].prefix,
-                        '-DLIBDWARF_DIR=%s'           % spec['libdwarf'].prefix,
-                        '-DLIBMONITOR_DIR=%s'         % spec['libmonitor'].prefix,
-                        '-DLIBUNWIND_DIR=%s'          % spec['libunwind'].prefix,
-                        '-DPAPI_DIR=%s'               % spec['papi'].prefix,
-                        '-DSQLITE3_DIR=%s'            % spec['sqlite'].prefix,
-                        '-DQTLIB_DIR=%s'              % spec['qt'].prefix,
-                        '-DPYTHON_EXECUTABLE=%s'      % join_path(spec['python'].prefix \
-                                                                  + '/bin/python'),
-                        '-DPYTHON_INCLUDE_DIR=%s'     % join_path(spec['python'].prefix.include) \
-                                                                  + '/python' + python_vers,
-                        '-DPYTHON_LIBRARY=%s'         % join_path(spec['python'].prefix.lib) \
-                                                                  + '/libpython' + python_vers + '.so',
-                        '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                        '-DBoost_NO_BOOST_CMAKE=TRUE',
-                        '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
-                        '-DBoost_DIR=%s'              % spec['boost'].prefix,
-                        '-DBOOST_LIBRARYDIR=%s'       % spec['boost'].prefix.lib,
-                        '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix
-                       ])
+                        ['-DCMAKE_INSTALL_PREFIX=%s'
+                            % prefix,
+                         '-DCMAKE_PREFIX_PATH=%s'
+                            % cmake_prefix_path,
+                         '-DINSTRUMENTOR=%s'
+                            % instrumentor_setting,
+                         '-DBINUTILS_DIR=%s'
+                            % spec['binutils'].prefix,
+                         '-DLIBELF_DIR=%s'
+                            % spec['libelf'].prefix,
+                         '-DLIBDWARF_DIR=%s'
+                            % spec['libdwarf'].prefix,
+                         '-DLIBMONITOR_DIR=%s'
+                            % spec['libmonitor'].prefix,
+                         '-DLIBUNWIND_DIR=%s'
+                            % spec['libunwind'].prefix,
+                         '-DPAPI_DIR=%s'
+                            % spec['papi'].prefix,
+                         '-DSQLITE3_DIR=%s'
+                            % spec['sqlite'].prefix,
+                         '-DQTLIB_DIR=%s'
+                            % spec['qt'].prefix,
+                         '-DPYTHON_EXECUTABLE=%s'
+                            % join_path(spec['python'].prefix + '/bin/python'),
+                         '-DPYTHON_INCLUDE_DIR=%s'
+                            % join_path(
+                                spec['python'].prefix.include) + python_pv,
+                         '-DPYTHON_LIBRARY=%s'
+                            % join_path(
+                                spec['python'].prefix.lib) + python_pvs,
+                         '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                         '-DBoost_NO_BOOST_CMAKE=TRUE',
+                         '-DBOOST_ROOT=%s'
+                            % spec['boost'].prefix,
+                         '-DBoost_DIR=%s'
+                            % spec['boost'].prefix,
+                         '-DBOOST_LIBRARYDIR=%s'
+                            % spec['boost'].prefix.lib,
+                         '-DDYNINST_DIR=%s'
+                            % spec['dyninst'].prefix])
 
                     # Add any MPI implementations coming from variant settings
                     self.set_mpi_cmakeOptions(spec, cmakeOptions)
                     cmakeOptions.extend(std_cmake_args)
 
-                    # Adjust the build options to the favored ones for this build
+                    # Adjust the build options to the favored
+                    # ones for this build
                     self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
 
                     cmake('..', *cmakeOptions)
@@ -431,40 +445,61 @@ class Openspeedshop(Package):
 
         elif '+cbtf' in spec:
             instrumentor_setting = "cbtf"
-            resolve_symbols = "symtabapi"
-            cmake_prefix_path = join_path(spec['cbtf'].prefix)  \
-                                          + ':' + join_path(spec['cbtf-krell'].prefix)  \
-                                          + ':' + join_path(spec['dyninst'].prefix)
+            # resolve_symbols = "symtabapi"
+            cmake_prefix_path = join_path(spec['cbtf'].prefix) \
+                + ':' + join_path(spec['cbtf-krell'].prefix)\
+                + ':' + join_path(spec['dyninst'].prefix)
 
             if '+runtime' in spec:
                 with working_dir('build_cbtf_runtime', create=True):
-                    python_vers='%d.%d' % spec['python'].version[:2]
+                    python_vers = '%d.%d' % spec['python'].version[:2]
+                    python_pv = '/python' + python_vers
+                    python_pvs = '/libpython' + python_vers + '.so'
                     cmakeOptions = []
-                    cmakeOptions.extend(['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-                          '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
-                          '-DINSTRUMENTOR=%s'           % instrumentor_setting,
-                          '-DBINUTILS_DIR=%s'           % spec['binutils'].prefix,
-                          '-DLIBELF_DIR=%s'             % spec['libelf'].prefix,
-                          '-DLIBDWARF_DIR=%s'           % spec['libdwarf'].prefix,
-                          '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
-                          '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
-                          '-DPYTHON_EXECUTABLE=%s'      % join_path(spec['python'].prefix + '/bin/python'),
-                          '-DPYTHON_INCLUDE_DIR=%s'     % join_path(spec['python'].prefix.include) \
-                                                                         + '/python' + python_vers,
-                          '-DPYTHON_LIBRARY=%s'         % join_path(spec['python'].prefix.lib) \
-                                                                         + '/libpython' + python_vers + '.so',
-                          '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                          '-DBoost_NO_BOOST_CMAKE=TRUE',
-                          '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
-                          '-DBoost_DIR=%s'              % spec['boost'].prefix,
-                          '-DBOOST_LIBRARYDIR=%s'       % spec['boost'].prefix.lib,
-                          '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
-                          '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
-                          '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix,
-                          '-DMRNET_DIR=%s'              % spec['mrnet'].prefix
-                          ])
+                    cmakeOptions.extend(
+                        ['-DCMAKE_INSTALL_PREFIX=%s'
+                            % prefix,
+                         '-DCMAKE_PREFIX_PATH=%s'
+                            % cmake_prefix_path,
+                         '-DINSTRUMENTOR=%s'
+                            % instrumentor_setting,
+                         '-DBINUTILS_DIR=%s'
+                            % spec['binutils'].prefix,
+                         '-DLIBELF_DIR=%s'
+                            % spec['libelf'].prefix,
+                         '-DLIBDWARF_DIR=%s'
+                            % spec['libdwarf'].prefix,
+                         '-DCBTF_DIR=%s'
+                            % spec['cbtf'].prefix,
+                         '-DCBTF_KRELL_DIR=%s'
+                            % spec['cbtf-krell'].prefix,
+                         '-DPYTHON_EXECUTABLE=%s'
+                            % join_path(spec['python'].prefix + '/bin/python'),
+                         '-DPYTHON_INCLUDE_DIR=%s'
+                            % join_path(
+                                spec['python'].prefix.include) + python_pv,
+                         '-DPYTHON_LIBRARY=%s'
+                            % join_path(
+                                spec['python'].prefix.lib) + python_pvs,
+                         '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                         '-DBoost_NO_BOOST_CMAKE=TRUE',
+                         '-DBOOST_ROOT=%s'
+                            % spec['boost'].prefix,
+                         '-DBoost_DIR=%s'
+                            % spec['boost'].prefix,
+                         '-DBOOST_LIBRARYDIR=%s'
+                            % spec['boost'].prefix.lib,
+                         '-DBoost_INCLUDE_DIRS:PATH=%s'
+                            % spec['boost'].prefix.include,
+                         '-DBoost_LIBRARY_DIRS:PATH=%s'
+                            % spec['boost'].prefix.lib,
+                         '-DDYNINST_DIR=%s'
+                            % spec['dyninst'].prefix,
+                         '-DMRNET_DIR=%s'
+                            % spec['mrnet'].prefix])
 
-                    # Adjust the build options to the favored ones for this build
+                    # Adjust the build options to the
+                    # favored ones for this build
                     self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
 
                     cmake('..', *cmakeOptions)
@@ -475,36 +510,59 @@ class Openspeedshop(Package):
 
             else:
                 with working_dir('build_cbtf', create=True):
-                    python_vers=format(spec['python'].version.up_to(2))
+                    python_vers = format(spec['python'].version.up_to(2))
+                    python_pv = '/python' + python_vers
+                    python_pvs = '/libpython' + python_vers + '.so'
                     cmakeOptions = []
-                    cmakeOptions.extend(['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-                          '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
-                          '-DINSTRUMENTOR=%s'           % instrumentor_setting,
-                          '-DBINUTILS_DIR=%s'           % spec['binutils'].prefix,
-                          '-DLIBELF_DIR=%s'             % spec['libelf'].prefix,
-                          '-DLIBDWARF_DIR=%s'           % spec['libdwarf'].prefix,
-                          '-DSQLITE3_DIR=%s'            % spec['sqlite'].prefix,
-                          '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
-                          '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
-                          '-DQTLIB_DIR=%s'              % spec['qt'].prefix,
-                          '-DPYTHON_EXECUTABLE=%s'      % join_path(spec['python'].prefix + '/bin/python'),
-                          '-DPYTHON_INCLUDE_DIR=%s'     % join_path(spec['python'].prefix.include) \
-                                                                         + '/python' + python_vers,
-                          '-DPYTHON_LIBRARY=%s'         % join_path(spec['python'].prefix.lib) \
-                                                                         + '/libpython' + python_vers + '.so',
-                          '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                          '-DBoost_NO_BOOST_CMAKE=TRUE',
-                          '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
-                          '-DBoost_DIR=%s'              % spec['boost'].prefix,
-                          '-DBOOST_LIBRARYDIR=%s'       % spec['boost'].prefix.lib,
-                          '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
-                          '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
-                          '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix,
-                          '-DMRNET_DIR=%s'              % spec['mrnet'].prefix
-                          ])
+                    cmakeOptions.extend(
+                        ['-DCMAKE_INSTALL_PREFIX=%s'
+                            % prefix,
+                         '-DCMAKE_PREFIX_PATH=%s'
+                            % cmake_prefix_path,
+                         '-DINSTRUMENTOR=%s'
+                            % instrumentor_setting,
+                         '-DBINUTILS_DIR=%s'
+                            % spec['binutils'].prefix,
+                         '-DLIBELF_DIR=%s'
+                            % spec['libelf'].prefix,
+                         '-DLIBDWARF_DIR=%s'
+                            % spec['libdwarf'].prefix,
+                         '-DSQLITE3_DIR=%s'
+                            % spec['sqlite'].prefix,
+                         '-DCBTF_DIR=%s'
+                            % spec['cbtf'].prefix,
+                         '-DCBTF_KRELL_DIR=%s'
+                            % spec['cbtf-krell'].prefix,
+                         '-DQTLIB_DIR=%s'
+                            % spec['qt'].prefix,
+                         '-DPYTHON_EXECUTABLE=%s'
+                            % join_path(
+                                spec['python'].prefix + '/bin/python'),
+                         '-DPYTHON_INCLUDE_DIR=%s'
+                            % join_path(
+                                spec['python'].prefix.include) + python_pv,
+                         '-DPYTHON_LIBRARY=%s'
+                            % join_path(
+                                spec['python'].prefix.lib) + python_pvs,
+                         '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                         '-DBoost_NO_BOOST_CMAKE=TRUE',
+                         '-DBOOST_ROOT=%s'
+                            % spec['boost'].prefix,
+                         '-DBoost_DIR=%s'
+                            % spec['boost'].prefix,
+                         '-DBOOST_LIBRARYDIR=%s'
+                            % spec['boost'].prefix.lib,
+                         '-DBoost_INCLUDE_DIRS:PATH=%s'
+                            % spec['boost'].prefix.include,
+                         '-DBoost_LIBRARY_DIRS:PATH=%s'
+                            % spec['boost'].prefix.lib,
+                         '-DDYNINST_DIR=%s'
+                            % spec['dyninst'].prefix,
+                         '-DMRNET_DIR=%s'
+                            % spec['mrnet'].prefix])
 
-
-                    # Adjust the build options to the favored ones for this build
+                    # Adjust the build options to the favored
+                    # ones for this build
                     self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
 
                     cmake('..', *cmakeOptions)
@@ -512,4 +570,3 @@ class Openspeedshop(Package):
                     make("clean")
                     make()
                     make("install")
-
