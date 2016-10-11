@@ -59,8 +59,6 @@ import spack.repository
 import spack.url
 import spack.util.web
 from llnl.util.filesystem import *
-from llnl.util.filesystem import *
-from llnl.util.lang import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
