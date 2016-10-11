@@ -48,6 +48,8 @@ class Charm(Package):
     # Support OpenMPI; see
     # <https://charm.cs.illinois.edu/redmine/issues/1206>
     patch("mpi.patch")
+    # Ignore compiler warnings while configuring
+    patch("strictpass.patch")
 
     # Communication mechanisms (choose exactly one)
     # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
