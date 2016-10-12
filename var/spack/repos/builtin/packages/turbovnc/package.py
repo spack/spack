@@ -48,10 +48,12 @@ class Turbovnc(Package):
     depends_on("libjpeg-turbo")
     #depends_on("libjpeg-turbo@1.5.1", when='@2.1')
     depends_on("openssl")
+    depends_on("pam")
+    depends_on("libx11")
 
     def url_for_version(self, version):
         """Handle TurboVNC's version-based custom URLs."""
-        return '"http://downloads.sourceforge.net/project/turbovnc/%s/turbovnc-%s.tar.gz' % (
+        return 'http://downloads.sourceforge.net/project/turbovnc/%s/turbovnc-%s.tar.gz' % (
             version, version)
 
 
