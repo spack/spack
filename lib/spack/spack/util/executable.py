@@ -40,6 +40,7 @@ class Executable(object):
 
     def __init__(self, name):
         self.exe = name.split(' ')
+        self.default_env = {}
         self.returncode = None
 
         if not self.exe:
@@ -47,6 +48,9 @@ class Executable(object):
 
     def add_default_arg(self, arg):
         self.exe.append(arg)
+
+    def add_default_env(self, key, value):
+        self.default_env[key] = value
 
     @property
     def command(self):
@@ -103,7 +107,13 @@ class Executable(object):
         fail_on_error = kwargs.pop("fail_on_error", True)
         ignore_errors = kwargs.pop("ignore_errors", ())
 
+        # environment
         env = kwargs.get('env', None)
+        if env is None:
+            env = os.environ.copy()
+            env.update(self.default_env)
+        else:
+            env = self.default_env.copy().update(env)
 
         # TODO: This is deprecated.  Remove in a future version.
         return_output = kwargs.pop("return_output", False)
@@ -149,6 +159,7 @@ class Executable(object):
 
         cmd_line = "'%s'" % "' '".join(
             map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
+
         tty.debug(cmd_line)
 
         try:

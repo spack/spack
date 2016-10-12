@@ -26,21 +26,13 @@
 # Author: Justin Too <too1@llnl.gov>
 #
 import distutils.dir_util
-
-import spack
 from spack import *
-import llnl.util.tty as tty
 
 
 class Jdk(Package):
     """The Java Development Kit (JDK) released by Oracle Corporation
        in the form of a binary product aimed at Java developers."""
     homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
-
-    version('8u66-linux-x64', '88f31f3d642c3287134297b8c10e61bf',
-            url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz")
-    version('8u92-linux-x64', '65a1cc17ea362453a6e0eb4f13be76e4',
-            url="http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.tar.gz")
 
     # Oracle requires that you accept their License Agreement in order
     # to access the Java packages in download.oracle.com. In order to
@@ -53,18 +45,12 @@ class Jdk(Package):
         '-H',  # specify required License Agreement cookie
         'Cookie: oraclelicense=accept-securebackup-cookie']
 
-    def do_fetch(self, mirror_only=False):
-        # Add our custom curl commandline options
-        tty.msg(
-            "[Jdk] Adding required commandline options to curl " +
-            "before performing fetch: %s" %
-            (self.curl_options))
-
-        for option in self.curl_options:
-            spack.curl.add_default_arg(option)
-
-        # Now perform the actual fetch
-        super(Jdk, self).do_fetch(mirror_only)
+    version('8u66-linux-x64', '88f31f3d642c3287134297b8c10e61bf',
+            url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz",
+            curl_options=curl_options)
+    version('8u92-linux-x64', '65a1cc17ea362453a6e0eb4f13be76e4',
+            url="http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.tar.gz",
+            curl_options=curl_options)
 
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
