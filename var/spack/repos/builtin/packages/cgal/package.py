@@ -57,7 +57,6 @@ class Cgal(Package):
     variant('demos', default=False,
             description='Build CGAL demos')
 
-
     # Essential Third Party Libraries
     depends_on('boost+thread+system')
     depends_on('gmp')
@@ -70,7 +69,6 @@ class Cgal(Package):
     # Optional to build CGAL_Qt5 (demos)
     # depends_on('opengl', when='+demos')   # not yet in Spack
     depends_on('qt@5:', when='+demos')
-
 
     # Optional Third Party Libraries
     # depends_on('leda')
