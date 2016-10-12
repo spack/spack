@@ -119,7 +119,8 @@ class EnvironmentTest(unittest.TestCase):
                             'spack', 'test', 'data')
         files = [
             join_path(datadir, 'sourceme_first.sh'),
-            join_path(datadir, 'sourceme_second.sh')
+            join_path(datadir, 'sourceme_second.sh'),
+            join_path(datadir, 'sourceme_parameters.sh intel64')
         ]
         env = EnvironmentModifications.from_sourcing_files(*files)
         modifications = env.group_by_name()
@@ -134,6 +135,11 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual(len(modifications['NEW_VAR']), 1)
         self.assertTrue(isinstance(modifications['NEW_VAR'][0], SetEnv))
         self.assertEqual(modifications['NEW_VAR'][0].value, 'new')
+
+        self.assertEqual(len(modifications['FOO']), 1)
+        self.assertTrue(isinstance(modifications['FOO'][0], SetEnv))
+        self.assertEqual(modifications['FOO'][0].value, 'intel64')
+
         # Unset variables
         self.assertEqual(len(modifications['EMPTY_PATH_LIST']), 1)
         self.assertTrue(isinstance(
