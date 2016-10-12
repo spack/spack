@@ -111,6 +111,16 @@ class Clang(Compiler):
 
         return cpr._version_cache[comp]
 
+    def _find_full_path(self, path):
+        basename = os.path.basename(path)
+
+        if not self.is_apple or basename not in ('clang', 'clang++'):
+            return super(Clang, self)._find_full_path(path)
+
+        xcrun = Executable('xcrun')
+        full_path = xcrun('-f', basename, output=str)
+        return full_path.strip()
+
     def setup_custom_environment(self, env):
         """Set the DEVELOPER_DIR environment for the Xcode toolchain.
 
