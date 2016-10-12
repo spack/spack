@@ -114,6 +114,11 @@ class Compiler(object):
 
     def __init__(self, cspec, operating_system,
                  paths, modules=[], alias=None, **kwargs):
+        self.operating_system = operating_system
+        self.spec = cspec
+        self.modules = modules
+        self.alias = alias
+
         def check(exe):
             if exe is None:
                 return None
@@ -137,11 +142,6 @@ class Compiler(object):
             value = kwargs.get(flag, None)
             if value is not None:
                 self.flags[flag] = value.split()
-
-        self.operating_system = operating_system
-        self.spec = cspec
-        self.modules = modules
-        self.alias = alias
 
     @property
     def version(self):
