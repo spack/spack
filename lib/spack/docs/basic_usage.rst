@@ -46,7 +46,7 @@ will be treated as though it started and ended with
 as case-insensitive. You can also add the ``-d`` to search the description of
 the package in addition to the name.  Some examples:
 
-All packages whose names contain "sql" :
+All packages whose names contain "sql":
 
 .. command-output:: spack list sql
 
