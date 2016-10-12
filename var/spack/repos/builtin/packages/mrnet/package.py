@@ -44,7 +44,7 @@ class Mrnet(Package):
     depends_on("boost")
 
     def install(self, spec, prefix):
-        # Build the MRNet LW thread safe libraries when the 
+        # Build the MRNet LW thread safe libraries when the
         # lwthreads variant is present
         if '+lwthreads' in spec:
             configure("--prefix=%s" % prefix, "--enable-shared",
