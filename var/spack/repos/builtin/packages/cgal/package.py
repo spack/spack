@@ -64,7 +64,7 @@ class Cgal(Package):
     depends_on('mpfr')
 
     # Required for CGAL_ImageIO
-    depends_on('opengl', when='+imageio')
+    # depends_on('opengl', when='+imageio') # not yet in Spack
     depends_on('zlib')
 
     # Optional to build CGAL_Qt5 (demos)
@@ -94,17 +94,15 @@ class Cgal(Package):
             # CGAL supports only Release and Debug build type. Any
             # other build type will raise an error at configure time
             '-DCMAKE_BUILD_TYPE:STRING=%s' %
-                ('Debug' if '+debug' in spec else 'Release'),
+            ('Debug' if '+debug' in spec else 'Release'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' %
-                ('ON' if '+shared' in spec else 'OFF'),
+            ('ON' if '+shared' in spec else 'OFF'),
             '-DWITH_CGAL_Core:BOOL=%s' %
-                ('YES' if '+core' in spec else 'NO'),
+            ('YES' if '+core' in spec else 'NO'),
             '-DWITH_CGAL_ImageIO:BOOL=%s' %
-                ('YES' if '+imageio' in spec else 'NO'),
+            ('YES' if '+imageio' in spec else 'NO'),
             '-DWITH_CGAL_Qt5:BOOL=%s' %
-                ('YES' if '+demos' in spec else 'NO'),
-        ]
-        
+            ('YES' if '+demos' in spec else 'NO')]
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
