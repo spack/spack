@@ -44,8 +44,12 @@ class Cgal(Package):
     variant('debug', default=False,
             description='Builds a debug version of the libraries')
 
-    # See "7 CGAL Libraries" at:
+    # ---- See "7 CGAL Libraries" at:
     # http://doc.cgal.org/latest/Manual/installation.html
+
+    # The CORE library provides exact arithmetic for geometric computations.
+    # See: http://cs.nyu.edu/exact/core_pages/
+    #      http://cs.nyu.edu/exact/core_pages/svn-core.html
     variant('core', default=False,
             description='Build the CORE library for algebraic numbers')
     variant('imageio', default=False,
