@@ -26,15 +26,19 @@ from spack import *
 
 
 class XcbProto(Package):
-    """Protocol for libxcb"""
+    """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to
+    generate the majority of its code and API."""
 
     homepage = "http://xcb.freedesktop.org/"
     url      = "http://xcb.freedesktop.org/dist/xcb-proto-1.11.tar.gz"
 
+    version('1.12', '5ee1ec124ea8d56bd9e83b8e9e0b84c4')
     version('1.11', 'c8c6cb72c84f58270f4db1f39607f66a')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    extends('python')
 
-        make()
-        make("install")
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
+
+        # make('check')  # fails xmllint validation
+        make('install')

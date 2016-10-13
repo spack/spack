@@ -34,6 +34,7 @@ class Libxc(Package):
 
     version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
+    version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
 
     def install(self, spec, prefix):
         # Optimizations for the Intel compiler, suggested by CP2K

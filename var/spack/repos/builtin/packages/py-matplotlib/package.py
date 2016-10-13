@@ -38,36 +38,51 @@ class PyMatplotlib(Package):
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
-    variant('gui',     default=False, description='Enable GUI')
+    # See: http://matplotlib.org/users/installing.html
+
+    # Variants enabled by default for a standard configuration
+    variant('tk', default=True, description='Enable Tk GUI')
+    variant('image', default=True,
+            description='Enable reading/saving JPEG, BMP and TIFF files')
+
+    # Variants optionally available to user
     variant('ipython', default=False, description='Enable ipython support')
+    variant('qt', default=False, description='Enable Qt GUI')
+    variant('latex', default=False,
+            description='Enable LaTeX text rendering support')
+    variant('animation', default=False,
+            description='Enable animation support')
 
     # Python 2.7, 3.4, or 3.5
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
 
-    # Required dependencies
-    depends_on('py-numpy@1.6:',    type=nolink)
-    depends_on('py-setuptools',    type='build')
-    depends_on('py-dateutil@1.1:', type=nolink)
-    depends_on('py-pyparsing',     type=nolink)
+    # ------ Required dependencies
+    depends_on('py-setuptools', type='build')
+
     depends_on('libpng@1.2:')
-    depends_on('py-pytz',          type=nolink)
     depends_on('freetype@2.3:')
-    depends_on('py-cycler@0.9:',   type=nolink)
 
-    # Optional GUI framework
-    depends_on('tk@8.3:',   when='+gui')  # not 8.6.0 or 8.6.1
-    depends_on('qt',        when='+gui')
-    depends_on('py-pyside', when='+gui', type=nolink)
-    # TODO: Add more GUI dependencies
+    depends_on('py-numpy@1.6:', type=nolink)
+    depends_on('py-dateutil@1.1:', type=nolink)
+    depends_on('py-pyparsing', type=nolink)
+    depends_on('py-pytz', type=nolink)
+    depends_on('py-cycler@0.9:', type=nolink)
 
-    # Optional external programs
+    # ------ Optional GUI frameworks
+    depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1
+    depends_on('qt', when='+qt')
+    depends_on('py-pyside', when='+qt', type=nolink)
+
+    # --------- Optional external programs
     # ffmpeg/avconv or mencoder
-    depends_on('ImageMagick')
+    depends_on('ImageMagick', when='+animation')
 
-    # Optional dependencies
-    depends_on('py-pillow',  type=nolink)
-    depends_on('pkg-config', type='build')
+    # --------- Optional dependencies
+    depends_on('pkg-config', type='build')    # why not...
+    depends_on('py-pillow', when='+image', type=nolink)
     depends_on('py-ipython', when='+ipython')
+    depends_on('ghostscript', when='+latex', type='run')
+    depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
     depends_on('py-nose')  # type='test'
@@ -83,7 +98,7 @@ class PyMatplotlib(Package):
         setup_py('build')
         setup_py('install', '--prefix={0}'.format(prefix))
 
-        if '+gui' in spec:
+        if '+qt' in spec or '+tk' in spec:
             # Set backend in matplotlib configuration file
             config_file = None
             for p, d, f in os.walk(prefix.lib):
@@ -95,5 +110,11 @@ class PyMatplotlib(Package):
 
             kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
             rc = FileFilter(config_file)
-            rc.filter('^backend.*',      'backend     : Qt4Agg', **kwargs)
-            rc.filter('^#backend.qt4.*', 'backend.qt4 : PySide', **kwargs)
+
+            # Only make Qt4 be the default backend if Tk is turned off
+            if '+qt' in spec and '+tk' not in spec:
+                rc.filter('^backend.*', 'backend     : Qt4Agg', **kwargs)
+
+            # Additional options in case user is doing Qt4:
+            if '+qt' in spec:
+                rc.filter('^#backend.qt4.*', 'backend.qt4 : PySide', **kwargs)

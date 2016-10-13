@@ -60,7 +60,7 @@ class Hdf5(Package):
 
     depends_on("mpi", when='+mpi')
     depends_on("szip", when='+szip')
-    depends_on("zlib")
+    depends_on("zlib@1.1.2:")
 
     def validate(self, spec):
         """
@@ -121,14 +121,14 @@ class Hdf5(Package):
             # this is not actually a problem.
             extra_args.extend([
                 "--enable-parallel",
-                "CC=%s" % self.spec['mpi'].mpicc,
+                "CC=%s" % spec['mpi'].mpicc
             ])
 
             if '+cxx' in spec:
-                extra_args.append("CXX=%s" % self.spec['mpi'].mpicxx)
+                extra_args.append("CXX=%s" % spec['mpi'].mpicxx)
 
             if '+fortran' in spec:
-                extra_args.append("FC=%s" % self.spec['mpi'].mpifc)
+                extra_args.append("FC=%s" % spec['mpi'].mpifc)
 
         if '+szip' in spec:
             extra_args.append("--with-szlib=%s" % spec['szip'].prefix)
@@ -144,6 +144,10 @@ class Hdf5(Package):
             "--with-zlib=%s" % spec['zlib'].prefix,
             *extra_args)
         make()
+
+        if self.run_tests:
+            make("check")
+
         make("install")
         #self.check_install(spec)
 
@@ -171,7 +175,7 @@ HDF5 version {version} {version}
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
-                cc = which(join_path(spec['mpi'].prefix.bin, "mpicc"))
+                cc = which('%s' % spec['mpi'].mpicc)
             else:
                 cc = which('cc')
             # TODO: Automate these path and library settings
