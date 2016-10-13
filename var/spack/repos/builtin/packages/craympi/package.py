@@ -1,9 +1,11 @@
 from spack import *
 
+
 class Craympi(Package):
     """Dummy package for Cray MPI"""
 
-    url      = "http://www.example.com/intelmpi-1.0.tar.gz"
+    url      = "http://www.example.com/craympi-1.0.tar.gz"
+    homepage = "http://www.example.com/craympi-1.0.tar.gz"
 
     version('3.2')
     provides('mpi@:3.0')
