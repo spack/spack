@@ -1,7 +1,6 @@
 from spack import *
 
 from contextlib import closing
-from glob import glob
 import sys
 from os.path import isfile
 
@@ -127,7 +126,7 @@ class Gcc(Package):
     @property
     def spec_dir(self):
         # e.g. lib64/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
+        spec_dir = glob_redirect("%s/lib64/gcc/*/*" % self.prefix)
         return spec_dir[0] if spec_dir else None
 
     def write_rpath_specs(self):

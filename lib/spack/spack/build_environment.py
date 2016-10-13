@@ -51,6 +51,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import glob
 import os
 import sys
 import shutil
@@ -101,9 +102,10 @@ class MakeExecutable(Executable):
        everything.
     """
 
-    def __init__(self, name, jobs):
+    def __init__(self, name, jobs, destdir=None):
         super(MakeExecutable, self).__init__(name)
         self.jobs = jobs
+        self.destdir = destdir
 
     def __call__(self, *args, **kwargs):
         disable = env_flag(SPACK_NO_PARALLEL_MAKE)
@@ -112,6 +114,9 @@ class MakeExecutable(Executable):
         if parallel:
             jobs = "-j%d" % self.jobs
             args = (jobs,) + args
+
+        if self.destdir and 'install' in args:
+            args = ("DESTDIR={0}".format(self.destdir),) + args
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
@@ -322,6 +327,92 @@ def set_build_environment_variables(pkg, env, dirty=False):
     return env
 
 
+class RedirectionInstallContext(object):
+    """
+    Provides file commands which redirect paths relative to a specified
+    directory; furthermore it only redirects paths with a specified prefix.
+    For example if the prefix is /x/y/ and the destination directory is
+    /redirect/, then creating a file /x/y/z will actually create a file in
+    /redirect/x/y/z. For the purposes of matching against the prefix, /x/y
+    will be considered a match with /x/y/.
+
+    For commands that return file paths, the provided commands strip off the
+    redirect prefix (when it is present), which ensures they are safe to use
+    as symlink targets (for example).
+
+    Paths used as locations for file commands (e.g. when copying, moving, or
+    deleting) should be redirected (if they target the package prefix).
+    """
+    def __init__(self, pkgPrefix, destdir):
+        if not pkgPrefix.endswith(os.sep):
+            pkgPrefix += os.sep
+        self.pkgPrefix = pkgPrefix
+        self.destdir = destdir
+
+    def redirect_path(self, path):
+        path = os.path.abspath(path)
+        # Append os.sep so that if self.pkgPrefix = "/x/y/z/", it will be
+        # considered a prefix of "/x/y/z".
+        if self.destdir and (path + os.sep).startswith(self.pkgPrefix):
+            if path.startswith(os.sep):
+                path = path[len(os.sep):]
+            return join_path(self.destdir, path)
+        else:
+            return path
+
+    def strip_destdir(self, path):
+        path = os.path.abspath(path)
+        if self.destdir and path.startswith(self.destdir):
+            path = os.sep + path[len(self.destdir):]
+        return path
+
+    def install_redirect(self, src, dst):
+        install(src, self.redirect_path(dst))
+
+    def mkdirp_redirect(self, *paths):
+        paths = list(self.redirect_path(x) for x in paths)
+        mkdirp(*paths)
+
+    def symlink_redirect(self, src, dst, force=False):
+        # Redirects dst, removes DESTDIR from src. Does not need to assume that
+        # src intends pkgPrefix as a prefix but does assume that no intended
+        # prefix has DESTDIR as a prefix.
+        srcPath = self.strip_destdir(src)
+        if force:
+            force_symlink(srcPath, self.redirect_path(dst))
+        else:
+            os.symlink(srcPath, self.redirect_path(dst))
+
+    def pwd_redirect(self):
+        return self.strip_destdir(os.getcwd())
+
+    def force_symlink_redirect(self, src, dst):
+        self.symlink_redirect(src, dst, force=True)
+
+    def working_dir_redirect(self, dirname, **kwargs):
+        return working_dir(self.redirect_path(dirname), **kwargs)
+
+    def glob_redirect(self, pathPattern):
+        return list(self.strip_destdir(x) for x in
+                    glob.glob(self.redirect_path(pathPattern)))
+
+    def open_redirect(self, path, *args):
+        return open(self.redirect_path(path), *args)
+
+
+class RedirectedCommand(object):
+    def __init__(self, fn, redirContext, numPaths=1):
+        self.fn = fn
+        self.redirCtxt = redirContext
+        self.numPaths = numPaths
+
+    def __call__(self, *args, **kwargs):
+        newArgs = list(args[:-self.numPaths])
+        newArgs.extend(self.redirCtxt.redirect_path(p)
+                       for p in args[-self.numPaths:])
+        return self.fn(*newArgs, **kwargs)
+
+
 def set_module_variables_for_package(pkg, module):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
@@ -336,9 +427,13 @@ def set_module_variables_for_package(pkg, module):
     m = module
     m.make_jobs = jobs
 
+    pkgCtxt = pkg.installCtxt
+    destdir = pkgCtxt.destdir
+
     # TODO: make these build deps that can be installed if not found.
-    m.make = MakeExecutable('make', jobs)
-    m.gmake = MakeExecutable('gmake', jobs)
+    m.make  = MakeExecutable('make', jobs, destdir)
+    m.gmake = MakeExecutable('gmake', jobs, destdir)
+    m.make_redir = MakeExecutable('make-redir', jobs, destdir)
     m.scons = MakeExecutable('scons', jobs)
 
     # easy shortcut to os.environ
@@ -359,22 +454,47 @@ def set_module_variables_for_package(pkg, module):
     m.spack_cc = join_path(link_dir, pkg.compiler.link_paths['cc'])
     m.spack_cxx = join_path(link_dir, pkg.compiler.link_paths['cxx'])
     m.spack_f77 = join_path(link_dir, pkg.compiler.link_paths['f77'])
-    m.spack_fc = join_path(link_dir, pkg.compiler.link_paths['fc'])
+    m.spack_fc  = join_path(link_dir, pkg.compiler.link_paths['fc'])
 
     # Emulate some shell commands for convenience
-    m.pwd = os.getcwd
-    m.cd = os.chdir
-    m.mkdir = os.mkdir
-    m.makedirs = os.makedirs
-    m.remove = os.remove
-    m.removedirs = os.removedirs
-    m.symlink = os.symlink
+    if pkgCtxt.destdir:
+        m.pwd = pkgCtxt.pwd_redirect
+        m.symlink = pkgCtxt.symlink_redirect
+        m.mkdirp  = pkgCtxt.mkdirp_redirect
+        m.glob_redirect = pkgCtxt.glob_redirect
 
-    m.mkdirp = mkdirp
-    m.install = install
-    m.install_tree = install_tree
-    m.rmtree = shutil.rmtree
-    m.move = shutil.move
+        m.cd = RedirectedCommand(os.chdir, pkgCtxt, 1)
+        m.mkdir = RedirectedCommand(os.mkdir, pkgCtxt, 1)
+        m.makedirs = RedirectedCommand(os.makedirs, pkgCtxt, 1)
+        m.remove = RedirectedCommand(os.remove, pkgCtxt, 1)
+        m.removedirs = RedirectedCommand(os.removedirs, pkgCtxt, 1)
+
+        m.install = pkgCtxt.install_redirect
+        m.install_tree = RedirectedCommand(install_tree, pkgCtxt, 2)
+        m.move = RedirectedCommand(shutil.move, pkgCtxt, 2)
+        m.rmtree = RedirectedCommand(shutil.rmtree, pkgCtxt, 1)
+        m.cp = RedirectedCommand(which('cp'), pkgCtxt, 2)
+
+        # These are only set for redirected installations of pkg
+        m.working_dir  = pkgCtxt.working_dir_redirect
+        m.open = pkgCtxt.open_redirect
+        m.force_symlink = pkgCtxt.force_symlink_redirect
+    else:
+        m.glob_redirect = glob.glob
+        m.pwd = os.getcwd
+        m.cd = os.chdir
+        m.mkdir = os.mkdir
+        m.makedirs = os.makedirs
+        m.remove = os.remove
+        m.removedirs = os.removedirs
+        m.symlink = os.symlink
+        m.cp = which('cp')
+
+        m.mkdirp  = mkdirp
+        m.install = install
+        m.install_tree = install_tree
+        m.move = shutil.move
+        m.rmtree = shutil.rmtree
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.

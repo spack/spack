@@ -68,6 +68,8 @@ class Openssl(Package):
             env['KERNEL_BITS'] = '64'
 
         options = ['zlib', 'no-krb5', 'shared']
+        if self.installCtxt.destdir:
+            options.append('--install_prefix=%s' % self.installCtxt.destdir)
 
         config = Executable('./config')
         config('--prefix=%s' % prefix,

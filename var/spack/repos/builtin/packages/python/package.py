@@ -231,8 +231,11 @@ class Python(Package):
             'python{0}'.format('3' if self.spec.satisfies('@3') else '')
         )
 
-        module.python = Executable(python_path)
-        module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
+        module.python = PythonExe(
+            python_path, ext_spec.package.installCtxt.destdir)
+        module.setup_py = (
+            lambda *args, **kwargs:
+            module.python(*(['setup.py'] + list(args)), **kwargs))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = join_path(ext_spec.prefix,
@@ -244,7 +247,8 @@ class Python(Package):
 
         # Make the site packages directory for extensions
         if ext_spec.package.is_extension:
-            mkdirp(module.site_packages_dir)
+            ext_spec.package.installCtxt.mkdirp_redirect(
+                module.site_packages_dir)
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.
@@ -340,3 +344,25 @@ sys.__egginsert = p + len(new)
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
             self.write_easy_install_pth(exts)
+
+
+class PythonExe(Executable):
+    def __init__(self, name, destdir=None):
+        super(PythonExe, self).__init__(name)
+        self.destdir = destdir
+
+    def __call__(self, *args, **kwargs):
+        if 'setup.py' in args:
+            setupIdx = args.index('setup.py')
+            newArgs = list(args[:setupIdx + 1]) + ['--no-user-cfg']
+            if self.destdir and 'install' in args:
+                installIdx = args.index('install')
+                newArgs += (list(args[setupIdx + 1:installIdx + 1]) +
+                            ['--root={0}'.format(self.destdir)] +
+                            list(args[installIdx + 1:]))
+            else:
+                newArgs += args[setupIdx + 1:]
+        else:
+            newArgs = args
+
+        return super(PythonExe, self).__call__(*newArgs, **kwargs)

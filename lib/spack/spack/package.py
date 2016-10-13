@@ -62,6 +62,7 @@ import spack.url
 import spack.util.web
 
 from spack.stage import Stage, ResourceStage, StageComposite
+from spack.build_environment import RedirectionInstallContext
 from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError, which
@@ -731,6 +732,14 @@ class Package(object):
         return self.spec.prefix
 
     @property
+    def installCtxt(self):
+        if self.name in spack.install_layout.redirected:
+            destdir = spack.install_layout.destdir
+        else:
+            destdir = None
+        return RedirectionInstallContext(self.prefix, destdir)
+
+    @property
     # TODO: Change this to architecture
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
@@ -1081,12 +1090,15 @@ class Package(object):
                         # (can happen with spack setup)
                         try:
                             # log_install_path and env_install_path are here
-                            shutil.rmtree(packages_dir)
+                            shutil.rmtree(
+                                self.installCtxt.redirect_path(packages_dir))
                         except:
                             pass
 
-                        install(log_path, log_install_path)
-                        install(env_path, env_install_path)
+                        self.installCtxt.install_redirect(
+                            log_path, log_install_path)
+                        self.installCtxt.install_redirect(
+                            env_path, env_install_path)
                         dump_packages(self.spec, packages_dir)
 
                 # Run post install hooks before build stage is removed.
@@ -1145,7 +1157,8 @@ class Package(object):
                 path_list = [path_list]
 
             for path in path_list:
-                abs_path = os.path.join(self.prefix, path)
+                abs_path = self.installCtxt.redirect_path(
+                    os.path.join(self.prefix, path))
                 if not predicate(abs_path):
                     raise InstallError(
                         "Install failed for %s. No such %s in prefix: %s" %
@@ -1154,7 +1167,8 @@ class Package(object):
         check_paths(self.sanity_check_is_file, 'file', os.path.isfile)
         check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
-        installed = set(os.listdir(self.prefix))
+        installed = set(os.listdir(
+            self.installCtxt.redirect_path(self.prefix)))
         installed.difference_update(spack.install_layout.hidden_file_paths)
         if not installed:
             raise InstallError(
@@ -1543,7 +1557,8 @@ def dump_packages(spec, path):
        namespace in the spec DAG, and fills the repos wtih package
        files and patch files for every node in the DAG.
     """
-    mkdirp(path)
+    installCtxt = spec.package.installCtxt
+    installCtxt.mkdirp_redirect(path)
 
     # Copy in package.py files from any dependencies.
     # Note that we copy them in as they are in the *install* directory
@@ -1571,7 +1586,8 @@ def dump_packages(spec, path):
                          node.name)
 
         # Create a destination repository
-        dest_repo_root = join_path(path, node.namespace)
+        dest_repo_root = installCtxt.redirect_path(
+            join_path(path, node.namespace))
         if not os.path.exists(dest_repo_root):
             spack.repository.create_repo(dest_repo_root)
         repo = spack.repository.Repo(dest_repo_root)

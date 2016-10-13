@@ -24,6 +24,7 @@
 ##############################################################################
 import shutil
 import tempfile
+import filecmp
 
 import spack
 from llnl.util.filesystem import *
@@ -49,6 +50,7 @@ class InstallTest(MockPackagesTest):
         # Use a fake install directory to avoid conflicts bt/w
         # installed pkgs and mock packages.
         self.tmpdir = tempfile.mkdtemp()
+        self.redirect = tempfile.mkdtemp()
         self.orig_layout = spack.install_layout
         self.orig_db = spack.installed_db
 
@@ -66,6 +68,7 @@ class InstallTest(MockPackagesTest):
         spack.install_layout = self.orig_layout
         spack.installed_db   = self.orig_db
         shutil.rmtree(self.tmpdir, ignore_errors=True)
+        shutil.rmtree(self.redirect, ignore_errors=True)
 
     def fake_fetchify(self, pkg):
         """Fake the URL for a package so it downloads from a file."""
@@ -90,6 +93,34 @@ class InstallTest(MockPackagesTest):
         except Exception:
             pkg.remove_prefix()
             raise
+
+    def test_install_redirected_succeeds(self):
+        spec = Spec('redir')
+        spec.concretize()
+        pkg = spack.repo.get(spec)
+        spack.install_layout.destdir = self.redirect
+        spack.install_layout.redirected.add(pkg.name)
+
+        self.fake_fetchify(pkg)
+
+        pkg.do_install()
+
+    def test_install_redirected_matches(self):
+        spec = Spec('redir')
+        spec.concretize()
+        pkg = spack.repo.get(spec)
+        spack.install_layout.destdir = self.redirect
+        spack.install_layout.redirected.add(pkg.name)
+
+        self.fake_fetchify(pkg)
+
+        pkg.do_install()
+
+        spack.install_layout.redirected.clear()
+        pkg.do_install()
+        self.assertTrue(filecmp.dircmp(
+            self.tmpdir,
+            join_path(self.redirect, self.tmpdir)))
 
     def test_install_environment(self):
         spec = Spec('cmake-client').concretized()

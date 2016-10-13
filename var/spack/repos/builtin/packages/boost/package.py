@@ -284,7 +284,9 @@ class Boost(Package):
 
         bootstrap = Executable('./bootstrap.sh')
 
-        bootstrap_options = ['--prefix=%s' % prefix]
+        bootstrap_options = [
+            '--prefix=%s' % self.installCtxt.redirect_path(prefix)]
+
         self.determine_bootstrap_options(spec, withLibs, bootstrap_options)
 
         bootstrap(*bootstrap_options)

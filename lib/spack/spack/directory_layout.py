@@ -29,7 +29,7 @@ import glob
 import tempfile
 import yaml
 
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import join_path
 
 import spack
 from spack.spec import Spec
@@ -51,6 +51,9 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.pkgToPath = {}
+        self.redirected = set()
+        self.destdir = None
 
     @property
     def hidden_file_paths(self):
@@ -123,6 +126,9 @@ class DirectoryLayout(object):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
 
+        if spec.name in self.pkgToPath:
+            return self.pkgToPath[spec.name]
+
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
@@ -131,8 +137,12 @@ class DirectoryLayout(object):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
-        path = self.path_for_spec(spec)
-        assert(path.startswith(self.root))
+        installCtxt = spec.package.installCtxt
+        path = installCtxt.redirect_path(self.path_for_spec(spec))
+        root = installCtxt.destdir or self.root
+        if root.endswith(os.sep):
+            root = root[:-len(os.sep)]
+        assert(path.startswith(root))
 
         if os.path.exists(path):
             try:
@@ -141,7 +151,7 @@ class DirectoryLayout(object):
                 raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
-        while path != self.root:
+        while path != root:
             if os.path.isdir(path):
                 if os.listdir(path):
                     return
@@ -248,8 +258,10 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        mkdirp(self.metadata_path(spec))
-        self.write_spec(spec, self.spec_file_path(spec))
+        installCtxt = spec.package.installCtxt
+        installCtxt.mkdirp_redirect(self.metadata_path(spec))
+        self.write_spec(
+            spec, installCtxt.redirect_path(self.spec_file_path(spec)))
 
     def check_installed(self, spec):
         _check_concrete(spec)

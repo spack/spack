@@ -69,12 +69,33 @@ class Bzip2(Package):
                 'ln -s libbz2.{0}.dylib libbz2.{1}.dylib'.format(v3, v2),
                 **kwargs)
 
+    def setup_makefile_for_redirect(self):
+        mf = FileFilter('Makefile')
+        # e.g. replace "if ( test ! -d $(PREFIX)/bin ) ; then mkdir -p $(PREFIX)/bin ; fi" # noqa
+        # with "mkdir -p $(PREFIX)/bin"
+        # remove calls to "test" since make-redir does not redirect it
+        mf.filter(
+            r'if \( test ! -d \$\(PREFIX\)/[^;]+ \) ; then (mkdir -p \$\(PREFIX\)/[^;]+) ; fi',  # noqa
+            r'\1')
+
+        # e.g. replace 'echo ".so man1/bzgrep.1" > $(PREFIX)/man/man1/bzegrep.1' # noqa
+        # with 'echo ".so man1/bzgrep.1" > DESTDIR$(PREFIX)/man/man1/bzegrep.1'
+        # (make-redir does not redirect 'echo')
+        mf.filter(
+            r'echo ".so man1/([^"]+)" > \$\(PREFIX\)/man/man1/(\S+)',
+            r'echo ".so man1/\1" > {0}/$(PREFIX)/man/man1/\2'.format(
+                self.installCtxt.destdir))
+
     def install(self, spec, prefix):
         # Build the dynamic library first
         make('-f', 'Makefile-libbz2_so')
         # Build the static library and everything else
         make()
-        make('install', 'PREFIX={0}'.format(prefix))
+        if self.installCtxt.destdir:
+            self.setup_makefile_for_redirect()
+            make_redir('install', 'PREFIX={0}'.format(prefix))
+        else:
+            make('install', 'PREFIX={0}'.format(prefix))
 
         install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
 
