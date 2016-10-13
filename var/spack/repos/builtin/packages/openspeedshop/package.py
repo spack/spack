@@ -60,7 +60,7 @@ class Openspeedshop(Package):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url		= "https://github.com/OpenSpeedShop"
+    url	= "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
     version('2.2', branch='master',
@@ -119,7 +119,6 @@ class Openspeedshop(Package):
     depends_on("libdwarf")
     depends_on("sqlite")
     depends_on("boost@1.50.0:")
-    # depends_on("boost@1.53.0")
     depends_on("dyninst@9.1.0:")
     depends_on("python")
     depends_on("qt@3.3.8b+krellpatch")
@@ -224,37 +223,6 @@ class Openspeedshop(Package):
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 
-        # This is always python lib everywhere we have seen to date.
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['python'].prefix.lib)
-
-        # This is always boost lib everywhere we have seen to date.
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['boost'].prefix.lib)
-
-        # Find sqlite library path
-        sqlite_libdir = find_libraries(['libsqlite3'],
-                                       root=self.spec['sqlite'].prefix,
-                                       shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             os.path.dirname(sqlite_libdir.joined()))
-
-        # see above for dyninst_libdir detection code
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             os.path.dirname(dyninst_libdir.joined()))
-
-        # Find libelf library path
-        libelf_libdir = find_libraries(['libelf'],
-                                       root=self.spec['libelf'].prefix,
-                                       shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             os.path.dirname(libelf_libdir.joined()))
-
-        # Find libdwarf library path
-        libdwarf_libdir = find_libraries(['libdwarf'],
-                                         root=self.spec['libdwarf'].prefix,
-                                         shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             os.path.dirname(libdwarf_libdir.joined()))
-
         # Settings specific to the version, checking here
         # for the cbtf instrumentor
         if '+cbtf' in self.spec:
@@ -271,39 +239,6 @@ class Openspeedshop(Package):
             run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
 
-            # Find cbtf-krell component library path
-            cbtfkrell_libdir = \
-                find_libraries(['libcbtf-core'],
-                               root=self.spec['cbtf-krell'].prefix,
-                               shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(cbtfkrell_libdir.joined()))
-
-            # Find cbtf component library path
-            cbtf_libdir = find_libraries(['libcbtf'],
-                                         root=self.spec['cbtf'].prefix,
-                                         shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(cbtf_libdir.joined()))
-
-            # see above for dyninst_libdir detection code
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(dyninst_libdir.joined()))
-
-            # Find xercesc component library path
-            xercesc_libdir = find_libraries(['libxerces-c'],
-                                            root=self.spec['xerces-c'].prefix,
-                                            shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(xercesc_libdir.joined()))
-
-            # Find mrnet component library path
-            mrnet_libdir = find_libraries(['libmrnet'],
-                                          root=self.spec['mrnet'].prefix,
-                                          shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(mrnet_libdir.joined()))
-
         elif '+offline' in self.spec:
             # Had to use this form of syntax self.prefix.lib and
             # self.prefix.lib64 returned None all the time
@@ -312,36 +247,6 @@ class Openspeedshop(Package):
                         join_path(oss_libdir + '/openspeedshop'))
             run_env.prepend_path('PATH', self.spec['papi'].prefix.bin)
             run_env.prepend_path('PATH', self.spec['libdwarf'].prefix.bin)
-
-            # Find papi library path
-            papi_libdir = find_libraries(['libpapi'],
-                                         root=self.spec['papi'].prefix,
-                                         shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(papi_libdir.joined()))
-
-            # Find binutils library path
-            binutils_libdir = find_libraries(['libbfd'],
-                                             root=self.spec['binutils'].prefix,
-                                             shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(binutils_libdir.joined()))
-
-            # Find libmonitor library path
-            libmonitor_libdir = \
-                find_libraries(['libmonitor'],
-                               root=self.spec['monitor'].prefix,
-                               shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(libmonitor_libdir.joined()))
-
-            # Find libunwind library path
-            libunwind_libdir = \
-                find_libraries(['libunwind'],
-                               root=self.spec['libunwind'].prefix,
-                               shared=True, recurse=True)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 os.path.dirname(libunwind_libdir.joined()))
 
             if '+mpich' in self.spec:
                 run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich')
@@ -385,7 +290,8 @@ class Openspeedshop(Package):
                 with working_dir('build', create=True):
                     python_vers = format(spec['python'].version.up_to(2))
                     python_pv = '/python' + python_vers
-                    python_pvs = '/libpython' + python_vers + '.so'
+                    python_pvs = \
+                        '/libpython' + python_vers + '.' + format(dso_suffix)
                     cmakeOptions = []
                     cmakeOptions.extend(
                         ['-DCMAKE_INSTALL_PREFIX=%s'
@@ -454,7 +360,8 @@ class Openspeedshop(Package):
                 with working_dir('build_cbtf_runtime', create=True):
                     python_vers = '%d.%d' % spec['python'].version[:2]
                     python_pv = '/python' + python_vers
-                    python_pvs = '/libpython' + python_vers + '.so'
+                    python_pvs = \
+                        '/libpython' + python_vers + '.' + format(dso_suffix)
                     cmakeOptions = []
                     cmakeOptions.extend(
                         ['-DCMAKE_INSTALL_PREFIX=%s'
@@ -512,7 +419,8 @@ class Openspeedshop(Package):
                 with working_dir('build_cbtf', create=True):
                     python_vers = format(spec['python'].version.up_to(2))
                     python_pv = '/python' + python_vers
-                    python_pvs = '/libpython' + python_vers + '.so'
+                    python_pvs = \
+                        '/libpython' + python_vers + '.' + format(dso_suffix)
                     cmakeOptions = []
                     cmakeOptions.extend(
                         ['-DCMAKE_INSTALL_PREFIX=%s'

@@ -59,7 +59,6 @@ class CbtfArgonavis(Package):
 
     depends_on("cmake@3.0.2:", type='build')
     depends_on("boost@1.50.0:")
-    # depends_on("boost@1.53.0")
     depends_on("papi")
     depends_on("mrnet@5.0.1:+lwthreads")
     depends_on("cbtf")
