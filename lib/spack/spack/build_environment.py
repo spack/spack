@@ -600,6 +600,10 @@ def setup_package(pkg, dirty=False):
         # then set the module variables for both classes so the
         # parent class can still use them if it gets called.
         spkg = dspec.package
+        if not spkg.installed:
+            sys.stderr.write("Skip env setup for " + spkg.name + "\n")
+            continue
+
         modules = parent_class_modules(spkg.__class__)
         for mod in modules:
             set_module_variables_for_package(spkg, mod)

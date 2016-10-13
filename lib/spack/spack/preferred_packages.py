@@ -34,6 +34,7 @@ class PreferredPackages(object):
     def __init__(self):
         self.preferred = spack.config.get_config('packages')
         self._spec_for_pkgname_cache = {}
+        self.pkgToSubspace = {}
 
     # Given a package name, sort component (e.g, version, compiler, ...), and
     # a second_key (used by providers), return the list
@@ -42,6 +43,13 @@ class PreferredPackages(object):
         pkglist = [pkgname]
         if test_all:
             pkglist.append('all')
+        #TODO: move this logic into config.py - add a function that can revise
+        #the packages section according to subspace choices
+        if (pkgname in self.pkgToSubspace 
+                and component in ['compiler', 'version']):
+            subspace = self.preferred[pkgname]['subspaces'][self.pkgToSubspace[pkgname]]
+            if component in subspace:
+                return [str(s).strip() for s in subspace[component]]
         for pkg in pkglist:
             order = self.preferred.get(pkg, {}).get(component, {})
             if isinstance(order, dict) and second_key:

@@ -26,6 +26,7 @@ from spack import *
 import os
 import sys
 
+import spack
 
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
@@ -256,4 +257,7 @@ class Qt(Package):
     def install(self, spec, prefix):
         self.configure()
         make()
-        make("install")
+        if spack.destdir:
+            make("install", "INSTALL_ROOT=" + spack.destdir)
+        else:
+            make("install")

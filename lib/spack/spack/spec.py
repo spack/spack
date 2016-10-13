@@ -2190,6 +2190,7 @@ class Spec(object):
         You can also use full-string versions, which elide the prefixes::
 
             ${PACKAGE}       Package name
+            ${NAME}          (Also) Package name
             ${VERSION}       Version
             ${COMPILER}      Full compiler string
             ${COMPILERNAME}  Compiler name
@@ -2198,6 +2199,8 @@ class Spec(object):
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
             ${SHA1}          Dependencies 8-char sha1 prefix
+            ${VARIANT:<value>:<iftrue>}
+            ${DEP:<pkgName>:<piece>}
 
             ${SPACK_ROOT}    The spack root directory
             ${SPACK_INSTALL} The default spack install directory,
@@ -2292,37 +2295,62 @@ class Spec(object):
                         raise ValueError("Error: unterminated ${ in format:"
                                          "'%s'" % format_string)
                     named_str += c
-                    continue
-                if named_str == 'PACKAGE':
-                    name = self.name if self.name else ''
-                    write(fmt % self.name, '@')
-                if named_str == 'VERSION':
-                    if self.versions and self.versions != _any_version:
-                        write(fmt % str(self.versions), '@')
-                elif named_str == 'COMPILER':
-                    if self.compiler:
-                        write(fmt % self.compiler, '%')
-                elif named_str == 'COMPILERNAME':
-                    if self.compiler:
-                        write(fmt % self.compiler.name, '%')
-                elif named_str == 'COMPILERVER':
-                    if self.compiler:
-                        write(fmt % self.compiler.versions, '%')
+                    continue;
+                
+                if named_str.startswith('DEP:'):
+                    _, pkgName, attribute = named_str.split(':', 2)
+                    implementingSpecs = list(x for x in spec.traverse() if
+                        (x.name == pkgName or x.package.provides(pkgName)))
+                    if not implementingSpecs:
+                        raise ValueError("Error: {0} is not a dependency of {1}"
+                            .format(pkgName, self.name))
+                    spec = iter(implementingSpecs).next()
+                else:
+                    attribute = named_str
+                    spec = self
+                
+                if attribute == 'PACKAGE' or attribute == 'NAME':
+                    write(fmt % spec.name, '@')
+                elif attribute.startswith('VERSION'):
+                    if attribute.startswith('VERSION:') and self.concrete:
+                        _, specificity = attribute.split(':')
+                        specificity = int(specificity)
+                        versionStr = str(self.version[:specificity])
+                    elif spec.versions and spec.versions != _any_version:
+                        versionStr = str(spec.versions)
+                    else:
+                        versionStr = None
+                        
+                    if versionStr:
+                        write(fmt % versionStr, '@')
+                elif attribute == 'COMPILER':
+                    if spec.compiler:
+                        write(fmt % spec.compiler, '%')
+                elif attribute == 'COMPILERNAME':
+                    if spec.compiler:
+                        write(fmt % spec.compiler.name, '%')
+                elif attribute == 'COMPILERVER':
+                    if spec.compiler:
+                        write(fmt % spec.compiler.versions, '%')
                 elif named_str == 'COMPILERFLAGS':
-                    if self.compiler:
-                        write(fmt % str(self.compiler_flags), '%')
-                elif named_str == 'OPTIONS':
-                    if self.variants:
-                        write(fmt % str(self.variants), '+')
-                elif named_str == 'ARCHITECTURE':
-                    if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture), ' arch=')
-                elif named_str == 'SHA1':
-                    if self.dependencies:
-                        out.write(fmt % str(self.dag_hash(7)))
-                elif named_str == 'SPACK_ROOT':
+                    if spec.compiler:
+                        write(fmt % str(spec.compiler_flags), '%')
+                elif attribute == 'OPTIONS':
+                    if spec.variants:
+                        write(fmt % str(spec.variants), '+')
+                elif attribute == 'ARCHITECTURE':
+                    if spec.architecture and str(spec.architecture):
+                        write(fmt % str(spec.architecture), ' arch=')
+                elif attribute == 'SHA1':
+                    if spec.dependencies:
+                        out.write(fmt % str(spec.dag_hash(7)))
+                elif attribute.startswith('VARIANT'):
+                    _, setting, ifTrueStr = attribute.split(':')
+                    if setting in spec:
+                        out.write(fmt % ifTrueStr)
+                elif attribute == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
-                elif named_str == 'SPACK_INSTALL':
+                elif attribute == 'SPACK_INSTALL':
                     out.write(fmt % spack.install_path)
 
                 named = False

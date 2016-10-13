@@ -27,6 +27,16 @@ import os
 from spack import *
 
 
+class PackageReference(object):
+    def __init__(self, option, path):
+        self.option = option
+        self.path = path
+    
+    def appendIfExists(self, settings):
+        if os.path.exists(self.path):
+            settings.append(self.option.format(self.path))
+
+
 class Llvm(Package):
     """The LLVM Project is a collection of modular and reusable compiler and
        toolchain technologies. Despite its name, LLVM has little to do
@@ -128,6 +138,7 @@ class Llvm(Package):
             'url':  base_url % {'pkg': 'lldb'},
             'destination': 'tools',
             'placement': 'lldb',
+            'when': '+lldb',
         },
         'polly': {
             'url':  base_url % {'pkg': 'polly'},
@@ -264,20 +275,22 @@ class Llvm(Package):
             version(release['version'], svn=release['repo'])
 
             for name, repo in release['resources'].items():
+                extraConditions = resources[name].get('when', '')
                 resource(name=name,
                          svn=repo,
                          destination=resources[name]['destination'],
-                         when='@%(version)s' % release,
+                         when='@%s %s' % (release['version'], extraConditions),
                          placement=resources[name].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
 
             for name, md5 in release['resources'].items():
+                extraConditions = resources[name].get('when', '')
                 resource(name=name,
                          url=resources[name]['url'] % release,
                          md5=md5,
                          destination=resources[name]['destination'],
-                         when='@%(version)s' % release,
+                         when='@%s %s' % (release['version'], extraConditions),
                          placement=resources[name].get('placement', None))
 
     def install(self, spec, prefix):
@@ -289,12 +302,17 @@ class Llvm(Package):
             '..',
             '-DCMAKE_BUILD_TYPE=' + build_type,
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
-            '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix])
+            '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp'])
+
+        PackageReference(
+            '-DPYTHON_EXECUTABLE:PATH={0}/bin/python', 
+            spec['python'].prefix).appendIfExists(cmake_args)
 
         if '+gold' in spec:
-            cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
-                              os.path.join(spec['binutils'].prefix, 'include'))
+            PackageReference(
+                '-DLLVM_BINUTILS_INCDIR={0}', 
+                spec['binutils'].prefix.include).appendIfExists(cmake_args)
+
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:

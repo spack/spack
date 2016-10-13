@@ -180,6 +180,7 @@ class log_output(object):
 
             read_file.flush()
             read_file.close()
+            sys.stdout.flush()
 
             # Set a trace function to skip the with block.
             sys.settrace(lambda *args, **keys: None)

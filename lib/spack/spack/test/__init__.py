@@ -41,6 +41,7 @@ test_names = [
     'cc',
     'cmd.find',
     'cmd.module',
+    'cmd.rpm',
     'cmd.test_install',
     'cmd.uninstall',
     'concretize',

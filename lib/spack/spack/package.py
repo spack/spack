@@ -342,6 +342,8 @@ class Package(object):
     """
     sanity_check_is_dir = []
 
+    license = None
+
     """Per-process lock objects for each install prefix."""
     prefix_locks = {}
 
@@ -941,6 +943,7 @@ class Package(object):
                    keep_stage=False,
                    install_deps=True,
                    install_self=True,
+                   skip_deps=None,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1002,12 +1005,16 @@ class Package(object):
 
         # First, install dependencies recursively.
         if install_deps:
-            for dep in self.spec.dependencies():
+            skip_deps = skip_deps or set()
+            to_install = list(spec for spec in self.spec.dependencies()
+                              if spec.name not in skip_deps)
+            for dep in to_install:
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
-                    install_deps=install_deps,
+                    install_deps=True,
                     install_self=True,
+                    skip_deps=skip_deps,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,

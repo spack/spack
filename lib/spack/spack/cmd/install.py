@@ -69,6 +69,9 @@ def setup_parser(subparser):
         '--dirty', action='store_true', dest='dirty',
         help="Install a package *without* cleaning the environment.")
     subparser.add_argument(
+        '--skip-deps', dest='skip_deps',
+        help="Comma-separated list of dependencies to ignore (more selective than --ignore-dependencies)")
+    subparser.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install")
     subparser.add_argument(
@@ -99,7 +102,12 @@ def install(parser, args):
         assert(len(specs) == 1)
         spec = iter(specs).next()
         spack.install_layout.pkgToPath[spec.name] = args.install_path
-
+    
+    if args.skip_deps:
+        skip_deps = set(args.skip_deps.split(','))
+    else:
+        skip_deps = set()
+    
     for spec in specs:
         package = spack.repo.get(spec)
         package.do_install(
@@ -107,6 +115,7 @@ def install(parser, args):
             keep_stage=args.keep_stage,
             install_deps=not args.ignore_deps,
             install_self=not args.deps_only,
+            skip_deps=skip_deps,
             make_jobs=args.jobs,
             run_tests=args.run_tests,
             verbose=args.verbose,
