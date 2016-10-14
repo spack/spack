@@ -24,6 +24,7 @@ addons:
   apt:
     packages:
       - graphviz
+      - libyaml
 
 # Install various dependencies
 install:
