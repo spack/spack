@@ -24,7 +24,7 @@ addons:
   apt:
     packages:
       - graphviz
-      - libyaml
+      - libyaml-dev
       - yaml-cpp-dev
 
 # Install various dependencies
