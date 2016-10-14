@@ -43,7 +43,8 @@ class Plumed(Package):
     homepage = 'http://www.plumed.org/'
     url = 'https://github.com/plumed/plumed2'
 
-    version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
+    version('2.2.3', git="https://github.com/plumed/plumed2.git", 
+            commit='3093d24')
 
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
