@@ -1,0 +1,14 @@
+packages:
+  #  intelmpi:
+    #version: [4.1.3, 4.1.0, 4.0.3]
+    #  version: [4.1.3.048]
+    #paths:
+    #  intelmpi@4.1.3.048 %gcc@4.4.7 arch=linux-redhat6-x86_64: /software/compilers/intel/2013.1.046/impi/4.1.3.048/intel64
+      #intelmpi@4.1.0 %gcc@4.4.7 arch=linux-redhat6-x86_64: /software/compilers/intel/13.0/impi/4.1.0.024/intel64
+      #intelmpi@4.0.3 %gcc@4.4.7 arch=linux-redhat6-x86_64: /software/compilers/intel/13.0/impi/4.0.3.008/intel64
+      #buildable: False
+  all:
+    compiler: [gcc@4.4.7, intel@15.0.0]
+    providers:
+      mpi: [intelmpi]
+
