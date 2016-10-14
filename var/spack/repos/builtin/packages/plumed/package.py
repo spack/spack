@@ -41,14 +41,24 @@ class Plumed(Package):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
+    url = 'https://github.com/plumed/plumed2'
 
-    version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
+    version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
 
+    # Variants. PLUMED by default builds a number of optional modules.
+    # The ones listed here are not built by default for various reasons,
+    # such as stability, lack of testing, or lack of demand.
+    variant('crystallization', default=False,
+            description='Build support for optional crystallization module.')
+    variant('imd', default=False,
+            description='Build support for optional imd module.')
+    variant('manyrestraints', default=False,
+            description='Build support for optional manyrestraints module.')
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
 
+    # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on('zlib')
     depends_on('blas')
     depends_on('lapack')
@@ -96,16 +106,44 @@ class Plumed(Package):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = [
-            'CXX={0}'.format(spec['mpi'].mpicxx)
-        ] if '+mpi' in self.spec else []
+        configure_opts = ['--prefix=' + prefix]
 
+        # If using MPI then ensure the correct compiler wrapper is used.
+        if '+mpi' in spec:
+            configure_opts.extend([
+                '--enable-mpi',
+                'CXX={0}'.format(spec['mpi'].mpicxx)
+            ])
+
+            # If the MPI dependency is provided by the intelmpi package then
+            # the following additional argument is required to allow it to
+            # build.
+            if spec.satisfies('^intelmpi'):
+                configure_opts.extend([
+                    'STATIC_LIBS=-mt_mpi'
+                ])
+
+        # Additional arguments
         configure_opts.extend([
-            '--prefix={0}'.format(prefix),
             '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
-            '--enable-mpi={0}'.format('yes' if '+mpi' in spec else 'no'),
             '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
         ])
+
+        # Construct list of optional modules
+        module_opts = []
+        module_opts.extend([
+            '+crystallization' if (
+                '+crystallization' in spec) else '-crystallization',
+            '+imd' if '+imd' in spec else '-imd',
+            '+manyrestraints' if (
+                '+manyrestraints' in spec) else '-manyrestraints'
+        ])
+
+        # If we have specified any optional modules then add the argument to
+        # enable or disable them.
+        if module_opts:
+            configure_opts.extend([
+                '--enable-modules={0}'.format("".join(module_opts))])
 
         configure(*configure_opts)
         make()
