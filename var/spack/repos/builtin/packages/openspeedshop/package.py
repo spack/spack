@@ -176,22 +176,22 @@ class Openspeedshop(Package):
 
         # openmpi
         if '+openmpi' in spec:
-            MPIOptions.extend(['-DOPENMPI_DIR=%s' % spec['openmpi'].prefix])
+            MPIOptions.append(['-DOPENMPI_DIR=%s' % spec['openmpi'].prefix])
         # mpich
         if '+mpich' in spec:
-            MPIOptions.extend(['-DMPICH_DIR=%s' % spec['mpich'].prefix])
+            MPIOptions.append(['-DMPICH_DIR=%s' % spec['mpich'].prefix])
         # mpich2
         if '+mpich2' in spec:
-            MPIOptions.extend(['-DMPICH2_DIR=%s' % spec['mpich2'].prefix])
+            MPIOptions.append(['-DMPICH2_DIR=%s' % spec['mpich2'].prefix])
         # mvapich
         if '+mvapich' in spec:
-            MPIOptions.extend(['-DMVAPICH_DIR=%s' % spec['mvapich'].prefix])
+            MPIOptions.append(['-DMVAPICH_DIR=%s' % spec['mvapich'].prefix])
         # mvapich2
         if '+mvapich2' in spec:
-            MPIOptions.extend(['-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix])
+            MPIOptions.append(['-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix])
         # mpt
         if '+mpt' in spec:
-            MPIOptions.extend(['-DMPT_DIR=%s' % spec['mpt'].prefix])
+            MPIOptions.append(['-DMPT_DIR=%s' % spec['mpt'].prefix])
 
         cmakeOptions.extend(MPIOptions)
 
@@ -202,13 +202,10 @@ class Openspeedshop(Package):
         # of OpenSpeedShop
         run_env.prepend_path('PATH', self.prefix.bin)
 
-        # sqlite3 path
-        run_env.prepend_path('PATH', self.spec['sqlite'].prefix.bin)
-
-        # python path
-        run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
-
-        # Find Dyninst library path
+        # Find Dyninst library path, this is needed to
+        # set the DYNINSTAPI_RT_LIB library which is
+        # required for OpenSpeedShop to find loop level
+        # performance information
         dyninst_libdir = find_libraries(['libdyninstAPI_RT'],
                                         root=self.spec['dyninst'].prefix,
                                         shared=True, recurse=True)
