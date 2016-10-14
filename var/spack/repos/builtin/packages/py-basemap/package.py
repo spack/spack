@@ -49,7 +49,7 @@ class PyBasemap(Package):
         # We are not sure if this fix is needed before Python 3.5.2.
         # If it is needed, this test should be changed.
         # See: https://github.com/LLNL/spack/pull/1964
-        if spec.version >= Version('3.5.2'):
+        if spec['python'].version >= Version('3.5.2'):
             # Use symlinks to join the two mpl_toolkits/ directories into
             # one, inside of basemap.  This is because Basemap tries to
             # "add to" an existing package in Matplotlib, which is only
