@@ -138,34 +138,22 @@ class CbtfKrell(Package):
 
         # openmpi
         if '+openmpi' in spec:
-            MPIOptions.append([
-                '-DOPENMPI_DIR=%s' % spec['openmpi'].prefix
-            ])
+            MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
         if '+mpich' in spec:
-            MPIOptions.append([
-                '-DMPICH_DIR=%s' % spec['mpich'].prefix
-            ])
+            MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
         if '+mpich2' in spec:
-            MPIOptions.append([
-                '-DMPICH2_DIR=%s' % spec['mpich2'].prefix
-            ])
+            MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
         if '+mvapich' in spec:
-            MPIOptions.append([
-                '-DMVAPICH_DIR=%s' % spec['mvapich'].prefix
-            ])
+            MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
         if '+mvapich2' in spec:
-            MPIOptions.append([
-                '-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix
-            ])
+            MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
         if '+mpt' in spec:
-            MPIOptions.append([
-                '-DMPT_DIR=%s' % spec['mpt'].prefix
-            ])
+            MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
         cmakeOptions.extend(MPIOptions)
 

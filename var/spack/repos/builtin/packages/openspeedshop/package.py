@@ -140,13 +140,6 @@ class Openspeedshop(Package):
     depends_on("cbtf-argonavis", when='+cbtf+cuda')
     depends_on("mrnet@5.0.1:+lwthreads", when='+cbtf')
 
-    # We don't need this for building, but to complete the
-    # runtime module file
-    # It is required in cbtf, so it will be available and not
-    # cause another rebuild
-
-    depends_on("xerces-c@3.1.1:", when='+cbtf')
-
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the
         # options that will enable the cbtf-krell built type settings
@@ -176,22 +169,22 @@ class Openspeedshop(Package):
 
         # openmpi
         if '+openmpi' in spec:
-            MPIOptions.append(['-DOPENMPI_DIR=%s' % spec['openmpi'].prefix])
+            MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
         if '+mpich' in spec:
-            MPIOptions.append(['-DMPICH_DIR=%s' % spec['mpich'].prefix])
+            MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
         if '+mpich2' in spec:
-            MPIOptions.append(['-DMPICH2_DIR=%s' % spec['mpich2'].prefix])
+            MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
         if '+mvapich' in spec:
-            MPIOptions.append(['-DMVAPICH_DIR=%s' % spec['mvapich'].prefix])
+            MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
         if '+mvapich2' in spec:
-            MPIOptions.append(['-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix])
+            MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
         if '+mpt' in spec:
-            MPIOptions.append(['-DMPT_DIR=%s' % spec['mpt'].prefix])
+            MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
         cmakeOptions.extend(MPIOptions)
 
