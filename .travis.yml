@@ -24,6 +24,8 @@ addons:
   apt:
     packages:
       - graphviz
+      - libyaml-dev
+      - yaml-cpp-dev
 
 # Install various dependencies
 install:
@@ -31,6 +33,7 @@ install:
   - pip install flake8
   - pip install sphinx
   - pip install mercurial
+  - pip install pyyaml
 
 before_script:
   # Need this for the git tests to succeed.
