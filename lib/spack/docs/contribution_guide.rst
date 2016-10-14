@@ -96,8 +96,8 @@ Spack uses `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to test for
 `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance. PEP 8 is
 a series of style guides for Python that provide suggestions for everything
 from variable naming to indentation. In order to limit the number of PRs that
-were mostly style changes, we decided to enforce PEP 8 conformance. If your
-PR does not comply with PEP 8, it will not be accepted.
+were mostly style changes, we decided to enforce PEP 8 conformance. Your PR
+needs to comply with PEP 8 in order to be accepted.
 
 Testing for PEP 8 compliance is easy. Simply add the quality assurance
 directory to your ``PATH`` and run the flake8 script:
@@ -118,7 +118,8 @@ directory to your ``PATH`` and run the flake8 script:
    length checks. We also exempt lines that start with "homepage", "url", "version",
    "variant", "depends_on", and "extends" in the ``package.py`` files.
 
-More flake8 exemptions can be found in ``$SPACK_ROOT/.flake8``.
+More approved flake8 exemptions can be found
+`here <https://github.com/LLNL/spack/blob/develop/.flake8>`_.
 
 If all is well, you'll see something like this:
 
@@ -150,6 +151,12 @@ Most of the error messages are straightforward, but if you don't understand what
 they mean, just ask questions about them when you submit your PR. The line numbers
 will change if you add or delete lines, so simply run ``run-flake8-tests`` again
 to update them.
+
+.. tip::
+
+   Try fixing flake8 errors in reverse order. This eliminates the need for
+   multiple runs of ``flake8`` just to re-compute line numbers and makes it
+   much easier to fix errors directly off of the Travis output.
 
 .. warning::
 
