@@ -97,6 +97,8 @@ expansion when it is the first character in an id typed on the command line.
 """
 import base64
 import hashlib
+import imp
+import itertools
 import ctypes
 from StringIO import StringIO
 from operator import attrgetter
@@ -2384,24 +2386,21 @@ class Spec(object):
         query_parameters = name.split(':')
         name, query_parameters = query_parameters[0], query_parameters[1:]
 
-        # FIXME : flatten this function to have a single return statement
-        for spec in self.traverse():
-            if spec.name == name:
-                spec.set_query(name, query_parameters)
-                return spec
+        try:
+            value = next(
+                itertools.chain(
+                    # Regular specs
+                    (x for x in self.traverse() if x.name == name),
+                    # Virtual specs
+                    (x for x in self.traverse()
+                     if (not x.virtual) and x.package.provides(name))
+                )
+            )
+        except StopIteration:
+            raise KeyError("No spec with name %s in %s" % (name, self))
 
-        if Spec.is_virtual(name):
-            # TODO: this is a kind of kludgy way to find providers
-            # TODO: should we just keep virtual deps in the DAG instead of
-            # TODO: removing them on concretize?
-            for spec in self.traverse():
-                if spec.virtual:
-                    continue
-                if spec.package.provides(name):
-                    spec.set_query(name, query_parameters, isvirtual=True)
-                    return spec
-
-        raise KeyError("No spec with name %s in %s" % (name, self))
+        value.set_query(name, query_parameters, isvirtual=Spec.is_virtual(name))
+        return value
 
     def __contains__(self, spec):
         """True if this spec satisfies the provided spec, or if any dependency
