@@ -32,10 +32,6 @@
 
 """
 import yaml
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError as e:
-    from yaml import Loader, Dumper
 from yaml.nodes import *
 from yaml.constructor import ConstructorError
 from ordereddict_backport import OrderedDict
@@ -68,7 +64,7 @@ def mark(obj, node):
     obj._end_mark = node.end_mark
 
 
-class OrderedLineLoader(Loader):
+class OrderedLineLoader(yaml.Loader):
     """YAML loader that preserves order and line numbers.
 
        Mappings read in by this loader behave like an ordered dict.
@@ -160,7 +156,7 @@ OrderedLineLoader.add_constructor(
     u'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
 
 
-class OrderedLineDumper(Dumper):
+class OrderedLineDumper(yaml.Dumper):
     """Dumper that preserves ordering and formats ``syaml_*`` objects.
 
       This dumper preserves insertion ordering ``syaml_dict`` objects
