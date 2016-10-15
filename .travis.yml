@@ -26,7 +26,6 @@ addons:
     packages:
       - graphviz
       - libyaml-dev
-      - libyaml-cpp-dev
 
 # Install various dependencies
 install:
