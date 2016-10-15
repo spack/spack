@@ -2399,7 +2399,9 @@ class Spec(object):
         except StopIteration:
             raise KeyError("No spec with name %s in %s" % (name, self))
 
-        value.set_query(name, query_parameters, isvirtual=Spec.is_virtual(name))
+        value.set_query(
+            name, query_parameters, isvirtual=Spec.is_virtual(name)
+        )
         return value
 
     def __contains__(self, spec):
