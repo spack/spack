@@ -161,6 +161,37 @@ class Openspeedshop(Package):
 
         cmakeOptions.extend(BuildTypeOptions)
 
+    def set_defaultbase_cmakeOptions(self, spec, cmakeOptions):
+        # Appends to cmakeOptions the options that will enable
+        # the appropriate base level options to the openspeedshop
+        # cmake build.
+        python_vers = format(spec['python'].version.up_to(2))
+        python_pv = '/python' + python_vers
+        python_pvs = '/libpython' + python_vers + '.' + format(dso_suffix)
+
+        BaseOptions = []
+
+        BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
+        BaseOptions.append('-DLIBELF_DIR=%s' % spec['libelf'].prefix)
+        BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
+        BaseOptions.append(
+            '-DPYTHON_EXECUTABLE=%s'
+            % join_path(spec['python'].prefix + '/bin/python'))
+        BaseOptions.append(
+            '-DPYTHON_INCLUDE_DIR=%s'
+            % join_path(spec['python'].prefix.include) + python_pv)
+        BaseOptions.append(
+            '-DPYTHON_LIBRARY=%s'
+            % join_path(spec['python'].prefix.lib) + python_pvs)
+        BaseOptions.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
+        BaseOptions.append('-DBoost_NO_BOOST_CMAKE=TRUE')
+        BaseOptions.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
+        BaseOptions.append('-DBoost_DIR=%s' % spec['boost'].prefix)
+        BaseOptions.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
+        BaseOptions.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
+
+        cmakeOptions.extend(BaseOptions)
+
     def set_mpi_cmakeOptions(self, spec, cmakeOptions):
         # Appends to cmakeOptions the options that will enable
         # the appropriate MPI implementations
@@ -278,11 +309,11 @@ class Openspeedshop(Package):
             else:
                 cmake_prefix_path = join_path(spec['dyninst'].prefix)
                 with working_dir('build', create=True):
-                    python_vers = format(spec['python'].version.up_to(2))
-                    python_pv = '/python' + python_vers
-                    python_pvs = \
-                        '/libpython' + python_vers + '.' + format(dso_suffix)
                     cmakeOptions = []
+
+                    # Appends base options to cmakeOptions
+                    self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
+
                     cmakeOptions.extend(
                         ['-DCMAKE_INSTALL_PREFIX=%s'
                             % prefix,
@@ -290,12 +321,6 @@ class Openspeedshop(Package):
                             % cmake_prefix_path,
                          '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
-                         '-DBINUTILS_DIR=%s'
-                            % spec['binutils'].prefix,
-                         '-DLIBELF_DIR=%s'
-                            % spec['libelf'].prefix,
-                         '-DLIBDWARF_DIR=%s'
-                            % spec['libdwarf'].prefix,
                          '-DLIBMONITOR_DIR=%s'
                             % spec['libmonitor'].prefix,
                          '-DLIBUNWIND_DIR=%s'
@@ -305,25 +330,7 @@ class Openspeedshop(Package):
                          '-DSQLITE3_DIR=%s'
                             % spec['sqlite'].prefix,
                          '-DQTLIB_DIR=%s'
-                            % spec['qt'].prefix,
-                         '-DPYTHON_EXECUTABLE=%s'
-                            % join_path(spec['python'].prefix + '/bin/python'),
-                         '-DPYTHON_INCLUDE_DIR=%s'
-                            % join_path(
-                                spec['python'].prefix.include) + python_pv,
-                         '-DPYTHON_LIBRARY=%s'
-                            % join_path(
-                                spec['python'].prefix.lib) + python_pvs,
-                         '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                         '-DBoost_NO_BOOST_CMAKE=TRUE',
-                         '-DBOOST_ROOT=%s'
-                            % spec['boost'].prefix,
-                         '-DBoost_DIR=%s'
-                            % spec['boost'].prefix,
-                         '-DBOOST_LIBRARYDIR=%s'
-                            % spec['boost'].prefix.lib,
-                         '-DDYNINST_DIR=%s'
-                            % spec['dyninst'].prefix])
+                            % spec['qt'].prefix])
 
                     # Add any MPI implementations coming from variant settings
                     self.set_mpi_cmakeOptions(spec, cmakeOptions)
@@ -348,11 +355,11 @@ class Openspeedshop(Package):
 
             if '+runtime' in spec:
                 with working_dir('build_cbtf_runtime', create=True):
-                    python_vers = '%d.%d' % spec['python'].version[:2]
-                    python_pv = '/python' + python_vers
-                    python_pvs = \
-                        '/libpython' + python_vers + '.' + format(dso_suffix)
                     cmakeOptions = []
+
+                    # Appends base options to cmakeOptions
+                    self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
+
                     cmakeOptions.extend(
                         ['-DCMAKE_INSTALL_PREFIX=%s'
                             % prefix,
@@ -360,38 +367,10 @@ class Openspeedshop(Package):
                             % cmake_prefix_path,
                          '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
-                         '-DBINUTILS_DIR=%s'
-                            % spec['binutils'].prefix,
-                         '-DLIBELF_DIR=%s'
-                            % spec['libelf'].prefix,
-                         '-DLIBDWARF_DIR=%s'
-                            % spec['libdwarf'].prefix,
                          '-DCBTF_DIR=%s'
                             % spec['cbtf'].prefix,
                          '-DCBTF_KRELL_DIR=%s'
                             % spec['cbtf-krell'].prefix,
-                         '-DPYTHON_EXECUTABLE=%s'
-                            % join_path(spec['python'].prefix + '/bin/python'),
-                         '-DPYTHON_INCLUDE_DIR=%s'
-                            % join_path(
-                                spec['python'].prefix.include) + python_pv,
-                         '-DPYTHON_LIBRARY=%s'
-                            % join_path(
-                                spec['python'].prefix.lib) + python_pvs,
-                         '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                         '-DBoost_NO_BOOST_CMAKE=TRUE',
-                         '-DBOOST_ROOT=%s'
-                            % spec['boost'].prefix,
-                         '-DBoost_DIR=%s'
-                            % spec['boost'].prefix,
-                         '-DBOOST_LIBRARYDIR=%s'
-                            % spec['boost'].prefix.lib,
-                         '-DBoost_INCLUDE_DIRS:PATH=%s'
-                            % spec['boost'].prefix.include,
-                         '-DBoost_LIBRARY_DIRS:PATH=%s'
-                            % spec['boost'].prefix.lib,
-                         '-DDYNINST_DIR=%s'
-                            % spec['dyninst'].prefix,
                          '-DMRNET_DIR=%s'
                             % spec['mrnet'].prefix])
 
@@ -407,11 +386,11 @@ class Openspeedshop(Package):
 
             else:
                 with working_dir('build_cbtf', create=True):
-                    python_vers = format(spec['python'].version.up_to(2))
-                    python_pv = '/python' + python_vers
-                    python_pvs = \
-                        '/libpython' + python_vers + '.' + format(dso_suffix)
                     cmakeOptions = []
+
+                    # Appends base options to cmakeOptions
+                    self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
+
                     cmakeOptions.extend(
                         ['-DCMAKE_INSTALL_PREFIX=%s'
                             % prefix,
@@ -419,12 +398,6 @@ class Openspeedshop(Package):
                             % cmake_prefix_path,
                          '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
-                         '-DBINUTILS_DIR=%s'
-                            % spec['binutils'].prefix,
-                         '-DLIBELF_DIR=%s'
-                            % spec['libelf'].prefix,
-                         '-DLIBDWARF_DIR=%s'
-                            % spec['libdwarf'].prefix,
                          '-DSQLITE3_DIR=%s'
                             % spec['sqlite'].prefix,
                          '-DCBTF_DIR=%s'
@@ -433,29 +406,6 @@ class Openspeedshop(Package):
                             % spec['cbtf-krell'].prefix,
                          '-DQTLIB_DIR=%s'
                             % spec['qt'].prefix,
-                         '-DPYTHON_EXECUTABLE=%s'
-                            % join_path(
-                                spec['python'].prefix + '/bin/python'),
-                         '-DPYTHON_INCLUDE_DIR=%s'
-                            % join_path(
-                                spec['python'].prefix.include) + python_pv,
-                         '-DPYTHON_LIBRARY=%s'
-                            % join_path(
-                                spec['python'].prefix.lib) + python_pvs,
-                         '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                         '-DBoost_NO_BOOST_CMAKE=TRUE',
-                         '-DBOOST_ROOT=%s'
-                            % spec['boost'].prefix,
-                         '-DBoost_DIR=%s'
-                            % spec['boost'].prefix,
-                         '-DBOOST_LIBRARYDIR=%s'
-                            % spec['boost'].prefix.lib,
-                         '-DBoost_INCLUDE_DIRS:PATH=%s'
-                            % spec['boost'].prefix.include,
-                         '-DBoost_LIBRARY_DIRS:PATH=%s'
-                            % spec['boost'].prefix.lib,
-                         '-DDYNINST_DIR=%s'
-                            % spec['dyninst'].prefix,
                          '-DMRNET_DIR=%s'
                             % spec['mrnet'].prefix])
 
