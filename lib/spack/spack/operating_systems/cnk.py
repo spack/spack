@@ -9,7 +9,7 @@ class Cnk(OperatingSystem):
     on that node."""
 
     def __init__(self):
-        name = 'CNK'
+        name = 'cnk'
         version = '1'
         super(Cnk, self).__init__(name, version)
 
