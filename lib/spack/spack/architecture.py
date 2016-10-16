@@ -83,7 +83,6 @@ from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 
 import spack
-import spack.compilers
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
@@ -276,6 +275,8 @@ class OperatingSystem(object):
         # Once the paths are cleaned up, do a search for each type of
         # compiler.  We can spawn a bunch of parallel searches to reduce
         # the overhead of spelunking all these directories.
+        # NOTE: we import spack.compilers here to avoid init order cycles
+        import spack.compilers
         types = spack.compilers.all_compiler_types()
         compiler_lists = parmap(lambda cmp_cls:
                                 self.find_compiler(cmp_cls, *filtered_path),
