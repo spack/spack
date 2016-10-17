@@ -125,7 +125,9 @@ class Petsc(Package):
         return compiler_opts
 
     def install(self, spec, prefix):
-        options = ['--with-ssl=0']
+        options = ['--with-ssl=0',
+                   '--download-c2html=0',
+                   '--download-hwloc=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
