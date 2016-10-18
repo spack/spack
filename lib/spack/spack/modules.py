@@ -369,12 +369,6 @@ class EnvModule(object):
         """
         if self.blacklisted:
             return
-        tty.debug("\tWRITE : %s [%s]" %
-                  (self.spec.cshort_spec, self.file_name))
-
-        module_dir = os.path.dirname(self.file_name)
-        if not os.path.exists(module_dir):
-            mkdirp(module_dir)
 
         # Parse configuration file
         module_configuration, conf_env = parse_config_options(self)
@@ -398,6 +392,15 @@ class EnvModule(object):
         if output:
             output.write(module_file_content)
         elif overwrite or (not os.path.exists(self.file_name)):
+            #TODO: this is currently placed here because MergeTclModule doesnt
+            #necessarily have all the details that .tokens wants
+            tty.debug("\tWRITE : %s [%s]" %
+                      (self.spec.cshort_spec, self.file_name))
+
+            module_dir = os.path.dirname(self.file_name)
+            if not os.path.exists(module_dir):
+                mkdirp(module_dir)        
+
             with open(self.file_name, 'w') as f:
                 f.write(module_file_content)
         else:
@@ -648,16 +651,13 @@ class TclModule(EnvModule):
                                                  nformat=self.naming_scheme,
                                                  cformat=item))
                         raise SystemExit('Module generation aborted.')
-                line = line.format(**naming_tokens)
+                line = line.format(**naming_tokens.tokens)
             yield line
 
 
 class MergedTclModule(TclModule):
-    """
-    
-    """
-    def __init__(self, specs, env_var, spec_to_val):
-        super(MergedTclModule, self).__init__(iter(specs).next())
+    def __init__(self, query_spec, specs, env_var, spec_to_val):
+        super(MergedTclModule, self).__init__(query_spec)
         self.specs = list(specs)
         self.env_var = env_var
         self.spec_to_val = spec_to_val
@@ -685,6 +685,13 @@ class MergedTclModule(TclModule):
             match = iter(matching).next()
             for x in self.process_conditional_env(match, val):
                 yield x
+
+    def module_specific_content(self, configuration):
+        #TODO: the superclass implementation should eventually be suitable but
+        #as of now the .tokens property unconditionally extracts details which
+        #may not be present for the query spec (e.g. it always grabs the
+        #compiler)
+        return tuple()
 
 # To construct an arbitrary hierarchy of module files:
 # 1. Parse the configuration file and check that all the items in

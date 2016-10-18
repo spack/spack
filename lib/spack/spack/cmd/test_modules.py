@@ -27,7 +27,8 @@ def test_modules(parser, args):
     
     env_var = "compiler"
     spec_to_val = {"%gcc@4.4.7":"gcc_4.4.7", "%gcc@4.8.5": "gcc_4.8.5"}
-    merged_module = MergedTclModule(specs, env_var, spec_to_val)
+    query_spec = spack.spec.Spec(args.merge_spec)
+    merged_module = MergedTclModule(query_spec, specs, env_var, spec_to_val)
     collect_output = StringIO.StringIO()
     merged_module.write(output=collect_output)
     
