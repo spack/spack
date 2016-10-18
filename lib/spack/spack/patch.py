@@ -69,8 +69,13 @@ class Patch(object):
             if self.url:
                 # use an anonymous stage to fetch the patch if it is a URL
                 patch_stage = spack.stage.Stage(self.url)
+                patch_stage.create()
                 patch_stage.fetch()
-                patch_file = patch_stage.archive_file
+                patch_stage.expand_archive()
+                patch_file = os.path.abspath(
+                    os.listdir(patch_stage.path).pop()
+                )
+                stage.chdir_to_source()
             else:
                 patch_file = self.path
 

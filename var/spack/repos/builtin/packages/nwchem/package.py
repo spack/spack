@@ -44,26 +44,33 @@ class Nwchem(Package):
     depends_on('python@2.7:2.8', type=nolink)
 
     # patches for 6.6-27746:
-    # TODO: add support for achived patches, i.e.
-    # http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz
-    patch('Config_libs66.patch', when='@6.6', level=0)
-    patch('Gcc6_optfix.patch', when='@6.6', level=0)
-    patch('Util_gnumakefile.patch', when='@6.6', level=0)
-    patch('cosmo_dftprint.patch', when='@6.6', level=0)
-    patch('cosmo_meminit.patch', when='@6.6', level=0)
-    patch('dplot_tolrho.patch', when='@6.6', level=0)
-    patch('driver_smalleig.patch', when='@6.6', level=0)
-    patch('ga_argv.patch', when='@6.6', level=0)
-    patch('ga_defs.patch', when='@6.6', level=0)
-    patch('raman_displ.patch', when='@6.6', level=0)
-    patch('sym_abelian.patch', when='@6.6', level=0)
-    patch('tddft_mxvec20.patch', when='@6.6', level=0)
-    patch('tools_lib64.patch', when='@6.6', level=0)
-    patch('txs_gcc6.patch', when='@6.6', level=0)
-    patch('Util_getppn.patch', when='@6.6', level=0)
-    patch('xccvs98.patch', when='@6.6', level=0)
-    patch('zgesdv.patch', when='@6.6', level=0)
-    patch('Gcc6_macs_optfix.patch', when='@6.6', level=0)
+    urls_for_patches = {
+        '@6.6': [
+            'http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
+            'http://www.nwchem-sw.org/images/Tools_lib64.patch.gz',
+            'http://www.nwchem-sw.org/images/Config_libs66.patch.gz',
+            'http://www.nwchem-sw.org/images/Cosmo_meminit.patch.gz',
+            'http://www.nwchem-sw.org/images/Sym_abelian.patch.gz',
+            'http://www.nwchem-sw.org/images/Xccvs98.patch.gz',
+            'http://www.nwchem-sw.org/images/Dplot_tolrho.patch.gz',
+            'http://www.nwchem-sw.org/images/Driver_smalleig.patch.gz',
+            'http://www.nwchem-sw.org/images/Ga_argv.patch.gz',
+            'http://www.nwchem-sw.org/images/Raman_displ.patch.gz',
+            'http://www.nwchem-sw.org/images/Ga_defs.patch.gz',
+            'http://www.nwchem-sw.org/images/Zgesvd.patch.gz',
+            'http://www.nwchem-sw.org/images/Cosmo_dftprint.patch.gz',
+            'http://www.nwchem-sw.org/images/Txs_gcc6.patch.gz',
+            'http://www.nwchem-sw.org/images/Gcc6_optfix.patch.gz',
+            'http://www.nwchem-sw.org/images/Util_gnumakefile.patch.gz',
+            'http://www.nwchem-sw.org/images/Util_getppn.patch.gz',
+            'http://www.nwchem-sw.org/images/Gcc6_macs_optfix.patch.gz',
+            'http://www.nwchem-sw.org/images/Notdir_fc.patch.gz'
+        ]
+    }
+    # Iterate over patches
+    for condition, urls in urls_for_patches.iteritems():
+        for url in urls:
+            patch(url, when=condition, level=0)
 
     def install(self, spec, prefix):
         scalapack = spec['scalapack'].scalapack_libs
