@@ -359,7 +359,7 @@ class EnvModule(object):
 
         return False
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, output=None):
         """
         Writes out a module file for this object.
 
@@ -394,18 +394,20 @@ class EnvModule(object):
         for line in self.module_specific_content(module_configuration):
             module_file_content += line
 
-        # Print a warning in case I am accidentally overwriting
-        # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.file_name):
+        # Dump to file
+        if output:
+            output.write(module_file_content)
+        elif overwrite or (not os.path.exists(self.file_name)):
+            with open(self.file_name, 'w') as f:
+                f.write(module_file_content)
+        else:
+            # Print a warning in case I am accidentally overwriting
+            # a module file that is already there (name clash)
             message = 'Module file already exists : skipping creation\n'
             message += 'file : {0.file_name}\n'
             message += 'spec : {0.spec}'
             tty.warn(message.format(self))
             return
-
-        # Dump to file
-        with open(self.file_name, 'w') as f:
-            f.write(module_file_content)
 
     def setup_environment(self, module_configuration, conf_env):
         # Environment modifications guessed by inspecting the
@@ -648,6 +650,41 @@ class TclModule(EnvModule):
                         raise SystemExit('Module generation aborted.')
                 line = line.format(**naming_tokens)
             yield line
+
+
+class MergedTclModule(TclModule):
+    """
+    
+    """
+    def __init__(self, specs, env_var, spec_to_val):
+        super(MergedTclModule, self).__init__(iter(specs).next())
+        self.specs = list(specs)
+        self.env_var = env_var
+        self.spec_to_val = spec_to_val
+
+    def process_conditional_env(self, spec, val):
+        if_start = 'if [ {env_var} == "{val}" ] {{\n'.format(
+            env_var=self.env_var, val=val)
+        yield if_start
+        
+        for x in TclModule(spec).process_environment_command():
+            yield x
+        
+        yield '}\n'
+
+    def process_environment_command(self):
+        for constraint_spec, val in self.spec_to_val.iteritems():
+            matching = list(
+                s for s in self.specs if s.satisfies(constraint_spec))
+            if not matching:
+                continue
+            if len(matching) > 1:
+                raise ValueError(
+                    "Multiple specs match constraint: " + str(constraint_spec))
+            
+            match = iter(matching).next()
+            for x in self.process_conditional_env(match, val):
+                yield x
 
 # To construct an arbitrary hierarchy of module files:
 # 1. Parse the configuration file and check that all the items in
