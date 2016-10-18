@@ -14,12 +14,11 @@ description = "Test out merged module functionality"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to install")
+        'merge_spec', help="specs of packages to install")
 
 
-def test_modules(parser, args):
-    specs = spack.cmd.parse_specs(args.packages, concretize=True)
+def test_modules(parser, args):    
+    specs = spack.installed_db.query(args.merge_spec)
     
     #module = TclModule(specs[0])
     #collect_output = StringIO.StringIO()
