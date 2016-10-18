@@ -75,7 +75,7 @@ class Petsc(Package):
     depends_on('python @2.6:2.7')
 
     # Other dependencies
-    depends_on('boost', when='+boost')
+    depends_on('boost', when='@:3.5+boost')
     depends_on('metis@5:', when='+metis')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -125,7 +125,9 @@ class Petsc(Package):
         return compiler_opts
 
     def install(self, spec, prefix):
-        options = ['--with-ssl=0']
+        options = ['--with-ssl=0',
+                   '--download-c2html=0',
+                   '--download-hwloc=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
