@@ -36,9 +36,9 @@ description = "Build and install packages"
 def setup_parser(subparser):
     subparser.add_argument(
         '--only',
-        default='package:dependencies',
+        default='package,dependencies',
         dest='things_to_install',
-        choices=['package', 'dependencies', 'package:dependencies'],
+        choices=['package', 'dependencies', 'package,dependencies'],
         help="""Select the mode of installation.
 The default is to install the package along with all its dependencies.
 Alternatively one can decide to install only the package or only
