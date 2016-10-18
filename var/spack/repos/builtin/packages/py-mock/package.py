@@ -33,6 +33,7 @@ class PyMock(Package):
     homepage = "https://github.com/testing-cabal/mock"
     url      = "https://pypi.python.org/packages/source/m/mock/mock-1.3.0.tar.gz"
 
+    version('2.0.0', '0febfafd14330c9dcaa40de2d82d40ad')
     version('1.3.0', '73ee8a4afb3ff4da1b4afa287f39fdeb')
 
     extends('python')
