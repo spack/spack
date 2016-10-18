@@ -376,6 +376,38 @@ class EnvModule(object):
         if not os.path.exists(module_dir):
             mkdirp(module_dir)
 
+        # Parse configuration file
+        module_configuration, conf_env = parse_config_options(self)
+
+        # Build up the module file content
+        module_file_content = self.header
+        for x in filter_blacklisted(
+                module_configuration.pop('autoload', []), self.name):
+            module_file_content += self.autoload(x)
+        for x in module_configuration.pop('load', []):
+            module_file_content += self.autoload(x)
+        for x in filter_blacklisted(
+                module_configuration.pop('prerequisites', []), self.name):
+            module_file_content += self.prerequisite(x)
+        for line in self.process_environment_command():
+            module_file_content += line
+        for line in self.module_specific_content(module_configuration):
+            module_file_content += line
+
+        # Print a warning in case I am accidentally overwriting
+        # a module file that is already there (name clash)
+        if not overwrite and os.path.exists(self.file_name):
+            message = 'Module file already exists : skipping creation\n'
+            message += 'file : {0.file_name}\n'
+            message += 'spec : {0.spec}'
+            tty.warn(message.format(self))
+            return
+
+        # Dump to file
+        with open(self.file_name, 'w') as f:
+            f.write(module_file_content)
+
+    def setup_environment(self, module_configuration, conf_env):
         # Environment modifications guessed by inspecting the
         # installation prefix
         env = inspect_path(self.spec.prefix)
@@ -399,40 +431,11 @@ class EnvModule(object):
         # Package-specific environment modifications
         set_module_variables_for_package(self.pkg, self.pkg.module)
         self.spec.package.setup_environment(spack_env, env)
-
-        # Parse configuration file
-        module_configuration, conf_env = parse_config_options(self)
         env.extend(conf_env)
+
         filters = module_configuration.get('filter', {}).get(
             'environment_blacklist', {})
-        # Build up the module file content
-        module_file_content = self.header
-        for x in filter_blacklisted(
-                module_configuration.pop('autoload', []), self.name):
-            module_file_content += self.autoload(x)
-        for x in module_configuration.pop('load', []):
-            module_file_content += self.autoload(x)
-        for x in filter_blacklisted(
-                module_configuration.pop('prerequisites', []), self.name):
-            module_file_content += self.prerequisite(x)
-        for line in self.process_environment_command(
-                filter_environment_blacklist(env, filters)):
-            module_file_content += line
-        for line in self.module_specific_content(module_configuration):
-            module_file_content += line
-
-        # Print a warning in case I am accidentally overwriting
-        # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.file_name):
-            message = 'Module file already exists : skipping creation\n'
-            message += 'file : {0.file_name}\n'
-            message += 'spec : {0.spec}'
-            tty.warn(message.format(self))
-            return
-
-        # Dump to file
-        with open(self.file_name, 'w') as f:
-            f.write(module_file_content)
+        return filter_environment_blacklist(env, filters)
 
     @property
     def header(self):
@@ -453,7 +456,10 @@ class EnvModule(object):
         m = type(self)(spec)
         return self.prerequisite_format.format(module_file=m.use_name)
 
-    def process_environment_command(self, env):
+    def process_environment_command(self, env=None):
+        if not env:
+            module_configuration, conf_env = parse_config_options(self)
+            env = self.setup_environment(module_configuration, conf_env)
         for command in env:
             # Token expansion from configuration file
             name = command.args.get('name', '').format(**self.upper_tokens)
@@ -546,6 +552,25 @@ class TclModule(EnvModule):
     default_naming_format = \
         '{name}-{version}-{compiler.name}-{compiler.version}'
 
+    environment_modifications_formats_colon = {
+        PrependPath: 'prepend-path {name} \"{value}\"\n',
+        AppendPath: 'append-path   {name} \"{value}\"\n',
+        RemovePath: 'remove-path   {name} \"{value}\"\n',
+        SetEnv: 'setenv {name} \"{value}\"\n',
+        UnsetEnv: 'unsetenv {name}\n'
+    }
+    
+    environment_modifications_formats_general = {
+        PrependPath:
+        'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+        AppendPath:
+        'append-path   --delim "{separator}" {name} \"{value}\"\n',
+        RemovePath:
+        'remove-path   --delim "{separator}" {name} \"{value}\"\n',
+        SetEnv: 'setenv {name} \"{value}\"\n',
+        UnsetEnv: 'unsetenv {name}\n'
+    }
+
     @property
     def file_name(self):
         return join_path(self.path, self.spec.architecture, self.use_name)
@@ -575,24 +600,10 @@ class TclModule(EnvModule):
             header += '}\n\n'
         return header
 
-    def process_environment_command(self, env):
-        environment_modifications_formats_colon = {
-            PrependPath: 'prepend-path {name} \"{value}\"\n',
-            AppendPath: 'append-path   {name} \"{value}\"\n',
-            RemovePath: 'remove-path   {name} \"{value}\"\n',
-            SetEnv: 'setenv {name} \"{value}\"\n',
-            UnsetEnv: 'unsetenv {name}\n'
-        }
-        environment_modifications_formats_general = {
-            PrependPath:
-            'prepend-path --delim "{separator}" {name} \"{value}\"\n',
-            AppendPath:
-            'append-path   --delim "{separator}" {name} \"{value}\"\n',
-            RemovePath:
-            'remove-path   --delim "{separator}" {name} \"{value}\"\n',
-            SetEnv: 'setenv {name} \"{value}\"\n',
-            UnsetEnv: 'unsetenv {name}\n'
-        }
+    def process_environment_command(self, env=None):
+        if not env:
+            module_configuration, conf_env = parse_config_options(self)
+            env = self.setup_environment(module_configuration, conf_env)
         for command in env:
             # Token expansion from configuration file
             name = command.args.get('name', '').format(**self.upper_tokens)
@@ -601,10 +612,10 @@ class TclModule(EnvModule):
             # Format the line int the module file
             try:
                 if command.args.get('separator', ':') == ':':
-                    yield environment_modifications_formats_colon[type(
+                    yield self.environment_modifications_formats_colon[type(
                         command)].format(**command.args)
                 else:
-                    yield environment_modifications_formats_general[type(
+                    yield self.environment_modifications_formats_general[type(
                         command)].format(**command.args)
             except KeyError:
                 message = ('Cannot handle command of type {command}: '
