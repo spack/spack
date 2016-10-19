@@ -69,6 +69,8 @@ class R(Package):
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')
+    depends_on('libx11')
+    depends_on('libxt')
     depends_on('curl')
     depends_on('pcre')
     depends_on('jdk')

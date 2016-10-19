@@ -38,6 +38,7 @@ class Tk(Package):
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
     depends_on("tcl")
+    depends_on("libx11")
 
     def url_for_version(self, version):
         base_url = "http://prdownloads.sourceforge.net/tcl"
