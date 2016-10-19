@@ -686,6 +686,29 @@ class MergedTclModule(TclModule):
             for x in self.process_conditional_env(match, val):
                 yield x
 
+    @property
+    def extra_path_elements(self):
+        path_elements = list()
+        
+        for dep, dep_scheme in (
+                CONFIGURATION[self.name].get('dep_naming_schemes', {})
+                .iteritems()):
+            if dep == self.spec.name:
+                continue
+            
+            dep_specs = list(s[dep] for s in self.specs if dep in s)
+            if not dep_specs:
+                continue
+            
+            if len(dep_specs) != len(self.specs):
+                raise ValueError()
+                
+            if any(dep_specs[0] != s for s in dep_specs[1:]):
+                raise ValueError()
+
+            path_elements.append(dep_specs[0].format(dep_scheme))
+        return path_elements
+
     def module_specific_content(self, configuration):
         #TODO: the superclass implementation should eventually be suitable but
         #as of now the .tokens property unconditionally extracts details which

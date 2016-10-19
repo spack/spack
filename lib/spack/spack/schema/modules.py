@@ -112,6 +112,9 @@ schema = {
                         '$ref': '#/definitions/array_of_strings'},
                     'naming_scheme': {
                         'type': 'string'  # Can we be more specific here?
+                    },
+                    'dep_naming_schemes': {
+                        '$ref': '#/definitions/dictionary_of_strings'
                     }
                 }},
                 {'patternProperties': {

@@ -33,3 +33,5 @@ def test_modules(parser, args):
     merged_module.write(output=collect_output)
     
     print(collect_output.getvalue())
+    
+    print(merged_module.extra_path_elements)
