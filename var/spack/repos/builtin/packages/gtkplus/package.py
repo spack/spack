@@ -36,7 +36,7 @@ class Gtkplus(Package):
 
     depends_on("atk")
     depends_on("gdk-pixbuf")
-    depends_on("glib", type='build')
+    depends_on("glib")
     depends_on("pango")
     depends_on("glib")
 
