@@ -522,41 +522,56 @@ def fork(pkg, function, dirty=False):
     carries on.
     """
 
+    pid = None
+    protected_failure = False
+    # This try block is present to cover exceptions which occur between the
+    # call to fork and the try block which executes the function
     try:
-        pid = os.fork()
-    except OSError as e:
-        raise InstallError("Unable to fork build process: %s" % e)
-
-    if pid == 0:
-        # Give the child process the package's build environment.
-        setup_package(pkg, dirty=dirty)
-
         try:
-            # call the forked function.
-            function()
+            pid = os.fork()
+        except OSError as e:
+            raise InstallError("Unable to fork build process: %s" % e)
 
-            # Use os._exit here to avoid raising a SystemExit exception,
-            # which interferes with unit tests.
-            os._exit(0)
+        if pid == 0:
+            # Give the child process the package's build environment.
+            setup_package(pkg, dirty=dirty)
 
-        except spack.error.SpackError as e:
-            e.die()
+            try:
+                # call the forked function.
+                function()
 
-        except:
-            # Child doesn't raise or return to main spack code.
-            # Just runs default exception handler and exits.
+                # Use os._exit here to avoid raising a SystemExit exception,
+                # which interferes with unit tests.
+                os._exit(0)
+
+            except spack.error.SpackError as e:
+                protected_failure = True
+                e.die()
+
+            except:
+                # Child doesn't raise or return to main spack code.
+                # Just runs default exception handler and exits.
+                protected_failure = True
+                sys.excepthook(*sys.exc_info())
+                os._exit(1)
+
+        else:
+            # Parent process just waits for the child to complete.  If the
+            # child exited badly, assume it already printed an appropriate
+            # message.  Just make the parent exit with an error code.
+            pid, returncode = os.waitpid(pid, 0)
+            if returncode != 0:
+                message = "Installation process had nonzero exit code : {code}"
+                strcode = str(returncode)
+                raise InstallError(message.format(code=strcode))
+    except:
+        if protected_failure:  # Implies pid == 0
+            raise
+        elif pid == 0:
             sys.excepthook(*sys.exc_info())
             os._exit(1)
-
-    else:
-        # Parent process just waits for the child to complete.  If the
-        # child exited badly, assume it already printed an appropriate
-        # message.  Just make the parent exit with an error code.
-        pid, returncode = os.waitpid(pid, 0)
-        if returncode != 0:
-            message = "Installation process had nonzero exit code : {code}"
-            strcode = str(returncode)
-            raise InstallError(message.format(code=strcode))
+        else:
+            raise
 
 
 class InstallError(spack.error.SpackError):
