@@ -37,7 +37,7 @@ class Cdd(Package):
 
     def url_for_version(self, version):
         return ("ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-%s.tar.gz" %
-                str(version.dotted()).replace('.', ''))
+                str(version.dotted).replace('.', ''))
 
     version('0.61a', '22c24a7a9349dd7ec0e24531925a02d9')
 

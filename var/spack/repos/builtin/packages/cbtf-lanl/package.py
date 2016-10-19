@@ -55,9 +55,9 @@ class CbtfLanl(Package):
     version('1.6', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
 
-    depends_on("cmake@3.0.2", type='build')
+    depends_on("cmake@3.0.2:", type='build')
     # Dependencies for cbtf-krell
-    depends_on("mrnet@5.0.1:+lwthreads+krellpatch")
+    depends_on("mrnet@5.0.1:+lwthreads")
     depends_on("xerces-c@3.1.1:")
     depends_on("cbtf")
     depends_on("cbtf-krell")

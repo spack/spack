@@ -22,39 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.config
-
-description = "Get and set configuration options."
+from spack import *
 
 
-def setup_parser(subparser):
-    # User can only choose one
-    subparser.add_argument('--scope', choices=spack.config.config_scopes,
-                           help="Configuration scope to read/modify.")
+class Htop(Package):
+    """htop is an interactive text-mode process viewer for Unix systems."""
 
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
+    homepage = "https://github.com/hishamhm/htop"
+    url      = "https://hisham.hm/htop/releases/2.0.2/htop-2.0.2.tar.gz"
 
-    get_parser = sp.add_parser('get', help='Print configuration values.')
-    get_parser.add_argument('section', help="Configuration section to print.")
+    version('2.0.2', '7d354d904bad591a931ad57e99fea84a')
 
-    edit_parser = sp.add_parser('edit', help='Edit configuration file.')
-    edit_parser.add_argument('section', help="Configuration section to edit")
+    depends_on('ncurses')
 
-
-def config_get(args):
-    spack.config.print_section(args.section)
-
-
-def config_edit(args):
-    if not args.scope:
-        args.scope = 'user'
-    if not args.section:
-        args.section = None
-    config_file = spack.config.get_config_filename(args.scope, args.section)
-    spack.editor(config_file)
-
-
-def config(parser, args):
-    action = {'get': config_get,
-              'edit': config_edit}
-    action[args.config_command](args)
+    def install(self, spec, prefix):
+        configure('--prefix=%s' % prefix)
+        make()
+        make('install')

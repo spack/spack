@@ -22,39 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.config
 
-description = "Get and set configuration options."
-
-
-def setup_parser(subparser):
-    # User can only choose one
-    subparser.add_argument('--scope', choices=spack.config.config_scopes,
-                           help="Configuration scope to read/modify.")
-
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
-
-    get_parser = sp.add_parser('get', help='Print configuration values.')
-    get_parser.add_argument('section', help="Configuration section to print.")
-
-    edit_parser = sp.add_parser('edit', help='Edit configuration file.')
-    edit_parser.add_argument('section', help="Configuration section to edit")
+from spack import *
 
 
-def config_get(args):
-    spack.config.print_section(args.section)
+class PyMacs2(Package):
+    """MACS2 Model-based Analysis of ChIP-Seq"""
 
+    homepage = "https://github.com/taoliu/MACS"
+    url      = "https://pypi.python.org/packages/9f/99/a8ac96b357f6b0a6f559fe0f5a81bcae12b98579551620ce07c5183aee2c/MACS2-2.1.1.20160309.tar.gz"
 
-def config_edit(args):
-    if not args.scope:
-        args.scope = 'user'
-    if not args.section:
-        args.section = None
-    config_file = spack.config.get_config_filename(args.scope, args.section)
-    spack.editor(config_file)
+    version('2.1.1.20160309', '2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')
 
+    extends('python')
+    depends_on('python@2.7:2.8')
 
-def config(parser, args):
-    action = {'get': config_get,
-              'edit': config_edit}
-    action[args.config_command](args)
+    # Most Python packages only require py-setuptools as a build dependency.
+    # However, py-macs2 requires py-setuptools during runtime as well.
+    depends_on('py-setuptools', type=nolink)
+    depends_on('py-numpy@1.6:', type=nolink)
+
+    def install(self, spec, prefix):
+        setup_py('install', '--prefix={0}'.format(prefix))
