@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
 
 
 class Emacs(Package):
@@ -36,8 +35,8 @@ class Emacs(Package):
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=True, description="Enable an X toolkit")
-    variant('toolkit', default='gtk', 
-        description="Select an X toolkit (gtk, athena)")
+    variant('toolkit', default='gtk',
+            description="Select an X toolkit (gtk, athena)")
 
     depends_on('ncurses')
     depends_on('libtiff', when='+X')
