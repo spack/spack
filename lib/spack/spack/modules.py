@@ -651,7 +651,7 @@ class TclModule(EnvModule):
                                                  nformat=self.naming_scheme,
                                                  cformat=item))
                         raise SystemExit('Module generation aborted.')
-                line = line.format(**naming_tokens.tokens)
+                line = line.format(**naming_tokens)
             yield line
 
 
