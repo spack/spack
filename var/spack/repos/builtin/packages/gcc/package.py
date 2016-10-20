@@ -67,7 +67,7 @@ class Gcc(Package):
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
-            not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
+           not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
             enabled_languages.add('go')
 
         # Fix a standard header file for OS X Yosemite that
