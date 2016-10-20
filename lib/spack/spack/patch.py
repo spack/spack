@@ -111,9 +111,14 @@ class UrlPatch(Patch):
             stage: stage for the package that needs to be patched
         """
         fetcher = fs.URLFetchStrategy(self.url, digest=self.md5)
-        with spack.stage.Stage(fetcher) as patch_stage:
+        mirror = join_path(
+            os.path.dirname(stage.mirror_path),
+            os.path.basename(self.url)
+        )
+        with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
             patch_stage.fetch()
             patch_stage.check()
+            patch_stage.cache_local()
             patch_stage.expand_archive()
             self.path = os.path.abspath(
                 os.listdir(patch_stage.path).pop()
