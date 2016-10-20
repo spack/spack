@@ -23,47 +23,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class EnvModele(Package):
+class EnvIcebin(Package):
 
     homepage = ""
 
-    version('1.0', 'e2b724dfcc31d735897971db91be89ff')
+    version('1.0')
 
-    variant('python', default=True,
-            description='Include basic scientific Python environment')
+    # Running ModelE
+    depends_on('env-modele')
 
-    # --------- ModelE dependencies (taken from modele/package.py)
-    # Build dependencies
-    depends_on('m4')
-    depends_on('cmake')
-    # Link dependencies
-    depends_on('mpi')
-    depends_on('netcdf-fortran')
-    #depends_on('fexception')
-    depends_on('everytrace+fortran+mpi')
-    depends_on('parallel-netcdf+fortran~cxx')
+    # Regridding...
+    depends_on('icebin')
 
-    # -------- Other things we need
-    depends_on('modele-utils')
-    depends_on('modele-control')
-    depends_on('ncview')
-    depends_on('nco')
-    depends_on('icebin~coupler')    # No coupling for now, just EC jujitsu
+    # Python environment
+    depends_on('py-rtree')
+    depends_on('py-giss')
+    depends_on('py-proj')
+    depends_on('py-pyside')
 
-    # -------- Python post-processing environment
-    depends_on('python@3:', when='+python')
-    depends_on('py-scipy', when='+python')
-    depends_on('py-netcdf', when='+python')
-    depends_on('py-matplotlib', when='+python')
-    depends_on('py-basemap', when='+python')
-    depends_on('py-git2', when='+python')
-    depends_on('py-xarray', when='+python')
-    depends_on('py-proj', when='+python')
-    depends_on('py-bsddb3', when='+python')
-    depends_on('py-udunits', when='+python')
+    # Utilities
+    depends_on('emacs')
+    depends_on('git')
 
     def url_for_version(self, version):
         return 'https://github.com/citibeth/dummy/tarball/v1.0'
