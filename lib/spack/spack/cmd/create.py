@@ -102,7 +102,7 @@ ${body}
 
 
 class DefaultGuess(object):
-
+    """Provides the default values to be used for the package file template"""
     base_class_name = 'Package'
 
     dependencies = """\
@@ -132,7 +132,7 @@ class DefaultGuess(object):
 
 
 class AutotoolsGuess(DefaultGuess):
-
+    """Provides appropriate overrides for autotools-based packages"""
     base_class_name = 'AutotoolsPackage'
 
     dependencies = """\
@@ -145,14 +145,14 @@ class AutotoolsGuess(DefaultGuess):
 
     body = """\
     def configure_args(self):
-       # FIXME : Add arguments other than --prefix
-       # FIXME : If not needed delete the function
+       # FIXME: Add arguments other than --prefix
+       # FIXME: If not needed delete the function
        args = []
        return args"""
 
 
 class CMakeGuess(DefaultGuess):
-
+    """Provides appropriate overrides for cmake-based packages"""
     base_class_name = 'CMakePackage'
 
     dependencies = """\
@@ -161,15 +161,15 @@ class CMakeGuess(DefaultGuess):
 
     body = """\
     def cmake_args(self):
-       # FIXME : Add arguments other than
-       # FIXME : CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-       # FIXME : If not needed delete the function
+       # FIXME: Add arguments other than
+       # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+       # FIXME: If not needed delete the function
        args = []
        return args"""
 
 
 class SconsGuess(DefaultGuess):
-
+    """Provides appropriate overrides for scons-based packages"""
     dependencies = """\
     # FIXME: Add additional dependencies if required.
     depends_on('scons', type='build')"""
@@ -182,7 +182,7 @@ class SconsGuess(DefaultGuess):
 
 
 class BazelGuess(DefaultGuess):
-
+    """Provides appropriate overrides for bazel-based packages"""
     dependencies = """\
     # FIXME: Add additional dependencies if required.
     depends_on('bazel', type='build')"""
@@ -194,7 +194,7 @@ class BazelGuess(DefaultGuess):
 
 
 class PythonGuess(DefaultGuess):
-
+    """Provides appropriate overrides for python extensions"""
     dependencies = """\
     extends('python')
 
@@ -213,7 +213,7 @@ class PythonGuess(DefaultGuess):
 
 
 class RGuess(DefaultGuess):
-
+    """Provides appropriate overrides for R extensions"""
     dependencies = """\
     extends('R')
 
@@ -232,7 +232,7 @@ class RGuess(DefaultGuess):
 
 
 class OctaveGuess(DefaultGuess):
-
+    """Provides appropriate overrides for octave packages"""
     dependencies = """\
     extends('octave')
 
