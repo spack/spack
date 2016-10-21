@@ -95,9 +95,9 @@ class DefaultConcretizer(object):
                                      not b.external and b.external_module):
                 # We're choosing between different providers, so
                 # maintain order from provider sort
-                index_of_a = next(i for i in range(0, len(candidates)) \
+                index_of_a = next(i for i in range(0, len(candidates))
                                   if a.satisfies(candidates[i]))
-                index_of_b = next(i for i in range(0, len(candidates)) \
+                index_of_b = next(i for i in range(0, len(candidates))
                                   if b.satisfies(candidates[i]))
                 return index_of_a - index_of_b
 
