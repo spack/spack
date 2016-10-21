@@ -3004,12 +3004,17 @@ Cleans up all of Spack's temporary and cached files.  This can be used to
 recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
-When called with ``--stage`` or ``--all`` (or without arguments, in which case
-the default is ``--all``) this removes all staged files; this is equivalent to
-running ``spack clean`` for every package you have fetched or staged.
+When called with ``--stage`` or without arguments this removes all staged
+files and will be equivalent to running ``spack clean`` for every package
+you have fetched or staged.
 
-When called with ``--cache`` or ``--all`` this will clear all resources
+When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
+
+When called with ``--user-cache`` this will remove caches in the user home
+directory, including cached virtual indices.
+
+To remove all of the above, the command can be called with ``--all``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
