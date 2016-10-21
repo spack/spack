@@ -277,7 +277,7 @@ def setup_parser(subparser):
 
 class BuildSystemGuesser(object):
 
-    _choiches = {
+    _choices = {
         'autotools': AutotoolsGuess,
         'cmake': CMakeGuess,
         'scons': SconsGuess,
