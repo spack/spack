@@ -45,7 +45,5 @@ class Qhull(CMakePackage):
 
     depends_on('cmake@2.6:', type='build')
 
-    @CMakePackage.sanity_check('build')
-    @CMakePackage.on_package_attributes(run_tests=True)
     def check(self):
         make('test')

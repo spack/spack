@@ -1733,6 +1733,16 @@ class AutotoolsPackage(PackageBase):
     def install(self, spec, prefix):
         inspect.getmodule(self).make('install')
 
+    @PackageBase.sanity_check('build')
+    @PackageBase.on_package_attributes(run_tests=True)
+    def _run_default_function(self):
+        try:
+            fn = getattr(self, 'check')
+            tty.msg('Trying default sanity checks [check]')
+            fn()
+        except AttributeError:
+            tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+
     # This will be used as a registration decorator in user
     # packages, if need be
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
@@ -1791,6 +1801,16 @@ class CMakePackage(PackageBase):
     def install(self, spec, prefix):
         with working_dir(self.wdir()):
             inspect.getmodule(self).make('install')
+
+    @PackageBase.sanity_check('build')
+    @PackageBase.on_package_attributes(run_tests=True)
+    def _run_default_function(self):
+        try:
+            fn = getattr(self, 'check')
+            tty.msg('Trying default sanity checks [check]')
+            fn()
+        except AttributeError:
+            tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
 

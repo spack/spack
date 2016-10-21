@@ -43,8 +43,6 @@ class Lzo(AutotoolsPackage):
             '--enable-shared'
         ]
 
-    @AutotoolsPackage.sanity_check('build')
-    @AutotoolsPackage.on_package_attributes(run_tests=True)
     def check(self):
         make('check')
         make('test')
