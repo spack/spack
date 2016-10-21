@@ -25,16 +25,13 @@
 from spack import *
 
 
-class Externalvirtual(Package):
+class Othervirtual(Package):
     homepage = "http://somewhere.com"
     url      = "http://somewhere.com/stuff-1.0.tar.gz"
 
-    version('1.0', '1234567890abcdef1234567890abcdef')
-    version('2.0', '234567890abcdef1234567890abcdef1')
-    version('2.1', '34567890abcdef1234567890abcdef12')
-    version('2.2', '4567890abcdef1234567890abcdef123')
+    version('1.0', '67890abcdef1234567890abcdef12345')
 
-    provides('stuff', when='@1.0:')
+    provides('stuff')
 
     def install(self, spec, prefix):
         pass
