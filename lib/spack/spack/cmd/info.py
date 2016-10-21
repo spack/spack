@@ -84,6 +84,13 @@ def print_text_info(pkg):
 
             print "    " + fmt % (name, default, desc)
 
+    print
+    print "Installation Phases:"
+    phase_str = ''
+    for phase in pkg.phases:
+        phase_str += "    {0}".format(phase)
+    print phase_str
+
     for deptype in ('build', 'link', 'run'):
         print
         print "%s Dependencies:" % deptype.capitalize()
@@ -94,7 +101,7 @@ def print_text_info(pkg):
             print "    None"
 
     print
-    print "Virtual packages: "
+    print "Virtual Packages: "
     if pkg.provided:
         for spec, when in pkg.provided.items():
             print "    %s provides %s" % (when, spec)
