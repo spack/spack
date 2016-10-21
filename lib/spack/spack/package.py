@@ -1088,8 +1088,6 @@ class PackageBase(object):
         finally:
             self.prefix_lock.release_write()
 
-    install_phases = set(['configure', 'build', 'install', 'provenance'])
-
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1171,7 +1169,6 @@ class PackageBase(object):
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
-        # ------------------- BEGIN def build_process()
         # Then install the package itself.
         def build_process():
             """Forked for each build. Has its own process and python
@@ -1778,7 +1775,7 @@ class CMakePackage(PackageBase):
         return join_path(self.stage.source_path, 'spack-build')
 
     def cmake_args(self):
-        return list()
+        return []
 
     def cmake(self, spec, prefix):
         options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
