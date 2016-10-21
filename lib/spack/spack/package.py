@@ -1094,7 +1094,6 @@ class PackageBase(object):
                    keep_prefix=False,
                    keep_stage=False,
                    install_deps=True,
-                   install_self=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
