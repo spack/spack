@@ -1686,10 +1686,10 @@ class EditableMakefile(PackageBase):
         return self.stage.source_path
 
     def build_args(self):
-        return list()
+        return []
 
     def install_args(self):
-        return list()
+        return []
 
     def edit(self, spec, prefix):
         raise NotImplementedError('\'edit\' function not implemented')
@@ -1721,7 +1721,7 @@ class AutotoolsPackage(PackageBase):
                 'configure script not found in {0}'.format(os.getcwd()))
 
     def configure_args(self):
-        return list()
+        return []
 
     def configure(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
@@ -1761,7 +1761,7 @@ class CMakePackage(PackageBase):
 
         args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
                 '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
-                '-DCMAKE_VERBOSE_MAKEFILE=ON']
+                '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
         if platform.mac_ver()[0]:
             args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
 
