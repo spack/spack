@@ -126,7 +126,9 @@ class DefaultGuess(object):
         """Adds a version() call to the package for each version found."""
         max_len = max(len(str(v)) for v, h in self.version_hash_tuples)
         format = "    version(%%-%ds, '%%s')" % (max_len + 2)
-        return '\n'.join(format % ("'%s'" % v, h) for v, h in self.version_hash_tuples)
+        return '\n'.join(
+            format % ("'%s'" % v, h) for v, h in self.version_hash_tuples
+        )
 
 
 class AutotoolsGuess(DefaultGuess):
