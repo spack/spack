@@ -158,11 +158,19 @@ class URLFetchStrategy(FetchStrategy):
             self.digest = digest
 
         self.expand_archive = kwargs.get('expand', True)
+        self.extra_curl_options = kwargs.get('curl_options', [])
+        self._curl = None
 
         self.extension = kwargs.get('extension', None)
 
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
+
+    @property
+    def curl(self):
+        if not self._curl:
+            self._curl = which('curl', required=True)
+        return self._curl
 
     @_needs_stage
     def fetch(self):
@@ -196,15 +204,21 @@ class URLFetchStrategy(FetchStrategy):
             self.url,
         ]
 
+        if spack.insecure:
+            curl_args.append('-k')
+
         if sys.stdout.isatty():
             curl_args.append('-#')  # status bar when using a tty
         else:
             curl_args.append('-sS')  # just errors when not.
 
-        # Run curl but grab the mime type from the http headers
-        headers = spack.curl(*curl_args, output=str, fail_on_error=False)
+        curl_args += self.extra_curl_options
 
-        if spack.curl.returncode != 0:
+        # Run curl but grab the mime type from the http headers
+        curl = self.curl
+        headers = curl(*curl_args, output=str, fail_on_error=False)
+
+        if curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
@@ -212,12 +226,12 @@ class URLFetchStrategy(FetchStrategy):
             if partial_file and os.path.exists(partial_file):
                 os.remove(partial_file)
 
-            if spack.curl.returncode == 22:
+            if curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
                 raise FailedDownloadError(
                     self.url, "URL %s was not found!" % self.url)
 
-            elif spack.curl.returncode == 60:
+            elif curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
                 raise FailedDownloadError(
                     self.url,
@@ -233,7 +247,7 @@ class URLFetchStrategy(FetchStrategy):
                 # error, but print a spack message too
                 raise FailedDownloadError(
                     self.url,
-                    "Curl failed with error %d" % spack.curl.returncode)
+                    "Curl failed with error %d" % curl.returncode)
 
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
@@ -272,6 +286,8 @@ class URLFetchStrategy(FetchStrategy):
                 "URLFetchStrategy couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
+        if not self.extension:
+            self.extension = extension(self.archive_file)
         decompress = decompressor_for(self.archive_file, self.extension)
 
         # Expand all tarballs in their own directory to contain
@@ -299,7 +315,8 @@ class URLFetchStrategy(FetchStrategy):
                     shutil.move(os.path.join(tarball_container, f),
                                 os.path.join(self.stage.path, f))
                 os.rmdir(tarball_container)
-
+        if not files:
+            os.rmdir(tarball_container)
         # Set the wd back to the stage when done.
         self.stage.chdir()
 
@@ -530,6 +547,12 @@ class GitFetchStrategy(VCSFetchStrategy):
     def git(self):
         if not self._git:
             self._git = which('git', required=True)
+
+            # If the user asked for insecure fetching, make that work
+            # with git as well.
+            if spack.insecure:
+                self._git.add_default_env('GIT_SSL_NO_VERIFY', 'true')
+
         return self._git
 
     @_needs_stage

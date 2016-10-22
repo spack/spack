@@ -32,15 +32,13 @@ class Ncview(Package):
 
     version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
 
-    depends_on("netcdf")
-    depends_on("udunits2")
-    depends_on("libpng")
-
-    # OS Dependencies
-    # Ubuntu: apt-get install libxaw7-dev
-    # CentOS 7: yum install libXaw-devel
+    depends_on('netcdf')
+    depends_on('udunits2')
+    depends_on('libpng')
+    depends_on('libxaw')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

@@ -116,6 +116,10 @@ dependencies_dict = {
     # FIXME: Add additional dependencies if required.
     depends_on('scons', type='build')""",
 
+    'bazel': """\
+    # FIXME: Add additional dependencies if required.
+    depends_on('bazel', type='build')""",
+
     'python': """\
     extends('python')
 
@@ -163,6 +167,10 @@ install_dict = {
         # FIXME: Add logic to build and install here.
         scons('prefix={0}'.format(prefix))
         scons('install')""",
+
+    'bazel': """\
+        # FIXME: Add logic to build and install here.
+        bazel()""",
 
     'python': """\
         # FIXME: Add logic to build and install here.
@@ -238,7 +246,8 @@ class BuildSystemGuesser(object):
             (r'/CMakeLists.txt$', 'cmake'),
             (r'/SConstruct$',     'scons'),
             (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'R')
+            (r'/NAMESPACE$',      'R'),
+            (r'/WORKSPACE$',      'bazel')
         ]
 
         # Peek inside the compressed file.

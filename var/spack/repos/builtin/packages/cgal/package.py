@@ -44,13 +44,31 @@ class Cgal(Package):
     variant('debug', default=False,
             description='Builds a debug version of the libraries')
 
+    # ---- See "7 CGAL Libraries" at:
+    # http://doc.cgal.org/latest/Manual/installation.html
+
+    # The CORE library provides exact arithmetic for geometric computations.
+    # See: http://cs.nyu.edu/exact/core_pages/
+    #      http://cs.nyu.edu/exact/core_pages/svn-core.html
+    variant('core', default=False,
+            description='Build the CORE library for algebraic numbers')
+    variant('imageio', default=False,
+            description='Build utilities to read/write image files')
+    variant('demos', default=False,
+            description='Build CGAL demos')
+
     # Essential Third Party Libraries
-    depends_on('boost')
+    depends_on('boost+thread+system')
     depends_on('gmp')
     depends_on('mpfr')
+
+    # Required for CGAL_ImageIO
+    # depends_on('opengl', when='+imageio') # not yet in Spack
     depends_on('zlib')
-    # depends_on('opengl')
-    depends_on('qt@5:')
+
+    # Optional to build CGAL_Qt5 (demos)
+    # depends_on('opengl', when='+demos')   # not yet in Spack
+    depends_on('qt@5:', when='+demos')
 
     # Optional Third Party Libraries
     # depends_on('leda')
@@ -70,20 +88,19 @@ class Cgal(Package):
         # Installation instructions:
         # http://doc.cgal.org/latest/Manual/installation.html
 
-        options = []
-        options.extend(std_cmake_args)
-
-        # CGAL supports only Release and Debug build type. Any other build type
-        # will raise an error at configure time
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-        else:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
-
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS:BOOL=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+        options = std_cmake_args + [
+            # CGAL supports only Release and Debug build type. Any
+            # other build type will raise an error at configure time
+            '-DCMAKE_BUILD_TYPE:STRING=%s' %
+            ('Debug' if '+debug' in spec else 'Release'),
+            '-DBUILD_SHARED_LIBS:BOOL=%s' %
+            ('ON' if '+shared' in spec else 'OFF'),
+            '-DWITH_CGAL_Core:BOOL=%s' %
+            ('YES' if '+core' in spec else 'NO'),
+            '-DWITH_CGAL_ImageIO:BOOL=%s' %
+            ('YES' if '+imageio' in spec else 'NO'),
+            '-DWITH_CGAL_Qt5:BOOL=%s' %
+            ('YES' if '+demos' in spec else 'NO')]
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)

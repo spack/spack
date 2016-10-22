@@ -232,7 +232,8 @@ class ProviderIndex(object):
                     spdict[provided_spec] = opdict[provided_spec]
                     continue
 
-                spdict[provided_spec] += opdict[provided_spec]
+                spdict[provided_spec] = \
+                    spdict[provided_spec].union(opdict[provided_spec])
 
     def remove_provider(self, pkg_name):
         """Remove a provider from the ProviderIndex."""

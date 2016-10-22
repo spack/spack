@@ -45,15 +45,10 @@ class PyScipy(Package):
     # Known not to work with 2.23, 2.25
     depends_on('binutils@2.26:', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=nolink)
+    depends_on('blas')
+    depends_on('lapack')
 
     def install(self, spec, prefix):
-        if 'atlas' in spec:
-            # libatlas.so actually isn't always installed, but this
-            # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(
-                spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
-        else:
-            env['BLAS'] = spec['blas'].blas_libs.joined()
-            env['LAPACK'] = spec['lapack'].lapack_libs.joined()
-
+        # NOTE: scipy picks up Blas/Lapack from numpy, see
+        # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
         setup_py('install', '--prefix={0}'.format(prefix))

@@ -23,12 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 import errno
+import hashlib
 import shutil
 import tempfile
 from urlparse import urljoin
 
 import llnl.util.tty as tty
+import llnl.util.lock
 from llnl.util.filesystem import *
 
 import spack.util.pattern as pattern
@@ -38,6 +41,7 @@ import spack.config
 import spack.fetch_strategy as fs
 import spack.error
 from spack.version import *
+from spack.util.crypto import prefix_bits, bit_length
 
 STAGE_PREFIX = 'spack-stage-'
 
@@ -88,8 +92,12 @@ class Stage(object):
     similar, and are intended to persist for only one run of spack.
     """
 
-    def __init__(self, url_or_fetch_strategy,
-                 name=None, mirror_path=None, keep=False, path=None):
+    """Shared dict of all stage locks."""
+    stage_locks = {}
+
+    def __init__(
+            self, url_or_fetch_strategy,
+            name=None, mirror_path=None, keep=False, path=None, lock=True):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -147,6 +155,20 @@ class Stage(object):
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
 
+        # File lock for the stage directory.  We use one file for all
+        # stage locks. See Spec.prefix_lock for details on this approach.
+        self._lock = None
+        if lock:
+            if self.name not in Stage.stage_locks:
+                sha1 = hashlib.sha1(self.name).digest()
+                lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
+                stage_lock_path = join_path(spack.stage_path, '.lock')
+
+                Stage.stage_locks[self.name] = llnl.util.lock.Lock(
+                    stage_lock_path, lock_id, 1)
+
+            self._lock = Stage.stage_locks[self.name]
+
     def __enter__(self):
         """
         Entering a stage context will create the stage directory
@@ -154,6 +176,8 @@ class Stage(object):
         Returns:
             self
         """
+        if self._lock is not None:
+            self._lock.acquire_write(timeout=60)
         self.create()
         return self
 
@@ -174,6 +198,9 @@ class Stage(object):
         # Delete when there are no exceptions, unless asked to keep.
         if exc_type is None and not self.keep:
             self.destroy()
+
+        if self._lock is not None:
+            self._lock.release_write()
 
     def _need_to_create_path(self):
         """Makes sure nothing weird has happened since the last time we
@@ -416,7 +443,8 @@ class Stage(object):
         """
         # Create the top-level stage directory
         mkdirp(spack.stage_path)
-        remove_dead_links(spack.stage_path)
+        remove_if_dead_link(self.path)
+
         # If a tmp_root exists then create a directory there and then link it
         # in the stage area, otherwise create the stage directory in self.path
         if self._need_to_create_path():
@@ -516,6 +544,10 @@ class StageComposite:
     @property
     def archive_file(self):
         return self[0].archive_file
+
+    @property
+    def mirror_path(self):
+        return self[0].mirror_path
 
 
 class DIYStage(object):

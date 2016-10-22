@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+import os
 import platform
 import shutil
 import sys
@@ -47,6 +48,8 @@ class Charm(Package):
     # Support OpenMPI; see
     # <https://charm.cs.illinois.edu/redmine/issues/1206>
     patch("mpi.patch")
+    # Ignore compiler warnings while configuring
+    patch("strictpass.patch")
 
     # Communication mechanisms (choose exactly one)
     # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
@@ -169,4 +172,19 @@ class Charm(Package):
         # this wouldn't be difficult.
         build = Executable(join_path(".", "build"))
         build(target, version, *options)
+
+        # Charm++'s install script does not copy files, it only creates
+        # symbolic links. Fix this.
+        for dirpath, dirnames, filenames in os.walk(prefix):
+            for filename in filenames:
+                filepath = join_path(dirpath, filename)
+                if os.path.islink(filepath):
+                    tmppath = filepath + ".tmp"
+                    # Skip dangling symbolic links
+                    try:
+                        shutil.copy2(filepath, tmppath)
+                        os.remove(filepath)
+                        os.rename(tmppath, filepath)
+                    except:
+                        pass
         shutil.rmtree(join_path(prefix, "tmp"))

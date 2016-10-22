@@ -32,10 +32,15 @@ class PyMako(Package):
     homepage = "https://pypi.python.org/pypi/mako"
     url = "https://pypi.python.org/packages/source/M/Mako/Mako-1.0.1.tar.gz"
 
+    version('1.0.4', 'c5fc31a323dd4990683d2f2da02d4e20')
     version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
 
-    depends_on('py-setuptools', type='build')
     extends('python')
 
+    depends_on('py-setuptools', type='build')
+    # depends_on('py-mock',   type='test')  # TODO: Add test deptype
+    # depends_on('py-pytest', type='test')  # TODO: Add test deptype
+    depends_on('py-markupsafe@0.9.2:', type=nolink)
+
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

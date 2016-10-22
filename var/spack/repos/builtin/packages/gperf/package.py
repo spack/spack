@@ -39,6 +39,8 @@ class Gperf(Package):
     version('3.0.4', 'c1f1db32fb6598d6a93e6e88796a8632')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        # make('check')  # fails tests
+        make('install')

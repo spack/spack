@@ -41,6 +41,7 @@ class Pango(Package):
     depends_on("pkg-config", type="build")
     depends_on("harfbuzz")
     depends_on("cairo")
+    depends_on("glib")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

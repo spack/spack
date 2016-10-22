@@ -15,6 +15,7 @@
 /share/spack/modules
 /share/spack/lmod
 /TAGS
+*.swp
 /htmlcov
 .coverage
 #*

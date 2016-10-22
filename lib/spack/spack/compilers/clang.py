@@ -23,11 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import os
+import spack
 import spack.compiler as cpr
 from spack.compiler import *
 from spack.util.executable import *
 import llnl.util.tty as tty
 from spack.version import ver
+from shutil import copytree, ignore_patterns
 
 
 class Clang(Compiler):
@@ -107,3 +110,79 @@ class Clang(Compiler):
             cpr._version_cache[comp] = ver
 
         return cpr._version_cache[comp]
+
+    def _find_full_path(self, path):
+        basename = os.path.basename(path)
+
+        if not self.is_apple or basename not in ('clang', 'clang++'):
+            return super(Clang, self)._find_full_path(path)
+
+        xcrun = Executable('xcrun')
+        full_path = xcrun('-f', basename, output=str)
+        return full_path.strip()
+
+    def setup_custom_environment(self, env):
+        """Set the DEVELOPER_DIR environment for the Xcode toolchain.
+
+        On macOS, not all buildsystems support querying CC and CXX for the
+        compilers to use and instead query the Xcode toolchain for what
+        compiler to run. This side-steps the spack wrappers. In order to inject
+        spack into this setup, we need to copy (a subset of) Xcode.app and
+        replace the compiler executables with symlinks to the spack wrapper.
+        Currently, the stage is used to store the Xcode.app copies. We then set
+        the 'DEVELOPER_DIR' environment variables to cause the xcrun and
+        related tools to use this Xcode.app.
+        """
+        super(Clang, self).setup_custom_environment(env)
+
+        if not self.is_apple:
+            return
+
+        xcode_select = Executable('xcode-select')
+        real_root = xcode_select('--print-path', output=str).strip()
+        real_root = os.path.dirname(os.path.dirname(real_root))
+        developer_root = os.path.join(spack.stage_path,
+                                      'xcode-select',
+                                      self.name,
+                                      str(self.version))
+        xcode_link = os.path.join(developer_root, 'Xcode.app')
+
+        if not os.path.exists(developer_root):
+            tty.warn('Copying Xcode from %s to %s in order to add spack '
+                     'wrappers to it. Please do not interrupt.'
+                     % (real_root, developer_root))
+
+            # We need to make a new Xcode.app instance, but with symlinks to
+            # the spack wrappers for the compilers it ships. This is necessary
+            # because some projects insist on just asking xcrun and related
+            # tools where the compiler runs. These tools are very hard to trick
+            # as they do realpath and end up ignoring the symlinks in a
+            # "softer" tree of nothing but symlinks in the right places.
+            copytree(real_root, developer_root, symlinks=True,
+                     ignore=ignore_patterns('AppleTV*.platform',
+                                            'Watch*.platform',
+                                            'iPhone*.platform',
+                                            'Documentation',
+                                            'swift*'))
+
+            real_dirs = [
+                'Toolchains/XcodeDefault.xctoolchain/usr/bin',
+                'usr/bin',
+            ]
+
+            bins = ['c++', 'c89', 'c99', 'cc', 'clang', 'clang++', 'cpp']
+
+            for real_dir in real_dirs:
+                dev_dir = os.path.join(developer_root,
+                                       'Contents',
+                                       'Developer',
+                                       real_dir)
+                for fname in os.listdir(dev_dir):
+                    if fname in bins:
+                        os.unlink(os.path.join(dev_dir, fname))
+                        os.symlink(os.path.join(spack.build_env_path, 'cc'),
+                                   os.path.join(dev_dir, fname))
+
+            os.symlink(developer_root, xcode_link)
+
+        env.set('DEVELOPER_DIR', xcode_link)
