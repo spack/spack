@@ -46,6 +46,9 @@ def decompressor_for(path, extension=None):
             path.endswith('.zip')):
         unzip = which('unzip', required=True)
         return unzip
+    if extension and re.match(r'gz', extension):
+        gunzip = which('gunzip', required=True)
+        return gunzip
     tar = which('tar', required=True)
     tar.add_default_arg('-xf')
     return tar

@@ -545,6 +545,10 @@ class StageComposite:
     def archive_file(self):
         return self[0].archive_file
 
+    @property
+    def mirror_path(self):
+        return self[0].mirror_path
+
 
 class DIYStage(object):
     """Simple class that allows any directory to be a spack stage."""

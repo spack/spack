@@ -31,8 +31,10 @@ class Externalvirtual(Package):
 
     version('1.0', '1234567890abcdef1234567890abcdef')
     version('2.0', '234567890abcdef1234567890abcdef1')
+    version('2.1', '34567890abcdef1234567890abcdef12')
+    version('2.2', '4567890abcdef1234567890abcdef123')
 
-    provides('stuff')
+    provides('stuff', when='@1.0:')
 
     def install(self, spec, prefix):
         pass
