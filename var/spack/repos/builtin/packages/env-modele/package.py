@@ -62,7 +62,7 @@ class EnvModele(Package):
     depends_on('py-git2', when='+python')
     depends_on('py-xarray', when='+python')
     depends_on('py-proj', when='+python')
-    depends_on('py-bsddb3', when='+python')
+#    depends_on('py-bsddb3', when='+python')
     depends_on('py-udunits', when='+python')
 
     def url_for_version(self, version):
