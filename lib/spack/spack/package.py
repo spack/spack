@@ -1186,8 +1186,6 @@ class PackageBase(object):
             )
 
             self.stage.keep = keep_stage
-            self.build_directory = join_path(self.stage.path, 'spack-build')
-            self.source_directory = self.stage.source_path
 
             try:
                 with contextlib.nested(self.stage, self._prefix_write_lock()):
@@ -1768,7 +1766,7 @@ class CMakePackage(PackageBase):
         return 'RelWithDebInfo'
 
     def root_cmakelists_dir(self):
-        return self.source_directory
+        return self.stage.source_path
 
     @property
     def std_cmake_args(self):
@@ -1794,7 +1792,7 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
         return args
 
-    def wdir(self):
+    def build_directory(self):
         return join_path(self.stage.source_path, 'spack-build')
 
     def cmake_args(self):
@@ -1803,16 +1801,16 @@ class CMakePackage(PackageBase):
     def cmake(self, spec, prefix):
         options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
             self.cmake_args()
-        create = not os.path.exists(self.wdir())
-        with working_dir(self.wdir(), create=create):
+        create = not os.path.exists(self.build_directory())
+        with working_dir(self.build_directory(), create=create):
             inspect.getmodule(self).cmake(*options)
 
     def build(self, spec, prefix):
-        with working_dir(self.wdir()):
+        with working_dir(self.build_directory()):
             inspect.getmodule(self).make()
 
     def install(self, spec, prefix):
-        with working_dir(self.wdir()):
+        with working_dir(self.build_directory()):
             inspect.getmodule(self).make('install')
 
     @PackageBase.sanity_check('build')
