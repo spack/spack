@@ -65,17 +65,12 @@ class Openscenegraph(Package):
         with working_dir('spack-build', create=True):
             cmake(
                 '..',
-                '-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
-                '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
                 '-DZLIB_INCLUDE_DIR={0}'.format(spec['zlib'].prefix.include),
                 '-DZLIB_LIBRARY={0}/libz.{1}'.format(spec['zlib'].prefix.lib,
                                                      dso_suffix),
                 '-DBUILD_OSG_APPLICATIONS=OFF',
                 '-DOSG_NOTIFY_DISABLED=ON',
                 '-DLIB_POSTFIX=',
-                '-DFFMPEG_LIBAVCODEC_INCLUDE_DIRS=',
-                '-DFFMPEG_LIBAVFORMAT_INCLUDE_DIRS=',
-                '-DFFMPEG_LIBAVUTIL_INCLUDE_DIRS=',
                 *cmake_args
             )
             make()
