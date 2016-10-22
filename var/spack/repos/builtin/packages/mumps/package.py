@@ -79,8 +79,8 @@ class Mumps(Package):
             raise RuntimeError(
                 'You cannot use the variants parmetis or ptscotch without mpi')
 
-        lapack_blas = self.spec['lapack'].lapack_libs \
-                      + self.spec['blas'].blas_libs
+        lapack_blas = (self.spec['lapack'].lapack_libs +
+                       self.spec['blas'].blas_libs)
         makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
 
         orderings = ['-Dpord']
