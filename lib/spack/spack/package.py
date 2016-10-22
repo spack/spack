@@ -1674,6 +1674,9 @@ class PackageBase(object):
 
 class Package(PackageBase):
     phases = ['install']
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'Package'
     # This will be used as a registration decorator in user
     # packages, if need be
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
@@ -1681,6 +1684,9 @@ class Package(PackageBase):
 
 class EditableMakefile(PackageBase):
     phases = ['edit', 'build', 'install']
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'EditableMakefile'
 
     def wdir(self):
         return self.stage.source_path
@@ -1709,6 +1715,9 @@ class EditableMakefile(PackageBase):
 
 class AutotoolsPackage(PackageBase):
     phases = ['autoreconf', 'configure', 'build', 'install']
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'AutotoolsPackage'
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
@@ -1750,6 +1759,9 @@ class AutotoolsPackage(PackageBase):
 
 class CMakePackage(PackageBase):
     phases = ['cmake', 'build', 'install']
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'CMakePackage'
 
     def build_type(self):
         return 'RelWithDebInfo'
