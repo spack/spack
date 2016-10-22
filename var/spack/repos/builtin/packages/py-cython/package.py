@@ -41,4 +41,4 @@ class PyCython(Package):
     depends_on('binutils')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)
