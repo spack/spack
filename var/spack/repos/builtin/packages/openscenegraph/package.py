@@ -54,16 +54,19 @@ class Openscenegraph(Package):
             '-DDYNAMIC_OPENTHREADS={0}'.format(shared_status),
         ])
 
-        source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, 'spack-build')
-        with working_dir(build_directory, create=True):
-            cmake(
-                source_directory,
-                '-DCMAKE_INSTALL_PREFIX={0}'.format(prefix),
-                '-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
-                '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
+        # NOTE: This is necessary in order to allow OpenSceneGraph to compile
+        # despite containing a number of implicit bool to int conversions.
+        if spec.satisfies('%gcc'):
+            cmake_args.extend([
                 '-DCMAKE_C_FLAGS=-fpermissive',
                 '-DCMAKE_CXX_FLAGS=-fpermissive',
+            ])
+
+        with working_dir('spack-build', create=True):
+            cmake(
+                '..',
+                '-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
+                '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
                 '-DZLIB_INCLUDE_DIR={0}'.format(spec['zlib'].prefix.include),
                 '-DZLIB_LIBRARY={0}/libz.{1}'.format(spec['zlib'].prefix.lib,
                                                      dso_suffix),
