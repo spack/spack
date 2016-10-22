@@ -56,6 +56,7 @@ class Ibmisc(CMakePackage):
     def configure_args(self):
         spec = self.spec
         return [
+            '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
             '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
             '-DUSE_BLITZ=%s' % ('YES' if '+blitz' in spec else 'NO'),
