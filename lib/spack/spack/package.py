@@ -1263,13 +1263,9 @@ class PackageBase(object):
             # A StopIteration exception means that do_install
             # was asked to stop early from clients
             tty.msg(e.message)
-        except Exception:
-            tty.warn("Keeping install prefix in place despite error.",
-                     "Spack will think this package is installed. " +
-                     "Manually remove this directory to fix:",
-                     self.prefix,
-                     wrap=False)
-            raise
+            tty.msg(
+                'Package stage directory : {0}'.format(self.stage.source_path)
+            )
         finally:
             # Remove the install prefix if anything went wrong during install.
             if not keep_prefix:
