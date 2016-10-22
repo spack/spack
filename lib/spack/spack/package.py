@@ -1181,8 +1181,9 @@ class PackageBase(object):
                 else:
                     self.do_stage()
 
-            tty.msg("Building {0} [{1}]".format(
-                self.name, type(self).__base__))
+            tty.msg(
+                'Building {0} [{1}]'.format(self.name, self.build_system_class)
+            )
 
             self.stage.keep = keep_stage
             self.build_directory = join_path(self.stage.path, 'spack-build')
