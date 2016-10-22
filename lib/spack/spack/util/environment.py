@@ -25,6 +25,27 @@
 import os
 
 
+def filter_system_paths(paths):
+    """
+    Filter system paths and return a filtered array.
+
+    Arguments:
+    paths -- array of paths
+    """
+    system_paths = ['/usr']
+    filtered = []
+    for p in paths:
+        take = True
+        for s in system_paths:
+            # if p starts from s -> filter
+            if p.startswith(s):
+                take = False
+        if take:
+            filtered.append(p)
+
+    return filtered
+
+
 def get_path(name):
     path = os.environ.get(name, "").strip()
     if path:

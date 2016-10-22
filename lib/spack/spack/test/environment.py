@@ -30,6 +30,7 @@ from llnl.util.filesystem import join_path
 from spack.environment import EnvironmentModifications
 from spack.environment import SetEnv, UnsetEnv
 from spack.environment import RemovePath, PrependPath, AppendPath
+from spack.util.environment import filter_system_paths
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -58,6 +59,13 @@ class EnvironmentTest(unittest.TestCase):
         env.unset('UNSET_ME')
         env.apply_modifications()
         self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
+
+    def test_filter_system_paths(self):
+        paths = ['/path/to/1', 'path/to/2', '/usr', 'path/to/3', '/usr/lib',
+                 '/usr/bin/']
+        filtered = filter_system_paths(paths)
+        self.assertEqual(filtered,
+                         ['/path/to/1', 'path/to/2', 'path/to/3'])
 
     def test_set_path(self):
         env = EnvironmentModifications()
