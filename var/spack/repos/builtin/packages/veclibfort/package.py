@@ -61,3 +61,10 @@ class Veclibfort(Package):
 
         make('all')
         make('PREFIX=%s' % prefix, 'install')
+
+        # test
+        fc = which('fc')
+        flags = ['-o', 'tester', '-O', 'tester.f90']
+        flags.extend(self.lapack_libs.ld_flags.split())
+        fc(*flags)
+        Executable('./tester')()
