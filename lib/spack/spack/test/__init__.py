@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import signal
 import sys
 import os
 
@@ -89,6 +90,26 @@ def list_tests():
     return test_names
 
 
+class InterruptRecorder(object):
+    """Provides functionality to track instances where library code ignores
+    interrupt signals.
+    """
+    signal = None
+
+    @staticmethod
+    def initialize():
+        InterruptRecorder.signal = False
+
+        def record_interrupt(signal, frame):
+            InterruptRecorder.signal = True
+            raise KeyboardInterrupt
+        signal.signal(signal.SIGINT, record_interrupt)
+
+    @staticmethod
+    def interrupted():
+        return InterruptRecorder.signal
+
+
 def run(names, outputDir, verbose=False):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
@@ -106,6 +127,8 @@ def run(names, outputDir, verbose=False):
                 colify(sorted(test_names), indent=4)
                 sys.exit(1)
 
+    InterruptRecorder.initialize()
+
     tally = Tally()
     for test in names:
         module = 'spack.test.' + test
@@ -122,6 +145,10 @@ def run(names, outputDir, verbose=False):
                         "--xunit-file={0}".format(xmlOutputPath)]
         argv = [""] + runOpts + [module]
         nose.run(argv=argv, addplugins=[tally])
+
+        if InterruptRecorder.interrupted():
+            tty.warn("Tests interrupted")
+            break
 
     succeeded = not tally.failCount and not tally.errorCount
     tty.msg("Tests Complete.", "%5d tests run" % tally.numberOfTestsRun,
