@@ -33,6 +33,8 @@ class Ibmisc(CMakePackage):
             description='Compile utilities for Google Test library')
     variant('python', default=True,
             description='Compile utilities for use with Python/Cython')
+    variant('docs', default=False,
+            description='Build the documentation')
 
     extends('python')
 
@@ -49,7 +51,7 @@ class Ibmisc(CMakePackage):
 
     # Build dependencies
     depends_on('cmake', type='build')
-    depends_on('doxygen', type='build')
+    depends_on('doxygen', when='+docs', type='build')
 
     def configure_args(self):
         spec = self.spec
@@ -60,4 +62,5 @@ class Ibmisc(CMakePackage):
             '-DUSE_NETCDF=%s' % ('YES' if '+netcdf' in spec else 'NO'),
             '-DUSE_BOOST=%s' % ('YES' if '+boost' in spec else 'NO'),
             '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
-            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO'),
+            '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO')]
