@@ -23,17 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import spack.build_environment
-import llnl.util.tty as tty
-import os
-import shutil
+
 
 class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
     url      = "https://github.com/pism/pism/tarball/v123"
-    #https://github.com/pism/pism/archive/v0.7.3.tar.gz
+    # https://github.com/pism/pism/archive/v0.7.3.tar.gz
 
     version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
 
@@ -51,7 +48,7 @@ class Pism(CMakePackage):
     variant('icebin', default=False,
             description='Build classes needed by IceBin')
     variant('proj', default=True,
-            description='Use Proj.4 to compute cell areas, ' \
+            description='Use Proj.4 to compute cell areas, '
             'longitudes, and latitudes.')
     variant('parallel-netcdf4', default=False,
             description='Enables parallel NetCDF-4 I/O.')
@@ -61,7 +58,7 @@ class Pism(CMakePackage):
             description='Enables parallel HDF5 I/O.')
     # variant('tao', default=False,
     #         description='Use TAO in inverse solvers.')
-    variant('docs', default=False, description=
+    variant('docs', default=False, description=''
             'Build PISM documentation (requires LaTeX and Doxygen)')
 
     # CMake build options not transferred to Spack variants
@@ -137,17 +134,17 @@ class Pism(CMakePackage):
 #
 # > Do you have handy a table of which versions of PETSc are required
 # > for which versions of PISM?
-# 
+#
 # We don't. The installation manual [1] specifies the minimum PETSc
 # version for the latest "stable" release (currently PETSc 3.3). The
 # stable PISM version should support all PETSc versions starting from the
 # one specified in the manual and up to the latest PETSc release.
-# 
+#
 # The current development PISM version should be built with the latest
 # PETSc release at the time (the "maint" branch of PETSc).
-# 
+#
 # Thanks to Git it is relatively easy to find this info, though:
-# 
+#
 # | PISM version | PETSc version |
 # |--------------+---------------|
 # |          0.7 | 3.3 and later |

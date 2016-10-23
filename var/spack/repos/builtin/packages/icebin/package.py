@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Icebin(CMakePackage):
     """Regridding/Coupling library for GCM + Ice Sheet Model"""
 
@@ -69,7 +70,6 @@ class Icebin(CMakePackage):
     depends_on('ibmisc+proj+blitz+netcdf+boost+udunits2+python')
     depends_on('proj')
     depends_on('eigen')
-
 
     depends_on('cmake', type='build')
     depends_on('doxygen', type='build')

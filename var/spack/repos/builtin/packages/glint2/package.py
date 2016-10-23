@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Glint2(CMakePackage):
     """Regridding/Coupling library for GCM + Ice Sheet Model"""
 
@@ -65,7 +66,6 @@ class Glint2(CMakePackage):
     # Build dependencies
     depends_on('cmake', type='build')
     depends_on('doxygen', type='build')
-
 
     # Dummy dependency to work around Spack bug
     depends_on('openblas')

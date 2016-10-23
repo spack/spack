@@ -49,17 +49,16 @@ class Issm(Package):
     depends_on("mumps")
     depends_on("metis")
 
-    #!! depends_on("m1qn3")
-    #!! depends_on("triangle")
+    # depends_on("m1qn3")
+    # depends_on("triangle")
 
     depends_on("python@2:", when="+python")
     depends_on("py-nose", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-scipy", when="+python")
-    #!! depends_on("py-netcdf", when="+python")
+    # depends_on("py-netcdf", when="+python")
 
     depends_on("matlab", when="+matlab")
-
 
     def install(self, spec, prefix):
         mpi_dir = spec['mpi'].prefix
