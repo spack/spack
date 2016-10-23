@@ -13,8 +13,6 @@ class Ibmisc(CMakePackage):
         git='https://github.com/citibeth/ibmisc.git',
         branch='develop')
 
-
-
     variant('everytrace', default=False,
             description='Report errors through Everytrace')
     variant('proj', default=True,
@@ -66,6 +64,7 @@ class Ibmisc(CMakePackage):
             '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO')]
 
         if '+python' in spec:
-            args.append('-DCYTHON_EXECUTABLE=%s' % join_path(spec['py-cython'].prefix.bin, 'cython'))
+            args.append('-DCYTHON_EXECUTABLE=%s' %
+                join_path(spec['py-cython'].prefix.bin, 'cython'))
 
         return args
