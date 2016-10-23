@@ -37,6 +37,7 @@ class Ibmisc(CMakePackage):
             description='Build the documentation')
 
     extends('python')
+    depends_on('python@3:')    # Needed for the build...
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')
@@ -46,7 +47,7 @@ class Ibmisc(CMakePackage):
     depends_on('udunits2', when='+udunits2')
     depends_on('googletest', when='+googletest', type='build')
     depends_on('py-cython', when='+python', type=nolink)
-    depends_on('py-numpy', when='+python', type=nolink)
+    depends_on('py-numpy', when='+python')
     depends_on('boost', when='+boost')
 
     # Build dependencies
