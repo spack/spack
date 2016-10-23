@@ -55,7 +55,7 @@ class Ibmisc(CMakePackage):
 
     def configure_args(self):
         spec = self.spec
-        return [
+        args = [
             '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
             '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
@@ -65,3 +65,8 @@ class Ibmisc(CMakePackage):
             '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
             '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO'),
             '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO')]
+
+        if '+python' in spec:
+            args.append('-DCYTHON_EXECUTABLE=%s' % join_path(spec['py-cython'].prefix.bin, 'cython'))
+
+        return args
