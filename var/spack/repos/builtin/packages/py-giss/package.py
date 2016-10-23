@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyGiss(Package):
     """Misc. Python Stuff."""
 
@@ -24,4 +25,4 @@ class PyGiss(Package):
     depends_on('py-six')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        python('setup.py', 'install', '--prefix=%s' % prefix)
