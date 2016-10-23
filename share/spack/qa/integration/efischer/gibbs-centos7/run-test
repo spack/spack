@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+
+export REALHOME=$HOME
+export HOME=`pwd`
+export SPACK_ROOT=`pwd`/../../../../../..
+export SPACK_ROOT=`realpath $SPACK_ROOT`
+
+
+module purge
+export PATH=$SPACK_ROOT/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/git/bin
+export PYTHONPATH=
+
+spack spec env-modele
+
+

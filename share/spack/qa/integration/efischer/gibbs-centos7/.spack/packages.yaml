@@ -1,0 +1,85 @@
+packages:
+    python:
+        # Lie about the version in the system, so it's new enough for Spack to recognize.
+        paths:
+            python@2.7.8: /        # Spack can't install Python2, I don't know why
+        version: [3.5.2,2.7.8]
+
+    py-cython:
+        version: [0.23.5]
+    py-proj:
+        version: [1.9.5.1.1]    # Normal released version 1.9.5.1 is buggy
+    py-matplotlib:
+        variants: +gui +ipython
+    py-numpy:
+        variants: +blas +lapack
+
+    ibmisc:
+        version: [develop]
+        variants: +python +netcdf
+    icebin:
+        version: [develop]
+        variants: +gridgen +python ~coupler ~pism
+    py-giss:
+        version: [develop]
+
+    # Running without dynamic ice
+    modele:
+        version: [landice]
+    modele-utils:
+        version: [cmake]
+
+#    # Running with dynamic ice
+#    modele:
+#        version: [glint2]
+#        variants: [+couler +pism]
+
+    pism:
+        version: [glint2]
+    glint2:
+        version: [glint2]
+        variants: +coupler +pism
+
+    everytrace:
+        version: [develop]
+    eigen:
+        variants: ~suitesparse
+    netcdf:
+        variants: +mpi
+
+
+    openmpi:
+        version: [1.10.3]
+
+    py-pyside:
+        version: [1.2.4]
+
+    # Recommended for security reasons
+    # Do not install OpenSSL as non-root user.
+    openssl:
+        paths:
+            openssl@system: /false/path
+        version: [system]
+        buildable: False
+
+#    # Matplotlib uses the system libpng anyway
+#    libpng:
+#        paths:
+#            libpng@1.5.13: /false/path
+#        version: [1.5.13]
+#        buildable: False
+
+    # Recommended, unless your system doesn't provide Qt4
+    qt:
+        paths:
+            qt@4.8.5: /false/path
+        version: [4.8.5]
+        buildable: False
+
+    all:
+        compiler: [gcc@4.9.3]
+        providers:
+            mpi: [openmpi]
+            blas: [openblas]
+            lapack: [openblas]
+
