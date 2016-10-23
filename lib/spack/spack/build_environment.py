@@ -135,7 +135,10 @@ def load_module(mod):
             exec(compile(modulecmd('unload', text[i + 1], output=str,
                                    error=str), '<string>', 'exec'))
     # Load the module now that there are no conflicts
-    load = modulecmd('load', mod, output=str, error=str)
+    # Intel compiler on viz cluster print message to stderr and that
+    # causes spack to abort! Reported upstream!
+    # load = modulecmd('load', mod, output=str, error=str)
+    load = modulecmd('load', mod, output=str)
     exec(compile(load, '<string>', 'exec'))
 
 
