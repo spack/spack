@@ -148,6 +148,12 @@ def setup(self, args):
 
         spec.concretize()
         package = spack.repo.get(spec)
+        if not isinstance(package, spack.CMakePackage):
+            tty.die(
+                'Support for {0} derived packages not yet implemented'.format(
+                    package.build_system_class
+                )
+            )
 
         # It's OK if the package is already installed.
 
@@ -156,9 +162,5 @@ def setup(self, args):
 
         # TODO: make this an argument, not a global.
         spack.do_checksum = False
-
-        if not isinstance(package, spack.CMakePackage):
-            raise RuntimeError(
-                'Support for {0} not yet implemented'.format(type(package)))
 
         write_spconfig(package)
