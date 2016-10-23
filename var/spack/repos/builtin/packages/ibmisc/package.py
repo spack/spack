@@ -65,6 +65,6 @@ class Ibmisc(CMakePackage):
 
         if '+python' in spec:
             args.append('-DCYTHON_EXECUTABLE=%s' %
-                join_path(spec['py-cython'].prefix.bin, 'cython'))
+                        join_path(spec['py-cython'].prefix.bin, 'cython'))
 
         return args
