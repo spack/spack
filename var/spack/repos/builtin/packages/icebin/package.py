@@ -47,9 +47,8 @@ class Icebin(CMakePackage):
     depends_on('eigen')
 
 
-    # Build dependencies
-    depends_on('cmake')
-    depends_on('doxygen')
+    depends_on('cmake', type='build')
+    depends_on('doxygen', type='build')
 
     def configure_args(self):
         spec = self.spec
