@@ -5,9 +5,15 @@ class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
 
     homepage = "https://github.com/citibeth/ibmisc"
-    url      = "https://github.com/citibeth/ibmisc/tarball/123"
+    url      = "https://github.com/citibeth/ibmisc/tarball/v0.1.3"
 
-    version('0.1.0', '12f2a32432a11db48e00217df18e59fa')
+    version('0.1.3', 'bb1876a8d1f0710c1a031280c0fc3f2e')
+
+    version('develop',
+        git='https://github.com/citibeth/ibmisc.git',
+        branch='develop')
+
+
 
     variant('everytrace', default=False,
             description='Report errors through Everytrace')
@@ -48,7 +54,7 @@ class Ibmisc(CMakePackage):
 
     def configure_args(self):
         spec = self.spec
-        return [
+        args = [
             '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
             '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
@@ -58,3 +64,8 @@ class Ibmisc(CMakePackage):
             '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
             '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO'),
             '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO')]
+
+        if '+python' in spec:
+            args.append('-DCYTHON_EXECUTABLE=%s' % join_path(spec['py-cython'].prefix.bin, 'cython'))
+
+        return args
