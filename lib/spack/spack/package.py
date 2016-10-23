@@ -38,7 +38,6 @@ import copy
 import functools
 import inspect
 import os
-import platform
 import re
 import sys
 import textwrap
@@ -48,7 +47,6 @@ from StringIO import StringIO
 import llnl.util.lock
 import llnl.util.tty as tty
 import spack
-import spack.build_environment
 import spack.compilers
 import spack.directives
 import spack.error
@@ -1695,159 +1693,6 @@ class Package(PackageBase):
     build_system_class = 'Package'
     # This will be used as a registration decorator in user
     # packages, if need be
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
-
-
-class EditableMakefile(PackageBase):
-    phases = ['edit', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = 'EditableMakefile'
-
-    def wdir(self):
-        return self.stage.source_path
-
-    def build_args(self):
-        return []
-
-    def install_args(self):
-        return []
-
-    def edit(self, spec, prefix):
-        raise NotImplementedError('\'edit\' function not implemented')
-
-    def build(self, spec, prefix):
-        args = self.build_args()
-        with working_dir(self.wdir()):
-            inspect.getmodule(self).make(*args)
-
-    def install(self, spec, prefix):
-        args = self.install_args() + ['install']
-        with working_dir(self.wdir()):
-            inspect.getmodule(self).make(*args)
-
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
-
-
-class AutotoolsPackage(PackageBase):
-    phases = ['autoreconf', 'configure', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = 'AutotoolsPackage'
-
-    def autoreconf(self, spec, prefix):
-        """Not needed usually, configure should be already there"""
-        pass
-
-    @PackageBase.sanity_check('autoreconf')
-    def is_configure_or_die(self):
-        if not os.path.exists('configure'):
-            raise RuntimeError(
-                'configure script not found in {0}'.format(os.getcwd()))
-
-    def configure_args(self):
-        return []
-
-    def configure(self, spec, prefix):
-        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-        inspect.getmodule(self).configure(*options)
-
-    def build(self, spec, prefix):
-        inspect.getmodule(self).make()
-
-    def install(self, spec, prefix):
-        inspect.getmodule(self).make('install')
-
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def _run_default_function(self):
-        try:
-            fn = getattr(self, 'check')
-            tty.msg('Trying default sanity checks [check]')
-            fn()
-        except AttributeError:
-            tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
-
-    def check(self):
-        self._if_make_target_execute('test')
-        self._if_make_target_execute('check')
-
-    # This will be used as a registration decorator in user
-    # packages, if need be
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
-
-
-class CMakePackage(PackageBase):
-    phases = ['cmake', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = 'CMakePackage'
-
-    def build_type(self):
-        return 'RelWithDebInfo'
-
-    def root_cmakelists_dir(self):
-        return self.stage.source_path
-
-    @property
-    def std_cmake_args(self):
-        # standard CMake arguments
-        return CMakePackage._std_args(self)
-
-    @staticmethod
-    def _std_args(pkg):
-        try:
-            build_type = pkg.build_type()
-        except AttributeError:
-            build_type = 'RelWithDebInfo'
-
-        args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
-                '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
-        if platform.mac_ver()[0]:
-            args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
-
-        # Set up CMake rpath
-        args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ':'.join(spack.build_environment.get_rpaths(pkg))
-        args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
-        return args
-
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'spack-build')
-
-    def cmake_args(self):
-        return []
-
-    def cmake(self, spec, prefix):
-        options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
-            self.cmake_args()
-        create = not os.path.exists(self.build_directory())
-        with working_dir(self.build_directory(), create=create):
-            inspect.getmodule(self).cmake(*options)
-
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory()):
-            inspect.getmodule(self).make()
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory()):
-            inspect.getmodule(self).make('install')
-
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def _run_default_function(self):
-        try:
-            fn = getattr(self, 'check')
-            tty.msg('Trying default build sanity checks [check]')
-            fn()
-        except AttributeError:
-            tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
-
-    def check(self):
-        with working_dir(self.build_directory()):
-            self._if_make_target_execute('test')
-
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
 
 

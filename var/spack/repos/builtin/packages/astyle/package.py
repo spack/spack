@@ -37,11 +37,11 @@ class Astyle(EditableMakefile):
 
     parallel = False
 
-    def wdir(self):
+    def build_directory(self):
         return join_path(self.stage.source_path, 'build', self.compiler.name)
 
     def edit(self, spec, prefix):
-        makefile = join_path(self.wdir(), 'Makefile')
+        makefile = join_path(self.build_directory(), 'Makefile')
         filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
 
     def install_args(self):

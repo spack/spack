@@ -196,7 +196,9 @@ __all__ = ['Package',
            'alldeps',
            'nolink']
 from spack.package import Package, ExtensionConflictError
-from spack.package import CMakePackage, AutotoolsPackage, EditableMakefile
+from spack.build_systems.editable_makefile import EditableMakefile
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
 from spack.version import Version, ver
 from spack.spec import DependencySpec, alldeps, nolink
 from spack.multimethod import when
