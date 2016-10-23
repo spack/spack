@@ -44,26 +44,33 @@ class Nwchem(Package):
     depends_on('python@2.7:2.8', type=nolink)
 
     # patches for 6.6-27746:
-    # TODO: add support for achived patches, i.e.
-    # http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz
-    patch('Config_libs66.patch', when='@6.6', level=0)
-    patch('Gcc6_optfix.patch', when='@6.6', level=0)
-    patch('Util_gnumakefile.patch', when='@6.6', level=0)
-    patch('cosmo_dftprint.patch', when='@6.6', level=0)
-    patch('cosmo_meminit.patch', when='@6.6', level=0)
-    patch('dplot_tolrho.patch', when='@6.6', level=0)
-    patch('driver_smalleig.patch', when='@6.6', level=0)
-    patch('ga_argv.patch', when='@6.6', level=0)
-    patch('ga_defs.patch', when='@6.6', level=0)
-    patch('raman_displ.patch', when='@6.6', level=0)
-    patch('sym_abelian.patch', when='@6.6', level=0)
-    patch('tddft_mxvec20.patch', when='@6.6', level=0)
-    patch('tools_lib64.patch', when='@6.6', level=0)
-    patch('txs_gcc6.patch', when='@6.6', level=0)
-    patch('Util_getppn.patch', when='@6.6', level=0)
-    patch('xccvs98.patch', when='@6.6', level=0)
-    patch('zgesdv.patch', when='@6.6', level=0)
-    patch('Gcc6_macs_optfix.patch', when='@6.6', level=0)
+    urls_for_patches = {
+        '@6.6': [
+            ('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz', 'f91c6a04df56e228fe946291d2f38c9a'),
+            ('http://www.nwchem-sw.org/images/Tools_lib64.patch.gz', 'b71e8dbad27f1c97b60a53ec34d3f6e0'),
+            ('http://www.nwchem-sw.org/images/Config_libs66.patch.gz', 'cc4be792e7b5128c3f9b7b1167ade2cf'),
+            ('http://www.nwchem-sw.org/images/Cosmo_meminit.patch.gz', '1d94685bf3b72d8ecd40c46334348ca7'),
+            ('http://www.nwchem-sw.org/images/Sym_abelian.patch.gz', 'b19cade61c787916a73a4aaf6e2445d6'),
+            ('http://www.nwchem-sw.org/images/Xccvs98.patch.gz', 'b9aecc516a3551dcf871cb2f066598cb'),
+            ('http://www.nwchem-sw.org/images/Dplot_tolrho.patch.gz', '0a5bdad63d2d0ffe46b28db7ad6d9cec'),
+            ('http://www.nwchem-sw.org/images/Driver_smalleig.patch.gz', 'c3f609947220c0adb524b02c316b5564'),
+            ('http://www.nwchem-sw.org/images/Ga_argv.patch.gz', '7a665c981cfc17187455e1826f095f6f'),
+            ('http://www.nwchem-sw.org/images/Raman_displ.patch.gz', 'ed334ca0b2fe81ce103ef8cada990c4c'),
+            ('http://www.nwchem-sw.org/images/Ga_defs.patch.gz', '0c3cab4d5cbef5acac16ffc5e6f869ef'),
+            ('http://www.nwchem-sw.org/images/Zgesvd.patch.gz', '8fd5a11622968ef4351bd3d5cddce8f2'),
+            ('http://www.nwchem-sw.org/images/Cosmo_dftprint.patch.gz', '64dcf27f3c6ced2cadfb504fa66e9d08'),
+            ('http://www.nwchem-sw.org/images/Txs_gcc6.patch.gz', '56595a7252da051da13f94edc54fe059'),
+            ('http://www.nwchem-sw.org/images/Gcc6_optfix.patch.gz', 'c6642c21363c09223784b47b8636047d'),
+            ('http://www.nwchem-sw.org/images/Util_gnumakefile.patch.gz', 'af74ea2e32088030137001ce5cb047c5'),
+            ('http://www.nwchem-sw.org/images/Util_getppn.patch.gz', '8dec8ee198bf5ec4c3a22a6dbf31683c'),
+            ('http://www.nwchem-sw.org/images/Gcc6_macs_optfix.patch.gz', 'a891a2713aac8b0423c8096461c243eb'),
+            ('http://www.nwchem-sw.org/images/Notdir_fc.patch.gz', '2dc997d4ab3719ac7964201adbc6fd79')
+        ]
+    }
+    # Iterate over patches
+    for condition, urls in urls_for_patches.iteritems():
+        for url, md5 in urls:
+            patch(url, when=condition, level=0, md5=md5)
 
     def install(self, spec, prefix):
         scalapack = spec['scalapack'].scalapack_libs

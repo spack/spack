@@ -33,10 +33,6 @@ class Lrslib(Package):
     homepage = "http://cgm.cs.mcgill.ca/~avis/C/lrs.html"
     url      = "http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-062.tar.gz"
 
-    def url_for_version(self, version):
-        return ("http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-%s.tar.gz" %
-                ('0' + str(version).replace('.', '')))
-
     version('6.2', 'be5da7b3b90cc2be628dcade90c5d1b9')
     version('6.1', '0b3687c8693cd7d1f234a3f65e147551')
     version('6.0', 'd600a2e62969ad03f7ab2f85f1b3709c')
@@ -50,6 +46,10 @@ class Lrslib(Package):
     depends_on("libtool", type="build")
 
     patch("Makefile.spack.patch")
+
+    def url_for_version(self, version):
+        url = "http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-0{0}.tar.gz"
+        return url.format(version.joined)
 
     def install(self, spec, prefix):
         # The Makefile isn't portable; use our own instead

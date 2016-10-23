@@ -259,7 +259,7 @@ def provides(pkg, *specs, **kwargs):
 
 
 @directive('patches')
-def patch(pkg, url_or_filename, level=1, when=None):
+def patch(pkg, url_or_filename, level=1, when=None, **kwargs):
     """Packages can declare patches to apply to source.  You can
        optionally provide a when spec to indicate that a particular
        patch should only be applied when the package's spec meets
@@ -271,7 +271,7 @@ def patch(pkg, url_or_filename, level=1, when=None):
     cur_patches = pkg.patches.setdefault(when_spec, [])
     # if this spec is identical to some other, then append this
     # patch to the existing list.
-    cur_patches.append(Patch(pkg, url_or_filename, level))
+    cur_patches.append(Patch.create(pkg, url_or_filename, level, **kwargs))
 
 
 @directive('variants')

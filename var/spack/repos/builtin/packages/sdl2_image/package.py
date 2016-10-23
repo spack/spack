@@ -22,31 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Cdd(Package):
-    """The program cdd+ (cdd, respectively) is a C++ (ANSI C)
-    implementation of the Double Description Method [MRTT53] for
-    generating all vertices (i.e. extreme points) and extreme rays of
-    a general convex polyhedron given by a system of linear
-    inequalities"""
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
-    url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-061a.tar.gz"
+class Sdl2Image(Package):
+    """SDL is designed to provide the bare bones of creating a graphical
+    program. """
 
-    version('0.61a', '22c24a7a9349dd7ec0e24531925a02d9')
+    homepage = "http://sdl.beuc.net/sdl.wiki/SDL_image"
+    url      = "https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz"
 
-    depends_on("libtool", type="build")
+    version('2.0.1', 'd94b94555ba022fa249a53a021dc3606')
 
-    patch("Makefile.spack.patch")
-
-    def url_for_version(self, version):
-        url = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-{0}.tar.gz"
-        return url.format(version.joined)
+    depends_on('sdl2')
 
     def install(self, spec, prefix):
-        # The Makefile isn't portable; use our own instead
-        makeargs = ["-f", "Makefile.spack", "PREFIX=%s" % prefix]
-        make(*makeargs)
-        make("install", *makeargs)
+        configure('--prefix={0}'.format(prefix))
+
+        make()
+        make('install')

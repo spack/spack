@@ -30,7 +30,7 @@ class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
 
-    version('6.1', '1e29d9d435b7ccc2842a320150b28ba4')
+    version('6.1', 'f49bd548e0d5e2458b2dabb3ee01341a')
     version('6.0', '3fa1e7f7b51ef8a23e6c687cdcad9f96')
 
     # Licensing
@@ -43,8 +43,8 @@ class Nag(Package):
     def url_for_version(self, version):
         # TODO: url and checksum are architecture dependent
         # TODO: We currently only support x86_64
-        return 'http://www.nag.com/downloads/impl/npl6a%sna_amd64.tgz' % str(
-            version).replace('.', '')
+        url = 'http://www.nag.com/downloads/impl/npl6a{0}na_amd64.tgz'
+        return url.format(version.joined)
 
     def install(self, spec, prefix):
         # Set installation directories

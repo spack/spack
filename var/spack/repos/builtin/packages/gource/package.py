@@ -22,31 +22,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Cdd(Package):
-    """The program cdd+ (cdd, respectively) is a C++ (ANSI C)
-    implementation of the Double Description Method [MRTT53] for
-    generating all vertices (i.e. extreme points) and extreme rays of
-    a general convex polyhedron given by a system of linear
-    inequalities"""
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
-    url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-061a.tar.gz"
+class Gource(Package):
+    """Software version control visualization."""
 
-    version('0.61a', '22c24a7a9349dd7ec0e24531925a02d9')
+    homepage = "http://gource.io"
+    url      = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
 
-    depends_on("libtool", type="build")
+    version('0.44', '79cda1bfaad16027d59cce55455bfab88b57c69d')
 
-    patch("Makefile.spack.patch")
+    depends_on('automake',   type='build')
+    depends_on('autoconf',   type='build')
+    depends_on('libtool',    type='build')
+    depends_on('glm',        type='build')
+    depends_on('pkg-config', type='build')
 
-    def url_for_version(self, version):
-        url = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-{0}.tar.gz"
-        return url.format(version.joined)
+    depends_on('freetype@2.0:')
+    depends_on('pcre')
+    depends_on('boost@1.46:+filesystem+system')
+    depends_on('glew')
+    depends_on('jpeg')
+    depends_on('libpng')
+    depends_on('pcre')
+    depends_on('sdl2')
+    depends_on('sdl2_image')
 
     def install(self, spec, prefix):
-        # The Makefile isn't portable; use our own instead
-        makeargs = ["-f", "Makefile.spack", "PREFIX=%s" % prefix]
-        make(*makeargs)
-        make("install", *makeargs)
+        make_args = ['--prefix=%s' % prefix,
+                     '--disable-dependency-tracking',
+                     '--without-x',
+                     '--with-boost=%s' % spec['boost'].prefix]
+
+        autoreconf('-i')
+        configure(*make_args)
+        make()
+
+        make("install",
+             parallel=False)
