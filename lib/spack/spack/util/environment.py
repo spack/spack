@@ -37,16 +37,16 @@ def filter_system_paths(paths):
 
 def filter_system_bin_paths(paths):
     filtered = []
-    back = []
+    bins = []
     # filter out system bin paths
     for p in paths:
         if p in system_bins:
-            back.append(p)
+            bins.append(p)
         else:
             filtered.append(p)
 
     # add to the begining because PATH is constructed with prepend_path(item)
-    filtered[:0] = back
+    filtered[:0] = bins
 
     return filtered
 
