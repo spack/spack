@@ -24,24 +24,30 @@
 ##############################################################################
 import os
 
+system_paths = ['/', '/usr/', '/usr/local']
+suffixes = ['lib', 'lib64', 'include']
+system_dirs = sum(([os.path.join(p, s)
+                    for s in suffixes] for p in system_paths), [])
+system_bins = [os.path.join(p, 'bin') for p in system_paths]
+
 
 def filter_system_paths(paths):
-    """
-    Filter system paths and return a filtered array.
+    return [p for p in paths if not any(p in s for s in system_dirs)]
 
-    Arguments:
-    paths -- array of paths
-    """
-    system_paths = ['/usr']
+
+def filter_system_bin_paths(paths):
     filtered = []
+    back = []
+    # filter out system bin paths
     for p in paths:
-        take = True
-        for s in system_paths:
-            # if p starts from s -> filter
-            if p.startswith(s):
-                take = False
-        if take:
+        if p in system_bins:
+            back.append(p)
+        else:
             filtered.append(p)
+
+    # add to the end
+    for p in back:
+        filtered.append(p)
 
     return filtered
 

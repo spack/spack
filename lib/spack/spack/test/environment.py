@@ -30,7 +30,7 @@ from llnl.util.filesystem import join_path
 from spack.environment import EnvironmentModifications
 from spack.environment import SetEnv, UnsetEnv
 from spack.environment import RemovePath, PrependPath, AppendPath
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, filter_system_bin_paths
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -61,11 +61,39 @@ class EnvironmentTest(unittest.TestCase):
         self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
 
     def test_filter_system_paths(self):
-        paths = ['/path/to/1', 'path/to/2', '/usr', 'path/to/3', '/usr/lib',
-                 '/usr/bin/']
-        filtered = filter_system_paths(paths)
+        filtered = filter_system_paths([
+            '/usr/local/Cellar/gcc/5.3.0/lib',
+            '/usr/local/lib',
+            '/usr/local/include',
+            '/usr/local/lib64',
+            '/usr/local/opt/some-package/lib',
+            '/usr/opt/lib',
+            '/lib',
+            '/lib64',
+            '/include',
+            '/opt/some-package/include',
+        ])
         self.assertEqual(filtered,
-                         ['/path/to/1', 'path/to/2', 'path/to/3'])
+                         ['/usr/local/Cellar/gcc/5.3.0/lib',
+                          '/usr/local/opt/some-package/lib',
+                          '/usr/opt/lib',
+                          '/opt/some-package/include'])
+
+        filtered = filter_system_bin_paths([
+            '/usr/local/Cellar/gcc/5.3.0/bin',
+            '/usr/local/bin',
+            '/usr/local/opt/some-package/bin',
+            '/usr/opt/bin',
+            '/bin',
+            '/opt/some-package/bin',
+        ])
+        self.assertEqual(filtered,
+                         ['/usr/local/Cellar/gcc/5.3.0/bin',
+                          '/usr/local/opt/some-package/bin',
+                          '/usr/opt/bin',
+                          '/opt/some-package/bin',
+                          '/usr/local/bin',
+                          '/bin'])
 
     def test_set_path(self):
         env = EnvironmentModifications()

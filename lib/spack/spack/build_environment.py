@@ -304,7 +304,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, [
         '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
-    bin_dirs = filter_system_paths(bin_dirs)
+    bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 
