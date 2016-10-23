@@ -45,9 +45,9 @@ def filter_system_bin_paths(paths):
         else:
             filtered.append(p)
 
-    # add to the end
+    # add to the begining because PATH is constructed with prepend_path(item)
     for p in back:
-        filtered.append(p)
+        filtered[:0] = [p]
 
     return filtered
 

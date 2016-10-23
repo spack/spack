@@ -88,12 +88,12 @@ class EnvironmentTest(unittest.TestCase):
             '/opt/some-package/bin',
         ])
         self.assertEqual(filtered,
-                         ['/usr/local/Cellar/gcc/5.3.0/bin',
+                         ['/bin',
+                          '/usr/local/bin',
+                          '/usr/local/Cellar/gcc/5.3.0/bin',
                           '/usr/local/opt/some-package/bin',
                           '/usr/opt/bin',
-                          '/opt/some-package/bin',
-                          '/usr/local/bin',
-                          '/bin'])
+                          '/opt/some-package/bin'])
 
     def test_set_path(self):
         env = EnvironmentModifications()
