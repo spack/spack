@@ -44,6 +44,3 @@ class Qhull(CMakePackage):
             url="http://www.qhull.org/download/qhull-2012.1-src.tgz")
 
     depends_on('cmake@2.6:', type='build')
-
-    def check(self):
-        make('test')

@@ -1055,6 +1055,27 @@ class PackageBase(object):
         mkdirp(self.prefix.lib)
         mkdirp(self.prefix.man1)
 
+    def _if_make_target_execute(self, target):
+        try:
+            # Check if we have a makefile
+            file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
+            file = file.pop()
+        except IndexError:
+            tty.msg('No Makefile found in the build directory')
+            return
+
+        # Check if 'target' is in the makefile
+        regex = re.compile('^' + target + ':')
+        with open(file, 'r') as f:
+            matches = [line for line in f.readlines() if regex.match(line)]
+
+        if not matches:
+            tty.msg('Target \'' + target + ':\' not found in Makefile')
+            return
+
+        # Execute target
+        inspect.getmodule(self).make(target)
+
     def _get_needed_resources(self):
         resources = []
         # Select the resources that are needed for this build
@@ -1747,6 +1768,10 @@ class AutotoolsPackage(PackageBase):
         except AttributeError:
             tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
+    def check(self):
+        self._if_make_target_execute('test')
+        self._if_make_target_execute('check')
+
     # This will be used as a registration decorator in user
     # packages, if need be
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
@@ -1814,10 +1839,14 @@ class CMakePackage(PackageBase):
     def _run_default_function(self):
         try:
             fn = getattr(self, 'check')
-            tty.msg('Trying default sanity checks [check]')
+            tty.msg('Trying default build sanity checks [check]')
             fn()
         except AttributeError:
-            tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+            tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+
+    def check(self):
+        with working_dir(self.build_directory()):
+            self._if_make_target_execute('test')
 
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
 

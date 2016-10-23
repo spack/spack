@@ -42,7 +42,3 @@ class Lzo(AutotoolsPackage):
             '--disable-dependency-tracking',
             '--enable-shared'
         ]
-
-    def check(self):
-        make('check')
-        make('test')

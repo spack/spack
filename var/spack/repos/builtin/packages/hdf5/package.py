@@ -144,7 +144,8 @@ class Hdf5(AutotoolsPackage):
         return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
 
     def check(self):
-        "Build and run a small program to test the installed HDF5 library"
+        super(Hdf5, self).check()
+        # Build and run a small program to test the installed HDF5 library
         spec = self.spec
         print("Checking HDF5 installation...")
         checkdir = "spack-check"
