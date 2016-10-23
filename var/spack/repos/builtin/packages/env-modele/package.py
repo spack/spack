@@ -42,7 +42,7 @@ class EnvModele(Package):
     # Link dependencies
     depends_on('mpi')
     depends_on('netcdf-fortran')
-    #depends_on('fexception')
+    # depends_on('fexception')
     depends_on('everytrace+fortran+mpi')
     depends_on('parallel-netcdf+fortran~cxx')
 
@@ -71,4 +71,3 @@ class EnvModele(Package):
     def install(self, spec, prefix):
         with open(os.path.join(spec.prefix, 'dummy.txt'), 'w') as out:
             out.write('This is a bundle\n')
-
