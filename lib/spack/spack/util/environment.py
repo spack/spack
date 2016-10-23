@@ -26,13 +26,12 @@ import os
 
 system_paths = ['/', '/usr/', '/usr/local']
 suffixes = ['lib', 'lib64', 'include']
-system_dirs = sum(([os.path.join(p, s)
-                    for s in suffixes] for p in system_paths), [])
+system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths]
 system_bins = [os.path.join(p, 'bin') for p in system_paths]
 
 
 def filter_system_paths(paths):
-    return [p for p in paths if not any(p in s for s in system_dirs)]
+    return [p for p in paths if p not in system_dirs]
 
 
 def filter_system_bin_paths(paths):
