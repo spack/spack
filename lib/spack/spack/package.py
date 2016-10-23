@@ -1638,6 +1638,17 @@ class CMakePackage(StagedPackage):
                 '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']]
         cmd += self.configure_args()
 
+        # Extremely "dirty" alternative one COULD try.
+        # This is probably not a good idea, as it prevents the
+        # user from overriding anything later on.
+        # Better would be to make the end of spconfig.py look like:
+        #     fullenv = dict(os.environ)
+        #     fullenv.update(env)
+        #     proc = subprocess.Popen(cmd, env=fullenv)
+        #
+        # env = dict(os.environ)
+        # env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.transitive_inc_path()
+
         env = {
             'PATH': os.environ['PATH'],
             'SPACK_TRANSITIVE_INCLUDE_PATH': self.transitive_inc_path(),
@@ -1675,8 +1686,6 @@ env = dict(os.environ)
                         fout.write('    %s\n' % part)
                     fout.write('"""))\n')
 
-            fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = "
-                       "env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
             fout.write('\ncmd = cmdlist("""\n')
             fout.write('%s\n' % cmd[0])
             for arg in cmd[1:]:
