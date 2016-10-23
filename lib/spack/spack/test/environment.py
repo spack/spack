@@ -88,8 +88,8 @@ class EnvironmentTest(unittest.TestCase):
             '/opt/some-package/bin',
         ])
         self.assertEqual(filtered,
-                         ['/bin',
-                          '/usr/local/bin',
+                         ['/usr/local/bin',
+                          '/bin',
                           '/usr/local/Cellar/gcc/5.3.0/bin',
                           '/usr/local/opt/some-package/bin',
                           '/usr/opt/bin',
