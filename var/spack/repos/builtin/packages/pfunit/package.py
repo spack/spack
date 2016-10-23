@@ -31,11 +31,10 @@ class Pfunit(Package):
     homepage = "http://pfunit.sourceforge.net/index.html"
     url = "http://downloads.sourceforge.net/project/pfunit/Source/pFUnit-3.2.7.tar.gz"
 
-
     # Shared library support added.
     # Alt URL: git clone http://git.code.sf.net/p/pfunit/code pfunit-code
     version('3.2.7.1', git='git://git.code.sf.net/p/pfunit/code',
-        branch='ae0a3c6afd67e8709d062dcdb646ace676aae4ba')
+            branch='ae0a3c6afd67e8709d062dcdb646ace676aae4ba')
 
     # Standard release version
     version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
