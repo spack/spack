@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyGiss(Package):
     """Misc. Python Stuff."""
 
