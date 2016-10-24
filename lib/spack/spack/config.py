@@ -179,7 +179,6 @@ section_schemas = {
     'mirrors': spack.schema.mirrors.schema,
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
-    'targets': spack.schema.targets.schema,
     'modules': spack.schema.modules.schema,
 }
 
