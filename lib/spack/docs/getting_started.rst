@@ -283,7 +283,7 @@ valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``,
          cxx: /usr/local/bin/icpc-15.0.024-beta
          f77: /usr/local/bin/ifort-15.0.024-beta
          fc: /usr/local/bin/ifort-15.0.024-beta
-       parameters:
+       flags:
          cppflags: -O3 -fPIC
        spec: intel@15.0.0:
 
