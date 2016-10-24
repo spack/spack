@@ -35,6 +35,8 @@ class Tally(Plugin):
         self.successCount = 0
         self.failCount = 0
         self.errorCount = 0
+        self.error_list = []
+        self.fail_list = []
 
     @property
     def numberOfTestsRun(self):
@@ -52,9 +54,11 @@ class Tally(Plugin):
 
     def addError(self, test, err):
         self.errorCount += 1
+        self.error_list.append(test)
 
     def addFailure(self, test, err):
         self.failCount += 1
+        self.fail_list.append(test)
 
     def finalize(self, result):
         pass
