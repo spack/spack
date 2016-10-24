@@ -146,7 +146,7 @@ pick up dependencies from ``/usr`` than the intended Spack version.
 
 In order to avoid this problem, it is advisable to specify a fake path
 in ``packages.yaml``, thereby preventing Spack from adding the real
-path to compiler command lines.  This will work becuase compilers
+path to compiler command lines.  This will work because compilers
 normally search standard system paths, even if they are not on the
 command line.  For example:
 
