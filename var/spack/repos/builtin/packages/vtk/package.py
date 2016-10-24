@@ -77,11 +77,18 @@ class Vtk(Package):
                 # Enable Qt support here.
                 '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
                 '-DQT_QMAKE_EXECUTABLE:PATH={0}/qmake'.format(qt_bin),
-                # Ignore webkit because it's hard to build w/Qt
-                '-DVTK_Group_Qt:BOOL=OFF',
-                '-DModule_vtkGUISupportQt:BOOL=ON',
-                '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
+                '-DVTK_Group_Qt:BOOL=ON',
             ])
+
+            # NOTE: The following definitions are required in order to allow
+            # VTK to build with qt~webkit versions (see the documentation for
+            # more info: http://www.vtk.org/Wiki/VTK/Tutorials/QtSetup).
+            if '~webkit' in spec['qt']:
+                cmake_args.extend([
+                    '-DVTK_Group_Qt:BOOL=OFF',
+                    '-DModule_vtkGUISupportQt:BOOL=ON',
+                    '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
+                ])
 
             if spec.satisfies('@:6.1.0'):
                 cmake_args.append('-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY')
