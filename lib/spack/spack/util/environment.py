@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from llnl.util.lang import dedupe
 
 system_paths = ['/', '/usr/', '/usr/local']
 suffixes = ['lib', 'lib64', 'include']
@@ -37,7 +36,8 @@ def filter_system_paths(paths):
 
 def filter_system_bin_paths(paths):
     bins = [p for p in paths if p in system_bins]
-    return list(dedupe(bins + paths))
+    nobins = [p for p in paths if p not in system_bins]
+    return bins + nobins
 
 
 def get_path(name):
