@@ -136,6 +136,31 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+- compiler:
+    spec: gcc@4.7.2
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc472
+      cxx: /path/to/g++472
+      f77: /path/to/gfortran472
+      fc: /path/to/gfortran472
+    flags:
+      cflags: -O0
+      cxxflags: -O0
+      fflags: -O0
+    modules: 'None'
+- compiler:
+    spec: clang@3.5
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang35
+      cxx: /path/to/clang++35
+      f77: None
+      fc: None
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
 """.format(linux_os_name, linux_os_version)
 
 mock_packages_config = """\

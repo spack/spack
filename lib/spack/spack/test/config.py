@@ -57,6 +57,21 @@ a_comps = [
     }},
     {'compiler': {
         'paths': {
+            "cc": "/gcc422",
+            "cxx": "/g++422",
+            "f77": 'gfortran',
+            "fc": 'gfortran'
+        },
+        'flags': {
+            "cppflags": "-O0 -fpic",
+            "fflags": "-f77",
+        },
+        'modules': None,
+        'spec': 'gcc@4.2.2',
+        'operating_system': 'CNL10'
+    }},
+    {'compiler': {
+        'paths': {
             "cc": "<overwritten>",
             "cxx": "<overwritten>",
             "f77": '<overwritten>',
@@ -92,6 +107,21 @@ b_comps = [
     }},
     {'compiler': {
         'paths': {
+            "cc": "/icc123",
+            "cxx": "/icp123",
+            "f77": 'ifort',
+            "fc": 'ifort'
+        },
+        'flags': {
+            "cppflags": "-O3",
+            "fflags": "-f77rtl",
+        },
+        'modules': None,
+        'spec': 'icc@12.3',
+        'operating_system': 'CNL10'
+    }},
+    {'compiler': {
+        'paths': {
             "cc": "<overwritten>",
             "cxx": "<overwritten>",
             "f77": '<overwritten>',
@@ -112,11 +142,13 @@ class ConfigTest(MockPackagesTest):
     def setUp(self):
         super(ConfigTest, self).setUp()
         self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
+        self.a_comp_specs = [ac['compiler']['spec'] for ac in a_comps]
+        self.b_comp_specs = [bc['compiler']['spec'] for bc in b_comps]
+
         spack.config.config_scopes = OrderedDict()
-        spack.config.ConfigScope(
-            'test_low_priority', os.path.join(self.tmp_dir, 'low'))
-        spack.config.ConfigScope('test_high_priority',
-                                 os.path.join(self.tmp_dir, 'high'))
+        for priority in ['low', 'high']:
+            spack.config.ConfigScope('test_{0}_priority'.format(priority),
+                                     os.path.join(self.tmp_dir, priority))
 
     def tearDown(self):
         super(ConfigTest, self).tearDown()
@@ -126,19 +158,22 @@ class ConfigTest(MockPackagesTest):
         """Check that named compilers in comps match Spack's config."""
         config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'fc']
+        flag_list = ['cflags', 'cxxflags', 'fflags', 'cppflags',
+                     'ldflags', 'ldlibs']
         param_list = ['modules', 'paths', 'spec', 'operating_system']
         for compiler in config:
             conf = compiler['compiler']
             if conf['spec'] in compiler_names:
-                comp = None
-                for c in comps:
-                    if c['compiler']['spec'] == conf['spec']:
-                        comp = c['compiler']
-                        break
+                comp = next((c['compiler'] for c in comps if
+                             c['compiler']['spec'] == conf['spec']), None)
                 if not comp:
                     self.fail('Bad config spec')
                 for p in param_list:
                     self.assertEqual(conf[p], comp[p])
+                for f in flag_list:
+                    expected = comp.get('flags', {}).get(f, None)
+                    actual = conf.get('flags', {}).get(f, None)
+                    self.assertEqual(expected, actual)
                 for c in compiler_list:
                     expected = comp['paths'][c]
                     actual = conf['paths'][c]
@@ -156,8 +191,8 @@ class ConfigTest(MockPackagesTest):
         spack.config.update_config('compilers', b_comps, 'test_high_priority')
 
         # Make sure the config looks how we expect.
-        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, *self.a_comp_specs)
+        self.check_config(b_comps, *self.b_comp_specs)
 
     def test_write_key_to_disk(self):
         # Write b_comps "on top of" a_comps.
@@ -168,8 +203,8 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, *self.a_comp_specs)
+        self.check_config(b_comps, *self.b_comp_specs)
 
     def test_write_to_same_priority_file(self):
         # Write b_comps in the same file as a_comps.
@@ -180,5 +215,5 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, *self.a_comp_specs)
+        self.check_config(b_comps, *self.b_comp_specs)
