@@ -31,7 +31,7 @@ class Fastqc(Package):
     """A quality control tool for high throughput sequence data."""
 
     homepage = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
-    url      = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
+    url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
     version('0.11.5', '3524f101c0ab0bae77c7595983170a76')
 
@@ -44,7 +44,7 @@ class Fastqc(Package):
         mkpath(self.prefix.bin)
         mkpath(self.prefix.lib)
         copy_file('fastqc', self.prefix.bin)
-        for j in ['cisd-jhdf5.jar', 'jbzip2-0.9.jar','sam-1.103.jar']:
+        for j in ['cisd-jhdf5.jar', 'jbzip2-0.9.jar', 'sam-1.103.jar']:
             copy_file(j, self.prefix.lib)
         for d in ['Configuration', 'net', 'org', 'Templates', 'uk']:
             copy_tree(d, join_path(self.prefix.lib, d))
