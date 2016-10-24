@@ -29,7 +29,7 @@ from llnl.util.filesystem import working_dir
 from spack.package import PackageBase
 
 
-class EditableMakefile(PackageBase):
+class MakefilePackage(PackageBase):
     """Specialized class for packages that are built using editable Makefiles
 
     This class provides three phases that can be overridden:
@@ -43,7 +43,7 @@ class EditableMakefile(PackageBase):
     phases = ['edit', 'build', 'install']
     # To be used in UI queries that require to know which
     # build-system class we are using
-    build_system_class = 'EditableMakefile'
+    build_system_class = 'MakefilePackage'
 
     def build_directory(self):
         """Directory where the main Makefile is located"""

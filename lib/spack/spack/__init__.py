@@ -189,14 +189,14 @@ sys_type = None
 __all__ = ['Package',
            'CMakePackage',
            'AutotoolsPackage',
-           'EditableMakefile',
+           'MakefilePackage',
            'Version',
            'when',
            'ver',
            'alldeps',
            'nolink']
 from spack.package import Package, ExtensionConflictError
-from spack.build_systems.editable_makefile import EditableMakefile
+from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.version import Version, ver
