@@ -35,6 +35,8 @@ def filter_system_paths(paths):
 
 
 def filter_system_bin_paths(paths):
+    # Turn the iterable into a list. Assume it's a list from here on.
+    paths = list(paths)
     bins = [p for p in paths if p in system_bins]
     nobins = [p for p in paths if p not in system_bins]
     return bins + nobins
