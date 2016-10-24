@@ -39,6 +39,7 @@ def filter_system_bin_paths(paths):
     paths = list(paths)
     bins = [p for p in paths if p in system_bins]
     nobins = [p for p in paths if p not in system_bins]
+    # put bins infront as PATH is set by: prepend_path('PATH', item)
     return bins + nobins
 
 
