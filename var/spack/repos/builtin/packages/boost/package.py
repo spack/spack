@@ -164,14 +164,14 @@ class Boost(Package):
         incs = " ".join([dirname(u) for u in incs])
 
         pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
-        alllibs = join_path(spec['python'].prefix.lib, pylib)
+        all_libs = join_path(spec['python'].prefix.lib, pylib)
         if sys.platform == 'darwin':
-            libs = [u for u in alllibs if splitext(u)[1] == '.dylib']
+            libs = [u for u in all_libs if splitext(u)[1] == '.dylib']
         else:
-            libs = [u for u in alllibs if splitext(u)[1] == '.so']
+            libs = [u for u in all_libs if splitext(u)[1] == '.so']
 
         if len(libs) == 0:
-            libs = [u for u in alllibs if splitext(u)[1] == '.a']
+            libs = [u for u in all_libs if splitext(u)[1] == '.a']
 
         libs = " ".join(libs)
         return 'using python : %s : %s : %s : %s ;\n' % (
