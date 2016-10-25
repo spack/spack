@@ -22,12 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+import spack.cmd.configure as cfg
+
 from spack import *
 
+description = 'Stops at build stage when installing a package, if possible'
 
-class Blitz(AutotoolsPackage):
-    """N-dimensional arrays for C++"""
-    homepage = "http://github.com/blitzpp/blitz"
-    url = "https://github.com/blitzpp/blitz/tarball/1.0.0"
+build_system_to_phase = {
+    CMakePackage: 'build',
+    AutotoolsPackage: 'build'
+}
 
-    version('1.0.0', '9f040b9827fe22228a892603671a77af')
+
+def setup_parser(subparser):
+    cfg.setup_parser(subparser)
+
+
+def build(parser, args):
+    cfg._stop_at_phase_during_install(args, build, build_system_to_phase)
