@@ -25,6 +25,7 @@
 from spack import *
 import sys
 import os
+from glob import glob
 
 
 class Boost(Package):
@@ -156,7 +157,6 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
-        from glob import glob
         from os.path import dirname, splitext
         pydir = 'python%s.%s*' % spec['python'].version.version[:2]
         incs = join_path(spec['python'].prefix.include, pydir, "pyconfig.h")
