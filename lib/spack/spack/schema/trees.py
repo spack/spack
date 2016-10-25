@@ -47,15 +47,9 @@ schema = {
                             'default': ''
                         },
                         'multiply': {
-                            'type':  'object',
-                            'default': {},
-                            'additionalProperties': False,
-                            'patternProperties': {
-                                r'\w[\w-]*': {
-                                    'type': 'string',
-                                    'default': '',
-                                },
-                            },
+                            'type': 'array',
+                            'default': [],
+                            'items': {'type': 'string'}
                         },
                         'switches': {
                             'type':  'object',

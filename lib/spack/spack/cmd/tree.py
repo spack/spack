@@ -44,14 +44,17 @@ class PackageConfig(object):
         self.multiply = multiply or {}
 
     def project(self, spec):
-        elements = list()
-        elements.append(spec.format(self.descriptor))
+        starter_path = spec.format(self.descriptor)
+        elements = starter_path.split('/')
+        path = Path(elements[:-1], elements[-1])
+        for dep, action, dep_cfg in self.multiply:
+            if dep in spec and not dep == spec.name:
+                dep_path = dep_cfg.project(spec[dep])
+                action(path, str(dep_path))
+
         if self.compiler_descriptor:
-            elements.append(spec.format(self.compiler_descriptor))
-        elements.extend(spec[dep].format(descriptor)
-            for dep, descriptor in self.multiply.iteritems()
-            if dep in spec and not dep == spec.name)
-        return join_path(*elements)
+            path.prepend(spec.format(self.compiler_descriptor))
+        return str(path)
 
 class FallbackSection(object):
     def __init__(self, primary, secondary):
@@ -64,10 +67,99 @@ class FallbackSection(object):
         elif key in self.secondary:
             return self.secondary[key]
 
-def get_package_config(name, config):
-    section = FallbackSection(config.get(name, {}), config.get('all'))
+class Path(object):
+    def __init__(self, dir_elements, basename):
+        self.dir_elements = dir_elements
+        self.basename = basename
+
+    def prepend(self, element):
+        self.dir_elements.insert(0, element)
+
+    def append(self, element):
+        self.dir_elements.append(element)
+
+    def append_basename(self, element):
+        self.basename = '-'.join([self.basename, element])
+
+    def __str__(self):
+        elements = list(self.dir_elements)
+        if self.basename:
+            elements.append(self.basename)
+        return join_path(*elements)
+
+class PathAction(object):
+    PREPEND = 'prepend'
+    APPEND = 'append'
+    BASENAME = 'basename'
+    ACTIONS = set([PREPEND, APPEND, BASENAME])
+
+    def __init__(self, action):
+        if action not in PathAction.ACTIONS:
+            raise ValueError(
+                "Action must be one of {{{0}}}, check configuration".format(
+                    ', '.join(PathActions.ACTIONS)))
+        self.action = action
+
+    def __call__(self, path, element):
+        if self.action == PathAction.PREPEND:
+            path.prepend(element)
+        elif self.action == PathAction.APPEND:
+            path.append(element)
+        else:
+            path.append_basename(element)
+
+    @staticmethod
+    def reorder(items, actionFn):
+        appends = list()
+        prepends = list()
+        for item in items:
+            path_action = actionFn(item).action
+            if path_action == PathAction.PREPEND:
+                prepends.append(item)
+            else:
+                appends.append(item)
+        return list(reversed(prepends)) + appends
+
+def get_package_config(name, config, exclude_multiply=None,
+        force_path_action=None):
+    """
+    Notes:
+    
+    - siblings may reuse multipliers, but children never reuse multipliers
+      which were used by their parents
+    - (implied) parent multiplier actions override child multiplier actions
+    - always append to basename for multipliers of multipliers
+    - elements appear in the order listed: if a prepend action for Y follows
+      a prepend action for X, the result will appear as X/Y
+    """
+    section = FallbackSection(config.get(name, {}), config.get('all'))    
+
+    multipliers = list()
+    exclude_multiply = set(exclude_multiply) if exclude_multiply else set()
+    for item in section['multiply']:
+        t = item.strip().split(':')
+        if len(t) == 3:
+            action, pkg, cfg_id = t
+        else:
+            action, pkg = t
+            cfg_id = pkg
+        
+        action = force_path_action or action
+
+        if pkg not in exclude_multiply:
+            multipliers.append((action, pkg, cfg_id))
+            exclude_multiply.add(pkg)
+
+    multiply = list()
+    for action, pkg, _ in multipliers:
+        pkg_cfg = get_package_config(cfg_id, config, exclude_multiply,
+            force_path_action=PathAction.BASENAME)
+        multiply.append((pkg, PathAction(action), pkg_cfg))
+    
+    multiply = PathAction.reorder(multiply, lambda t: t[1])
+    
     return PackageConfig(section['descriptor'], section['compiler_descriptor'],
-        section['multiply'])
+        multiply)
 
 def project_all(specs, config):
     def keyFn(spec):
