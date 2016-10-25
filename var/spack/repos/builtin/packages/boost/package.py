@@ -165,11 +165,7 @@ class Boost(Package):
 
         pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
         all_libs = join_path(spec['python'].prefix.lib, pylib)
-        if sys.platform == 'darwin':
-            libs = [u for u in all_libs if splitext(u)[1] == '.dylib']
-        else:
-            libs = [u for u in all_libs if splitext(u)[1] == '.so']
-
+        libs = [u for u in all_libs if splitext(u)[1] == dso_suffix]
         if len(libs) == 0:
             libs = [u for u in all_libs if splitext(u)[1] == '.a']
 
