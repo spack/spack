@@ -215,7 +215,7 @@ def junit_output(spec, test_suite):
                 test_case.set_result(TestResult.PASSED)
             except InstallError:
                 # Check if the package relies on dependencies that
-                #  did not install
+                # did not install
                 duration = time.time() - start_time
                 test_case.set_duration(duration)
                 if [x for x in self.spec.dependencies(('link', 'run')) if not spack.repo.get(x).installed]:  # NOQA: ignore=E501
