@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
+import copy
 import os
 import string
 import sys
@@ -30,10 +31,11 @@ import sys
 import llnl.util.tty as tty
 import spack
 import spack.cmd
+import spack.cmd.install as install
+from llnl.util.filesystem import set_executable
 from spack import which
 from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
-from llnl.util.filesystem import set_executable
 
 description = "Create a configuration script and module, but don't build."
 
@@ -163,4 +165,26 @@ def setup(self, args):
         # TODO: make this an argument, not a global.
         spack.do_checksum = False
 
+        # Install dependencies if requested to do so
+        if not args.ignore_deps:
+            parser = argparse.ArgumentParser()
+            install.setup_parser(parser)
+            inst_args = copy.deepcopy(args)
+            inst_args = parser.parse_args(
+                ['--only=dependencies'] + args.spec,
+                namespace=inst_args
+            )
+            install.install(parser, inst_args)
+        # Generate spconfig.py
+        tty.msg(
+            'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
+        )
         write_spconfig(package)
+        # Install this package to register it in the DB and permit
+        # module file regeneration
+        inst_args = copy.deepcopy(args)
+        inst_args = parser.parse_args(
+            ['--only=package', '--fake'] + args.spec,
+            namespace=inst_args
+        )
+        install.install(parser, inst_args)
