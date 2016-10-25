@@ -35,7 +35,7 @@ class Gcc(Compiler):
     cxx_names = ['g++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['gfortran']
+    f77_names = ['gfortran', 'g77']
 
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['gfortran']
