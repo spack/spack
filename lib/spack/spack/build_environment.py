@@ -251,6 +251,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
         if os.path.isdir(ci):
             env_paths.append(ci)
 
+    env_paths = filter_system_paths(env_paths)
+
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
@@ -258,12 +260,14 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in
                     pkg.spec.traverse(root=False, deptype=('build', 'link'))]
+    dep_prefixes = filter_system_paths(dep_prefixes)
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
 
     # These variables control compiler wrapper behavior
-    env.set_path(SPACK_RPATH_DEPS, [d.prefix for d in get_rpath_deps(pkg)])
-    env.set_path(SPACK_LINK_DEPS, [
-        d.prefix for d in pkg.spec.traverse(root=False, deptype=('link'))])
+    env.set_path(SPACK_RPATH_DEPS, filter_system_paths([
+        d.prefix for d in get_rpath_deps(pkg)]))
+    env.set_path(SPACK_LINK_DEPS, filter_system_paths([
+        d.prefix for d in pkg.spec.traverse(root=False, deptype=('link'))]))
 
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
@@ -298,6 +302,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, [
         '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
+    bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 

@@ -30,6 +30,7 @@ from llnl.util.filesystem import join_path
 from spack.environment import EnvironmentModifications
 from spack.environment import SetEnv, UnsetEnv
 from spack.environment import RemovePath, PrependPath, AppendPath
+from spack.util.environment import filter_system_paths, filter_system_bin_paths
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -58,6 +59,41 @@ class EnvironmentTest(unittest.TestCase):
         env.unset('UNSET_ME')
         env.apply_modifications()
         self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
+
+    def test_filter_system_paths(self):
+        filtered = filter_system_paths([
+            '/usr/local/Cellar/gcc/5.3.0/lib',
+            '/usr/local/lib',
+            '/usr/local/include',
+            '/usr/local/lib64',
+            '/usr/local/opt/some-package/lib',
+            '/usr/opt/lib',
+            '/lib',
+            '/lib64',
+            '/include',
+            '/opt/some-package/include',
+        ])
+        self.assertEqual(filtered,
+                         ['/usr/local/Cellar/gcc/5.3.0/lib',
+                          '/usr/local/opt/some-package/lib',
+                          '/usr/opt/lib',
+                          '/opt/some-package/include'])
+
+        filtered = filter_system_bin_paths([
+            '/usr/local/Cellar/gcc/5.3.0/bin',
+            '/usr/local/bin',
+            '/usr/local/opt/some-package/bin',
+            '/usr/opt/bin',
+            '/bin',
+            '/opt/some-package/bin',
+        ])
+        self.assertEqual(filtered,
+                         ['/usr/local/bin',
+                          '/bin',
+                          '/usr/local/Cellar/gcc/5.3.0/bin',
+                          '/usr/local/opt/some-package/bin',
+                          '/usr/opt/bin',
+                          '/opt/some-package/bin'])
 
     def test_set_path(self):
         env = EnvironmentModifications()
