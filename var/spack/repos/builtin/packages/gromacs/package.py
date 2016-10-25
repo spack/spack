@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gromacs(Package):
+class Gromacs(CMakePackage):
     """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
     dynamics package primarily designed for simulations of proteins, lipids
     and nucleic acids. It was originally developed in the Biophysical
@@ -64,28 +64,22 @@ class Gromacs(Package):
         if '+plumed' in self.spec:
             self.spec['plumed'].package.apply_patch(self)
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
 
         options = []
 
-        if '+mpi' in spec:
+        if '+mpi' in self.spec:
             options.append('-DGMX_MPI:BOOL=ON')
 
-        if '+double' in spec:
+        if '+double' in self.spec:
             options.append('-DGMX_DOUBLE:BOOL=ON')
 
-        if '~shared' in spec:
+        if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
 
-        if '+debug' in spec:
+        if '+debug' in self.spec:
             options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
         else:
             options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
 
-        options.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-
-            cmake('..', *options)
-            make()
-            make('install')
+        return options
