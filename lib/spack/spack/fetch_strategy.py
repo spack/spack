@@ -286,6 +286,8 @@ class URLFetchStrategy(FetchStrategy):
                 "URLFetchStrategy couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
+        if not self.extension:
+            self.extension = extension(self.archive_file)
         decompress = decompressor_for(self.archive_file, self.extension)
 
         # Expand all tarballs in their own directory to contain
@@ -313,7 +315,8 @@ class URLFetchStrategy(FetchStrategy):
                     shutil.move(os.path.join(tarball_container, f),
                                 os.path.join(self.stage.path, f))
                 os.rmdir(tarball_container)
-
+        if not files:
+            os.rmdir(tarball_container)
         # Set the wd back to the stage when done.
         self.stage.chdir()
 

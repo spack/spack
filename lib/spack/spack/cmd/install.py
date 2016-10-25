@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from __future__ import print_function
 import argparse
 
 import llnl.util.tty as tty
@@ -35,12 +34,15 @@ description = "Build and install packages"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
-        help="Do not try to install dependencies of requested packages.")
-    subparser.add_argument(
-        '-d', '--dependencies-only', action='store_true', dest='deps_only',
-        help='Install dependencies of this package, ' +
-        'but not the package itself.')
+        '--only',
+        default='package,dependencies',
+        dest='things_to_install',
+        choices=['package', 'dependencies', 'package,dependencies'],
+        help="""Select the mode of installation.
+The default is to install the package along with all its dependencies.
+Alternatively one can decide to install only the package or only
+the dependencies."""
+    )
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
@@ -69,15 +71,17 @@ def setup_parser(subparser):
         '--dirty', action='store_true', dest='dirty',
         help="Install a package *without* cleaning the environment.")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to install")
+        'package',
+        nargs=argparse.REMAINDER,
+        help="spec of the package to install"
+    )
     subparser.add_argument(
         '--run-tests', action='store_true', dest='run_tests',
         help="Run tests during installation of a package.")
 
 
-def install(parser, args):
-    if not args.packages:
+def install(parser, args, **kwargs):
+    if not args.package:
         tty.die("install requires at least one package argument")
 
     if args.jobs is not None:
@@ -87,29 +91,40 @@ def install(parser, args):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
-    specs = spack.cmd.parse_specs(args.packages, concretize=True)
+    # Parse cli arguments and construct a dictionary
+    # that will be passed to Package.do_install API
+    kwargs.update({
+        'keep_prefix': args.keep_prefix,
+        'keep_stage': args.keep_stage,
+        'install_deps': 'dependencies' in args.things_to_install,
+        'make_jobs': args.jobs,
+        'run_tests': args.run_tests,
+        'verbose': args.verbose,
+        'fake': args.fake,
+        'dirty': args.dirty
+    })
+
+    # Spec from cli
+    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    if len(specs) != 1:
+        tty.error('only one spec can be installed at a time.')
+    spec = specs.pop()
 
     if args.destdir:
-        assert(len(specs) == 1)
         spack.install_layout.destdir = args.destdir
-        spec = iter(specs).next()
         spack.install_layout.redirected.add(spec.name)
 
     if args.install_path:
-        assert(len(specs) == 1)
-        spec = iter(specs).next()
         spack.install_layout.pkgToPath[spec.name] = args.install_path
 
-    for spec in specs:
+    if args.things_to_install == 'dependencies':
+        # Install dependencies as-if they were installed
+        # for root (explicit=False in the DB)
+        kwargs['explicit'] = False
+        for s in spec.dependencies():
+            p = spack.repo.get(s)
+            p.do_install(**kwargs)
+    else:
         package = spack.repo.get(spec)
-        package.do_install(
-            keep_prefix=args.keep_prefix,
-            keep_stage=args.keep_stage,
-            install_deps=not args.ignore_deps,
-            install_self=not args.deps_only,
-            make_jobs=args.jobs,
-            run_tests=args.run_tests,
-            verbose=args.verbose,
-            fake=args.fake,
-            dirty=args.dirty,
-            explicit=True)
+        kwargs['explicit'] = True
+        package.do_install(**kwargs)

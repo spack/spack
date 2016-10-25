@@ -26,6 +26,7 @@ import os
 import sys
 import llnl.util.tty as tty
 import spack
+import inspect
 
 
 class SpackError(Exception):
@@ -49,7 +50,7 @@ class SpackError(Exception):
         else:
             tty.error(self.message)
             if self.long_message:
-                print self.long_message
+                print(self.long_message)
             os._exit(1)
 
     def __str__(self):
@@ -57,6 +58,16 @@ class SpackError(Exception):
         if self._long_message:
             msg += "\n    %s" % self._long_message
         return msg
+
+    def __repr__(self):
+        args = [repr(self.message), repr(self.long_message)]
+        args = ','.join(args)
+        qualified_name = inspect.getmodule(
+            self).__name__ + '.' + type(self).__name__
+        return qualified_name + '(' + args + ')'
+
+    def __reduce__(self):
+        return type(self), (self.message, self.long_message)
 
 
 class UnsupportedPlatformError(SpackError):

@@ -22,25 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import string
+from __future__ import print_function
+
 import os
 import re
+import string
 
-from ordereddict_backport import OrderedDict
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack
 import spack.cmd
 import spack.cmd.checksum
 import spack.url
 import spack.util.web
-from spack.spec import Spec
-from spack.util.naming import *
+from llnl.util.filesystem import mkdirp
+from ordereddict_backport import OrderedDict
 from spack.repository import Repo, RepoError
-
+from spack.spec import Spec
 from spack.util.executable import which
-
+from spack.util.naming import *
 
 description = "Create a new package file from an archive URL"
 
@@ -87,7 +86,7 @@ package_template = string.Template("""\
 from spack import *
 
 
-class ${class_name}(Package):
+class ${class_name}(${base_class_name}):
     ""\"FIXME: Put a proper description of your package here.""\"
 
     # FIXME: Add a proper url for your package's homepage here.
@@ -98,101 +97,160 @@ ${versions}
 
 ${dependencies}
 
-    def install(self, spec, prefix):
-${install}
+${body}
 """)
 
-# Build dependencies and extensions
-dependencies_dict = {
-    'autotools': """\
+
+class DefaultGuess(object):
+    """Provides the default values to be used for the package file template"""
+    base_class_name = 'Package'
+
+    dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on('foo')""",
+    # depends_on('foo')"""
 
-    'cmake': """\
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
+
+    def __init__(self, name, url, version_hash_tuples):
+        self.name = name
+        self.class_name = mod_to_class(name)
+        self.url = url
+        self.version_hash_tuples = version_hash_tuples
+
+    @property
+    def versions(self):
+        """Adds a version() call to the package for each version found."""
+        max_len = max(len(str(v)) for v, h in self.version_hash_tuples)
+        format = "    version(%%-%ds, '%%s')" % (max_len + 2)
+        return '\n'.join(
+            format % ("'%s'" % v, h) for v, h in self.version_hash_tuples
+        )
+
+
+class AutotoolsGuess(DefaultGuess):
+    """Provides appropriate overrides for autotools-based packages"""
+    base_class_name = 'AutotoolsPackage'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required.
+    # depends_on('m4', type='build')
+    # depends_on('autoconf', type='build')
+    # depends_on('automake', type='build')
+    # depends_on('libtool', type='build')
+    # depends_on('foo')"""
+
+    body = """\
+    def configure_args(self):
+       # FIXME: Add arguments other than --prefix
+       # FIXME: If not needed delete the function
+       args = []
+       return args"""
+
+
+class CMakeGuess(DefaultGuess):
+    """Provides appropriate overrides for cmake-based packages"""
+    base_class_name = 'CMakePackage'
+
+    dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on('cmake', type='build')""",
+    depends_on('cmake', type='build')"""
 
-    'scons': """\
+    body = """\
+    def cmake_args(self):
+       # FIXME: Add arguments other than
+       # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+       # FIXME: If not needed delete the function
+       args = []
+       return args"""
+
+
+class SconsGuess(DefaultGuess):
+    """Provides appropriate overrides for scons-based packages"""
+    dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on('scons', type='build')""",
+    depends_on('scons', type='build')"""
 
-    'python': """\
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Add logic to build and install here.
+        scons('prefix={0}'.format(prefix))
+        scons('install')"""
+
+
+class BazelGuess(DefaultGuess):
+    """Provides appropriate overrides for bazel-based packages"""
+    dependencies = """\
+    # FIXME: Add additional dependencies if required.
+    depends_on('bazel', type='build')"""
+
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Add logic to build and install here.
+        bazel()"""
+
+
+class PythonGuess(DefaultGuess):
+    """Provides appropriate overrides for python extensions"""
+    dependencies = """\
     extends('python')
 
     # FIXME: Add additional dependencies if required.
     # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=nolink)""",
+    # depends_on('py-foo',        type=nolink)"""
 
-    'R': """\
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Add logic to build and install here.
+        setup_py('install', '--prefix={0}'.format(prefix))"""
+
+    def __init__(self, name, *args):
+        name = 'py-{0}'.format(name)
+        super(PythonGuess, self).__init__(name, *args)
+
+
+class RGuess(DefaultGuess):
+    """Provides appropriate overrides for R extensions"""
+    dependencies = """\
     extends('R')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('r-foo', type=nolink)""",
+    # depends_on('r-foo', type=nolink)"""
 
-    'octave': """\
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Add logic to build and install here.
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)"""
+
+    def __init__(self, name, *args):
+        name = 'r-{0}'.format(name)
+        super(RGuess, self).__init__(name, *args)
+
+
+class OctaveGuess(DefaultGuess):
+    """Provides appropriate overrides for octave packages"""
+    dependencies = """\
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('octave-foo', type=nolink)""",
+    # depends_on('octave-foo', type=nolink)"""
 
-    'unknown': """\
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')"""
-}
-
-# Default installation instructions
-install_dict = {
-    'autotools': """\
-        # FIXME: Modify the configure line to suit your build system here.
-        configure('--prefix={0}'.format(prefix))
-
-        # FIXME: Add logic to build and install here.
-        make()
-        make('install')""",
-
-    'cmake': """\
-        with working_dir('spack-build', create=True):
-            # FIXME: Modify the cmake line to suit your build system here.
-            cmake('..', *std_cmake_args)
-
-            # FIXME: Add logic to build and install here.
-            make()
-            make('install')""",
-
-    'scons': """\
-        # FIXME: Add logic to build and install here.
-        scons('prefix={0}'.format(prefix))
-        scons('install')""",
-
-    'python': """\
-        # FIXME: Add logic to build and install here.
-        setup_py('install', '--prefix={0}'.format(prefix))""",
-
-    'R': """\
-        # FIXME: Add logic to build and install here.
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)""",
-
-    'octave': """\
+    body = """\
+    def install(self, spec, prefix):
         # FIXME: Add logic to build and install here.
         octave('--quiet', '--norc',
                '--built-in-docstrings-file=/dev/null',
                '--texi-macros-file=/dev/null',
                '--eval', 'pkg prefix {0}; pkg install {1}'.format(
-                   prefix, self.stage.archive_file))""",
+                   prefix, self.stage.archive_file))"""
 
-    'unknown': """\
-        # FIXME: Unknown build system
-        make()
-        make('install')"""
-}
-
-
-def make_version_calls(ver_hash_tuples):
-    """Adds a version() call to the package for each version found."""
-    max_len = max(len(str(v)) for v, h in ver_hash_tuples)
-    format = "    version(%%-%ds, '%%s')" % (max_len + 2)
-    return '\n'.join(format % ("'%s'" % v, h) for v, h in ver_hash_tuples)
+    def __init__(self, name, *args):
+        name = 'octave-{0}'.format(name)
+        super(OctaveGuess, self).__init__(name, *args)
 
 
 def setup_parser(subparser):
@@ -219,6 +277,16 @@ def setup_parser(subparser):
 
 class BuildSystemGuesser(object):
 
+    _choices = {
+        'autotools': AutotoolsGuess,
+        'cmake': CMakeGuess,
+        'scons': SconsGuess,
+        'bazel': BazelGuess,
+        'python': PythonGuess,
+        'R': RGuess,
+        'octave': OctaveGuess
+    }
+
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
@@ -238,7 +306,8 @@ class BuildSystemGuesser(object):
             (r'/CMakeLists.txt$', 'cmake'),
             (r'/SConstruct$',     'scons'),
             (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'R')
+            (r'/NAMESPACE$',      'R'),
+            (r'/WORKSPACE$',      'bazel')
         ]
 
         # Peek inside the compressed file.
@@ -265,6 +334,10 @@ class BuildSystemGuesser(object):
                 build_system = bs
 
         self.build_system = build_system
+
+    def make_guess(self, name, url, ver_hash_tuples):
+        cls = self._choiches.get(self.build_system, DefaultGuess)
+        return cls(name, url, ver_hash_tuples)
 
 
 def guess_name_and_version(url, args):
@@ -339,7 +412,7 @@ def fetch_tarballs(url, name, version):
         tty.msg("Found %s versions of %s:" % (len(versions), name),
                 *spack.cmd.elide_list(
                     ["%-10s%s" % (v, u) for v, u in versions.iteritems()]))
-        print
+        print('')
         archives_to_fetch = tty.get_number(
             "Include how many checksums in the package file?",
             default=5, abort='q')
@@ -380,16 +453,10 @@ def create(parser, args):
     if not ver_hash_tuples:
         tty.die("Could not fetch any tarballs for %s" % name)
 
-    # Add prefix to package name if it is an extension.
-    if guesser.build_system == 'python':
-        name = 'py-{0}'.format(name)
-    if guesser.build_system == 'R':
-        name = 'r-{0}'.format(name)
-    if guesser.build_system == 'octave':
-        name = 'octave-{0}'.format(name)
+    guess = guesser.make_guess(name, url, ver_hash_tuples)
 
     # Create a directory for the new package.
-    pkg_path = repo.filename_for_package_name(name)
+    pkg_path = repo.filename_for_package_name(guess.name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
     else:
@@ -399,12 +466,15 @@ def create(parser, args):
     with open(pkg_path, "w") as pkg_file:
         pkg_file.write(
             package_template.substitute(
-                name=name,
-                class_name=mod_to_class(name),
-                url=url,
-                versions=make_version_calls(ver_hash_tuples),
-                dependencies=dependencies_dict[guesser.build_system],
-                install=install_dict[guesser.build_system]))
+                name=guess.name,
+                class_name=guess.class_name,
+                base_class_name=guess.base_class_name,
+                url=guess.url,
+                versions=guess.versions,
+                dependencies=guess.dependencies,
+                body=guess.body
+            )
+        )
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)

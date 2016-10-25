@@ -24,11 +24,11 @@
 ##############################################################################
 """Utility classes for logging the output of blocks of code.
 """
-import sys
+import multiprocessing
 import os
 import re
 import select
-import inspect
+import sys
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -100,25 +100,29 @@ class keyboard_input(object):
 
 
 class log_output(object):
-    """Redirects output and error of enclosed block to a file.
+    """Spawns a daemon that reads from a pipe and writes to a file
 
     Usage:
-        with log_output(open('logfile.txt', 'w')):
-           # do things ... output will be logged.
+        # Spawns the daemon
+        with log_output('logfile.txt', 'w') as log_redirection:
+           # do things ... output is not redirected
+           with log_redirection:
+                # do things ... output will be logged
 
     or:
-        with log_output(open('logfile.txt', 'w'), echo=True):
-           # do things ... output will be logged
-           # and also printed to stdout.
+        with log_output('logfile.txt', echo=True) as log_redirection:
+           # do things ... output is not redirected
+           with log_redirection:
+               # do things ... output will be logged
+               # and also printed to stdout.
 
-    Closes the provided stream when done with the block.
-    If echo is True, also prints the output to stdout.
+    Opens a stream in 'w' mode at daemon spawning and closes it at
+    daemon joining. If echo is True, also prints the output to stdout.
     """
 
-    def __init__(self, stream, echo=False, force_color=False, debug=False):
-        self.stream = stream
-
-        # various output options
+    def __init__(self, filename, echo=False, force_color=False, debug=False):
+        self.filename = filename
+        # Various output options
         self.echo = echo
         self.force_color = force_color
         self.debug = debug
@@ -126,70 +130,81 @@ class log_output(object):
         # Default is to try file-descriptor reassignment unless the system
         # out/err streams do not have an associated file descriptor
         self.directAssignment = False
+        self.read, self.write = os.pipe()
 
-    def trace(self, frame, event, arg):
-        """Jumps to __exit__ on the child process."""
-        raise _SkipWithBlock()
+        # Sets a daemon that writes to file what it reads from a pipe
+        self.p = multiprocessing.Process(
+            target=self._spawn_writing_daemon,
+            args=(self.read,),
+            name='logger_daemon'
+        )
+        self.p.daemon = True
+        # Needed to un-summon the daemon
+        self.parent_pipe, self.child_pipe = multiprocessing.Pipe()
 
     def __enter__(self):
-        """Redirect output from the with block to a file.
+        self.p.start()
+        return log_output.OutputRedirection(self)
 
-        This forks the with block as a separate process, with stdout
-        and stderr redirected back to the parent via a pipe.  If
-        echo is set, also writes to standard out.
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.parent_pipe.send(True)
+        self.p.join(60.0)  # 1 minute to join the child
 
-        """
-        # remember these values for later.
-        self._force_color = color._force_color
-        self._debug = tty._debug
+    def _spawn_writing_daemon(self, read):
+        # Parent: read from child, skip the with block.
+        read_file = os.fdopen(read, 'r', 0)
+        with open(self.filename, 'w') as log_file:
+            with keyboard_input(sys.stdin):
+                while True:
+                    rlist, _, _ = select.select([read_file, sys.stdin], [], [])
+                    if not rlist:
+                        break
 
-        read, write = os.pipe()
+                    # Allow user to toggle echo with 'v' key.
+                    # Currently ignores other chars.
+                    if sys.stdin in rlist:
+                        if sys.stdin.read(1) == 'v':
+                            self.echo = not self.echo
 
-        self.pid = os.fork()
-        if self.pid:
-            # Parent: read from child, skip the with block.
-            os.close(write)
-
-            read_file = os.fdopen(read, 'r', 0)
-            with self.stream as log_file:
-                with keyboard_input(sys.stdin):
-                    while True:
-                        rlist, w, x = select.select(
-                            [read_file, sys.stdin], [], [])
-                        if not rlist:
+                    # Handle output from the with block process.
+                    if read_file in rlist:
+                        line = read_file.readline()
+                        if not line:
+                            # For some reason we never reach this point...
                             break
 
-                        # Allow user to toggle echo with 'v' key.
-                        # Currently ignores other chars.
-                        if sys.stdin in rlist:
-                            if sys.stdin.read(1) == 'v':
-                                self.echo = not self.echo
+                        # Echo to stdout if requested.
+                        if self.echo:
+                            sys.stdout.write(line)
 
-                        # handle output from the with block process.
-                        if read_file in rlist:
-                            line = read_file.readline()
-                            if not line:
-                                break
+                        # Stripped output to log file.
+                        log_file.write(_strip(line))
+                        log_file.flush()
 
-                            # Echo to stdout if requested.
-                            if self.echo:
-                                sys.stdout.write(line)
+                    if self.child_pipe.poll():
+                        break
 
-                            # Stripped output to log file.
-                            log_file.write(_strip(line))
+    def __del__(self):
+        """Closes the pipes"""
+        os.close(self.write)
+        os.close(self.read)
 
-            read_file.flush()
-            read_file.close()
+    class OutputRedirection(object):
 
-            # Set a trace function to skip the with block.
-            sys.settrace(lambda *args, **keys: None)
-            frame = inspect.currentframe(1)
-            frame.f_trace = self.trace
+        def __init__(self, other):
+            self.__dict__.update(other.__dict__)
 
-        else:
-            # Child: redirect output, execute the with block.
-            os.close(read)
+        def __enter__(self):
+            """Redirect output from the with block to a file.
 
+            Hijacks stdout / stderr and writes to the pipe
+            connected to the logger daemon
+            """
+            # remember these values for later.
+            self._force_color = color._force_color
+            self._debug = tty._debug
+            # Redirect this output to a pipe
+            write = self.write
             try:
                 # Save old stdout and stderr
                 self._stdout = os.dup(sys.stdout.fileno())
@@ -205,53 +220,26 @@ class log_output(object):
                 output_redirect = os.fdopen(write, 'w')
                 sys.stdout = output_redirect
                 sys.stderr = output_redirect
-
             if self.force_color:
                 color._force_color = True
-
             if self.debug:
                 tty._debug = True
 
-    def __exit__(self, exc_type, exception, traceback):
-        """Exits on child, handles skipping the with block on parent."""
-        # Child should just exit here.
-        if self.pid == 0:
+        def __exit__(self, exc_type, exception, traceback):
+            """Plugs back the original file descriptors
+            for stdout and stderr
+            """
             # Flush the log to disk.
             sys.stdout.flush()
             sys.stderr.flush()
-
-            if exception:
-                # Restore stdout on the child if there's an exception,
-                # and let it be raised normally.
-                #
-                # This assumes that even if the exception is caught,
-                # the child will exit with a nonzero return code.  If
-                # it doesn't, the child process will continue running.
-                #
-                # TODO: think about how this works outside install.
-                # TODO: ideally would propagate exception to parent...
-                if self.directAssignment:
-                    sys.stdout = self._stdout
-                    sys.stderr = self._stderr
-                else:
-                    os.dup2(self._stdout, sys.stdout.fileno())
-                    os.dup2(self._stderr, sys.stderr.fileno())
-
-                return False
-
+            if self.directAssignment:
+                # We seem to need this only to pass test/install.py
+                sys.stdout = self._stdout
+                sys.stderr = self._stderr
             else:
-                # Die quietly if there was no exception.
-                os._exit(0)
+                os.dup2(self._stdout, sys.stdout.fileno())
+                os.dup2(self._stderr, sys.stderr.fileno())
 
-        else:
-            # If the child exited badly, parent also should exit.
-            pid, returncode = os.waitpid(self.pid, 0)
-            if returncode != 0:
-                os._exit(1)
-
-        # restore output options.
-        color._force_color = self._force_color
-        tty._debug = self._debug
-
-        # Suppresses exception if it's our own.
-        return exc_type is _SkipWithBlock
+            # restore output options.
+            color._force_color = self._force_color
+            tty._debug = self._debug
