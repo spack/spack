@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xpyb(Package):
+class PyXpyb(Package):
     """xpyb provides a Python binding to the X Window System protocol
     via libxcb."""
 
