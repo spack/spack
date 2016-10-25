@@ -42,7 +42,7 @@ class Gmp(AutotoolsPackage):
     def configure_args(self):
         args = ['--enable-cxx']
         # We need this flag if we want all the following checks to pass.
-        if spec.compiler.name == 'intel':
+        if self.spec.compiler.name == 'intel':
             args.append('CXXFLAGS=-no-ftz')
 
         return args
