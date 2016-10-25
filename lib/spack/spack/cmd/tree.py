@@ -36,41 +36,48 @@ def setup_parser(subparser):
     subparser.add_argument(
         'root')
 
-class UniversalProjection(object):
-    def __init__(self, formatStr):
-        self.formatStr = formatStr
+class PackageConfig(object):
+    def __init__(self, descriptor=None, compiler_descriptor=None,
+            multiply=None):
+        self.descriptor = descriptor
+        self.compiler_descriptor = compiler_descriptor
+        self.multiply = multiply or {}
+
+    def project(self, spec):
+        elements = list()
+        elements.append(spec.format(self.descriptor))
+        if self.compiler_descriptor:
+            elements.append(spec.format(self.compiler_descriptor))
+        elements.extend(spec[dep].format(descriptor)
+            for dep, descriptor in self.multiply.iteritems()
+            if dep in spec and not dep == spec.name)
+        return join_path(*elements)
+
+class FallbackSection(object):
+    def __init__(self, primary, secondary):
+        self.primary = primary
+        self.secondary = secondary
     
-    def _project(self, spec):
-        return spec.format(self.formatStr)
+    def __getitem__(self, key):
+        if key in self.primary:
+            return self.primary[key]
+        elif key in self.secondary:
+            return self.secondary[key]
 
-    def project_all(self, specs):
-        link_to_specs = map_specs(specs, self._project)
+def get_package_config(name, config):
+    section = FallbackSection(config.get(name, {}), config.get('all'))
+    return PackageConfig(section['descriptor'], section['compiler_descriptor'],
+        section['multiply'])
+
+def project_all(specs, config):
+    def keyFn(spec):
+        pkg_cfg = get_package_config(spec.name, config)
+        return pkg_cfg.project(spec)
         
-        return dict(
-            (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
-
-#TODO: there may be conflict resolution schemes which don't just need all instances
-#    of a given package but rather all instances of their dependents as well (if
-#    it is desirable to ensure that you link a dependency when you link its
-#    parent).
-
-#First do an initial sort. Then for each package, choose it if its dependent
-#was chosen. Note that you could have X->Z and Y->Z', then which one do you pick?
-
-class AutoProjection(object):
-    def __init__(self, format_str, spec_to_format):
-        self.base_format = format_str
-        self.spec_to_format = spec_to_format
-        
-    def _project(self, spec):
-        elements = [spec.format(self.base_format)]
-        for extra_spec, format_str in self.spec_to_format.iteritems():
-            if extra_spec in spec:
-                elements.append(spec[extra_spec].format(format_str))
-        #TODO: actually I think this needs to be reversed, because the path
-        #    without augmentations may refer to an existing prefix, so I can't
-        #    later append more things to it.
-        return join_path(elements)
+    link_to_specs = map_specs(specs, keyFn)
+    
+    return dict(
+        (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
 
 def map_specs(specs, keyFn):
     key_to_specs = defaultdict(set)
@@ -101,10 +108,6 @@ def update_install(specs, config):
     
     #TODO: what to do if the installed specs arent the chosen specs?
 
-#TODO: should there be any attempt to pick the dependencies of a package when
-#    you pick the package? e.g. if X->Y and there is also Y', should I always
-#    choose Y?
-
 def update_uninstall(specs, config):
     projection = config.projection
     link_to_spec = projection.project_all(specs)
@@ -117,21 +120,14 @@ def update_uninstall(specs, config):
     link_to_spec = projection.project_all(related_specs)
     config.add_links(link_to_spec)
 
-#TODO: store spec to link so that if link scheme changes you can still remove
-#    (then again you should totally regenerate if scheme changes)
-#TODO: projection which optionally includes details if they apply (e.g. mention
-#    the MPI implementation if there is a dependency on MPI)
-#TODO: if a projection automatically adds details to disambiguate specs, then
-#    the installation of a new spec could lead to several symlinks being updated
 
 def tree(parser, args):
     root = args.root
 
     all_specs = spack.install_layout.all_specs()
-    projection = UniversalProjection(args.default_projection)
-    
-    link_to_chosen = projection.project_all(all_specs)
-    
-    for link, spec in link_to_chosen.iteritems():
-        link_path = join_path(root, link)
-        print link_path, spec.prefix
+
+    config = spack.config.get_config('trees')
+
+    for link_path, spec in project_all(all_specs, config).iteritems():
+        print join_path(root, link_path), spec.prefix
+

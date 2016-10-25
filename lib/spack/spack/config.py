@@ -150,6 +150,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'targets': spack.schema.targets.schema,
     'modules': spack.schema.modules.schema,
+    'trees': spack.schema.trees.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
