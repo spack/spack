@@ -171,7 +171,7 @@ class Boost(Package):
 
         libs = " ".join(libs)
         return 'using python : %s : %s : %s : %s ;\n' % (
-            spec['python'].version,
+            spec['python'].version.up_to(2),
             join_path(spec['python'].prefix.bin, 'python'),
             incs, libs
         )
