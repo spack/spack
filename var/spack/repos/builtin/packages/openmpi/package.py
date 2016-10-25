@@ -44,6 +44,9 @@ def _verbs_dir():
         # Remove executable name and "bin" directory
         path = os.path.dirname(path)
         path = os.path.dirname(path)
+        # There's usually no "/include" on Unix; use "/usr/include" instead
+        if path == "/":
+            path = "/usr"
         return path
     except:
         return None
