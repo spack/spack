@@ -52,7 +52,11 @@ schema = {
                                 'f77': {'anyOf': [{'type': 'string'},
                                                   {'type': 'null'}]},
                                 'fc':  {'anyOf': [{'type': 'string'},
-                                                  {'type': 'null'}]},
+                                                  {'type': 'null'}]}}},
+                        'flags': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
                                 'cflags': {'anyOf': [{'type': 'string'},
                                                      {'type': 'null'}]},
                                 'cxxflags': {'anyOf': [{'type': 'string'},

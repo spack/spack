@@ -104,3 +104,10 @@ class ConcretizePreferencesTest(MockPackagesTest):
         self.update_packages('all', 'providers', {'mpi': ['zmpi']})
         spec = self.concretize('mpileaks')
         self.assertTrue('zmpi', spec)
+
+    def test_develop(self):
+        """Test conretization with develop version
+        """
+        spec = Spec('builtin.mock.develop-test')
+        spec.concretize()
+        self.assertEqual(spec.version, spack.spec.Version('0.2.15'))

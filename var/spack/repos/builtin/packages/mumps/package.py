@@ -64,6 +64,7 @@ class Mumps(Package):
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
+    depends_on('lapack')
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
@@ -78,8 +79,9 @@ class Mumps(Package):
             raise RuntimeError(
                 'You cannot use the variants parmetis or ptscotch without mpi')
 
-        blas = self.spec['blas'].blas_libs
-        makefile_conf = ["LIBBLAS = %s" % blas.ld_flags]
+        lapack_blas = (self.spec['lapack'].lapack_libs +
+                       self.spec['blas'].blas_libs)
+        makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
 
         orderings = ['-Dpord']
 
@@ -155,7 +157,13 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        makefile_conf.append("CDEFS   = -DAdd_")
+        if self.compiler.name == 'intel':
+            # Intel Fortran compiler provides the main() function so
+            # C examples linked with the Fortran compiler require a
+            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+            makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
+        else:
+            makefile_conf.append("CDEFS   = -DAdd_")
 
         if '+shared' in self.spec:
             if sys.platform == 'darwin':

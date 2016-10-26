@@ -25,23 +25,13 @@
 from spack import *
 
 
-class Xpyb(Package):
-    """xpyb provides a Python binding to the X Window System protocol
-    via libxcb."""
+class DevelopTest(Package):
+    """Dummy package with develop version"""
+    homepage = "http://www.openblas.net"
+    url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
-    homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/xpyb-1.3.1.tar.gz"
-
-    version('1.3.1', '75d567e25517fb883a56f10b77fd2757')
-
-    extends('python')
-
-    depends_on('libxcb@1.5:')
-
-    depends_on('xcb-proto@1.7.1:', type='build')
+    version('develop', git='https://github.com/dummy/repo.git')
+    version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
+        pass

@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from __future__ import print_function
 import argparse
 
 import llnl.util.tty as tty
@@ -75,7 +74,7 @@ the dependencies."""
         help="Run tests during installation of a package.")
 
 
-def install(parser, args):
+def install(parser, args, **kwargs):
     if not args.package:
         tty.die("install requires at least one package argument")
 
@@ -88,7 +87,7 @@ def install(parser, args):
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
-    kwargs = {
+    kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'install_deps': 'dependencies' in args.things_to_install,
@@ -97,7 +96,7 @@ def install(parser, args):
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty
-    }
+    })
 
     # Spec from cli
     specs = spack.cmd.parse_specs(args.package, concretize=True)
