@@ -1,9 +1,31 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
-
-from contextlib import closing
-from glob import glob
+import glob
+import os
 import sys
-from os.path import isfile
 
 
 class Gcc(Package):
@@ -31,18 +53,18 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    variant('piclibs',
-            default=False,
-            description="Build PIC versions of libgfortran.a and libstdc++.a")
+    variant('piclibs', default=False,
+            description='Build PIC versions of libgfortran.a and libstdc++.a')
 
-    depends_on("mpfr")
-    depends_on("gmp")
-    depends_on("mpc", when='@4.5:')
-    depends_on("isl", when='@5.0:')
+    depends_on('gmp@4.3.2:')
+    depends_on('mpfr@2.4.2:')
+    depends_on('mpc@0.8.1', when='@4.5:')
+    depends_on('isl@0.14:0.16', when='@5.0:')
 
-    # TODO: integrate these libraries.
-    # depends_on("ppl")
-    # depends_on("cloog")
+    # TODO: integrate these libraries. They are needed for GCC 4.7 and earlier.
+    # depends_on('ppl')
+    # depends_on('cloog')
+
     if sys.platform == 'darwin':
         patch('darwin/gcc-4.9.patch1', when='@4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.3')
@@ -55,22 +77,21 @@ class Gcc(Package):
     def install(self, spec, prefix):
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
-        if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
+        if spec.satisfies('@4.7.1:') and sys.platform != 'darwin' and \
            not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
             enabled_languages.add('go')
 
         # Fix a standard header file for OS X Yosemite that
         # is GCC incompatible by replacing non-GCC compliant macros
         if 'yosemite' in spec.architecture:
-            if isfile(r'/usr/include/dispatch/object.h'):
+            if os.path.isfile(r'/usr/include/dispatch/object.h'):
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 cp = which('cp')
                 new_header = join_path(new_dispatch_dir, 'object.h')
                 cp(r'/usr/include/dispatch/object.h', new_header)
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
-                            'typedef void* dispatch_block_t',
-                            new_header)
+                            'typedef void* dispatch_block_t', new_header)
 
         # Generic options to compile GCC
         options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,
@@ -105,7 +126,7 @@ class Gcc(Package):
     @property
     def spec_dir(self):
         # e.g. lib64/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
+        spec_dir = glob.glob("%s/lib64/gcc/*/*" % self.prefix)
         return spec_dir[0] if spec_dir else None
 
     def write_rpath_specs(self):
@@ -119,7 +140,7 @@ class Gcc(Package):
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
         lines = gcc('-dumpspecs', output=str).strip().split("\n")
         specs_file = join_path(self.spec_dir, 'specs')
-        with closing(open(specs_file, 'w')) as out:
+        with open(specs_file, 'w') as out
             for line in lines:
                 out.write(line + "\n")
                 if line.startswith("*link:"):
