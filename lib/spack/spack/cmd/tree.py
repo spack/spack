@@ -151,7 +151,7 @@ def get_package_config(name, config, exclude_multiply=None,
             exclude_multiply.add(pkg)
 
     multiply = list()
-    for action, pkg, _ in multipliers:
+    for action, pkg, cfg_id in multipliers:
         pkg_cfg = get_package_config(cfg_id, config, exclude_multiply,
             force_path_action=PathAction.BASENAME)
         multiply.append((pkg, PathAction(action), pkg_cfg))
