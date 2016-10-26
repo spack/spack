@@ -184,11 +184,11 @@ class Executable(object):
                     result += err
                 return result
 
-        except OSError, e:
+        except OSError as e:
             raise ProcessError(
                 "%s: %s" % (self.exe[0], e.strerror), "Command: " + cmd_line)
 
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
                     str(e), "\nExit status %d when invoking command: %s" %
@@ -249,7 +249,14 @@ class ProcessError(spack.error.SpackError):
 
     @property
     def long_message(self):
-        msg = self._long_message
+
+        msg = self._long_message if self._long_message else ''
+
+        if self.package_context:
+            if msg:
+                msg += "\n\n"
+            msg += '\n'.join(self.package_context)
+
         if msg:
             msg += "\n\n"
 
@@ -257,12 +264,25 @@ class ProcessError(spack.error.SpackError):
             msg += "See build log for details:\n"
             msg += "  %s" % self.build_log
 
-        if self.package_context:
-            if msg:
-                msg += "\n\n"
-            msg += '\n'.join(self.package_context)
-
         return msg
+
+    def __reduce__(self):
+        # We need this constructor because we are trying to move a ProcessError
+        # across processes. This means that we have to preserve the original
+        # package context and build log
+        return _make_process_error, (
+            self.message,
+            self._long_message,
+            self.package_context,
+            self.build_log
+        )
+
+
+def _make_process_error(msg, long_message, pkg_context, build_log):
+    a = ProcessError(msg, long_message)
+    a.package_context = pkg_context
+    a.build_log = build_log
+    return a
 
 
 def _get_package_context():
@@ -291,7 +311,7 @@ def _get_package_context():
 
         # Look only at a frame in a subclass of spack.Package
         obj = frame.f_locals['self']
-        if type(obj) != spack.Package and isinstance(obj, spack.Package):
+        if type(obj) != spack.PackageBase and isinstance(obj, spack.PackageBase):  # NOQA: ignore=E501
             break
     else:
         # Didn't find anything
