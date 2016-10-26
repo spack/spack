@@ -39,7 +39,7 @@ def setup_parser(subparser):
     subparser.add_argument('action')
     subparser.add_argument('target', nargs=argparse.REMAINDER)
 
-class PackageConfig(object):
+class PackageProjection(object):
     def __init__(self, element_groups, dep=None):
         self.element_groups = element_groups
         self.dep = dep
@@ -120,9 +120,9 @@ def get_package_config(name, config, exclude_multiply=None,
 
     if element_group:
         element_groups.append(element_group)
-    return PackageConfig(element_groups, dep=dep)
+    return PackageProjection(element_groups, dep=dep)
 
-class PackageDetail(object):
+class PackageDetailProjection(object):
     def __init__(self, true_fmt, query_spec=None, false_fmt=None):
         self.query_spec = query_spec
         self.true_fmt = true_fmt
@@ -141,7 +141,7 @@ def process_this(t):
     elif t[0] == 'this?':
         _, query_spec, true_fmt = t[:3]
         false_fmt = t[3] if len(t) > 3 else None
-    return PackageDetail(true_fmt, query_spec, false_fmt)
+    return PackageDetailProjection(true_fmt, query_spec, false_fmt)
 
 def project_all(specs, config):
     def keyFn(spec):
@@ -161,9 +161,9 @@ def map_specs(specs, keyFn):
     return key_to_specs
 
 def resolve_conflict(specs):
-    #TODO: optionally omit build dependencies when ordering packages
     return max(specs)
 
+#TODO: unfinished
 def update_install(specs, config):
     projection = config.projection
 
@@ -182,6 +182,7 @@ def update_install(specs, config):
     
     #TODO: what to do if the installed specs arent the chosen specs?
 
+#TODO: unfinished
 def update_uninstall(specs, config):
     projection = config.projection
     link_to_spec = projection.project_all(specs)
