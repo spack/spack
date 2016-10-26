@@ -53,10 +53,6 @@ class Gcc(Package):
     patch('gcc-backport.patch', when='@4.7:5.3')
 
     def install(self, spec, prefix):
-        # libjava/configure needs a minor fix to install into spack paths.
-        filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
-                    string=True)
-
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
