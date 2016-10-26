@@ -40,34 +40,24 @@ def setup_parser(subparser):
     subparser.add_argument('target', nargs=argparse.REMAINDER)
 
 class PackageConfig(object):
-    def __init__(self, descriptor=None, compiler_descriptor=None,
-            multiply=None, place_first=False):
-        self.descriptor = descriptor
-        self.compiler_descriptor = compiler_descriptor
-        self.multiply = multiply or list()
-        self.place_first = place_first
+    def __init__(self, element_groups, dep=None):
+        self.element_groups = element_groups
+        self.dep = dep
 
     def project(self, spec):
-        base = spec.format(self.descriptor)
+        if self.dep:
+            if self.dep == spec.name or self.dep not in spec:
+                return
+            spec = spec[self.dep]
+        projected_groups = list()
+        for element_group in self.element_groups:
+            projected = list(x.project(spec) for x in element_group)
+            projected = list(x for x in projected if x)
+            if projected:
+                projected_groups.append(projected)
 
-        elements = list()
-
-        if self.compiler_descriptor:
-            elements.append(spec.format(self.compiler_descriptor))
-
-        for dep, action, dep_cfg in self.multiply:
-            if dep in spec and not dep == spec.name:
-                dep_path = dep_cfg.project(spec[dep]) #TODO? coerce placement to first? (maybe do this in get_pkg_config?)
-                if action == 'dirname':
-                    elements.append(dep_path)
-                else:
-                    base = '-'.join([base, dep_path]) #TODO: dep_path must not have any /
-
-        if self.place_first:
-            elements.insert(0, base)
-        else:
-            elements.append(base)
-        return str(join_path(*elements))
+        if projected_groups:
+            return join_path(*('-'.join(x) for x in projected_groups))
 
 class FallbackSection(object):
     def __init__(self, primary, secondary):
@@ -81,7 +71,7 @@ class FallbackSection(object):
             return self.secondary[key]
 
 def get_package_config(name, config, exclude_multiply=None,
-        force_path_action=None):
+        force_basename=False, dep=None):
     """
     Notes:
     
@@ -94,31 +84,66 @@ def get_package_config(name, config, exclude_multiply=None,
     """
     section = FallbackSection(config.get(name, {}), config.get('all'))    
 
-    multipliers = list()
+    element_groups = list()
+    element_group = list()
     exclude_multiply = set(exclude_multiply) if exclude_multiply else set()
-    for item in section['multiply']:
+
+    parent_exclude = set(exclude_multiply)
+    for item in section['components']:
         t = item.strip().split(':')
-        if len(t) == 3:
-            action, pkg, cfg_id = t
-        else:
-            action, pkg = t
-            cfg_id = pkg
-        
-        action = force_path_action or action
-
-        if pkg not in exclude_multiply:
-            multipliers.append((action, pkg, cfg_id))
-            exclude_multiply.add(pkg)
-
-    multiply = list()
-    for action, pkg, cfg_id in multipliers:
-        pkg_cfg = get_package_config(cfg_id, config, exclude_multiply,
-            force_path_action='basename')
-        multiply.append((pkg, action, pkg_cfg))
+        if t[0] == 'dep':
+            parent_exclude.add(t[1])
+        elif t[0] == 'once':
+            parent_exclude.add(t[1])
     
-    place_first = section['placement'] == 'first'
-    return PackageConfig(section['descriptor'], section['compiler_descriptor'],
-        multiply, place_first)
+    for item in section['components']:
+        t = item.strip().split(':')
+        if t[0] == '/':
+            if force_basename:
+                continue
+            element_groups.append(element_group)
+            element_group = list()
+        else:
+            if t[0] == 'dep':
+                pkg = t[1]
+                if pkg in exclude_multiply:
+                    continue
+                cfg_id = pkg if len(t) < 3 else t[2]
+                element = get_package_config(cfg_id, config, parent_exclude,
+                    force_basename=True, dep=pkg)
+            elif t[0] == 'once':
+                cfg_id = t[1]
+                if cfg_id in exclude_multiply:
+                    continue
+                element = process_this(t[2:])
+            elif t[0] in ['this', 'this?']:
+                element = process_this(t)
+            element_group.append(element)
+
+    if element_group:
+        element_groups.append(element_group)
+    return PackageConfig(element_groups, dep=dep)
+
+class PackageDetail(object):
+    def __init__(self, true_fmt, query_spec=None, false_fmt=None):
+        self.query_spec = query_spec
+        self.true_fmt = true_fmt
+        self.false_fmt = false_fmt
+
+    def project(self, spec):
+        if not self.query_spec or spec.satisfies(self.query_spec):
+            return spec.format(self.true_fmt)
+        elif self.false_fmt:
+            return spec.format(self.false_fmt)
+
+def process_this(t):
+    if t[0] == 'this':
+        _, true_fmt = t
+        query_spec, false_fmt = None, None
+    elif t[0] == 'this?':
+        _, query_spec, true_fmt = t[:3]
+        false_fmt = t[3] if len(t) > 3 else None
+    return PackageDetail(true_fmt, query_spec, false_fmt)
 
 def project_all(specs, config):
     def keyFn(spec):

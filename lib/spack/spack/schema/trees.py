@@ -41,30 +41,10 @@ schema = {
                     'default': {},
                     'additionalProperties': False,
                     'properties': {
-                        'descriptor': {'type': 'string'},
-                        'compiler_descriptor': {
-                            'type': 'string',
-                            'default': ''
-                        },
-                        'multiply': {
+                        'components': {
                             'type': 'array',
                             'default': [],
                             'items': {'type': 'string'}
-                        },
-                        'placement' : {
-                            'type': 'string',
-                            'enum': ['first', 'last'],
-                        },
-                        'switches': {
-                            'type':  'object',
-                            'default': {},
-                            'additionalProperties': False,
-                            'patternProperties': {
-                                r'\w[\w-]*': {
-                                    'type': 'string',
-                                    'default': '',
-                                },
-                            },
                         },
                     }
                 }
