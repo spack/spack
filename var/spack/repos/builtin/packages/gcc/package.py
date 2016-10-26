@@ -31,12 +31,6 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    variant('binutils',
-            default=sys.platform != 'darwin',
-            description="Build via binutils")
-    variant('gold',
-            default=sys.platform != 'darwin',
-            description="Build the gold linker plugin for ld-based LTO")
     variant('piclibs',
             default=False,
             description="Build PIC versions of libgfortran.a and libstdc++.a")
@@ -45,8 +39,6 @@ class Gcc(Package):
     depends_on("gmp")
     depends_on("mpc", when='@4.5:')
     depends_on("isl", when='@5.0:')
-    depends_on("binutils~libiberty", when='+binutils ~gold')
-    depends_on("binutils~libiberty+gold", when='+binutils +gold')
 
     # TODO: integrate these libraries.
     # depends_on("ppl")
@@ -91,19 +83,7 @@ class Gcc(Package):
                    "--with-mpc=%s" % spec['mpc'].prefix, "--with-mpfr=%s" %
                    spec['mpfr'].prefix, "--with-gmp=%s" % spec['gmp'].prefix,
                    "--enable-lto", "--with-quad"]
-        # Binutils
-        if spec.satisfies('+binutils'):
-            static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
-            binutils_options = [
-                "--with-sysroot=/", "--with-stage1-ldflags=%s %s" %
-                (self.rpath_args, static_bootstrap_flags),
-                "--with-boot-ldflags=%s %s" %
-                (self.rpath_args, static_bootstrap_flags), "--with-gnu-ld",
-                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                "--with-gnu-as",
-                "--with-as=%s/bin/as" % spec['binutils'].prefix
-            ]
-            options.extend(binutils_options)
+
         # Isl
         if 'isl' in spec:
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
