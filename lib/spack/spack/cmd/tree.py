@@ -44,20 +44,29 @@ class PackageConfig(object):
             multiply=None):
         self.descriptor = descriptor
         self.compiler_descriptor = compiler_descriptor
-        self.multiply = multiply or {}
+        self.multiply = multiply or list()
 
-    def project(self, spec):
-        starter_path = spec.format(self.descriptor)
-        elements = starter_path.split('/')
-        path = Path(elements[:-1], elements[-1])
-        for dep, action, dep_cfg in self.multiply:
-            if dep in spec and not dep == spec.name:
-                dep_path = dep_cfg.project(spec[dep])
-                action(path, str(dep_path))
+    def project(self, spec, place_first=False):
+        base = spec.format(self.descriptor)
+
+        elements = list()
 
         if self.compiler_descriptor:
-            path.prepend(spec.format(self.compiler_descriptor))
-        return str(path)
+            elements.append(spec.format(self.compiler_descriptor))
+
+        for dep, action, dep_cfg in self.multiply:
+            if dep in spec and not dep == spec.name:
+                dep_path = dep_cfg.project(spec[dep], place_first=True)
+                if action == 'dirname':
+                    elements.append(dep_path)
+                else:
+                    base = '-'.join([base, dep_path]) #TODO: dep_path must not have any /
+
+        if place_first:
+            elements.insert(0, base)
+        else:
+            elements.append(base)
+        return str(join_path(*elements))
 
 class FallbackSection(object):
     def __init__(self, primary, secondary):
@@ -69,59 +78,6 @@ class FallbackSection(object):
             return self.primary[key]
         elif key in self.secondary:
             return self.secondary[key]
-
-class Path(object):
-    def __init__(self, dir_elements, basename):
-        self.dir_elements = dir_elements
-        self.basename = basename
-
-    def prepend(self, element):
-        self.dir_elements.insert(0, element)
-
-    def append(self, element):
-        self.dir_elements.append(element)
-
-    def append_basename(self, element):
-        self.basename = '-'.join([self.basename, element])
-
-    def __str__(self):
-        elements = list(self.dir_elements)
-        if self.basename:
-            elements.append(self.basename)
-        return join_path(*elements)
-
-class PathAction(object):
-    PREPEND = 'prepend'
-    APPEND = 'append'
-    BASENAME = 'basename'
-    ACTIONS = set([PREPEND, APPEND, BASENAME])
-
-    def __init__(self, action):
-        if action not in PathAction.ACTIONS:
-            raise ValueError(
-                "Action must be one of {{{0}}}, check configuration".format(
-                    ', '.join(PathActions.ACTIONS)))
-        self.action = action
-
-    def __call__(self, path, element):
-        if self.action == PathAction.PREPEND:
-            path.prepend(element)
-        elif self.action == PathAction.APPEND:
-            path.append(element)
-        else:
-            path.append_basename(element)
-
-    @staticmethod
-    def reorder(items, actionFn):
-        appends = list()
-        prepends = list()
-        for item in items:
-            path_action = actionFn(item).action
-            if path_action == PathAction.PREPEND:
-                prepends.append(item)
-            else:
-                appends.append(item)
-        return list(reversed(prepends)) + appends
 
 def get_package_config(name, config, exclude_multiply=None,
         force_path_action=None):
@@ -156,10 +112,8 @@ def get_package_config(name, config, exclude_multiply=None,
     multiply = list()
     for action, pkg, cfg_id in multipliers:
         pkg_cfg = get_package_config(cfg_id, config, exclude_multiply,
-            force_path_action=PathAction.BASENAME)
-        multiply.append((pkg, PathAction(action), pkg_cfg))
-    
-    multiply = PathAction.reorder(multiply, lambda t: t[1])
+            force_path_action='dirname')
+        multiply.append((pkg, action, pkg_cfg))
     
     return PackageConfig(section['descriptor'], section['compiler_descriptor'],
         multiply)

@@ -51,6 +51,10 @@ schema = {
                             'default': [],
                             'items': {'type': 'string'}
                         },
+                        'placement' : {
+                            'type': 'string',
+                            'enum': ['first', 'last'],
+                        },
                         'switches': {
                             'type':  'object',
                             'default': {},
