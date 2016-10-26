@@ -25,12 +25,12 @@
 from spack import *
 
 
-class Gmp(Package):
-    """GMP is a free library for arbitrary precision arithmetic, operating
-    on signed integers, rational numbers, and floating-point numbers."""
-
+class Gmp(AutotoolsPackage):
+    """GMP is a free library for arbitrary precision arithmetic,
+       operating on signed integers, rational numbers, and
+       floating-point numbers."""
     homepage = "https://gmplib.org"
-    url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
+    url = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
 
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
     version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
@@ -39,16 +39,10 @@ class Gmp(Package):
 
     depends_on('m4', type='build')
 
-    def install(self, spec, prefix):
-        config_args = ['--prefix=' + prefix,
-                       '--enable-cxx']
-
+    def configure_args(self):
+        args = ['--enable-cxx']
         # We need this flag if we want all the following checks to pass.
-        if spec.compiler.name == 'intel':
-            config_args.append('CXXFLAGS=-no-ftz')
+        if self.spec.compiler.name == 'intel':
+            args.append('CXXFLAGS=-no-ftz')
 
-        configure(*config_args)
-
-        make()
-        make('check')
-        make('install')
+        return args

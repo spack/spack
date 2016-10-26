@@ -98,7 +98,7 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import hashlib
 import imp
-import sys
+import ctypes
 from StringIO import StringIO
 from operator import attrgetter
 
@@ -202,6 +202,9 @@ special_types = {
 }
 
 legal_deps = tuple(special_types) + alldeps
+
+"""Max integer helps avoid passing too large a value to cyaml."""
+maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
 def validate_deptype(deptype):
@@ -969,12 +972,12 @@ class Spec(object):
             return self._hash[:length]
         else:
             yaml_text = syaml.dump(
-                self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+                self.to_node_dict(), default_flow_style=True, width=maxint)
             sha = hashlib.sha1(yaml_text)
-            b32_hash = base64.b32encode(sha.digest()).lower()[:length]
+            b32_hash = base64.b32encode(sha.digest()).lower()
             if self.concrete:
                 self._hash = b32_hash
-            return b32_hash
+            return b32_hash[:length]
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""

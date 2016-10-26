@@ -51,7 +51,7 @@ test_command = [
     'arg5', 'arg6']
 
 
-class CompilerTest(unittest.TestCase):
+class CompilerWrapperTest(unittest.TestCase):
 
     def setUp(self):
         self.cc = Executable(join_path(spack.build_env_path, "cc"))

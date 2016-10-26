@@ -526,32 +526,57 @@ in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
 ``http://example.com/foo-8.2.1.tar.gz``.
 
-If spack *cannot* extrapolate the URL from the ``url`` field by
-default, you can write your own URL generation algorithm in place of
-the ``url`` declaration.  For example:
+If the URL is particularly complicated or changes based on the release,
+you can override the default URL generation algorithm by defining your
+own ``url_for_version()`` function. For example, the developers of HDF5
+keep changing the archive layout, so the ``url_for_version()`` function
+looks like:
 
-.. code-block:: python
-   :linenos:
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/hdf5/package.py
+   :pyobject: Hdf5.url_for_version
 
-   class Foo(Package):
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
-       ...
-       def url_for_version(self, version):
-           return 'http://example.com/version_%s/foo-%s.tar.gz' \
-               % (version, version)
-       ...
+With the use of this ``url_for_version()``, Spack knows to download HDF5 ``1.8.16``
+from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz``
+but download HDF5 ``1.10.0`` from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.gz``.
 
-If a URL cannot be derived systematically, you can add an explicit URL
-for a particular version:
+You'll notice that HDF5's ``url_for_version()`` function makes use of a special
+``Version`` function called ``up_to()``. When you call ``version.up_to(2)`` on a
+version like ``1.10.0``, it returns ``1.10``. ``version.up_to(1)`` would return
+``1``. This can be very useful for packages that place all ``X.Y.*`` versions in
+a single directory and then places all ``X.Y.Z`` versions in a subdirectory.
+
+There are a few ``Version`` properties you should be aware of. We generally
+prefer numeric versions to be separated by dots for uniformity, but not all
+tarballs are named that way. For example, ``icu4c`` separates its major and minor
+versions with underscores, like ``icu4c-57_1-src.tgz``. The value ``57_1`` can be
+obtained with the use of the ``version.underscored`` property. Note that Python
+properties don't need parentheses. There are other separator properties as well:
+
+===================  ======
+Property             Result
+===================  ======
+version.dotted       1.2.3
+version.dashed       1-2-3
+version.underscored  1_2_3
+version.joined       123
+===================  ======
+
+.. note::
+
+   Python properties don't need parentheses. ``version.dashed`` is correct.
+   ``version.dashed()`` is incorrect.
+
+If a URL cannot be derived systematically, or there is a special URL for one
+of its versions, you can add an explicit URL for a particular version:
 
 .. code-block:: python
 
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
            url='http://example.com/foo-8.2.1-special-version.tar.gz')
 
-For the URL above, you might have to add an explicit URL because the
-version can't simply be substituted in the original ``url`` to
-construct the new one for ``8.2.1``.
+This is common for Python packages that download from PyPi. Since newer
+download URLs often contain a unique hash for each version, there is no
+way to guess the URL systematically.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
@@ -3004,12 +3029,17 @@ Cleans up all of Spack's temporary and cached files.  This can be used to
 recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
-When called with ``--stage`` or ``--all`` (or without arguments, in which case
-the default is ``--all``) this removes all staged files; this is equivalent to
-running ``spack clean`` for every package you have fetched or staged.
+When called with ``--stage`` or without arguments this removes all staged
+files and will be equivalent to running ``spack clean`` for every package
+you have fetched or staged.
 
-When called with ``--cache`` or ``--all`` this will clear all resources
+When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
+
+When called with ``--user-cache`` this will remove caches in the user home
+directory, including cached virtual indices.
+
+To remove all of the above, the command can be called with ``--all``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success

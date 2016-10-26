@@ -218,12 +218,14 @@ If you want to see specifics on a particular compiler, you can run
 
    $ spack compiler info intel@15
    intel@15.0.0:
-           cc  = /usr/local/bin/icc-15.0.090
-           cxx = /usr/local/bin/icpc-15.0.090
-           f77 = /usr/local/bin/ifort-15.0.090
-           fc  = /usr/local/bin/ifort-15.0.090
-           modules  = []
-           operating system  = centos6
+     paths:
+       cc  = /usr/local/bin/icc-15.0.090
+       cxx = /usr/local/bin/icpc-15.0.090
+       f77 = /usr/local/bin/ifort-15.0.090
+       fc  = /usr/local/bin/ifort-15.0.090
+     modules = []
+     operating system = centos6
+   ...
 
 This shows which C, C++, and Fortran compilers were detected by Spack.
 Notice also that we didn't have to be too specific about the
@@ -244,7 +246,7 @@ Each compiler configuration in the file looks like this:
 
    compilers:
    - compiler:
-       modules = []
+       modules: []
        operating_system: centos6
        paths:
          cc: /usr/local/bin/icc-15.0.024-beta
@@ -253,39 +255,46 @@ Each compiler configuration in the file looks like this:
          fc: /usr/local/bin/ifort-15.0.024-beta
        spec: intel@15.0.0:
 
-For compilers, like ``clang``, that do not support Fortran, put
+For compilers that do not support Fortran (like ``clang``), put
 ``None`` for ``f77`` and ``fc``:
-
-.. code-block:: yaml
-
-       paths:
-         cc: /usr/bin/clang
-         cxx: /usr/bin/clang++
-         f77: None
-         fc: None
-       spec: clang@3.3svn:
-
-Once you save the file, the configured compilers will show up in the
-list displayed by ``spack compilers``.
-
-You can also add compiler flags to manually configured compilers. The
-valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``,
-``ldflags``, and ``ldlibs``. For example:
 
 .. code-block:: yaml
 
    compilers:
    - compiler:
-       modules = []
-       operating_system: OS
+       modules: []
+       operating_system: centos6
        paths:
-         cc: /usr/local/bin/icc-15.0.024-beta
-         cxx: /usr/local/bin/icpc-15.0.024-beta
-         f77: /usr/local/bin/ifort-15.0.024-beta
-         fc: /usr/local/bin/ifort-15.0.024-beta
-       parameters:
+         cc: /usr/bin/clang
+         cxx: /usr/bin/clang++
+         f77: None
+         fc: None
+       spec: clang@3.3svn
+
+Once you save the file, the configured compilers will show up in the
+list displayed by ``spack compilers``.
+
+You can also add compiler flags to manually configured compilers. These
+flags should be specified in the ``flags`` section of the compiler
+specification. The valid flags are ``cflags``, ``cxxflags``, ``fflags``,
+``cppflags``, ``ldflags``, and ``ldlibs``. For example:
+
+.. code-block:: yaml
+
+   compilers:
+   - compiler:
+       modules: []
+       operating_system: centos6
+       paths:
+         cc: /usr/bin/gcc
+         cxx: /usr/bin/g++
+         f77: /usr/bin/gfortran
+         fc: /usr/bin/gfortran
+       flags:
+         cflags: -O3 -fPIC
+         cxxflags: -O3 -fPIC
          cppflags: -O3 -fPIC
-       spec: intel@15.0.0:
+       spec: gcc@4.7.2
 
 These flags will be treated by spack as if they were entered from
 the command line each time this compiler is used. The compiler wrappers
@@ -527,7 +536,7 @@ configuration in ``compilers.yaml`` illustrates this technique:
 
    compilers:
    - compiler:
-       modules = [gcc-4.9.3, intel-15.0.24]
+       modules: [gcc-4.9.3, intel-15.0.24]
        operating_system: centos7
        paths:
          cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
@@ -568,7 +577,7 @@ flags to the ``icc`` command:
 
        compilers:
        - compiler:
-           modules = [intel-15.0.24]
+           modules: [intel-15.0.24]
            operating_system: centos7
            paths:
              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta

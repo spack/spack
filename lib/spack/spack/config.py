@@ -30,18 +30,47 @@ Configuration file scopes
 
 When Spack runs, it pulls configuration data from several config
 directories, each of which contains configuration files.  In Spack,
-there are two configuration scopes:
+there are three configuration scopes (lowest to highest):
 
-1. ``site``: Spack loads site-wide configuration options from
-   ``$(prefix)/etc/spack/``.
+1. ``defaults``: Spack loads default configuration settings from
+   ``$(prefix)/etc/spack/defaults/``. These settings are the "out of the
+   box" settings Spack will use without site- or user- modification, and
+   this is where settings that are versioned with Spack should go.
 
-2. ``user``: Spack next loads per-user configuration options from
-   ``~/.spack/``.
+2. ``site``: This scope affects only this *instance* of Spack, and
+   overrides the ``defaults`` scope. Configuration files in
+   ``$(prefix)/etc/spack/`` determine site scope. These can be used for
+   per-project settings (for users with their own spack instance) or for
+   site-wide settings (for admins maintaining a common spack instance).
 
-Spack may read configuration files from both of these locations.  When
-configurations conflict, the user config options take precedence over
-the site configurations.  Each configuration directory may contain
-several configuration files, such as compilers.yaml or mirrors.yaml.
+3. ``user``: User configuration goes in the user's home directory,
+   specifically in ``~/.spack/``.
+
+Spack may read configuration files from any of these locations.  When
+configurations conflict, settings from higher-precedence scopes override
+lower-precedence settings.
+
+fCommands that modify scopes (``spack compilers``, ``spack config``,
+etc.) take a ``--scope=<name>`` parameter that you can use to control
+which scope is modified.
+
+For each scope above, there can *also* be platform-specific
+overrides. For example, on Blue Gene/Q machines, Spack needs to know the
+location of cross-compilers for the compute nodes.  This configuration is
+in ``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence
+over settings in the ``defaults`` scope, but can still be overridden by
+settings in ``site``, ``site/bgq``, ``user``, or ``user/bgq``. So, the
+full list of scopes and their precedence is:
+
+1. ``defaults``
+2. ``defaults/<platform>``
+3. ``site``
+4. ``site/<platform>``
+5. ``user``
+6. ``user/<platform>``
+
+Each configuration directory may contain several configuration files,
+such as compilers.yaml or mirrors.yaml.
 
 =========================
 Configuration file format
@@ -118,6 +147,7 @@ a key in a configuration file.  For example, this::
 
 Will make Spack take compilers *only* from the user configuration, and
 the site configuration will be ignored.
+
 """
 
 import copy
@@ -135,6 +165,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack
+import spack.architecture
 from spack.error import SpackError
 import spack.schema
 
@@ -267,16 +298,30 @@ class ConfigScope(object):
         """Empty cached config information."""
         self.sections = {}
 
+#
+# Below are configuration scopes.
+#
+# Each scope can have per-platfom overrides in subdirectories of the
+# configuration directory.
+#
+_platform = spack.architecture.platform().name
+
 """Default configuration scope is the lowest-level scope. These are
    versioned with Spack and can be overridden by sites or users."""
-ConfigScope('defaults', os.path.join(spack.etc_path, 'spack', 'defaults'))
+_defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
+ConfigScope('defaults', _defaults_path)
+ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
 
 """Site configuration is per spack instance, for sites or projects.
    No site-level configs should be checked into spack by default."""
-ConfigScope('site', os.path.join(spack.etc_path, 'spack'))
+_site_path = os.path.join(spack.etc_path, 'spack')
+ConfigScope('site', _site_path)
+ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 
 """User configuration can override both spack defaults and site config."""
-ConfigScope('user', spack.user_config_path)
+_user_path = spack.user_config_path
+ConfigScope('user', _user_path)
+ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
 
 def highest_precedence_scope():

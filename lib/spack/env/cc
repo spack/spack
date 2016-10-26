@@ -317,13 +317,6 @@ case "$mode" in
         args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
 esac
 
-#
-# Unset pesky environment variables that could affect build sanity.
-#
-unset LD_LIBRARY_PATH
-unset LD_RUN_PATH
-unset DYLD_LIBRARY_PATH
-
 full_command=("$command" "${args[@]}")
 
 # In test command mode, write out full command for Spack tests.

@@ -29,13 +29,8 @@ description = "Get and set configuration options."
 
 def setup_parser(subparser):
     # User can only choose one
-    scope_group = subparser.add_mutually_exclusive_group()
-    scope_group.add_argument(
-        '--user', action='store_const', const='user', dest='scope',
-        help="Use config file in user home directory (default).")
-    scope_group.add_argument(
-        '--site', action='store_const', const='site', dest='scope',
-        help="Use config file in spack prefix.")
+    subparser.add_argument('--scope', choices=spack.config.config_scopes,
+                           help="Configuration scope to read/modify.")
 
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 

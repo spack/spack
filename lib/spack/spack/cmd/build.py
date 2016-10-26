@@ -22,26 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+import spack.cmd.configure as cfg
+
 from spack import *
 
+description = 'Stops at build stage when installing a package, if possible'
 
-class Xpyb(Package):
-    """xpyb provides a Python binding to the X Window System protocol
-    via libxcb."""
+build_system_to_phase = {
+    CMakePackage: 'build',
+    AutotoolsPackage: 'build'
+}
 
-    homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/xpyb-1.3.1.tar.gz"
 
-    version('1.3.1', '75d567e25517fb883a56f10b77fd2757')
+def setup_parser(subparser):
+    cfg.setup_parser(subparser)
 
-    extends('python')
 
-    depends_on('libxcb@1.5:')
-
-    depends_on('xcb-proto@1.7.1:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
+def build(parser, args):
+    cfg._stop_at_phase_during_install(args, build, build_system_to_phase)
