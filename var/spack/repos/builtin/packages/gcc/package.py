@@ -58,7 +58,7 @@ class Gcc(AutotoolsPackage):
 
     depends_on('gmp@4.3.2:')
     depends_on('mpfr@2.4.2:')
-    depends_on('mpc@0.8.1', when='@4.5:')
+    depends_on('mpc@0.8.1:', when='@4.5:')
     depends_on('isl@0.14:0.16', when='@5.0:')
 
     # TODO: Integrate these libraries. They are needed for GCC 4.7 and earlier.
