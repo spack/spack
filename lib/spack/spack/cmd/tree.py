@@ -25,16 +25,19 @@
 import spack
 from llnl.util.filesystem import join_path
 
+import argparse
+
 from collections import defaultdict
 import itertools
 
 description = "Project Spack's fully-qualified names to a tree of simplified symlinks"
 
 def setup_parser(subparser):
+    subparser.add_argument('--root', dest='root')
     subparser.add_argument(
-        '--default-projection', dest='default_projection')
-    subparser.add_argument(
-        'root')
+        '--transitive', dest='transitive', action='store_true')
+    subparser.add_argument('action')
+    subparser.add_argument('target', nargs=argparse.REMAINDER)
 
 class PackageConfig(object):
     def __init__(self, descriptor=None, compiler_descriptor=None,
@@ -212,14 +215,49 @@ def update_uninstall(specs, config):
     link_to_spec = projection.project_all(related_specs)
     config.add_links(link_to_spec)
 
+def get_or_set(d, key, val):
+    if key in d:
+        return d[key]
+    else:
+        d[key] = val
+        return val
 
 def tree(parser, args):
     root = args.root
+    action = args.action
 
-    all_specs = spack.install_layout.all_specs()
+    tree_config = spack.config.get_config('trees')
+    projections_config = spack.config.get_config('projections')
 
-    config = spack.config.get_config('trees')
+    if action == 'add':
+        tree_id, query_spec = args.target
+            
+        tree = get_or_set(projections_config, tree_id, {})
+        update = get_or_set(
+            tree, 'transitive' if args.transitive else 'single', [])
+        update.append(query_spec)
+        spack.config.update_config('projections', projections_config, 'user')
+    elif action == 'project':
+        tree_id, = args.target
 
-    for link_path, spec in project_all(all_specs, config).iteritems():
-        print join_path(root, link_path), spec.prefix
+        if tree_id == 'all':
+            specs_to_project = spack.install_layout.all_specs()
+        else:
+            specs_to_project = list()
+            tree = projections_config[tree_id]
+            single = tree['single']
+            transitive = tree['transitive']
+            for query_spec in single:
+                specs_to_project.extend(
+                    spack.installed_db.query(query_spec))
+            for query_spec in transitive:
+                specs_to_project.extend(
+                    itertools.chain.from_iterable(spec.traverse() for spec in
+                        spack.installed_db.query(query_spec)))
+
+        for link_path, spec in project_all(
+                specs_to_project, tree_config).iteritems():
+            print join_path(root, link_path), spec.prefix
+    else:
+        raise ValueError("Unknown action: " + action)
 

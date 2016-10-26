@@ -1,0 +1,7 @@
+projections:
+  tree-foo: 
+    single:
+      - mpi     #each of these is a query spec: get all matching specs
+      - bzip2
+    transitive:
+      - boost   #likewise each of these is a query spec

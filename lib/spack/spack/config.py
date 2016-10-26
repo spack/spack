@@ -151,6 +151,7 @@ section_schemas = {
     'targets': spack.schema.targets.schema,
     'modules': spack.schema.modules.schema,
     'trees': spack.schema.trees.schema,
+    'projections': spack.schema.projections.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
