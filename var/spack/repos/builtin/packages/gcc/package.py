@@ -33,8 +33,8 @@ class Gcc(AutotoolsPackage):
        Objective-C, Fortran, and Java."""
 
     homepage = "https://gcc.gnu.org/"
-    url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
-    list_url = 'http://ftp.gnu.org/gnu/gcc/'
+    url      = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
+    list_url = "http://ftp.gnu.org/gnu/gcc/"
     list_depth = 2
 
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
@@ -97,7 +97,6 @@ class Gcc(AutotoolsPackage):
            not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
             enabled_languages.add('go')
 
-
         # Generic options to compile GCC
         args = [
             '--libdir={0}/lib64'.format(self.prefix),
@@ -133,24 +132,24 @@ class Gcc(AutotoolsPackage):
     @property
     def spec_dir(self):
         # e.g. lib64/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob.glob("%s/lib64/gcc/*/*" % self.prefix)
+        spec_dir = glob.glob('{0}/lib64/gcc/*/*'.format(self.prefix))
         return spec_dir[0] if spec_dir else None
 
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""
         if not self.spec_dir:
-            tty.warn("Could not install specs for %s." %
-                     self.spec.format('$_$@'))
+            tty.warn('Could not install specs for {0}.'.format(
+                     self.spec.format('$_$@')))
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
-        lines = gcc('-dumpspecs', output=str).strip().split("\n")
+        lines = gcc('-dumpspecs', output=str).strip().split('\n')
         specs_file = join_path(self.spec_dir, 'specs')
-        with open(specs_file, 'w') as out
+        with open(specs_file, 'w') as out:
             for line in lines:
-                out.write(line + "\n")
-                if line.startswith("*link:"):
-                    out.write("-rpath %s/lib:%s/lib64 \\\n" %
-                              (self.prefix, self.prefix))
+                out.write(line + '\n')
+                if line.startswith('*link:'):
+                    out.write(r'-rpath {0}/lib:{0}/lib64 \n'.format(
+                        self.prefix))
         set_install_permissions(specs_file)
