@@ -41,12 +41,13 @@ def setup_parser(subparser):
 
 class PackageConfig(object):
     def __init__(self, descriptor=None, compiler_descriptor=None,
-            multiply=None):
+            multiply=None, place_first=False):
         self.descriptor = descriptor
         self.compiler_descriptor = compiler_descriptor
         self.multiply = multiply or list()
+        self.place_first = place_first
 
-    def project(self, spec, place_first=False):
+    def project(self, spec):
         base = spec.format(self.descriptor)
 
         elements = list()
@@ -56,13 +57,13 @@ class PackageConfig(object):
 
         for dep, action, dep_cfg in self.multiply:
             if dep in spec and not dep == spec.name:
-                dep_path = dep_cfg.project(spec[dep], place_first=True)
+                dep_path = dep_cfg.project(spec[dep]) #TODO? coerce placement to first? (maybe do this in get_pkg_config?)
                 if action == 'dirname':
                     elements.append(dep_path)
                 else:
                     base = '-'.join([base, dep_path]) #TODO: dep_path must not have any /
 
-        if place_first:
+        if self.place_first:
             elements.insert(0, base)
         else:
             elements.append(base)
@@ -112,11 +113,12 @@ def get_package_config(name, config, exclude_multiply=None,
     multiply = list()
     for action, pkg, cfg_id in multipliers:
         pkg_cfg = get_package_config(cfg_id, config, exclude_multiply,
-            force_path_action='dirname')
+            force_path_action='basename')
         multiply.append((pkg, action, pkg_cfg))
     
+    place_first = section['placement'] == 'first'
     return PackageConfig(section['descriptor'], section['compiler_descriptor'],
-        multiply)
+        multiply, place_first)
 
 def project_all(specs, config):
     def keyFn(spec):

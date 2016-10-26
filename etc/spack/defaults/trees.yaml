@@ -20,6 +20,6 @@ trees:
       - dirname:mpi #since there is no entry, we use the descriptor for 'all' (careful about omitting 'mpi', and in fact you can omit any multiplier that's already mentioned, which would be all of the multipliers in this case since you are referring back to the same descriptor)
       - dirname:bzip2 #if we didnt want to use exactly the same package descriptor as "bzip2" we could create and refer to e.g. "bzip2/bzip2_multiplier"
       - basename:zlib
-    placement: last
+    placement: first
   bzip2:
     descriptor: "ARRRRRR-${PACKAGE}"
