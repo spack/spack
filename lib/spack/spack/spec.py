@@ -2218,6 +2218,7 @@ class Spec(object):
         out = StringIO()
         named = escape = compiler = False
         named_str = fmt = ''
+        nested_start = False
 
         def write(s, c):
             if color:
@@ -2285,21 +2286,29 @@ class Spec(object):
                     compiler = False
 
             elif named:
+                if c == '{':
+                    if nested_start:
+                        raise ValueError("Maximum nesting depth of 2 exceeded")
+                    nested_start = True
+                    named_str += c
+                    continue
                 if not c == '}':
                     if i == length - 1:
                         raise ValueError("Error: unterminated ${ in format:"
                                          "'%s'" % format_string)
                     named_str += c
                     continue;
+                elif nested_start:
+                    nested_start = False
+                    named_str += c
+                    continue
                 
                 if named_str.startswith('DEP:'):
-                    _, pkgName, attribute = named_str.split(':', 2)
-                    implementingSpecs = list(x for x in spec.traverse() if
-                        (x.name == pkgName or x.package.provides(pkgName)))
-                    if not implementingSpecs:
-                        raise ValueError("Error: {0} is not a dependency of {1}"
-                            .format(pkgName, self.name))
-                    spec = iter(implementingSpecs).next()
+                    _, dep, dep_format = named_str.split(':', 2)
+                    if dep in spec:
+                        out.write(spec[dep].format(dep_format))
+                    named = False
+                    continue
                 else:
                     attribute = named_str
                     spec = self
