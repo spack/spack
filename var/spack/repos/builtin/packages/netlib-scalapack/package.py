@@ -40,10 +40,6 @@ class NetlibScalapack(Package):
     # versions before 2.0.0 are not using cmake and requires blacs as
     # a separated package
 
-    #error: disable mangling: error while loading shared
-    #libraries: libintlc.so.5: cannot open shared
-    patch('patch.intel', when='%intel', level=0)
-
     variant(
         'shared',
         default=True,

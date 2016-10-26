@@ -65,8 +65,6 @@ class Petsc(Package):
             description='Activates support for MUMPS (only parallel)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
-    variant('batch', default=False,
-            description='Enable batch mode to disable running job')
 
     # Virtual dependencies
     depends_on('blas')
@@ -173,20 +171,6 @@ class Petsc(Package):
             options.append(
                 '--with-superlu_dist=0'
             )
-
-        if '%intel' in spec:
-            options.extend([
-                '--with-clib-autodetect=0',
-                '--with-fortranlib-autodetect=0',
-                '--with-cxxlib-autodetect=0'
-            ])
-
-
-        if 'batch' in spec:
-            options.extend([
-                '--with-batch',
-                '--known-mpi-shared-libraries=0'
-            ])
 
         configure('--prefix=%s' % prefix, *options)
 

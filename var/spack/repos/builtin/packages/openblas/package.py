@@ -54,9 +54,6 @@ class Openblas(Package):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
 
-    #see issue on github with intel compiler
-    patch('intel.patch', when='%intel')
-
     @property
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
@@ -135,10 +132,6 @@ class Openblas(Package):
         link_flags.extend(["-lpthread"])
         if '+openmp' in spec:
             link_flags.extend([self.compiler.openmp_flag])
-
-        #see issue http://icl.cs.utk.edu/lapack-forum/viewtopic.php?f=12&t=4283
-        if spec.satisfies('%intel'):
-            link_flags.extend(['-lifcore'])
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)
         compare_output_file(output, blessed_file)
