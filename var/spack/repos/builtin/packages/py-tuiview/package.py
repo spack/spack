@@ -41,4 +41,4 @@ class PyTuiview(Package):
     depends_on("gdal")
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

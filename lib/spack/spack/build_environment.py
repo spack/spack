@@ -51,16 +51,14 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import os
-import sys
-import shutil
 import multiprocessing
-import platform
+import os
+import shutil
+import sys
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-
 import spack
+from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -77,6 +75,8 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
+SPACK_RPATH_DEPS = 'SPACK_RPATH_DEPS'
+SPACK_LINK_DEPS = 'SPACK_LINK_DEPS'
 SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
@@ -221,6 +221,8 @@ def set_compiler_environment_variables(pkg, env):
     for mod in compiler.modules:
         load_module(mod)
 
+    compiler.setup_custom_environment(env)
+
     return env
 
 
@@ -249,14 +251,24 @@ def set_build_environment_variables(pkg, env, dirty=False):
         if os.path.isdir(ci):
             env_paths.append(ci)
 
+    env_paths = filter_system_paths(env_paths)
+
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix
-                    for d in pkg.spec.traverse(root=False, deptype='build')]
+    dep_prefixes = [d.prefix for d in
+                    pkg.spec.traverse(root=False, deptype=('build', 'link'))]
+    dep_prefixes = filter_system_paths(dep_prefixes)
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
+
+    # These variables control compiler wrapper behavior
+    env.set_path(SPACK_RPATH_DEPS, filter_system_paths([
+        d.prefix for d in get_rpath_deps(pkg)]))
+    env.set_path(SPACK_LINK_DEPS, filter_system_paths([
+        d.prefix for d in pkg.spec.traverse(root=False, deptype=('link'))]))
+
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
 
@@ -288,8 +300,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
                 env.remove_path('PATH', p)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(
-        filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+    bin_dirs = reversed(filter(os.path.isdir, [
+        '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
+    bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 
@@ -341,16 +354,8 @@ def set_module_variables_for_package(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
 
-    # standard CMake arguments
-    m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
-    if platform.mac_ver()[0]:
-        m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-    # Set up CMake rpath
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' %
-                            ":".join(get_rpaths(pkg)))
+    # Standard CMake arguments
+    m.std_cmake_args = spack.CMakePackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.build_env_path
@@ -382,10 +387,18 @@ def set_module_variables_for_package(pkg, module):
     m.dso_suffix = dso_suffix
 
 
+def get_rpath_deps(pkg):
+    """Return immediate or transitive RPATHs depending on the package."""
+    if pkg.transitive_rpaths:
+        return [d for d in pkg.spec.traverse(root=False, deptype=('link'))]
+    else:
+        return pkg.spec.dependencies(deptype='link')
+
+
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = pkg.spec.dependencies(deptype='link')
+    deps = get_rpath_deps(pkg)
     rpaths.extend(d.prefix.lib for d in deps
                   if os.path.isdir(d.prefix.lib))
     rpaths.extend(d.prefix.lib64 for d in deps
@@ -395,6 +408,21 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
+
+
+def get_std_cmake_args(cmake_pkg):
+    # standard CMake arguments
+    ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
+           '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
+           '-DCMAKE_VERBOSE_MAKEFILE=ON']
+    if platform.mac_ver()[0]:
+        ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
+
+    # Set up CMake rpath
+    ret.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
+
+    return ret
 
 
 def parent_class_modules(cls):
@@ -497,41 +525,26 @@ def fork(pkg, function, dirty=False):
     carries on.
     """
 
-    try:
-        pid = os.fork()
-    except OSError as e:
-        raise InstallError("Unable to fork build process: %s" % e)
-
-    if pid == 0:
-        # Give the child process the package's build environment.
-        setup_package(pkg, dirty=dirty)
-
+    def child_execution(child_connection):
         try:
-            # call the forked function.
+            setup_package(pkg, dirty=dirty)
             function()
+            child_connection.send([None, None, None])
+        except Exception as e:
+            child_connection.send([type(e), e, None])
+        finally:
+            child_connection.close()
 
-            # Use os._exit here to avoid raising a SystemExit exception,
-            # which interferes with unit tests.
-            os._exit(0)
-
-        except spack.error.SpackError as e:
-            e.die()
-
-        except:
-            # Child doesn't raise or return to main spack code.
-            # Just runs default exception handler and exits.
-            sys.excepthook(*sys.exc_info())
-            os._exit(1)
-
-    else:
-        # Parent process just waits for the child to complete.  If the
-        # child exited badly, assume it already printed an appropriate
-        # message.  Just make the parent exit with an error code.
-        pid, returncode = os.waitpid(pid, 0)
-        if returncode != 0:
-            message = "Installation process had nonzero exit code : {code}"
-            strcode = str(returncode)
-            raise InstallError(message.format(code=strcode))
+    parent_connection, child_connection = multiprocessing.Pipe()
+    p = multiprocessing.Process(
+        target=child_execution,
+        args=(child_connection,)
+    )
+    p.start()
+    exc_type, exception, traceback = parent_connection.recv()
+    p.join()
+    if exception is not None:
+        raise exception
 
 
 class InstallError(spack.error.SpackError):

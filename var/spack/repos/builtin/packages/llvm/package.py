@@ -33,8 +33,8 @@ class Llvm(Package):
        with traditional virtual machines, though it does provide helpful
        libraries that can be used to build them. The name "LLVM" itself
        is not an acronym; it is the full name of the project.
-
     """
+
     homepage = 'http://llvm.org/'
     url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
 
@@ -42,7 +42,7 @@ class Llvm(Package):
 
     # currently required by mesa package
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005',
-            url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')  # currently required by mesa package
+            url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')
 
     variant('debug', default=False,
             description="Build a debug version of LLVM, this increases "
@@ -114,7 +114,7 @@ class Llvm(Package):
             'destination': 'projects',
             'placement': 'libcxxabi',
         },
-        'clang': {
+        'cfe': {
             'url':  base_url % {'pkg': 'cfe'},
             'destination': 'tools',
             'placement': 'clang',
@@ -144,63 +144,93 @@ class Llvm(Package):
         {
             'version': 'trunk',
             'repo': 'http://llvm.org/svn/llvm-project/llvm/trunk',
-                    'resources': {
-                        'compiler-rt': 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
-                        'openmp': 'http://llvm.org/svn/llvm-project/openmp/trunk',
-                        'polly': 'http://llvm.org/svn/llvm-project/polly/trunk',
-                        'libcxx': 'http://llvm.org/svn/llvm-project/libcxx/trunk',
-                        'libcxxabi': 'http://llvm.org/svn/llvm-project/libcxxabi/trunk',
-                        'clang': 'http://llvm.org/svn/llvm-project/cfe/trunk',
-                        'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
-                        'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
-                        'llvm-libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            'resources': {
+                'compiler-rt': 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
+                'openmp': 'http://llvm.org/svn/llvm-project/openmp/trunk',
+                'polly': 'http://llvm.org/svn/llvm-project/polly/trunk',
+                'libcxx': 'http://llvm.org/svn/llvm-project/libcxx/trunk',
+                'libcxxabi': 'http://llvm.org/svn/llvm-project/libcxxabi/trunk',
+                'cfe': 'http://llvm.org/svn/llvm-project/cfe/trunk',
+                'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
+                'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
+                'llvm-libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                }
+            },
+            {
+                'version': '3.9.0',
+                'md5': 'f2093e98060532449eb7d2fcfd0bc6c6',
+                'resources': {
+                    'compiler-rt': 'b7ea34c9d744da16ffc0217b6990d095',
+                    'openmp': '5390164f2374e1444e82393541ecf6c7',
+                    'polly': '1cf328cbae25267749b68cfa6f113674',
+                    'libcxx': '0a11efefd864ce6f321194e441f7e569',
+                    'libcxxabi': 'd02642308e22e614af6b061b9b4fedfa',
+                    'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
+                    'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
+                    'lldb': '968d053c3c3d7297983589164c6999e9',
+                    'llvm-libunwind': '3e5c87c723a456be599727a444b1c166',
                     }
-        },
-        {
-            'version': '3.8.0',
-            'md5': '07a7a74f3c6bd65de4702bf941b511a0',
-            'resources': {
-                'compiler-rt': 'd6fcbe14352ffb708e4d1ac2e48bb025',
-                'openmp': '8fd7cc35d48051613cf1e750e9f22e40',
-                'polly': '1b3b20f52d34a4024e21a4ea7112caa7',
-                'libcxx': 'd6e0bdbbee39f7907ad74fd56d03b88a',
-                'libcxxabi': 'bbe6b4d72c7c5978550d370af529bcf7',
-                'clang': 'cc99e7019bb74e6459e80863606250c5',
-                'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
-                'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
-                        'llvm-libunwind': '162ade468607f153cca12be90b5194fa',
-            }
-        },
-        {
-            'version': '3.7.1',
-            'md5': 'bf8b3a2c79e61212c5409041dfdbd319',
-            'resources': {
-                'compiler-rt': '1c6975daf30bb3b0473b53c3a1a6ff01',
-                'openmp': 'b4ad08cda4e5c22e42b66062b140438e',
-                'polly': '3a2a7367002740881637f4d47bca4dc3',
-                'libcxx': 'f9c43fa552a10e14ff53b94d04bea140',
-                'libcxxabi': '52d925afac9f97e9dcac90745255c169',
-                'clang': '0acd026b5529164197563d135a8fd83e',
-                'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
-                'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
-                        'llvm-libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
-            }
-        },
-        {
-            'version': '3.7.0',
-            'md5': 'b98b9495e5655a672d6cb83e1a180f8e',
-            'resources': {
-                'compiler-rt': '383c10affd513026f08936b5525523f5',
-                'openmp': 'f482c86fdead50ba246a1a2b0bbf206f',
-                'polly': '32f93ffc9cc7e042df22089761558f8b',
-                'libcxx': '46aa5175cbe1ad42d6e9c995968e56dd',
-                'libcxxabi': '5aa769e2fca79fa5335cfae8f6258772',
-                'clang': '8f9d27335e7331cf0a4711e952f21f01',
-                'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
-                'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
-                        'llvm-libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
-            }
-        },
+                },
+            {
+                'version': '3.8.1',
+                'md5': '538467e6028bbc9259b1e6e015d25845',
+                'resources': {
+                    'compiler-rt': 'f140db073d2453f854fbe01cc46f3110',
+                    'openmp': '078b8d4c51ad437a4f8b5989f5ec4156',
+                    'polly': '8a40e697a4ba1c8b640b85d074bd6e25',
+                    'libcxx': '1bc60150302ff76a0d79d6f9db22332e',
+                    'libcxxabi': '3c63b03ba2f30a01279ca63384a67773',
+                    'cfe': '4ff2f8844a786edb0220f490f7896080',
+                    'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
+                    'lldb': '9e4787b71be8e432fffd31e13ac87623',
+                    'llvm-libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
+                    }
+                },
+            {
+                'version': '3.8.0',
+                'md5': '07a7a74f3c6bd65de4702bf941b511a0',
+                'resources': {
+                    'compiler-rt': 'd6fcbe14352ffb708e4d1ac2e48bb025',
+                    'openmp': '8fd7cc35d48051613cf1e750e9f22e40',
+                    'polly': '1b3b20f52d34a4024e21a4ea7112caa7',
+                    'libcxx': 'd6e0bdbbee39f7907ad74fd56d03b88a',
+                    'libcxxabi': 'bbe6b4d72c7c5978550d370af529bcf7',
+                    'cfe': 'cc99e7019bb74e6459e80863606250c5',
+                    'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
+                    'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
+                    'llvm-libunwind': '162ade468607f153cca12be90b5194fa',
+                    }
+                },
+            {
+                'version': '3.7.1',
+                'md5': 'bf8b3a2c79e61212c5409041dfdbd319',
+                'resources': {
+                    'compiler-rt': '1c6975daf30bb3b0473b53c3a1a6ff01',
+                    'openmp': 'b4ad08cda4e5c22e42b66062b140438e',
+                    'polly': '3a2a7367002740881637f4d47bca4dc3',
+                    'libcxx': 'f9c43fa552a10e14ff53b94d04bea140',
+                    'libcxxabi': '52d925afac9f97e9dcac90745255c169',
+                    'cfe': '0acd026b5529164197563d135a8fd83e',
+                    'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
+                    'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
+                    'llvm-libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
+                    }
+                },
+            {
+                'version': '3.7.0',
+                'md5': 'b98b9495e5655a672d6cb83e1a180f8e',
+                'resources': {
+                    'compiler-rt': '383c10affd513026f08936b5525523f5',
+                    'openmp': 'f482c86fdead50ba246a1a2b0bbf206f',
+                    'polly': '32f93ffc9cc7e042df22089761558f8b',
+                    'libcxx': '46aa5175cbe1ad42d6e9c995968e56dd',
+                    'libcxxabi': '5aa769e2fca79fa5335cfae8f6258772',
+                    'cfe': '8f9d27335e7331cf0a4711e952f21f01',
+                    'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
+                    'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
+                    'llvm-libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
+                    }
+                },
         {
             'version': '3.6.2',
             'md5': '0c1ee3597d75280dee603bae9cbf5cc2',
@@ -209,7 +239,7 @@ class Llvm(Package):
                 'openmp': '65dd5863b9b270960a96817e9152b123',
                 'libcxx': '22214c90697636ef960a49aef7c1823a',
                 'libcxxabi': '17518e361e4e228f193dd91e8ef54ba2',
-                'clang': 'ff862793682f714bb7862325b9c06e20',
+                'cfe': 'ff862793682f714bb7862325b9c06e20',
                 'clang-tools-extra': '3ebc1dc41659fcec3db1b47d81575e06',
                 'lldb': '51e5eb552f777b950bb0ff326e60d5f0',
             }
@@ -222,7 +252,7 @@ class Llvm(Package):
                 'openmp': '121ddb10167d7fc38b1f7e4b029cf059',
                 'libcxx': '406f09b1dab529f3f7879f4d548329d2',
                 'libcxxabi': 'b22c707e8d474a99865ad3c521c3d464',
-                'clang': '93f9532f8f7e6f1d8e5c1116907051cb',
+                'cfe': '93f9532f8f7e6f1d8e5c1116907051cb',
                 'clang-tools-extra': 'f13f31ed3038acadc6fa63fef812a246',
                 'lldb': 'cc5ea8a414c62c33e760517f8929a204',
             }

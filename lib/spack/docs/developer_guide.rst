@@ -324,3 +324,27 @@ Developer commands
 ^^^^^^^^^^^^^^
 ``spack test``
 ^^^^^^^^^^^^^^
+
+---------
+Profiling
+---------
+
+Spack has some limited built-in support for profiling, and can report
+statistics using standard Python timing tools.  To use this feature,
+supply ``--profile`` to Spack on the command line, before any subcommands.
+
+.. _spack-p:
+
+^^^^^^^^^^^^^^^^^^^
+``spack --profile``
+^^^^^^^^^^^^^^^^^^^
+
+``spack --profile`` output looks like this:
+
+.. command-output:: spack --profile graph dyninst
+   :ellipsis: 25
+
+The bottom of the output shows the top most time consuming functions,
+slowest on top.  The profiling support is from Python's built-in tool,
+`cProfile
+<https://docs.python.org/2/library/profile.html#module-cProfile>`_.

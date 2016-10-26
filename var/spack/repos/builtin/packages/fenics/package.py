@@ -62,17 +62,15 @@ class Fenics(Package):
     # variant('slepc4py',     default=True,  description='Uses SLEPc4py')
     # variant('pastix',       default=True,  description='Compile with Pastix')
 
-    patch('petsc-3.7.patch', when='^petsc@3.7:')
+    patch('petsc-3.7.patch', when='@1.6.1^petsc@3.7:')
     patch('petsc-version-detection.patch', when='@:1.6.1')
+    patch('hdf5~cxx-detection.patch')
 
     extends('python')
 
-    depends_on('py-numpy')
-    depends_on('py-ply')
-    depends_on('py-six')
-    depends_on('py-sphinx@1.0.1:', when='+doc')
-    depends_on('eigen@3.2.0:')
-    depends_on('boost')
+    depends_on('eigen@3.2.0:', type='build')
+    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
+
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
@@ -85,12 +83,27 @@ class Fenics(Package):
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('qt', when='+qt')
 
-    # This are the build dependencies
-    depends_on('py-setuptools')
-    depends_on('cmake@2.8.12:')
-    depends_on('swig@3.0.3:')
+    depends_on('py-ply', type=nolink)
+    depends_on('py-six', type=nolink)
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-sympy', type=nolink)
+    depends_on('swig@3.0.3:', type=nolink)
+    depends_on('cmake@2.8.12:', type=nolink)
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
     releases = [
+        {
+            'version': '2016.1.0',
+            'md5': '92e8d00f6487a575987201f0b0d19173',
+            'resources': {
+                'ffc': '35457ae164e481ba5c9189ebae060a47',
+                'fiat': 'ac0c49942831ee434301228842bcc280',
+                'instant': '0e3dbb464c4d90d691f31f0fdd63d4f6',
+                'ufl': '37433336e5c9b58d1d5ab4acca9104a7',
+            }
+        },
         {
             'version': '1.6.0',
             'md5': '35cb4baf7ab4152a40fb7310b34d5800',
@@ -130,7 +143,7 @@ class Fenics(Package):
     def install(self, spec, prefix):
         for package in ['ufl', 'ffc', 'fiat', 'instant']:
             with working_dir(join_path('depends', package)):
-                python('setup.py', 'install', '--prefix=%s' % prefix)
+                setup_py('install', '--prefix=%s' % prefix)
 
         cmake_args = [
             '-DCMAKE_BUILD_TYPE:STRING={0}'.format(

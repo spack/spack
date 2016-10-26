@@ -30,6 +30,7 @@ from llnl.util.filesystem import join_path
 from spack.environment import EnvironmentModifications
 from spack.environment import SetEnv, UnsetEnv
 from spack.environment import RemovePath, PrependPath, AppendPath
+from spack.util.environment import filter_system_paths, filter_system_bin_paths
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -58,6 +59,41 @@ class EnvironmentTest(unittest.TestCase):
         env.unset('UNSET_ME')
         env.apply_modifications()
         self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
+
+    def test_filter_system_paths(self):
+        filtered = filter_system_paths([
+            '/usr/local/Cellar/gcc/5.3.0/lib',
+            '/usr/local/lib',
+            '/usr/local/include',
+            '/usr/local/lib64',
+            '/usr/local/opt/some-package/lib',
+            '/usr/opt/lib',
+            '/lib',
+            '/lib64',
+            '/include',
+            '/opt/some-package/include',
+        ])
+        self.assertEqual(filtered,
+                         ['/usr/local/Cellar/gcc/5.3.0/lib',
+                          '/usr/local/opt/some-package/lib',
+                          '/usr/opt/lib',
+                          '/opt/some-package/include'])
+
+        filtered = filter_system_bin_paths([
+            '/usr/local/Cellar/gcc/5.3.0/bin',
+            '/usr/local/bin',
+            '/usr/local/opt/some-package/bin',
+            '/usr/opt/bin',
+            '/bin',
+            '/opt/some-package/bin',
+        ])
+        self.assertEqual(filtered,
+                         ['/usr/local/bin',
+                          '/bin',
+                          '/usr/local/Cellar/gcc/5.3.0/bin',
+                          '/usr/local/opt/some-package/bin',
+                          '/usr/opt/bin',
+                          '/opt/some-package/bin'])
 
     def test_set_path(self):
         env = EnvironmentModifications()
@@ -119,7 +155,8 @@ class EnvironmentTest(unittest.TestCase):
                             'spack', 'test', 'data')
         files = [
             join_path(datadir, 'sourceme_first.sh'),
-            join_path(datadir, 'sourceme_second.sh')
+            join_path(datadir, 'sourceme_second.sh'),
+            join_path(datadir, 'sourceme_parameters.sh intel64')
         ]
         env = EnvironmentModifications.from_sourcing_files(*files)
         modifications = env.group_by_name()
@@ -134,6 +171,11 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual(len(modifications['NEW_VAR']), 1)
         self.assertTrue(isinstance(modifications['NEW_VAR'][0], SetEnv))
         self.assertEqual(modifications['NEW_VAR'][0].value, 'new')
+
+        self.assertEqual(len(modifications['FOO']), 1)
+        self.assertTrue(isinstance(modifications['FOO'][0], SetEnv))
+        self.assertEqual(modifications['FOO'][0].value, 'intel64')
+
         # Unset variables
         self.assertEqual(len(modifications['EMPTY_PATH_LIST']), 1)
         self.assertTrue(isinstance(

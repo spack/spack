@@ -26,14 +26,21 @@ from spack import *
 
 
 class Dri2proto(Package):
-    """DRI2 Protocol Headers."""
-    homepage = "http://http://cgit.freedesktop.org/xorg/proto/dri2proto/"
-    url      = "http://xorg.freedesktop.org/releases/individual/proto/dri2proto-2.8.tar.gz"
+    """Direct Rendering Infrastructure 2 Extension.
+
+    This extension defines a protocol to securely allow user applications to
+    access the video hardware without requiring data to be passed through the
+    X server."""
+
+    homepage = "https://cgit.freedesktop.org/xorg/proto/dri2proto/"
+    url      = "https://www.x.org/releases/individual/proto/dri2proto-2.8.tar.gz"
 
     version('2.8', '19ea18f63d8ae8053c9fa84b60365b77')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
-        make()
-        make("install")
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
+
+        make('install')

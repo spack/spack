@@ -149,10 +149,10 @@ class Trilinos(Package):
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_BLAS=ON',
             '-DBLAS_LIBRARY_NAMES=%s' % ';'.join(blas.names),
-            '-DBLAS_LIBRARY_DIRS=%s' % spec['blas'].prefix.lib,
+            '-DBLAS_LIBRARY_DIRS=%s' % ';'.join(blas.directories),
             '-DTPL_ENABLE_LAPACK=ON',
             '-DLAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
-            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix.lib,
+            '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
@@ -177,6 +177,15 @@ class Trilinos(Package):
             ])
         else:
             options.extend(['-DTPL_ENABLE_Boost:BOOL=OFF'])
+
+        if '+hdf5' in spec:
+            options.extend([
+                '-DTPL_ENABLE_HDF5:BOOL=ON',
+                '-DHDF5_INCLUDE_DIRS:PATH=%s' % spec['hdf5'].prefix.include,
+                '-DHDF5_LIBRARY_DIRS:PATH=%s' % spec['hdf5'].prefix.lib
+            ])
+        else:
+            options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
         # Fortran lib
         libgfortran = os.path.dirname(os.popen(

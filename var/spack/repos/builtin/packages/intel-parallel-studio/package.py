@@ -11,7 +11,7 @@ class IntelParallelStudio(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html"""
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 

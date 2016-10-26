@@ -100,3 +100,24 @@ class Checker(object):
         self.sum = checksum(
             self.hash_fun, filename, block_size=self.block_size)
         return self.sum == self.hexdigest
+
+
+def prefix_bits(byte_array, bits):
+    """Return the first <bits> bits of a byte array as an integer."""
+    result = 0
+    n = 0
+    for i, b in enumerate(byte_array):
+        n += 8
+        result = (result << 8) | ord(b)
+        if n >= bits:
+            break
+
+    result >>= (n - bits)
+    return result
+
+
+def bit_length(num):
+    """Number of bits required to represent an integer in binary."""
+    s = bin(num)
+    s = s.lstrip('-0b')
+    return len(s)

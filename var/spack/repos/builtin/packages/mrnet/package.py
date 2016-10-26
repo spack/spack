@@ -37,13 +37,6 @@ class Mrnet(Package):
     version('4.1.0', '5a248298b395b329e2371bf25366115c')
     version('4.0.0', 'd00301c078cba57ef68613be32ceea2f')
 
-    # Add a patch that brings mrnet-5.0.1 up to date with the current
-    # development tree The development tree contains fixes needed for the
-    # krell based tools
-    variant('krellpatch', default=False,
-            description="Build MRNet with krell openspeedshop based patch.")
-    patch('krell-5.0.1.patch', when='@5.0.1+krellpatch')
-
     variant('lwthreads', default=False,
             description="Also build the MRNet LW threadsafe libraries")
     parallel = False
@@ -51,8 +44,8 @@ class Mrnet(Package):
     depends_on("boost")
 
     def install(self, spec, prefix):
-        # Build the MRNet LW thread safe libraries when the krelloptions
-        # variant is present
+        # Build the MRNet LW thread safe libraries when the
+        # lwthreads variant is present
         if '+lwthreads' in spec:
             configure("--prefix=%s" % prefix, "--enable-shared",
                       "--enable-ltwt-threadsafe")

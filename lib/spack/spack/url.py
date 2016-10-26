@@ -142,7 +142,7 @@ def split_url_extension(path):
     return prefix, ext, suffix
 
 
-def downloaded_file_extension(path):
+def determine_url_file_extension(path):
     """This returns the type of archive a URL refers to.  This is
        sometimes confusing because of URLs like:
 
@@ -160,8 +160,6 @@ def downloaded_file_extension(path):
             return 'tar.gz'
 
     prefix, ext, suffix = split_url_extension(path)
-    if not ext:
-        raise UrlParseError("Cannot deduce archive type in %s" % path, path)
     return ext
 
 
@@ -325,7 +323,7 @@ def parse_name_and_version(path):
 
 def insensitize(string):
     """Change upper and lowercase letters to be case insensitive in
-       the provided string.  e.g., 'a' because '[Aa]', 'B' becomes
+       the provided string.  e.g., 'a' becomes '[Aa]', 'B' becomes
        '[bB]', etc.  Use for building regexes."""
     def to_ins(match):
         char = match.group(1)

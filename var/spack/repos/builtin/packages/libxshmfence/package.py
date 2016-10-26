@@ -26,16 +26,24 @@ from spack import *
 
 
 class Libxshmfence(Package):
-    """This is a tiny library that exposes a event API on top of Linux
-    futexes."""
+    """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
 
-    homepage = "http://keithp.com/blogs/dri3_extension/"  # not really...
+    This library offers a CPU-based synchronization primitive compatible
+    with the X SyncFence objects that can be shared between processes
+    using file descriptor passing."""
+
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libxshmfence/"
     url      = "http://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.2.tar.gz"
 
     version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
 
+    depends_on('xproto', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
+
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('check')
+        make('install')

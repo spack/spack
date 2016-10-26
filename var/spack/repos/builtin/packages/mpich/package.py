@@ -23,13 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Mpich(Package):
     """MPICH is a high performance and widely portable implementation of
-       the Message Passing Interface (MPI) standard."""
+    the Message Passing Interface (MPI) standard."""
+
     homepage = "http://www.mpich.org"
-    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
@@ -41,10 +43,10 @@ class Mpich(Package):
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
-    variant('verbs', default=False,
-            description='Build support for OpenFabrics verbs.')
-    variant('pmi', default=True, description='Build with PMI support')
-    variant('hydra', default=True, description='Build the hydra process manager')
+    variant('hydra', default=True,  description='Build the hydra process manager')
+    variant('pmi',   default=True,  description='Build with PMI support')
+    variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
+    variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
 
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
@@ -62,26 +64,32 @@ class Mpich(Package):
         spack_env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-        self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        # Is this a Cray machine? (TODO: We need a better test than this.)
+        if os.environ.get('CRAYPE_VERSION'):
+            self.spec.mpicc = spack_cc
+            self.spec.mpicxx = spack_cxx
+            self.spec.mpifc = spack_fc
+            self.spec.mpif77 = spack_f77
+        else:
+            self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+            self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+            self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
         self.spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
     def install(self, spec, prefix):
-        config_args = ["--prefix=" + prefix,
-                       "--with-pmi=" + ("yes" if '+pmi' in spec else 'no'),
-                       "--with-pm=" + ('hydra' if '+hydra' in spec else 'no'),
-                       "--enable-shared"]
-
-        # Variants
-        if '+verbs' in spec:
-            config_args.append("--with-ibverbs")
-        else:
-            config_args.append("--without-ibverbs")
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--enable-shared',
+            '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
+            '--with-pmi={0}'.format('yes' if '+pmi' in spec else 'no'),
+            '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
+            '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
+        ]
 
         # TODO: Spack should make it so that you can't actually find
         # these compilers if they're "disabled" for the current
@@ -96,32 +104,33 @@ class Mpich(Package):
             config_args.append("--disable-fortran")
 
         configure(*config_args)
+
         make()
-        make("install")
+        make('check')
+        make('install')
 
-        self.filter_compilers()
+        self.filter_compilers(prefix)
 
-    def filter_compilers(self):
+    def filter_compilers(self, prefix):
         """Run after install to make the MPI compilers use the
-           compilers that Spack built the package with.
+        compilers that Spack built the package with.
 
-           If this isn't done, they'll have CC, CXX, F77, and FC set
-           to Spack's generic cc, c++, f77, and f90.  We want them to
-           be bound to whatever compiler they were built with.
-        """
-        bin = self.prefix.bin
-        mpicc = join_path(bin, 'mpicc')
-        mpicxx = join_path(bin, 'mpicxx')
-        mpif77 = join_path(bin, 'mpif77')
-        mpif90 = join_path(bin, 'mpif90')
+        If this isn't done, they'll have CC, CXX, F77, and FC set
+        to Spack's generic cc, c++, f77, and f90.  We want them to
+        be bound to whatever compiler they were built with."""
+
+        mpicc  = join_path(prefix.bin, 'mpicc')
+        mpicxx = join_path(prefix.bin, 'mpicxx')
+        mpif77 = join_path(prefix.bin, 'mpif77')
+        mpif90 = join_path(prefix.bin, 'mpif90')
 
         # Substitute Spack compile wrappers for the real
         # underlying compiler
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
-        filter_file(env['CC'], self.compiler.cc,  mpicc,  **kwargs)
+        filter_file(env['CC'],  self.compiler.cc,  mpicc,  **kwargs)
         filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
         filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'], self.compiler.fc,  mpif90, **kwargs)
+        filter_file(env['FC'],  self.compiler.fc,  mpif90, **kwargs)
 
         # Remove this linking flag if present
         # (it turns RPATH into RUNPATH)

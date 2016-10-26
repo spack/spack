@@ -129,8 +129,9 @@ from spack.util.executable import Executable, which
 # User's editor from the environment
 editor = Executable(os.environ.get("EDITOR", "vi"))
 
-# Curl tool for fetching files.
-curl = which("curl", required=True)
+# If this is enabled, tools that use SSL should not verify
+# certifiates. e.g., curl should use the -k option.
+insecure = False
 
 # Whether to build in tmp space or directly in the stage_path.
 # If this is true, then spack will make stage directories in
@@ -185,10 +186,19 @@ sys_type = None
 #       packages should live.  This file is overloaded for spack core vs.
 #       for packages.
 #
-__all__ = ['Package', 'StagedPackage', 'CMakePackage',
-           'Version', 'when', 'ver', 'alldeps', 'nolink']
+__all__ = ['Package',
+           'CMakePackage',
+           'AutotoolsPackage',
+           'MakefilePackage',
+           'Version',
+           'when',
+           'ver',
+           'alldeps',
+           'nolink']
 from spack.package import Package, ExtensionConflictError
-from spack.package import StagedPackage, CMakePackage
+from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
 from spack.version import Version, ver
 from spack.spec import DependencySpec, alldeps, nolink
 from spack.multimethod import when

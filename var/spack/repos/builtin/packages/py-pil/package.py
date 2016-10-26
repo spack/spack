@@ -43,4 +43,4 @@ class PyPil(Package):
     depends_on('python@1.5.2:2.8')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

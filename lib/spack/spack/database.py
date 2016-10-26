@@ -33,7 +33,7 @@ The database serves two purposes:
   2. It will allow us to track external installations as well as lost
      packages and their dependencies.
 
-Prior ot the implementation of this store, a direcotry layout served
+Prior to the implementation of this store, a directory layout served
 as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
@@ -49,6 +49,7 @@ from llnl.util.filesystem import *
 from llnl.util.lock import *
 
 import spack.spec
+from spack.directory_layout import DirectoryLayoutError
 from spack.version import Version
 from spack.spec import *
 from spack.error import SpackError
@@ -155,12 +156,12 @@ class Database(object):
         self._index_path = join_path(self._db_dir, 'index.yaml')
         self._lock_path = join_path(self._db_dir, 'lock')
 
+        # This is for other classes to use to lock prefix directories.
+        self.prefix_lock_path = join_path(self._db_dir, 'prefix_lock')
+
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
-
-        if not os.path.exists(self._lock_path):
-            touch(self._lock_path)
 
         # initialize rest of state.
         self.lock = Lock(self._lock_path)

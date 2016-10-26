@@ -42,4 +42,4 @@ class PyAstroid(Package):
     depends_on('py-six', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)
