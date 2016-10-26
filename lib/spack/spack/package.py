@@ -1180,7 +1180,9 @@ class PackageBase(object):
                     verbose=verbose,
                     make_jobs=make_jobs,
                     run_tests=run_tests,
-                    dirty=dirty)
+                    dirty=dirty,
+                    **kwargs
+                )
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
