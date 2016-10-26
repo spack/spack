@@ -186,7 +186,8 @@ sys_type = None
 #       packages should live.  This file is overloaded for spack core vs.
 #       for packages.
 #
-__all__ = ['Package',
+__all__ = ['PackageBase',
+           'Package',
            'CMakePackage',
            'AutotoolsPackage',
            'MakefilePackage',
@@ -195,7 +196,7 @@ __all__ = ['Package',
            'ver',
            'alldeps',
            'nolink']
-from spack.package import Package, ExtensionConflictError
+from spack.package import Package, PackageBase, ExtensionConflictError
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
