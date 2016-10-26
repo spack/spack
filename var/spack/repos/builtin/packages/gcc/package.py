@@ -28,11 +28,11 @@ import os
 import sys
 
 
-class Gcc(Package):
+class Gcc(AutotoolsPackage):
     """The GNU Compiler Collection includes front ends for C, C++,
        Objective-C, Fortran, and Java."""
-    homepage = "https://gcc.gnu.org"
 
+    homepage = "https://gcc.gnu.org/"
     url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 2
@@ -61,7 +61,7 @@ class Gcc(Package):
     depends_on('mpc@0.8.1', when='@4.5:')
     depends_on('isl@0.14:0.16', when='@5.0:')
 
-    # TODO: integrate these libraries. They are needed for GCC 4.7 and earlier.
+    # TODO: Integrate these libraries. They are needed for GCC 4.7 and earlier.
     # depends_on('ppl')
     # depends_on('cloog')
 
@@ -74,18 +74,13 @@ class Gcc(Package):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:5.3')
 
-    def install(self, spec, prefix):
-        enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
-
-        if spec.satisfies('@4.7.1:') and sys.platform != 'darwin' and \
-           not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
-            enabled_languages.add('go')
-
+    def patch(self):
         # Fix a standard header file for OS X Yosemite that
         # is GCC incompatible by replacing non-GCC compliant macros
-        if 'yosemite' in spec.architecture:
+        if 'yosemite' in self.spec.architecture:
             if os.path.isfile(r'/usr/include/dispatch/object.h'):
-                new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
+                new_dispatch_dir = join_path(
+                    self.prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 cp = which('cp')
                 new_header = join_path(new_dispatch_dir, 'object.h')
@@ -93,33 +88,45 @@ class Gcc(Package):
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t', new_header)
 
+    def configure_args(self):
+        spec = self.spec
+
+        enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
+
+        if spec.satisfies('@4.7.1:') and sys.platform != 'darwin' and \
+           not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
+            enabled_languages.add('go')
+
+
         # Generic options to compile GCC
-        options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,
-                   "--disable-multilib",
-                   "--enable-languages=" + ','.join(enabled_languages),
-                   "--with-mpc=%s" % spec['mpc'].prefix, "--with-mpfr=%s" %
-                   spec['mpfr'].prefix, "--with-gmp=%s" % spec['gmp'].prefix,
-                   "--enable-lto", "--with-quad"]
+        args = [
+            '--libdir={0}/lib64'.format(self.prefix),
+            '--disable-multilib',
+            '--enable-languages=' + ','.join(enabled_languages),
+            '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+            '--with-mpc={0}'.format(spec['mpc'].prefix),
+            '--enable-lto',
+            '--with-quad'
+        ]
 
         # Isl
         if 'isl' in spec:
-            isl_options = ["--with-isl=%s" % spec['isl'].prefix]
-            options.extend(isl_options)
+            args.append('--with-isl={0}'.format(spec['isl'].prefix))
 
         if sys.platform == 'darwin':
-            darwin_options = ["--with-build-config=bootstrap-debug"]
-            options.extend(darwin_options)
+            args.append('--with-build-config=bootstrap-debug')
 
-        build_dir = join_path(self.stage.path, 'spack-build')
-        configure = Executable(join_path(self.stage.source_path, 'configure'))
-        with working_dir(build_dir, create=True):
-            # Rest of install is straightforward.
-            configure(*options)
-            if sys.platform == 'darwin':
-                make("bootstrap")
-            else:
-                make()
-            make("install")
+        return args
+
+    def build(self, spec, prefix):
+        if sys.platform == 'darwin':
+            make('bootstrap')
+        else:
+            make()
+
+    def install(self, spec, prefix):
+        make('install')
 
         self.write_rpath_specs()
 
