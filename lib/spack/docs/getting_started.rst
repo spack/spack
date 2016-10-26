@@ -774,15 +774,12 @@ to add the following to ``packages.yaml``:
    provider which use standard names for libraries (as opposed to, for example,
    `libopenblas.so`).
 
-   Unfortunately, the approach above will lead to ``/usr``
-   being added to compilation paths and RPATHs, where it could cause
-   unrelated system libraries to be used instead of their Spack
-   equivalents. Different from ``OpenSSL`` we can not use a false path because
-   some dependents need full path to BLAS / LAPACK libraries.
-
-   The adding of ``/usr`` to ``RPATH`` in this sitution is a known issue
-   and will be fixed in a future release.
-
+   Although we specify external package in ``/usr``, Spack is smart enough not
+   to add ``/usr/lib`` to RPATHs, where it could cause unrelated system
+   libraries to be used instead of their Spack equivalents. ``usr/bin`` will be
+   present in PATH, however it will be have lower precedence compared to other
+   packages and thereby prevent usage of system's binaries as opposed to their
+   Spack equivalents.
 
 ^^^
 Git
