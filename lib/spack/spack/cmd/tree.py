@@ -79,8 +79,6 @@ def get_package_config(name, config, exclude_multiply=None,
       which were used by their parents
     - (implied) parent multiplier actions override child multiplier actions
     - always append to basename for multipliers of multipliers
-    - elements appear in the order listed: if a prepend action for Y follows
-      a prepend action for X, the result will appear as X/Y
     """
     section = FallbackSection(config.get(name, {}), config.get('all'))    
 
