@@ -778,8 +778,8 @@ to add the following to ``packages.yaml``:
    to add ``/usr/lib`` to RPATHs, where it could cause unrelated system
    libraries to be used instead of their Spack equivalents. ``usr/bin`` will be
    present in PATH, however it will have lower precedence compared to paths
-   from other dependencies. Thereby the usage of system's binaries as opposed
-   to their Spack equivalents is avoided.
+   from other dependencies. This ensures that binaries in Spack dependencies
+   are preferred over system binaries.
 
 ^^^
 Git
