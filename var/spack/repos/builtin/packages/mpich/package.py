@@ -63,6 +63,11 @@ class Mpich(Package):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
+        spack_env.set('OMPI_CC', spack_cc)
+        spack_env.set('OMPI_CXX', spack_cxx)
+        spack_env.set('OMPI_FC', spack_fc)
+        spack_env.set('OMPI_F77', spack_f77)
+
     @when('arch=bgq-CNK-powerpc')
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
