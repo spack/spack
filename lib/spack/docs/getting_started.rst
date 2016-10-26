@@ -746,6 +746,41 @@ there."  This is reasonable for OpenSSL, which has a stable API.
    and will be fixed in a future release.
 
 
+^^^^^^^^^^^^^
+BLAS / LAPACK
+^^^^^^^^^^^^^
+
+The recommended way to use system-supplied BLAS / LAPACK packages is
+to add the following to ``packages.yaml``:
+
+.. code-block:: yaml
+
+    packages:
+        netlib-lapack:
+            paths:
+                netlib-lapack@system: /usr
+            version: [system]
+            buildable: False
+        all:
+            providers:
+                blas: [netlib-lapack]
+                lapack: [netlib-lapack]
+
+.. note::
+
+   The ``@system`` "version" means "I don't care what version it is,
+   just use what is there." Above we pretend that the system-provided
+   Blas/Lapack is ``netlib-lapack`` only because it is the only BLAS / LAPACK
+   provider which use standard names for libraries (as opposed to, for example,
+   `libopenblas.so`).
+
+   Although we specify external package in ``/usr``, Spack is smart enough not
+   to add ``/usr/lib`` to RPATHs, where it could cause unrelated system
+   libraries to be used instead of their Spack equivalents. ``usr/bin`` will be
+   present in PATH, however it will have lower precedence compared to paths
+   from other dependencies. This ensures that binaries in Spack dependencies
+   are preferred over system binaries.
+
 ^^^
 Git
 ^^^
