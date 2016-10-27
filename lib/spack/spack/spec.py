@@ -2348,10 +2348,14 @@ class Spec(object):
                 elif attribute == 'SHA1':
                     if spec.dependencies:
                         out.write(fmt % str(spec.dag_hash(7)))
-                elif attribute.startswith('VARIANT'):
-                    _, setting, ifTrueStr = attribute.split(':')
-                    if setting in spec:
-                        out.write(fmt % ifTrueStr)
+                elif attribute.startswith('?'):
+                    t = attribute.split(':')
+                    _, check_spec, true_format = t[:3]
+                    false_format = t[3] if len(t) > 3 else None
+                    if spec.satisfies(check_spec):
+                        out.write(spec.format(true_format))
+                    elif false_format:
+                        out.write(spec.format(false_format))
                 elif attribute == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
                 elif attribute == 'SPACK_INSTALL':
