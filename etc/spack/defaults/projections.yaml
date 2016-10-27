@@ -17,3 +17,5 @@ projections:
         target: bin/bzip2 #relative to package prefix 
     components:
       - "this:ARRRRRR-${PACKAGE}"
+  zlib:
+    descriptor: "examplezlib-${version}"

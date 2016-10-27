@@ -60,17 +60,6 @@ class PackageProjection(object):
         if projected_groups:
             return join_path(*('-'.join(x) for x in projected_groups))
 
-class FallbackSection(object):
-    def __init__(self, primary, secondary):
-        self.primary = primary
-        self.secondary = secondary
-    
-    def __getitem__(self, key):
-        if key in self.primary:
-            return self.primary[key]
-        elif key in self.secondary:
-            return self.secondary[key]
-
 def get_package_config(name, config, exclude_multiply=None,
         force_basename=False, dep=None):
     """
@@ -81,21 +70,30 @@ def get_package_config(name, config, exclude_multiply=None,
     - (implied) parent multiplier actions override child multiplier actions
     - always append to basename for multipliers of multipliers
     """
-    section = FallbackSection(config.get(name, {}), config.get('all'))    
+    primary_section = config.get(name, {})
+    all_section = config.get('all', {})
+    if 'descriptor' in primary_section:
+        return PackageDetailProjection(primary_section['descriptor'])
+    elif 'components' in primary_section:
+        components_section = primary_section['components']
+    elif 'descriptor' in all_section:
+        return PackageDetailProjection(all_section['descriptor'])
+    elif 'components' in all_section:
+        components_section = all_section['components']
 
     element_groups = list()
     element_group = list()
     exclude_multiply = set(exclude_multiply) if exclude_multiply else set()
 
     parent_exclude = set(exclude_multiply)
-    for item in section['components']:
+    for item in components_section:
         t = item.strip().split(':')
         if t[0] == 'dep':
             parent_exclude.add(t[1])
         elif t[0] == 'once':
             parent_exclude.add(t[1])
     
-    for item in section['components']:
+    for item in components_section:
         t = item.strip().split(':')
         if t[0] == '/':
             if force_basename:

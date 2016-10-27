@@ -45,6 +45,7 @@ schema = {
                             'default': [],
                             'items': {'type': 'string'}
                         },
+                        'descriptor': {'type': 'string'},
                         'targets': {
                             'type': 'array',
                             'default': [],
