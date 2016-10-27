@@ -6,7 +6,7 @@ class Intelmpi(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/intelmpi-1.0.tar.gz"
 
-    version('5.0.1', '0123456789abcdef0123456789abcdef')
+    version('develop', '0123456789abcdef0123456789abcdef')
 
     provides('mpi')
 
