@@ -9,8 +9,7 @@ projections:
       - dep:zlib
       - /
       - "this:${PACKAGE}-${VERSION}"
-  bzip2:
-#TODO: optional descriptor which offers similar functionality in spec.format      
+  bzip2:  
     targets:
       - output: /usr/bin/bzip2_1
         match: "bzip2@1.0:"
