@@ -242,6 +242,9 @@ def get_or_set(d, key, val):
         d[key] = val
         return val
 
+def softlink_command(target_path, link_path):
+    return "ln -s {0} {1}".format(target_path, link_path)
+
 def tree(parser, args):
     root = args.root
     action = args.action
@@ -277,11 +280,11 @@ def tree(parser, args):
 
         for link_path, spec in project_packages(
                 specs_to_project, projections_config).iteritems():
-            print join_path(root, link_path), spec.prefix
+            print softlink_command(spec.prefix, join_path(root, link_path))
 
         for link_path, target in project_targets(
                 specs_to_project, projections_config).iteritems():
-            print link_path, "->", target
+            print softlink_command(target, link_path)
     else:
         raise ValueError("Unknown action: " + action)
 
