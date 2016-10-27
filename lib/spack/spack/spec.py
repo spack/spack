@@ -2302,63 +2302,63 @@ class Spec(object):
                     nested_start = False
                     named_str += c
                     continue
-                
-                if named_str.startswith('DEP:'):
+
+                # Allow property identifiers to be case-insensitive
+                section_id = named_str.upper()
+
+                if section_id.startswith('DEP:'):
                     _, dep, dep_format = named_str.split(':', 2)
-                    if dep in spec:
-                        out.write(spec[dep].format(dep_format))
+                    if dep in self:
+                        out.write(self[dep].format(dep_format))
                     named = False
                     continue
-                else:
-                    attribute = named_str
-                    spec = self
                 
-                if attribute == 'PACKAGE' or attribute == 'NAME':
-                    write(fmt % spec.name, '@')
-                elif attribute.startswith('VERSION'):
-                    if attribute.startswith('VERSION:') and self.concrete:
-                        _, specificity = attribute.split(':')
+                if section_id == 'PACKAGE' or section_id == 'NAME':
+                    write(fmt % self.name, '@')
+                elif section_id.startswith('VERSION'):
+                    if section_id.startswith('VERSION:') and self.concrete:
+                        _, specificity = named_str.split(':')
                         specificity = int(specificity)
                         version_str = str(self.version[:specificity])
-                    elif spec.versions and spec.versions != _any_version:
-                        version_str = str(spec.versions)
+                    elif self.versions and self.versions != _any_version:
+                        version_str = str(self.versions)
                     else:
                         version_str = None
                         
                     if version_str:
                         write(fmt % version_str, '@')
-                elif attribute == 'COMPILER':
-                    if spec.compiler:
-                        write(fmt % spec.compiler, '%')
-                elif attribute == 'COMPILERNAME':
-                    if spec.compiler:
-                        write(fmt % spec.compiler.name, '%')
-                elif attribute == 'COMPILERVER':
-                    if spec.compiler:
-                        write(fmt % spec.compiler.versions, '%')
-                elif named_str == 'COMPILERFLAGS':
-                    if spec.compiler:
-                        write(fmt % str(spec.compiler_flags), '%')
-                elif attribute == 'OPTIONS':
-                    if spec.variants:
-                        write(fmt % str(spec.variants), '+')
-                elif attribute == 'ARCHITECTURE':
-                    if spec.architecture and str(spec.architecture):
-                        write(fmt % str(spec.architecture), ' arch=')
-                elif attribute == 'SHA1':
-                    if spec.dependencies:
-                        out.write(fmt % str(spec.dag_hash(7)))
-                elif attribute.startswith('?'):
-                    t = attribute.split(':')
+                elif section_id == 'COMPILER':
+                    if self.compiler:
+                        write(fmt % self.compiler, '%')
+                elif section_id == 'COMPILERNAME':
+                    if self.compiler:
+                        write(fmt % self.compiler.name, '%')
+                elif section_id == 'COMPILERVER':
+                    if self.compiler:
+                        write(fmt % self.compiler.versions, '%')
+                elif section_id == 'COMPILERFLAGS':
+                    if self.compiler:
+                        write(fmt % str(self.compiler_flags), '%')
+                elif section_id == 'OPTIONS':
+                    if self.variants:
+                        write(fmt % str(self.variants), '+')
+                elif section_id == 'ARCHITECTURE':
+                    if self.architecture and str(self.architecture):
+                        write(fmt % str(self.architecture), ' arch=')
+                elif section_id == 'SHA1':
+                    if self.dependencies:
+                        out.write(fmt % str(self.dag_hash(7)))
+                elif section_id.startswith('?'):
+                    t = named_str.split(':')
                     _, check_spec, true_format = t[:3]
                     false_format = t[3] if len(t) > 3 else None
-                    if spec.satisfies(check_spec):
-                        out.write(spec.format(true_format))
+                    if self.satisfies(check_spec):
+                        out.write(self.format(true_format))
                     elif false_format:
-                        out.write(spec.format(false_format))
-                elif attribute == 'SPACK_ROOT':
+                        out.write(self.format(false_format))
+                elif section_id == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
-                elif attribute == 'SPACK_INSTALL':
+                elif section_id == 'SPACK_INSTALL':
                     out.write(fmt % spack.install_path)
 
                 named = False
