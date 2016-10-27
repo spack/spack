@@ -73,6 +73,10 @@ def get_package_config(name, config, exclude_multiply=None,
     primary_section = config.get(name, {})
     all_section = config.get('all', {})
     if 'descriptor' in primary_section:
+        #TODO: if this is wrapped in package projection, I can later make sure
+        #that descriptor projections are included when I attempt to skip
+        #duplicates when a package provides multiple dependencies (which are
+        #mentioned as components)
         return PackageDetailProjection(primary_section['descriptor'])
     elif 'components' in primary_section:
         components_section = primary_section['components']
