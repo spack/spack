@@ -48,6 +48,8 @@ class PackageProjection(object):
         self.dep = dep
 
     def project(self, spec):
+        #TODO: keep track of the instantiations of virtual deps to avoid
+        #including them twice in the projection
         if self.dep:
             if self.dep == spec.name or self.dep not in spec:
                 return
@@ -75,10 +77,6 @@ def get_package_config(name, config, exclude_multiply=None,
     primary_section = config.get(name, {})
     all_section = config.get('all', {})
     if 'descriptor' in primary_section:
-        #TODO: if this is wrapped in package projection, I can later make sure
-        #that descriptor projections are included when I attempt to skip
-        #duplicates when a package provides multiple dependencies (which are
-        #mentioned as components)
         return PackageProjection(
             [[PackageDetailProjection(primary_section['descriptor'])]],
             dep)
