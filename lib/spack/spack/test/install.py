@@ -26,7 +26,7 @@ import shutil
 import tempfile
 
 import spack
-import spack.install_area
+import spack.store
 from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
 from spack.database import Database
@@ -50,11 +50,11 @@ class InstallTest(MockPackagesTest):
         # Use a fake install directory to avoid conflicts bt/w
         # installed pkgs and mock packages.
         self.tmpdir = tempfile.mkdtemp()
-        self.orig_layout = spack.install_area.layout
-        self.orig_db = spack.install_area.db
+        self.orig_layout = spack.store.layout
+        self.orig_db = spack.store.db
 
-        spack.install_area.layout = YamlDirectoryLayout(self.tmpdir)
-        spack.install_area.db     = Database(self.tmpdir)
+        spack.store.layout = YamlDirectoryLayout(self.tmpdir)
+        spack.store.db     = Database(self.tmpdir)
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
@@ -64,8 +64,8 @@ class InstallTest(MockPackagesTest):
         spack.do_checksum = True
 
         # restore spack's layout.
-        spack.install_area.layout = self.orig_layout
-        spack.install_area.db     = self.orig_db
+        spack.store.layout = self.orig_layout
+        spack.store.db     = self.orig_db
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def fake_fetchify(self, pkg):
@@ -92,7 +92,7 @@ class InstallTest(MockPackagesTest):
             pkg.remove_prefix()
             raise
 
-    def test_install_area(self):
+    def test_store(self):
         spec = Spec('cmake-client').concretized()
 
         for s in spec.traverse():

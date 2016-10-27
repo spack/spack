@@ -25,7 +25,7 @@
 
 import argparse
 
-import spack.install_area
+import spack.store
 import spack.modules
 from spack.util.pattern import Bunch
 __all__ = ['add_common_arguments']
@@ -54,7 +54,7 @@ class ConstraintAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
         d = self.qualifiers.get(namespace.subparser_name, {})
-        specs = [s for s in spack.install_area.db.query(**d)]
+        specs = [s for s in spack.store.db.query(**d)]
         values = ' '.join(values)
         if values:
             specs = [x for x in specs if x.satisfies(values, strict=True)]

@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
-import spack.install_area
+import spack.store
 description = "Rebuild Spack's package database."
 
 
 def reindex(parser, args):
-    spack.install_area.db.reindex(spack.install_area.layout)
+    spack.store.db.reindex(spack.store.layout)

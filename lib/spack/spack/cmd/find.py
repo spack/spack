@@ -28,7 +28,7 @@ import sys
 import llnl.util.tty as tty
 import spack
 import spack.spec
-import spack.install_area
+import spack.store
 from llnl.util.lang import *
 from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
@@ -146,9 +146,9 @@ def find(parser, args):
 
     # Get all the specs the user asked for
     if not query_specs:
-        specs = set(spack.install_area.db.query(**q_args))
+        specs = set(spack.store.db.query(**q_args))
     else:
-        results = [set(spack.install_area.db.query(qs, **q_args))
+        results = [set(spack.store.db.query(qs, **q_args))
                    for qs in query_specs]
         specs = set.union(*results)
 
