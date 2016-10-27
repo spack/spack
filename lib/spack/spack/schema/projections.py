@@ -35,30 +35,37 @@ schema = {
             'default': {},
             'additionalProperties': False,
             'patternProperties': {
-                r'\w[\w-]*': {  # package name
+                r'\w[\w-]*': {  # projection name
                     'type': 'object',
                     'default': {},
                     'additionalProperties': False,
-                    'properties': {
-                        'components': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {'type': 'string'}
-                        },
-                        'top-level-basedir': {'type': 'string'},
-                        'descriptor': {'type': 'string'},
-                        'targets': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {
-                                'type': 'object',
-                                'properties': {
-                                    'match': {'type': 'string'},
-                                    'target': {'type': 'string'},
-                                    'output': {'type': 'string'}
-                                }
+                    'patternProperties': {
+                        r'\w[\w-]*': {  # package name
+                            'type': 'object',
+                            'default': {},
+                            'additionalProperties': False,
+                            'properties': {
+                                'components': {
+                                    'type': 'array',
+                                    'default': [],
+                                    'items': {'type': 'string'}
+                                },
+                                'top-level-basedir': {'type': 'string'},
+                                'descriptor': {'type': 'string'},
+                                'targets': {
+                                    'type': 'array',
+                                    'default': [],
+                                    'items': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'match': {'type': 'string'},
+                                            'target': {'type': 'string'},
+                                            'output': {'type': 'string'}
+                                        }
+                                    }
+                                },
                             }
-                        },
+                        }
                     }
                 }
             }

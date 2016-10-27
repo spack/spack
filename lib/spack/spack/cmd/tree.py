@@ -35,13 +35,14 @@ import errno
 description = "Project Spack's fully-qualified names to a tree of simplified symlinks"
 
 def setup_parser(subparser):
-    subparser.add_argument('--root', dest='root')
     subparser.add_argument('--relative-root', dest='relative_root')
     subparser.add_argument(
         '--show-only', dest="show_only", action="store_true")
     subparser.add_argument(
         '--transitive', dest='transitive', action='store_true')
     subparser.add_argument('action')
+    subparser.add_argument('--root', dest='root')
+    subparser.add_argument('--projection', dest='projection')
     subparser.add_argument('target', nargs=argparse.REMAINDER)
 
 class PackageProjection(object):
@@ -293,13 +294,14 @@ def print_links(link_to_target, link_root=None):
         print link, '--->', target
 
 def tree(parser, args):
-    root = args.root
+    root = args.root #TODO: get this from the tree
+    projection_id = args.projection #TODO: get this from the tree
     relative_root = args.relative_root or '/'
     action = args.action
     link_action = print_links if args.show_only else create_softlinks
 
     tree_config = spack.config.get_config('trees')
-    projections_config = spack.config.get_config('projections')
+    projections_config = spack.config.get_config('projections')[projection_id]
 
     if action == 'add':
         tree_id, query_spec = args.target
