@@ -2319,14 +2319,14 @@ class Spec(object):
                     if attribute.startswith('VERSION:') and self.concrete:
                         _, specificity = attribute.split(':')
                         specificity = int(specificity)
-                        versionStr = str(self.version[:specificity])
+                        version_str = str(self.version[:specificity])
                     elif spec.versions and spec.versions != _any_version:
-                        versionStr = str(spec.versions)
+                        version_str = str(spec.versions)
                     else:
-                        versionStr = None
+                        version_str = None
                         
-                    if versionStr:
-                        write(fmt % versionStr, '@')
+                    if version_str:
+                        write(fmt % version_str, '@')
                 elif attribute == 'COMPILER':
                     if spec.compiler:
                         write(fmt % spec.compiler, '%')
