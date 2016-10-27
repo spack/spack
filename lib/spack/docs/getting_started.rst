@@ -730,20 +730,9 @@ there."  This is reasonable for OpenSSL, which has a stable API.
     packages:
         openssl:
             paths:
-                openssl@system: /false/path
+                openssl@system: /usr
             version: [system]
             buildable: False
-
-.. note::
-
-   Even though OpenSSL is located in ``/usr``, We have told Spack to
-   look for it in ``/false/path``.  This prevents ``/usr`` from being
-   added to compilation paths and RPATHs, where it could cause
-   unrelated system libraries to be used instead of their Spack
-   equivalents.
-
-   The adding of ``/usr`` to ``RPATH`` in this sitution is a known issue
-   and will be fixed in a future release.
 
 
 ^^^^^^^^^^^^^
