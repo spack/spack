@@ -38,6 +38,8 @@ def setup_parser(subparser):
     subparser.add_argument('--root', dest='root')
     subparser.add_argument('--relative-root', dest='relative_root')
     subparser.add_argument(
+        '--show-only', dest="show_only", action="store_true")
+    subparser.add_argument(
         '--transitive', dest='transitive', action='store_true')
     subparser.add_argument('action')
     subparser.add_argument('target', nargs=argparse.REMAINDER)
@@ -76,22 +78,28 @@ def get_package_config(name, config, exclude_multiply=None,
     """
     primary_section = config.get(name, {})
     all_section = config.get('all', {})
-    if 'descriptor' in primary_section:
+    if primary_section.get('descriptor', None):
         return PackageProjection(
             [[PackageDetailProjection(primary_section['descriptor'])]],
             dep)
-    elif 'components' in primary_section:
+    elif primary_section.get('components', None):
         components_section = primary_section['components']
-    elif 'descriptor' in all_section:
+    elif all_section.get('descriptor', None):
         return PackageProjection(
             [[PackageDetailProjection(all_section['descriptor'])]],
             dep)
-    elif 'components' in all_section:
+    elif all_section.get('components', None):
         components_section = all_section['components']
 
     element_groups = list()
     element_group = list()
     exclude_multiply = set(exclude_multiply) if exclude_multiply else set()
+
+    base = (
+        primary_section.get('top-level-basedir', None)
+        or all_section.get('top-level-basedir', None))
+    if base and not dep:
+        element_groups.append([PackageDetailProjection(base)])
 
     parent_exclude = set(exclude_multiply)
     for item in components_section:
@@ -250,16 +258,7 @@ def softlink_command(target_path, link_path):
     return "ln -s {0} {1}".format(target_path, link_path)
 
 def create_softlinks(link_to_target, link_root=None):
-    collisions = defaultdict(set)
-    for link1, link2 in itertools.combinations(link_to_target, 2):
-        if link1.startswith(link2) or link2.startswith(link1):
-            smaller, larger = sorted([link1, link2], key=lambda x: len(x))
-            collisions[smaller].add(larger)
-
-    for prefix, conflicts in collisions.iteritems():
-        print 'The following collides with {0} links:'.format(
-            str(len(conflicts)))
-        print '\t{0}'.format(prefix)
+    check_for_collisions(link_to_target)
 
     for link, target in link_to_target.iteritems():
         if link_root:
@@ -275,10 +274,29 @@ def create_softlinks(link_to_target, link_root=None):
                 print "Collision: ", link
                 raise
 
+def check_for_collisions(link_to_target):
+    collisions = defaultdict(set)
+    for link1, link2 in itertools.combinations(link_to_target, 2):
+        if link1.startswith(link2) or link2.startswith(link1):
+            smaller, larger = sorted([link1, link2], key=lambda x: len(x))
+            collisions[smaller].add(larger)
+
+    for prefix, conflicts in collisions.iteritems():
+        print 'The following collides with {0} links:'.format(
+            str(len(conflicts)))
+        print '\t{0}'.format(prefix)
+
+def print_links(link_to_target, link_root=None):
+    check_for_collisions(link_to_target)
+    
+    for link, target in link_to_target.iteritems():
+        print link, '--->', target
+
 def tree(parser, args):
     root = args.root
     relative_root = args.relative_root or '/'
     action = args.action
+    link_action = print_links if args.show_only else create_softlinks
 
     tree_config = spack.config.get_config('trees')
     projections_config = spack.config.get_config('projections')
@@ -312,11 +330,11 @@ def tree(parser, args):
         link_to_spec = project_packages(specs_to_project, projections_config)
         link_to_prefix = dict(
             (link, spec.prefix) for link, spec in link_to_spec.iteritems())
-        create_softlinks(
+        link_action(
             link_to_prefix,
             join_path(relative_root, root.lstrip('/')))
 
-        create_softlinks(
+        link_action(
             project_targets(specs_to_project, projections_config),
             relative_root) # target links are absolute
     else:

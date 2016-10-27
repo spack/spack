@@ -45,6 +45,7 @@ schema = {
                             'default': [],
                             'items': {'type': 'string'}
                         },
+                        'top-level-basedir': {'type': 'string'},
                         'descriptor': {'type': 'string'},
                         'targets': {
                             'type': 'array',
