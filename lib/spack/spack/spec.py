@@ -856,7 +856,7 @@ class Spec(object):
                        children in the dependency DAG.
 
            cover    [=nodes|edges|paths]
-               Determines how extensively to cover the dag.  Possible vlaues:
+               Determines how extensively to cover the dag.  Possible values:
 
                'nodes': Visit each node in the dag only once.  Every node
                         yielded by this function will be unique.
