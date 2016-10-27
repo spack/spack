@@ -30,7 +30,7 @@ import multiprocessing
 import os.path
 
 import spack
-import spack.install_area
+import spack.store
 from llnl.util.filesystem import join_path
 from llnl.util.tty.colify import colify
 from spack.test.mock_database import MockDatabase
@@ -41,16 +41,16 @@ def _print_ref_counts():
     recs = []
 
     def add_rec(spec):
-        cspecs = spack.install_area.db.query(spec, installed=any)
+        cspecs = spack.store.db.query(spec, installed=any)
 
         if not cspecs:
             recs.append("[ %-7s ] %-20s-" % ('', spec))
         else:
             key = cspecs[0].dag_hash()
-            rec = spack.install_area.db.get_record(cspecs[0])
+            rec = spack.store.db.get_record(cspecs[0])
             recs.append("[ %-7s ] %-20s%d" % (key[:7], spec, rec.ref_count))
 
-    with spack.install_area.db.read_transaction():
+    with spack.store.db.read_transaction():
         add_rec('mpileaks ^mpich')
         add_rec('callpath ^mpich')
         add_rec('mpich')
@@ -83,7 +83,7 @@ class DatabaseTest(MockDatabase):
 
     def test_010_all_install_sanity(self):
         """Ensure that the install layout reflects what we think it does."""
-        all_specs = spack.install_area.layout.all_specs()
+        all_specs = spack.store.layout.all_specs()
         self.assertEqual(len(all_specs), 13)
 
         # query specs with multiple configurations
@@ -114,12 +114,12 @@ class DatabaseTest(MockDatabase):
 
     def test_015_write_and_read(self):
         # write and read DB
-        with spack.install_area.db.write_transaction():
-            specs = spack.install_area.db.query()
-            recs = [spack.install_area.db.get_record(s) for s in specs]
+        with spack.store.db.write_transaction():
+            specs = spack.store.db.query()
+            recs = [spack.store.db.get_record(s) for s in specs]
 
         for spec, rec in zip(specs, recs):
-            new_rec = spack.install_area.db.get_record(spec)
+            new_rec = spack.store.db.get_record(spec)
             self.assertEqual(new_rec.ref_count, rec.ref_count)
             self.assertEqual(new_rec.spec,      rec.spec)
             self.assertEqual(new_rec.path,      rec.path)
@@ -127,7 +127,7 @@ class DatabaseTest(MockDatabase):
 
     def _check_merkleiness(self):
         """Ensure the spack database is a valid merkle graph."""
-        all_specs = spack.install_area.db.query(installed=any)
+        all_specs = spack.store.db.query(installed=any)
 
         seen = {}
         for spec in all_specs:
@@ -140,7 +140,7 @@ class DatabaseTest(MockDatabase):
 
     def _check_db_sanity(self):
         """Utiilty function to check db against install layout."""
-        expected = sorted(spack.install_area.layout.all_specs())
+        expected = sorted(spack.store.layout.all_specs())
         actual = sorted(self.install_db.query())
 
         self.assertEqual(len(expected), len(actual))
@@ -155,7 +155,7 @@ class DatabaseTest(MockDatabase):
 
     def test_025_reindex(self):
         """Make sure reindex works and ref counts are valid."""
-        spack.install_area.db.reindex(spack.install_area.layout)
+        spack.store.db.reindex(spack.store.layout)
         self._check_db_sanity()
 
     def test_030_db_sanity_from_another_process(self):
@@ -179,7 +179,7 @@ class DatabaseTest(MockDatabase):
     def test_050_basic_query(self):
         """Ensure querying database is consistent with what is installed."""
         # query everything
-        self.assertEqual(len(spack.install_area.db.query()), 13)
+        self.assertEqual(len(spack.store.db.query()), 13)
 
         # query specs with multiple configurations
         mpileaks_specs = self.install_db.query('mpileaks')
@@ -224,7 +224,7 @@ class DatabaseTest(MockDatabase):
         self.assertTrue(concrete_spec not in remaining)
 
         # add it back and make sure everything is ok.
-        self.install_db.add(concrete_spec, spack.install_area.layout)
+        self.install_db.add(concrete_spec, spack.store.layout)
         installed = self.install_db.query()
         self.assertTrue(concrete_spec in installed)
         self.assertEqual(installed, original)
@@ -255,7 +255,7 @@ class DatabaseTest(MockDatabase):
         self.assertEqual(self.install_db.get_record('mpich').ref_count, 1)
 
         # Put the spec back
-        self.install_db.add(rec.spec, spack.install_area.layout)
+        self.install_db.add(rec.spec, spack.store.layout)
 
         # record is present again
         self.assertEqual(

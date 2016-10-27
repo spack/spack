@@ -146,22 +146,6 @@ for path in _tmp_candidates:
 do_checksum = True
 
 #
-# SYS_TYPE to use for the spack installation.
-# Value of this determines what platform spack thinks it is by
-# default.  You can assign three types of values:
-# 1. None
-#    Spack will try to determine the sys_type automatically.
-#
-# 2. A string
-#    Spack will assume that the sys_type is hardcoded to the value.
-#
-# 3. A function that returns a string:
-#    Spack will use this function to determine the sys_type.
-#
-sys_type = None
-
-
-#
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
 # Spack internal code should call 'import spack' and accesses other

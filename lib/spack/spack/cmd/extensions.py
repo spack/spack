@@ -30,7 +30,7 @@ from llnl.util.tty.colify import colify
 import spack
 import spack.cmd
 import spack.cmd.find
-import spack.install_area
+import spack.store
 
 description = "List extensions for package."
 
@@ -88,7 +88,7 @@ def extensions(parser, args):
     # List specs of installed extensions.
     #
     installed = [s.spec
-                 for s in spack.install_area.db.installed_extensions_for(spec)]
+                 for s in spack.store.db.installed_extensions_for(spec)]
 
     print
     if not installed:
@@ -100,7 +100,7 @@ def extensions(parser, args):
     #
     # List specs of activated extensions.
     #
-    activated = spack.install_area.layout.extension_map(spec)
+    activated = spack.store.layout.extension_map(spec)
     print
     if not activated:
         tty.msg("None activated.")

@@ -30,13 +30,32 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        'install': {
+        'config': {
             'type': 'object',
-            'default' : {},
+            'default': {},
             'additionalProperties': False,
             'properties': {
-                'path' : { 'type': 'string' },
-                'layout' : { 'type': 'string' }
+                'install_tree': {'type': 'string'},
+                'build_stage': {
+                    'oneOf': [
+                        {'type': 'string'},
+                        {'type': 'array',
+                         'items': {'type': 'string'}}],
+                },
+                'source_cache': {'type': 'string'},
+                'misc_cache': {'type': 'string'},
+                'verify_ssl': {
+                    'type': 'boolean',
+                    'default': True,
+                },
+                'checksum': {
+                    'type': 'boolean',
+                    'default': True,
+                },
+                'dirty': {
+                    'type': 'boolean',
+                    'default': False,
+                },
             }
         },
     },

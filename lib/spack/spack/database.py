@@ -48,7 +48,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 from llnl.util.lock import *
 
-import spack.install_area
+import spack.store
 import spack.repository
 from spack.directory_layout import DirectoryLayoutError
 from spack.version import Version
@@ -280,7 +280,7 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.install_area.layout)
+            self.reindex(spack.store.layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
         def invalid_record(hash_key, error):
@@ -446,7 +446,7 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
-            self.reindex(spack.install_area.layout)
+            self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):
         """Add an install record for this spec to the database.
