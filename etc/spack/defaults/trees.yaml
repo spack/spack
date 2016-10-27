@@ -10,5 +10,9 @@ trees:
       - "this:${PACKAGE}-${VERSION}"
   bzip2:
 #TODO: optional descriptor which offers similar functionality in spec.format      
+    targets:
+      - output: /usr/bin/bzip2_1
+        match: "bzip2@1.0:"
+        target: bin/bzip2 #relative to package prefix 
     components:
       - "this:ARRRRRR-${PACKAGE}"

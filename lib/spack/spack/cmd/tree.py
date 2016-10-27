@@ -29,6 +29,7 @@ import argparse
 
 from collections import defaultdict
 import itertools
+import os
 
 description = "Project Spack's fully-qualified names to a tree of simplified symlinks"
 
@@ -143,7 +144,29 @@ def process_this(t):
         false_fmt = t[3] if len(t) > 3 else None
     return PackageDetailProjection(true_fmt, query_spec, false_fmt)
 
-def project_all(specs, config):
+def get_target_projections(pkg, config):
+    targets = config.get(pkg, {}).get('targets', [])
+    return list(
+        TargetProjection(t['match'], t['target'], t['output'])
+        for t in targets)
+        
+class TargetProjection(object):
+    def __init__(self, match, target, output):
+        self.match = match
+        self.target = target
+        self.output = output
+
+    def matches(self, spec):
+        return spec.satisfies(self.match)
+
+    def project(self, spec):
+        target_path = join_path(spec.prefix, self.target)
+        if not os.path.exists(target_path):
+            raise ValueError(
+                "{0} does not exist in {1}".format(self.target, spec.prefix))
+        return target_path, spec.format(self.output)
+
+def project_packages(specs, config):
     def keyFn(spec):
         pkg_cfg = get_package_config(spec.name, config)
         return pkg_cfg.project(spec)
@@ -152,6 +175,21 @@ def project_all(specs, config):
     
     return dict(
         (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
+
+def project_targets(specs, config):
+    output_to_targets = defaultdict(set)
+    for spec in specs:
+        target_projections = get_target_projections(spec.name, config)
+        for tp in target_projections:
+            if tp.matches(spec):
+                target, output = tp.project(spec)
+                output_to_targets[output].add((spec, target))
+    output_to_target = {}
+    for output, spec_keys in output_to_targets.iteritems():
+        #TODO: warn when there is more than one target
+        spec, target = max(spec_keys, key=lambda (spec, target): spec)
+        output_to_target[output] = target
+    return output_to_target
 
 def map_specs(specs, keyFn):
     key_to_specs = defaultdict(set)
@@ -176,7 +214,7 @@ def update_install(specs, config):
     related_specs = set(itertools.chain.from_iterable(
         spack.installed_db.query(name) for name in touched))
 
-    link_to_spec = projection.project_all(related_specs)
+    link_to_spec = projection.project_packages(related_specs)
     
     config.update_links(link_to_spec)
     
@@ -185,14 +223,14 @@ def update_install(specs, config):
 #TODO: unfinished
 def update_uninstall(specs, config):
     projection = config.projection
-    link_to_spec = projection.project_all(specs)
+    link_to_spec = projection.project_packages(specs)
     config.remove_links(set(link_to_spec))
 
     # If all instances of a package are uninstalled, there may be no entries
     # for it here.
     related_specs = set(itertools.chain.from_iterable(
         spack.installed_db.query(s.name) for s in specs))
-    link_to_spec = projection.project_all(related_specs)
+    link_to_spec = projection.project_packages(related_specs)
     config.add_links(link_to_spec)
 
 def get_or_set(d, key, val):
@@ -235,9 +273,13 @@ def tree(parser, args):
                     itertools.chain.from_iterable(spec.traverse() for spec in
                         spack.installed_db.query(query_spec)))
 
-        for link_path, spec in project_all(
+        for link_path, spec in project_packages(
                 specs_to_project, tree_config).iteritems():
             print join_path(root, link_path), spec.prefix
+
+        for link_path, target in project_targets(
+                specs_to_project, tree_config).iteritems():
+            print link_path, "->", target
     else:
         raise ValueError("Unknown action: " + action)
 

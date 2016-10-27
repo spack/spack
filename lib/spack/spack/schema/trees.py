@@ -46,6 +46,18 @@ schema = {
                             'default': [],
                             'items': {'type': 'string'}
                         },
+                        'targets': {
+                            'type': 'array',
+                            'default': [],
+                            'items': {
+                                'type': 'object',
+                                'properties': {
+                                    'match': {'type': 'string'},
+                                    'target': {'type': 'string'},
+                                    'output': {'type': 'string'}
+                                }
+                            }
+                        },
                     }
                 }
             }
