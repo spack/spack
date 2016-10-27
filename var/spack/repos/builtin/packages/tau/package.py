@@ -62,7 +62,7 @@ class Tau(Package):
     # support.
     depends_on('pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
-    depends_on('binutils', when='~download')
+    #depends_on('binutils', when='~download')
     depends_on('mpi', when='+mpi')
 
     def set_compiler_options(self, spec):
@@ -119,8 +119,8 @@ class Tau(Package):
             options.extend(['-bfd=download',
                             '-unwind=download',
                             '-asmdex=download'])
-        else:
-            options.extend(["-bfd=%s" % spec['binutils'].prefix])
+        #else:
+        #    options.extend(["-bfd=%s" % spec['binutils'].prefix])
             # TODO : unwind and asmdex are still missing
 
         if '+scorep' in spec:

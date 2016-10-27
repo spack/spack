@@ -150,9 +150,10 @@ def setup(self, args):
 
         spec.concretize()
         package = spack.repo.get(spec)
-        if not isinstance(package, spack.CMakePackage):
-            tty.die(
-                'Support for {0} derived packages not yet implemented'.format(
+        create_spconfig = isinstance(package, spack.CMakePackage)
+        if not create_spconfig:
+            tty.msg(
+                'Support for {0} derived packages not yet implemented, spconfig.py will not be created!'.format(
                     package.build_system_class
                 )
             )
@@ -175,16 +176,27 @@ def setup(self, args):
                 namespace=inst_args
             )
             install.install(parser, inst_args)
-        # Generate spconfig.py
-        tty.msg(
-            'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
-        )
-        write_spconfig(package)
-        # Install this package to register it in the DB and permit
-        # module file regeneration
-        inst_args = copy.deepcopy(args)
-        inst_args = parser.parse_args(
-            ['--only=package', '--fake'] + args.spec,
-            namespace=inst_args
-        )
-        install.install(parser, inst_args)
+
+        if create_spconfig:
+            # Generate spconfig.py
+            tty.msg(
+                'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
+            )
+            write_spconfig(package)
+
+            # Install this package to register it in the DB and permit
+            # module file regeneration
+            inst_args = copy.deepcopy(args)
+            inst_args = parser.parse_args(
+                ['--only=package', '--fake'] + args.spec,
+                namespace=inst_args
+            )
+            install.install(parser, inst_args)
+        else:
+            package.do_install(
+                keep_prefix=True,  # Don't remove install directory
+                install_deps=not args.ignore_deps,
+                verbose=args.verbose,
+                keep_stage=True,   # don't remove source dir for SETUP.
+                install_phases=set(['setup', 'provenance']),
+                dirty=args.dirty)
