@@ -1,18 +1,7 @@
 trees:
-  all:
-    components:
-      - dep:mpi #since there is no entry, we use the descriptor for 'all'
-      - "once:compiler:this?:%gcc:gnu-${COMPILERVER}:${COMPILERNAME}"
-      - /
-      - dep:bzip2 #if we didnt want to use exactly the same package descriptor as "bzip2" we could create and refer to e.g. "bzip2/bzip2_multiplier"
-      - dep:zlib
-      - /
-      - "this:${PACKAGE}-${VERSION}"
-  bzip2:
-#TODO: optional descriptor which offers similar functionality in spec.format      
-    targets:
-      - output: /usr/bin/bzip2_1
-        match: "bzip2@1.0:"
-        target: bin/bzip2 #relative to package prefix 
-    components:
-      - "this:ARRRRRR-${PACKAGE}"
+  tree-foo: 
+    single:
+      - mpi     #each of these is a query spec: get all matching specs
+      - bzip2
+    transitive:
+      - boost   #likewise each of these is a query spec

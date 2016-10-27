@@ -250,11 +250,11 @@ def tree(parser, args):
     if action == 'add':
         tree_id, query_spec = args.target
             
-        tree = get_or_set(projections_config, tree_id, {})
+        tree = get_or_set(tree_config, tree_id, {})
         update = get_or_set(
             tree, 'transitive' if args.transitive else 'single', [])
         update.append(query_spec)
-        spack.config.update_config('projections', projections_config, 'user')
+        spack.config.update_config('trees', tree_config, 'user')
     elif action == 'project':
         tree_id, = args.target
 
@@ -262,7 +262,7 @@ def tree(parser, args):
             specs_to_project = spack.install_layout.all_specs()
         else:
             specs_to_project = list()
-            tree = projections_config[tree_id]
+            tree = tree_config[tree_id]
             single = tree['single']
             transitive = tree['transitive']
             for query_spec in single:
@@ -274,11 +274,11 @@ def tree(parser, args):
                         spack.installed_db.query(query_spec)))
 
         for link_path, spec in project_packages(
-                specs_to_project, tree_config).iteritems():
+                specs_to_project, projections_config).iteritems():
             print join_path(root, link_path), spec.prefix
 
         for link_path, target in project_targets(
-                specs_to_project, tree_config).iteritems():
+                specs_to_project, projections_config).iteritems():
             print link_path, "->", target
     else:
         raise ValueError("Unknown action: " + action)

@@ -36,29 +36,17 @@ schema = {
             'default': {},
             'additionalProperties': False,
             'patternProperties': {
-                r'\w[\w-]*': {  # package name
-                    'type': 'object',
-                    'default': {},
-                    'additionalProperties': False,
-                    'properties': {
-                        'components': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {'type': 'string'}
-                        },
-                        'targets': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {
-                                'type': 'object',
-                                'properties': {
-                                    'match': {'type': 'string'},
-                                    'target': {'type': 'string'},
-                                    'output': {'type': 'string'}
-                                }
-                            }
-                        },
-                    }
+                r'\w[\w-]*': {  # tree name
+                    'single': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {'type': 'string'}
+                    },
+                    'transitive': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {'type': 'string'}
+                    },
                 }
             }
         }
