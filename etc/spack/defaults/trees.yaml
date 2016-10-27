@@ -1,3 +1,4 @@
+# A tree is a collection of packages which should be projected
 trees:
   tree-foo: 
     single:

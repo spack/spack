@@ -1,3 +1,4 @@
+# Specifies how to construct symlinks for packages
 projections:
   all:
     components:
