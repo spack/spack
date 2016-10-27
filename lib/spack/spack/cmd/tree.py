@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import join_path, mkdirp
 
 import argparse
 
@@ -35,6 +35,7 @@ description = "Project Spack's fully-qualified names to a tree of simplified sym
 
 def setup_parser(subparser):
     subparser.add_argument('--root', dest='root')
+    subparser.add_argument('--relative-root', dest='relative_root')
     subparser.add_argument(
         '--transitive', dest='transitive', action='store_true')
     subparser.add_argument('action')
@@ -245,8 +246,17 @@ def get_or_set(d, key, val):
 def softlink_command(target_path, link_path):
     return "ln -s {0} {1}".format(target_path, link_path)
 
+def create_softlinks(link_to_target, link_root=None):
+    for link, target in link_to_target.iteritems():
+        if link_root:
+            link = join_path(link_root, link.lstrip('/'))
+        link = link.rstrip('/')
+        mkdirp(os.path.dirname(link))
+        os.symlink(target, link)
+
 def tree(parser, args):
     root = args.root
+    relative_root = args.relative_root or '/'
     action = args.action
 
     tree_config = spack.config.get_config('trees')
@@ -278,13 +288,16 @@ def tree(parser, args):
                     itertools.chain.from_iterable(spec.traverse() for spec in
                         spack.installed_db.query(query_spec)))
 
-        for link_path, spec in project_packages(
-                specs_to_project, projections_config).iteritems():
-            print softlink_command(spec.prefix, join_path(root, link_path))
+        link_to_spec = project_packages(specs_to_project, projections_config)
+        link_to_prefix = dict(
+            (link, spec.prefix) for link, spec in link_to_spec.iteritems())
+        create_softlinks(
+            link_to_prefix,
+            join_path(relative_root, root.lstrip('/')))
 
-        for link_path, target in project_targets(
-                specs_to_project, projections_config).iteritems():
-            print softlink_command(target, link_path)
+        create_softlinks(
+            project_targets(specs_to_project, projections_config),
+            relative_root) # target links are absolute
     else:
         raise ValueError("Unknown action: " + action)
 
