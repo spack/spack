@@ -23,21 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import StringIO
+import argparse
+import codecs
 import collections
-import os
-import unittest
 import contextlib
+import unittest
 
+import llnl.util.filesystem
 import spack
 import spack.cmd
-from spack.cmd import test_install
+import spack.cmd.install as install
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
 
 
 # Monkey-patch open to write module files to a StringIO instance
 @contextlib.contextmanager
-def mock_open(filename, mode):
+def mock_open(filename, mode, *args):
     if not mode == 'wb':
         message = 'test.test_install : unexpected opening mode for mock_open'
         raise RuntimeError(message)
@@ -103,6 +105,8 @@ class MockPackage(object):
         self.build_log_path = buildLogPath
 
     def do_install(self, *args, **kwargs):
+        for x in self.spec.dependencies():
+            x.package.do_install(*args, **kwargs)
         self.installed = True
 
 
@@ -120,36 +124,28 @@ class MockPackageDb(object):
 def mock_fetch_log(path):
     return []
 
-specX = MockSpec('X', "1.2.0")
-specY = MockSpec('Y', "2.3.8")
+specX = MockSpec('X', '1.2.0')
+specY = MockSpec('Y', '2.3.8')
 specX._dependencies['Y'] = spack.DependencySpec(specY, spack.alldeps)
 pkgX = MockPackage(specX, 'logX')
 pkgY = MockPackage(specY, 'logY')
-
-
-class MockArgs(object):
-
-    def __init__(self, package):
-        self.package = package
-        self.jobs = None
-        self.no_checksum = False
-        self.output = None
+specX.package = pkgX
+specY.package = pkgY
 
 
 # TODO: add test(s) where Y fails to install
-class TestInstallTest(unittest.TestCase):
-    """
-    Tests test-install where X->Y
-    """
+class InstallTestJunitLog(unittest.TestCase):
+    """Tests test-install where X->Y"""
 
     def setUp(self):
-        super(TestInstallTest, self).setUp()
-
+        super(InstallTestJunitLog, self).setUp()
+        install.PackageBase = MockPackage
         # Monkey patch parse specs
+
         def monkey_parse_specs(x, concretize):
-            if x == 'X':
+            if x == ['X']:
                 return [specX]
-            elif x == 'Y':
+            elif x == ['Y']:
                 return [specY]
             return []
 
@@ -157,11 +153,12 @@ class TestInstallTest(unittest.TestCase):
         spack.cmd.parse_specs = monkey_parse_specs
 
         # Monkey patch os.mkdirp
-        self.os_mkdir = os.mkdir
-        os.mkdir = lambda x: True
+        self.mkdirp = llnl.util.filesystem.mkdirp
+        llnl.util.filesystem.mkdirp = lambda x: True
 
         # Monkey patch open
-        test_install.open = mock_open
+        self.codecs_open = codecs.open
+        codecs.open = mock_open
 
         # Clean FILE_REGISTRY
         FILE_REGISTRY.clear()
@@ -176,21 +173,24 @@ class TestInstallTest(unittest.TestCase):
 
     def tearDown(self):
         # Remove the monkey patched test_install.open
-        test_install.open = open
+        codecs.open = self.codecs_open
 
         # Remove the monkey patched os.mkdir
-        os.mkdir = self.os_mkdir
-        del self.os_mkdir
+        llnl.util.filesystem.mkdirp = self.mkdirp
+        del self.mkdirp
 
         # Remove the monkey patched parse_specs
         spack.cmd.parse_specs = self.parse_specs
         del self.parse_specs
-        super(TestInstallTest, self).tearDown()
+        super(InstallTestJunitLog, self).tearDown()
 
         spack.repo = self.saved_db
 
     def test_installing_both(self):
-        test_install.test_install(None, MockArgs('X'))
+        parser = argparse.ArgumentParser()
+        install.setup_parser(parser)
+        args = parser.parse_args(['--log-format=junit', 'X'])
+        install.install(parser, args)
         self.assertEqual(len(FILE_REGISTRY), 1)
         for _, content in FILE_REGISTRY.items():
             self.assertTrue('tests="2"' in content)
@@ -200,7 +200,10 @@ class TestInstallTest(unittest.TestCase):
     def test_dependency_already_installed(self):
         pkgX.installed = True
         pkgY.installed = True
-        test_install.test_install(None, MockArgs('X'))
+        parser = argparse.ArgumentParser()
+        install.setup_parser(parser)
+        args = parser.parse_args(['--log-format=junit', 'X'])
+        install.install(parser, args)
         self.assertEqual(len(FILE_REGISTRY), 1)
         for _, content in FILE_REGISTRY.items():
             self.assertTrue('tests="2"' in content)

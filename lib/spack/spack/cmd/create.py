@@ -336,7 +336,7 @@ class BuildSystemGuesser(object):
         self.build_system = build_system
 
     def make_guess(self, name, url, ver_hash_tuples):
-        cls = self._choiches.get(self.build_system, DefaultGuess)
+        cls = self._choices.get(self.build_system, DefaultGuess)
         return cls(name, url, ver_hash_tuples)
 
 

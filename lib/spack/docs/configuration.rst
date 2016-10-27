@@ -134,34 +134,6 @@ buggy or otherwise undesirable.
 
 .. _system-packages:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-False Paths for System Packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Sometimes, the externally-installed package one wishes to use with
-Spack comes with the Operating System and is installed in a standard
-place --- ``/usr``, for example.  Many other packages are there as
-well.  If Spack adds it to build paths, then some packages might
-pick up dependencies from ``/usr`` than the intended Spack version.
-
-In order to avoid this problem, it is advisable to specify a fake path
-in ``packages.yaml``, thereby preventing Spack from adding the real
-path to compiler command lines.  This will work because compilers
-normally search standard system paths, even if they are not on the
-command line.  For example:
-
-.. code-block:: yaml
-
-    packages:
-        # Recommended for security reasons
-        # Do not install OpenSSL as non-root user.
-        openssl:
-            paths:
-                openssl@system: /false/path
-            version: [system]
-            buildable: False
-
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Extracting System Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

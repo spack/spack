@@ -111,7 +111,6 @@ env = dict(os.environ)
                     fout.write('    %s\n' % part)
                 fout.write('"""))\n')
 
-        fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")  # NOQA: ignore=E501
         fout.write('\ncmd = cmdlist("""\n')
         fout.write('%s\n' % cmd[0])
         for arg in cmd[1:]:
