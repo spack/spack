@@ -13,8 +13,8 @@ class LinuxDistro(OperatingSystem):
 
     def __init__(self):
         distname, version, _ = py_platform.linux_distribution(
-            # Add support for Arch Linux
-            supported_dists=py_platform._supported_dists + ('arch',),
+            # Add support for Arch and Amazon Linux
+            supported_dists=py_platform._supported_dists + ('arch', 'system'),
             full_distribution_name=False)
 
         # Grabs major version from tuple on redhat; on other platforms
