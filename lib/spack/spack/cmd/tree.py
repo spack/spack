@@ -78,11 +78,15 @@ def get_package_config(name, config, exclude_multiply=None,
         #that descriptor projections are included when I attempt to skip
         #duplicates when a package provides multiple dependencies (which are
         #mentioned as components)
-        return PackageDetailProjection(primary_section['descriptor'])
+        return PackageProjection(
+            [[PackageDetailProjection(primary_section['descriptor'])]],
+            dep)
     elif 'components' in primary_section:
         components_section = primary_section['components']
     elif 'descriptor' in all_section:
-        return PackageDetailProjection(all_section['descriptor'])
+        return PackageProjection(
+            [[PackageDetailProjection(all_section['descriptor'])]],
+            dep)
     elif 'components' in all_section:
         components_section = all_section['components']
 
