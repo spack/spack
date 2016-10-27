@@ -32,7 +32,8 @@ import itertools
 import os
 import errno
 
-description = "Project Spack's fully-qualified names to a tree of simplified symlinks"
+description = "Project package prefixes"
+
 
 def setup_parser(subparser):
     subparser.add_argument('--relative-root', dest='relative_root')
@@ -45,14 +46,15 @@ def setup_parser(subparser):
     subparser.add_argument('--projection', dest='projection')
     subparser.add_argument('target', nargs=argparse.REMAINDER)
 
+
 class PackageProjection(object):
     def __init__(self, element_groups, dep=None):
         self.element_groups = element_groups
         self.dep = dep
 
     def project(self, spec):
-        #TODO: keep track of the instantiations of virtual deps to avoid
-        #including them twice in the projection
+        # TODO: keep track of the instantiations of virtual deps to avoid
+        # including them twice in the projection
         if self.dep:
             if self.dep == spec.name or self.dep not in spec:
                 return
@@ -67,11 +69,12 @@ class PackageProjection(object):
         if projected_groups:
             return join_path(*('-'.join(x) for x in projected_groups))
 
+
 def get_package_config(name, config, exclude_multiply=None,
-        force_basename=False, dep=None):
+                       force_basename=False, dep=None):
     """
     Notes:
-    
+
     - siblings may reuse multipliers, but children never reuse multipliers
       which were used by their parents
     - (implied) parent multiplier actions override child multiplier actions
@@ -97,8 +100,8 @@ def get_package_config(name, config, exclude_multiply=None,
     exclude_multiply = set(exclude_multiply) if exclude_multiply else set()
 
     base = (
-        primary_section.get('top-level-basedir', None)
-        or all_section.get('top-level-basedir', None))
+        primary_section.get('top-level-basedir', None) or
+        all_section.get('top-level-basedir', None))
     if base and not dep:
         element_groups.append([PackageDetailProjection(base)])
 
@@ -109,7 +112,7 @@ def get_package_config(name, config, exclude_multiply=None,
             parent_exclude.add(t[1])
         elif t[0] == 'once':
             parent_exclude.add(t[1])
-    
+
     for item in components_section:
         t = item.strip().split(':')
         if t[0] == '/':
@@ -123,7 +126,8 @@ def get_package_config(name, config, exclude_multiply=None,
                 if pkg in exclude_multiply:
                     continue
                 cfg_id = pkg if len(t) < 3 else t[2]
-                element = get_package_config(cfg_id, config, parent_exclude,
+                element = get_package_config(
+                    cfg_id, config, parent_exclude,
                     force_basename=True, dep=pkg)
             elif t[0] == 'once':
                 cfg_id = t[1]
@@ -138,6 +142,7 @@ def get_package_config(name, config, exclude_multiply=None,
         element_groups.append(element_group)
     return PackageProjection(element_groups, dep=dep)
 
+
 class PackageDetailProjection(object):
     def __init__(self, true_fmt, query_spec=None, false_fmt=None):
         self.query_spec = query_spec
@@ -150,6 +155,7 @@ class PackageDetailProjection(object):
         elif self.false_fmt:
             return spec.format(self.false_fmt)
 
+
 def process_this(t):
     if t[0] == 'this':
         _, true_fmt = t
@@ -159,12 +165,14 @@ def process_this(t):
         false_fmt = t[3] if len(t) > 3 else None
     return PackageDetailProjection(true_fmt, query_spec, false_fmt)
 
+
 def get_target_projections(pkg, config):
     targets = config.get(pkg, {}).get('targets', [])
     return list(
         TargetProjection(t['match'], t['target'], t['output'])
         for t in targets)
-        
+
+
 class TargetProjection(object):
     def __init__(self, match, target, output):
         self.match = match
@@ -181,15 +189,17 @@ class TargetProjection(object):
                 "{0} does not exist in {1}".format(self.target, spec.prefix))
         return target_path, spec.format(self.output)
 
+
 def project_packages(specs, config):
     def keyFn(spec):
         pkg_cfg = get_package_config(spec.name, config)
         return pkg_cfg.project(spec)
-        
+
     link_to_specs = map_specs(specs, keyFn)
-    
+
     return dict(
         (x, resolve_conflict(y)) for x, y in link_to_specs.iteritems())
+
 
 def project_targets(specs, config):
     output_to_targets = defaultdict(set)
@@ -201,10 +211,11 @@ def project_targets(specs, config):
                 output_to_targets[output].add((spec, target))
     output_to_target = {}
     for output, spec_keys in output_to_targets.iteritems():
-        #TODO: warn when there is more than one target
+        # TODO: warn when there is more than one target
         spec, target = max(spec_keys, key=lambda (spec, target): spec)
         output_to_target[output] = target
     return output_to_target
+
 
 def map_specs(specs, keyFn):
     key_to_specs = defaultdict(set)
@@ -213,29 +224,32 @@ def map_specs(specs, keyFn):
         key_to_specs[key].add(spec)
     return key_to_specs
 
+
 def resolve_conflict(specs):
     return max(specs)
 
-#TODO: unfinished
+
+# TODO: unfinished
 def update_install(specs, config):
     projection = config.projection
 
     touched = set()
     for spec in specs:
         touched.update(x.name for x in spec.traverse())
-    
+
     # All specs associated with all packages affected, along with the specs
     # associated with their dependencies
     related_specs = set(itertools.chain.from_iterable(
         spack.installed_db.query(name) for name in touched))
 
     link_to_spec = projection.project_packages(related_specs)
-    
-    config.update_links(link_to_spec)
-    
-    #TODO: what to do if the installed specs arent the chosen specs?
 
-#TODO: unfinished
+    config.update_links(link_to_spec)
+
+    # TODO: what to do if the installed specs arent the chosen specs?
+
+
+# TODO: unfinished
 def update_uninstall(specs, config):
     projection = config.projection
     link_to_spec = projection.project_packages(specs)
@@ -248,6 +262,7 @@ def update_uninstall(specs, config):
     link_to_spec = projection.project_packages(related_specs)
     config.add_links(link_to_spec)
 
+
 def get_or_set(d, key, val):
     if key in d:
         return d[key]
@@ -255,8 +270,10 @@ def get_or_set(d, key, val):
         d[key] = val
         return val
 
+
 def softlink_command(target_path, link_path):
     return "ln -s {0} {1}".format(target_path, link_path)
+
 
 def create_softlinks(link_to_target, link_root=None):
     check_for_collisions(link_to_target)
@@ -275,6 +292,7 @@ def create_softlinks(link_to_target, link_root=None):
                 print "Collision: ", link
                 raise
 
+
 def check_for_collisions(link_to_target):
     collisions = defaultdict(set)
     for link1, link2 in itertools.combinations(link_to_target, 2):
@@ -287,15 +305,17 @@ def check_for_collisions(link_to_target):
             str(len(conflicts)))
         print '\t{0}'.format(prefix)
 
+
 def print_links(link_to_target, link_root=None):
     check_for_collisions(link_to_target)
-    
+
     for link, target in link_to_target.iteritems():
         print link, '--->', target
 
+
 def tree(parser, args):
-    root = args.root #TODO: get this from the tree
-    projection_id = args.projection #TODO: get this from the tree
+    root = args.root  # TODO: get this from the tree
+    projection_id = args.projection  # TODO: get this from the tree
     relative_root = args.relative_root or '/'
     action = args.action
     link_action = print_links if args.show_only else create_softlinks
@@ -305,7 +325,7 @@ def tree(parser, args):
 
     if action == 'add':
         tree_id, query_spec = args.target
-            
+
         tree = get_or_set(tree_config, tree_id, {})
         update = get_or_set(
             tree, 'transitive' if args.transitive else 'single', [])
@@ -326,7 +346,8 @@ def tree(parser, args):
                     spack.installed_db.query(query_spec))
             for query_spec in transitive:
                 specs_to_project.extend(
-                    itertools.chain.from_iterable(spec.traverse() for spec in
+                    itertools.chain.from_iterable(
+                        spec.traverse() for spec in
                         spack.installed_db.query(query_spec)))
 
         link_to_spec = project_packages(specs_to_project, projections_config)
@@ -338,7 +359,6 @@ def tree(parser, args):
 
         link_action(
             project_targets(specs_to_project, projections_config),
-            relative_root) # target links are absolute
+            relative_root)  # target links are absolute
     else:
         raise ValueError("Unknown action: " + action)
-
