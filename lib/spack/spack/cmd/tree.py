@@ -30,6 +30,7 @@ import argparse
 from collections import defaultdict
 import itertools
 import os
+import errno
 
 description = "Project Spack's fully-qualified names to a tree of simplified symlinks"
 
@@ -251,12 +252,30 @@ def softlink_command(target_path, link_path):
     return "ln -s {0} {1}".format(target_path, link_path)
 
 def create_softlinks(link_to_target, link_root=None):
+    collisions = defaultdict(set)
+    for link1, link2 in itertools.combinations(link_to_target, 2):
+        if link1.startswith(link2) or link2.startswith(link1):
+            smaller, larger = sorted([link1, link2], key=lambda x: len(x))
+            collisions[smaller].add(larger)
+
+    for prefix, conflicts in collisions.iteritems():
+        print 'The following collides with {0} links:'.format(
+            str(len(conflicts)))
+        print '\t{0}'.format(prefix)
+
     for link, target in link_to_target.iteritems():
         if link_root:
             link = join_path(link_root, link.lstrip('/'))
         link = link.rstrip('/')
-        mkdirp(os.path.dirname(link))
-        os.symlink(target, link)
+        try:
+            mkdirp(os.path.dirname(link))
+            os.symlink(target, link)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+            else:
+                print "Collision: ", link
+                raise
 
 def tree(parser, args):
     root = args.root
