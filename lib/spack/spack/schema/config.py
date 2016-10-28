@@ -22,7 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for packages.yaml configuration files."""
+"""Schema for config.yaml configuration file.
+
+.. literalinclude:: ../spack/schema/config.py
+   :lines: 32-
+"""
+
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
