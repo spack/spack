@@ -86,10 +86,12 @@ def print_links(link_to_target, link_root=None):
         print link, '--->', target
 
 
-def update_install(installed_specs, tree):
+# TODO: this only handles package projections, not target projections
+def update_install(installed_specs, tree, config=None):
+    config = config or UpdateConfig()
     # TODO: must get all specs here because an installed spec may be a
     # dependency of a transitive spec in the tree
-    tree_specs = set(get_relevant_specs(tree))
+    tree_specs = set(config.relevant_specs(tree))
     specs_for_update = tree_specs & installed_specs
 
     root = tree['root']
@@ -97,12 +99,53 @@ def update_install(installed_specs, tree):
     projections_config = spack.config.get_config(
         'projections')[projection_id]
 
-    link_to_spec = project_packages(specs_for_update, projections_config)
+    link_to_spec = project_packages(
+        specs_for_update, projections_config, resolve_conflict)
 
-    # TODO: unfinished
+    update = dict()
+    rm_links = list()
+    for link, spec in link_to_spec.iteritems():
+        link_path = join_path(root, link)
+        prev_spec = config.spec_from_prefix(link_path)
+        if prev_spec:
+            if spec == prev_spec:
+                continue
+            # TODO? highlight details which differ between the two specs
+            chosen = resolve_conflict([spec, prev_spec])
+            if chosen == spec:
+                update[link] = spec.prefix
+                rm_links.append(link_path)
+                print (
+                    "The following spec will be replaced for {0}:".format(
+                        link_path) +
+                    "\n{0}".format(str(prev_spec)))
+            else:
+                print (
+                    "Existing spec for {0}".format(link_path) + 
+                    " is preferred over newly-installed spec {0}".format(
+                        str(spec)))
+        else:
+            update[link] = spec.prefix
 
-    # For each link, if the symlink exists, read the spec from yaml. Perform
-    # resolution to see whether the new spec or the old spec wins.
+    for link_path in rm_links:
+        config.delete(link_path)
+
+    config.link_action(update, root)
+
+
+def read_spec_from_prefix(path):
+    with open(path, 'r') as F:
+        return spack.spec.from_yaml(F)
+
+
+class UpdateConfig(object):
+    def __init__(
+            self, relevant_specs=None, link_action=None, delete=None,
+            spec_from_prefix=None):
+        self.relevant_specs = relevant_specs or get_relevant_specs
+        self.link_action = link_action or create_softlinks
+        self.delete = delete or os.remove
+        self.spec_from_prefix = spec_from_prefix or read_spec_from_prefix
 
 
 # TODO: unfinished
