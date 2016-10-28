@@ -221,7 +221,8 @@ class ConfigTest(MockPackagesTest):
         self.check_config(b_comps, *self.b_comp_specs)
 
     def check_canonical(self, var, expected):
-        """ensure things are substituted properly and canonicalized."""
+        """Ensure that <expected> is substituted properly for <var> in strings
+           containing <var> in various positions."""
         path = '/foo/bar/baz'
 
         self.assertEqual(canonicalize_path(var + path),

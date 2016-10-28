@@ -620,12 +620,12 @@ class Repo(object):
 
         # Read the old ProviderIndex, or make a new one.
         key = self._cache_file
-        index_existed = spack.user_cache.init_entry(key)
+        index_existed = spack.misc_cache.init_entry(key)
         if index_existed and not self._needs_update:
-            with spack.user_cache.read_transaction(key) as f:
+            with spack.misc_cache.read_transaction(key) as f:
                 self._provider_index = ProviderIndex.from_yaml(f)
         else:
-            with spack.user_cache.write_transaction(key) as (old, new):
+            with spack.misc_cache.write_transaction(key) as (old, new):
                 if old:
                     self._provider_index = ProviderIndex.from_yaml(old)
                 else:
@@ -701,7 +701,7 @@ class Repo(object):
             self._all_package_names = []
 
             # Get index modification time.
-            index_mtime = spack.user_cache.mtime(self._cache_file)
+            index_mtime = spack.misc_cache.mtime(self._cache_file)
 
             for pkg_name in os.listdir(self.packages_path):
                 # Skip non-directories in the package root.

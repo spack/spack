@@ -298,6 +298,9 @@ class ConfigScope(object):
         """Empty cached config information."""
         self.sections = {}
 
+    def __repr__(self):
+        return '<ConfigScope: %s: %s>' % (self.name, self.path)
+
 #
 # Below are configuration scopes.
 #

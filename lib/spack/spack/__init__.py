@@ -30,7 +30,10 @@ import getpass
 from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
-# This lives in $prefix/lib/spack/spack/__file__
+#-----------------------------------------------------------------------------
+# Variables describing how Spack is laid out in its prefix.
+#-----------------------------------------------------------------------------
+# This file lives in $prefix/lib/spack/spack/__file__
 spack_root = ancestor(__file__, 4)
 
 # The spack script itself
@@ -49,82 +52,100 @@ var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
-cache_path     = join_path(var_path, "cache")
+
+# Paths to built-in Spack repositories.
+packages_path      = join_path(repos_path, "builtin")
+mock_packages_path = join_path(repos_path, "builtin.mock")
 
 # User configuration location
 user_config_path = os.path.expanduser('~/.spack')
-
-import spack.fetch_strategy
-fetch_cache = spack.fetch_strategy.FsCache(cache_path)
-
-from spack.file_cache import FileCache
-user_cache_path = join_path(user_config_path, 'cache')
-user_cache = FileCache(user_cache_path)
 
 prefix = spack_root
 opt_path       = join_path(prefix, "opt")
 etc_path       = join_path(prefix, "etc")
 
-#
-# Set up the default packages database.
-#
+
+#-----------------------------------------------------------------------------
+# Initial imports (only for use in this file -- see __all__ below.)
+#-----------------------------------------------------------------------------
+# These imports depend on the paths above, or on each other
+# Group them here so it's easy to understand the order.
+# TODO: refactor this stuff to be more init order agnostic.
 import spack.repository
+import spack.error
+import spack.config
+import spack.fetch_strategy
+from spack.file_cache import FileCache
+from spack.preferred_packages import PreferredPackages
+from spack.abi import ABI
+from spack.concretize import DefaultConcretizer
+from spack.version import Version
+from spack.util.path import canonicalize_path
+
+
+#-----------------------------------------------------------------------------
+# Initialize various data structures & objects at the core of Spack.
+#-----------------------------------------------------------------------------
+# Version information
+spack_version = Version("0.9.1")
+
+
+# Set up the default packages database.
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
 except spack.error.SpackError, e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
-#
-# Paths to built-in Spack repositories.
-#
-packages_path      = join_path(repos_path, "builtin")
-mock_packages_path = join_path(repos_path, "builtin.mock")
 
-#
-# This controls how packages are sorted when trying to choose
-# the most preferred package.  More preferred packages are sorted
-# first.
-#
-from spack.preferred_packages import PreferredPackages
+# PreferredPackages controls preference sort order during concretization.
+# More preferred packages are sorted first.
 pkgsort = PreferredPackages()
 
-#
-# This tests ABI compatibility between packages
-#
-from spack.abi import ABI
+
+# Tests ABI compatibility between packages
 abi = ABI()
 
-#
+
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.
-#
-from spack.concretize import DefaultConcretizer
 concretizer = DefaultConcretizer()
 
-# Version information
-from spack.version import Version
-spack_version = Version("0.9.1")
+#-----------------------------------------------------------------------------
+# config.yaml options
+#-----------------------------------------------------------------------------
+_config = spack.config.get_config('config')
 
-#
-# Executables used by Spack
-#
-from spack.util.executable import Executable, which
 
-# User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", "vi"))
+# Path where downloaded source code is cached
+cache_path = canonicalize_path(
+    _config.get('source_cache', join_path(var_path, "cache")))
+fetch_cache = spack.fetch_strategy.FsCache(cache_path)
+
+
+# cache for miscellaneous stuff.
+misc_cache_path = canonicalize_path(
+    _config.get('misc_cache', join_path(user_config_path, 'cache')))
+misc_cache = FileCache(misc_cache_path)
+
 
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
-insecure = False
+insecure = not _config.get('verify_ssl', True)
 
-# Whether spack should allow installation of unsafe versions of
-# software.  "Unsafe" versions are ones it doesn't have a checksum
-# for.
-do_checksum = True
 
-#
+# Whether spack should allow installation of unsafe versions of software.
+# "Unsafe" versions are ones it doesn't have a checksum for.
+do_checksum = _config.get('checksum', True)
+
+
+# If this is True, spack will not clean the environment to remove
+# potentially harmful variables before builds.
+dirty = _config.get('dirty', False)
+
+
+#-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
 # Spack internal code should call 'import spack' and accesses other
@@ -135,6 +156,7 @@ do_checksum = True
 #       packages should live.  This file is overloaded for spack core vs.
 #       for packages.
 #
+#-----------------------------------------------------------------------------
 __all__ = ['PackageBase',
            'Package',
            'CMakePackage',
@@ -164,6 +186,9 @@ __all__ += spack.directives.__all__
 import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
+
+# User's editor from the environment
+editor = Executable(os.environ.get("EDITOR", "vi"))
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \

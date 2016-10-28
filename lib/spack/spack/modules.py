@@ -675,7 +675,7 @@ class LmodModule(EnvModule):
     def __init__(self, spec=None):
         super(LmodModule, self).__init__(spec)
 
-        self.configuration = CONFIGURATION.get('lmod', {})
+        self.configuration = _module_config.get('lmod', {})
         hierarchy_tokens = self.configuration.get('hierarchical_scheme', [])
         # TODO : Check that the extra hierarchy tokens specified in the
         # TODO : configuration file are actually virtual dependencies

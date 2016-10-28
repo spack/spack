@@ -36,8 +36,8 @@ def setup_parser(subparser):
         '-d', '--downloads', action='store_true',
         help="Remove cached downloads.")
     subparser.add_argument(
-        '-u', '--user-cache', action='store_true',
-        help="Remove caches in user home directory. Includes virtual indices.")
+        '-m', '--misc-cache', action='store_true',
+        help="Remove long-lived caches, like the virtual package index.")
     subparser.add_argument(
         '-a', '--all', action='store_true',
         help="Remove all of the above.")
@@ -45,7 +45,7 @@ def setup_parser(subparser):
 
 def purge(parser, args):
     # Special case: no flags.
-    if not any((args.stage, args.downloads, args.user_cache, args.all)):
+    if not any((args.stage, args.downloads, args.misc_cache, args.all)):
         stage.purge()
         return
 
@@ -54,5 +54,5 @@ def purge(parser, args):
         stage.purge()
     if args.downloads or args.all:
         spack.fetch_cache.destroy()
-    if args.user_cache or args.all:
-        spack.user_cache.destroy()
+    if args.misc_cache or args.all:
+        spack.misc_cache.destroy()
