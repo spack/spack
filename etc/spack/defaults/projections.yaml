@@ -31,3 +31,11 @@ projections:
         - "this:ARRRRRR-${PACKAGE}"
     zlib:
       descriptor: "examplezlib-${version}" #descriptor is the alternative to specifying a list of components
+  test-collide:
+    all:
+      components:
+        - "once:compiler:this?:%gcc:gnu-${COMPILERVER}:${COMPILERNAME}"
+        - /
+        - dep:bzip2 # if bzip2 and some package using it are both projected, a conflict will result
+        - /
+        - "this:${PACKAGE}-${VERSION}"

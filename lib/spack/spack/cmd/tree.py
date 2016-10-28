@@ -66,17 +66,15 @@ def create_softlinks(link_to_target, root):
 
 
 def check_for_prefix_collisions(links, root):
+    """Ensure that the given paths (which are relative to root) are
+    distinct from one another and from any existing paths.
+    """
     # Check for conflicts between planned prefixes
-    collisions = defaultdict(set)
     for link1, link2 in itertools.combinations(links, 2):
         if link1.startswith(link2) or link2.startswith(link1):
             smaller, larger = sorted([link1, link2], key=lambda x: len(x))
-            collisions[smaller].add(larger)
-
-    for prefix, conflicts in collisions.iteritems():
-        print 'The following collides with {0} links:'.format(
-            str(len(conflicts)))
-        print '\t{0}'.format(prefix)
+            raise ValueError(
+                "Prefix collision:\n\t{0}\n\t{1}".format(smaller, larger))
 
     # Check for conflicts between planned and existing prefixes
     for link in links:
