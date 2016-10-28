@@ -145,6 +145,14 @@ def tree(parser, args):
             tree, 'transitive' if args.transitive else 'single', [])
         update.append(query_spec)
         spack.config.update_config('trees', tree_config, 'user')
+    elif action in ['create', 'set']:
+        tree_id, = args.target
+        tree = get_or_set(tree_config, tree_id, {})
+        if args.root:
+            tree['root'] = args.root
+        if args.projection:
+            tree['projection'] = args.projection
+        spack.config.update_config('trees', tree_config, 'user')
     elif action == 'project':
         tree_id, = args.target
 
