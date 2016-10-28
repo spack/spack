@@ -23,7 +23,7 @@ projections:
         - /
         - "this:${PACKAGE}-${VERSION}"
     bzip2:
-      targets:
+      targets: #a target allows mapping a single file to a string, rather than the whole package
         - output: /usr/bin/bzip2_1
           match: "bzip2@1.0:"
           target: bin/bzip2 #relative to package prefix 
