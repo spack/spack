@@ -174,7 +174,7 @@ class TargetProjection(object):
         if not os.path.exists(target_path):
             raise ValueError(
                 "{0} does not exist in {1}".format(self.target, spec.prefix))
-        return target_path, spec.format(self.output)
+        return spec.format(self.output)
 
 
 def get_relevant_specs(tree):
@@ -209,12 +209,12 @@ def project_targets(specs, config, resolve_target_conflict):
         target_projections = get_target_projections(spec.name, config)
         for tp in target_projections:
             if tp.matches(spec):
-                target, output = tp.project(spec)
-                output_to_targets[output].add((spec, target))
+                output = tp.project(spec)
+                output_to_targets[output].add((spec, tp))
     output_to_target = {}
     for output, spec_keys in output_to_targets.iteritems():
-        spec, target = resolve_target_conflict(spec_keys)
-        output_to_target[output] = target
+        spec, tp = resolve_target_conflict(spec_keys)
+        output_to_target[output] = (spec, tp.target)
     return output_to_target
 
 

@@ -169,9 +169,13 @@ def tree(parser, args):
             link_to_prefix,
             join_path(relative_root, root.lstrip('/')))
 
+        link_to_target = project_targets(
+                specs_to_project, projections_config, resolve_target_conflict)
+        link_to_target_path = dict(
+            (link, join_path(spec.prefix, target))
+            for link, (spec, target) in link_to_target.iteritems())
         link_action(
-            project_targets(
-                specs_to_project, projections_config, resolve_target_conflict),
+            link_to_target_path,
             relative_root)  # target links are absolute
     else:
         raise ValueError("Unknown action: " + action)
