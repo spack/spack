@@ -34,6 +34,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import spack
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
@@ -70,9 +71,10 @@ the dependencies."""
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="Fake install. Just remove prefix and create a fake file.")
-    subparser.add_argument(
-        '--dirty', action='store_true', dest='dirty',
-        help="Install a package *without* cleaning the environment.")
+
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
+
     subparser.add_argument(
         'package',
         nargs=argparse.REMAINDER,

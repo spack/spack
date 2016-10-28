@@ -191,7 +191,7 @@ config:
   misc_cache: ~/.spack/cache
   verify_ssl: true
   checksum: true
-  dirty: false
+  dirty: True
 """
 
 # these are written out to mock config files.
@@ -211,9 +211,6 @@ class MockPackagesTest(unittest.TestCase):
         self.db = RepoPath(spack.mock_packages_path)
         spack.repo.swap(self.db)
 
-        spack.config.clear_config_caches()
-        self.real_scopes = spack.config.config_scopes
-
         # Mock up temporary configuration directories
         self.temp_config = tempfile.mkdtemp()
         self.mock_site_config = os.path.join(self.temp_config, 'site')
@@ -227,6 +224,9 @@ class MockPackagesTest(unittest.TestCase):
 
         # TODO: Mocking this up is kind of brittle b/c ConfigScope
         # TODO: constructor modifies config_scopes.  Make it cleaner.
+        spack.config.clear_config_caches()
+        self.real_scopes = spack.config.config_scopes
+
         spack.config.config_scopes = OrderedDict()
         spack.config.ConfigScope('site', self.mock_site_config)
         spack.config.ConfigScope('user', self.mock_user_config)
@@ -261,6 +261,7 @@ class MockPackagesTest(unittest.TestCase):
         """Restore the real packages path after any test."""
         spack.repo.swap(self.db)
         spack.config.config_scopes = self.real_scopes
+
         shutil.rmtree(self.temp_config, ignore_errors=True)
         spack.config.clear_config_caches()
 

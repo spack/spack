@@ -95,3 +95,21 @@ parms = Bunch(
         'help': 'Recursively traverse spec dependencies'
     })
 _arguments['recurse_dependencies'] = parms
+
+parms = Bunch(
+    flags=('--clean',),
+    kwargs={
+        'action': 'store_false',
+        'dest': 'dirty',
+        'help': 'Clean environment before installing package.'
+    })
+_arguments['clean'] = parms
+
+parms = Bunch(
+    flags=('--dirty',),
+    kwargs={
+        'action': 'store_true',
+        'dest': 'dirty',
+        'help': 'Do NOT clean environment before installing.'
+    })
+_arguments['dirty'] = parms

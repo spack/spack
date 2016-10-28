@@ -46,9 +46,16 @@ def use_tmp(use_tmp):
        not use temporary space for stages.
     """
     # mock up config
-    path = _test_tmp_path if use_tmp else spack.stage_path
+    assert(_test_tmp_path is not None)
+
+    if use_tmp:
+        path = _test_tmp_path    # use temporary stage
+    else:
+        path = spack.stage_path  # Use Spack's stage dir (no links)
+
     spack.config.update_config(
         'config', {'build_stage': [path]}, scope='user')
+
     yield
 
 
@@ -59,12 +66,27 @@ class StageTest(MockPackagesTest):
            by the Stage class.  It doesn't actually create the Stage -- that
            is done by individual tests.
         """
+        super(StageTest, self).setUp()
+
         global _test_tmp_path
 
+        #
+        # Mock up a stage area that looks like this:
+        #
+        # TMPDIR/                    test_files_dir
+        #     tmp/                   test_tmp_path (where stage should be)
+        #     test-files/            archive_dir_path
+        #         README.txt         test_readme (contains "hello world!\n")
+        #     test-files.tar.gz      archive_url = file:///path/to/this
+        #
         self.test_files_dir = tempfile.mkdtemp()
         self.test_tmp_path  = os.path.realpath(
             os.path.join(self.test_files_dir, 'tmp'))
         _test_tmp_path = self.test_tmp_path
+
+        # set _test_tmp_path as the default test directory to use for stages.
+        spack.config.update_config(
+            'config', {'build_stage': [_test_tmp_path]}, scope='user')
 
         self.archive_dir = 'test-files'
         self.archive_name = self.archive_dir + '.tar.gz'
@@ -99,6 +121,8 @@ class StageTest(MockPackagesTest):
 
     def tearDown(self):
         """Blows away the test environment directory."""
+        super(StageTest, self).tearDown()
+
         shutil.rmtree(self.test_files_dir, ignore_errors=True)
 
         # chdir back to original working dir
@@ -138,7 +162,7 @@ class StageTest(MockPackagesTest):
             self.assertFalse(os.path.islink(target))
 
             # Make sure the directory is in the place we asked it to
-            # be (see setUp and tearDown)
+            # be (see setUp, tearDown, and use_tmp)
             self.assertTrue(target.startswith(self.test_tmp_path))
 
         else:

@@ -471,7 +471,7 @@ class LmodTests(ModuleFileGeneratorTests):
         # Make sure that virtual providers (in the hierarchy) always
         # include a hash. Make sure that the module file for the spec
         # does not include a hash if hash_length is 0.
-        spack.modules.CONFIGURATION = self.configuration_no_hash
+        spack.modules._module_config = self.configuration_no_hash
         spec = spack.spec.Spec(mpileaks_spec_string)
         spec.concretize()
         module = spack.modules.LmodModule(spec)

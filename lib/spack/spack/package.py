@@ -1118,7 +1118,7 @@ class PackageBase(object):
                    run_tests=False,
                    fake=False,
                    explicit=False,
-                   dirty=False,
+                   dirty=None,
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1164,6 +1164,10 @@ class PackageBase(object):
                         rec = spack.store.db.get_record(self.spec)
                         rec.explicit = True
                 return
+
+        # Dirty argument takes precedence over dirty config setting.
+        if dirty is None:
+            dirty = spack.dirty
 
         self._do_install_pop_kwargs(kwargs)
 
