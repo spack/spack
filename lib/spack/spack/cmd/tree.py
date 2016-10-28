@@ -48,16 +48,15 @@ def setup_parser(subparser):
     subparser.add_argument('target', nargs=argparse.REMAINDER)
 
 
-def create_softlinks(link_to_target, link_root=None):
-    check_for_collisions(link_to_target)
+def create_softlinks(link_to_target, root):
+    link_path_to_target = dict(
+        (join_path(root, link.lstrip('/')).rstrip('/'), target)
+        for link, target in link_to_target.iteritems())
 
-    for link, target in link_to_target.iteritems():
-        if link_root:
-            link = join_path(link_root, link.lstrip('/'))
-        link = link.rstrip('/')
+    for link_path, target in link_path_to_target.iteritems():
         try:
-            mkdirp(os.path.dirname(link))
-            os.symlink(target, link)
+            mkdirp(os.path.dirname(link_path))
+            os.symlink(target, link_path)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -66,9 +65,10 @@ def create_softlinks(link_to_target, link_root=None):
                 raise
 
 
-def check_for_collisions(link_to_target):
+def check_for_prefix_collisions(links, root):
+    # Check for conflicts between planned prefixes
     collisions = defaultdict(set)
-    for link1, link2 in itertools.combinations(link_to_target, 2):
+    for link1, link2 in itertools.combinations(links, 2):
         if link1.startswith(link2) or link2.startswith(link1):
             smaller, larger = sorted([link1, link2], key=lambda x: len(x))
             collisions[smaller].add(larger)
@@ -78,10 +78,29 @@ def check_for_collisions(link_to_target):
             str(len(conflicts)))
         print '\t{0}'.format(prefix)
 
+    # Check for conflicts between planned and existing prefixes
+    for link in links:
+        prefix = link
+        while prefix:
+            if os.path.exists(join_path(root, prefix.lstrip('/'))):
+                raise ValueError(
+                    "Link {0} collides with existing prefix".format(link))
+            prefix = os.path.dirname(prefix)
 
-def print_links(link_to_target, link_root=None):
-    check_for_collisions(link_to_target)
 
+def check_for_target_collisions(link_to_target_path):
+    # Targets can share prefixes; the only constraint is that they are unique
+    seen = dict()
+    for link, target_path in link_to_target_path.iteritems():
+        if link in seen:
+            raise ValueError(
+                "Target collision:\n{0}\n{1}\n{2}".format(
+                    link, target_path, seen[link]))
+        elif os.path.exists(link):
+            raise ValueError("Link already exists: {0}".format(link))
+
+
+def print_links(link_to_target, root):
     for link, target in link_to_target.iteritems():
         print link, '--->', target
 
@@ -130,6 +149,7 @@ def update_install(installed_specs, tree, config=None):
     for link_path in rm_links:
         config.delete(link_path)
 
+    check_for_prefix_collisions(set(update), root)
     config.link_action(update, root)
 
 
@@ -212,19 +232,21 @@ def tree(parser, args):
 
         projections_config = spack.config.get_config(
             'projections')[projection_id]
+
         link_to_spec = project_packages(
             specs_to_project, projections_config, resolve_conflict)
         link_to_prefix = dict(
             (link, spec.prefix) for link, spec in link_to_spec.iteritems())
-        link_action(
-            link_to_prefix,
-            join_path(relative_root, root.lstrip('/')))
+        pkg_root = join_path(relative_root, root.lstrip('/'))
+        check_for_prefix_collisions(set(link_to_prefix), pkg_root)
+        link_action(link_to_prefix, pkg_root)
 
         link_to_target = project_targets(
                 specs_to_project, projections_config, resolve_target_conflict)
         link_to_target_path = dict(
             (link, join_path(spec.prefix, target))
             for link, (spec, target) in link_to_target.iteritems())
+        check_for_target_collisions(link_to_target_path)
         link_action(
             link_to_target_path,
             relative_root)  # target links are absolute
