@@ -1357,7 +1357,7 @@ will add a ``python-2.7.12`` version string to any packages compiled with
 python matching the spec, ``python@2.7.12``. This is useful to know which
 version of python a set of python extensions is associated with. Likewise, the
 ``openblas`` string is attached to any program that has openblas in the spec,
-most likely via the ``+blas`` variant specification.  
+most likely via the ``+blas`` variant specification.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Regenerating Module files
