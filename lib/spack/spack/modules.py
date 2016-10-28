@@ -48,10 +48,12 @@ import string
 import textwrap
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path, mkdirp
+
 import spack
 import spack.compilers  # Needed by LmodModules
 import spack.config
-from llnl.util.filesystem import join_path, mkdirp
+from spack.util.path import canonicalize_path
 from spack.build_environment import parent_class_modules
 from spack.build_environment import set_module_variables_for_package
 from spack.environment import *
@@ -62,7 +64,11 @@ __all__ = ['EnvModule', 'Dotkit', 'TclModule']
    metaclass."""
 module_types = {}
 
-CONFIGURATION = spack.config.get_config('modules')
+"""Module install roots are in config.yaml."""
+_roots = spack.config.get_config('config').get('module_roots', {})
+
+"""Specifics about modules are in modules.yaml"""
+_module_config = spack.config.get_config('modules')
 
 
 def print_help():
@@ -92,7 +98,7 @@ def inspect_path(prefix):
     """
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
-    prefix_inspections = CONFIGURATION.get('prefix_inspections', {})
+    prefix_inspections = _module_config.get('prefix_inspections', {})
     for relative_path, variables in prefix_inspections.items():
         expected = join_path(prefix, relative_path)
         if os.path.isdir(expected):
@@ -168,7 +174,7 @@ def parse_config_options(module_generator):
         module file
     """
     # Get the configuration for this kind of generator
-    module_configuration = copy.deepcopy(CONFIGURATION.get(
+    module_configuration = copy.deepcopy(_module_config.get(
         module_generator.name, {}))
 
     #####
@@ -248,7 +254,7 @@ class EnvModule(object):
 
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
-            if cls.name != 'env_module' and cls.name in CONFIGURATION[
+            if cls.name != 'env_module' and cls.name in _module_config[
                     'enable']:
                 module_types[cls.name] = cls
 
@@ -271,7 +277,7 @@ class EnvModule(object):
     @property
     def naming_scheme(self):
         try:
-            naming_scheme = CONFIGURATION[self.name]['naming_scheme']
+            naming_scheme = _module_config[self.name]['naming_scheme']
         except KeyError:
             naming_scheme = self.default_naming_format
         return naming_scheme
@@ -314,7 +320,7 @@ class EnvModule(object):
 
     @property
     def blacklisted(self):
-        configuration = CONFIGURATION.get(self.name, {})
+        configuration = _module_config.get(self.name, {})
         whitelist_matches = [x
                              for x in configuration.get('whitelist', [])
                              if self.spec.satisfies(x)]
@@ -473,7 +479,9 @@ class EnvModule(object):
 
 class Dotkit(EnvModule):
     name = 'dotkit'
-    path = join_path(spack.share_path, 'dotkit')
+    path = canonicalize_path(
+        _roots.get(name, join_path(spack.share_path, name)))
+
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
         RemovePath: 'dk_unalter {name} {value}\n',
@@ -516,7 +524,8 @@ class Dotkit(EnvModule):
 
 class TclModule(EnvModule):
     name = 'tcl'
-    path = join_path(spack.share_path, "modules")
+    path = canonicalize_path(
+        _roots.get(name, join_path(spack.share_path, 'modules')))
 
     autoload_format = ('if ![ is-loaded {module_file} ] {{\n'
                        '    puts stderr "Autoloading {module_file}"\n'
@@ -635,7 +644,8 @@ class TclModule(EnvModule):
 
 class LmodModule(EnvModule):
     name = 'lmod'
-    path = join_path(spack.share_path, "lmod")
+    path = canonicalize_path(
+        _roots.get(name, join_path(spack.share_path, name)))
 
     environment_modifications_formats = {
         PrependPath: 'prepend_path("{name}", "{value}")\n',
@@ -655,6 +665,12 @@ class LmodModule(EnvModule):
     family_format = 'family("{family}")\n'
 
     path_part_without_hash = join_path('{token.name}', '{token.version}')
+
+    # TODO : Check that extra tokens specified in configuration file
+    # TODO : are actually virtual dependencies
+    configuration = _module_config.get('lmod', {})
+    hierarchy_tokens = configuration.get('hierarchical_scheme', [])
+    hierarchy_tokens = hierarchy_tokens + ['mpi', 'compiler']
 
     def __init__(self, spec=None):
         super(LmodModule, self).__init__(spec)

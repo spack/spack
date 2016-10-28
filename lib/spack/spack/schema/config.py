@@ -42,6 +42,16 @@ schema = {
                         {'type': 'array',
                          'items': {'type': 'string'}}],
                 },
+                'module_roots': {
+                    'type': 'object',
+                    'default': {},
+                    'additionalProperties': False,
+                    'properties': {
+                        'tcl': {'type': 'string'},
+                        'lmod': {'type': 'string'},
+                        'dotkit': {'type': 'string'},
+                    },
+                },
                 'source_cache': {'type': 'string'},
                 'misc_cache': {'type': 'string'},
                 'verify_ssl': {
