@@ -87,13 +87,16 @@ def get_package_config(name, config, exclude_multiply=None,
             [[PackageDetailProjection(primary_section['descriptor'])]],
             dep)
     elif primary_section.get('components', None):
-        components_section = primary_section['components']
+        components = primary_section['components']
     elif all_section.get('descriptor', None):
         return PackageProjection(
             [[PackageDetailProjection(all_section['descriptor'])]],
             dep)
     elif all_section.get('components', None):
-        components_section = all_section['components']
+        components = all_section['components']
+
+    components = list(components)
+    components.extend(primary_section.get('extra-components', []))
 
     element_groups = list()
     element_group = list()
@@ -106,14 +109,14 @@ def get_package_config(name, config, exclude_multiply=None,
         element_groups.append([PackageDetailProjection(base)])
 
     parent_exclude = set(exclude_multiply)
-    for item in components_section:
+    for item in components:
         t = item.strip().split(':')
         if t[0] == 'dep':
             parent_exclude.add(t[1])
         elif t[0] == 'once':
             parent_exclude.add(t[1])
 
-    for item in components_section:
+    for item in components:
         t = item.strip().split(':')
         if t[0] == '/':
             if force_basename:

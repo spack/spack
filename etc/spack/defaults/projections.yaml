@@ -1,15 +1,17 @@
-# Specifies how to construct symlinks for packages
+# This config file specifies how to project packages to paths.
 projections:
   test1:
     all:
       components:
-        - "once:compiler:this?:%gcc:gnu-${COMPILERVER}:${COMPILERNAME}"
+        - "once:compiler:this?:%gcc:gnu-${COMPILERVER}:${COMPILERNAME}" #"compiler" is an id to make sure this doesnt appear more than once in the projection
         - /
         - dep:bzip2 #if we didnt want to use exactly the same package descriptor as "bzip2" we could create and refer to e.g. "bzip2/bzip2_multiplier"
         - /
-        - "this:${PACKAGE}-${VERSION}"
+        - "this:${PACKAGE}-${VERSION}" #this is not qualified with "once" so may appear for each package
     bzip2: # this does not specify descriptor or components, so it will use the definition from 'all' (top-level-basedir is still used)
       top-level-basedir: "${package}"
+      extra-components: #extra-components will not override the "components" section of "all"
+        - "this:astaticstring"
   test2:
     all:
       components:
@@ -17,7 +19,7 @@ projections:
         - "once:compiler:this?:%gcc:gnu-${COMPILERVER}:${COMPILERNAME}"
         - /
         - dep:bzip2
-        - dep:zlib
+        - dep:zlib #if zlib and bzip2 are both present, they will be joined with a "-"
         - /
         - "this:${PACKAGE}-${VERSION}"
     bzip2:
@@ -28,4 +30,4 @@ projections:
       components:
         - "this:ARRRRRR-${PACKAGE}"
     zlib:
-      descriptor: "examplezlib-${version}"
+      descriptor: "examplezlib-${version}" #descriptor is the alternative to specifying a list of components
