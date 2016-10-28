@@ -1,5 +1,11 @@
 language: python
 
+# Only build master and develop on push; do not build every branch.
+branches:
+  only:
+    - master
+    - develop
+
 # Construct build matrix
 python:
   - 2.6
