@@ -37,6 +37,8 @@ schema = {
             'additionalProperties': False,
             'patternProperties': {
                 r'\w[\w-]*': {  # tree name
+                    'root': {'type': 'string'},
+                    'projection': {'type': 'string'},
                     'single': {
                         'type': 'array',
                         'default': [],

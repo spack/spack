@@ -1,6 +1,7 @@
 # A tree is a collection of packages which should be projected
 trees:
-  tree-foo: 
+  tree-foo:
+    root: /usr/local/spackview
     single:
       - mpi     #each of these is a query spec: get all matching specs
       - bzip2

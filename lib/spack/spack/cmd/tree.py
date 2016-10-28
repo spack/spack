@@ -317,14 +317,11 @@ def print_links(link_to_target, link_root=None):
 
 
 def tree(parser, args):
-    root = args.root  # TODO: get this from the tree
-    projection_id = args.projection  # TODO: get this from the tree
     relative_root = args.relative_root or '/'
     action = args.action
     link_action = print_links if args.show_only else create_softlinks
 
     tree_config = spack.config.get_config('trees')
-    projections_config = spack.config.get_config('projections')[projection_id]
 
     if action == 'add':
         tree_id, query_spec = args.target
@@ -338,10 +335,15 @@ def tree(parser, args):
         tree_id, = args.target
 
         if tree_id == 'all':
+            root = args.root
+            projection_id = args.projection
             specs_to_project = spack.install_layout.all_specs()
         else:
-            specs_to_project = list()
             tree = tree_config[tree_id]
+            root = args.root or tree['root']
+            projection_id = args.projection or tree['projection']
+
+            specs_to_project = list()
             single = tree['single']
             transitive = tree['transitive']
             for query_spec in single:
@@ -353,6 +355,8 @@ def tree(parser, args):
                         spec.traverse() for spec in
                         spack.installed_db.query(query_spec)))
 
+        projections_config = spack.config.get_config(
+            'projections')[projection_id]
         link_to_spec = project_packages(specs_to_project, projections_config)
         link_to_prefix = dict(
             (link, spec.prefix) for link, spec in link_to_spec.iteritems())
