@@ -70,7 +70,7 @@ class PackageProjection(object):
             return join_path(*('-'.join(x) for x in projected_groups))
 
 
-def get_package_config(name, config, exclude_multiply=None,
+def get_package_projection(name, config, exclude_multiply=None,
                        force_basename=False, dep=None):
     """
     Notes:
@@ -129,7 +129,7 @@ def get_package_config(name, config, exclude_multiply=None,
                 if pkg in exclude_multiply:
                     continue
                 cfg_id = pkg if len(t) < 3 else t[2]
-                element = get_package_config(
+                element = get_package_projection(
                     cfg_id, config, parent_exclude,
                     force_basename=True, dep=pkg)
             elif t[0] == 'once':
@@ -195,7 +195,7 @@ class TargetProjection(object):
 
 def project_packages(specs, config):
     def keyFn(spec):
-        pkg_cfg = get_package_config(spec.name, config)
+        pkg_cfg = get_package_projection(spec.name, config)
         return pkg_cfg.project(spec)
 
     link_to_specs = map_specs(specs, keyFn)
