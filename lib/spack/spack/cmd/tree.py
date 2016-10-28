@@ -193,6 +193,21 @@ class TargetProjection(object):
         return target_path, spec.format(self.output)
 
 
+def get_relevant_specs(tree):
+    relevant_specs = list()
+    single = tree['single']
+    transitive = tree['transitive']
+    for query_spec in single:
+        relevant_specs.extend(
+            spack.installed_db.query(query_spec))
+    for query_spec in transitive:
+        relevant_specs.extend(
+            itertools.chain.from_iterable(
+                spec.traverse() for spec in
+                spack.installed_db.query(query_spec)))
+    return relevant_specs
+
+
 def project_packages(specs, config):
     def keyFn(spec):
         pkg_cfg = get_package_projection(spec.name, config)
@@ -232,38 +247,27 @@ def resolve_conflict(specs):
     return max(specs)
 
 
-# TODO: unfinished
-def update_install(specs, config):
-    projection = config.projection
+def update_install(installed_specs, tree):
+    # TODO: must get all specs here because an installed spec may be a
+    # dependency of a transitive spec in the tree
+    tree_specs = set(get_relevant_specs(tree))
+    specs_for_update = tree_specs & installed_specs
 
-    touched = set()
-    for spec in specs:
-        touched.update(x.name for x in spec.traverse())
+    root = tree['root']
+    projection_id = tree['projection']
+    projections_config = spack.config.get_config(
+        'projections')[projection_id]
 
-    # All specs associated with all packages affected, along with the specs
-    # associated with their dependencies
-    related_specs = set(itertools.chain.from_iterable(
-        spack.installed_db.query(name) for name in touched))
+    link_to_spec = project_packages(specs_for_update, projections_config)
 
-    link_to_spec = projection.project_packages(related_specs)
+    # TODO: unfinished
 
-    config.update_links(link_to_spec)
-
-    # TODO: what to do if the installed specs arent the chosen specs?
-
+    # For each link, if the symlink exists, read the spec from yaml. Perform
+    # resolution to see whether the new spec or the old spec wins.
 
 # TODO: unfinished
 def update_uninstall(specs, config):
-    projection = config.projection
-    link_to_spec = projection.project_packages(specs)
-    config.remove_links(set(link_to_spec))
-
-    # If all instances of a package are uninstalled, there may be no entries
-    # for it here.
-    related_specs = set(itertools.chain.from_iterable(
-        spack.installed_db.query(s.name) for s in specs))
-    link_to_spec = projection.project_packages(related_specs)
-    config.add_links(link_to_spec)
+    pass
 
 
 def get_or_set(d, key, val):
@@ -343,17 +347,7 @@ def tree(parser, args):
             root = args.root or tree['root']
             projection_id = args.projection or tree['projection']
 
-            specs_to_project = list()
-            single = tree['single']
-            transitive = tree['transitive']
-            for query_spec in single:
-                specs_to_project.extend(
-                    spack.installed_db.query(query_spec))
-            for query_spec in transitive:
-                specs_to_project.extend(
-                    itertools.chain.from_iterable(
-                        spec.traverse() for spec in
-                        spack.installed_db.query(query_spec)))
+            specs_to_project = get_relevant_specs(tree)
 
         projections_config = spack.config.get_config(
             'projections')[projection_id]
