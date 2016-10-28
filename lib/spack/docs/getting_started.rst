@@ -1170,4 +1170,4 @@ if we want to build with intel compilers, use version 16.0.0.109. We add a spec
 for each compiler type for each cray modules. This ensures that for each
 compiler on our system we can use that external module.
 
-For more on external packages check out the section :ref:`sec-external_packages`.
+For more on external packages check out the section :ref:`sec-external-packages`.

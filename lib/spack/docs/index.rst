@@ -52,6 +52,8 @@ or refer to the full manual below.
    :caption: Reference Manual
 
    configuration
+   config_yaml
+   build_settings
    mirrors
    module_file_support
    package_list

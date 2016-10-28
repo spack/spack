@@ -22,7 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for compiler configuration files."""
+"""Schema for compilers.yaml configuration file.
+
+.. literalinclude:: ../spack/schema/compilers.py
+   :lines: 32-
+"""
 
 
 schema = {
