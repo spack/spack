@@ -180,6 +180,27 @@ packages:
       externalmodule@1.0%gcc@4.5.0: external-module
 """
 
+mock_config = """\
+config:
+  install_tree: $spack/opt/spack
+  build_stage:
+  - $tempdir
+  - /nfs/tmp2/$user
+  - $spack/var/spack/stage
+  source_cache: $spack/var/spack/cache
+  misc_cache: ~/.spack/cache
+  verify_ssl: true
+  checksum: true
+  dirty: false
+"""
+
+# these are written out to mock config files.
+mock_configs = {
+    'config.yaml': mock_config,
+    'compilers.yaml': mock_compiler_config,
+    'packages.yaml': mock_packages_config,
+}
+
 
 class MockPackagesTest(unittest.TestCase):
 
@@ -199,11 +220,10 @@ class MockPackagesTest(unittest.TestCase):
         self.mock_user_config = os.path.join(self.temp_config, 'user')
         mkdirp(self.mock_site_config)
         mkdirp(self.mock_user_config)
-        for confs in [('compilers.yaml', mock_compiler_config),
-                      ('packages.yaml', mock_packages_config)]:
-            conf_yaml = os.path.join(self.mock_site_config, confs[0])
+        for filename, data in mock_configs.items():
+            conf_yaml = os.path.join(self.mock_site_config, filename)
             with open(conf_yaml, 'w') as f:
-                f.write(confs[1])
+                f.write(data)
 
         # TODO: Mocking this up is kind of brittle b/c ConfigScope
         # TODO: constructor modifies config_scopes.  Make it cleaner.

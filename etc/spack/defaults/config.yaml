@@ -31,13 +31,13 @@ config:
   # You can use $tempdir to refer to the system default temp directory
   # (as returned by tempfile.gettempdir()).
   #
-  # A value of $local indicates that Spack should run builds directly
-  # inside its install directory without staging them in temporary space.
+  # A value of $spack/var/spack/stage indicates that Spack should run
+  # builds directly inside its install directory without staging them in
+  # temporary space.
   build_stage:
-    - /usr/workspace/*/%u
     - $tempdir
-    - /nfs/tmp2/%u
-    - $local
+    - /nfs/tmp2/$user
+    - $spack/var/spack/stage
 
 
   # Cache directory already downloaded source tarballs and archived

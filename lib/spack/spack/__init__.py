@@ -119,27 +119,6 @@ editor = Executable(os.environ.get("EDITOR", "vi"))
 # certifiates. e.g., curl should use the -k option.
 insecure = False
 
-# Whether to build in tmp space or directly in the stage_path.
-# If this is true, then spack will make stage directories in
-# a tmp filesystem, and it will symlink them into stage_path.
-use_tmp_stage = True
-
-# Locations to use for staging and building, in order of preference
-# Use a %u to add a username to the stage paths here, in case this
-# is a shared filesystem.  Spack will use the first of these paths
-# that it can create.
-tmp_dirs = []
-_default_tmp = tempfile.gettempdir()
-_tmp_user = getpass.getuser()
-
-_tmp_candidates = (_default_tmp, '/nfs/tmp2', '/tmp', '/var/tmp')
-for path in _tmp_candidates:
-    # don't add a second username if it's already unique by user.
-    if _tmp_user not in path:
-        tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
-    else:
-        tmp_dirs.append(join_path(path, 'spack-stage'))
-
 # Whether spack should allow installation of unsafe versions of
 # software.  "Unsafe" versions are ones it doesn't have a checksum
 # for.

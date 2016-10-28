@@ -24,10 +24,12 @@
 ##############################################################################
 import os
 import shutil
+import getpass
 from tempfile import mkdtemp
 
 import spack
 import spack.config
+from spack.util.path import canonicalize_path
 from ordereddict_backport import OrderedDict
 from spack.test.mock_packages_test import *
 
@@ -217,3 +219,53 @@ class ConfigTest(MockPackagesTest):
         # Same check again, to ensure consistency.
         self.check_config(a_comps, *self.a_comp_specs)
         self.check_config(b_comps, *self.b_comp_specs)
+
+    def check_canonical(self, var, expected):
+        """ensure things are substituted properly and canonicalized."""
+        path = '/foo/bar/baz'
+
+        self.assertEqual(canonicalize_path(var + path),
+                         expected + path)
+
+        self.assertEqual(canonicalize_path(path + var),
+                         path + '/' + expected)
+
+        self.assertEqual(canonicalize_path(path + var + path),
+                         expected + path)
+
+    def test_substitute_config_variables(self):
+        prefix = spack.prefix.lstrip('/')
+
+        self.assertEqual(os.path.join('/foo/bar/baz', prefix),
+                         canonicalize_path('/foo/bar/baz/$spack'))
+
+        self.assertEqual(os.path.join(spack.prefix, 'foo/bar/baz'),
+                         canonicalize_path('$spack/foo/bar/baz/'))
+
+        self.assertEqual(os.path.join('/foo/bar/baz', prefix, 'foo/bar/baz'),
+                         canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/'))
+
+        self.assertEqual(os.path.join('/foo/bar/baz', prefix),
+                         canonicalize_path('/foo/bar/baz/${spack}'))
+
+        self.assertEqual(os.path.join(spack.prefix, 'foo/bar/baz'),
+                         canonicalize_path('${spack}/foo/bar/baz/'))
+
+        self.assertEqual(
+            os.path.join('/foo/bar/baz', prefix, 'foo/bar/baz'),
+            canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/'))
+
+        self.assertNotEqual(
+            os.path.join('/foo/bar/baz', prefix, 'foo/bar/baz'),
+            canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/'))
+
+    def test_substitute_user(self):
+        user = getpass.getuser()
+        self.assertEqual('/foo/bar/' + user + '/baz',
+                         canonicalize_path('/foo/bar/$user/baz'))
+
+    def test_substitute_tempdir(self):
+        tempdir = tempfile.gettempdir()
+        self.assertEqual(tempdir, canonicalize_path('$tempdir'))
+        self.assertEqual(tempdir + '/foo/bar/baz',
+                         canonicalize_path('$tempdir/foo/bar/baz'))

@@ -44,6 +44,7 @@ import spack
 import spack.error
 import spack.spec
 from spack.provider_index import ProviderIndex
+from spack.util.path import canonicalize_path
 from spack.util.naming import *
 
 #
@@ -91,19 +92,6 @@ class SpackNamespace(ModuleType):
         submodule = self.__package__ + '.' + name
         setattr(self, name, __import__(submodule))
         return getattr(self, name)
-
-
-def substitute_spack_prefix(path):
-    """Replaces instances of $spack with Spack's prefix."""
-    return re.sub(r'^\$spack', spack.prefix, path)
-
-
-def canonicalize_path(path):
-    """Substitute $spack, expand user home, take abspath."""
-    path = substitute_spack_prefix(path)
-    path = os.path.expanduser(path)
-    path = os.path.abspath(path)
-    return path
 
 
 class RepoPath(object):
