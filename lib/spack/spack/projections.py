@@ -24,6 +24,7 @@
 ##############################################################################
 import spack
 from llnl.util.filesystem import join_path
+import llnl.util.tty as tty
 
 from collections import defaultdict
 import itertools
@@ -198,8 +199,13 @@ def project_packages(specs, config, resolve_conflict):
 
     path_to_specs = map_specs(specs, keyFn)
 
-    return dict(
-        (x, resolve_conflict(y)) for x, y in path_to_specs.iteritems())
+    path_to_spec = dict()
+    for path, specs in path_to_specs.iteritems():
+        if len(specs) > 1:
+            tty.warn(
+                "{0} has {1} conflicting specs".format(path, str(len(specs))))
+        path_to_spec[path] = resolve_conflict(specs)
+    return path_to_spec
 
 
 def check_for_prefix_collisions(relative_paths, root, prefix_used):
