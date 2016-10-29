@@ -120,7 +120,7 @@ class Openspeedshop(Package):
     depends_on("sqlite")
     depends_on("boost@1.50.0:")
     depends_on("dyninst@9.1.0:")
-    depends_on("python")
+    depends_on("libxml2+python")
     depends_on("qt@3.3.8b+krellpatch")
 
     # Dependencies only for the openspeedshop offline package.

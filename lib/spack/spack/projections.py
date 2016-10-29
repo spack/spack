@@ -183,12 +183,12 @@ def get_relevant_specs(tree):
     transitive = tree['transitive']
     for query_spec in single:
         relevant_specs.extend(
-            spack.installed_db.query(query_spec))
+            spack.store.db.query(query_spec))
     for query_spec in transitive:
         relevant_specs.extend(
             itertools.chain.from_iterable(
                 spec.traverse() for spec in
-                spack.installed_db.query(query_spec)))
+                spack.store.db.query(query_spec)))
     return relevant_specs
 
 

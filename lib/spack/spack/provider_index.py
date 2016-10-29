@@ -28,7 +28,7 @@ The ``virtual`` module contains utility classes for virtual dependencies.
 from itertools import product as iproduct
 from pprint import pformat
 
-import yaml
+import spack.util.spack_yaml as syaml
 from yaml.error import MarkedYAMLError
 
 import spack
@@ -190,13 +190,13 @@ class ProviderIndex(object):
             lambda vpkg, pset: [
                 vpkg.to_node_dict(), [p.to_node_dict() for p in pset]], list)
 
-        yaml.dump({'provider_index': {'providers': provider_list}},
-                  stream=stream)
+        syaml.dump({'provider_index': {'providers': provider_list}},
+                   stream=stream)
 
     @staticmethod
     def from_yaml(stream):
         try:
-            yfile = yaml.load(stream)
+            yfile = syaml.load(stream)
         except MarkedYAMLError, e:
             raise spack.spec.SpackYAMLError(
                 "error parsing YAML ProviderIndex cache:", str(e))

@@ -22,14 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.modules
+from spack import *
 
 
-def post_install(pkg):
-    dk = spack.modules.Dotkit(pkg.spec)
-    dk.write()
+class Ant(Package):
+    """Apache Ant is a Java library and command-line tool whose mission is to
+       drive processes described in build files as targets and extension points
+       dependent upon each other
+    """
 
+    homepage = "http://ant.apache.org/"
+    url = "http://apache.claz.org/ant/source/apache-ant-1.9.7-src.tar.gz"
 
-def post_uninstall(pkg):
-    dk = spack.modules.Dotkit(pkg.spec)
-    dk.remove()
+    version('1.9.7', 'a2fd9458c76700b7be51ef12f07d4bb1')
+
+    depends_on('jdk')
+
+    def install(self, spec, prefix):
+        env['ANT_HOME'] = self.prefix
+        bash = which('bash')
+        bash('./build.sh', 'install')

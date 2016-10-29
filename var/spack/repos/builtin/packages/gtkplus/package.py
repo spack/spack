@@ -37,6 +37,7 @@ class Gtkplus(Package):
     depends_on("atk")
     depends_on("gdk-pixbuf")
     depends_on("pango")
+    depends_on("glib")
 
     def patch(self):
         # remove disable deprecated flag.

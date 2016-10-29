@@ -232,6 +232,13 @@ class Mvapich2(Package):
         ]
 
     def install(self, spec, prefix):
+        # Until we can pass variants such as +fortran through virtual
+        # dependencies depends_on('mpi'), require Fortran compiler to
+        # avoid delayed build errors in dependents.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError('Mvapich2 requires both C and Fortran ',
+                               'compilers!')
+
         # we'll set different configure flags depending on our
         # environment
         configure_args = [

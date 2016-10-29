@@ -83,10 +83,11 @@ adding new unit tests or strengthening existing tests.
 
 .. note::
 
-   There is also a ``run-unit-tests`` script in ``share/spack/qa`` that runs the
-   unit tests. Afterwards, it reports back to Coverage with the percentage of Spack
-   that is covered by unit tests. This script is designed for Travis CI. If you
-   want to run the unit tests yourself, we suggest you use ``spack test``.
+   There is also a ``run-unit-tests`` script in ``share/spack/qa`` that
+   runs the unit tests. Afterwards, it reports back to Coverage with the
+   percentage of Spack that is covered by unit tests. This script is
+   designed for Travis CI. If you want to run the unit tests yourself, we
+   suggest you use ``spack test``.
 
 ^^^^^^^^^^^^
 Flake8 Tests
@@ -99,24 +100,25 @@ from variable naming to indentation. In order to limit the number of PRs that
 were mostly style changes, we decided to enforce PEP 8 conformance. Your PR
 needs to comply with PEP 8 in order to be accepted.
 
-Testing for PEP 8 compliance is easy. Simply add the quality assurance
-directory to your ``PATH`` and run the flake8 script:
+Testing for PEP 8 compliance is easy. Simply run the ``spack flake8``
+command:
 
 .. code-block:: console
 
-   $ export PATH+=":$SPACK_ROOT/share/spack/qa"
-   $ run-flake8-tests
+   $ spack flake8
 
-``run-flake8-tests`` has a couple advantages over running ``flake8`` by hand:
+``spack flake8`` has a couple advantages over running ``flake8`` by hand:
 
-#. It only tests files that you have modified since branching off of develop.
+#. It only tests files that you have modified since branching off of
+   ``develop``.
 
 #. It works regardless of what directory you are in.
 
-#. It automatically adds approved exemptions from the flake8 checks. For example,
-   URLs are often longer than 80 characters, so we exempt them from the line
-   length checks. We also exempt lines that start with "homepage", "url", "version",
-   "variant", "depends_on", and "extends" in the ``package.py`` files.
+#. It automatically adds approved exemptions from the ``flake8``
+   checks. For example, URLs are often longer than 80 characters, so we
+   exempt them from line length checks. We also exempt lines that start
+   with "homepage", "url", "version", "variant", "depends_on", and
+   "extends" in ``package.py`` files.
 
 More approved flake8 exemptions can be found
 `here <https://github.com/LLNL/spack/blob/develop/.flake8>`_.
@@ -518,4 +520,3 @@ and create a PR:
 .. code-block:: console
 
    $ git push origin --set-upstream
-
