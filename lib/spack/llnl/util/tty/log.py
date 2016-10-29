@@ -191,7 +191,6 @@ class log_output(object):
         os.close(self.write)
         os.close(self.read)
 
-
     class OutputRedirection(object):
 
         def __init__(self, other):

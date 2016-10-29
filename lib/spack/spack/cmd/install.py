@@ -83,7 +83,8 @@ the dependencies."""
 
     subparser.add_argument(
         '--skip-deps', dest='skip_deps',
-        help="Comma-separated list of dependencies to ignore (more selective than --ignore-dependencies)")
+        help="""Comma-separated list of dependencies to ignore.
+This is more selective than --ignore-dependencies.""")
     subparser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
