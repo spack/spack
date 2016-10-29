@@ -225,6 +225,16 @@ def check_for_prefix_collisions(relative_paths, root, prefix_used):
             prefix = os.path.dirname(prefix)
 
 
+def check_for_target_collisions(paths):
+    # Targets can share prefixes; the only constraint is that they are unique
+    seen = set()
+    for path in paths:
+        if path in seen:
+            raise ValueError("Target collision: {0}".format(path))
+        elif os.path.exists(path):
+            raise ValueError("Path already exists: {0}".format(link))
+        seen.add(path)
+
 def project_targets(specs, config, resolve_target_conflict):
     output_to_targets = defaultdict(set)
     for spec in specs:

@@ -65,18 +65,6 @@ def create_softlinks(link_to_target, root):
                 raise
 
 
-def check_for_target_collisions(link_to_target_path):
-    # Targets can share prefixes; the only constraint is that they are unique
-    seen = dict()
-    for link, target_path in link_to_target_path.iteritems():
-        if link in seen:
-            raise ValueError(
-                "Target collision:\n{0}\n{1}\n{2}".format(
-                    link, target_path, seen[link]))
-        elif os.path.exists(link):
-            raise ValueError("Link already exists: {0}".format(link))
-
-
 def print_links(link_to_target, root):
     for link, target in link_to_target.iteritems():
         print link, '--->', target
@@ -225,7 +213,7 @@ def tree(parser, args):
         link_to_target_path = dict(
             (link, join_path(spec.prefix, target))
             for link, (spec, target) in link_to_target.iteritems())
-        check_for_target_collisions(link_to_target_path)
+        check_for_target_collisions(set(link_to_target_path))
         link_action(link_to_target_path, relative_root)
     else:
         raise ValueError("Unknown action: " + action)
