@@ -49,16 +49,11 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Module File Support
-
-   module_file_support
-
-.. toctree::
-   :maxdepth: 2
    :caption: Reference Manual
 
    configuration
    mirrors
+   module_file_support
    package_list
    command_index
 
