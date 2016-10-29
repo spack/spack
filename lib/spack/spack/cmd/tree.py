@@ -65,29 +65,6 @@ def create_softlinks(link_to_target, root):
                 raise
 
 
-# TODO: move to projections.py
-def check_for_prefix_collisions(relative_paths, root, prefix_used):
-    """Ensure that the given paths (which are relative to root) are
-    distinct from one another and from any existing paths.
-    """
-    # Check for conflicts between planned prefixes
-    for path1, path2 in itertools.combinations(relative_paths, 2):
-        if path1.startswith(path2) or path2.startswith(path1):
-            smaller, larger = sorted([path1, path2], key=lambda x: len(x))
-            raise ValueError(
-                "Prefix collision:\n\t{0}\n\t{1}".format(smaller, larger))
-
-    # Check for conflicts between planned and existing prefixes
-    for path in relative_paths:
-        prefix = path
-        while prefix:
-            full_prefix = join_path(root, prefix.lstrip('/'))
-            if os.path.exists(full_prefix) and prefix_used(full_prefix):
-                raise ValueError(
-                    "Path {0} collides with existing prefix".format(path))
-            prefix = os.path.dirname(prefix)
-
-
 def check_for_target_collisions(link_to_target_path):
     # Targets can share prefixes; the only constraint is that they are unique
     seen = dict()
