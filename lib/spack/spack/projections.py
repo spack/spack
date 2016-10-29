@@ -235,6 +235,7 @@ def check_for_target_collisions(paths):
             raise ValueError("Path already exists: {0}".format(link))
         seen.add(path)
 
+
 def project_targets(specs, config, resolve_target_conflict):
     output_to_targets = defaultdict(set)
     for spec in specs:
