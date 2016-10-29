@@ -65,24 +65,26 @@ def create_softlinks(link_to_target, root):
                 raise
 
 
-def check_for_prefix_collisions(links, root):
+# TODO: move to projections.py
+def check_for_prefix_collisions(relative_paths, root, prefix_used):
     """Ensure that the given paths (which are relative to root) are
     distinct from one another and from any existing paths.
     """
     # Check for conflicts between planned prefixes
-    for link1, link2 in itertools.combinations(links, 2):
-        if link1.startswith(link2) or link2.startswith(link1):
-            smaller, larger = sorted([link1, link2], key=lambda x: len(x))
+    for path1, path2 in itertools.combinations(relative_paths, 2):
+        if path1.startswith(path2) or path2.startswith(path1):
+            smaller, larger = sorted([path1, path2], key=lambda x: len(x))
             raise ValueError(
                 "Prefix collision:\n\t{0}\n\t{1}".format(smaller, larger))
 
     # Check for conflicts between planned and existing prefixes
-    for link in links:
-        prefix = link
+    for path in relative_paths:
+        prefix = path
         while prefix:
-            if os.path.exists(join_path(root, prefix.lstrip('/'))):
+            full_prefix = join_path(root, prefix.lstrip('/'))
+            if os.path.exists(full_prefix) and prefix_used(full_prefix):
                 raise ValueError(
-                    "Link {0} collides with existing prefix".format(link))
+                    "Path {0} collides with existing prefix".format(path))
             prefix = os.path.dirname(prefix)
 
 
@@ -236,7 +238,8 @@ def tree(parser, args):
         link_to_prefix = dict(
             (link, spec.prefix) for link, spec in link_to_spec.iteritems())
         pkg_root = join_path(relative_root, root.lstrip('/'))
-        check_for_prefix_collisions(set(link_to_prefix), pkg_root)
+        check_for_prefix_collisions(
+            set(link_to_prefix), pkg_root, os.path.islink)
         link_action(link_to_prefix, pkg_root)
 
         link_to_target = project_targets(
@@ -245,8 +248,6 @@ def tree(parser, args):
             (link, join_path(spec.prefix, target))
             for link, (spec, target) in link_to_target.iteritems())
         check_for_target_collisions(link_to_target_path)
-        link_action(
-            link_to_target_path,
-            relative_root)  # target links are absolute
+        link_action(link_to_target_path, relative_root)
     else:
         raise ValueError("Unknown action: " + action)
