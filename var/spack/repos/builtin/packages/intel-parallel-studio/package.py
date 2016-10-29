@@ -184,15 +184,24 @@ class IntelParallelStudio(IntelInstaller):
                                                           "license.lic"))
         if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
                                          spec.satisfies('@professional')):
-            os.mkdir(os.path.join(self.prefix, "inspector_xe/licenses"))
+            inspector_dir = "inspector_xe/licenses"
+            advisor_dir = "advisor_xe/licenses"
+            vtune_amplifier_dir = "vtune_amplifier_xe/licenses"
+
+            year = int(str(self.version).split('.')[1])
+            if year >= 2017:
+                inspector_dir = "inspector/licenses"
+                advisor_dir = "advisor/licenses"
+
+            os.mkdir(os.path.join(self.prefix, inspector_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "inspector_xe/licenses", "license.lic"))
-            os.mkdir(os.path.join(self.prefix, "advisor_xe/licenses"))
+                self.prefix, inspector_dir, "license.lic"))
+            os.mkdir(os.path.join(self.prefix, advisor_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "advisor_xe/licenses", "license.lic"))
-            os.mkdir(os.path.join(self.prefix, "vtune_amplifier_xe/licenses"))
+                self.prefix, advisor_dir, "license.lic"))
+            os.mkdir(os.path.join(self.prefix, vtune_amplifier_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "vtune_amplifier_xe/licenses", "license.lic"))
+                self.prefix, vtune_amplifier_dir, "license.lic"))
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
                 spec.satisfies('@cluster'):
