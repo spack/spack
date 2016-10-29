@@ -9,8 +9,8 @@ Spack provides integration with `Environment Modules
 <http://modules.sourceforge.net/>`_ ,  `LMod
 <http://lmod.readthedocs.io/en/latest/>`_ and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ by:
 
- * generating module files after a successful installation
- * providing commands that can leverage the spec syntax to manipulate modules
+* generating module files after a successful installation
+* providing commands that can leverage the spec syntax to manipulate modules
 
 In the following you will see how to activate shell support for commands in Spack
 that requires it, and discover what benefits this may bring with respect to deal
@@ -19,7 +19,7 @@ directly with automatically generated module files.
 .. note::
 
    If your machine does not already have a module system installed,
-   we advice to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
+   we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
    for more details.
 
 ----------------------
@@ -30,15 +30,15 @@ You can enable shell support by sourcing the appropriate setup file
 in the ``$SPACK_ROOT/share/spack`` directory.
 For ``bash`` or ``ksh`` users:
 
-.. code-block:: bash
+.. code-block:: console
 
-   . ${SPACK_ROOT}/share/spack/setup-env.sh
+   $ . ${SPACK_ROOT}/share/spack/setup-env.sh
 
 For ``csh`` and ``tcsh`` instead:
 
-.. code-block:: csh
+.. code-block:: console
 
-   source $SPACK_ROOT/share/spack/setup-env.csh
+   $ source $SPACK_ROOT/share/spack/setup-env.csh
 
 
 .. note::
@@ -303,8 +303,8 @@ customized:
 
 All these module sections allow for both:
 
- 1. global directives that usually affect the whole layout of modules or the naming scheme
- 2. directives that affect only a set of packages and modify their content
+1. global directives that usually affect the whole layout of modules or the naming scheme
+2. directives that affect only a set of packages and modify their content
 
 For the latter point in particular it is possible to **use anonymous specs**
 to select an appropriate set of packages on which the modifications should be applied.
@@ -515,9 +515,9 @@ are either ``none``, ``direct`` or ``all``.
      It will produce module files that have a ``prereq``
      statement instead of automatically loading other modules.
 
-=======================
-Module file maintenance
-=======================
+========================
+Module files maintenance
+========================
 
 Spack not only provides great flexibility in the generation of module files
 and in the customization of both their layout and content, but also ships with
