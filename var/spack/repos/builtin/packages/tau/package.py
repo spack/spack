@@ -131,6 +131,8 @@ class Tau(Package):
 
         if '+mpi' in spec:
             options.append('-mpi')
+            options.append('-mpiinc=%s' % spec['mpi'].prefix.include)
+            options.append('-mpilib=%s' % spec['mpi'].prefix.lib)
 
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
