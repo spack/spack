@@ -110,12 +110,12 @@ Neither of these is particularly pretty, easy to remember, or
 easy to type.  Luckily, Spack has its own interface for using modules
 and dotkits.  You can use the same spec syntax you're used to:
 
-  =========================  ==========================
-  Environment Modules        Dotkit
-  =========================  ==========================
-  ``spack load <spec>``      ``spack use <spec>``
-  ``spack unload <spec>``    ``spack unuse <spec>``
-  =========================  ==========================
+=========================  ==========================
+Environment Modules        Dotkit
+=========================  ==========================
+``spack load <spec>``      ``spack use <spec>``
+``spack unload <spec>``    ``spack unuse <spec>``
+=========================  ==========================
 
 And you can use the same shortened names you use everywhere else in
 Spack.  For example, this will add the ``mpich`` package built with
@@ -250,11 +250,11 @@ and has similar effects on module file of dependees. Even in this case
   with the following snippet:
 
   .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
-     :lines: 151-159
+     :pyobject: R.setup_environment
 
   The ``R`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
-  it appropriately in the ovverride of the second method:
+  it appropriately in the override of the second method:
 
   .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
      :lines: 128-129,146-151
@@ -309,7 +309,7 @@ All these module sections allow for both:
 For the latter point in particular it is possible to **use anonymous specs**
 to select an appropriate set of packages on which the modifications should be applied.
 To the best of our knowledge Spack **is the only package manager offering this customization flexibility**,
-made possible by the novel DSL introduced to describe specs.
+made possible by the novel domain specific language introduced to describe specs.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selection by anonymous specs
@@ -524,69 +524,30 @@ and in the customization of both their layout and content, but also ships with
 a tool to ease the burden of their maintenance in production environments.
 This tool is the ``spack module`` command:
 
-.. code-block:: console
+.. command-output:: spack module --help
 
-  $ spack module --help
-  usage: spack module [-h] SUBCOMMAND ...
-
-  positional arguments:
-    SUBCOMMAND
-      refresh   Regenerate module files
-      find      Find module files for packages
-      rm        Remove module files
-      loads     Prompt the list of modules associated with a constraint
-
-  optional arguments:
-    -h, --help  show this help message and exit
-
---------------------------------
-'module refresh' and 'module rm'
---------------------------------
+------------------------
+``spack module refresh``
+------------------------
 
 The command that regenerates module files to update their content or their layout
 is ``module refresh``:
 
-.. code-block:: console
-
-  $ spack module refresh --help
-  usage: spack module refresh [-h] [--delete-tree] [-m {tcl,dotkit}] [-y]
-                              [constraint [constraint ...]]
-
-  positional arguments:
-    constraint            Constraint to select a subset of installed packages
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    --delete-tree         Delete the module file tree before refresh
-    -m {tcl,dotkit}, --module-type {tcl,dotkit}
-                          Type of module files
-    -y, --yes-to-all      Assume "yes" is the answer to every confirmation
-                          request.
+.. command-output:: spack module refresh --help
 
 A set of packages can be selected using anonymous specs for the optional
 ``constraint`` positional argument. The argument ``--module-type`` identifies
 the type of module files to refresh. Optionally the entire tree can be deleted
 before regeneration if the change in layout is radical.
 
+-------------------
+``spack module rm``
+-------------------
+
 If instead what you need is just to delete a few module files, then the right
 command is ``module rm``:
 
-.. code-block:: console
-
-  $ spack module rm --help
-  usage: spack module rm [-h] [-m {tcl,dotkit}] [-y]
-                         [constraint [constraint ...]]
-
-  positional arguments:
-    constraint            Constraint to select a subset of installed packages
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -m {tcl,dotkit}, --module-type {tcl,dotkit}
-                          Type of module files
-    -y, --yes-to-all      Assume "yes" is the answer to every confirmation
-                        request.
-
+.. command-output:: spack module rm --help
 
 .. note::
   We care about your module files!
@@ -598,10 +559,9 @@ command is ``module rm``:
 
 .. _extensions:
 
-
-------------
-module loads
-------------
+----------------------
+``spack module loads``
+----------------------
 
 In some cases, it is desirable to load not just a module, but also all
 the modules it depends on.  This is not required for most modules
