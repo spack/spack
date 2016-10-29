@@ -56,7 +56,7 @@ test_data = {
     ])}
 
 
-class YamlTest(unittest.TestCase):
+class SpackYamlTest(unittest.TestCase):
 
     def setUp(self):
         self.data = syaml.load(test_file)

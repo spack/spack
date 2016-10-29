@@ -47,6 +47,7 @@ from StringIO import StringIO
 import llnl.util.lock
 import llnl.util.tty as tty
 import spack
+import spack.store
 import spack.compilers
 import spack.directives
 import spack.error
@@ -832,7 +833,7 @@ class PackageBase(object):
         if not self.is_extension:
             raise ValueError(
                 "is_extension called on package that is not an extension.")
-        exts = spack.install_layout.extension_map(self.extendee_spec)
+        exts = spack.store.layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
     def provides(self, vpkg_name):
@@ -853,7 +854,7 @@ class PackageBase(object):
         TODO: move this method to database.py?
         """
         dependents = []
-        for spec in spack.installed_db.query():
+        for spec in spack.store.db.query():
             if self.name == spec.name:
                 continue
             # XXX(deptype): Should build dependencies not count here?
@@ -867,7 +868,7 @@ class PackageBase(object):
     def prefix_lock(self):
         """Prefix lock is a byte range lock on the nth byte of a file.
 
-        The lock file is ``spack.installed_db.prefix_lock`` -- the DB
+        The lock file is ``spack.store.db.prefix_lock`` -- the DB
         tells us what to call it and it lives alongside the install DB.
 
         n is the sys.maxsize-bit prefix of the DAG hash.  This makes
@@ -879,7 +880,7 @@ class PackageBase(object):
             prefix = self.spec.prefix
             if prefix not in Package.prefix_locks:
                 Package.prefix_locks[prefix] = llnl.util.lock.Lock(
-                    spack.installed_db.prefix_lock_path,
+                    spack.store.db.prefix_lock_path,
                     self.spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
 
             self._prefix_lock = Package.prefix_locks[prefix]
@@ -893,8 +894,8 @@ class PackageBase(object):
 
     @property
     def installCtxt(self):
-        if self.name in spack.install_layout.redirected:
-            destdir = spack.install_layout.destdir
+        if self.name in spack.store.layout.redirected:
+            destdir = spack.store.layout.destdir
         else:
             destdir = None
         return RedirectionInstallContext(self.prefix, destdir)
@@ -924,7 +925,7 @@ class PackageBase(object):
         Removes the prefix for a package along with any empty parent
         directories
         """
-        spack.install_layout.remove_install_directory(self.spec)
+        spack.store.layout.remove_install_directory(self.spec)
 
     def do_fetch(self, mirror_only=False):
         """
@@ -1126,7 +1127,7 @@ class PackageBase(object):
                    run_tests=False,
                    fake=False,
                    explicit=False,
-                   dirty=False,
+                   dirty=None,
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1161,17 +1162,21 @@ class PackageBase(object):
             return
 
         # Ensure package is not already installed
-        layout = spack.install_layout
+        layout = spack.store.layout
         with self._prefix_read_lock():
             if layout.check_installed(self.spec):
                 tty.msg(
                     "%s is already installed in %s" % (self.name, self.prefix))
-                rec = spack.installed_db.get_record(self.spec)
+                rec = spack.store.db.get_record(self.spec)
                 if (not rec.explicit) and explicit:
-                    with spack.installed_db.write_transaction():
-                        rec = spack.installed_db.get_record(self.spec)
+                    with spack.store.db.write_transaction():
+                        rec = spack.store.db.get_record(self.spec)
                         rec.explicit = True
                 return
+
+        # Dirty argument takes precedence over dirty config setting.
+        if dirty is None:
+            dirty = spack.dirty
 
         self._do_install_pop_kwargs(kwargs)
 
@@ -1189,7 +1194,9 @@ class PackageBase(object):
                     verbose=verbose,
                     make_jobs=make_jobs,
                     run_tests=run_tests,
-                    dirty=dirty)
+                    dirty=dirty,
+                    **kwargs
+                )
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1272,15 +1279,15 @@ class PackageBase(object):
 
         try:
             # Create the install prefix and fork the build process.
-            spack.install_layout.create_install_directory(self.spec)
+            spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
             # If we installed then we should keep the prefix
             keep_prefix = True if self.last_phase is None else keep_prefix
             # note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
-            spack.installed_db.add(
-                self.spec, spack.install_layout, explicit=explicit
+            spack.store.db.add(
+                self.spec, spack.store.layout, explicit=explicit
             )
         except directory_layout.InstallDirectoryAlreadyExistsError:
             # Abort install if install directory exists.
@@ -1309,15 +1316,16 @@ class PackageBase(object):
         """
         self.last_phase = kwargs.pop('stop_at', None)
         if self.last_phase is not None and self.last_phase not in self.phases:
-            tty.die('\'{0.last_phase}\' is not among the allowed phases for package {0.name}'.format(self))  # NOQA: ignore=E501
+            tty.die('\'{0}\' is not an allowed phase for package {1}'
+                    .format(self.last_phase, self.name))
 
     def log(self):
         # Copy provenance into the install directory on success
-        log_install_path = spack.install_layout.build_log_path(
+        log_install_path = spack.store.layout.build_log_path(
             self.spec)
-        env_install_path = spack.install_layout.build_env_path(
+        env_install_path = spack.store.layout.build_env_path(
             self.spec)
-        packages_dir = spack.install_layout.build_packages_path(
+        packages_dir = spack.store.layout.build_packages_path(
             self.spec)
 
         # Remove first if we're overwriting another build
@@ -1353,7 +1361,8 @@ class PackageBase(object):
 
         installed = set(os.listdir(
             self.installCtxt.redirect_path(self.prefix)))
-        installed.difference_update(spack.install_layout.hidden_file_paths)
+        installed.difference_update(
+            spack.store.layout.hidden_file_paths)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
@@ -1361,7 +1370,7 @@ class PackageBase(object):
     @property
     def build_log_path(self):
         if self.installed:
-            return spack.install_layout.build_log_path(self.spec)
+            return spack.store.layout.build_log_path(self.spec)
         else:
             return join_path(self.stage.source_path, 'spack-build.out')
 
@@ -1491,9 +1500,9 @@ class PackageBase(object):
         if not self.installed:
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
-            specs = spack.installed_db.query(self.spec, installed=True)
+            specs = spack.store.db.query(self.spec, installed=True)
             if specs:
-                spack.installed_db.remove(specs[0])
+                spack.store.db.remove(specs[0])
                 tty.msg("Removed stale DB entry for %s" % self.spec.short_spec)
                 return
             else:
@@ -1510,7 +1519,7 @@ class PackageBase(object):
             # Uninstalling in Spack only requires removing the prefix.
             self.remove_prefix()
             #
-            spack.installed_db.remove(self.spec)
+            spack.store.db.remove(self.spec)
         tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
@@ -1544,8 +1553,8 @@ class PackageBase(object):
         """
         self._sanity_check_extension()
 
-        spack.install_layout.check_extension_conflict(self.extendee_spec,
-                                                      self.spec)
+        spack.store.layout.check_extension_conflict(
+            self.extendee_spec, self.spec)
 
         # Activate any package dependencies that are also extensions.
         if not force:
@@ -1556,7 +1565,7 @@ class PackageBase(object):
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
-        spack.install_layout.add_extension(self.extendee_spec, self.spec)
+        spack.store.layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s" %
                 (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
@@ -1571,7 +1580,7 @@ class PackageBase(object):
         """
 
         def ignore(filename):
-            return (filename in spack.install_layout.hidden_file_paths or
+            return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
@@ -1589,9 +1598,11 @@ class PackageBase(object):
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
-            spack.install_layout.check_activated(self.extendee_spec, self.spec)
+            spack.store.layout.check_activated(
+                self.extendee_spec, self.spec)
 
-            activated = spack.install_layout.extension_map(self.extendee_spec)
+            activated = spack.store.layout.extension_map(
+                self.extendee_spec)
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
@@ -1607,8 +1618,8 @@ class PackageBase(object):
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
         if self.activated:
-            spack.install_layout.remove_extension(self.extendee_spec,
-                                                  self.spec)
+            spack.store.layout.remove_extension(
+                self.extendee_spec, self.spec)
 
         tty.msg("Deactivated extension %s for %s" %
                 (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
@@ -1624,7 +1635,7 @@ class PackageBase(object):
         """
 
         def ignore(filename):
-            return (filename in spack.install_layout.hidden_file_paths or
+            return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
@@ -1725,7 +1736,7 @@ def flatten_dependencies(spec, flat_dir):
     for dep in spec.traverse(root=False):
         name = dep.name
 
-        dep_path = spack.install_layout.path_for_spec(dep)
+        dep_path = spack.store.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
         os.mkdir(flat_dir + '/' + name)
@@ -1755,7 +1766,7 @@ def dump_packages(spec, path):
         if node is not spec:
             # Locate the dependency package in the install tree and find
             # its provenance information.
-            source = spack.install_layout.build_packages_path(node)
+            source = spack.store.layout.build_packages_path(node)
             source_repo_root = join_path(source, node.namespace)
 
             # There's no provenance installed for the source package.  Skip it.
