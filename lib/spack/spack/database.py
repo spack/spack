@@ -468,7 +468,7 @@ class Database(object):
         if key not in self._data:
             installed = False
             path = None
-            if directory_layout:
+            if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
                 try:
                     directory_layout.check_installed(spec)
