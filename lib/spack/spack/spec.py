@@ -2177,6 +2177,7 @@ class Spec(object):
         """
         Prints out particular pieces of a spec, depending on what is
         in the format string.  The format strings you can provide are::
+
             $_   Package name
             $.   Full package name (with namespace)
             $@   Version with '@' prefix
@@ -2189,7 +2190,9 @@ class Spec(object):
             $=   Architecture prefixed by 'arch='
             $#   7-char prefix of DAG hash with '-' prefix
             $$   $
+
         You can also use full-string versions, which elide the prefixes::
+
             ${PACKAGE}       Package name
             ${NAME}          (Also) Package name
             ${VERSION}       Version
@@ -2212,9 +2215,12 @@ class Spec(object):
         Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
         ``$-20_`` for a left-justified name.
+
         Anything else is copied verbatim into the output stream.
+
         *Example:*  ``$_$@$+`` translates to the name, version, and options
         of the package, but no dependencies, arch, or compiler.
+
         TODO: allow, e.g., ``$6#`` to customize short hash length
         TODO: allow, e.g., ``$##`` for full hash.
         """
