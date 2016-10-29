@@ -131,8 +131,9 @@ def update_install(installed_specs, tree, config=None):
 
 
 def read_spec_from_prefix(path):
-    with open(path, 'r') as F:
-        return spack.spec.from_yaml(F)
+    # Here path is expected to be a package prefix
+    spec_yaml_path = join_path(path, '.spack', 'spec.yaml')
+    return spack.install_layout.read_spec(spec_yaml_path)
 
 
 class UpdateConfig(object):
