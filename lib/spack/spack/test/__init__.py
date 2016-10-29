@@ -42,7 +42,7 @@ test_names = [
     'cmd.find',
     'cmd.module',
     'cmd.rpm',
-    'cmd.test_install',
+    'cmd.install',
     'cmd.uninstall',
     'concretize',
     'concretize_preferences',
@@ -79,7 +79,7 @@ test_names = [
     'url_substitution',
     'versions',
     'provider_index',
-    'yaml',
+    'spack_yaml',
     # This test needs to be last until global compiler cache is fixed.
     'cmd.test_compiler_cmd',
 ]

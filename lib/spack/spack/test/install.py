@@ -27,6 +27,7 @@ import tempfile
 import filecmp
 
 import spack
+import spack.store
 from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
 from spack.database import Database
@@ -51,11 +52,11 @@ class InstallTest(MockPackagesTest):
         # installed pkgs and mock packages.
         self.tmpdir = tempfile.mkdtemp()
         self.redirect = tempfile.mkdtemp()
-        self.orig_layout = spack.install_layout
-        self.orig_db = spack.installed_db
+        self.orig_layout = spack.store.layout
+        self.orig_db = spack.store.db
 
-        spack.install_layout = YamlDirectoryLayout(self.tmpdir)
-        spack.installed_db   = Database(self.tmpdir)
+        spack.store.layout = YamlDirectoryLayout(self.tmpdir)
+        spack.store.db     = Database(self.tmpdir)
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
@@ -65,8 +66,8 @@ class InstallTest(MockPackagesTest):
         spack.do_checksum = True
 
         # restore spack's layout.
-        spack.install_layout = self.orig_layout
-        spack.installed_db   = self.orig_db
+        spack.store.layout = self.orig_layout
+        spack.store.db     = self.orig_db
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         shutil.rmtree(self.redirect, ignore_errors=True)
 
@@ -98,8 +99,8 @@ class InstallTest(MockPackagesTest):
         spec = Spec('redir')
         spec.concretize()
         pkg = spack.repo.get(spec)
-        spack.install_layout.destdir = self.redirect
-        spack.install_layout.redirected.add(pkg.name)
+        spack.store.layout.destdir = self.redirect
+        spack.store.layout.redirected.add(pkg.name)
 
         self.fake_fetchify(pkg)
 
@@ -109,20 +110,20 @@ class InstallTest(MockPackagesTest):
         spec = Spec('redir')
         spec.concretize()
         pkg = spack.repo.get(spec)
-        spack.install_layout.destdir = self.redirect
-        spack.install_layout.redirected.add(pkg.name)
+        spack.store.layout.destdir = self.redirect
+        spack.store.layout.redirected.add(pkg.name)
 
         self.fake_fetchify(pkg)
 
         pkg.do_install()
 
-        spack.install_layout.redirected.clear()
+        spack.store.layout.redirected.clear()
         pkg.do_install()
         self.assertTrue(filecmp.dircmp(
             self.tmpdir,
             join_path(self.redirect, self.tmpdir)))
 
-    def test_install_environment(self):
+    def test_store(self):
         spec = Spec('cmake-client').concretized()
 
         for s in spec.traverse():

@@ -160,6 +160,14 @@ class Trilinos(Package):
                 'ON' if '+hypre' in spec else 'OFF')
         ])
 
+        if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
+            # Panzer uses some std:chrono that is not recognized by Intel
+            # Don't know which (maybe all) Trilinos versions this applies to
+            # Don't know which (maybe all) Intel versions this applies to
+            options.extend([
+                '-DTrilinos_ENABLE_Panzer:BOOL=OFF'
+            ])
+
         if '+hdf5' in spec:
             options.extend([
                 '-DTPL_ENABLE_HDF5:BOOL=ON',
@@ -188,14 +196,15 @@ class Trilinos(Package):
             options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
         # Fortran lib
-        libgfortran = os.path.dirname(os.popen(
-            '%s --print-file-name libgfortran.a' %
-            join_path(mpi_bin, 'mpif90')).read())
-        options.extend([
-            '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
-                libgfortran),
-            '-DTrilinos_ENABLE_Fortran=ON'
-        ])
+        if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+            libgfortran = os.path.dirname(os.popen(
+                '%s --print-file-name libgfortran.a' %
+                join_path(mpi_bin, 'mpif90')).read())
+            options.extend([
+                '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
+                    libgfortran),
+                '-DTrilinos_ENABLE_Fortran=ON'
+            ])
 
         # for build-debug only:
         # options.extend([

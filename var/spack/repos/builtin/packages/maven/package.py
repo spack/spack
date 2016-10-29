@@ -23,28 +23,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class Gtkplus(Package):
-    """The GTK+ 2 package contains libraries used for creating graphical user
-       interfaces for applications."""
-    homepage = "http://www.gtk.org"
+class Maven(Package):
+    """Apache Maven is a software project management and comprehension tool."""
 
-    version(
-        '2.24.25', '612350704dd3aacb95355a4981930c6f',
-        url="http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.25.tar.xz")
+    homepage = "https://maven.apache.org/index.html"
+    url = "http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz"
 
-    depends_on("atk")
-    depends_on("gdk-pixbuf")
-    depends_on("pango")
-    depends_on("glib")
+    version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
 
-    def patch(self):
-        # remove disable deprecated flag.
-        filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
-                    '', 'configure', string=True)
+    depends_on('jdk')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        # install pre-built distribution
+        copy_tree('.', prefix)

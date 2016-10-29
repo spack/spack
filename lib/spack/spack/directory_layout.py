@@ -32,7 +32,7 @@ import yaml
 from llnl.util.filesystem import join_path
 
 import spack
-from spack.spec import Spec
+import spack.spec
 from spack.error import SpackError
 
 
@@ -220,7 +220,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Read the contents of a file and parse them as a spec"""
         try:
             with open(path) as f:
-                spec = Spec.from_yaml(f)
+                spec = spack.spec.Spec.from_yaml(f)
         except Exception as e:
             if spack.debug:
                 raise

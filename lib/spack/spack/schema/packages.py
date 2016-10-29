@@ -22,7 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for packages.yaml configuration files."""
+"""Schema for packages.yaml configuration files.
+
+.. literalinclude:: ../spack/schema/packages.py
+   :lines: 32-
+"""
 
 
 schema = {
@@ -31,7 +35,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        r'packages:?': {
+        r'packages': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,

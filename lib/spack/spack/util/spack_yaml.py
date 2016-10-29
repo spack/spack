@@ -91,7 +91,9 @@ class OrderedLineLoader(Loader):
             value = value.encode('ascii')
         except UnicodeEncodeError:
             pass
+
         value = syaml_str(value)
+
         mark(value, node)
         return value
 

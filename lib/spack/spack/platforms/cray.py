@@ -1,7 +1,7 @@
 import os
 import re
-import spack.config
 import llnl.util.tty as tty
+from spack import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
@@ -46,13 +46,10 @@ class Cray(Platform):
             self.add_target(name, Target(name, 'craype-%s' % target))
 
         # Get aliased targets from config or best guess from environment:
-        conf = spack.config.get_config('targets')
         for name in ('front_end', 'back_end'):
             _target = getattr(self, name, None)
             if _target is None:
                 _target = os.environ.get('SPACK_' + name.upper())
-            if _target is None:
-                _target = conf.get(name)
             if _target is None and name == 'back_end':
                 _target = self._default_target_from_env()
             if _target is not None:
@@ -82,7 +79,7 @@ class Cray(Platform):
             similar to linux/standard linker behavior
         """
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
-        cray_wrapper_names = join_path(spack.build_env_path, 'cray')
+        cray_wrapper_names = join_path(build_env_path, 'cray')
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
             env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)

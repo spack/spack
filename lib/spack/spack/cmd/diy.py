@@ -30,6 +30,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
 
@@ -52,9 +53,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND version.")
-    subparser.add_argument(
-        '--dirty', action='store_true', dest='dirty',
-        help="Install a package *without* cleaning the environment.")
+
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
 
 def diy(self, args):

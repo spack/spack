@@ -22,27 +22,46 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for mirrors.yaml configuration file.
+"""Schema for config.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/mirrors.py
+.. literalinclude:: ../spack/schema/config.py
    :lines: 32-
 """
 
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack mirror configuration file schema',
+    'title': 'Spack module file configuration file schema',
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        r'mirrors': {
+        'config': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {
-                    'type': 'string'},
-            },
+            'properties': {
+                'install_tree': {'type': 'string'},
+                'build_stage': {
+                    'oneOf': [
+                        {'type': 'string'},
+                        {'type': 'array',
+                         'items': {'type': 'string'}}],
+                },
+                'module_roots': {
+                    'type': 'object',
+                    'additionalProperties': False,
+                    'properties': {
+                        'tcl': {'type': 'string'},
+                        'lmod': {'type': 'string'},
+                        'dotkit': {'type': 'string'},
+                    },
+                },
+                'source_cache': {'type': 'string'},
+                'misc_cache': {'type': 'string'},
+                'verify_ssl': {'type': 'boolean'},
+                'checksum': {'type': 'boolean'},
+                'dirty': {'type': 'boolean'},
+            }
         },
     },
 }

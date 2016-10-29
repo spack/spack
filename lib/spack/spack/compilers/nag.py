@@ -61,11 +61,11 @@ class Nag(Compiler):
     # options with '-Wl,-Wl,,'
     @property
     def f77_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,'
+        return '-Wl,-Wl,,-rpath,,'
 
     @property
     def fc_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,'
+        return '-Wl,-Wl,,-rpath,,'
 
     @classmethod
     def default_version(self, comp):
