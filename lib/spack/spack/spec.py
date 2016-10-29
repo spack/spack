@@ -2302,7 +2302,7 @@ class Spec(object):
                         raise ValueError("Error: unterminated ${ in format:"
                                          "'%s'" % format_string)
                     named_str += c
-                    continue;
+                    continue
                 elif nested_start:
                     nested_start = False
                     named_str += c
@@ -2317,7 +2317,7 @@ class Spec(object):
                         out.write(self[dep].format(dep_format))
                     named = False
                     continue
-                
+
                 if section_id == 'PACKAGE' or section_id == 'NAME':
                     write(fmt % self.name, '@')
                 elif section_id.startswith('VERSION'):
@@ -2329,7 +2329,7 @@ class Spec(object):
                         version_str = str(self.versions)
                     else:
                         version_str = None
-                        
+
                     if version_str:
                         write(fmt % version_str, '@')
                 elif section_id == 'COMPILER':

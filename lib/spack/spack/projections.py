@@ -28,7 +28,6 @@ from llnl.util.filesystem import join_path
 from collections import defaultdict
 import itertools
 import os
-import errno
 
 
 class PackageProjection(object):
@@ -55,7 +54,7 @@ class PackageProjection(object):
 
 
 def get_package_projection(name, config, exclude_multiply=None,
-                       force_basename=False, dep=None):
+                           force_basename=False, dep=None):
     """
     Notes:
 

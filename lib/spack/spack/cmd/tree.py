@@ -28,8 +28,6 @@ from llnl.util.filesystem import join_path, mkdirp
 
 import argparse
 
-from collections import defaultdict
-import itertools
 import os
 import errno
 
@@ -105,7 +103,7 @@ def update_install(installed_specs, tree, config=None):
                     "\n{0}".format(str(prev_spec)))
             else:
                 print (
-                    "Existing spec for {0}".format(link_path) + 
+                    "Existing spec for {0}".format(link_path) +
                     " is preferred over newly-installed spec {0}".format(
                         str(spec)))
         else:
@@ -209,7 +207,7 @@ def tree(parser, args):
         link_action(link_to_prefix, pkg_root)
 
         link_to_target = project_targets(
-                specs_to_project, projections_config, resolve_target_conflict)
+            specs_to_project, projections_config, resolve_target_conflict)
         link_to_target_path = dict(
             (link, join_path(spec.prefix, target))
             for link, (spec, target) in link_to_target.iteritems())
