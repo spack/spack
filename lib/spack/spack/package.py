@@ -66,6 +66,7 @@ from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError
 from spack.version import *
+import spack.version
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -509,6 +510,9 @@ class PackageBase(object):
     prefix_locks = {}
 
     def __init__(self, spec):
+    	# By default use "standard" version numbers.  Subclass can override this.
+    	self.version_scheme = spack.version.DefaultVersionScheme()
+
         # this determines how the package should be built.
         self.spec = spec
 

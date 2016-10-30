@@ -201,9 +201,8 @@ class DefaultConcretizer(object):
             pkg.versions.get(Version(v)).get('preferred', False),
 
             # ------- Regular case: use latest non-develop version by default.
-            # Avoid @develop version, which would otherwise be the "largest"
-            # in straight version comparisons
-            not v.isdevelop(),
+            # Avoid non-release versions, unless user asked for them.
+            v.isrelease(),
 
             # Compare the version itself
             # This includes the logic:
