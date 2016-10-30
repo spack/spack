@@ -131,15 +131,13 @@ def dependencies(spec, request='all'):
     # FIXME : step among nodes that refer to the same package?
     seen = set()
     seen_add = seen.add
-    l = [xx
-         for xx in sorted(
-             spec.traverse(order='post',
-                           depth=True,
-                           cover='nodes',
-                           deptype=('link', 'run'),
-                           root=False),
-             reverse=True)]
-    return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
+    l = sorted(
+        spec.traverse(order='post',
+                      cover='nodes',
+                      deptype=('link', 'run'),
+                      root=False),
+        reverse=True)
+    return [x for x in l if not (x in seen or seen_add(x))]
 
 
 def update_dictionary_extending_lists(target, update):
@@ -238,6 +236,10 @@ def filter_blacklisted(specs, module_name):
         yield x
 
 
+def format_env_var_name(name):
+    return name.replace('-', '_').upper()
+
+
 class EnvModule(object):
     name = 'env_module'
     formats = {}
@@ -275,50 +277,29 @@ class EnvModule(object):
         return naming_scheme
 
     @property
-    def tokens(self):
-        """Tokens that can be substituted in environment variable values
-        and naming schemes
-        """
-        tokens = {
-            'name': self.spec.name,
-            'version': self.spec.version,
-            'compiler': self.spec.compiler,
-            'prefix': self.spec.package.prefix
-        }
-        return tokens
-
-    @property
-    def upper_tokens(self):
-        """Tokens that can be substituted in environment variable names"""
-        upper_tokens = {
-            'name': self.spec.name.replace('-', '_').upper()
-        }
-        return upper_tokens
-
-    @property
     def use_name(self):
         """
         Subclasses should implement this to return the name the module command
         uses to refer to the package.
         """
-        naming_tokens = self.tokens
-        naming_scheme = self.naming_scheme
-        name = naming_scheme.format(**naming_tokens)
+        name = self.spec.format(self.naming_scheme)
         # Not everybody is working on linux...
         parts = name.split('/')
         name = join_path(*parts)
         # Add optional suffixes based on constraints
+        path_elements = [name] + self._get_suffixes()
+        return '-'.join(path_elements)
+
+    def _get_suffixes(self):
         configuration, _ = parse_config_options(self)
-        suffixes = [name]
+        suffixes = []
         for constraint, suffix in configuration.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
-        # Always append the hash to make the module file unique
-        hash_length = configuration.pop('hash_length', 7)
+        hash_length = configuration.get('hash_length', 7)
         if hash_length != 0:
             suffixes.append(self.spec.dag_hash(length=hash_length))
-        name = '-'.join(suffixes)
-        return name
+        return suffixes
 
     @property
     def category(self):
@@ -456,8 +437,9 @@ class EnvModule(object):
     def process_environment_command(self, env):
         for command in env:
             # Token expansion from configuration file
-            name = command.args.get('name', '').format(**self.upper_tokens)
-            value = str(command.args.get('value', '')).format(**self.tokens)
+            name = format_env_var_name(
+                self.spec.format(command.args.get('name', '')))
+            value = self.spec.format(str(command.args.get('value', '')))
             command.update_args(name=name, value=value)
             # Format the line int the module file
             try:
@@ -501,7 +483,7 @@ class Dotkit(EnvModule):
     autoload_format = 'dk_op {module_file}\n'
 
     default_naming_format = \
-        '{name}-{version}-{compiler.name}-{compiler.version}'
+        '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
 
     @property
     def file_name(self):
@@ -544,7 +526,7 @@ class TclModule(EnvModule):
     prerequisite_format = 'prereq {module_file}\n'
 
     default_naming_format = \
-        '{name}-{version}-{compiler.name}-{compiler.version}'
+        '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
 
     @property
     def file_name(self):
@@ -595,8 +577,9 @@ class TclModule(EnvModule):
         }
         for command in env:
             # Token expansion from configuration file
-            name = command.args.get('name', '').format(**self.upper_tokens)
-            value = str(command.args.get('value', '')).format(**self.tokens)
+            name = format_env_var_name(
+                self.spec.format(command.args.get('name', '')))
+            value = self.spec.format(str(command.args.get('value', '')))
             command.update_args(name=name, value=value)
             # Format the line int the module file
             try:
@@ -614,7 +597,6 @@ class TclModule(EnvModule):
                 tty.warn(details.format(**command.args))
 
     def module_specific_content(self, configuration):
-        naming_tokens = self.tokens
         # Conflict
         conflict_format = configuration.get('conflict', [])
         f = string.Formatter()
@@ -635,7 +617,7 @@ class TclModule(EnvModule):
                                                  nformat=self.naming_scheme,
                                                  cformat=item))
                         raise SystemExit('Module generation aborted.')
-                line = line.format(**naming_tokens)
+                line = self.spec.format(line)
             yield line
 
 # To construct an arbitrary hierarchy of module files:
@@ -672,24 +654,24 @@ class LmodModule(EnvModule):
 
     family_format = 'family("{family}")\n'
 
-    path_part_with_hash = join_path('{token.name}', '{token.version}-{token.hash}')  # NOQA: ignore=E501
     path_part_without_hash = join_path('{token.name}', '{token.version}')
-
-    # TODO : Check that extra tokens specified in configuration file
-    # TODO : are actually virtual dependencies
-    configuration = CONFIGURATION.get('lmod', {})
-    hierarchy_tokens = configuration.get('hierarchical_scheme', [])
-    hierarchy_tokens = hierarchy_tokens + ['mpi', 'compiler']
 
     def __init__(self, spec=None):
         super(LmodModule, self).__init__(spec)
+
+        self.configuration = CONFIGURATION.get('lmod', {})
+        hierarchy_tokens = self.configuration.get('hierarchical_scheme', [])
+        # TODO : Check that the extra hierarchy tokens specified in the
+        # TODO : configuration file are actually virtual dependencies
+        self.hierarchy_tokens = hierarchy_tokens + ['mpi', 'compiler']
+
         # Sets the root directory for this architecture
         self.modules_root = join_path(LmodModule.path, self.spec.architecture)
+
         # Retrieve core compilers
         self.core_compilers = self.configuration.get('core_compilers', [])
         # Keep track of the requirements that this package has in terms
-        # of virtual packages
-        # that participate in the hierarchical structure
+        # of virtual packages that participate in the hierarchical structure
         self.requires = {'compiler': self.spec.compiler}
         # For each virtual dependency in the hierarchy
         for x in self.hierarchy_tokens:
@@ -740,10 +722,10 @@ class LmodModule(EnvModule):
         # CompilerSpec does not have an hash
         if name == 'compiler':
             return self.path_part_without_hash.format(token=value)
-        # For virtual providers add a small part of the hash
-        # to distinguish among different variants in a directory hierarchy
-        value.hash = value.dag_hash(length=6)
-        return self.path_part_with_hash.format(token=value)
+        # In this case the hierarchy token refers to a virtual provider
+        path = self.path_part_without_hash.format(token=value)
+        path = '-'.join([path, value.dag_hash(length=7)])
+        return path
 
     @property
     def file_name(self):
@@ -756,7 +738,10 @@ class LmodModule(EnvModule):
 
     @property
     def use_name(self):
-        return self.token_to_path('', self.spec)
+        path_elements = [self.spec.format("${PACKAGE}/${VERSION}")]
+        # The remaining elements are filename suffixes
+        path_elements.extend(self._get_suffixes())
+        return '-'.join(path_elements)
 
     def modulepath_modifications(self):
         # What is available is what we require plus what we provide
