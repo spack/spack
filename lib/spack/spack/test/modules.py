@@ -28,6 +28,7 @@ from contextlib import contextmanager
 import StringIO
 import spack.modules
 import spack.spec
+import llnl.util.filesystem
 from spack.test.mock_packages_test import MockPackagesTest
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
@@ -104,6 +105,7 @@ class ModuleFileGeneratorTests(MockPackagesTest):
         self.configuration_instance = spack.modules.CONFIGURATION
         self.module_types_instance = spack.modules.module_types
         spack.modules.open = mock_open
+        spack.modules.mkdirp = lambda x: None
         # Make sure that a non-mocked configuration will trigger an error
         spack.modules.CONFIGURATION = None
         spack.modules.module_types = {self.factory.name: self.factory}
@@ -112,6 +114,7 @@ class ModuleFileGeneratorTests(MockPackagesTest):
         del spack.modules.open
         spack.modules.module_types = self.module_types_instance
         spack.modules.CONFIGURATION = self.configuration_instance
+        spack.modules.mkdirp = llnl.util.filesystem.mkdirp
         super(ModuleFileGeneratorTests, self).tearDown()
 
     def get_modulefile_content(self, spec):
@@ -119,6 +122,7 @@ class ModuleFileGeneratorTests(MockPackagesTest):
         generator = self.factory(spec)
         generator.write()
         content = FILE_REGISTRY[generator.file_name].split('\n')
+        generator.remove()
         return content
 
 

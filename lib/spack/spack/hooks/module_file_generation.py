@@ -26,10 +26,12 @@ import spack.modules
 
 
 def post_install(pkg):
-    dk = spack.modules.TclModule(pkg.spec)
-    dk.write()
+    for item, cls in spack.modules.module_types.iteritems():
+        generator = cls(pkg.spec)
+        generator.write()
 
 
 def post_uninstall(pkg):
-    dk = spack.modules.TclModule(pkg.spec)
-    dk.remove()
+    for item, cls in spack.modules.module_types.iteritems():
+        generator = cls(pkg.spec)
+        generator.remove()
