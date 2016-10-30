@@ -27,7 +27,7 @@ import argparse
 
 import spack.store
 import spack.modules
-from spack.util.pattern import Bunch
+from spack.util.pattern import Args
 __all__ = ['add_common_arguments']
 
 _arguments = {}
@@ -60,56 +60,26 @@ class ConstraintAction(argparse.Action):
             specs = [x for x in specs if x.satisfies(values, strict=True)]
         namespace.specs = specs
 
-parms = Bunch(
-    flags=('constraint',),
-    kwargs={
-        'nargs': '*',
-        'help': 'Constraint to select a subset of installed packages',
-        'action': ConstraintAction
-    })
-_arguments['constraint'] = parms
+_arguments['constraint'] = Args(
+    'constraint', nargs='*', action=ConstraintAction,
+    help='Constraint to select a subset of installed packages')
 
-parms = Bunch(
-    flags=('-m', '--module-type'),
-    kwargs={
-        'help': 'Type of module files',
-        'default': 'tcl',
-        'choices': spack.modules.module_types
-    })
-_arguments['module_type'] = parms
+_arguments['module_type'] = Args(
+    '-m', '--module-type', help='Type of module files',
+    default='tcl', choices=spack.modules.module_types)
 
-parms = Bunch(
-    flags=('-y', '--yes-to-all'),
-    kwargs={
-        'action': 'store_true',
-        'dest': 'yes_to_all',
-        'help': 'Assume "yes" is the answer to every confirmation request.'
-    })
-_arguments['yes_to_all'] = parms
+_arguments['yes_to_all'] = Args(
+    '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
+    help='Assume "yes" is the answer to every confirmation request.')
 
-parms = Bunch(
-    flags=('-r', '--dependencies'),
-    kwargs={
-        'action': 'store_true',
-        'dest': 'recurse_dependencies',
-        'help': 'Recursively traverse spec dependencies'
-    })
-_arguments['recurse_dependencies'] = parms
+_arguments['recurse_dependencies'] = Args(
+    '-r', '--dependencies', action='store_true', dest='recurse_dependencies',
+    help='Recursively traverse spec dependencies')
 
-parms = Bunch(
-    flags=('--clean',),
-    kwargs={
-        'action': 'store_false',
-        'dest': 'dirty',
-        'help': 'Clean environment before installing package.'
-    })
-_arguments['clean'] = parms
+_arguments['clean'] = Args(
+    '--clean', action='store_false', dest='dirty',
+    help='Clean environment before installing package.')
 
-parms = Bunch(
-    flags=('--dirty',),
-    kwargs={
-        'action': 'store_true',
-        'dest': 'dirty',
-        'help': 'Do NOT clean environment before installing.'
-    })
-_arguments['dirty'] = parms
+_arguments['dirty'] = Args(
+    '--dirty', action='store_true', dest='dirty',
+    help='Do NOT clean environment before installing.')
