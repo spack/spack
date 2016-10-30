@@ -53,6 +53,7 @@ or refer to the full manual below.
 
    configuration
    mirrors
+   module_file_support
    package_list
    command_index
 
