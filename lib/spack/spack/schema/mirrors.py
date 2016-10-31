@@ -35,7 +35,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        r'mirrors:?': {
+        r'mirrors': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,

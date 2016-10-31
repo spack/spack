@@ -266,7 +266,7 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            data = syaml.load(f)
+            data = _mark_overrides(syaml.load(f))
 
         if data:
             validate_section(data, schema)
@@ -286,6 +286,34 @@ def clear_config_caches():
        to be re-read upon the next request"""
     for scope in config_scopes.values():
         scope.clear()
+
+
+def override(string):
+    """Test if a spack YAML string is an override.
+
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `::`,
+    and if they do, their values completely replace lower-precedence
+    configs instead of merging into them.
+
+    """
+    return hasattr(string, 'override') and string.override
+
+
+def _mark_overrides(data):
+    if isinstance(data, list):
+        return [_mark_overrides(elt) for elt in data]
+
+    elif isinstance(data, dict):
+        marked = {}
+        for key, val in data.iteritems():
+            if isinstance(key, basestring) and key.endswith(':'):
+                key = syaml.syaml_str(key[:-1])
+                key.override = True
+            marked[key] = _mark_overrides(val)
+        return marked
+
+    else:
+        return data
 
 
 def _merge_yaml(dest, source):
@@ -320,9 +348,11 @@ def _merge_yaml(dest, source):
     # Source dict is merged into dest.
     elif they_are(dict):
         for sk, sv in source.iteritems():
-            if sk not in dest:
+            if override(sk) or sk not in dest:
+                # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.copy(sv)
             else:
+                # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
         return dest
 
@@ -371,18 +401,18 @@ def get_config(section, scope=None):
         if not data or not isinstance(data, dict):
             continue
 
-        # Allow complete override of site config with '<section>::'
-        override_key = section + ':'
-        if not (section in data or override_key in data):
+        if section not in data:
             tty.warn("Skipping bad configuration file: '%s'" % scope.path)
             continue
 
-        if override_key in data:
-            merged_section = data[override_key]
-        else:
-            merged_section = _merge_yaml(merged_section, data[section])
+        merged_section = _merge_yaml(merged_section, data)
 
-    return merged_section
+    # no config files -- empty config.
+    if section not in merged_section:
+        return {}
+
+    # take the top key off before returning.
+    return merged_section[section]
 
 
 def get_config_filename(scope, section):

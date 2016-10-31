@@ -78,7 +78,7 @@ test_names = [
     'url_substitution',
     'versions',
     'provider_index',
-    'yaml',
+    'spack_yaml',
     # This test needs to be last until global compiler cache is fixed.
     'cmd.test_compiler_cmd',
 ]
