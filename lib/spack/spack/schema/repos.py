@@ -35,7 +35,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        r'repos:?': {
+        r'repos': {
             'type': 'array',
             'default': [],
             'items': {

@@ -35,7 +35,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        'compilers:?': {  # optional colon for overriding site config.
+        'compilers': {
             'type': 'array',
             'items': {
                 'compiler': {

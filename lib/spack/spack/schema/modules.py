@@ -127,7 +127,7 @@ schema = {
         }
     },
     'patternProperties': {
-        r'modules:?': {
+        r'modules': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,

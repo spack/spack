@@ -49,7 +49,6 @@ schema = {
                 },
                 'module_roots': {
                     'type': 'object',
-                    'default': {},
                     'additionalProperties': False,
                     'properties': {
                         'tcl': {'type': 'string'},
@@ -59,18 +58,9 @@ schema = {
                 },
                 'source_cache': {'type': 'string'},
                 'misc_cache': {'type': 'string'},
-                'verify_ssl': {
-                    'type': 'boolean',
-                    'default': True,
-                },
-                'checksum': {
-                    'type': 'boolean',
-                    'default': True,
-                },
-                'dirty': {
-                    'type': 'boolean',
-                    'default': False,
-                },
+                'verify_ssl': {'type': 'boolean'},
+                'checksum': {'type': 'boolean'},
+                'dirty': {'type': 'boolean'},
             }
         },
     },

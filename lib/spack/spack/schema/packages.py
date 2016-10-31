@@ -35,7 +35,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        r'packages:?': {
+        r'packages': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,
