@@ -39,19 +39,31 @@ class SpackError(Exception):
         self.message = message
         self._long_message = long_message
 
+        # for exceptions raised from child build processes, we save the
+        # traceback as a string and print it in the parent.
+        self.traceback = None
+
     @property
     def long_message(self):
         return self._long_message
 
     def die(self):
+        # basic debug message
+        tty.error(self.message)
+        if self.long_message:
+            print(self.long_message)
+
+        # stack trace, etc. in debug mode.
         if spack.debug:
-            sys.excepthook(*sys.exc_info())
-            os._exit(1)
-        else:
-            tty.error(self.message)
-            if self.long_message:
-                print(self.long_message)
-            os._exit(1)
+            if self.traceback:
+                # exception came from a build child, already got
+                # traceback in child, so print it.
+                sys.stderr.write(self.traceback)
+            else:
+                # run parent exception hook.
+                sys.excepthook(*sys.exc_info())
+
+        os._exit(1)
 
     def __str__(self):
         msg = self.message

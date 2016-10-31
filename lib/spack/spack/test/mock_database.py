@@ -26,6 +26,7 @@ import shutil
 import tempfile
 
 import spack
+import spack.store
 from spack.spec import Spec
 from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
@@ -41,7 +42,7 @@ class MockDatabase(MockPackagesTest):
         pkg.do_install(fake=True)
 
     def _mock_remove(self, spec):
-        specs = spack.installed_db.query(spec)
+        specs = spack.store.db.query(spec)
         assert len(specs) == 1
         spec = specs[0]
         spec.package.do_uninstall(spec)
@@ -54,17 +55,17 @@ class MockDatabase(MockPackagesTest):
 
         # Make a fake install directory
         self.install_path = tempfile.mkdtemp()
-        self.spack_install_path = spack.install_path
-        spack.install_path = self.install_path
+        self.spack_install_path = spack.store.root
+        spack.store.root = self.install_path
 
         self.install_layout = YamlDirectoryLayout(self.install_path)
-        self.spack_install_layout = spack.install_layout
-        spack.install_layout = self.install_layout
+        self.spack_install_layout = spack.store.layout
+        spack.store.layout = self.install_layout
 
         # Make fake database and fake install directory.
-        self.installed_db = Database(self.install_path)
-        self.spack_installed_db = spack.installed_db
-        spack.installed_db = self.installed_db
+        self.install_db = Database(self.install_path)
+        self.spack_install_db = spack.store.db
+        spack.store.db = self.install_db
 
         # make a mock database with some packages installed note that
         # the ref count for dyninst here will be 3, as it's recycled
@@ -90,18 +91,18 @@ class MockDatabase(MockPackagesTest):
         #
 
         # Transaction used to avoid repeated writes.
-        with spack.installed_db.write_transaction():
+        with spack.store.db.write_transaction():
             self._mock_install('mpileaks ^mpich')
             self._mock_install('mpileaks ^mpich2')
             self._mock_install('mpileaks ^zmpi')
 
     def tearDown(self):
-        with spack.installed_db.write_transaction():
-            for spec in spack.installed_db.query():
+        with spack.store.db.write_transaction():
+            for spec in spack.store.db.query():
                 spec.package.do_uninstall(spec)
 
         super(MockDatabase, self).tearDown()
         shutil.rmtree(self.install_path)
-        spack.install_path = self.spack_install_path
-        spack.install_layout = self.spack_install_layout
-        spack.installed_db = self.spack_installed_db
+        spack.store.root = self.spack_install_path
+        spack.store.layout = self.spack_install_layout
+        spack.store.db = self.spack_install_db

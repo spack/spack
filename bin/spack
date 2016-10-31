@@ -62,7 +62,8 @@ orphaned_pyc_files = [
     os.path.join(SPACK_LIB_PATH, 'spack', 'platforms', 'cray_xc.pyc'),
     os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'package-list.pyc'),
     os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'test-install.pyc'),
-    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'url-parse.pyc')
+    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'url-parse.pyc'),
+    os.path.join(SPACK_LIB_PATH, 'spack', 'test', 'yaml.pyc')
 ]
 
 for pyc_file in orphaned_pyc_files:
