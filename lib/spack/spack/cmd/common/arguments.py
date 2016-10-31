@@ -46,19 +46,25 @@ class ConstraintAction(argparse.Action):
     """Constructs a list of specs based on a constraint given on the command line
 
     An instance of this class is supposed to be used as an argument action
-    in a parser. It will read a constraint and will attach a list of matching
-    specs to the namespace
+    in a parser. It will read a constraint and will attach a function to the
+    arguments that accepts optional keyword arguments.
+
+    To obtain the specs from a command the function must be called.
     """
-    qualifiers = {}
 
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
-        d = self.qualifiers.get(namespace.subparser_name, {})
-        specs = [s for s in spack.store.db.query(**d)]
-        values = ' '.join(values)
+        self.values = values
+        namespace.contraint = values
+        namespace.specs = self._specs
+
+    def _specs(self, **kwargs):
+        specs = [s for s in spack.store.db.query(**kwargs)]
+        values = ' '.join(self.values)
         if values:
             specs = [x for x in specs if x.satisfies(values, strict=True)]
-        namespace.specs = specs
+        return specs
+
 
 _arguments['constraint'] = Args(
     'constraint', nargs='*', action=ConstraintAction,

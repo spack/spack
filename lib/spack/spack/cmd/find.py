@@ -22,16 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
 import sys
 
 import llnl.util.tty as tty
-import spack
-import spack.spec
-import spack.store
-from llnl.util.lang import *
-from llnl.util.tty.colify import *
-from llnl.util.tty.color import *
+import spack.cmd.common.arguments as arguments
+
 from spack.cmd import display_specs
 
 description = "Find installed spack packages"
@@ -43,6 +38,7 @@ def setup_parser(subparser):
                               action='store_const',
                               dest='mode',
                               const='short',
+                              default='short',
                               help='Show only specs (default)')
     format_group.add_argument('-p', '--paths',
                               action='store_const',
@@ -68,12 +64,12 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='show_flags',
                            help='Show spec compiler flags.')
-
-    subparser.add_argument(
+    implicit_explicit = subparser.add_mutually_exclusive_group()
+    implicit_explicit.add_argument(
         '-e', '--explicit',
         action='store_true',
         help='Show only specs that were installed explicitly')
-    subparser.add_argument(
+    implicit_explicit.add_argument(
         '-E', '--implicit',
         action='store_true',
         help='Show only specs that were installed as dependencies')
@@ -100,17 +96,10 @@ def setup_parser(subparser):
                            action='store_true',
                            help='Show fully qualified package names.')
 
-    subparser.add_argument('query_specs',
-                           nargs=argparse.REMAINDER,
-                           help='optional specs to filter results')
+    arguments.add_common_arguments(subparser, ['constraint'])
 
 
 def query_arguments(args):
-    # Check arguments
-    if args.explicit and args.implicit:
-        tty.error('You can\'t pass -E and -e options simultaneously.')
-        raise SystemExit(1)
-
     # Set up query arguments.
     installed, known = True, any
     if args.only_missing:
@@ -129,35 +118,17 @@ def query_arguments(args):
 
 
 def find(parser, args):
-    # Filter out specs that don't exist.
-    query_specs = spack.cmd.parse_specs(args.query_specs)
-    query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.repo.exists(s.name) or not s.name)
-
-    if nonexisting:
-        msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
-        msg += ", ".join(s.name for s in nonexisting)
-        tty.msg(msg)
-
-        if not query_specs:
-            return
-
     q_args = query_arguments(args)
-
-    # Get all the specs the user asked for
+    query_specs = args.specs(**q_args)
+    # Exit early if no package matches the constraint
     if not query_specs:
-        specs = set(spack.store.db.query(**q_args))
-    else:
-        results = [set(spack.store.db.query(qs, **q_args))
-                   for qs in query_specs]
-        specs = set.union(*results)
-
-    if not args.mode:
-        args.mode = 'short'
-
+        msg = "No package matches the query: {0}".format(args.contraint)
+        tty.msg(msg)
+        return
+    # Display the result
     if sys.stdout.isatty():
-        tty.msg("%d installed packages." % len(specs))
-    display_specs(specs,
+        tty.msg("%d installed packages." % len(query_specs))
+    display_specs(query_specs,
                   mode=args.mode,
                   long=args.long,
                   very_long=args.very_long,
