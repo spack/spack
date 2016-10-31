@@ -51,10 +51,12 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import multiprocessing
 import os
-import shutil
 import sys
+import multiprocessing
+import traceback
+import inspect
+import shutil
 
 import llnl.util.tty as tty
 import spack
@@ -530,9 +532,29 @@ def fork(pkg, function, dirty=False):
         try:
             setup_package(pkg, dirty=dirty)
             function()
-            child_connection.send([None, None, None])
-        except Exception as e:
-            child_connection.send([type(e), e, None])
+            child_connection.send(None)
+        except:
+            # catch ANYTHING that goes wrong in the child process
+            exc_type, exc, tb = sys.exc_info()
+
+            # Need to unwind the traceback in the child because traceback
+            # objects can't be sent to the parent.
+            tb_string = traceback.format_exc()
+
+            # build up some context from the offending package so we can
+            # show that, too.
+            package_context = get_package_context(tb)
+
+            build_log = None
+            if hasattr(pkg, 'log_path'):
+                build_log = pkg.log_path
+
+            # make a pickleable exception to send to parent.
+            msg = "%s: %s" % (str(exc_type.__name__), str(exc))
+
+            ce = ChildError(msg, tb_string, build_log, package_context)
+            child_connection.send(ce)
+
         finally:
             child_connection.close()
 
@@ -542,11 +564,126 @@ def fork(pkg, function, dirty=False):
         args=(child_connection,)
     )
     p.start()
-    exc_type, exception, traceback = parent_connection.recv()
+    child_exc = parent_connection.recv()
     p.join()
-    if exception is not None:
-        raise exception
+
+    if child_exc is not None:
+        raise child_exc
+
+
+def get_package_context(traceback):
+    """Return some context for an error message when the build fails.
+
+    Args:
+    traceback -- A traceback from some exception raised during install.
+
+    This function inspects the stack to find where we failed in the
+    package file, and it adds detailed context to the long_message
+    from there.
+
+    """
+    def make_stack(tb, stack=None):
+        """Tracebacks come out of the system in caller -> callee order.  Return
+        an array in callee -> caller order so we can traverse it."""
+        if stack is None:
+            stack = []
+        if tb is not None:
+            make_stack(tb.tb_next, stack)
+            stack.append(tb)
+        return stack
+
+    stack = make_stack(traceback)
+
+    for tb in stack:
+        frame = tb.tb_frame
+        if 'self' in frame.f_locals:
+            # Find the first proper subclass of spack.PackageBase.
+            obj = frame.f_locals['self']
+            if isinstance(obj, spack.PackageBase):
+                break
+
+    # we found obj, the Package implementation we care about.
+    # point out the location in the install method where we failed.
+    lines = []
+    lines.append("%s:%d, in %s:" % (
+        inspect.getfile(frame.f_code), frame.f_lineno, frame.f_code.co_name
+    ))
+
+    # Build a message showing context in the install method.
+    sourcelines, start = inspect.getsourcelines(frame)
+    for i, line in enumerate(sourcelines):
+        mark = ">> " if start + i == frame.f_lineno else "   "
+        lines.append("  %s%-5d%s" % (mark, start + i, line.rstrip()))
+
+    return lines
 
 
 class InstallError(spack.error.SpackError):
-    """Raised when a package fails to install"""
+    """Raised by packages when a package fails to install"""
+
+
+class ChildError(spack.error.SpackError):
+    """Special exception class for wrapping exceptions from child processes
+       in Spack's build environment.
+
+    The main features of a ChildError are:
+
+    1. They're serializable, so when a child build fails, we can send one
+       of these to the parent and let the parent report what happened.
+
+    2. They have a ``traceback`` field containing a traceback generated
+       on the child immediately after failure.  Spack will print this on
+       failure in lieu of trying to run sys.excepthook on the parent
+       process, so users will see the correct stack trace from a child.
+
+    3. They also contain package_context, which shows source code context
+       in the Package implementation where the error happened.  To get
+       this, Spack searches the stack trace for the deepest frame where
+       ``self`` is in scope and is an instance of PackageBase.  This will
+       generally find a useful spot in the ``package.py`` file.
+
+    The long_message of a ChildError displays all this stuff to the user,
+    and SpackError handles displaying the special traceback if we're in
+    debug mode with spack -d.
+
+    """
+    def __init__(self, msg, traceback_string, build_log, package_context):
+        super(ChildError, self).__init__(msg)
+        self.traceback = traceback_string
+        self.build_log = build_log
+        self.package_context = package_context
+
+    @property
+    def long_message(self):
+        msg = self._long_message if self._long_message else ''
+
+        if self.package_context:
+            if msg:
+                msg += "\n\n"
+            msg += '\n'.join(self.package_context)
+
+        if msg:
+            msg += "\n\n"
+
+        if self.build_log:
+            msg += "See build log for details:\n"
+            msg += "  %s" % self.build_log
+
+        return msg
+
+    def __reduce__(self):
+        """__reduce__ is used to serialize (pickle) ChildErrors.
+
+        Return a function to reconstruct a ChildError, along with the
+        salient properties we'll need.
+        """
+        return _make_child_error, (
+            self.message,
+            self.traceback,
+            self.build_log,
+            self.package_context)
+
+
+def _make_child_error(msg, traceback, build_log, package_context):
+    """Used by __reduce__ in ChildError to reconstruct pickled errors."""
+    return ChildError(msg, traceback, build_log, package_context)

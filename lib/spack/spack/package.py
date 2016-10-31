@@ -65,7 +65,6 @@ from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError
 from spack.version import *
 
 """Allowed URL schemes for spack packages."""
@@ -95,6 +94,8 @@ class InstallPhase(object):
         # If instance is there the caller wants to execute the
         # install phase, thus return a properly set wrapper
         phase = getattr(instance, self.name)
+
+        print phase
 
         @functools.wraps(phase)
         def phase_wrapper(spec, prefix):
@@ -1213,60 +1214,57 @@ class PackageBase(object):
 
             self.stage.keep = keep_stage
 
-            try:
-                with contextlib.nested(self.stage, self._prefix_write_lock()):
-                    # Run the pre-install hook in the child process after
-                    # the directory is created.
-                    spack.hooks.pre_install(self)
-                    if fake:
-                        self.do_fake_install()
-                    else:
-                        # Do the real install in the source directory.
-                        self.stage.chdir_to_source()
-                        # Save the build environment in a file before building.
-                        env_path = join_path(os.getcwd(), 'spack-build.env')
-                        # Redirect I/O to a build log (and optionally to
-                        # the terminal)
-                        log_path = join_path(os.getcwd(), 'spack-build.out')
-                        # FIXME : refactor this assignment
-                        self.log_path = log_path
-                        self.env_path = env_path
-                        dump_environment(env_path)
-                        # Spawn a daemon that reads from a pipe and redirects
-                        # everything to log_path
-                        redirection_context = log_output(
-                            log_path, verbose,
-                            sys.stdout.isatty(),
-                            True
-                        )
-                        with redirection_context as log_redirection:
-                            for phase_name, phase in zip(self.phases, self._InstallPhase_phases):  # NOQA: ignore=E501
-                                tty.msg(
-                                    'Executing phase : \'{0}\''.format(phase_name)  # NOQA: ignore=E501
-                                )
-                                # Redirect stdout and stderr to daemon pipe
-                                with log_redirection:
-                                    getattr(self, phase)(
-                                        self.spec, self.prefix)
-                        self.log()
-                    # Run post install hooks before build stage is removed.
-                    spack.hooks.post_install(self)
+            with contextlib.nested(self.stage, self._prefix_write_lock()):
+                # Run the pre-install hook in the child process after
+                # the directory is created.
+                spack.hooks.pre_install(self)
+                if fake:
+                    self.do_fake_install()
+                else:
+                    # Do the real install in the source directory.
+                    self.stage.chdir_to_source()
 
-                # Stop timer.
-                self._total_time = time.time() - start_time
-                build_time = self._total_time - self._fetch_time
+                    # Save the build environment in a file before building.
+                    env_path = join_path(os.getcwd(), 'spack-build.env')
 
-                tty.msg("Successfully installed %s" % self.name,
-                        "Fetch: %s.  Build: %s.  Total: %s." %
-                        (_hms(self._fetch_time), _hms(build_time),
-                         _hms(self._total_time)))
-                print_pkg(self.prefix)
+                    # Redirect I/O to a build log (and optionally to
+                    # the terminal)
+                    log_path = join_path(os.getcwd(), 'spack-build.out')
 
-            except ProcessError as e:
-                # Annotate ProcessErrors with the location of
-                # the build log
-                e.build_log = log_path
-                raise e
+                    # FIXME : refactor this assignment
+                    self.log_path = log_path
+                    self.env_path = env_path
+                    dump_environment(env_path)
+
+                    # Spawn a daemon that reads from a pipe and redirects
+                    # everything to log_path
+                    redirection_context = log_output(
+                        log_path, verbose,
+                        sys.stdout.isatty(),
+                        True
+                    )
+                    with redirection_context as log_redirection:
+                        for phase_name, phase in zip(self.phases, self._InstallPhase_phases):  # NOQA: ignore=E501
+                            tty.msg(
+                                'Executing phase : \'{0}\''.format(phase_name)  # NOQA: ignore=E501
+                            )
+                            # Redirect stdout and stderr to daemon pipe
+                            with log_redirection:
+                                getattr(self, phase)(
+                                    self.spec, self.prefix)
+                    self.log()
+                # Run post install hooks before build stage is removed.
+                spack.hooks.post_install(self)
+
+            # Stop timer.
+            self._total_time = time.time() - start_time
+            build_time = self._total_time - self._fetch_time
+
+            tty.msg("Successfully installed %s" % self.name,
+                    "Fetch: %s.  Build: %s.  Total: %s." %
+                    (_hms(self._fetch_time), _hms(build_time),
+                     _hms(self._total_time)))
+            print_pkg(self.prefix)
 
         try:
             # Create the install prefix and fork the build process.
