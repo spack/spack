@@ -202,8 +202,27 @@ class Python(Package):
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         """Set PYTHONPATH to include site-packages dir for the
         extension and any other python extensions it depends on."""
-        pythonhome = self.prefix
-        spack_env.set('PYTHONHOME', pythonhome)
+        # The python executable for version 3 may be python3 or python
+        # See https://github.com/LLNL/spack/pull/2173#issuecomment-257170199
+        pythonex = 'python{0}'.format('3' if self.spec.satisfies('@3') else '')
+        if os.path.isdir(self.prefix.bin):
+            base = self.prefix.bin
+        else:
+            base = self.prefix
+        if not os.path.isfile(os.path.join(base, pythonex)):
+            if self.spec.satisfies('@3'):
+                python = Executable(os.path.join(base, 'python'))
+                version = python('-c', 'import sys; print(sys.version)',
+                                 output=str)
+                if version.startswith('3'):
+                    pythonex = 'python'
+                else:
+                    raise RuntimeError('Cannot locate python executable')
+            else:
+                raise RuntimeError('Cannot locate python executable')
+        python = Executable(os.path.join(base, pythonex))
+        prefix = python('-c', 'import sys; print(sys.prefix)', output=str)
+        spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
         for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
