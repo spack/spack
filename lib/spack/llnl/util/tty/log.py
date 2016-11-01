@@ -120,7 +120,14 @@ class log_output(object):
     daemon joining. If echo is True, also prints the output to stdout.
     """
 
-    def __init__(self, filename, echo=False, force_color=False, debug=False, input_stream=sys.stdin):  # NOQA: ignore=E501
+    def __init__(
+            self,
+            filename,
+            echo=False,
+            force_color=False,
+            debug=False,
+            input_stream=sys.stdin
+    ):
         self.filename = filename
         # Various output options
         self.echo = echo
