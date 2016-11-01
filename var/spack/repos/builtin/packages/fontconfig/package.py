@@ -28,14 +28,20 @@ from spack import *
 class Fontconfig(AutotoolsPackage):
     """Fontconfig customizing font access"""
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
-    url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz"
+    url = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz"
 
     version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
 
     depends_on('freetype')
     depends_on('libxml2')
     depends_on('pkg-config', type='build')
+    depends_on('font-util', type='build')
 
     def configure_args(self):
-        args = ["--enable-libxml2", "--disable-docs"]
+        args = ["--prefix=%s" % prefix,
+                "--enable-libxml2",
+                "--disable-docs",
+                "--with-default-fonts=%s" %
+                spec['font-util'].prefix + "/share/fonts",
+        ]
         return args
