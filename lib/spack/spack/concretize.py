@@ -386,9 +386,12 @@ class DefaultConcretizer(object):
 
         # copy concrete version into other_compiler
         try:
-            spec.compiler = next(c for c in matches if _proper_compiler_style(c, spec.architecture)).copy()
+            spec.compiler = next(
+                c for c in matches
+                if _proper_compiler_style(c, spec.architecture)).copy()
         except StopIteration:
-            raise UnavailableCompilerVersionError(spec.compiler, arch.platform_os)
+            raise UnavailableCompilerVersionError(spec.compiler,
+                                                  arch.platform_os)
         assert(spec.compiler.concrete)
         return True  # things changed.
 
