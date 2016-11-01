@@ -388,7 +388,7 @@ class DefaultConcretizer(object):
         index = 0
         while not _proper_compiler_style(matches[index], spec.architecture):
             index += 1
-            if index == len(matches) - 1:
+            if index == len(matches):
                 arch = spec.architecture
                 raise UnavailableCompilerVersionError(spec.compiler,
                                                       arch.platform_os)
