@@ -41,24 +41,16 @@ from spack import *
 
 
 class Nmap(AutotoolsPackage):
-    """Nmap a network utility"""
+    """Nmap ("Network Mapper") is a free and open source (license) 
+       utility for network discovery and security auditing. 
+       It also provides ncat an updated nc"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://nmap.org"
     url      = "https://nmap.org/dist/nmap-7.31.tar.bz2"
 
     version('7.31', 'f2f6660142a777862342a58cc54258ea')
     version('7.30', '8d86797d5c9e56de571f9630c0e6b5f8')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('m4', type='build')
-    # depends_on('autoconf', type='build')
-    # depends_on('automake', type='build')
-    # depends_on('libtool', type='build')
-    # depends_on('foo')
-
     def configure_args(self):
-       # FIXME: Add arguments other than --prefix
-       # FIXME: If not needed delete the function
        args = []
        return args
