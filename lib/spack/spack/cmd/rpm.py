@@ -97,6 +97,9 @@ when there is no other option""")
         '--rpm-source', dest='rpm_source', nargs=2,
         help="""<dst-path> <spec-path>: create source directory for RPM""")
     subparser.add_argument(
+        '--rpm-cache', dest='rpm_cache', nargs=2,
+        help="""<spack-origin> <spec-path>: set up spack cache for RPM""")
+    subparser.add_argument(
         'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
 
@@ -1003,6 +1006,9 @@ def rpm(parser, args):
     if args.rpm_source:
         dst_path, spec_path = args.rpm_source
         create_rpm_source(dst_path, spec_path)
+    elif args.rpm_cache:
+        spack_origin_path, spec_path = args.rpm_cache
+        populate_cache(spack_origin_path, spec_path)
     else:
         generate_rpms_transitive(args)
 
@@ -1031,17 +1037,26 @@ def create_rpm_source(dst_path, spec_file_path):
     for subdir in ['bin', 'lib', 'etc', 'var/spack/repos']:
         spack_move(subdir)
 
-    new_cache_path = os.path.join(spack_dst, 'var', 'spack', 'cache')
-    mkdirp(new_cache_path)
-    populate_cache([spack_spec], new_cache_path)
 
+def populate_cache(spack_origin_path, spec_file_path):
+    """This is invoked in the spack source directory that is created for the
+    rpm. It uses the origin spack repository cache as a mirror and attempts to
+    cache sources needed to build a package.
+    """
+    cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
+    cfg_store = ConfigStore(None, specsDir=cfg_dir)
+    _, spec_fname = os.path.split(spec_file_path)
+    rpm_name = spec_fname[:-5]
+    rpm_props = cfg_store.getRpmProperties(rpm_name)
 
-def populate_cache(specs, alt_cache_path):
+    specs = [rpm_props.pkgSpec]
+
     local_mirror = '_local_cache'
     mirrors = spack.config.get_config('mirrors')
     try:
-        mirrors[local_mirror] = spack.cache_path
-        spack.fetch_cache.root = alt_cache_path
+        mirrors[local_mirror] = 'file://' + os.path.abspath(
+            os.path.join(spack_origin_path, 'var', 'spack', 'cache'))
+        spack.config.update_config('mirrors', mirrors)
 
         for spec in specs:
             spec = spack.spec.Spec(spec)
@@ -1052,7 +1067,7 @@ def populate_cache(specs, alt_cache_path):
     finally:
         if local_mirror in mirrors:
             del mirrors[local_mirror]
-        spack.fetch_cache.root = spack.cache_path
+        spack.config.update_config('mirrors', mirrors)
 
 
 def default_spec():
