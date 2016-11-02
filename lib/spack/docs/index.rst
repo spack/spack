@@ -46,6 +46,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
+   module_file_tutorial
 
 .. toctree::
    :maxdepth: 2
