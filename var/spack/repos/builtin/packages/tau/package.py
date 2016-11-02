@@ -24,7 +24,7 @@
 ##############################################################################
 from spack import *
 import os
-import os.path
+import glob
 from llnl.util.filesystem import join_path
 
 
@@ -162,3 +162,9 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
+
+    def setup_environment(self, spack_env, run_env):
+        pattern = '%s/Makefile.*' % self.prefix.lib
+        files = glob.glob(pattern)
+        makefile = files[0] if files else ''
+        run_env.set('TAU_MAKEFILE', makefile)
