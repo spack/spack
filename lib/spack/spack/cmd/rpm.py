@@ -32,6 +32,7 @@ import re
 import shutil
 import yaml
 
+from llnl.util.filesystem import mkdirp
 import llnl.util.tty as tty
 
 import spack
@@ -92,6 +93,9 @@ types to infer whether a package should not be an rpm""")
         '--default-namespace', dest='defaultNamespace', nargs=2,
         help="""<name-scheme> <prefix-root>: use this name scheme for packages
 when there is no other option""")
+    subparser.add_argument(
+        '--rpm-source', dest='rpm_source', nargs=2,
+        help="""<dst-path> <spec-path>: create source directory for RPM""")
     subparser.add_argument(
         'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
@@ -996,7 +1000,59 @@ def expandOption(opt):
 
 
 def rpm(parser, args):
-    generate_rpms_transitive(args)
+    if args.rpm_source:
+        dst_path, spec_path = args.rpm_source
+        create_rpm_source(dst_path, spec_path)
+    else:
+        generate_rpms_transitive(args)
+
+
+def create_rpm_source(dst_path, spec_file_path):
+    cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
+    cfg_store = ConfigStore(None, specsDir=cfg_dir)
+    _, spec_fname = os.path.split(spec_file_path)
+    rpm_name = spec_fname[:-5]
+    rpm_props = cfg_store.getRpmProperties(rpm_name)
+    spec_props = cfg_store.getSpecProperties(rpm_name)
+    spack_spec = rpm_props.pkgSpec
+
+    source_name = "{0}-{1}".format(rpm_name, spec_props.VERSION)
+    spack_prefix = spack.spack_root  # Prefix for this spack install
+    spack_dst = os.path.join(dst_path, source_name)
+    mkdirp(spack_dst)
+    def spack_move(rel_path):
+        head, tail = os.path.split(subdir)
+        if head:
+            mkdirp(os.path.join(spack_dst, head))
+        dst = os.path.join(spack_dst, rel_path)
+
+        shutil.copytree(os.path.join(spack_prefix, subdir), dst)
+
+    for subdir in ['bin', 'lib', 'etc', 'var/spack/repos']:
+        spack_move(subdir)
+
+    new_cache_path = os.path.join(spack_dst, 'var', 'spack', 'cache')
+    mkdirp(new_cache_path)
+    populate_cache([spack_spec], new_cache_path)
+
+
+def populate_cache(specs, alt_cache_path):
+    local_mirror = '_local_cache'
+    mirrors = spack.config.get_config('mirrors')
+    try:
+        mirrors[local_mirror] = spack.cache_path
+        spack.fetch_cache.root = alt_cache_path
+
+        for spec in specs:
+            spec = spack.spec.Spec(spec)
+            spec._mark_concrete()
+            package = spack.repo.get(spec)
+            package.do_stage()
+            package.do_clean()
+    finally:
+        if local_mirror in mirrors:
+            del mirrors[local_mirror]
+        spack.fetch_cache.root = spack.cache_path
 
 
 def default_spec():
