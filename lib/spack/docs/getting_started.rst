@@ -414,7 +414,17 @@ provides no Fortran compilers.  The user is therefore forced to use a
 mixed toolchain: XCode-provided Clang for C/C++ and GNU ``gfortran`` for
 Fortran.
 
-In the simplest case, you can just edit ``compilers.yaml``:
+#. You need to make sure that command-line tools are installed. To that
+   end run ``$ xcode-select --install``.
+
+#. Run ``$ spack compiler find`` to locate Clang.
+
+#. There are different ways to get ``gfortran`` on macOS. For example, you can
+   install GCC with Spack (``$ spack install gcc``) or with Homebrew
+   (``$ brew install gcc``).
+
+#. The only thing left to do is to edit ``~/.spack/compilers.yaml`` to provide
+   the path to ``gfortran``:
 
    .. code-block:: yaml
 
@@ -425,6 +435,11 @@ In the simplest case, you can just edit ``compilers.yaml``:
             cxx: /usr/bin/clang++
             f77: /path/to/bin/gfortran
             fc: /path/to/bin/gfortran
+
+   If you used Spack to install GCC, you can get the installation prefix by
+   ``$ spack location -i gcc`` (this will only work if you have a single version
+   of GCC installed). Whereas for Homebrew, GCC is installed in
+   ``/usr/local/Cellar/gcc/x.y.z``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
