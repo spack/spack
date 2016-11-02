@@ -32,6 +32,8 @@ class Texlive(Package):
 
     homepage = "http://www.tug.org/texlive"
 
+    # pull from specific site because the texlive mirrors to not all
+    # update in synchrony.
     version('live', '6d171d370f3a2f2b936b9b0c87e8d0fe',
             url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
 
