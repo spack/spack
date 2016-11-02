@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import shutil
 
 
-class Libiconv(Package):
+class Libiconv(AutotoolsPackage):
     """GNU libiconv provides an implementation of the iconv() function
     and the iconv program for character set conversion."""
 
@@ -38,10 +39,10 @@ class Libiconv(Package):
     # of C11 any more and thus might not exist.
     patch("gets.patch")
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-extra-encodings')
+    def configure_args(self):
+        args = ['--enable-extra-encodings']
 
-        make()
-        make('check')
-        make('install')
+        # A hack to patch config.guess in the libcharset sub directory
+        shutil.copyfile('./build-aux/config.guess',
+                        'libcharset/build-aux/config.guess')
+        return args

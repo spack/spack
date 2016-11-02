@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPygtk(Package):
+class PyPygtk(AutotoolsPackage):
     """bindings for the Gtk in Python"""
     homepage = "http://www.pygtk.org/"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
@@ -41,6 +41,4 @@ class PyPygtk(Package):
     depends_on('py-py2cairo')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install", parallel=False)
+        make('install', parallel=False)
