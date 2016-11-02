@@ -148,7 +148,6 @@ class Tau(Package):
                     os.symlink(join_path(subdir, d), dest)
 
     def setup_environment(self, spack_env, run_env):
-        pattern = '%s/Makefile.*' % self.prefix.lib
+        pattern = join_path(self.prefix.lib, 'Makefile.*')
         files = glob.glob(pattern)
-        makefile = files[0] if files else ''
-        run_env.set('TAU_MAKEFILE', makefile)
+        run_env.set('TAU_MAKEFILE', files[0])
