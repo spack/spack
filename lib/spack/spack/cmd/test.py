@@ -92,6 +92,11 @@ def test(parser, args, unknown_args):
         pytest.main(['-h'])
         return
 
+    # Setup other command subparsers to guarantee execution
+    for cmd in spack.cmd.commands:
+        if cmd != 'test':
+            spack.cmd.setup_subparser(parser, cmd)
+
     # pytest.ini lives in the root of the sapck repository.
     with working_dir(spack.prefix):
         # --list and --long-list print the test output better.

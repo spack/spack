@@ -64,6 +64,15 @@ for file in os.listdir(command_path):
 commands.sort()
 
 
+def setup_subparser(parser, command):
+    """Setup arguments for sub-command"""
+    sp = parser.get_subparser(command)
+    sp.add_argument('-h', '--help', action='help',
+                    help="show this help message and exit")
+    spack.cmd.get_module(command).setup_parser(sp)
+    return sp
+
+
 def remove_options(parser, *options):
     """Remove some options from a parser."""
     for option in options:
@@ -205,7 +214,7 @@ def display_specs(specs, **kwargs):
 
             for abbrv, spec in zip(abbreviated, specs):
                 prefix = gray_hash(spec, hlen) if hashes else ''
-                print prefix + (format % (abbrv, spec.prefix))
+                print(prefix + (format % (abbrv, spec.prefix)))
 
         elif mode == 'deps':
             for spec in specs:

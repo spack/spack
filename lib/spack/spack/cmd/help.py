@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import spack
+
 description = "get help on spack and its commands"
 
 
@@ -32,6 +34,8 @@ def setup_parser(subparser):
 
 def help(parser, args):
     if args.help_command:
+        spack.cmd.setup_subparser(parser, args.help_command)
+
         parser.parse_args([args.help_command, '-h'])
     else:
         parser.print_help()

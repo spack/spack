@@ -156,14 +156,24 @@ class ConfigScope(object):
        Each file is a config "section" (e.g., mirrors, compilers, etc).
     """
 
-    def __init__(self, name, path):
+    def __init__(self, name, path, required=False):
+        global config_scopes
+
+        if required:
+            if not os.path.exists(path):
+                raise ConfigError("Directory '%s' does not exist" % path)
+            elif not os.path.isdir(path):
+                raise ConfigError("'%s' is not a directory" % path)
+
+        if name in config_scopes:
+            raise ConfigDuplicateScopeError("Scope %s already exists" % name)
+
         self.name = name           # scope name.
         self.path = path           # path to directory containing configs.
         self.sections = {}         # sections read from config files.
 
         # Register in a dict of all ConfigScopes
         # TODO: make this cleaner.  Mocking up for testing is brittle.
-        global config_scopes
         config_scopes[name] = self
 
     def get_section_filename(self, section):
@@ -464,6 +474,10 @@ class ConfigError(SpackError):
 
 
 class ConfigFileError(ConfigError):
+    pass
+
+
+class ConfigDuplicateScopeError(ConfigError):
     pass
 
 

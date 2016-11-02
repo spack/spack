@@ -45,7 +45,7 @@ Configuration Scopes
 -------------------------
 
 Spack pulls configuration data from files in several directories. There
-are three configuration scopes.  From lowest to highest:
+are four configuration scopes.  From lowest to highest:
 
 1. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
    the "factory" settings. Users should generally not modify the settings
@@ -59,7 +59,12 @@ are three configuration scopes.  From lowest to highest:
    a common spack instance).
 
 3. **user**: Stored in the home directory: ``~/.spack/``. These settings
-   affect all instances of Spack and take the highest precedence.
+   affect all instances of Spack and normally take the highest precedence.
+
+4. **custom**: Directories dynamically added to Spack using the global
+   argument, ``--config``. These settings only affect the current invocation
+   of Spack, but supersede all permenant settings. If multiple directories
+   are specified the latter arguments take higher precedence.
 
 Each configuration directory may contain several configuration files,
 such as ``config.yaml``, ``compilers.yaml``, or ``mirrors.yaml``.  When
@@ -71,13 +76,129 @@ etc.) take a ``--scope=<name>`` parameter that you can use to control
 which scope is modified.  By default they modify the highest-precedence
 scope.
 
+.. _custom-scopes:
+
+-------------------------
+Custom scopes
+-------------------------
+
+As well as the permanent configuration scopes it is also possible to
+temporarily add directories just for the current invocation of
+Spack. These can be used to specify alternative package preferences,
+module layouts, etc. They can also be used to pick-up package
+preferences distributed alongside the Spack recipe, for example to
+install software using dependency versions matching those from a
+reference system. Directories are added using the global argument
+``--config`` which takes either a directory path, or a combination of
+a package name and a subdirectory, for example,
+
+.. code-block:: console
+
+   $ spack --config path/to/config/dir install myapp
+   ==> Adding configuration scope 'config/dir'
+   ...
+   $ spack --config myapplication:dir install myapp
+   ==> Adding configuration scope 'application:dir'
+   ...
+
+The configuration scope name is based on the supplied argument and can
+be used in subcommands that take a ``--scope`` argument. The user may
+place configuration files inside that tree as needed (eg,
+``packages.yaml``).  If multiple scopes are provided:
+
+1. Each one must be preceded with the ``--config`` flag.
+2. They must be ordered from lowest to highest precedence.
+3. Their directory paths must end in a different leaf name.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example: Simultaneous Release and Development
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For example, suppose that one needs to support simultaneous building
+of release and development versions of a `mypackage`, where
+`mypackage` -> `A` -> `B`.  The following files could be created:
+
+.. code-block:: yaml
+
+   ~/myscopes/release/packages.yaml
+   --------------------------------
+   packages:
+       mypackage:
+           version: [1.7]
+       A:
+           version: [2.3]
+       B:
+           version: [0.8]
+
+.. code-block:: yaml
+
+   ~/myscopes/develop/packages.yaml
+   --------------------------------
+   packages:
+       mypackage:
+           version: [develop]
+       A:
+           version: [develop]
+       B:
+           version: [develop]
+
+For convenience, the preferred configuration scope could then be set
+in Bash aliases:
+
+.. code-block:: console
+
+   alias spack-release='spack --config ~/myscopes/release'
+   alias spack-develop='spack --config ~/myscopes/develop'
+
+.. note::
+
+   This example would be difficult to handle without command-line
+   scopes: concretization of ``mypackage ^A@develop ^B@develop`` will
+   typically fail because ``mypackage`` does not depend (directly) on
+   ``B``.  The situation is worse if ``A`` is a virtual package.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example: Incompatible Projects
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Suppose that one needs to build two software packages, `packagea` and
+`packageb`.  PackageA is Python2-based and PackageB is Python3-based.
+Moreover, PackageA only builds with OpenMPI and PackageB only builds
+with MPICH.  This problem can be solved elegantly by creating
+different configuration scopes for use with Package A and B:
+
+.. code-block:: yaml
+
+   ~/myscopes/packgea/packages.yaml
+   --------------------------------
+   packages:
+       python:
+           version: [2.7.11]
+       all:
+           providers:
+               mpi: [openmpi]
+
+.. code-block:: yaml
+
+   ~/myscopes/packageb/packages.yaml
+   --------------------------------
+   packages:
+       python:
+           version: [3.5.2]
+       all:
+           providers:
+               mpi: [mpich]
+
+
 .. _platform-scopes:
 
 -------------------------
 Platform-specific scopes
 -------------------------
 
-For each scope above, there can *also* be platform-specific settings.
+For each permanent scope above, there can *also* be platform-specific settings.
 For example, on Blue Gene/Q machines, Spack needs to know the location of
 cross-compilers for the compute nodes.  This configuration is in
 ``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence over
@@ -91,6 +212,8 @@ full scope precedence is:
 4. ``site/<platform>``
 5. ``user``
 6. ``user/<platform>``
+7. ``custom1``
+8. ``custom2`` etc.
 
 You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``.
@@ -251,3 +374,18 @@ The merged configuration would look like this:
        - /lustre-scratch/$user
        - ~/mystage
    $ _
+
+
+-----------------------
+Resulting Configuration
+-----------------------
+
+With so many scopes overriding each other, Spack provides a way to
+view the final "merged" version of any configuration file, with the
+``spack config get`` command.  For example, the following shows the
+resulting ``packages.yaml`` file, taking into account one command-line
+scope:
+
+.. code-block:: console
+
+   $ spack --config ~/myscopes/develop config get packages

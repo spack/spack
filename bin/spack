@@ -111,6 +111,8 @@ parser.add_argument('-m', '--mock', action='store_true',
                     help="use mock packages instead of real ones")
 parser.add_argument('-p', '--profile', action='store_true',
                     help="profile execution using cProfile")
+parser.add_argument('-c', '--config', action='append', default=[], metavar='<package:>dir',
+                    help="Add custom configuration directory dir, optionally relative to package")
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="print additional output during builds")
 parser.add_argument('-s', '--stacktrace', action='store_true',
@@ -127,9 +129,7 @@ import spack.cmd
 for cmd in spack.cmd.commands:
     module = spack.cmd.get_module(cmd)
     cmd_name = cmd.replace('_', '-')
-    subparser = subparsers.add_parser(cmd_name, help=module.description)
-    module.setup_parser(subparser)
-
+    subparsers.add_parser(cmd_name, help=module.description, add_help=False)
 
 def _main(args, unknown_args):
     # Set up environment based on args.
@@ -155,7 +155,32 @@ def _main(args, unknown_args):
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.insecure = True
 
+    for config_arg in args.config:
+        if ':' in config_arg:
+            package, path = config_arg.split(':', 1)
+            path = spack.join_path(
+                spack.repo.dirname_for_package_name(package),
+                path)
+            name = "{0}:{1}".format(package, os.path.split(path)[1])
+        else:
+            path = os.path.normpath(config_arg)
+            name = os.path.split(path)[1]
+
+        try:
+            spack.config.ConfigScope(name, path, required=True)
+        except spack.config.ConfigError as e:
+            tty.die(e)
+        tty.info("Added configuration scope '%s'" % (name,))
+        tty.debug("Config scope '%s'; %s" % (name,path))
+
+    if args.config:
+        # Should refresh repos and packages
+        spack.repo = spack.repository.RepoPath()
+        sys.meta_path.append(spack.repo)
+
     # Try to load the particular command asked for and run it
+    sp = spack.cmd.setup_subparser(parser, args.command)
+    args, unknown_args = sp.parse_known_args(unknown_args, args)
     command = spack.cmd.get_command(args.command.replace('-', '_'))
 
     # Allow commands to inject an optional argument and get unknown args
