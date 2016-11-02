@@ -426,58 +426,6 @@ In the simplest case, you can just edit ``compilers.yaml``:
             f77: /path/to/bin/gfortran
             fc: /path/to/bin/gfortran
 
-.. note::
-
-   If you are building packages that are sensitive to the compiler's
-   name, you may also need to slightly modify a few more files so that
-   Spack uses compiler names the build system will recognize.
-
-   Following are instructions on how to hack together
-   ``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
-   should work for other mixed toolchain needs.
-
-   Better support for mixed compiler toolchains is planned in forthcoming
-   Spack versions.
-
-   #. Create a symlink inside ``clang`` environment:
-
-      .. code-block:: console
-
-         $ cd $SPACK_ROOT/lib/spack/env/clang
-         $ ln -s ../cc gfortran
-
-
-   #. Patch ``clang`` compiler file:
-
-      .. code-block:: diff
-
-         $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
-         index e406d86..cf8fd01 100644
-         --- a/lib/spack/spack/compilers/clang.py
-         +++ b/lib/spack/spack/compilers/clang.py
-         @@ -35,17 +35,17 @@ class Clang(Compiler):
-              cxx_names = ['clang++']
-
-              # Subclasses use possible names of Fortran 77 compiler
-         -    f77_names = []
-         +    f77_names = ['gfortran']
-
-              # Subclasses use possible names of Fortran 90 compiler
-         -    fc_names = []
-         +    fc_names = ['gfortran']
-
-              # Named wrapper links within spack.build_env_path
-              link_paths = { 'cc'  : 'clang/clang',
-                             'cxx' : 'clang/clang++',
-                             # Use default wrappers for fortran, in case provided in compilers.yaml
-         -                   'f77' : 'f77',
-         -                   'fc'  : 'f90' }
-         +                   'f77' : 'clang/gfortran',
-         +                   'fc'  : 'clang/gfortran' }
-
-              @classmethod
-              def default_version(self, comp):
-
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
 ^^^^^^^^^^^^^^^^^^^^^
