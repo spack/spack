@@ -101,7 +101,9 @@ def setup_parser(subparser):
         '-k', '--keep-temp', action='store_true',
         help="Do not delete temporary directory where flake8 runs. "
              "Use for debugging, to see filtered files.")
-
+    subparser.add_argument(
+        '-r', '--root-relative', action='store_true', default=False,
+        help="print root-relative paths (default is cwd-relative)")
     subparser.add_argument(
         'files', nargs=argparse.REMAINDER, help="specific files to check")
 
@@ -144,7 +146,20 @@ def flake8(parser, args):
 
         # run flake8 on the temporary tree.
         with working_dir(temp):
-            flake8('--format', 'pylint', *file_list, fail_on_error=False)
+            output = flake8('--format', 'pylint', *file_list,
+                            fail_on_error=False, output=str)
+
+        if args.root_relative:
+            # print results relative to repo root.
+            print output
+        else:
+            # print results relative to current working directory
+            def cwd_relative(path):
+                return '%s: [' % os.path.relpath(
+                    os.path.join(spack.prefix, path.group(1)), os.getcwd())
+
+            for line in output.split('\n'):
+                print re.sub(r'^(.*): \[', cwd_relative, line)
 
         if flake8.returncode != 0:
             print "Flake8 found errors."
