@@ -27,6 +27,7 @@ import os
 import sys
 import shutil
 import tempfile
+import argparse
 
 from llnl.util.filesystem import *
 
@@ -75,17 +76,18 @@ exemptions = dict((re.compile(file_pattern),
 
 def filter_file(source, dest):
     """Filter a single file through all the patterns in exemptions."""
-    for file_pattern, errors in exemptions.items():
-        if not file_pattern.search(source):
-            continue
+    with open(source) as infile:
+        parent = os.path.dirname(dest)
+        mkdirp(parent)
 
-        with open(source) as infile:
-            parent = os.path.dirname(dest)
-            mkdirp(parent)
+        with open(dest, 'w') as outfile:
+            for file_pattern, errors in exemptions.items():
+                if not file_pattern.search(source):
+                    continue
 
-            with open(dest, 'w') as outfile:
                 for line in infile:
                     line = line.rstrip()
+
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
@@ -100,6 +102,9 @@ def setup_parser(subparser):
         help="Do not delete temporary directory where flake8 runs. "
              "Use for debugging, to see filtered files.")
 
+    subparser.add_argument(
+        'files', nargs=argparse.REMAINDER, help="specific files to check")
+
 
 def flake8(parser, args):
     # Just use this to check for flake8 -- we actually execute it with Popen.
@@ -108,28 +113,38 @@ def flake8(parser, args):
 
     temp = tempfile.mkdtemp()
     try:
+        file_list = args.files
+        if file_list:
+            def prefix_relative(path):
+                return os.path.relpath(
+                    os.path.abspath(os.path.realpath(path)), spack.prefix)
+
+            file_list = [prefix_relative(p) for p in file_list]
+
         with working_dir(spack.prefix):
-            changed = changed_files('*.py', output=str)
-            changed = [x for x in changed.split('\n') if x]
+            if not file_list:
+                file_list = changed_files('*.py', output=str)
+                file_list = [x for x in file_list.split('\n') if x]
+
             shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
         print '======================================================='
         print 'flake8: running flake8 code checks on spack.'
         print
         print 'Modified files:'
-        for filename in changed:
+        for filename in file_list:
             print "  %s" % filename.strip()
         print('=======================================================')
 
         # filter files into a temporary directory with exemptions added.
-        for filename in changed:
+        for filename in file_list:
             src_path = os.path.join(spack.prefix, filename)
             dest_path = os.path.join(temp, filename)
             filter_file(src_path, dest_path)
 
         # run flake8 on the temporary tree.
         with working_dir(temp):
-            flake8('--format', 'pylint', *changed, fail_on_error=False)
+            flake8('--format', 'pylint', *file_list, fail_on_error=False)
 
         if flake8.returncode != 0:
             print "Flake8 found errors."
