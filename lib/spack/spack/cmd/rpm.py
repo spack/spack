@@ -1018,14 +1018,13 @@ def create_rpm_source(dst_path, spec_file_path):
     cfg_store = ConfigStore(None, specsDir=cfg_dir)
     _, spec_fname = os.path.split(spec_file_path)
     rpm_name = spec_fname[:-5]
-    rpm_props = cfg_store.getRpmProperties(rpm_name)
     spec_props = cfg_store.getSpecProperties(rpm_name)
-    spack_spec = rpm_props.pkgSpec
 
     source_name = "{0}-{1}".format(rpm_name, spec_props.VERSION)
     spack_prefix = spack.spack_root  # Prefix for this spack install
     spack_dst = os.path.join(dst_path, source_name)
     mkdirp(spack_dst)
+
     def spack_move(rel_path):
         head, tail = os.path.split(subdir)
         if head:
