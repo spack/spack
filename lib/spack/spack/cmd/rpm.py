@@ -45,34 +45,34 @@ description = "Create RPM specs and sources for RPM installs"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '--output-dir', dest='outputDir', help="rpmbuild SOURCES directory")
+        '--output-dir', dest='output_dir', help="rpmbuild SOURCES directory")
     subparser.add_argument(
-        '--universal-subspace', dest='universalSubspace',
+        '--universal-subspace', dest='universal_subspace',
         help="choose the subspace to use for all packages (where available)")
     subparser.add_argument(
-        '--build-deps', dest='buildDeps',
+        '--build-deps', dest='build_deps',
         help="comma-separated packages which should not become rpms")
     subparser.add_argument(
-        '--ignore-deps', dest='ignoreDeps',
+        '--ignore-deps', dest='ignore_deps',
         help="comma-separated packages which should not be managed by Spack")
     subparser.add_argument(
-        '--specs-dir', dest='specsDir',
+        '--specs-dir', dest='specs_dir',
         help="parse rpm config from spec files in this directory")
     subparser.add_argument(
-        '--pkgs-dir', dest='pkgsDir',
+        '--pkgs-dir', dest='pkgs_dir',
         help="spec templates/filters are stored here")
     subparser.add_argument(
-        '--rpm-db-from-spec', dest='rpmDbSpec',
+        '--rpm-db-from-spec', dest='rpm_db_spec',
         help="""create rpm db from a given spec (default is to use all specs
 in --specs-dir)""")
     subparser.add_argument(
-        '--complete-specs', dest='completeSpecs', action="store_true",
+        '--complete-specs', dest='complete_specs', action="store_true",
         help="create specs from existing properties files")
     subparser.add_argument(
-        '--properties-only', dest='propertiesOnly', action="store_true",
+        '--properties-only', dest='properties_only', action="store_true",
         help="only create properties files, do not create specs")
     subparser.add_argument(
-        '--get-namespace-from-specs', dest='getNamespaceFromSpecs',
+        '--get-namespace-from-specs', dest='get_namespace_from_specs',
         action="store_true",
         help="get package namespaces from property files in spec directories")
     subparser.add_argument(
@@ -80,17 +80,17 @@ in --specs-dir)""")
         help="""create properties files from spec for rpm which has (up to now)
 not been managed with Spack""")
     subparser.add_argument(
-        '--infer-build-deps', dest='inferBuildDeps', action="store_true",
+        '--infer-build-deps', dest='infer_build_deps', action="store_true",
         help="""<RPM name> <package name> <root dir>: use package dependency
 types to infer whether a package should not be an rpm""")
     subparser.add_argument(
-        '--infer-ignore-deps', dest='inferIgnoreDeps', action="store_true",
+        '--infer-ignore-deps', dest='infer_ignore_deps', action="store_true",
         help="track packages maintained by spack but ignored by dependencies")
     subparser.add_argument(
-        '--no-redirect', dest='noRedirect', action="store_true",
+        '--no-redirect', dest='no_redirect', action="store_true",
         help="Spack installation in spec file will not redirect")
     subparser.add_argument(
-        '--default-namespace', dest='defaultNamespace', nargs=2,
+        '--default-namespace', dest='default_namespace', nargs=2,
         help="""<name-scheme> <prefix-root>: use this name scheme for packages
 when there is no other option""")
     subparser.add_argument(
@@ -142,53 +142,53 @@ class RpmTemplateVars(Properties):
         super(RpmTemplateVars, self).__init__(
             RpmTemplateVars.PROPERTIES, **kwargs)
 
-    def toJson(self):
-        jsonData = self.to_dict(CHANGE_LOG=list(self.CHANGE_LOG))
-        return json.dumps(jsonData, sort_keys=True, indent=4)
+    def to_json(self):
+        json_data = self.to_dict(CHANGE_LOG=list(self.CHANGE_LOG))
+        return json.dumps(json_data, sort_keys=True, indent=4)
 
     @staticmethod
-    def fromJson(string):
-        jsonData = json.loads(string)
+    def from_json(string):
+        json_data = json.loads(string)
         for prop, initializer in (
                 RpmTemplateVars.DEFAULT_PROPERTIES.iteritems()):
-            if prop not in jsonData:
-                jsonData[prop] = initializer()
-        return RpmTemplateVars(**jsonData)
+            if prop not in json_data:
+                json_data[prop] = initializer()
+        return RpmTemplateVars(**json_data)
 
 
-def fill_spec_template(specVars, specTemplate):
+def fill_spec_template(spec_vars, spec_template):
     requires = list(itertools.chain(
-        specVars.REQUIRES, specVars.SYSTEM_REQUIRES))
+        spec_vars.REQUIRES, spec_vars.SYSTEM_REQUIRES))
     if requires:
         REQUIRES = 'Requires: ' + ' '.join(requires)
     else:
         REQUIRES = ''
 
     build_requires = list(itertools.chain(
-        specVars.BUILD_REQUIRES, specVars.SYSTEM_BUILD_REQUIRES))
+        spec_vars.BUILD_REQUIRES, spec_vars.SYSTEM_BUILD_REQUIRES))
     if build_requires:
         BUILD_REQUIRES = 'BuildRequires: ' + ' '.join(build_requires)
     else:
         BUILD_REQUIRES = ''
 
-    if specVars.PROVIDES:
-        PROVIDES = 'Provides: ' + specVars.PROVIDES
+    if spec_vars.PROVIDES:
+        PROVIDES = 'Provides: ' + spec_vars.PROVIDES
     else:
         PROVIDES = ''
 
-    logEntries = list()
-    for date, author, releaseTag, comment in specVars.CHANGE_LOG:
-        logEntries.append("* {0} {1} {2}\n- {3}".format(
-            date, author, releaseTag, comment))
-    CHANGE_LOG = '\n\n'.join(logEntries)
+    log_entries = list()
+    for date, author, release_tag, comment in spec_vars.CHANGE_LOG:
+        log_entries.append("* {0} {1} {2}\n- {3}".format(
+            date, author, release_tag, comment))
+    CHANGE_LOG = '\n\n'.join(log_entries)
 
-    RELEASE = str(specVars.RELEASE)
+    RELEASE = str(spec_vars.RELEASE)
 
-    templateVars = specVars.to_dict(
+    template_vars = spec_vars.to_dict(
         REQUIRES=REQUIRES, BUILD_REQUIRES=BUILD_REQUIRES, PROVIDES=PROVIDES,
         CHANGE_LOG=CHANGE_LOG, RELEASE=RELEASE)
 
-    return specTemplate.format(**templateVars)
+    return spec_template.format(**template_vars)
 
 
 class RpmSpec(object):
@@ -197,35 +197,35 @@ class RpmSpec(object):
     track of information that is stored in a .spec file, updates the info, and
     generates completely new files as .spec updates for an rpm package.
     """
-    def __init__(self, rpmName, summary=None, license=None, release=None,
-                 changeLog=None, version=None, group=None, systemRequires=None,
-                 systemBuildRequires=None):
-        self.name = rpmName
+    def __init__(self, rpm_name, summary=None, license=None, release=None,
+                 change_log=None, version=None, group=None,
+                 system_requires=None, system_build_requires=None):
+        self.name = rpm_name
         # The provided change log is expected to be ordered, with the oldest
         # entry first
-        self.changeLog = changeLog or list()
+        self.change_log = change_log or list()
         self.release = release
         self.version = version or '1.0'
         self.group = group or 'Spack'
         self.summary = summary
         self.license = license
-        self.systemRequires = systemRequires or list()
-        self.systemBuildRequires = systemBuildRequires or list()
+        self.system_requires = system_requires or list()
+        self.system_build_requires = system_build_requires or list()
 
     @staticmethod
-    def new(rpmName, pkgSpec):
-        summary = re.sub("\s+", " ", pkgSpec.package.__doc__)
-        license = pkgSpec.package.license
-        return RpmSpec(rpmName, summary=summary, license=license)
+    def new(rpm_name, pkg_spec):
+        summary = re.sub("\s+", " ", pkg_spec.package.__doc__)
+        license = pkg_spec.package.license
+        return RpmSpec(rpm_name, summary=summary, license=license)
 
     def _add_log_entry(self, author, comment):
         # Time format: weekday, month, day, year
         time = datetime.datetime.now().strftime("%a %b %d %Y")
-        releaseTag = "{0}-{1}".format(str(self.version), str(self.release))
-        self.changeLog.append((time, author, releaseTag, comment))
+        release_tag = "{0}-{1}".format(str(self.version), str(self.release))
+        self.change_log.append((time, author, release_tag, comment))
 
-    def new_spec_variables(self, deps, install, installPath, author=None,
-                           comment=None, providesName=None):
+    def new_spec_variables(self, deps, install, install_path, author=None,
+                           comment=None, provides_name=None):
         if not author:
             author = "Spack"
         if not comment:
@@ -239,15 +239,15 @@ class RpmSpec(object):
         license = self.license or 'PLACEHOLDER'
         # When reading a spec file top-to-bottom, the newest entry should
         # appear first in the changelog
-        changeLog = list(reversed(self.changeLog))
+        change_log = list(reversed(self.change_log))
 
         return RpmTemplateVars(
-            RPM_NAME=self.name, PROVIDES=providesName,
+            RPM_NAME=self.name, PROVIDES=provides_name,
             RELEASE=self.release, REQUIRES=deps, BUILD_REQUIRES=deps,
-            INSTALL=install, PACKAGE_PATH=installPath, CHANGE_LOG=changeLog,
+            INSTALL=install, PACKAGE_PATH=install_path, CHANGE_LOG=change_log,
             SUMMARY=self.summary, LICENSE=license, VERSION=self.version,
-            GROUP=self.group, SYSTEM_REQUIRES=self.systemRequires,
-            SYSTEM_BUILD_REQUIRES=self.systemBuildRequires)
+            GROUP=self.group, SYSTEM_REQUIRES=self.system_requires,
+            SYSTEM_BUILD_REQUIRES=self.system_build_requires)
 
 
 class RpmSpecParser(object):
@@ -256,10 +256,10 @@ class RpmSpecParser(object):
         'summary'])
 
     @staticmethod
-    def parse(specContents):
+    def parse(spec_contents):
         tags = {}
         clog = None
-        for i, line in enumerate(specContents):
+        for i, line in enumerate(spec_contents):
             m = re.match(r'([a-zA-Z]+):\s*(.*)', line)
             if m:
                 tag = m.group(1)
@@ -267,15 +267,15 @@ class RpmSpecParser(object):
                 if tag.lower() in RpmSpecParser.TAGS:
                     tags[tag.lower()] = val
             if line.startswith('%changelog'):
-                clog = RpmSpecParser.clogSection(specContents[i:])
+                clog = RpmSpecParser.clogSection(spec_contents[i:])
         tags['release'] = re.match('([^%]+)', tags['release']).group(1)
         return tags, clog
 
     @staticmethod
-    def clogSection(specContents):
+    def clogSection(spec_contents):
         ids = list()
         comments = list()
-        for line in specContents:
+        for line in spec_contents:
             if line.startswith('*'):
                 tokens = line.split()[1:]
                 date = ' '.join(tokens[:4])
@@ -287,58 +287,58 @@ class RpmSpecParser(object):
                 comments.append(' '.join(tokens))
         return list(tuple(i) + (c,) for i, c in zip(ids, comments))
 
-    def parse_to_properties(self, cfgStore, specContents, pkgName, root):
-        tags, clog = RpmSpecParser.parse(specContents.split('\n'))
+    def parse_to_properties(self, cfg_store, spec_contents, pkg_name, root):
+        tags, clog = RpmSpecParser.parse(spec_contents.split('\n'))
 
         # BUILDREQUIRES, REQUIRES, INSTALL, PACKAGE_PATH
         # are inferred from rpm properties, command line
         # arguments, and spec concretization
-        rpmName = tags['name']
+        rpm_name = tags['name']
         provides = tags.get('provides', None)
-        specVars = RpmTemplateVars(
-            RPM_NAME=rpmName, PROVIDES=provides, RELEASE=tags['release'],
+        spec_vars = RpmTemplateVars(
+            RPM_NAME=rpm_name, PROVIDES=provides, RELEASE=tags['release'],
             REQUIRES=None, BUILD_REQUIRES=None, INSTALL=None,
             PACKAGE_PATH=None, CHANGE_LOG=clog, SUMMARY=tags['summary'],
             LICENSE=tags['license'], VERSION=tags['version'],
             GROUP=tags['group'])
 
-        # nonRpmDeps is not recorded in a spec so must be filled manually.
-        # ignoreDeps has the same issue. rpmDeps could be inferred from the
+        # non_rpm_deps is not recorded in a spec so must be filled manually.
+        # ignore_deps has the same issue. rpm_deps could be inferred from the
         # 'requires' tag but is only intended to track packages maintained by
         # Spack/rpm-install
-        rpmProps = SpackRpmProperties(
-            pkgName=pkgName, pkgSpec=None, path=None,
-            rpmDeps=[], nonRpmDeps=[], ignoreDeps=[], root=root,
-            nameSpec=rpmName, providesSpec=provides)
+        rpm_props = SpackRpmProperties(
+            pkg_name=pkg_name, pkg_spec=None, path=None,
+            rpm_deps=[], non_rpm_deps=[], ignore_deps=[], root=root,
+            name_spec=rpm_name, provides_spec=provides)
 
-        cfgStore.saveRpmProperties(rpmName, rpmProps.toJson())
-        cfgStore.saveSpecProperties(rpmName, specVars.toJson())
+        cfg_store.save_rpm_properties(rpm_name, rpm_props.to_json())
+        cfg_store.save_spec_properties(rpm_name, spec_vars.to_json())
 
 
-def read_rpms_transitive(cfgStore, rpmName, rpmDb):
-    if rpmName in rpmDb:
-        return rpmDb[rpmName].rpm
+def read_rpms_transitive(cfg_store, rpm_name, rpm_db):
+    if rpm_name in rpm_db:
+        return rpm_db[rpm_name].rpm
 
-    specProps = cfgStore.getSpecProperties(rpmName)
-    rpmProps = cfgStore.getRpmProperties(rpmName)
+    specProps = cfg_store.get_spec_properties(rpm_name)
+    rpm_props = cfg_store.get_rpm_properties(rpm_name)
 
-    rpmDeps = set(
-        read_rpms_transitive(cfgStore, dep, rpmDb)
-        for dep in rpmProps.rpmDeps)
+    rpm_deps = set(
+        read_rpms_transitive(cfg_store, dep, rpm_db)
+        for dep in rpm_props.rpm_deps)
 
     rpm = Rpm(
-        rpmName, rpmProps.pkgName, rpmProps.pkgSpec, rpmProps.path, rpmDeps,
-        nonRpmDeps=rpmProps.nonRpmDeps, ignoreDeps=rpmProps.ignoreDeps,
-        providesName=specProps.PROVIDES)
+        rpm_name, rpm_props.pkg_name, rpm_props.pkg_spec, rpm_props.path,
+        rpm_deps, non_rpm_deps=rpm_props.non_rpm_deps,
+        ignore_deps=rpm_props.ignore_deps, provides_name=specProps.PROVIDES)
 
-    rpmSpec = RpmSpec(
-        rpmName, summary=specProps.SUMMARY, group=specProps.GROUP,
+    rpm_spec = RpmSpec(
+        rpm_name, summary=specProps.SUMMARY, group=specProps.GROUP,
         license=specProps.LICENSE, release=int(specProps.RELEASE),
-        changeLog=specProps.CHANGE_LOG, version=specProps.VERSION,
-        systemRequires=specProps.SYSTEM_REQUIRES,
-        systemBuildRequires=specProps.SYSTEM_BUILD_REQUIRES)
+        change_log=specProps.CHANGE_LOG, version=specProps.VERSION,
+        system_requires=specProps.SYSTEM_REQUIRES,
+        system_build_requires=specProps.SYSTEM_BUILD_REQUIRES)
 
-    rpmDb[rpmName] = RpmInfo(rpm, rpmSpec)
+    rpm_db[rpm_name] = RpmInfo(rpm, rpm_spec)
 
     return rpm
 
@@ -347,65 +347,66 @@ class SpackRpmProperties(Properties):
     """This is intended to store details useful to Spack but not tracked by an
     RPM .spec file."""
     PROPERTIES = set([
-        'pkgName', 'pkgSpec', 'path', 'rpmDeps', 'nonRpmDeps',
-        'ignoreDeps', 'root', 'nameSpec', 'providesSpec'])
+        'pkg_name', 'pkg_spec', 'path', 'rpm_deps', 'non_rpm_deps',
+        'ignore_deps', 'root', 'name_spec', 'provides_spec'])
 
     def __init__(self, **kwargs):
         super(SpackRpmProperties, self).__init__(
             SpackRpmProperties.PROPERTIES, **kwargs)
 
     def namespace(self):
-        return CustomizedNamespace(self.nameSpec, self.providesSpec, self.root)
+        return CustomizedNamespace(
+            self.name_spec, self.provides_spec, self.root)
 
-    def toJson(self):
-        jsonData = self.to_dict(
-            rpmDeps=list(self.rpmDeps),
-            nonRpmDeps=list(self.nonRpmDeps),
-            ignoreDeps=list(self.ignoreDeps))
-        return json.dumps(jsonData, sort_keys=True, indent=4)
+    def to_json(self):
+        json_data = self.to_dict(
+            rpm_deps=list(self.rpm_deps),
+            non_rpm_deps=list(self.non_rpm_deps),
+            ignore_deps=list(self.ignore_deps))
+        return json.dumps(json_data, sort_keys=True, indent=4)
 
     @staticmethod
-    def fromJson(string):
+    def from_json(string):
         return SpackRpmProperties(**json.loads(string))
 
 
 class Rpm(object):
     def __init__(
-            self, name, pkgName, pkgSpec, path, rpmDeps,
-            nonRpmDepSpecs=None, nonRpmDeps=None, ignoreDeps=None,
-            providesName=None):
+            self, name, pkg_name, pkg_spec, path, rpm_deps,
+            nonrpm_dep_specs=None, non_rpm_deps=None, ignore_deps=None,
+            provides_name=None):
         self.name = name
-        self.pkgName = pkgName
-        self.pkgSpec = pkgSpec
+        self.pkg_name = pkg_name
+        self.pkg_spec = pkg_spec
         self.path = path  # Full path - everything up to {lib/, bin/, etc.}
-        self.rpmDeps = rpmDeps
+        self.rpm_deps = rpm_deps
         # These are dependencies which should not be created as RPMs. These are
         # implied build dependencies (but not all build dependencies are
         # managed this way).
-        self.nonRpmDeps = nonRpmDeps or set()
+        self.non_rpm_deps = non_rpm_deps or set()
         # These are dependencies that are typically managed by Spack but in
         # this case should be delegated to an existing system install.
-        self.ignoreDeps = ignoreDeps or set()
-        self.nonRpmDepSpecs = nonRpmDepSpecs or list()
-        self.providesName = providesName if providesName != name else None
+        self.ignore_deps = ignore_deps or set()
+        self.nonrpm_dep_specs = nonrpm_dep_specs or list()
+        self.provides_name = provides_name if provides_name != name else None
 
     def diff(self, other):
         """Compare with another instance of the same RPM package. Note this
         does not consider RPMs different if details of their dependencies are
         different, only if the names of the dependencies are different."""
-        rpmDepNames = frozenset(x.name for x in self.rpmDeps)
-        otherRpmDepNames = frozenset(x.name for x in other.rpmDeps)
+        rpm_dep_names = frozenset(x.name for x in self.rpm_deps)
+        other_rpm_dep_names = frozenset(x.name for x in other.rpm_deps)
         if self.name != other.name:
             raise ValueError("Diff is not useful for different RPM packages.")
-        # TODO: This compares everything except nonRpmDepSpecs (as of now those
-        # are not stored/parsed)
-        toCompare = list([
-            (self.pkgSpec, other.pkgSpec),
-            (self.path, other.path), (rpmDepNames, otherRpmDepNames),
-            (frozenset(self.nonRpmDeps), frozenset(other.nonRpmDeps)),
-            (frozenset(self.ignoreDeps), frozenset(other.ignoreDeps)),
-            (self.providesName, other.providesName)])
-        return set((x, y) for x, y in toCompare if x != y)
+        # TODO: This compares everything except nonrpm_dep_specs (as of now
+        # those are not stored/parsed)
+        to_compare = list([
+            (self.pkg_spec, other.pkg_spec),
+            (self.path, other.path), (rpm_dep_names, other_rpm_dep_names),
+            (frozenset(self.non_rpm_deps), frozenset(other.non_rpm_deps)),
+            (frozenset(self.ignore_deps), frozenset(other.ignore_deps)),
+            (self.provides_name, other.provides_name)])
+        return set((x, y) for x, y in to_compare if x != y)
 
     def __eq__(self, other):
         if not isinstance(other, Rpm):
@@ -414,130 +415,130 @@ class Rpm(object):
             return False
         if self.diff(other):
             return False
-        deps = sorted(self.rpmDeps, key=lambda x: x.name)
-        otherDeps = sorted(other.rpmDeps, key=lambda x: x.name)
-        return deps == otherDeps
+        deps = sorted(self.rpm_deps, key=lambda x: x.name)
+        other_deps = sorted(other.rpm_deps, key=lambda x: x.name)
+        return deps == other_deps
 
     @property
-    def depName(self):
-        return self.providesName if self.providesName else self.name
+    def dep_name(self):
+        return self.provides_name if self.provides_name else self.name
 
     def path_config(self):
-        pkgToPath = self._transitive_paths()
+        pkg_to_path = self._transitive_paths()
         formatPaths = {}
-        for (pkgName, spec), path in pkgToPath.iteritems():
-            formatPaths[pkgName] = {'paths': {spec: path}, 'buildable': False}
+        for (pkg_name, spec), path in pkg_to_path.iteritems():
+            formatPaths[pkg_name] = {'paths': {spec: path}, 'buildable': False}
         # Undo path config for root
-        del formatPaths[self.pkgName]
+        del formatPaths[self.pkg_name]
         return {'packages': formatPaths} if formatPaths else {}
 
-    def new_rpm_spec_variables(self, rpmSpec, redirect=True):
-        requiredDepNames = list(x.depName for x in self.direct_deps())
+    def new_rpm_spec_variables(self, rpm_spec, redirect=True):
+        required_dep_names = list(x.dep_name for x in self.direct_deps())
 
-        setPath = "--install-path={0}".format(self.path)
-        installArgs = ['./bin/spack install', '--verbose']
+        set_path = "--install-path={0}".format(self.path)
+        install_args = ['./bin/spack install', '--verbose']
         if redirect:
-            installArgs.append('--destdir=%{buildroot}')
-        skipDeps = self.ignoreDeps | set(x.pkgName for x in self.rpmDeps)
-        if skipDeps:
-            installArgs.append('--skip-deps=' + ','.join(skipDeps))
-        installArgs.extend([setPath, self.pkgSpec])
-        install = ' '.join(installArgs)
+            install_args.append('--destdir=%{buildroot}')
+        skip_deps = self.ignore_deps | set(x.pkg_name for x in self.rpm_deps)
+        if skip_deps:
+            install_args.append('--skip-deps=' + ','.join(skip_deps))
+        install_args.extend([set_path, self.pkg_spec])
+        install = ' '.join(install_args)
 
-        return rpmSpec.new_spec_variables(
-            requiredDepNames, install, self.path,
-            providesName=self.providesName)
+        return rpm_spec.new_spec_variables(
+            required_dep_names, install, self.path,
+            provides_name=self.provides_name)
 
     def _transitive_paths(self):
-        paths = {(self.pkgName, self.pkgSpec): self.path}
-        for dep in self.rpmDeps:
+        paths = {(self.pkg_name, self.pkg_spec): self.path}
+        for dep in self.rpm_deps:
             paths.update(dep._transitive_paths())
         return paths
 
     def direct_deps(self):
-        return set(self.rpmDeps) - set(itertools.chain.from_iterable(
-            x.transitive_deps() for x in self.rpmDeps))
+        return set(self.rpm_deps) - set(itertools.chain.from_iterable(
+            x.transitive_deps() for x in self.rpm_deps))
 
     def transitive_deps(self):
         return set(itertools.chain(
             itertools.chain.from_iterable(
-                x.transitive_deps() for x in self.rpmDeps),
-            set(self.rpmDeps)))
+                x.transitive_deps() for x in self.rpm_deps),
+            set(self.rpm_deps)))
 
     def write_files_for_install(
-            self, rpmSpec, cfgStore, redirect=True, spackRpmProps=None):
-        specVars = self.new_rpm_spec_variables(rpmSpec, redirect=redirect)
-        cfgStore.saveSpecProperties(self.name, specVars.toJson())
+            self, rpm_spec, cfg_store, redirect=True, spack_rpm_props=None):
+        spec_vars = self.new_rpm_spec_variables(rpm_spec, redirect=redirect)
+        cfg_store.save_spec_properties(self.name, spec_vars.to_json())
 
-        if spackRpmProps:
-            cfgStore.saveRpmProperties(self.name, spackRpmProps.toJson())
+        if spack_rpm_props:
+            cfg_store.save_rpm_properties(self.name, spack_rpm_props.to_json())
 
-        systemPkgCfg = list()
-        for dep in self.ignoreDeps:
-            depCfg = cfgStore.determineDepPkgCfg(self.name, dep)
+        system_pkg_cfg = list()
+        for dep in self.ignore_deps:
+            depCfg = cfg_store.determine_dep_pkg_cfg(self.name, dep)
             if not depCfg:
                 tty.msg("No package.yaml associated with dependency " + dep)
             else:
-                systemPkgCfg.append(depCfg)
-        pathCfg = self.path_config()
-        for pkgCfg in systemPkgCfg:
-            spack.config._merge_yaml(pathCfg, pkgCfg)
-        if pathCfg:
-            cfgStore.savePkgCfg(
-                self.name, yaml.dump(pathCfg, default_flow_style=False))
+                system_pkg_cfg.append(depCfg)
+        path_cfg = self.path_config()
+        for pkgCfg in system_pkg_cfg:
+            spack.config._merge_yaml(path_cfg, pkgCfg)
+        if path_cfg:
+            cfg_store.savePkgCfg(
+                self.name, yaml.dump(path_cfg, default_flow_style=False))
 
 
 def generate_rpms_transitive(args):
-    cfgStore = ConfigStore(
-        args.outputDir, specsDir=args.specsDir, pkgsDir=args.pkgsDir)
+    cfg_store = ConfigStore(
+        args.output_dir, specs_dir=args.specs_dir, pkgs_dir=args.pkgs_dir)
 
-    if args.completeSpecs:
-        cfgStore.completeSpecs()
+    if args.complete_specs:
+        cfg_store.complete_specs()
         return
 
     if args.bootstrap:
-        rpmName, pkgName, root = args.bootstrap
-        specContents = cfgStore.getSpec(rpmName)
+        rpm_name, pkg_name, root = args.bootstrap
+        spec_contents = cfg_store.get_spec(rpm_name)
         RpmSpecParser().parse_to_properties(
-            cfgStore, specContents, pkgName, root)
+            cfg_store, spec_contents, pkg_name, root)
         return
 
-    if cfgStore.specsDir:
-        rpmDb = {}
+    if cfg_store.specs_dir:
+        rpm_db = {}
 
-        if args.rpmDbSpec:
-            seed = args.rpmDbSpec
+        if args.rpm_db_spec:
+            seed = args.rpm_db_spec
             if seed.endswith('.spec'):
                 seed = seed[:-5]
-            rpmSeeds = [seed]
+            rpm_seeds = [seed]
         else:
-            rpmSeeds = list()
-            for root, dirs, files in os.walk(cfgStore.specsDir):
-                rpmSeeds.extend(f[:-5] for f in files if f.endswith('.spec'))
+            rpm_seeds = list()
+            for root, dirs, files in os.walk(cfg_store.specs_dir):
+                rpm_seeds.extend(f[:-5] for f in files if f.endswith('.spec'))
 
-        for seed in rpmSeeds:
-            read_rpms_transitive(cfgStore, seed, rpmDb)
+        for seed in rpm_seeds:
+            read_rpms_transitive(cfg_store, seed, rpm_db)
     else:
-        rpmDb = {}
+        rpm_db = {}
 
-    namespaceStore = NamespaceStore()
-    namespaceStore.set_up_namespaces(
-        args.universalSubspace, args.getNamespaceFromSpecs,
-        args.defaultNamespace, cfgStore)
+    namespace_store = NamespaceStore()
+    namespace_store.set_up_namespaces(
+        args.universal_subspace, args.get_namespace_from_specs,
+        args.default_namespace, cfg_store)
 
-    buildDeps = expandOption(args.buildDeps)
-    ignoreDeps = expandOption(args.ignoreDeps)
+    build_deps = expandOption(args.build_deps)
+    ignore_deps = expandOption(args.ignore_deps)
 
     specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) > 1:
         tty.die("Only 1 top-level package can be specified")
-    topSpec = iter(specs).next()
+    top_spec = iter(specs).next()
     new = set()
-    pkgToRpmProps = dict()
+    pkg_to_rpmprops = dict()
     rpm = resolve_autoname(
-        topSpec, namespaceStore, rpmDb, new, buildDeps, ignoreDeps,
-        pkgToRpmProps, inferBuildDeps=args.inferBuildDeps,
-        inferIgnoreDeps=args.inferIgnoreDeps)
+        top_spec, namespace_store, rpm_db, new, build_deps, ignore_deps,
+        pkg_to_rpmprops, infer_build_deps=args.infer_build_deps,
+        infer_ignore_deps=args.infer_ignore_deps)
 
     # RPMs may have been created that are not going to be used
     new &= rpm.transitive_deps()
@@ -546,22 +547,22 @@ def generate_rpms_transitive(args):
     # generates a new spec (regardless of whether it changed) since as of now
     # there is not sufficient functionality to check this properly (i.e. a
     # package hash)
-    rpm.pkgSpec = topSpec.format()
+    rpm.pkg_spec = top_spec.format()
     for rpm in set(itertools.chain([rpm], new)):
         tty.msg("New or updated rpm: " + rpm.name)
-        rpmSpec = rpmDb[rpm.name].spec
+        rpm_spec = rpm_db[rpm.name].spec
         rpm.write_files_for_install(
-            rpmSpec, cfgStore, redirect=(not args.noRedirect),
-            spackRpmProps=pkgToRpmProps[rpm.pkgName])
+            rpm_spec, cfg_store, redirect=(not args.no_redirect),
+            spack_rpm_props=pkg_to_rpmprops[rpm.pkg_name])
 
-    if not args.propertiesOnly:
-        cfgStore.completeSpecs()
+    if not args.properties_only:
+        cfg_store.complete_specs()
 
 
 def resolve_autoname(
-        pkgSpec, namespaceStore, rpmDb, new, buildDeps, ignoreDeps,
-        pkgToRpmProps, visited=None, inferBuildDeps=False,
-        inferIgnoreDeps=False):
+        pkg_spec, namespace_store, rpm_db, new, build_deps, ignore_deps,
+        pkg_to_rpmprops, visited=None, infer_build_deps=False,
+        infer_ignore_deps=False):
     """Because this automatically generates rpm names it can create rpms
     transitively.
 
@@ -576,120 +577,120 @@ def resolve_autoname(
     if not visited:
         visited = set()
 
-    namespace = namespaceStore.get_namespace(pkgSpec.name)
-    rpmName = namespace.name(pkgSpec)
+    namespace = namespace_store.get_namespace(pkg_spec.name)
+    rpm_name = namespace.name(pkg_spec)
 
-    rpm = rpmDb[rpmName].rpm if rpmName in rpmDb else None
+    rpm = rpm_db[rpm_name].rpm if rpm_name in rpm_db else None
 
-    if pkgSpec in visited:
+    if pkg_spec in visited:
         return rpm
-    visited.add(pkgSpec)
+    visited.add(pkg_spec)
 
     # Unlike specified build dependencies, inferred build dependencies are not
     # propagated transitively.
-    inferredBuildDeps = set()
-    if buildDeps is not None:
+    inferred_build_deps = set()
+    if build_deps is not None:
         # Prefer using build deps specified by the user. If not specified, use
         # whatever build dependencies were associated with the previous release
         # of the RPM.
-        inferredBuildDeps.update(buildDeps)
-    elif rpm and rpm.nonRpmDeps:
-        inferredBuildDeps.update(rpm.nonRpmDeps)
+        inferred_build_deps.update(build_deps)
+    elif rpm and rpm.non_rpm_deps:
+        inferred_build_deps.update(rpm.non_rpm_deps)
 
-    inferredIgnoreDeps = set()
-    if ignoreDeps is not None:
-        inferredIgnoreDeps.update(ignoreDeps)
-    elif rpm and rpm.ignoreDeps:
-        inferredIgnoreDeps.update(rpm.ignoreDeps)
+    inferred_ignore_deps = set()
+    if ignore_deps is not None:
+        inferred_ignore_deps.update(ignore_deps)
+    elif rpm and rpm.ignore_deps:
+        inferred_ignore_deps.update(rpm.ignore_deps)
 
-    dependencies = pkgSpec.dependencies_dict()
-    if inferBuildDeps:
-        inferredBuildDeps.update(
-            depName for depName, dep in dependencies.iteritems()
+    dependencies = pkg_spec.dependencies_dict()
+    if infer_build_deps:
+        inferred_build_deps.update(
+            dep_name for dep_name, dep in dependencies.iteritems()
             if set(dep.deptypes) == set(['build']))
 
-    rpmDeps = set()
-    nonRpmDepSpecs = list()
+    rpm_deps = set()
+    nonrpm_dep_specs = list()
     skipped = set()
-    for depName, dep in dependencies.iteritems():
-        if depName in inferredIgnoreDeps:
+    for dep_name, dep in dependencies.iteritems():
+        if dep_name in inferred_ignore_deps:
             pass
-        elif depName in inferredBuildDeps:
-            nonRpmDepSpecs.append(str(dep.spec))
+        elif dep_name in inferred_build_deps:
+            nonrpm_dep_specs.append(str(dep.spec))
         else:
-            if namespaceStore.get_namespace(dep.spec.name, required=False):
-                depRpm = resolve_autoname(
-                    dep.spec, namespaceStore, rpmDb, new,
-                    buildDeps, ignoreDeps, pkgToRpmProps, visited,
-                    inferBuildDeps=inferBuildDeps,
-                    inferIgnoreDeps=inferIgnoreDeps)
-                rpmDeps.add(depRpm)
+            if namespace_store.get_namespace(dep.spec.name, required=False):
+                dep_rpm = resolve_autoname(
+                    dep.spec, namespace_store, rpm_db, new,
+                    build_deps, ignore_deps, pkg_to_rpmprops, visited,
+                    infer_build_deps=infer_build_deps,
+                    infer_ignore_deps=infer_ignore_deps)
+                rpm_deps.add(dep_rpm)
             else:
                 skipped.add(dep.spec.name)
 
-    if inferIgnoreDeps:
-        transitiveDeps = (
+    if infer_ignore_deps:
+        transitive_deps = (
             set(itertools.chain.from_iterable(x.transitive_deps()
-                for x in rpmDeps)) |
-            rpmDeps)
-        inferredIgnoreDeps.update(itertools.chain.from_iterable(
-            x.ignoreDeps for x in transitiveDeps))
+                for x in rpm_deps)) |
+            rpm_deps)
+        inferred_ignore_deps.update(itertools.chain.from_iterable(
+            x.ignore_deps for x in transitive_deps))
     if skipped:
         tty.debug("Skipped: " + ', '.join(skipped))
-    skipped -= inferredIgnoreDeps
+    skipped -= inferred_ignore_deps
     if skipped:
         raise MissingNamespaceError(
             "The following packages are not ignored" +
             " and are missing namespace information: [{0}]".format(
                 ', '.join(skipped)))
 
-    omitDeps = inferredBuildDeps | inferredIgnoreDeps
-    rpmDeps = set(x for x in rpmDeps if x.pkgName not in omitDeps)
+    omitDeps = inferred_build_deps | inferred_ignore_deps
+    rpm_deps = set(x for x in rpm_deps if x.pkg_name not in omitDeps)
 
     rpm = Rpm(
-        rpmName, pkgSpec.name, pkgSpec.format(),
-        namespace.path(pkgSpec), rpmDeps, nonRpmDepSpecs=nonRpmDepSpecs,
-        nonRpmDeps=set(dependencies) & inferredBuildDeps,
-        ignoreDeps=set(x.name for x in pkgSpec.traverse()) &
-            inferredIgnoreDeps,  # NOQA: ignore=E131
-        providesName=namespace.provides_name(pkgSpec))
+        rpm_name, pkg_spec.name, pkg_spec.format(),
+        namespace.path(pkg_spec), rpm_deps, nonrpm_dep_specs=nonrpm_dep_specs,
+        non_rpm_deps=set(dependencies) & inferred_build_deps,
+        ignore_deps=set(x.name for x in pkg_spec.traverse()) &
+            inferred_ignore_deps,  # NOQA: ignore=E131
+        provides_name=namespace.provides_name(pkg_spec))
 
-    if rpmName not in rpmDb:
-        rpmSpec = RpmSpec.new(rpmName, pkgSpec)
+    if rpm_name not in rpm_db:
+        rpm_spec = RpmSpec.new(rpm_name, pkg_spec)
         new.add(rpm)
-        rpmInfo = RpmInfo(rpm, rpmSpec)
-        rpmDb[rpmName] = rpmInfo
+        rpm_info = RpmInfo(rpm, rpm_spec)
+        rpm_db[rpm_name] = rpm_info
     else:
-        oldRpm = rpmDb[rpmName].rpm
+        old_rpm = rpm_db[rpm_name].rpm
         # It is never correct for two different spack packages to have matching
         # RPM names: this is easy to avoid (e.g. if the name projection
         # includes the spack package name)
-        if rpm.pkgName != oldRpm.pkgName:
+        if rpm.pkg_name != old_rpm.pkg_name:
             raise ValueError(
                 "Name collision: new RPM for" +
                 "{0} collides with existing RPM for {1}".format(
-                    rpm.pkgName, oldRpm.pkgName))
+                    rpm.pkg_name, old_rpm.pkg_name))
         # Check if the rpm has changed in some way
-        diff = rpm.diff(oldRpm)
+        diff = rpm.diff(old_rpm)
         if diff:
-            tty.msg("RPM update: " + rpm.pkgName)
+            tty.msg("RPM update: " + rpm.pkg_name)
             tty.msg(
                 "{0}:\n{1}".format(
                     rpm.name,
                     '\n'.join('/'.join((str(x), str(y))) for x, y in diff)))
-            rpmDb[rpmName].rpm = rpm
+            rpm_db[rpm_name].rpm = rpm
             new.add(rpm)
         else:
-            rpm = oldRpm
+            rpm = old_rpm
 
     # TODO: if package.py contents change then a new rpm release should be made
 
-    pkgToRpmProps[pkgSpec.name] = SpackRpmProperties(
-        pkgName=rpm.pkgName, pkgSpec=rpm.pkgSpec, path=rpm.path,
-        rpmDeps=set(depRpm.name for depRpm in rpm.rpmDeps),
-        nonRpmDeps=rpm.nonRpmDeps, ignoreDeps=rpm.ignoreDeps,
-        root=namespace.root, nameSpec=namespace.nameSpec,
-        providesSpec=namespace.providesSpec)
+    pkg_to_rpmprops[pkg_spec.name] = SpackRpmProperties(
+        pkg_name=rpm.pkg_name, pkg_spec=rpm.pkg_spec, path=rpm.path,
+        rpm_deps=set(dep_rpm.name for dep_rpm in rpm.rpm_deps),
+        non_rpm_deps=rpm.non_rpm_deps, ignore_deps=rpm.ignore_deps,
+        root=namespace.root, name_spec=namespace.name_spec,
+        provides_spec=namespace.provides_spec)
 
     return rpm
 
@@ -699,77 +700,77 @@ class MissingNamespaceError(Exception):
 
 
 class CustomizedNamespace(object):
-    def __init__(self, nameSpec, providesSpec, root):
-        self.nameSpec = str(nameSpec)
-        self.providesSpec = providesSpec or self.nameSpec
+    def __init__(self, name_spec, provides_spec, root):
+        self.name_spec = str(name_spec)
+        self.provides_spec = provides_spec or self.name_spec
         self.root = root
 
     def name(self, spec):
-        return spec.format(self.nameSpec)
+        return spec.format(self.name_spec)
 
     def provides_name(self, spec):
-        return spec.format(self.providesSpec)
+        return spec.format(self.provides_spec)
 
     def path(self, spec):
         return os.path.join(self.root, spec.name, self.provides_name(spec))
 
 
 # TODO: move this to config?
-def resolve_pkg_to_namespace(universalSubspace=None):
+def resolve_pkg_to_namespace(universal_subspace=None):
     """If you only have 1 subspace or want to specify a default
     subspace, you can place the descriptors at the package level. If
     you want to create a subspace which is not default then an explicit
     subspace must be created under the package level.
-    'universalSubspace' will choose the same subspace for each package
+    'universal_subspace' will choose the same subspace for each package
     where available; if the subspace is not available for the package
     but it has a default then that will be used (if the subspace is not
     available and there is no default, that is an error).
     """
     packages = spack.config.get_config('packages')
-    pkg_to_subspace = resolve_pkg_to_subspace(universalSubspace)
-    pkgToNamespace = {}
-    for pkgName, info in packages.iteritems():
-        if pkgName in pkg_to_subspace:
-            subspace = info['subspaces'][pkg_to_subspace[pkgName]]
+    pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
+    pkg_to_namespace = {}
+    for pkg_name, info in packages.iteritems():
+        if pkg_name in pkg_to_subspace:
+            subspace = info['subspaces'][pkg_to_subspace[pkg_name]]
         elif all(p in info for p in ['name', 'prefix']):
             subspace = info
         else:
             continue
-        nameSpec = subspace['name']
-        providesSpec = subspace.get('provides', nameSpec)
+        name_spec = subspace['name']
+        provides_spec = subspace.get('provides', name_spec)
         root = subspace['prefix']
-        pkgToNamespace[pkgName] = CustomizedNamespace(
-            nameSpec, providesSpec, root)
-    return pkgToNamespace
+        pkg_to_namespace[pkg_name] = CustomizedNamespace(
+            name_spec, provides_spec, root)
+    return pkg_to_namespace
 
 
-def resolve_pkg_to_subspace(universalSubspace=None):
+def resolve_pkg_to_subspace(universal_subspace=None):
     pkg_to_subspace = {}
     packages = spack.config.get_config('packages')
-    for pkgName, info in packages.iteritems():
+    for pkg_name, info in packages.iteritems():
         # TODO: since these can be specified at the package level, use a more
         # descriptive name? like 'name' -> 'rpmnameprojection'
         if all(p in info for p in ['name', 'prefix']):
-            defaultSubspace = info
+            default_subspace = info
         else:
-            defaultSubspace = None
+            default_subspace = None
 
         subspaces = info['subspaces'] if 'subspaces' in info else {}
-        if universalSubspace in subspaces:
-            pkg_to_subspace[pkgName] = universalSubspace
-        elif defaultSubspace:
+        if universal_subspace in subspaces:
+            pkg_to_subspace[pkg_name] = universal_subspace
+        elif default_subspace:
             pass
         else:
             tty.msg(
-                "{0}: universal subspace not specified,".format(pkgName) +
+                "{0}: universal subspace not specified,".format(pkg_name) +
                 " and/or no suitable default")
     return pkg_to_subspace
 
 
 class RpmInfo(object):
-    def __init__(self, rpm, rpmSpec):
+    def __init__(self, rpm, rpm_spec):
         self.rpm = rpm
-        self.spec = rpmSpec
+        self.spec = rpm_spec
 
 
 class ConfigStore(object):
@@ -778,7 +779,7 @@ class ConfigStore(object):
     the rpm-package-level as associated RPMs are created. It expects the
     following directory structure:
 
-    <pkgsDir>/
+    <pkgs_dir>/
         <pkg name>/
             spec.skel
             filter* (any exe with the prefix "filter")
@@ -787,7 +788,7 @@ class ConfigStore(object):
 
     and
 
-    <specsDir>/
+    <specs_dir>/
         <rpm name>/
             spec.skel
             filter*
@@ -797,107 +798,111 @@ class ConfigStore(object):
             <rpm name>.spec
         ... (one folder per rpm)
     """
-    def __init__(self, outputDir, pkgsDir=None, specsDir=None):
-        self.pkgsDir = pkgsDir
-        self.specsDir = specsDir
-        self.outputDir = outputDir
+    def __init__(self, output_dir, pkgs_dir=None, specs_dir=None):
+        self.pkgs_dir = pkgs_dir
+        self.specs_dir = specs_dir
+        self.output_dir = output_dir
 
-    def determineSpecTemplate(self, rpmName, pkgName):
-        searchPaths = []
-        searchPaths.append(self.outputLocation(rpmName, 'spec.skel'))
-        if self.specsDir:
-            searchPaths.append(self.specsLocation(rpmName, 'spec.skel'))
-        if self.pkgsDir:
-            searchPaths.append(self.pkgsLocation(pkgName, 'spec.skel'))
-        templatePath = self.getFirstExisting(searchPaths, self.find)
-        if templatePath:
-            template = retrieveFileContents(templatePath)
+    def determine_spec_template(self, rpm_name, pkg_name):
+        search_paths = []
+        search_paths.append(self.output_location(rpm_name, 'spec.skel'))
+        if self.specs_dir:
+            search_paths.append(self.specs_location(rpm_name, 'spec.skel'))
+        if self.pkgs_dir:
+            search_paths.append(self.pkgs_location(pkg_name, 'spec.skel'))
+        template_path = self.get_first_existing(search_paths, self.find)
+        if template_path:
+            template = retrieve_file_contents(template_path)
         else:
-            tty.msg("Using default spec template for " + pkgName)
+            tty.msg("Using default spec template for " + pkg_name)
             template = default_spec()
 
-        self.saveRpmCfg(rpmName, 'spec.skel', template)
+        self.saveRpmCfg(rpm_name, 'spec.skel', template)
         return template
 
-    def determineDepPkgCfg(self, rpmName, depPkgName):
+    def determine_dep_pkg_cfg(self, rpm_name, dep_pkg_name):
         """For packages that should not be managed by Spack"""
-        dstFile = depPkgName + '_systempkg.yaml'
-        searchPaths = []
-        if self.specsDir:
-            searchPaths.append(self.specsLocation(rpmName, dstFile))
-        if self.pkgsDir:
-            searchPaths.append(self.pkgsLocation(depPkgName, 'systempkg.yaml'))
-        pkgCfgPath = self.getFirstExisting(searchPaths, self.find)
+        dst_file = dep_pkg_name + '_systempkg.yaml'
+        search_paths = []
+        if self.specs_dir:
+            search_paths.append(self.specs_location(rpm_name, dst_file))
+        if self.pkgs_dir:
+            search_paths.append(
+                self.pkgs_location(dep_pkg_name, 'systempkg.yaml'))
+        pkg_cfg_path = self.get_first_existing(search_paths, self.find)
 
-        if not pkgCfgPath:
+        if not pkg_cfg_path:
             return
-        shutil.copy(pkgCfgPath, self.setUpOutputLocation(rpmName, dstFile))
-        with open(pkgCfgPath, 'rb') as F:
+        shutil.copy(
+            pkg_cfg_path, self.set_up_output_location(rpm_name, dst_file))
+        with open(pkg_cfg_path, 'rb') as F:
             return yaml.safe_load(F)
 
-    def applyTransform(self, rpmName, pkgName):
-        varsFile = self.outputLocation(rpmName, 'specvars.json')
-        searchPaths = []
-        if self.specsDir:
-            searchPaths.append(self.specsLocation(rpmName))
-        if self.pkgsDir:
-            searchPaths.append(self.pkgsLocation(pkgName))
-        scriptPath = self.getFirstExisting(searchPaths, self.findScript)
-        if not scriptPath:
+    def apply_transform(self, rpm_name, pkg_name):
+        vars_file = self.output_location(rpm_name, 'specvars.json')
+        search_paths = []
+        if self.specs_dir:
+            search_paths.append(self.specs_location(rpm_name))
+        if self.pkgs_dir:
+            search_paths.append(self.pkgs_location(pkg_name))
+        script_path = self.get_first_existing(search_paths, self.find_script)
+        if not script_path:
             return
-        Executable(scriptPath)(varsFile)
-        shutil.copy(scriptPath, self.setUpOutputLocation(
-            rpmName, os.path.basename(scriptPath)))
-        with open(varsFile, 'rb') as F:
-            return RpmTemplateVars.fromJson(F.read())
+        Executable(script_path)(vars_file)
+        shutil.copy(script_path, self.set_up_output_location(
+            rpm_name, os.path.basename(script_path)))
+        with open(vars_file, 'rb') as F:
+            return RpmTemplateVars.from_json(F.read())
 
-    def specsLocation(self, rpmName, fName=None):
-        base = os.path.join(self.specsDir, rpmName)
+    def specs_location(self, rpm_name, fName=None):
+        base = os.path.join(self.specs_dir, rpm_name)
         return os.path.join(base, fName) if fName else base
 
-    def pkgsLocation(self, pkgName, fName=None):
-        base = os.path.join(self.pkgsDir, pkgName)
+    def pkgs_location(self, pkg_name, fName=None):
+        base = os.path.join(self.pkgs_dir, pkg_name)
         return os.path.join(base, fName) if fName else base
 
-    def getRpms(self):
-        return set(os.listdir(self.specsDir))
+    def get_rpms(self):
+        return set(os.listdir(self.specs_dir))
 
-    def getSpec(self, rpmName):
-        """Should only be called if specsDir is set"""
+    def get_spec(self, rpm_name):
+        """Should only be called if specs_dir is set"""
         specName = (
-            rpmName + '.spec' if not rpmName.endswith('.spec') else rpmName)
-        return retrieveFileContents(self.specsLocation(rpmName, specName))
+            rpm_name + '.spec' if not rpm_name.endswith('.spec') else rpm_name)
+        return retrieve_file_contents(self.specs_location(rpm_name, specName))
 
-    def getRpmProperties(self, rpmName, useOutput=False):
-        """Should only be called if specsDir is set"""
-        locationFn = self.outputLocation if useOutput else self.specsLocation
-        return SpackRpmProperties.fromJson(
-            retrieveFileContents(locationFn(rpmName, 'rpmprops.json')))
+    def get_rpm_properties(self, rpm_name, use_output=False):
+        """Should only be called if specs_dir is set"""
+        location_fn = (
+            self.output_location if use_output else self.specs_location)
+        return SpackRpmProperties.from_json(
+            retrieve_file_contents(location_fn(rpm_name, 'rpmprops.json')))
 
-    def getSpecProperties(self, rpmName, useOutput=False):
-        """Should only be called if specsDir is set"""
-        locationFn = self.outputLocation if useOutput else self.specsLocation
-        return RpmTemplateVars.fromJson(
-            retrieveFileContents(locationFn(rpmName, 'specvars.json')))
+    def get_spec_properties(self, rpm_name, use_output=False):
+        """Should only be called if specs_dir is set"""
+        location_fn = (
+            self.output_location if use_output else self.specs_location)
+        return RpmTemplateVars.from_json(
+            retrieve_file_contents(location_fn(rpm_name, 'specvars.json')))
 
-    def saveSpecProperties(self, rpmName, content):
-        self.saveRpmCfg(rpmName, 'specvars.json', content)
+    def save_spec_properties(self, rpm_name, content):
+        self.saveRpmCfg(rpm_name, 'specvars.json', content)
 
-    def saveRpmProperties(self, rpmName, content):
-        self.saveRpmCfg(rpmName, 'rpmprops.json', content)
+    def save_rpm_properties(self, rpm_name, content):
+        self.saveRpmCfg(rpm_name, 'rpmprops.json', content)
 
-    def saveSpec(self, rpmName, content):
-        self.saveRpmCfg(rpmName, '%s.spec' % rpmName, content)
+    def save_spec(self, rpm_name, content):
+        self.saveRpmCfg(rpm_name, '%s.spec' % rpm_name, content)
 
-    def savePkgCfg(self, rpmName, content):
-        self.saveRpmCfg(rpmName, 'packages.yaml', content)
+    def savePkgCfg(self, rpm_name, content):
+        self.saveRpmCfg(rpm_name, 'packages.yaml', content)
 
-    def saveRpmCfg(self, rpmName, fName, content):
-        with open(self.setUpOutputLocation(rpmName, fName), 'wb') as F:
+    def saveRpmCfg(self, rpm_name, fName, content):
+        with open(self.set_up_output_location(rpm_name, fName), 'wb') as F:
             F.write(content)
 
-    def setUpOutputLocation(self, rpmName, fName):
-        path = self.outputLocation(rpmName, fName)
+    def set_up_output_location(self, rpm_name, fName):
+        path = self.output_location(rpm_name, fName)
         directory = os.path.dirname(path)
         try:
             os.makedirs(directory)
@@ -909,10 +914,10 @@ class ConfigStore(object):
 
         return path
 
-    def outputLocation(self, rpmName, fName):
-        return os.path.join(self.outputDir, rpmName, fName)
+    def output_location(self, rpm_name, fName):
+        return os.path.join(self.output_dir, rpm_name, fName)
 
-    def findScript(self, directory):
+    def find_script(self, directory):
         if not os.path.exists(directory):
             return
         files = set(os.listdir(directory))
@@ -925,72 +930,73 @@ class ConfigStore(object):
     def find(self, path):
         return path if os.path.exists(path) else None
 
-    def getFirstExisting(self, paths, find):
+    def get_first_existing(self, paths, find):
         for path in paths:
             result = find(path)
             if result:
                 return result
 
-    def completeSpecs(self):
-        rpmNames = os.listdir(self.outputDir)
-        for rpmName in rpmNames:
+    def complete_specs(self):
+        rpm_names = os.listdir(self.output_dir)
+        for rpm_name in rpm_names:
             try:
-                self.completeSpec(rpmName)
+                self.complete_spec(rpm_name)
             except KeyError as e:
-                templateLocation = self.outputLocation(rpmName, 'spec.skel')
+                template_location = self.output_location(rpm_name, 'spec.skel')
                 key = e.args[0]
                 raise ValueError(
                     "{0} has unaddressed key {1},".format(
-                        templateLocation, key) +
+                        template_location, key) +
                     " edit and rerun with --complete-specs")
 
-    def completeSpec(self, rpmName):
-        rpmProps = self.getRpmProperties(rpmName, useOutput=True)
-        self.applyTransform(rpmName, rpmProps.pkgName)
-        specVars = self.getSpecProperties(rpmName, useOutput=True)
-        specTemplate = self.determineSpecTemplate(rpmName, rpmProps.pkgName)
-        specContents = fill_spec_template(specVars, specTemplate)
-        self.saveSpec(rpmName, specContents)
+    def complete_spec(self, rpm_name):
+        rpm_props = self.get_rpm_properties(rpm_name, use_output=True)
+        self.apply_transform(rpm_name, rpm_props.pkg_name)
+        spec_vars = self.get_spec_properties(rpm_name, use_output=True)
+        spec_template = self.determine_spec_template(
+            rpm_name, rpm_props.pkg_name)
+        spec_contents = fill_spec_template(spec_vars, spec_template)
+        self.save_spec(rpm_name, spec_contents)
 
 
 class NamespaceStore(object):
     def set_up_namespaces(
-            self, universalSubspace, getNamespaceFromSpecs, defaultNamespace,
-            cfgStore):
+            self, universal_subspace, get_namespace_from_specs,
+            default_namespace, cfg_store):
 
         # Preferred compilers and versions can be associated with
         # subspaces. The global preferences object is updated based on
         # the specified subspace to prefer the desired compiler/version
         # for the associated package.
         spack.pkgsort.pkg_to_subspace = resolve_pkg_to_subspace(
-            universalSubspace)
-        pkgToNamespace = resolve_pkg_to_namespace(universalSubspace)
-        if getNamespaceFromSpecs:
-            pkgToNamespace.update(self.get_namespaces_from_specs(cfgStore))
-        self.pkgToNamespace = pkgToNamespace
+            universal_subspace)
+        pkg_to_namespace = resolve_pkg_to_namespace(universal_subspace)
+        if get_namespace_from_specs:
+            pkg_to_namespace.update(self.get_namespaces_from_specs(cfg_store))
+        self.pkg_to_namespace = pkg_to_namespace
 
-        if defaultNamespace:
-            nameSpec, prefix = defaultNamespace
-            self.defaultNamespace = CustomizedNamespace(
-                nameSpec, nameSpec, prefix)
+        if default_namespace:
+            name_spec, prefix = default_namespace
+            self.default_namespace = CustomizedNamespace(
+                name_spec, name_spec, prefix)
         else:
-            self.defaultNamespace = None
+            self.default_namespace = None
 
-    def get_namespace(self, pkgName, required=True):
-        namespace = self.pkgToNamespace.get(pkgName, self.defaultNamespace)
+    def get_namespace(self, pkg_name, required=True):
+        namespace = self.pkg_to_namespace.get(pkg_name, self.default_namespace)
         if not namespace and required:
-            raise MissingNamespaceError("No namespace for " + pkgName)
+            raise MissingNamespaceError("No namespace for " + pkg_name)
         return namespace
 
-    def get_namespaces_from_specs(self, cfgStore):
-        pkgToNamespace = {}
-        for rpmName in cfgStore.getRpms():
-            rpmProps = cfgStore.getRpmProperties(rpmName)
-            pkgToNamespace[rpmProps.pkgName] = rpmProps.namespace()
-        return pkgToNamespace
+    def get_namespaces_from_specs(self, cfg_store):
+        pkg_to_namespace = {}
+        for rpm_name in cfg_store.get_rpms():
+            rpm_props = cfg_store.get_rpm_properties(rpm_name)
+            pkg_to_namespace[rpm_props.pkg_name] = rpm_props.namespace()
+        return pkg_to_namespace
 
 
-def retrieveFileContents(path):
+def retrieve_file_contents(path):
     with open(path, 'rb') as F:
         return F.read()
 
@@ -1015,10 +1021,10 @@ def rpm(parser, args):
 
 def create_rpm_source(dst_path, spec_file_path):
     cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
-    cfg_store = ConfigStore(None, specsDir=cfg_dir)
+    cfg_store = ConfigStore(None, specs_dir=cfg_dir)
     _, spec_fname = os.path.split(spec_file_path)
     rpm_name = spec_fname[:-5]
-    spec_props = cfg_store.getSpecProperties(rpm_name)
+    spec_props = cfg_store.get_spec_properties(rpm_name)
 
     source_name = "{0}-{1}".format(rpm_name, spec_props.VERSION)
     spack_prefix = spack.spack_root  # Prefix for this spack install
@@ -1043,12 +1049,12 @@ def populate_cache(spack_origin_path, spec_file_path):
     cache sources needed to build a package.
     """
     cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
-    cfg_store = ConfigStore(None, specsDir=cfg_dir)
+    cfg_store = ConfigStore(None, specs_dir=cfg_dir)
     _, spec_fname = os.path.split(spec_file_path)
     rpm_name = spec_fname[:-5]
-    rpm_props = cfg_store.getRpmProperties(rpm_name)
+    rpm_props = cfg_store.get_rpm_properties(rpm_name)
 
-    specs = [rpm_props.pkgSpec]
+    specs = [rpm_props.pkg_spec]
 
     local_mirror = '_local_cache'
     mirrors = spack.config.get_config('mirrors')
