@@ -26,7 +26,8 @@ from spack import *
 import os
 
 
-class EnvModele(Package):
+class EnvModeleKs(Package):
+    """ModelE "kitchen sink" environment."""
 
     homepage = ""
 
