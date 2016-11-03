@@ -35,7 +35,7 @@ class Subversion(Package):
 
     variant('python', default=False, description='Provide python bindings')
     variant('perl', default=False, description='Provide Perl bindings')
-    #variant('ruby', default=False, description='Provide ruby bindings')
+    # variant('ruby', default=False, description='Provide ruby bindings')
 
     depends_on('apr')
     depends_on('apr-util')
@@ -52,7 +52,7 @@ class Subversion(Package):
     # Optional: We need swig if we want the Perl, Python or Ruby bindings.
     extends('python', when='+python')
     depends_on('perl@5.8:', when='+perl')
-    #depends_on('ruby', when='+ruby')
+    # depends_on('ruby', when='+ruby')
 
     # Installation has race cases.
     parallel = False
@@ -100,6 +100,6 @@ class Subversion(Package):
             make('install-swig-pl')
 
         # ruby bindings
-        #if '+ruby' in spec:
+        # if '+ruby' in spec:
             # make('swig-rb')
             # make('install-swig-rb')
