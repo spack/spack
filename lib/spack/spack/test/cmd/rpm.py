@@ -55,11 +55,11 @@ class MockNamespace(object):
         return MockNamespace.ROOT
     
     @property
-    def nameSpec(self):
+    def name_spec(self):
         return "MockNamespace.nameSpec"
     
     @property
-    def providesSpec(self):
+    def provides_spec(self):
         return "MockNamespace.providesSpec"
 
 class MockNamespaceStore(object):
@@ -118,7 +118,7 @@ class RpmTest(unittest.TestCase):
     def test_rm_builddeps(self):
         rpmX = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1), 
             MockNamespace.path(specX1), set([rpmY1]), 
-            nonRpmDeps=set([specZ1.name]))
+            non_rpm_deps=set([specZ1.name]))
         rpmDb = self.rpmDb1
         rpmDb[rpmX.name] = RpmInfo(rpmX, None)
 
