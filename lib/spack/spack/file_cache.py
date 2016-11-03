@@ -77,10 +77,7 @@ class FileCache(object):
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""
         if key not in self._locks:
-            lock_file = self._lock_path(key)
-            if not os.path.exists(lock_file):
-                touch(lock_file)
-            self._locks[key] = Lock(lock_file)
+            self._locks[key] = Lock(self._lock_path(key))
         return self._locks[key]
 
     def init_entry(self, key):
@@ -116,7 +113,7 @@ class FileCache(object):
         Returns a ReadTransaction context manager and opens the cache file for
         reading.  You can use it like this:
 
-           with spack.user_cache.read_transaction(key) as cache_file:
+           with file_cache_object.read_transaction(key) as cache_file:
                cache_file.read()
 
         """

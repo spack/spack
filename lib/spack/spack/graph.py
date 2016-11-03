@@ -522,7 +522,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
 
     out.write('digraph G {\n')
     out.write('  labelloc = "b"\n')
-    out.write('  rankdir = "LR"\n')
+    out.write('  rankdir = "TB"\n')
     out.write('  ranksep = "5"\n')
     out.write('node[\n')
     out.write('     fontname=Monaco,\n')

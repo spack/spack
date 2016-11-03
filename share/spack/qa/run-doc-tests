@@ -9,7 +9,7 @@
 #     run-doc-tests
 #
 # Notes:
-#     Requires sphinx, git, mercurial, and subversion.
+#     Requires sphinx, graphviz, git, mercurial, and subversion.
 #
 
 QA_DIR="$(dirname "$0")"
@@ -36,9 +36,7 @@ export PATH="$SPACK_ROOT/bin:$PATH"
 # Allows script to be run from anywhere
 cd "$DOC_DIR"
 
-# Cleanup temporary files upon exit or when script is killed
-trap 'make clean --silent' EXIT SIGINT SIGTERM
-
 # Treat warnings as fatal errors
+make clean --silent
 make SPHINXOPTS=-W
 

@@ -41,6 +41,7 @@ class Papi(Package):
     homepage = "http://icl.cs.utk.edu/papi/index.html"
 
     url      = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
+    version('5.5.0', '5e1244a04ca031d4cc29b46ce3dd05b5')
     version('5.4.3', '3211b5a5bb389fe692370f5cf4cc2412')
     version('5.4.1', '9134a99219c79767a11463a76b0b01a2')
     version('5.3.0', '367961dd0ab426e5ae367c2713924ffb')

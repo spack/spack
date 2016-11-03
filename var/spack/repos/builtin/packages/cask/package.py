@@ -37,6 +37,8 @@ class Cask(Package):
     homepage = "http://cask.readthedocs.io/en/latest/"
     url      = "https://github.com/cask/cask/archive/v0.7.4.tar.gz"
 
+    version('0.8.1', '25196468a7ce634cfff14733678be6ba')
+    # version 0.8.0 is broken
     version('0.7.4', 'c973a7db43bc980dd83759a5864a1260')
 
     depends_on('emacs', type=nolink)

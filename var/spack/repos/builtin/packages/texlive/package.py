@@ -32,7 +32,7 @@ class Texlive(Package):
 
     homepage = "http://www.tug.org/texlive"
 
-    version('live', 'e671eea7f142c438959493cc42a2a59b',
+    version('live', '8402774984c67fed4a18b7f6491243a6',
             url="http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz")
 
     # There does not seem to be a complete list of schemes.

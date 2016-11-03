@@ -42,4 +42,4 @@ class PyPytables(Package):
 
     def install(self, spec, prefix):
         env["HDF5_DIR"] = spec['hdf5'].prefix
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)
