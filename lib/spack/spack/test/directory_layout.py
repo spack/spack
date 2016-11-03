@@ -29,7 +29,8 @@ import os
 
 import pytest
 import spack
-from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import (YamlDirectoryLayout,
+                                    InvalidDirectoryLayoutParametersError)
 from spack.repository import RepoPath
 from spack.spec import Spec
 
@@ -41,6 +42,46 @@ max_packages = 10
 def layout_and_dir(tmpdir):
     """Returns a directory layout and the corresponding directory."""
     yield YamlDirectoryLayout(str(tmpdir)), str(tmpdir)
+
+
+def test_yaml_directory_layout_parameters(
+        tmpdir, config
+):
+    """This tests the various parameters that can be used to configure
+    the install location """
+    spec = Spec('python')
+    spec.concretize()
+
+    # Ensure default layout matches expected spec format
+    layout_default = YamlDirectoryLayout(str(tmpdir))
+    path_default = layout_default.relative_path_for_spec(spec)
+    assert(path_default ==
+           spec.format("${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"))   # NOQA: ignore=E501
+
+    # Test hash_length parameter works correctly
+    layout_10 = YamlDirectoryLayout(str(tmpdir), hash_len=10)
+    path_10 = layout_10.relative_path_for_spec(spec)
+    layout_7 = YamlDirectoryLayout(str(tmpdir), hash_len=7)
+    path_7 = layout_7.relative_path_for_spec(spec)
+
+    assert(len(path_default) - len(path_10) == 22)
+    assert(len(path_default) - len(path_7) == 25)
+
+    # Test path_scheme
+    arch, compiler, package7 = path_7.split('/')
+    scheme_package7 = "${PACKAGE}-${VERSION}-${HASH:7}"
+
+    layout_package7 = YamlDirectoryLayout(str(tmpdir),
+                                          path_scheme=scheme_package7)
+    path_package7 = layout_package7.relative_path_for_spec(spec)
+
+    assert(package7 == path_package7)
+
+    # Ensure conflicting parameters caught
+    with pytest.raises(InvalidDirectoryLayoutParametersError):
+        YamlDirectoryLayout(str(tmpdir),
+                            hash_len=20,
+                            path_scheme=scheme_package7)
 
 
 def test_read_and_write_spec(
