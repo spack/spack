@@ -1,8 +1,8 @@
 import unittest
 import itertools
+import re
 
-import spack.cmd.rpm as rpm
-from spack.cmd.rpm import resolve_autoname, Rpm, RpmSpec, RpmInfo
+from spack.cmd.rpm import *
 
 class MockSpec(object):
     def __init__(self, name, deps=None):
@@ -143,3 +143,18 @@ class RpmTest(unittest.TestCase):
         expected = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1), 
             MockNamespace.path(specX1), set([rpmZ1, rpmY1]))
         self.assertEqual(expected, resultRpm)
+
+    def test_fill_spec(self):
+        rpm_spec = RpmSpec(
+            'foo-3.5',
+            summary='example package summary',
+            license='BSD',
+            group='examples',
+            system_build_requires=['system_binutils'])
+
+        spec_vars = rpm_spec.new_spec_variables(
+            ['spack_bar', 'spack_baz'],
+            './bin/spack install foo@3.5',
+            '/usr/spack/foo-3.5')
+
+        spec_contents = fill_spec_template(spec_vars, default_spec())
