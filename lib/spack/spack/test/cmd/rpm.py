@@ -68,11 +68,11 @@ class MockNamespaceStore(object):
 
 namespaceStore = MockNamespaceStore()
 
-"""
-  X
- / \ (build)
-Y   Z
-"""
+# The following spec instantiations build a simple dependency dag:
+#
+#   X
+#  / \ (build)
+# Y   Z
 
 specY1 = MockSpec('y')
 specZ1 = MockSpec('z')

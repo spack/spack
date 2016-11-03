@@ -581,12 +581,13 @@ def resolve_autoname(
     transitively.
 
     Notes:
-    -If a package is marked as a build dependency it is a build dependency
-     everywhere (even if other packages require it as a runtime dependency an
-     rpm will not be generated)
-    -Transitive dependencies of packages marked as build dependencies will also
-     not generate RPMs unless there is a path from the root which does not
-     traverse any build dependencies
+
+     * If a package is marked as a build dependency it is a build dependency
+       everywhere (even if other packages require it as a runtime dependency an
+       rpm will not be generated)
+     * Transitive dependencies of packages marked as build dependencies will
+       also not generate RPMs unless there is a path from the root which does
+       not traverse any build dependencies
     """
     if not visited:
         visited = set()
@@ -798,6 +799,7 @@ class ConfigStore(object):
             spec.skel
             filter* (any exe with the prefix "filter")
             systempkg.yaml
+
         ... (one folder per package)
 
     and
@@ -810,6 +812,7 @@ class ConfigStore(object):
             rpmprops.json
             specvars.json
             <rpm name>.spec
+
         ... (one folder per rpm)
     """
     def __init__(self, output_dir, pkgs_dir=None, specs_dir=None):
