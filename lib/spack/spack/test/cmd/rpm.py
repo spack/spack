@@ -158,3 +158,26 @@ class RpmTest(unittest.TestCase):
             '/usr/spack/foo-3.5')
 
         spec_contents = fill_spec_template(spec_vars, default_spec())
+
+    def test_parse_spec(self):
+        rpm_spec = RpmSpec(
+            'foo-3.5',
+            summary='example package summary',
+            license='BSD',
+            group='examples',
+            system_build_requires=['system_binutils'])
+
+        spec_vars = rpm_spec.new_spec_variables(
+            ['spack_bar', 'spack_baz'],
+            './bin/spack install foo@3.5',
+            '/usr/spack/foo-3.5')
+
+        spec_contents = fill_spec_template(spec_vars, default_spec())
+
+        spec_vars, rpm_props = RpmSpecParser().parse_to_properties(
+            spec_contents, 'foo', '/usr/spack/')
+
+        self.assertEqual('example package summary', spec_vars.SUMMARY)
+        self.assertTrue(not spec_vars.PACKAGE_PATH)
+        self.assertEqual('foo-3.5', rpm_props.name_spec)
+        self.assertEqual('/usr/spack/', rpm_props.root)

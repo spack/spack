@@ -287,7 +287,7 @@ class RpmSpecParser(object):
                 comments.append(' '.join(tokens))
         return list(tuple(i) + (c,) for i, c in zip(ids, comments))
 
-    def parse_to_properties(self, cfg_store, spec_contents, pkg_name, root):
+    def parse_to_properties(self, spec_contents, pkg_name, root):
         tags, clog = RpmSpecParser.parse(spec_contents.split('\n'))
 
         # BUILDREQUIRES, REQUIRES, INSTALL, PACKAGE_PATH
@@ -300,7 +300,8 @@ class RpmSpecParser(object):
             REQUIRES=None, BUILD_REQUIRES=None, INSTALL=None,
             PACKAGE_PATH=None, CHANGE_LOG=clog, SUMMARY=tags['summary'],
             LICENSE=tags['license'], VERSION=tags['version'],
-            GROUP=tags['group'])
+            GROUP=tags['group'], SYSTEM_REQUIRES=[],
+            SYSTEM_BUILD_REQUIRES=[])
 
         # non_rpm_deps is not recorded in a spec so must be filled manually.
         # ignore_deps has the same issue. rpm_deps could be inferred from the
@@ -311,8 +312,7 @@ class RpmSpecParser(object):
             rpm_deps=[], non_rpm_deps=[], ignore_deps=[], root=root,
             name_spec=rpm_name, provides_spec=provides)
 
-        cfg_store.save_rpm_properties(rpm_name, rpm_props.to_json())
-        cfg_store.save_spec_properties(rpm_name, spec_vars.to_json())
+        return spec_vars, rpm_props
 
 
 def read_rpms_transitive(cfg_store, rpm_name, rpm_db):
@@ -513,8 +513,11 @@ def generate_rpms_transitive(args):
     if args.bootstrap:
         rpm_name, pkg_name, root = args.bootstrap
         spec_contents = cfg_store.get_spec(rpm_name)
-        RpmSpecParser().parse_to_properties(
-            cfg_store, spec_contents, pkg_name, root)
+        spec_vars, rpm_props = RpmSpecParser().parse_to_properties(
+            spec_contents, pkg_name, root)
+
+        cfg_store.save_rpm_properties(rpm_name, rpm_props.to_json())
+        cfg_store.save_spec_properties(rpm_name, spec_vars.to_json())
         return
 
     if cfg_store.specs_dir:
