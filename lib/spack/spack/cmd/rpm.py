@@ -726,11 +726,11 @@ def resolve_pkg_to_namespace(universalSubspace=None):
     available and there is no default, that is an error).
     """
     packages = spack.config.get_config('packages')
-    pkgToSubspace = resolve_pkg_to_subspace(universalSubspace)
+    pkg_to_subspace = resolve_pkg_to_subspace(universalSubspace)
     pkgToNamespace = {}
     for pkgName, info in packages.iteritems():
-        if pkgName in pkgToSubspace:
-            subspace = info['subspaces'][pkgToSubspace[pkgName]]
+        if pkgName in pkg_to_subspace:
+            subspace = info['subspaces'][pkg_to_subspace[pkgName]]
         elif all(p in info for p in ['name', 'prefix']):
             subspace = info
         else:
@@ -744,7 +744,7 @@ def resolve_pkg_to_namespace(universalSubspace=None):
 
 
 def resolve_pkg_to_subspace(universalSubspace=None):
-    pkgToSubspace = {}
+    pkg_to_subspace = {}
     packages = spack.config.get_config('packages')
     for pkgName, info in packages.iteritems():
         # TODO: since these can be specified at the package level, use a more
@@ -756,14 +756,14 @@ def resolve_pkg_to_subspace(universalSubspace=None):
 
         subspaces = info['subspaces'] if 'subspaces' in info else {}
         if universalSubspace in subspaces:
-            pkgToSubspace[pkgName] = universalSubspace
+            pkg_to_subspace[pkgName] = universalSubspace
         elif defaultSubspace:
             pass
         else:
             tty.msg(
                 "{0}: universal subspace not specified,".format(pkgName) +
                 " and/or no suitable default")
-    return pkgToSubspace
+    return pkg_to_subspace
 
 
 class RpmInfo(object):
@@ -962,7 +962,7 @@ class NamespaceStore(object):
         # subspaces. The global preferences object is updated based on
         # the specified subspace to prefer the desired compiler/version
         # for the associated package.
-        spack.pkgsort.pkgToSubspace = resolve_pkg_to_subspace(
+        spack.pkgsort.pkg_to_subspace = resolve_pkg_to_subspace(
             universalSubspace)
         pkgToNamespace = resolve_pkg_to_namespace(universalSubspace)
         if getNamespaceFromSpecs:
