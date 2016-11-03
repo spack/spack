@@ -72,4 +72,6 @@ db = Database(root)
 # This controls how spack lays out install prefixes and
 # stage directories.
 #
-layout = YamlDirectoryLayout(root)
+layout = YamlDirectoryLayout(root,
+                             hash_len=config.get('install_hash_length'),
+                             path_scheme=config.get('install_path_scheme'))
