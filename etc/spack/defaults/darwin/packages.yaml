@@ -15,9 +15,4 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag]
-    providers:
-      mpi: [openmpi, mpich]
-      blas: [openblas]
-      lapack: [openblas]
-      pil: [py-pillow]
+    compiler: [clang, gcc, intel]
