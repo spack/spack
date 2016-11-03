@@ -244,17 +244,17 @@ def module(parser, args):
             'known': True
         },
     }
-    arguments.ConstraintAction.qualifiers.update(constraint_qualifiers)
-
+    query_args = constraint_qualifiers.get(args.subparser_name, {})
+    specs = args.specs(**query_args)
     module_type = args.module_type
     constraint = args.constraint
     try:
-        callbacks[args.subparser_name](module_type, args.specs, args)
+        callbacks[args.subparser_name](module_type, specs, args)
     except MultipleMatches:
         message = ('the constraint \'{query}\' matches multiple packages, '
                    'and this is not allowed in this context')
         tty.error(message.format(query=constraint))
-        for s in args.specs:
+        for s in specs:
             sys.stderr.write(s.format(color=True) + '\n')
         raise SystemExit(1)
     except NoMatch:
