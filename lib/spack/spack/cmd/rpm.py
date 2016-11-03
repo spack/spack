@@ -350,6 +350,19 @@ class SpackRpmProperties(Properties):
         'pkg_name', 'pkg_spec', 'path', 'rpm_deps', 'non_rpm_deps',
         'ignore_deps', 'root', 'name_spec', 'provides_spec'])
 
+    CONVERSION = {
+        'pkgName': 'pkg_name', 'pkgSpec': 'pkg_spec', 'rpmDeps': 'rpm_deps',
+        'nonRpmDeps': 'non_rpm_deps', 'ignoreDeps': 'ignore_deps',
+        'nameSpec': 'name_spec', 'providesSpec': 'provides_spec'}
+
+    @staticmethod
+    def convert_old_names(properties):
+        new = dict()
+        for k, v in properties.iteritems():
+            new_k = SpackRpmProperties.CONVERSION.get(k, k)
+            new[new_k] = v
+        return new
+
     def __init__(self, **kwargs):
         super(SpackRpmProperties, self).__init__(
             SpackRpmProperties.PROPERTIES, **kwargs)
@@ -367,7 +380,8 @@ class SpackRpmProperties(Properties):
 
     @staticmethod
     def from_json(string):
-        return SpackRpmProperties(**json.loads(string))
+        return SpackRpmProperties(
+            **SpackRpmProperties.convert_old_names(json.loads(string)))
 
 
 class Rpm(object):
