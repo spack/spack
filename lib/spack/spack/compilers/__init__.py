@@ -26,7 +26,6 @@
 system and configuring Spack to use multiple compilers.
 """
 import imp
-import platform
 
 from llnl.util.lang import list_modules
 from llnl.util.filesystem import join_path
