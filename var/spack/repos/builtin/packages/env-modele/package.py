@@ -55,6 +55,7 @@ class EnvModele(Package):
 
     # -------- Python post-processing environment
     depends_on('python@3:', when='+python')
+    depends_on('py-cython', when='+python')
     depends_on('py-scipy', when='+python')
     depends_on('py-netcdf', when='+python')
     depends_on('py-matplotlib', when='+python')
@@ -64,6 +65,7 @@ class EnvModele(Package):
     depends_on('py-proj', when='+python')
 #    depends_on('py-bsddb3', when='+python')
     depends_on('py-udunits', when='+python')
+    depends_on('py-more-itertools', when='+python')
 
     def url_for_version(self, version):
         return 'https://github.com/citibeth/dummy/tarball/v1.0'
