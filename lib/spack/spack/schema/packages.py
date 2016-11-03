@@ -76,27 +76,28 @@ schema = {
                             'type': 'object',
                             'default': {},
                         },
-                        'name': { 'type' : 'string' },
-                        'prefix': { 'type' : 'string' },
-                        'provides': { 'type' : 'string' },
+                        'name': {'type': 'string'},
+                        'prefix': {'type': 'string'},
+                        'provides': {'type': 'string'},
                         'subspaces': {
                             'type': 'object',
                             'patternProperties': {
                                 r'\w[\w-]*': {
                                     'type': 'object',
                                     'properties': {
-                                        'name': { 'type' : 'string' },
-                                        'prefix' : { 'type' : 'string' },
-                                        'provides' : { 'type' : 'string' },
+                                        'name': {'type': 'string'},
+                                        'prefix': {'type': 'string'},
+                                        'provides': {'type': 'string'},
                                         'compiler': {
-                                            'type' : 'array',
-                                            'default' : [],
-                                            'items' : { 'type' : 'string' } },
+                                            'type': 'array',
+                                            'default': [],
+                                            'items': {'type': 'string'}},
                                         'version': {
-                                            'type' : 'array',
-                                            'default' : [],
-                                            'items' : { 'anyOf' : [ { 'type' : 'string' },
-                                                                    { 'type' : 'number'}]}}, #version strings
+                                            'type': 'array',
+                                            'default': [],
+                                            'items': {'anyOf': [
+                                                {'type': 'string'},
+                                                {'type': 'number'}]}},
                                     }}}
                         },
                         'variants': {
