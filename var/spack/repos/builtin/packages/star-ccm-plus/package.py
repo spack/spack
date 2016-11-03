@@ -36,11 +36,6 @@ class StarCcmPlus(Package):
 
     variant('docs', default=False, description='Install the documentation')
 
-    # depends_on('jdk')
-    # depends_on('opengl@2.1:')  # TODO: Add OpenGL package
-    # MPICH is no longer supported
-    # depends_on('mpi')
-
     # Licensing
     license_required = True
     license_vars = ['CDLMD_LICENSE_FILE', 'LM_LICENSE_FILE']
@@ -77,7 +72,6 @@ class StarCcmPlus(Package):
         installer(
             '-i', 'silent',
             '-DINSTALLDIR={0}'.format(prefix),
-            # '-PCMPIINSTALLDIR={0}'.format(spec['mpi'].prefix),
             '-DINSTALLFLEX=false',
             '-DADDSYSTEMPATH=false',
             '-DNODOC={0}'.format('false' if '+docs' in spec else 'true')
