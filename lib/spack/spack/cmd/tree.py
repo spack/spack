@@ -68,7 +68,6 @@ def print_links(link_to_target, root):
         print link, '--->', target
 
 
-# TODO: this only handles package projections, not target projections
 def update_install(installed_specs, tree, config=None):
     config = config or UpdateConfig()
     # TODO: must get all specs here because an installed spec may be a
@@ -83,7 +82,6 @@ def update_install(installed_specs, tree, config=None):
 
     link_to_spec = project_packages(
         specs_for_update, projections_config, resolve_conflict)
-
     update = dict()
     rm_links = list()
     for link, spec in link_to_spec.iteritems():
@@ -115,6 +113,29 @@ def update_install(installed_specs, tree, config=None):
     check_for_prefix_collisions(set(update), root)
     config.link_action(update, root)
 
+    link_to_target = project_targets(
+        specs_for_update, projections_config, resolve_target_conflict)
+    update = dict()
+    rm_links = list()
+    for link, (spec, target) in link_to_target.iteritems():
+        prev_spec = config.spec_from_target(link, target)
+        if prev_spec:
+            if prev_spec == spec:
+                continue
+            chosen = resolve_conflict([spec, prev_spec])
+            if chosen == prev_spec:
+                continue
+            else:
+                rm_links.append(link)
+        target_path = join_path(spec.prefix, target)
+        update[link] = target_path
+
+    for link_path in rm_links:
+        config.delete(link_path)
+
+    check_for_target_collisions(set(update))
+    config.link_action(update, relative_root)
+
 
 def read_spec_from_prefix(path):
     # Here path is expected to be a package prefix
@@ -122,14 +143,23 @@ def read_spec_from_prefix(path):
     return spack.install_layout.read_spec(spec_yaml_path)
 
 
+def read_spec_from_target(link, target):
+    relative_depth = len(x for x in target.split(os.sep) if x) - 1
+    real_target_path = os.path.realpath(link)
+    target_dir = os.path.dirname(real_target_path)
+    prefix_path = join_path(target_dir, *([os.pardir] * relative_depth))
+    return read_spec_from_prefix(prefix_path)
+
+
 class UpdateConfig(object):
     def __init__(
             self, relevant_specs=None, link_action=None, delete=None,
-            spec_from_prefix=None):
+            spec_from_prefix=None, spec_from_target=None):
         self.relevant_specs = relevant_specs or get_relevant_specs
         self.link_action = link_action or create_softlinks
         self.delete = delete or os.remove
         self.spec_from_prefix = spec_from_prefix or read_spec_from_prefix
+        self.spec_from_target = spec_from_target or read_spec_from_target
 
 
 # TODO: unfinished
