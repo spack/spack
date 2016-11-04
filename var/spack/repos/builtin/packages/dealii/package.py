@@ -117,19 +117,16 @@ class Dealii(CMakePackage):
     depends_on("numdiff",     when='@develop')
     depends_on("astyle@2.04", when='@develop')
 
+    def build_type(self):
+        # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
+        return 'DebugRelease'
+
     def cmake_args(self):
         spec = self.spec
         options = []
-        options.extend(std_cmake_args)
-
-        # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
-        for word in options[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                options.remove(word)
 
         lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
         options.extend([
-            '-DCMAKE_BUILD_TYPE=DebugRelease',
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
