@@ -34,9 +34,9 @@ class Matio(AutotoolsPackage):
     version('1.5.2', '85b007b99916c63791f28398f6a4c6f1')
 
     variant("zlib", default=True,
-            description='Enable support for compressed mat files')
+            description='support for compressed mat files')
     variant("hdf5", default=True,
-            description='Enable support for version 7.3 mat files via the hdf5 library')
+            description='support for version 7.3 mat files via hdf5')
 
     depends_on("zlib", when="+zlib")
     depends_on("hdf5", when="+hdf5")
