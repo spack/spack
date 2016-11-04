@@ -43,11 +43,8 @@ class Opencoarrays(CMakePackage):
 
     provides('coarrays')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            args = std_cmake_args
-            args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-            args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-            cmake('..', *args)
-            make()
-            make("install")
+    def cmake_args(self):
+        args = []
+        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
+        return args
