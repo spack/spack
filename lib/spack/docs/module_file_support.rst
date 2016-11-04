@@ -675,7 +675,8 @@ command is ``module rm``:
 .. command-output:: spack module rm --help
 
 .. note::
-  We care about your module files!  Every modification done on modules
+  We care about your module files!
+   Every modification done on modules
    that are already existing will ask for a confirmation by default. If
    the command is used in a script it is possible though to pass the
    ``-y`` argument, that will skip this safety measure.
