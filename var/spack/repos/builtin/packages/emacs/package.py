@@ -52,7 +52,7 @@ class Emacs(Package):
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
             if toolkit not in ('gtk', 'athena'):
-                raise InstallError("toolkit must be one of (gtk, athena), not %s" %
+                raise InstallError("toolkit must be in (gtk, athena), not %s" %
                                    toolkit)
             args = [
                 '--with-x',
