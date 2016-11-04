@@ -42,7 +42,7 @@ class Everytrace(CMakePackage):
     depends_on('cmake', type='build')
     depends_on('mpi', when='+mpi')
 
-    def configure_args(self):
+    def cmake_args(self):
         spec = self.spec
         return [
             '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
