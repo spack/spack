@@ -2026,8 +2026,8 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
-   :pyobject: Libelf.install
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libpng/package.py
+   :pyobject: Libpng.install
    :linenos:
 
 ``install`` takes a ``spec``: a description of how the package should

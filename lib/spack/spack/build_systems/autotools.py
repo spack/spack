@@ -24,7 +24,11 @@
 ##############################################################################
 
 import inspect
+import os
 import os.path
+import shutil
+from subprocess import PIPE
+from subprocess import check_call
 
 import llnl.util.tty as tty
 from spack.package import PackageBase
@@ -46,6 +50,79 @@ class AutotoolsPackage(PackageBase):
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'AutotoolsPackage'
+    patch_config_guess = True
+
+    def do_patch_config_guess(self):
+        """Some packages ship with an older config.guess and need to have
+        this updated when installed on a newer architecture."""
+
+        my_config_guess = None
+        config_guess = None
+        if os.path.exists('config.guess'):
+            # First search the top-level source directory
+            my_config_guess = 'config.guess'
+        else:
+            # Then search in all sub directories.
+            # We would like to use AC_CONFIG_AUX_DIR, but not all packages
+            # ship with their configure.in or configure.ac.
+            d = '.'
+            dirs = [os.path.join(d, o) for o in os.listdir(d)
+                    if os.path.isdir(os.path.join(d, o))]
+            for dirname in dirs:
+                path = os.path.join(dirname, 'config.guess')
+                if os.path.exists(path):
+                    my_config_guess = path
+
+        if my_config_guess is not None:
+            try:
+                check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
+                # The package's config.guess already runs OK, so just use it
+                return True
+            except:
+                pass
+
+        # Look for a spack-installed automake package
+        if 'automake' in self.spec:
+            automake_path = os.path.join(self.spec['automake'].prefix, 'share',
+                                         'automake-' +
+                                         str(self.spec['automake'].version))
+            path = os.path.join(automake_path, 'config.guess')
+            if os.path.exists(path):
+                config_guess = path
+        if config_guess is not None:
+            try:
+                check_call([config_guess], stdout=PIPE, stderr=PIPE)
+                shutil.copyfile(config_guess, my_config_guess)
+                return True
+            except:
+                pass
+
+        # Look for the system's config.guess
+        if os.path.exists('/usr/share'):
+            automake_dir = [s for s in os.listdir('/usr/share') if
+                            "automake" in s]
+            if automake_dir:
+                automake_path = os.path.join('/usr/share', automake_dir[0])
+                path = os.path.join(automake_path, 'config.guess')
+                if os.path.exists(path):
+                    config_guess = path
+        if config_guess is not None:
+            try:
+                check_call([config_guess], stdout=PIPE, stderr=PIPE)
+                shutil.copyfile(config_guess, my_config_guess)
+                return True
+            except:
+                pass
+
+        return False
+
+    def patch(self):
+        """Perform any required patches."""
+
+        if self.patch_config_guess and self.spec.satisfies(
+                'arch=linux-redhat7-ppc64le'):
+            if not self.do_patch_config_guess():
+                raise RuntimeError('Failed to find suitable config.guess')
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""

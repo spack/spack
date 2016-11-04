@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cairo(Package):
+class Cairo(AutotoolsPackage):
     """Cairo is a 2D graphics library with support for multiple output
     devices."""
     homepage = "http://cairographics.org"
@@ -40,9 +40,7 @@ class Cairo(Package):
     depends_on("pkg-config", type="build")
     depends_on("fontconfig@2.10.91:")  # Require newer version of fontconfig.
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--disable-trace",  # can cause problems with libiberty
-                  "--enable-tee")
-        make()
-        make("install")
+    def configure_args(self):
+        args = ["--disable-trace",  # can cause problems with libiberty
+                "--enable-tee"]
+        return args

@@ -33,6 +33,13 @@ class Dyninst(Package):
     url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
 
+    # version 9.2.1b was the latest git commit when trying to port to a
+    # ppc64le system to get fixes in computeAddrWidth independent of 
+    # endianness. This version can be removed if the next release includes
+    # this change. The actual commit was
+    # b8596ad4023ec40ac07e669ff8ea3ec06e262703
+    version('9.2.1b', git='https://github.com/dyninst/dyninst.git',
+            commit='859cb778e20b619443c943c96dd1851da763142b')
     version('9.2.0', 'ad023f85e8e57837ed9de073b59d6bab',
             url="https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz")
     version('9.1.0', '5c64b77521457199db44bec82e4988ac',
@@ -67,19 +74,21 @@ class Dyninst(Package):
         libdwarf = spec['libdwarf'].prefix
 
         with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
-                  '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
-                  '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                  '-DLIBELF_INCLUDE_DIR=%s'   % join_path(
-                      libelf.include, 'libelf'),
-                  '-DLIBELF_LIBRARIES=%s'     % join_path(
-                      libelf.lib, 'libelf.so'),
-                  '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
-                  '-DLIBDWARF_LIBRARIES=%s'   % join_path(
-                      libdwarf.lib, 'libdwarf.so'),
-                  *std_cmake_args)
-
+            args = ['..',
+                    '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
+                    '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
+                    '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                    '-DLIBELF_INCLUDE_DIR=%s'   % join_path(
+                        libelf.include, 'libelf'),
+                    '-DLIBELF_LIBRARIES=%s'     % join_path(
+                        libelf.lib, 'libelf.so'),
+                    '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
+                    '-DLIBDWARF_LIBRARIES=%s'   % join_path(
+                        libdwarf.lib, 'libdwarf.so')]
+            if spec.satisfies('arch=linux-redhat7-ppc64le'):
+                args.append('-Darch_ppc64_little_endian=1')
+            args += std_cmake_args
+            cmake(*args)
             make()
             make("install")
 
