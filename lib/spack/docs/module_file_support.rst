@@ -544,7 +544,7 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVERSION}'
+           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
            all:
              conflict: ['${PACKAGE}', 'intel/14.0.1']
 
