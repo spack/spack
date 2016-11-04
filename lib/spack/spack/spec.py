@@ -2209,6 +2209,9 @@ class Spec(object):
                              ${SPACK_PREFIX}/opt
             ${PREFIX}        The package prefix
 
+        Note these are case-insensitive: for example you can specify either
+        ``${PACKAGE}`` or ``${package}``.
+
         Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
         ``$-20_`` for a left-justified name.
@@ -2299,6 +2302,7 @@ class Spec(object):
                                          "'%s'" % format_string)
                     named_str += c
                     continue
+                named_str = named_str.upper()
                 if named_str == 'PACKAGE':
                     name = self.name if self.name else ''
                     write(fmt % self.name, '@')
