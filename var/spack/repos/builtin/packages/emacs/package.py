@@ -34,7 +34,7 @@ class Emacs(Package):
     version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
-    variant('X', default=True, description="Enable an X toolkit")
+    variant('X', default=False, description="Enable an X toolkit")
     variant('toolkit', default='gtk',
             description="Select an X toolkit (gtk, athena)")
 
@@ -45,16 +45,18 @@ class Emacs(Package):
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('glib', when='+X toolkit=gtk')
     depends_on('gtkplus', when='+X toolkit=gtk')
 
     def install(self, spec, prefix):
         args = []
+        toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            # TODO: should check that toolkit is valid (gtk, athena)
+            if toolkit not in ('gtk', 'athena'):
+                raise InstallError("toolkit must be one of (gtk, athena), not %s" %
+                                   toolkit)
             args = [
                 '--with-x',
-                '--with-x-toolkit={0}'.format(spec.variants['toolkit'].value)
+                '--with-x-toolkit={0}'.format(toolkit)
             ]
         else:
             args = ['--without-x']
