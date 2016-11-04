@@ -120,7 +120,6 @@ class Dealii(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         options = []
-        options.extend(std_cmake_args)
 
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         for word in options[:]:
