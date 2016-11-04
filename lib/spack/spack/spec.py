@@ -2311,7 +2311,7 @@ class Spec(object):
                 elif named_str == 'COMPILERNAME':
                     if self.compiler:
                         write(fmt % self.compiler.name, '%')
-                elif named_str == 'COMPILERVER':
+                elif named_str in ['COMPILERVER', 'COMPILERVERSION']:
                     if self.compiler:
                         write(fmt % self.compiler.versions, '%')
                 elif named_str == 'COMPILERFLAGS':
