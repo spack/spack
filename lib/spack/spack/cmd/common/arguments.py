@@ -89,3 +89,11 @@ _arguments['clean'] = Args(
 _arguments['dirty'] = Args(
     '--dirty', action='store_true', dest='dirty',
     help='Do NOT clean environment before installing.')
+
+_arguments['long'] = Args(
+    '-l', '--long', action='store_true',
+    help='Show dependency hashes as well as versions.')
+
+_arguments['very_long'] = Args(
+    '-L', '--very-long', action='store_true',
+    help='Show full dependency hashes as well as versions.')
