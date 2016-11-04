@@ -96,7 +96,7 @@ Next you should install a few modules that will be used in the tutorial:
 
 .. code-block:: console
 
-  $ spack install netlib-scalapack ^ openmpi ^ openblas
+  $ spack install netlib-scalapack ^openmpi ^openblas
   # ...
 
 The packages you need to install are:
@@ -212,11 +212,12 @@ Prevent some module files from being generated
 Another common request at many sites is to avoid exposing software that
 is only needed as an intermediate step when building a newer stack.
 Let's try to comply to this rule preventing the generation of
-module files for anything that is compiled with ``gcc@4.8`` (the os provided compiler).
+module files for anything that is compiled with ``gcc@4.8`` (the OS provided compiler).
 
 To do that you should add a ``blacklist`` keyword to the configuration file:
 
 .. code-block:: yaml
+  :emphasize-lines: 3,4
 
   modules:
     tcl:
@@ -269,6 +270,7 @@ the module for ``gcc@6.2.0`` disappeared as it was bootstrapped with ``gcc@4.8.0
 exceptions to the blacklist rules you can use ``whitelist``:
 
 .. code-block:: yaml
+  :emphasize-lines: 3,4
 
   modules:
     tcl:
@@ -307,6 +309,7 @@ use the ``hash_length`` keyword in the configuration file:
 .. TODO: give reasons to remove hashes if they are not evident enough?
 
 .. code-block:: yaml
+  :emphasize-lines: 3
 
   modules:
     tcl:
@@ -344,6 +347,7 @@ the hashes the four different flavors of ``netlib-scalapack`` map to the same mo
 name. We have the possibility to add suffixes to differentiate them:
 
 .. code-block:: yaml
+ :emphasize-lines: 9-11,14-17
 
   modules:
     tcl:
@@ -387,6 +391,7 @@ Finally we can set a ``naming_scheme`` to prevent users from loading
 modules that refer to different flavors of the same library/application:
 
 .. code-block:: yaml
+  :emphasize-lines: 4,10,11
 
   modules:
     tcl:
@@ -428,7 +433,7 @@ The final result should look like:
 .. note::
   TCL specific directive
     The directives ``naming_scheme`` and ``conflict`` are TCL specific and do not apply
-    to ``dotkit`` or ``lmod``.
+    to the ``dotkit`` or ``lmod`` sections in the configuration file.
 
 ------------------------------------
 Add custom environment modifications
@@ -440,6 +445,7 @@ is installed. You can reach this goal using Spack by adding an
 ``environment`` directive to the configuration file:
 
 .. code-block:: yaml
+  :emphasize-lines: 17-19
 
   modules:
     tcl:
@@ -466,10 +472,11 @@ is installed. You can reach this goal using Spack by adding an
           '^mpich': mpich
 
 The tokens that you can use in module files and will be expanded in the ``environment``
-and ``naming_scheme`` directives are thise understood by the ``Spec.format`` method.
+and ``naming_scheme`` directives are those understood by the ``Spec.format`` method.
 Regenerating the module files should result in:
 
 .. code-block:: console
+  :emphasize-lines: 14
 
   $ spack module refresh -y -m tcl
   ==> Regenerating tcl module files
@@ -498,6 +505,7 @@ etc. int the ``gcc`` module file and apply other custom modifications to the
 ``openmpi`` modules with the following:
 
 .. code-block:: yaml
+  :emphasize-lines: 20-32
 
   modules:
     tcl:
@@ -536,7 +544,8 @@ etc. int the ``gcc`` module file and apply other custom modifications to the
           '^openmpi': openmpi
           '^mpich': mpich
 
-This time to regenerate the module file we will be more selective:
+This time we will be more selective and regenerate only the ``gcc`` and
+``openmpi`` module files:
 
 .. code-block:: console
 
@@ -600,6 +609,7 @@ the dependencies automatically. You can for instance generate python
 modules that autoload their dependencies by adding the ``autoload`` directive:
 
 .. code-block:: yaml
+  :emphasize-lines: 37,38
 
   modules:
     tcl:
@@ -640,7 +650,7 @@ modules that autoload their dependencies by adding the ``autoload`` directive:
       ^python:
         autoload:  'direct'
 
-and regenerating the module files:
+and regenerating the module files for every package that depends on ``python``:
 
 .. code-block:: console
 
@@ -725,6 +735,7 @@ enabled module file generators. The other things you need to do are:
 After modifications the configuration file will be:
 
 .. code-block:: yaml
+  :emphasize-lines: 2-6
 
   modules:
     enable::
@@ -787,7 +798,7 @@ and update ``MODULEPATH`` to point to the ``Core`` folder:
   ----------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
      gcc/6.2.0
 
-As you see the only module visible now is ``gcc``: loading that you will make
+As you see the only module visible now is ``gcc``. Loading that you will make
 visible the ``Compiler`` part of the software stack that was built with ``gcc/6.2.0``:
 
 .. code-block:: console
@@ -863,6 +874,7 @@ can add an arbitrary list of virtual providers to the triplet
 ``Core``/``Compiler``/``MPI``. A configuration file like:
 
 .. code-block:: yaml
+  :emphasize-lines: 7,8
 
   modules:
     enable::
