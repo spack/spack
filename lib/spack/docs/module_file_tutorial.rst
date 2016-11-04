@@ -173,7 +173,7 @@ Next you should regenerate all the module files:
 
 .. code-block:: console
 
-  $ spack module refresh -m tcl
+  $ spack module refresh --module-type tcl
   ==> You are about to regenerate tcl module files for:
 
   -- linux-Ubuntu14-x86_64 / gcc@4.8 ------------------------------
@@ -231,7 +231,7 @@ and regenerate the module files:
 
 .. code-block:: console
 
-  $ spack module refresh -m tcl --delete-tree
+  $ spack module refresh --module-type tcl --delete-tree
   ==> You are about to regenerate tcl module files for:
 
   -- linux-Ubuntu14-x86_64 / gcc@4.8 ------------------------------
@@ -286,7 +286,7 @@ exceptions to the blacklist rules you can use ``whitelist``:
 
 .. code-block:: console
 
-  $ spack module refresh -m tcl -y
+  $ spack module refresh --module-type tcl -y
 
 you'll see that now the module for ``gcc@6.2.0`` reappeared:
 
@@ -326,7 +326,7 @@ If you try to regenerate the module files now you will get an error:
 
 .. code-block:: console
 
-  $ spack module refresh -m tcl --delete-tree -y
+  $ spack module refresh --module-type tcl --delete-tree -y
   ==> Error: Name clashes detected in module files:
 
   file : /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/netlib-scalapack-2.0.2-gcc-6.2.0
@@ -373,7 +373,7 @@ Regenerating module files now we obtain:
 
 .. code-block:: console
 
-  $ spack module refresh -m tcl --delete-tree -y
+  $ spack module refresh --module-type tcl --delete-tree -y
   ==> Regenerating tcl module files
   $ module avail
 
@@ -471,14 +471,17 @@ is installed. You can reach this goal using Spack by adding an
           '^openmpi': openmpi
           '^mpich': mpich
 
-The tokens that you can use in module files and will be expanded in the ``environment``
-and ``naming_scheme`` directives are those understood by the ``Spec.format`` method.
+There are many variable tokens available to use in the ``environment``
+and ``naming_scheme`` directives, such as ``${PACKAGE}``,
+``${VERSION}``, etc. (see :meth:`~spack.spec.Spec.format` API documentation
+for the complete list).
+
 Regenerating the module files should result in:
 
 .. code-block:: console
   :emphasize-lines: 14
 
-  $ spack module refresh -y -m tcl
+  $ spack module refresh -y --module-type tcl
   ==> Regenerating tcl module files
 
   $ module show gcc
@@ -549,10 +552,10 @@ This time we will be more selective and regenerate only the ``gcc`` and
 
 .. code-block:: console
 
-  $ spack module refresh -y -m tcl gcc
+  $ spack module refresh -y --module-type tcl gcc
   ==> Regenerating tcl module files
 
-  $ spack module refresh -y -m tcl openmpi
+  $ spack module refresh -y --module-type tcl openmpi
   ==> Regenerating tcl module files
 
   $ module show gcc
@@ -654,7 +657,7 @@ and regenerating the module files for every package that depends on ``python``:
 
 .. code-block:: console
 
-  $ spack module refresh -y -m tcl ^python
+  $ spack module refresh -y --module-type tcl ^python
   ==> Regenerating tcl module files
 
 Now the ``py-scipy`` module will be:
@@ -785,7 +788,7 @@ You can now regenerate the module files
 
 .. code-block:: console
 
-  $ spack module refresh -m lmod --delete-tree -y
+  $ spack module refresh --module-type lmod --delete-tree -y
 
 and update ``MODULEPATH`` to point to the ``Core`` folder:
 
@@ -915,7 +918,7 @@ will add ``lapack`` providers to the mix. After the usual regeneration of module
 .. code-block:: console
 
   $ module purge
-  $ spack module refresh -m lmod --delete-tree -y
+  $ spack module refresh --module-type lmod --delete-tree -y
   ==> Regenerating lmod module files
 
 you will have something like:
