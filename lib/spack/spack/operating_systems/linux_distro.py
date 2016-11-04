@@ -1,5 +1,4 @@
 import re
-from external.distro import linux_distribution
 from spack.architecture import OperatingSystem
 
 
@@ -12,9 +11,14 @@ class LinuxDistro(OperatingSystem):
     """
 
     def __init__(self):
-        distname, version, _ = linux_distribution(
-            full_distribution_name=False)
-        distname, version = str(distname), str(version)
+        try:
+            # This will throw an error if imported on a non-Linux platform.
+            from external.distro import linux_distribution
+            distname, version, _ = linux_distribution(
+                full_distribution_name=False)
+            distname, version = str(distname), str(version)
+        except ImportError as e:
+            distname, version = 'unknown', ''
 
         # Grabs major version from tuple on redhat; on other platforms
         # grab the first legal identifier in the version field.  On
