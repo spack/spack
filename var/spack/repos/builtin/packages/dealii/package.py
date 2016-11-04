@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Dealii(Package):
+class Dealii(CMakePackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
@@ -118,7 +117,8 @@ class Dealii(Package):
     depends_on("numdiff",     when='@develop')
     depends_on("astyle@2.04", when='@develop')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
         options = []
         options.extend(std_cmake_args)
 
@@ -127,7 +127,6 @@ class Dealii(Package):
             if word.startswith('-DCMAKE_BUILD_TYPE'):
                 options.remove(word)
 
-        dsuf = 'dylib' if sys.platform == 'darwin' else 'so'
         lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
         options.extend([
             '-DCMAKE_BUILD_TYPE=DebugRelease',
@@ -215,9 +214,9 @@ class Dealii(Package):
                 '-DNETCDF_FOUND=true',
                 '-DNETCDF_LIBRARIES=%s;%s' % (
                     join_path(spec['netcdf-cxx'].prefix.lib,
-                              'libnetcdf_c++.%s' % dsuf),
+                              'libnetcdf_c++.%s' % dso_suffix),
                     join_path(spec['netcdf'].prefix.lib,
-                              'libnetcdf.%s' % dsuf)),
+                              'libnetcdf.%s' % dso_suffix)),
                 '-DNETCDF_INCLUDE_DIRS=%s;%s' % (
                     spec['netcdf-cxx'].prefix.include,
                     spec['netcdf'].prefix.include),
@@ -238,11 +237,7 @@ class Dealii(Package):
                 '-DDEAL_II_WITH_OPENCASCADE=OFF'
             ])
 
-        cmake('.', *options)
-        make()
-        if self.run_tests:
-            make("test")
-        make("install")
+        return options
 
     def setup_environment(self, spack_env, env):
         env.set('DEAL_II_DIR', self.prefix)
