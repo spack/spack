@@ -130,7 +130,6 @@ class Trilinos(CMakePackage):
 
         cxx_flags = []
         options = []
-        options.extend(std_cmake_args)
 
         mpi_bin = spec['mpi'].prefix.bin
         # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
