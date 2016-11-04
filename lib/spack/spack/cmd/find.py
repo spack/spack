@@ -52,14 +52,8 @@ def setup_parser(subparser):
         const='deps',
         help='Show full dependency DAG of installed packages')
 
-    subparser.add_argument('-l', '--long',
-                           action='store_true',
-                           dest='long',
-                           help='Show dependency hashes as well as versions.')
-    subparser.add_argument('-L', '--very-long',
-                           action='store_true',
-                           dest='very_long',
-                           help='Show dependency hashes as well as versions.')
+    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',
                            dest='show_flags',
