@@ -131,6 +131,7 @@ def update_install(installed_specs, tree, config=None):
         update[link] = target_path
 
     for link_path in rm_links:
+        # TODO: make sure rm_links has link paths vs. relative paths
         config.delete(link_path)
 
     check_for_target_collisions(set(update))
@@ -162,9 +163,49 @@ class UpdateConfig(object):
         self.spec_from_target = spec_from_target or read_spec_from_target
 
 
-# TODO: unfinished
-def update_uninstall(specs, config):
-    pass
+def update_uninstall(uninstalled_specs, tree, config=None):
+    config = config or UpdateConfig()
+    affected_pkgs = set(x.name for x in uninstalled_specs)
+    # TODO: must get all specs here because an installed spec may be a
+    # dependency of a transitive spec in the tree
+    tree_specs = set(config.relevant_specs(tree))
+    touched_specs = set(x for x in tree_specs if x.name in affected_pkgs)
+
+    root = tree['root']
+    projection_id = tree['projection']
+    projections_config = spack.config.get_config(
+        'projections')[projection_id]
+
+    link_to_spec = project_packages(
+        touched_specs, projections_config, resolve_conflict)
+
+    # TODO: should only project specs that are relevant to the tree
+    uninstalled_links = project_packages(
+        uninstalled_specs, projections_config, resolve_conflict)
+    uninstalled_prefixes = set(x.prefix for x in uninstalled_specs)
+
+    # Check realpath of each link, if the link points to the prefix of an
+    # uninstalled spec, then update the link
+    update = dict()
+    for link, spec in link_to_spec.iteritems():
+        link_path = join_path(root, link)
+        if (os.path.exists(link_path) and
+                os.path.realpath(link_path) in uninstalled_prefixes):
+            update[link] = spec
+
+    # In case the uninstalled links were not touched: you have to project them
+    # as well and delete. You should only delete if the link refers to the
+    # prefix of an uninstalled spec
+    rm_links = list()
+    for link, spec in uninstalled_links.iteritems():
+        link_path = join_path(root, link)
+        if link not in update and os.path.exists(link):
+            rm_links.append(link)
+
+    for link_path in rm_links:
+        # TODO: make sure rm_links has link paths vs. relative paths
+        config.delete(link_path)
+    config.link_action(update, relative_root)
 
 
 def resolve_conflict(specs):
