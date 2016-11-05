@@ -26,7 +26,6 @@
 system and configuring Spack to use multiple compilers.
 """
 import imp
-import platform
 
 from llnl.util.lang import list_modules
 from llnl.util.filesystem import join_path
@@ -43,12 +42,6 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _other_instance_vars = ['modules', 'operating_system']
 _cache_config_file = []
-
-# TODO: customize order in config file
-if platform.system() == 'Darwin':
-    _default_order = ['clang', 'gcc', 'intel']
-else:
-    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
 
 
 def _auto_compiler_spec(function):
@@ -167,18 +160,6 @@ def all_compilers(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [spack.spec.CompilerSpec(s['compiler']['spec'])
             for s in all_compilers_config(scope, init_config)]
-
-
-def default_compiler():
-    versions = []
-    for name in _default_order:
-        versions = find(name)
-        if versions:
-            break
-    else:
-        raise NoCompilersError()
-
-    return sorted(versions)[-1]
 
 
 def find_compilers(*paths):
