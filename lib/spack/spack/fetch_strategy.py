@@ -116,6 +116,14 @@ class FetchStrategy(object):
     def archive(self, destination):
         pass  # Used to create tarball for mirror.
 
+    @property
+    def cachable(self):
+        """Return whether the fetcher is capable of caching the
+           resource it retrieves. This generally is determined by
+           whether the resource is identifiably associated with a
+           specific package version."""
+        pass
+
     def __str__(self):  # Should be human readable URL.
         return "FetchStrategy.__str___"
 
@@ -271,6 +279,10 @@ class URLFetchStrategy(FetchStrategy):
     def archive_file(self):
         """Path to the source archive within this stage directory."""
         return self.stage.archive_file
+
+    @property
+    def cachable(self):
+        return bool(self.digest)
 
     @_needs_stage
     def expand(self):
@@ -555,6 +567,10 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         return self._git
 
+    @property
+    def cachable(self):
+        return bool(self.commit or self.tag)
+
     @_needs_stage
     def fetch(self):
         self.stage.chdir()
@@ -671,6 +687,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
             self._svn = which('svn', required=True)
         return self._svn
 
+    @property
+    def cachable(self):
+        return bool(self.revision)
+
     @_needs_stage
     def fetch(self):
         self.stage.chdir()
@@ -753,6 +773,10 @@ class HgFetchStrategy(VCSFetchStrategy):
         if not self._hg:
             self._hg = which('hg', required=True)
         return self._hg
+
+    @property
+    def cachable(self):
+        return bool(self.revision)
 
     @_needs_stage
     def fetch(self):
@@ -860,22 +884,30 @@ def for_package_version(pkg, version):
     raise InvalidArgsError(pkg, version)
 
 
+def from_list_url(pkg):
+    """If a package provides a URL which lists URLs for resources by
+       version, this can can create a fetcher for a URL discovered for
+       the specified package's version."""
+    if pkg.list_url:
+        try:
+            versions = pkg.fetch_remote_versions()
+            try:
+                url_from_list = versions[pkg.version]
+                return URLFetchStrategy(url=url_from_list, digest=None)
+            except KeyError:
+                tty.msg("Can not find version %s in url_list" %
+                        self.version)
+        except:
+            tty.msg("Could not determine url from list_url.")
+
+
 class FsCache(object):
 
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
     def store(self, fetcher, relativeDst):
-        unique = False
-        uidGroups = [['tag', 'commit'], ['digest'], ['revision']]
-        for grp in uidGroups:
-            try:
-                unique |= any(getattr(fetcher, x) for x in grp)
-            except AttributeError:
-                pass
-            if unique:
-                break
-        if not unique:
+        if not fetcher.cachable:
             return
 
         dst = join_path(self.root, relativeDst)
