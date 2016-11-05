@@ -390,8 +390,10 @@ class DefaultConcretizer(object):
                 c for c in matches
                 if _proper_compiler_style(c, spec.architecture)).copy()
         except StopIteration:
-            raise UnavailableCompilerVersionError(spec.compiler,
-                                                  arch.platform_os)
+            raise UnavailableCompilerVersionError(
+                spec.compiler, spec.architecture.platform_os
+            )
+
         assert(spec.compiler.concrete)
         return True  # things changed.
 
