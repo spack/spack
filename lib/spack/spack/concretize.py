@@ -385,14 +385,13 @@ class DefaultConcretizer(object):
                                                   arch.platform_os)
 
         # copy concrete version into other_compiler
-        index = 0
-        while not _proper_compiler_style(matches[index], spec.architecture):
-            index += 1
-            if index == len(matches) - 1:
-                arch = spec.architecture
-                raise UnavailableCompilerVersionError(spec.compiler,
-                                                      arch.platform_os)
-        spec.compiler = matches[index].copy()
+        try:
+            spec.compiler = next(
+                c for c in matches
+                if _proper_compiler_style(c, spec.architecture)).copy()
+        except StopIteration:
+            raise UnavailableCompilerVersionError(spec.compiler,
+                                                  arch.platform_os)
         assert(spec.compiler.concrete)
         return True  # things changed.
 

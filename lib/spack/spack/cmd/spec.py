@@ -23,36 +23,57 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import spack.cmd
 
 import spack
+import spack.cmd
+import spack.cmd.common.arguments as arguments
 
 description = "print out abstract and concrete versions of a spec."
 
 
 def setup_parser(subparser):
-    subparser.add_argument('-i', '--ids', action='store_true',
-                           help="show numerical ids for dependencies.")
+    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+    subparser.add_argument(
+        '-y', '--yaml', action='store_true', default=False,
+        help='Print concrete spec as YAML.')
+    subparser.add_argument(
+        '-c', '--cover', action='store',
+        default='nodes', choices=['nodes', 'edges', 'paths'],
+        help='How extensively to traverse the DAG. (default: nodes).')
+    subparser.add_argument(
+        '-I', '--install-status', action='store_true', default=False,
+        help='Show install status of packages.  Packages can be: '
+             'installed [+], missing and needed by an installed package [-], '
+             'or not installed (no annotation).')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
 def spec(parser, args):
-    kwargs = {'ids': args.ids,
-              'indent': 2,
-              'color': True}
+    kwargs = {'color': True,
+              'cover': args.cover,
+              'install_status': args.install_status,
+              'hashes': args.long or args.very_long,
+              'hashlen': None if args.very_long else 7}
 
     for spec in spack.cmd.parse_specs(args.specs):
+        # With -y, just print YAML to output.
+        if args.yaml:
+            spec.concretize()
+            print spec.to_yaml()
+            continue
+
+        # Print some diagnostic info by default.
         print "Input spec"
-        print "------------------------------"
+        print "--------------------------------"
         print spec.tree(**kwargs)
 
         print "Normalized"
-        print "------------------------------"
+        print "--------------------------------"
         spec.normalize()
         print spec.tree(**kwargs)
 
         print "Concretized"
-        print "------------------------------"
+        print "--------------------------------"
         spec.concretize()
         print spec.tree(**kwargs)

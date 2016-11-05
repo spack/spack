@@ -41,6 +41,7 @@ class Libsplash(Package):
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
+    version('1.6.0', 'c05bce95abfe1ae4cd9d9817acf58d94')
     version('1.5.0', 'c1efec4c20334242c8a3b6bfdc0207e3')
     version('1.4.0', '2de37bcef6fafa1960391bf44b1b50e0')
     version('1.3.1', '524580ba088d97253d03b4611772f37c')
