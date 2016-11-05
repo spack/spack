@@ -92,12 +92,13 @@ class Mpich(AutotoolsPackage):
             )
 
     def configure_args(self):
+        spec = self.spec
         return [
             '--enable-shared',
-            '--with-pm={0}'.format('hydra' if '+hydra' in self.spec else 'no'),
-            '--with-pmi={0}'.format('yes' if '+pmi' in self.spec else 'no'),
-            '--{0}-romio'.format('enable' if '+romio' in self.spec else 'disable'),
-            '--{0}-ibverbs'.format('with' if '+verbs' in self.spec else 'without')
+            '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
+            '--with-pmi={0}'.format('yes' if '+pmi' in spec else 'no'),
+            '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
+            '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
 
     @AutotoolsPackage.sanity_check('install')
