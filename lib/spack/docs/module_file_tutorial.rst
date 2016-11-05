@@ -1,4 +1,4 @@
-z.. _module_tutorial:
+.. _module_tutorial:
 
 =======
 Modules
