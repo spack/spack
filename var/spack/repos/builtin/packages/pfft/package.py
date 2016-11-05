@@ -50,13 +50,13 @@ class Pfft(AutotoolsPackage):
             make("check")
         make("install")
 
-        if '+float' in spec:
+        if '+float' in spec['fftw']:
             configure('--enable-float', *options)
             make()
             if self.run_tests:
                 make("check")
             make("install")
-        if '+long_double' in spec:
+        if '+long_double' in spec['fftw']:
             configure('--enable-long-double', *options)
             make()
             if self.run_tests:
