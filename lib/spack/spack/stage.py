@@ -161,7 +161,8 @@ class Stage(object):
 
     def __init__(
             self, url_or_fetch_strategy,
-            name=None, mirror_path=None, keep=False, path=None, lock=True):
+            name=None, mirror_path=None, keep=False, path=None, lock=True,
+            alternate_fetchers=None):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -197,6 +198,7 @@ class Stage(object):
         self.fetcher.set_stage(self)
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
+        self.alternate_fetchers = alternate_fetchers
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
 
@@ -408,28 +410,14 @@ class Stage(object):
                 fetchers.insert(
                     0, fs.URLFetchStrategy(
                         url, digest, expand=expand, extension=extension))
-            fetchers.insert(
-                0, spack.fetch_cache.fetcher(
-                    self.mirror_path, digest, expand=expand,
-                    extension=extension))
+            if self.default_fetcher.cachable:
+                fetchers.insert(
+                    0, spack.fetch_cache.fetcher(
+                        self.mirror_path, digest, expand=expand,
+                        extension=extension))
 
-            # Look for the archive in list_url
-            package_name = os.path.dirname(self.mirror_path)
-            pkg = spack.repo.get(package_name)
-            if pkg.list_url is not None and pkg.url is not None:
-                try:
-                    archive_version = spack.url.parse_version(
-                        self.default_fetcher.url)
-                    versions = pkg.fetch_remote_versions()
-                    try:
-                        url_from_list = versions[Version(archive_version)]
-                        fetchers.append(fs.URLFetchStrategy(
-                            url_from_list, digest))
-                    except KeyError:
-                        tty.msg("Can not find version %s in url_list" %
-                                archive_version)
-                except:
-                    tty.msg("Could not determine url from list_url.")
+        if self.alternate_fetchers:
+            fetchers.extend(self.alternate_fetchers)
 
         for fetcher in fetchers:
             try:

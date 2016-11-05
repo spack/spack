@@ -687,7 +687,8 @@ class PackageBase(object):
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
-        resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
+        resource_mirror = spack.mirror.mirror_archive_path(
+            self.spec, fetcher, resource.name)
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
@@ -702,8 +703,12 @@ class PackageBase(object):
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-        # Build the composite stage
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
+
+        # Check list_url alternative archive URLs
+        dynamic_fetcher = fs.from_list_url(self)
+        alternate_fetchers = [dynamic_fetcher] if dynamic_fetcher else None
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
+                      alternate_fetchers=alternate_fetchers)
         return stage
 
     def _make_stage(self):
