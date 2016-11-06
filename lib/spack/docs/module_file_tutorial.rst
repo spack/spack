@@ -610,7 +610,7 @@ Autoload dependencies
 Spack can also generate module files that contain code to load the
 dependencies automatically. You can, for instance generate python
 modules that load their dependencies by adding the ``autoload``
-directive and assigning it the value ``direct``S:
+directive and assigning it the value ``direct``:
 
 .. code-block:: yaml
   :emphasize-lines: 37,38
@@ -781,7 +781,7 @@ After modifications the configuration file will be:
     The double colon after ``enable`` is intentional and it serves the
     purpose of overriding the default list of enabled generators so
     that only ``lmod`` will be active (see :ref:`the reference
-    manual<config-overrides>` for a more detailed explanation of
+    manual <config-overrides>` for a more detailed explanation of
     config scopes).
 
 The directive ``core_compilers`` accepts a list of compilers : everything built
