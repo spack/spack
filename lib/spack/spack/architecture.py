@@ -471,6 +471,20 @@ def arch_from_dict(d):
         os_name = d['platform_os']
         target_name = d['target']
 
+        # NOTE: The way that the following code handles constructing
+        # new architectures is the root cause of a number of bugs
+        # that crop up when attempting to use a single Spack instance
+        # to handle installs on multiple architectures.
+        #
+        # The main problem is that Spack constructs a new architecture
+        # using the current host architecture as a base.  In order to
+        # accurately recreate architecture objects for other platforms,
+        # all of the information about the other platform should be
+        # given to this function and that platform should be used as
+        # the base instead.  Facilitating this change will require
+        # updating the Spack package YAML to accomodate all of the
+        # information about the host platform.
+
         if platform_name:
             arch.platform = _platform_from_dict(platform_name)
         else:
