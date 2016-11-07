@@ -439,9 +439,9 @@ The final result should look like:
 Add custom environment modifications
 ------------------------------------
 
-At many sites it is customary to set in module file for packages
-an environment variable that points to the root folder where the package
-is installed. You can achieve this using Spack by adding an
+At many sites it is customary to set an environment variable in a
+package's module file that points to the folder in which the package
+is installed. You can achieve this with Spack by adding an
 ``environment`` directive to the configuration file:
 
 .. code-block:: yaml
@@ -473,10 +473,10 @@ is installed. You can achieve this using Spack by adding an
 
 There are many variable tokens available to use in the ``environment``
 and ``naming_scheme`` directives, such as ``${PACKAGE}``,
-``${VERSION}``, etc. (see :meth:`~spack.spec.Spec.format` API documentation
-for the complete list).
+``${VERSION}``, etc. (see the :meth:`~spack.spec.Spec.format` API
+documentation for the complete list).
 
-Regenerating the module files should result in:
+Regenerating the module files should result in something like:
 
 .. code-block:: console
   :emphasize-lines: 14
@@ -503,7 +503,7 @@ Regenerating the module files should result in:
 As you see the ``gcc`` module has the environment variable ``GCC_ROOT`` set.
 
 Sometimes it's also useful to apply environment modifications selectively and target
-only certain packages. You can for instance set the common variables ``CC``, ``CXX``,
+only certain packages. You can, for instance set the common variables ``CC``, ``CXX``,
 etc. in the ``gcc`` module file and apply other custom modifications to the
 ``openmpi`` modules as follows:
 
@@ -607,9 +607,10 @@ This time we will be more selective and regenerate only the ``gcc`` and
 Autoload dependencies
 ---------------------
 
-Spack can also generate module files that contain code to load
-the dependencies automatically. You can for instance generate python
-modules that load their dependencies by adding the ``autoload`` directive:
+Spack can also generate module files that contain code to load the
+dependencies automatically. You can, for instance generate python
+modules that load their dependencies by adding the ``autoload``
+directive and assigning it the value ``direct``:
 
 .. code-block:: yaml
   :emphasize-lines: 37,38
@@ -721,7 +722,7 @@ Core/Compiler/MPI
 
 .. warning::
   Only LMod supports Lua hierarchical module files
-    For this part of the tutorial you need to have LMod as a tool to
+    For this part of the tutorial you need to be using LMod to
     manage your environment.
 
 The most common hierarchy is the so called ``Core/Compiler/MPI``. To have an idea
@@ -774,23 +775,28 @@ After modifications the configuration file will be:
             SLURM_MPI_TYPE: pmi2
             OMPI_MCA_btl_openib_warn_default_gid_prefix: '0'
 
-The double colon after ``enable`` is intentional and it serves the purpose of
-overriding the default list of enabled generators so that only ``lmod`` will be active
-(see :ref:`the reference manual<config-overrides>` for a more detailed explanation
-of config scopes).
+
+.. note::
+  The double colon
+    The double colon after ``enable`` is intentional and it serves the
+    purpose of overriding the default list of enabled generators so
+    that only ``lmod`` will be active (see :ref:`the reference
+    manual <config-overrides>` for a more detailed explanation of
+    config scopes).
 
 The directive ``core_compilers`` accepts a list of compilers : everything built
 using these compilers will create a module in the ``Core`` part of the hierarchy. It is
-common practice to put OS provided compilers in the list and only build common utilities
+common practice to put the OS provided compilers in the list and only build common utilities
 and other compilers in ``Core``.
 
-You can now regenerate the module files
+If you regenerate the module files
 
 .. code-block:: console
 
   $ spack module refresh --module-type lmod --delete-tree -y
 
-and update ``MODULEPATH`` to point to the ``Core`` folder:
+and update ``MODULEPATH`` to point to the ``Core`` folder, and
+list the available modules, you'll see:
 
 .. code-block:: console
 
@@ -801,7 +807,7 @@ and update ``MODULEPATH`` to point to the ``Core`` folder:
   ----------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
      gcc/6.2.0
 
-As you see the only module visible now is ``gcc``. Loading that you will make
+The only module visible now is ``gcc``. Loading that you will make
 visible the ``Compiler`` part of the software stack that was built with ``gcc/6.2.0``:
 
 .. code-block:: console
@@ -855,7 +861,8 @@ once you'll try switching among different stacks:
 
 This layout is already a great improvement over the usual non-hierarchical layout,
 but it still has an asymmetry: ``LAPACK`` providers are semantically the same as ``MPI``
-providers, but they are still not part of the hierarchy. One possible solution is shown next.
+providers, but they are still not part of the hierarchy.  We'll see a possible solution
+next.
 
 .. Activate lmod and turn the previous modifications into lmod:
    Add core compilers
@@ -970,6 +977,6 @@ Now both the ``MPI`` and the ``LAPACK`` providers are handled by LMod as hierarc
     1) netlib-scalapack/2.0.2
 
 making the use of tags to differentiate them unnecessary.
-Note that as we compiled ``py-numpy`` only with ``openblas`` the module
+Note that because we only compiled ``py-numpy`` with ``openblas`` the module
 is made inactive when we switch the ``LAPACK`` provider. The user
 environment will now be consistent by design!
