@@ -368,9 +368,11 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
 
 
 @directive('variants')
-def variant(name, default=False, description=""):
+def variant(name, default=False, description='', values=(True, False), exclusive=True):  # NOQA: ignore=E501
     """Define a variant for the package. Packager can specify a default
     value (on or off) as well as a text description."""
+
+    default = default
     description = str(description).strip()
 
     def _execute(pkg):
@@ -379,7 +381,7 @@ def variant(name, default=False, description=""):
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        pkg.variants[name] = Variant(default, description)
+            pkg.variants[name] = Variant(name, default, description, values, exclusive)
     return _execute
 
 

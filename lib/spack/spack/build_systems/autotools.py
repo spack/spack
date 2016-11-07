@@ -289,6 +289,39 @@ class AutotoolsPackage(PackageBase):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 
+    def _activate_or_not(self, active, inactive, name):
+        spec = self.spec
+        args = []
+        # For each allowed value in the list of values
+        for value in self.variants[name].values:
+            # Check if the value is active in the current spec
+            condition = '{name}={value}'.format(name=name, value=value)
+            activated = condition in spec
+            # Search for an override in the package for this value
+            override_name = '{0}_or_{1}_{2}'.format(active, inactive, value)
+            line_generator = getattr(self, override_name, None)
+            # If not available use a sensible default
+            if line_generator is None:
+                def _default_generator(is_activated):
+                    if is_activated:
+                        return '--{0}-{1}'.format(active, value)
+                    return '--{0}-{1}'.format(inactive, value)
+                line_generator = _default_generator
+            args.append(line_generator(activated))
+        return args
+
+    def with_or_without(self, name):
+        """Inspects the multi-valued variant 'name' and returns the configure
+        arguments that activate / deactivate the selected feature.
+        """
+        return self._activate_or_not('with', 'without', name)
+
+    def enable_or_disable(self, name):
+        """Inspects the multi-valued variant 'name' and returns the configure
+        arguments that activate / deactivate the selected feature.
+        """
+        return self._activate_or_not('enable', 'disable', name)
+
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 
     def installcheck(self):

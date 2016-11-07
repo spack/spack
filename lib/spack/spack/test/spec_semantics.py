@@ -243,6 +243,33 @@ class TestSpecSematics(object):
         check_satisfies('mpich~foo', 'mpich foo=FALSE')
         check_satisfies('mpich foo=False', 'mpich~foo')
 
+    def test_satisfies_multi_value_variant(self):
+        check_satisfies(
+            'multivalue_variant foo="bar,baz"',
+            'multivalue_variant foo="bar,baz"'
+        )
+        # A more constrained spec satisfies a less constrained one
+        check_satisfies(
+            'multivalue_variant foo="bar,baz"',
+            'multivalue_variant foo="bar"'
+        )
+        check_satisfies(
+            'multivalue_variant foo="bar,baz"',
+            'multivalue_variant foo="baz"'
+        )
+        check_satisfies(
+            'multivalue_variant foo="bar,baz,barbaz"',
+            'multivalue_variant foo="bar,baz"'
+        )
+        check_satisfies(
+            'multivalue_variant foo="bar,baz"',
+            'foo="bar,baz"'
+        )
+        check_satisfies(
+            'multivalue_variant foo="bar,baz"',
+            'foo="bar"'
+        )
+
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.
         check_satisfies('mpich+foo', 'mpich')
@@ -266,7 +293,7 @@ class TestSpecSematics(object):
         # No matchi in specs
         check_unsatisfiable('mpich~foo', 'mpich+foo')
         check_unsatisfiable('mpich+foo', 'mpich~foo')
-        check_unsatisfiable('mpich foo=1', 'mpich foo=2')
+        check_unsatisfiable('mpich foo=True', 'mpich foo=False')
 
     def test_satisfies_matching_compiler_flag(self):
         check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
@@ -416,6 +443,19 @@ class TestSpecSematics(object):
             'libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo'
         )
 
+    def test_constrain_multi_value_variant(self):
+        check_constrain(
+            'multivalue_variant foo="bar,baz"',
+            'multivalue_variant foo="bar"',
+            'multivalue_variant foo="baz"'
+        )
+
+        check_constrain(
+            'multivalue_variant foo="bar,baz,barbaz"',
+            'multivalue_variant foo="bar,barbaz"',
+            'multivalue_variant foo="baz"'
+        )
+
     def test_constrain_compiler_flags(self):
         check_constrain(
             'libelf cflags="-O3" cppflags="-Wall"',
@@ -455,7 +495,7 @@ class TestSpecSematics(object):
 
         check_invalid_constraint('libelf+debug', 'libelf~debug')
         check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
-        check_invalid_constraint('libelf debug=2', 'libelf debug=1')
+        check_invalid_constraint('libelf debug=True', 'libelf debug=False')
 
         check_invalid_constraint(
             'libelf cppflags="-O3"', 'libelf cppflags="-O2"')
