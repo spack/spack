@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Stat(Package):
+class Stat(AutotoolsPackage):
     """Library to create, manipulate, and export graphs Graphlib."""
 
     homepage = "http://paradyn.org/STAT/STAT.html"
@@ -60,20 +60,26 @@ class Stat(Package):
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 
-    def install(self, spec, prefix):
-        configure_args = [
+    def setup_environment(self, spack_env, run_env):
+        if self.spec.satisfies('arch=linux-redhat7-ppc64le'):
+            spack_env.set('LD_LIBRARY_PATH', '/opt/ibm/spectrum_mpi/lib')
+            spack_env.set('LDFLAGS',
+                          '-L/opt/ibm/spectrum_mpi/lib '
+                          '-Wl,-rpath=/opt/ibm/spectrum_mpi/lib '
+                          '-lopen-rte -lopen-pal')
+
+    def configure_args(self):
+        options = [
             "--enable-gui",
             "--prefix=%s" % prefix,
-            "--with-launchmon=%s"   % spec['launchmon'].prefix,
-            "--with-mrnet=%s"       % spec['mrnet'].prefix,
-            "--with-graphlib=%s"    % spec['graphlib'].prefix,
-            "--with-stackwalker=%s" % spec['dyninst'].prefix,
-            "--with-libdwarf=%s"    % spec['libdwarf'].prefix
+            "--with-launchmon=%s"   % self.spec['launchmon'].prefix,
+            "--with-mrnet=%s"       % self.spec['mrnet'].prefix,
+            "--with-graphlib=%s"    % self.spec['graphlib'].prefix,
+            "--with-stackwalker=%s" % self.spec['dyninst'].prefix,
+            "--with-libdwarf=%s"    % self.spec['libdwarf'].prefix
         ]
-        if '+dysect' in spec:
-            configure_args.append('--enable-dysectapi')
-        if '~examples' in spec:
-            configure_args.append('--disable-examples')
-        configure(*configure_args)
-
-        make("install")
+        if '+dysect' in self.spec:
+            options.append('--enable-dysectapi')
+        if '~examples' in self.spec:
+            options.append('--disable-examples')
+        return options

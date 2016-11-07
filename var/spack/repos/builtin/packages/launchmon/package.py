@@ -25,25 +25,46 @@
 from spack import *
 
 
-class Launchmon(Package):
+class Launchmon(AutotoolsPackage):
     """Software infrastructure that enables HPC run-time tools to
        co-locate tool daemons with a parallel job."""
     homepage = "https://github.com/LLNL/LaunchMON"
     url = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"
 
+    version('1.0.3b', git='https://github.com/LLNL/LaunchMON.git',
+            commit='1587a59d18e1d5159e441220e5686eaaa649647c')
     version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
-
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('pkg-config', type='build')
     depends_on('libgcrypt')
     depends_on('libgpg-error')
+    depends_on("libelf")
+    depends_on("boost")
 
-    def install(self, spec, prefix):
-        configure(
-            "--prefix=" + prefix,
-            "--with-bootfabric=cobo",
-            "--with-rm=slurm")
+    # A patch to hack around need to boostrap the git commit version
+    patch('lmon103b.patch', when='@1.0.3b')
 
-        make()
-        make("install")
+    def setup_environment(self, spack_env, run_env):
+        # These env var settings are temporary until the LaunchMON build
+        # system automatically detects the appropriate libraries
+        if self.spec.satisfies('arch=linux-redhat7-ppc64le'):
+            spack_env.set('LD_LIBRARY_PATH', '/opt/ibm/spectrum_mpi/lib')
+            spack_env.set('LDFLAGS',
+                          '-L/opt/ibm/spectrum_mpi/lib '
+                          ' -Wl,-rpath=/opt/ibm/spectrum_mpi/lib '
+                          '-lopen-rte -lopen-pal')
+
+    def configure_args(self):
+        args = []
+        # A hack to turn on x perms for configure since it was added via patch
+        if self.spec.satisfies('@1.0.3b'):
+            import os
+            st = os.stat('./configure')
+            os.chmod('./configure', st.st_mode | 64)
+        if self.spec.satisfies('arch=linux-redhat7-ppc64le'):
+            args.append("--with-test-rm=orte")
+            args.append("--with-launcher="
+                        "/opt/ibm/spectrum_mpi/bin/stock/orterun")
+        return args
