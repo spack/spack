@@ -425,6 +425,9 @@ class Stage(object):
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
+            except spack.fetch_strategy.NoCacheError as e:
+                # Don't bother reporting when something is not cached.
+                continue
             except spack.error.SpackError as e:
                 tty.msg("Fetching from %s failed." % fetcher)
                 tty.debug(e)
