@@ -703,12 +703,7 @@ class PackageBase(object):
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-
-        # Check list_url alternative archive URLs
-        dynamic_fetcher = fs.from_list_url(self)
-        alternate_fetchers = [dynamic_fetcher] if dynamic_fetcher else None
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
-                      alternate_fetchers=alternate_fetchers)
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
         return stage
 
     def _make_stage(self):
