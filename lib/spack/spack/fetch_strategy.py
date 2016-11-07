@@ -394,30 +394,28 @@ class CacheURLFetchStrategy(URLFetchStrategy):
     def fetch(self):
         path = re.sub('^file://', '', self.url)
 
-        # directly check whether the cache file already exists.
+        # check whether the cache file exists.
         if not os.path.isfile(path):
             raise NoCacheError('No cache of %s' % path)
 
-        # Just symlink it in if so.
+        # remove old symlink if one is there.
+        if os.path.exists(path):
+            os.remove(path)
+
+        # Symlink to local cached archive.
         self.stage.chdir()
         basename = os.path.basename(path)
-        if os.path.exists(basename):
-            link = os.path.abspath(os.path.realpath(basename))
-            target = os.path.abspath(os.path.realpath(path))
-            if link != target:
-                os.unlink(basename)
-                os.symlink(path, basename)
-        else:
-            os.symlink(path, basename)
+        os.symlink(path, basename)
 
+        # Notify the user how we fetched.
         tty.msg('Using cached archive: %s' % path)
 
+        # Remove link if checksum fails, or subsequent fetchers
+        # will assume they don't need to download.
         if self.digest:
             try:
                 self.check()
             except ChecksumError:
-                # Future fetchers will assume they don't need to
-                # download if the file remains
                 os.remove(self.archive_file)
                 raise
 
