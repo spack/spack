@@ -150,4 +150,4 @@ class Tau(Package):
     def setup_environment(self, spack_env, run_env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
         files = glob.glob(pattern)
-        run_env.set('TAU_MAKEFILE', files[0])
+        run_env.set('TAU_MAKEFILE', files[0] if files else '')
