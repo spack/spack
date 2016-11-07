@@ -256,6 +256,101 @@ def colorize_spec(spec):
 
 
 @key_ordering
+class ArchSpec(object):
+    """The ArchSpec class represents an abstract architecture specification
+      that a package should be built with.  At its core, each ArchSpec is
+      comprised of three elements: a platform (e.g. Linux), an OS (e.g. RHEL6),
+      and a target (e.g. x86_64)."""
+
+    # TODO: Formalize the specifications for architectures and then use
+    # the appropriate parser here to read these specifications.
+    def __init__(self, *args):
+        to_attr_string = lambda s: str(s) if s and s != "None" else None
+
+        if len(args) == 1:
+            spec_like = args[0]
+            if isinstance(spec_like, ArchSpec):
+                self._dup(spec_like)
+            elif isinstance(spec_like, basestring):
+                spec_fields = spec_like.split("-")
+
+                if len(spec_fields) == 3:
+                    self.platform, self.platform_os, self.target = tuple(
+                        to_attr_string(f) for f in spec_fields)
+                else:
+                    raise ValueError("%s is an invalid arch spec" % spec_like)
+        elif len(args) == 3:
+            self.platform = to_attr_string(args[0])
+            self.platform_os = to_attr_string(args[1])
+            self.target = to_attr_string(args[2])
+        else:
+            raise TypeError("Can't make arch spec from %s" % args)
+
+    def _autospec(self, spec_like):
+        if isinstance(spec_like, ArchSpec):
+            return spec_like
+        return ArchSpec(spec_like)
+
+    def _cmp_key(self):
+        return (self.platform, self.platform_os, self.target)
+
+    def _dup(self, other):
+        self.platform = other.platform
+        self.platform_os = other.platform_os
+        self.target = other.target
+
+    def satisfies(self, other, strict=False):
+        other = self._autospec(other)
+        sdict, odict = self.to_dict(), other.to_dict()
+
+        if strict or self.concrete:
+            return sdict == odict
+        else:
+            return all(getattr(self, attr) == getattr(other, attr)
+                       for attr in odict if sdict[attr] and odict[attr])
+
+    def constrain(self, other):
+        """Projects all architecture fields that are specified in the given
+        spec onto the instance spec if they're missing from the instance spec.
+        This will only work if the two specs are compatible."""
+        other = self._autospec(other)
+
+        if not self.satisfies(other):
+            raise UnsatisfiableArchitectureSpecError(self, other)
+
+        constrained = False
+        for attr, svalue in self.to_dict().iter_items():
+            ovalue = getattr(other, attr)
+            if svalue is None and ovalue is not None:
+                setattr(self, attr, ovalue)
+                constrained = True
+
+        return constrained
+
+    @property
+    def concrete(self):
+        return all(v for k, v in self.to_dict().iter_items())
+
+    def to_dict(self):
+        d = syaml_dict([
+            ('platform', self.platform),
+            ('platform_os', self.platform_os),
+            ('target', self.target)])
+        return syaml_dict([('arch', d)])
+
+    @staticmethod
+    def from_dict(d):
+        d = d['arch']
+        return ArchSpec(d['platform'], d['platform_os'], d['target'])
+
+    def __str__(self):
+        return "%s-%s-%s" % (self.platform, self.platform_os, self.target)
+
+    def __repr__(self):
+        return str(self)
+
+
+@key_ordering
 class CompilerSpec(object):
     """The CompilerSpec field represents the compiler or range of compiler
        versions that a package should be built with.  CompilerSpecs have a
