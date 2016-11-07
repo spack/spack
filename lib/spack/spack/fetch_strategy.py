@@ -194,7 +194,7 @@ class URLFetchStrategy(FetchStrategy):
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
 
-        tty.msg("Trying to fetch from %s" % self.url)
+        tty.msg("Fetching %s" % self.url)
 
         if partial_file:
             save_args = ['-C',
@@ -295,7 +295,7 @@ class URLFetchStrategy(FetchStrategy):
         self.stage.chdir()
         if not self.archive_file:
             raise NoArchiveFileError(
-                "URLFetchStrategy couldn't find archive file",
+                "Couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
         if not self.extension:
@@ -392,15 +392,33 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        super(CacheURLFetchStrategy, self).fetch()
+        path = re.sub('^file://', '', self.url)
+
+        # check whether the cache file exists.
+        if not os.path.isfile(path):
+            raise NoCacheError('No cache of %s' % path)
+
+        self.stage.chdir()
+
+        # remove old symlink if one is there.
+        filename = self.stage.save_filename
+        if os.path.exists(filename):
+            os.remove(filename)
+
+        # Symlink to local cached archive.
+        os.symlink(path, filename)
+
+        # Remove link if checksum fails, or subsequent fetchers
+        # will assume they don't need to download.
         if self.digest:
             try:
                 self.check()
             except ChecksumError:
-                # Future fetchers will assume they don't need to
-                # download if the file remains
                 os.remove(self.archive_file)
                 raise
+
+        # Notify the user how we fetched.
+        tty.msg('Using cached archive: %s' % path)
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -907,7 +925,12 @@ class FsCache(object):
         self.root = os.path.abspath(root)
 
     def store(self, fetcher, relativeDst):
+        # skip fetchers that aren't cachable
         if not fetcher.cachable:
+            return
+
+        # Don't store things that are already cached.
+        if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
         dst = join_path(self.root, relativeDst)
@@ -915,23 +938,23 @@ class FsCache(object):
         fetcher.archive(dst)
 
     def fetcher(self, targetPath, digest, **kwargs):
-        url = "file://" + join_path(self.root, targetPath)
-        return CacheURLFetchStrategy(url, digest, **kwargs)
+        path = join_path(self.root, targetPath)
+        return CacheURLFetchStrategy(path, digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)
 
 
 class FetchError(spack.error.SpackError):
+    """Superclass fo fetcher errors."""
 
-    def __init__(self, msg, long_msg=None):
-        super(FetchError, self).__init__(msg, long_msg)
+
+class NoCacheError(FetchError):
+    """Raised when there is no cached archive for a package."""
 
 
 class FailedDownloadError(FetchError):
-
     """Raised wen a download fails."""
-
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
             "Failed to fetch file from URL: %s" % url, msg)
@@ -939,19 +962,14 @@ class FailedDownloadError(FetchError):
 
 
 class NoArchiveFileError(FetchError):
-
-    def __init__(self, msg, long_msg):
-        super(NoArchiveFileError, self).__init__(msg, long_msg)
+    """"Raised when an archive file is expected but none exists."""
 
 
 class NoDigestError(FetchError):
-
-    def __init__(self, msg, long_msg=None):
-        super(NoDigestError, self).__init__(msg, long_msg)
+    """Raised after attempt to checksum when URL has no digest."""
 
 
 class InvalidArgsError(FetchError):
-
     def __init__(self, pkg, version):
         msg = ("Could not construct a fetch strategy for package %s at "
                "version %s")
@@ -960,17 +978,11 @@ class InvalidArgsError(FetchError):
 
 
 class ChecksumError(FetchError):
-
     """Raised when archive fails to checksum."""
-
-    def __init__(self, message, long_msg=None):
-        super(ChecksumError, self).__init__(message, long_msg)
 
 
 class NoStageError(FetchError):
-
     """Raised when fetch operations are called before set_stage()."""
-
     def __init__(self, method):
         super(NoStageError, self).__init__(
             "Must call FetchStrategy.set_stage() before calling %s" %
