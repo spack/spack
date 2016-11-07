@@ -398,14 +398,15 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         if not os.path.isfile(path):
             raise NoCacheError('No cache of %s' % path)
 
+        self.stage.chdir()
+
         # remove old symlink if one is there.
-        if os.path.exists(path):
-            os.remove(path)
+        filename = self.stage.save_filename
+        if os.path.exists(filename):
+            os.remove(filename)
 
         # Symlink to local cached archive.
-        self.stage.chdir()
-        basename = os.path.basename(path)
-        os.symlink(path, basename)
+        os.symlink(path, filename)
 
         # Notify the user how we fetched.
         tty.msg('Using cached archive: %s' % path)
