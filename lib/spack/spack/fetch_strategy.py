@@ -408,9 +408,6 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         # Symlink to local cached archive.
         os.symlink(path, filename)
 
-        # Notify the user how we fetched.
-        tty.msg('Using cached archive: %s' % path)
-
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
         if self.digest:
@@ -419,6 +416,9 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             except ChecksumError:
                 os.remove(self.archive_file)
                 raise
+
+        # Notify the user how we fetched.
+        tty.msg('Using cached archive: %s' % path)
 
 
 class VCSFetchStrategy(FetchStrategy):
