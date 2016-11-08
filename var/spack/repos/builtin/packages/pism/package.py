@@ -34,8 +34,14 @@ class Pism(CMakePackage):
 
     version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
 
+    version('0.7.x', git='https://github.com/pism/pism.git',
+        branch='stable0.7')
+
     version('glint2', git='https://github.com/pism/pism.git',
         branch='efischer/glint2')
+
+    version('dev', git='https://github.com/pism/pism.git',
+        branch='dev')
 
     variant('cxx11', default=True,
             description='Set CMake to C++11 standard')
@@ -86,8 +92,9 @@ class Pism(CMakePackage):
     depends_on('gsl')
     depends_on('mpi')
     depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
-    depends_on('petsc', when='@0:')
-    depends_on('petsc@3.4.5~superlu-dist', when='@glint2')
+#    depends_on('petsc', when='@0:')
+    depends_on('petsc')
+#    depends_on('petsc@3.4.5~superlu-dist', when='@glint2')
     depends_on('udunits2')
     depends_on('proj')
 
