@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Pdt(Package):
@@ -43,6 +44,15 @@ class Pdt(Package):
     version('3.20',   'c3edabe202926abe04552e33cd39672d')
     version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
     version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
+
+    def patch(self):
+        # TODO : pdt doesn't support clang compiler hence replace in Makefile
+        if self.spec.satisfies('%clang'):
+            filter_file(r'PDT_GXX=g\+\+ ', r'PDT_GXX=clang++ ', 'ductape/Makefile')
+
+        # on os-x fix for stdarg.h
+        if(sys.platform == 'darwin'):
+            filter_file(r'typedef __gnuc_va_list ', r'typedef __darwin_va_list ', 'include/kai/stdarg.h')
 
     def install(self, spec, prefix):
         configure('-prefix=%s' % prefix)

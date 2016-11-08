@@ -155,6 +155,9 @@ class Tau(Package):
         # only one arch per prefix the way spack installs.
         self.link_tau_arch_dirs()
 
+        # create tau compiler wrappers
+        self.create_tau_compiler_wrapper()
+
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
             for d in ('bin', 'lib'):
@@ -163,7 +166,39 @@ class Tau(Package):
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
 
-    def setup_environment(self, spack_env, run_env):
+    def create_tau_compiler_wrapper(self):
+        c_compiler = self.compiler.cc
+        cxx_compiler = self.compiler.cxx
+
+        if '+mpi' in self.spec:
+            c_compiler = self.spec['mpi'].mpicc
+            cxx_compiler = self.spec['mpi'].mpicxx
+
+        compilers = {'tau_cc': 'tau_cc.sh', 'tau_cxx': 'tau_cxx.sh'}
+
+        spack_compilers = {'tau_cc': c_compiler,
+                           'tau_cxx': cxx_compiler}
+
+        for tau_wrapper_compiler, tau_compiler in compilers.iteritems():
+            fname = join_path(self.prefix.bin, tau_wrapper_compiler)
+            f = open(fname, 'w')
+            content = 'if [ -n "${USE_PROFILER_WRAPPER}" ]; then' + '\n'
+            content += '    %s $PROFILER_FLAGS "$@"' % tau_compiler + '\n'
+            content += 'else' + '\n'
+            content += '    %s "$@"' % spack_compilers[tau_wrapper_compiler] + '\n'
+            content += 'fi'
+            f.write(content)
+            f.close()
+            os.chmod(fname, 0755)
+
+    def get_makefiles(self):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
-        files = glob.glob(pattern)
+        return glob.glob(pattern)
+
+    def setup_environment(self, spack_env, run_env):
+        files = self.get_makefiles()
         run_env.set('TAU_MAKEFILE', files[0] if files else '')
+
+    def setup_dependent_environment(self, module, spec, dep_spec):
+        files = self.get_makefiles()
+        os.environ['TAU_MAKEFILE'] = files[0] if files else ''
