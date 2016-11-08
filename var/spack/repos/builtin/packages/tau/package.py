@@ -65,6 +65,11 @@ class Tau(Package):
     #depends_on('binutils', when='~download')
     depends_on('mpi', when='+mpi')
 
+    def patch(self):
+        # TODO : neuron autotools add -MD option which turns off tau profile
+        filter_file(r' -M', r' -Q', 'tools/src/tau_cc.sh')
+        filter_file(r' -M', r' -Q', 'tools/src/tau_cxx.sh')
+
     def set_compiler_options(self, spec):
 
         useropt = ["-O2", self.rpath_args]
