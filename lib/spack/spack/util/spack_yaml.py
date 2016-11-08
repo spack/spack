@@ -91,7 +91,9 @@ class OrderedLineLoader(Loader):
             value = value.encode('ascii')
         except UnicodeEncodeError:
             pass
+
         value = syaml_str(value)
+
         mark(value, node)
         return value
 
@@ -199,6 +201,11 @@ class OrderedLineDumper(Dumper):
             else:
                 node.flow_style = best_style
         return node
+
+    def ignore_aliases(self, _data):
+        """Make the dumper NEVER print YAML aliases."""
+        return True
+
 
 # Make our special objects look like normal YAML ones.
 OrderedLineDumper.add_representer(syaml_dict, OrderedLineDumper.represent_dict)

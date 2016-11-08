@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import os
+import sys
 import spack
 import spack.compiler as cpr
 from spack.compiler import *
@@ -41,18 +42,18 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []
+    f77_names = ['gfortran']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []
+    fc_names = ['gfortran']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'clang/clang',
                   'cxx': 'clang/clang++',
                   # Use default wrappers for fortran, in case provided in
                   # compilers.yaml
-                  'f77': 'f77',
-                  'fc': 'f90'}
+                  'f77': 'clang/gfortran',
+                  'fc': 'clang/gfortran'}
 
     @property
     def is_apple(self):
@@ -120,6 +121,28 @@ class Clang(Compiler):
         xcrun = Executable('xcrun')
         full_path = xcrun('-f', basename, output=str)
         return full_path.strip()
+
+    @classmethod
+    def fc_version(cls, fc):
+        version = get_compiler_version(
+            fc, '-dumpversion',
+            # older gfortran versions don't have simple dumpversion output.
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
+        # This is horribly ad hoc, we need to map from gcc/gfortran version
+        # to clang version, but there could be multiple clang
+        # versions that work for a single gcc/gfortran version
+        if sys.platform == 'darwin':
+            clangversionfromgcc = {'6.2.0': '8.0.0-apple'}
+        else:
+            clangversionfromgcc = {}
+        if version in clangversionfromgcc:
+            return clangversionfromgcc[version]
+        else:
+            return 'unknown'
+
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.fc_version(f77)
 
     def setup_custom_environment(self, env):
         """Set the DEVELOPER_DIR environment for the Xcode toolchain.

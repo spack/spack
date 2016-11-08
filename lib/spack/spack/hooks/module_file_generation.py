@@ -22,24 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for target configuration files."""
+import spack.modules
 
 
-schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack target configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'patternProperties': {
-        r'targets:?': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {  # target name
-                    'type': 'string',
-                },
-            },
-        },
-    },
-}
+def post_install(pkg):
+    for item, cls in spack.modules.module_types.iteritems():
+        generator = cls(pkg.spec)
+        generator.write()
+
+
+def post_uninstall(pkg):
+    for item, cls in spack.modules.module_types.iteritems():
+        generator = cls(pkg.spec)
+        generator.remove()

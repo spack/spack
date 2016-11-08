@@ -22,14 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.modules
+from spack import *
 
 
-def post_install(pkg):
-    dk = spack.modules.Dotkit(pkg.spec)
-    dk.write()
+class PyXpyb(Package):
+    """xpyb provides a Python binding to the X Window System protocol
+    via libxcb."""
 
+    homepage = "https://xcb.freedesktop.org/"
+    url      = "https://xcb.freedesktop.org/dist/xpyb-1.3.1.tar.gz"
 
-def post_uninstall(pkg):
-    dk = spack.modules.Dotkit(pkg.spec)
-    dk.remove()
+    version('1.3.1', '75d567e25517fb883a56f10b77fd2757')
+
+    extends('python')
+
+    depends_on('libxcb@1.5:')
+
+    depends_on('xcb-proto@1.7.1:', type='build')
+
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
+
+        make()
+        make('install')

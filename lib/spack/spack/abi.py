@@ -26,6 +26,7 @@
 import os
 import spack
 import spack.spec
+from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 from llnl.util.lang import memoized

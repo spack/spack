@@ -25,23 +25,40 @@
 from spack import *
 
 
-class Xpyb(Package):
-    """xpyb provides a Python binding to the X Window System protocol
-    via libxcb."""
+class Pfft(AutotoolsPackage):
+    """PFFT is a software library for computing massively parallel,
+       fast Fourier transformations on distributed memory architectures.
+       PFFT can be understood as a generalization of FFTW-MPI to
+       multidimensional data decomposition."""
 
-    homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/xpyb-1.3.1.tar.gz"
+    homepage = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en"
+    url      = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software/pfft-1.0.8-alpha.tar.gz"
 
-    version('1.3.1', '75d567e25517fb883a56f10b77fd2757')
+    version('1.0.8-alpha', '46457fbe8e38d02ff87d439b63dc0709')
 
-    extends('python')
-
-    depends_on('libxcb@1.5:')
-
-    depends_on('xcb-proto@1.7.1:', type='build')
+    depends_on('fftw+mpi+pfft_patches')
+    depends_on('mpi')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        options = ['--prefix={0}'.format(prefix)]
+        if not self.compiler.f77 or not self.compiler.fc:
+            options.append("--disable-fortran")
 
+        configure(*options)
         make()
-        make('install')
+        if self.run_tests:
+            make("check")
+        make("install")
+
+        if '+float' in spec['fftw']:
+            configure('--enable-float', *options)
+            make()
+            if self.run_tests:
+                make("check")
+            make("install")
+        if '+long_double' in spec['fftw']:
+            configure('--enable-long-double', *options)
+            make()
+            if self.run_tests:
+                make("check")
+            make("install")

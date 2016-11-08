@@ -30,6 +30,7 @@ class Zeromq(Package):
     homepage = "http://zguide.zeromq.org/"
     url      = "http://download.zeromq.org/zeromq-4.1.2.tar.gz"
 
+    version('4.1.4', 'a611ecc93fffeb6d058c0e6edf4ad4fb')
     version('4.1.2', '159c0c56a895472f02668e692d122685')
     version('4.1.1', '0a4b44aa085644f25c177f79dc13f253')
     version('4.0.7', '9b46f7e7b0704b83638ef0d461fd59ab')
@@ -37,6 +38,7 @@ class Zeromq(Package):
     version('4.0.5', '73c39f5eb01b9d7eaf74a5d899f1d03d')
 
     depends_on("libsodium")
+    depends_on("libsodium@:1.0.3", when='@:4.1.2')
 
     def install(self, spec, prefix):
         configure("--with-libsodium", "--prefix=%s" % prefix)

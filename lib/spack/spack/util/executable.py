@@ -26,7 +26,6 @@
 import os
 import re
 import subprocess
-import inspect
 
 import llnl.util.tty as tty
 import spack
@@ -184,11 +183,11 @@ class Executable(object):
                     result += err
                 return result
 
-        except OSError, e:
+        except OSError as e:
             raise ProcessError(
                 "%s: %s" % (self.exe[0], e.strerror), "Command: " + cmd_line)
 
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
                     str(e), "\nExit status %d when invoking command: %s" %
@@ -237,74 +236,4 @@ def which(name, **kwargs):
 
 
 class ProcessError(spack.error.SpackError):
-
-    def __init__(self, msg, long_message=None):
-        # These are used for detailed debugging information for
-        # package builds.  They're built up gradually as the exception
-        # propagates.
-        self.package_context = _get_package_context()
-        self.build_log = None
-
-        super(ProcessError, self).__init__(msg, long_message)
-
-    @property
-    def long_message(self):
-        msg = self._long_message
-        if msg:
-            msg += "\n\n"
-
-        if self.build_log:
-            msg += "See build log for details:\n"
-            msg += "  %s" % self.build_log
-
-        if self.package_context:
-            if msg:
-                msg += "\n\n"
-            msg += '\n'.join(self.package_context)
-
-        return msg
-
-
-def _get_package_context():
-    """Return some context for an error message when the build fails.
-
-    This should be called within a ProcessError when the exception is
-    thrown.
-
-    Args:
-    process_error -- A ProcessError raised during install()
-
-    This function inspects the stack to find where we failed in the
-    package file, and it adds detailed context to the long_message
-    from there.
-
-    """
-    lines = []
-
-    # Walk up the stack
-    for f in inspect.stack():
-        frame = f[0]
-
-        # Find a frame with 'self' in the local variables.
-        if 'self' not in frame.f_locals:
-            continue
-
-        # Look only at a frame in a subclass of spack.Package
-        obj = frame.f_locals['self']
-        if type(obj) != spack.Package and isinstance(obj, spack.Package):
-            break
-    else:
-        # Didn't find anything
-        return lines
-
-    # Build a message showing where in install we failed.
-    lines.append("%s:%d, in %s:" % (
-        inspect.getfile(frame.f_code), frame.f_lineno, frame.f_code.co_name
-    ))
-
-    sourcelines, start = inspect.getsourcelines(frame)
-    for i, line in enumerate(sourcelines):
-        mark = ">> " if start + i == frame.f_lineno else "   "
-        lines.append("  %s%-5d%s" % (mark, start + i, line.rstrip()))
-
-    return lines
+    """ProcessErrors are raised when Executables exit with an error code."""

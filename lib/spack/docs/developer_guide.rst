@@ -250,29 +250,24 @@ Unit tests
 Other Modules
 ^^^^^^^^^^^^^
 
-:mod:`spack.globals`
-  Includes global settings for Spack.  the default policy classes for
-  things like :ref:`temporary space <temp-space>` and
-  :ref:`concretization <concretization-policies>`.
-
-:mod:`spack.tty`
-  Basic output functions for all of the messages Spack writes to the
-  terminal.
-
-:mod:`spack.color`
-  Implements a color formatting syntax used by ``spack.tty``.
-
 :mod:`spack.url`
   URL parsing, for deducing names and versions of packages from
   tarball URLs.
 
-:mod:`spack.util`
-  In this package are a number of utility modules for the rest of
-  Spack.
-
 :mod:`spack.error`
   :class:`SpackError <spack.error.SpackError>`, the base class for
   Spack's exception hierarchy.
+
+:mod:`llnl.util.tty`
+  Basic output functions for all of the messages Spack writes to the
+  terminal.
+
+:mod:`llnl.util.tty.color`
+  Implements a color formatting syntax used by ``spack.tty``.
+
+:mod:`llnl.util`
+  In this package are a number of utility modules for the rest of
+  Spack.
 
 ------------
 Spec objects

@@ -113,7 +113,7 @@ class FileCache(object):
         Returns a ReadTransaction context manager and opens the cache file for
         reading.  You can use it like this:
 
-           with spack.user_cache.read_transaction(key) as cache_file:
+           with file_cache_object.read_transaction(key) as cache_file:
                cache_file.read()
 
         """

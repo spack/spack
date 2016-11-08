@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import os
 import re
@@ -15,21 +39,13 @@ class IntelParallelStudio(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    # TODO: can also try the online installer (will download files on demand)
-    version('composer.2016.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
-        % os.getcwd())
-    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
-    version('cluster.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
-    version('composer.2016.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
-        % os.getcwd())
-    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
-    version('cluster.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
+    version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01')
+    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9')
+    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3')
+    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3')
+    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa')
+    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832')
+    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
@@ -83,6 +99,22 @@ class IntelParallelStudio(IntelInstaller):
     @property
     def lapack_libs(self):
         return self.blas_libs
+
+    def url_for_version(self, version):
+        """Assume the tarball is in the current directory."""
+
+        version_tuple = str(version).split('.')
+
+        url = "file://{0}/parallel_studio_xe_{1}".format(
+            os.getcwd(), version_tuple[1])
+
+        if version_tuple[0] == 'composer':
+            url += "_composer_edition"
+
+        if version_tuple[2] != '0':
+            url += "_update{0}".format(version_tuple[2])
+
+        return url + ".tgz"
 
     def check_variants(self, spec):
         error_message = '\t{variant} can not be turned off if "+all" is set'
@@ -152,15 +184,24 @@ class IntelParallelStudio(IntelInstaller):
                                                           "license.lic"))
         if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
                                          spec.satisfies('@professional')):
-            os.mkdir(os.path.join(self.prefix, "inspector_xe/licenses"))
+            inspector_dir = "inspector_xe/licenses"
+            advisor_dir = "advisor_xe/licenses"
+            vtune_amplifier_dir = "vtune_amplifier_xe/licenses"
+
+            year = int(str(self.version).split('.')[1])
+            if year >= 2017:
+                inspector_dir = "inspector/licenses"
+                advisor_dir = "advisor/licenses"
+
+            os.mkdir(os.path.join(self.prefix, inspector_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "inspector_xe/licenses", "license.lic"))
-            os.mkdir(os.path.join(self.prefix, "advisor_xe/licenses"))
+                self.prefix, inspector_dir, "license.lic"))
+            os.mkdir(os.path.join(self.prefix, advisor_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "advisor_xe/licenses", "license.lic"))
-            os.mkdir(os.path.join(self.prefix, "vtune_amplifier_xe/licenses"))
+                self.prefix, advisor_dir, "license.lic"))
+            os.mkdir(os.path.join(self.prefix, vtune_amplifier_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "vtune_amplifier_xe/licenses", "license.lic"))
+                self.prefix, vtune_amplifier_dir, "license.lic"))
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
                 spec.satisfies('@cluster'):

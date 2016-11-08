@@ -48,13 +48,14 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 from llnl.util.lock import *
 
-import spack.spec
+import spack.store
+import spack.repository
 from spack.directory_layout import DirectoryLayoutError
 from spack.version import Version
-from spack.spec import *
+import spack.spec
 from spack.error import SpackError
-from spack.repository import UnknownPackageError
 import spack.util.spack_yaml as syaml
+
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -66,7 +67,7 @@ _db_version = Version('0.9.2')
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
-_tracked_deps = nobuild
+_tracked_deps = 'nobuild'
 
 
 def _autospec(function):
@@ -218,7 +219,7 @@ class Database(object):
             spec_dict[name]['hash'] = hash_key
 
         # Build spec from dict first.
-        spec = Spec.from_node_dict(spec_dict)
+        spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
     def _assign_dependencies(self, hash_key, installs, data):
@@ -229,7 +230,8 @@ class Database(object):
 
         if 'dependencies' in spec_dict[spec.name]:
             yaml_deps = spec_dict[spec.name]['dependencies']
-            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+            for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
+                    yaml_deps):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
@@ -278,7 +280,7 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.install_layout)
+            self.reindex(spack.store.layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
         def invalid_record(hash_key, error):
@@ -444,7 +446,7 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
-            self.reindex(spack.install_layout)
+            self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):
         """Add an install record for this spec to the database.
@@ -468,7 +470,7 @@ class Database(object):
         if key not in self._data:
             installed = False
             path = None
-            if directory_layout:
+            if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
                 try:
                     directory_layout.check_installed(spec)
@@ -587,7 +589,7 @@ class Database(object):
             try:
                 if s.package.extends(extendee_spec):
                     yield s.package
-            except UnknownPackageError:
+            except spack.repository.UnknownPackageError:
                 continue
             # skips unknown packages
             # TODO: conditional way to do this instead of catching exceptions

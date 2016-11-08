@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Lzo(Package):
+class Lzo(AutotoolsPackage):
     """Real-time data compression library"""
 
     homepage = 'https://www.oberhumer.com/opensource/lzo/'
@@ -37,15 +37,8 @@ class Lzo(Package):
     version('2.06', '95380bd4081f85ef08c5209f4107e9f8')
     version('2.05', 'c67cda5fa191bab761c7cb06fe091e36')
 
-    def install(self, spec, prefix):
-        configure_args = [
-            '--prefix={0}'.format(prefix),
+    def configure_args(self):
+        return [
             '--disable-dependency-tracking',
             '--enable-shared'
         ]
-        configure(*configure_args)
-        make()
-        if self.run_tests:
-            make('check')
-            make('test')  # more exhaustive test
-        make('install')

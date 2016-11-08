@@ -35,28 +35,30 @@ class Visit(Package):
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
 
-    depends_on("vtk@6.1.0~opengl2")
-    depends_on("qt@4.8.6")
-    depends_on("python")
-    depends_on("silo+shared")
-    depends_on("hdf5~mpi")
+    depends_on('cmake', type='build')
+    depends_on('vtk@6.1.0~opengl2')
+    depends_on('qt@4.8.6')
+    depends_on('python')
+    depends_on('silo+shared')
+    depends_on('hdf5~mpi')
 
     def install(self, spec, prefix):
+        qt_bin = spec['qt'].prefix.bin
+        python_bin = spec['python'].prefix.bin
+
         with working_dir('spack-build', create=True):
+            cmake_args = std_cmake_args[:]
+            cmake_args.extend([
+                '-DVTK_MAJOR_VERSION=6',
+                '-DVTK_MINOR_VERSION=1',
+                '-DVISIT_USE_GLEW=OFF',
+                '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
+                '-DPYTHON_EXECUTABLE:FILEPATH={0}/python'.format(python_bin),
+                '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
+                '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
+                '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
+            ])
 
-            feature_args = std_cmake_args[:]
-            feature_args.extend([
-                "-DVTK_MAJOR_VERSION=6",
-                "-DVTK_MINOR_VERSION=1",
-                "-DVISIT_USE_GLEW=OFF",
-                "-DVISIT_LOC_QMAKE_EXE:FILEPATH=%s/qmake-qt4" % spec[
-                    'qt'].prefix.bin,
-                "-DPYTHON_EXECUTABLE:FILEPATH=%s/python" % spec[
-                    'python'].prefix.bin,
-                "-DVISIT_SILO_DIR:PATH=%s" % spec['silo'].prefix,
-                "-DVISIT_HDF5_DIR:PATH=%s" % spec['hdf5'].prefix])
-
-            cmake('../src', *feature_args)
-
+            cmake(join_path('..', 'src'), *cmake_args)
             make()
-            make("install")
+            make('install')

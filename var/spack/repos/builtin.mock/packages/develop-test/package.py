@@ -22,14 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.modules
+from spack import *
 
 
-def post_install(pkg):
-    dk = spack.modules.TclModule(pkg.spec)
-    dk.write()
+class DevelopTest(Package):
+    """Dummy package with develop version"""
+    homepage = "http://www.openblas.net"
+    url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
+    version('develop', git='https://github.com/dummy/repo.git')
+    version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-def post_uninstall(pkg):
-    dk = spack.modules.TclModule(pkg.spec)
-    dk.remove()
+    def install(self, spec, prefix):
+        pass

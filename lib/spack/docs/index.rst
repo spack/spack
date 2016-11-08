@@ -46,13 +46,17 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
+   module_file_tutorial
 
 .. toctree::
    :maxdepth: 2
    :caption: Reference Manual
 
    configuration
+   config_yaml
+   build_settings
    mirrors
+   module_file_support
    package_list
    command_index
 
