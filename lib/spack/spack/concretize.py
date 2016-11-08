@@ -292,16 +292,25 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        if spec.architecture is None:
-            # Set the architecture to all defaults
-            spec.architecture = spack.architecture.Arch()
-            return True
+        root_arch = spec.root.architecture
+        sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        spec_changed = False
 
-        # Concretize the operating_system and target based of the spec
-        ret = any((self._concretize_platform(spec),
-                   self._concretize_operating_system(spec),
-                   self._concretize_target(spec)))
-        return ret
+        if spec.architecture is None:
+            spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec_changed = True
+
+        default_archs = [root_arch, sys_arch]
+        while not spec.architecture.concrete and default_archs:
+            default_arch = default_archs.pop(0)
+
+            replacement_fields = [k for k, v in default_arch.to_cmp_dict()
+                                  if v and not getattr(spec.architecture, k)]
+            for field in replacement_fields:
+                setattr(spec.architecture, field, getattr(default_arch, field))
+                spec_changed = True
+
+        return spec_changed
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add

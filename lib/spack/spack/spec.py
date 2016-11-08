@@ -296,12 +296,6 @@ class ArchSpec(object):
     def _cmp_key(self):
         return (self.platform, self.platform_os, self.target)
 
-    def _cmp_dict(self):
-        return dict([
-            ('platform', self.platform),
-            ('platform_os', self.platform_os),
-            ('target', self.target)])
-
     def _dup(self, other):
         self.platform = other.platform
         self.platform_os = other.platform_os
@@ -319,7 +313,7 @@ class ArchSpec(object):
 
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
-        sdict, odict = self._cmp_dict(), other._cmp_dict()
+        sdict, odict = self.to_cmp_dict(), other.to_cmp_dict()
 
         if strict or self.concrete:
             return sdict == odict
@@ -337,7 +331,7 @@ class ArchSpec(object):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         constrained = False
-        for attr, svalue in self._cmp_dict().iteritems():
+        for attr, svalue in self.to_cmp_dict().iteritems():
             ovalue = getattr(other, attr)
             if svalue is None and ovalue is not None:
                 setattr(self, attr, ovalue)
@@ -352,7 +346,14 @@ class ArchSpec(object):
 
     @property
     def concrete(self):
-        return all(v for k, v in self._cmp_dict().iteritems())
+        return all(v for k, v in self.to_cmp_dict().iteritems())
+
+    def to_cmp_dict(self):
+        """Returns a dictionary that can be used for field comparison."""
+        return dict([
+            ('platform', self.platform),
+            ('platform_os', self.platform_os),
+            ('target', self.target)])
 
     def to_dict(self):
         d = syaml_dict([
@@ -1056,6 +1057,9 @@ class Spec(object):
         if self.versions:
             d.update(self.versions.to_dict())
 
+        if self.architecture:
+            d.update(self.architecture.to_dict())
+
         if self.compiler:
             d.update(self.compiler.to_dict())
 
@@ -1067,9 +1071,6 @@ class Spec(object):
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d['parameters'] = params
-
-        if self.architecture:
-            d['arch'] = self.architecture.to_dict()
 
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
