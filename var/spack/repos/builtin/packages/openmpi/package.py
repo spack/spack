@@ -27,10 +27,8 @@ from spack import *
 
 
 def _verbs_dir():
-    """
-    Try to find the directory where the OpenFabrics verbs package is
-    installed. Return None if not found.
-    """
+    """Try to find the directory where the OpenFabrics verbs package is
+    installed. Return None if not found."""
     try:
         # Try to locate Verbs by looking for a utility in the path
         ibv_devices = which("ibv_devices")
@@ -46,7 +44,7 @@ def _verbs_dir():
         return None
 
 
-class Openmpi(Package):
+class Openmpi(AutotoolsPackage):
     """The Open MPI Project is an open source Message Passing Interface
        implementation that is developed and maintained by a consortium
        of academic, research, and industry partners. Open MPI is
@@ -142,28 +140,23 @@ class Openmpi(Package):
         elif self.spec.satisfies('@1.7:'):
             return 'verbs'
 
-    def install(self, spec, prefix):
+    @AutotoolsPackage.precondition('autoreconf')
+    def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError('OpenMPI requires both C and Fortran ',
-                               'compilers!')
+            raise InstallError(
+                'OpenMPI requires both C and Fortran compilers!'
+            )
 
-        config_args = ["--prefix=%s" % prefix,
-                       "--with-hwloc=%s" % spec['hwloc'].prefix,
-                       "--enable-shared",
-                       "--enable-static"]
+    def configure_args(self):
+        spec = self.spec
 
-        # for Open-MPI 2.0:, C++ bindings are disabled by default.
-        if self.spec.satisfies('@2.0:'):
-            config_args.extend(['--enable-mpi-cxx'])
-
-        if getattr(self, 'config_extra', None) is not None:
-            config_args.extend(self.config_extra)
-
-        # Variant based arguments
-        config_args.extend([
+        config_args = [
+            '--with-hwloc={0}'.format(spec['hwloc'].prefix),
+            '--enable-shared',
+            '--enable-static'
             # Schedulers
             '--with-tm' if '+tm' in spec else '--without-tm',
             '--with-slurm' if '+slurm' in spec else '--without-slurm',
@@ -177,28 +170,24 @@ class Openmpi(Package):
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
-        ])
+        ]
+
+        # for Open-MPI 2.0+, C++ bindings are disabled by default.
+        if spec.satisfies('@2.0:'):
+            config_args.append('--enable-mpi-cxx')
+
         if '+verbs' in spec:
             path = _verbs_dir()
             if path is not None and path not in ('/usr', '/usr/local'):
-                config_args.append('--with-%s=%s' % (self.verbs, path))
+                config_args.append('--with-{0}={1}'.format(self.verbs, path))
             else:
-                config_args.append('--with-%s' % self.verbs)
+                config_args.append('--with-{0}'.format(self.verbs))
         else:
-            config_args.append('--without-%s' % self.verbs)
+            config_args.append('--without-{0}'.format(self.verbs))
 
-        # TODO: use variants for this, e.g. +lanl, +llnl, etc.
-        # use this for LANL builds, but for LLNL builds, we need:
-        #     "--with-platform=contrib/platform/llnl/optimized"
-        if self.version == ver("1.6.5") and '+lanl' in spec:
-            config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")  # NOQA: ignore=E501
+        return config_args
 
-        configure(*config_args)
-        make()
-        make("install")
-
-        self.filter_compilers()
-
+    @AutotoolsPackage.sanity_check('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.
