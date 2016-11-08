@@ -73,36 +73,39 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.0:1.10.1")
 
-    variant('psm', default=False, description='Build support for the PSM library.')
+    # Fabrics
+    variant('psm', default=False, description='Build support for the PSM library')
     variant('psm2', default=False,
-            description='Build support for the Intel PSM2 library.')
+            description='Build support for the Intel PSM2 library')
     variant('pmi', default=False,
             description='Build support for PMI-based launchers')
     variant('verbs', default=_verbs_dir() is not None,
-            description='Build support for OpenFabrics verbs.')
+            description='Build support for OpenFabrics verbs')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
-    variant('thread_multiple', default=False,
-            description='Enable MPI_THREAD_MULTIPLE support')
-
-    # TODO : variant support for alps, loadleveler  is missing
+    # Schedulers
+    # TODO: support for alps and loadleveler is missing
     variant('tm', default=False,
             description='Build TM (Torque, PBSPro, and compatible) support')
     variant('slurm', default=False,
             description='Build SLURM scheduler component')
 
+    # Additional support options
+    variant('java', default=False, description='Build Java support')
     variant('sqlite3', default=False, description='Build sqlite3 support')
-
     variant('vt', default=True,
             description='Build support for contributed package vt')
+    variant('thread_multiple', default=False,
+            description='Enable MPI_THREAD_MULTIPLE support')
 
-    # TODO : support for CUDA is missing
+    # TODO: support for CUDA is missing
 
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
+    depends_on('jdk', when='+java')
     depends_on('sqlite', when='+sqlite3')
 
     def url_for_version(self, version):
@@ -154,22 +157,24 @@ class Openmpi(AutotoolsPackage):
         spec = self.spec
 
         config_args = [
-            '--with-hwloc={0}'.format(spec['hwloc'].prefix),
             '--enable-shared',
             '--enable-static'
+            '--with-hwloc={0}'.format(spec['hwloc'].prefix),
             # Schedulers
             '--with-tm' if '+tm' in spec else '--without-tm',
             '--with-slurm' if '+slurm' in spec else '--without-slurm',
             # Fabrics
             '--with-psm' if '+psm' in spec else '--without-psm',
             '--with-psm2' if '+psm2' in spec else '--without-psm2',
+            '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-mxm' if '+mxm' in spec else '--without-mxm',
             # Other options
-            ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
-                else '--disable-mpi-thread-multiple'),
-            '--with-pmi' if '+pmi' in spec else '--without-pmi',
+            '--enable-java' if '+java' in spec else '--disable-java',
+            '--enable-mpi-java' if '+java' in spec else '--disable-mpi-java',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
+            ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
+                else '--disable-mpi-thread-multiple'),
         ]
 
         # for Open-MPI 2.0+, C++ bindings are disabled by default.
