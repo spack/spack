@@ -267,6 +267,8 @@ class ArchSpec(object):
     def __init__(self, *args):
         to_attr_string = lambda s: str(s) if s and s != "None" else None
 
+        self.platform, self.platform_os, self.target = (None, None, None)
+
         if len(args) == 1:
             spec_like = args[0]
             if isinstance(spec_like, ArchSpec):
@@ -286,8 +288,6 @@ class ArchSpec(object):
         else:
             raise TypeError("Can't make arch spec from %s" % args)
 
-        spack.architecture.verify_platform(self.platform)
-
     def _autospec(self, spec_like):
         if isinstance(spec_like, ArchSpec):
             return spec_like
@@ -296,14 +296,30 @@ class ArchSpec(object):
     def _cmp_key(self):
         return (self.platform, self.platform_os, self.target)
 
+    def _cmp_dict(self):
+        return dict([
+            ('platform', self.platform),
+            ('platform_os', self.platform_os),
+            ('target', self.target)])
+
     def _dup(self, other):
         self.platform = other.platform
         self.platform_os = other.platform_os
         self.target = other.target
 
+    @property
+    def platform(self):
+        return self._platform
+
+    @platform.setter
+    def platform(self, value):
+        if value is not None:
+            spack.architecture.verify_platform(value)
+        self._platform = value
+
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
-        sdict, odict = self.to_dict(), other.to_dict()
+        sdict, odict = self._cmp_dict(), other._cmp_dict()
 
         if strict or self.concrete:
             return sdict == odict
@@ -321,7 +337,7 @@ class ArchSpec(object):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         constrained = False
-        for attr, svalue in self.to_dict().iter_items():
+        for attr, svalue in self._cmp_dict().iteritems():
             ovalue = getattr(other, attr)
             if svalue is None and ovalue is not None:
                 setattr(self, attr, ovalue)
@@ -336,7 +352,7 @@ class ArchSpec(object):
 
     @property
     def concrete(self):
-        return all(v for k, v in self.to_dict().iter_items())
+        return all(v for k, v in self._cmp_dict().iteritems())
 
     def to_dict(self):
         d = syaml_dict([
@@ -2594,7 +2610,8 @@ class SpecParser(spack.parse.Parser):
         platform_default = spack.architecture.platform().name
         for spec in specs:
             for s in spec.traverse():
-                if s.architecture.platform_os or s.architecture.target:
+                if s.architecture and not s.architecture.platform and \
+                        (s.architecture.platform_os or s.architecture.target):
                     s._set_architecture(platform=platform_default)
         return specs
 
