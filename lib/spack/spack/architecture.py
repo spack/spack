@@ -76,6 +76,7 @@ attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
 import os
+import imp
 import inspect
 
 from llnl.util.lang import memoized, list_modules, key_ordering
@@ -447,6 +448,17 @@ def _platform_from_dict(platform_name):
     for p in platform_list:
         if platform_name.replace("_", "").lower() == p.__name__.lower():
             return p()
+
+
+def verify_platform(platform_name):
+    """ Determines whether or not the platform with the given name is supported
+        in Spack.  For more information, see the 'spack.platforms' submodule.
+    """
+    platform_name = platform_name.replace("_", "").lower()
+    platform_names = [p.__name__.lower() for p in all_platforms()]
+
+    if platform_name not in platform_names:
+        raise ValueError("%s is not a supported platform" % platform_name)
 
 
 def arch_from_dict(d):

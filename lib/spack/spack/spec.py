@@ -97,7 +97,6 @@ expansion when it is the first character in an id typed on the command line.
 """
 import base64
 import hashlib
-import imp
 import ctypes
 from StringIO import StringIO
 from operator import attrgetter
@@ -257,10 +256,11 @@ def colorize_spec(spec):
 
 @key_ordering
 class ArchSpec(object):
-    """The ArchSpec class represents an abstract architecture specification
-      that a package should be built with.  At its core, each ArchSpec is
-      comprised of three elements: a platform (e.g. Linux), an OS (e.g. RHEL6),
-      and a target (e.g. x86_64)."""
+    """ The ArchSpec class represents an abstract architecture specification
+        that a package should be built with.  At its core, each ArchSpec is
+        comprised of three elements: a platform (e.g. Linux), an OS (e.g.
+        RHEL6), and a target (e.g. x86_64).
+    """
 
     # TODO: Formalize the specifications for architectures and then use
     # the appropriate parser here to read these specifications.
@@ -285,6 +285,8 @@ class ArchSpec(object):
             self.target = to_attr_string(args[2])
         else:
             raise TypeError("Can't make arch spec from %s" % args)
+
+        spack.architecture.verify_platform(self.platform)
 
     def _autospec(self, spec_like):
         if isinstance(spec_like, ArchSpec):
@@ -326,6 +328,11 @@ class ArchSpec(object):
                 constrained = True
 
         return constrained
+
+    def copy(self):
+        clone = ArchSpec.__new__(ArchSpec)
+        clone._dup(self)
+        return clone
 
     @property
     def concrete(self):
@@ -759,37 +766,32 @@ class Spec(object):
         """
         valid_flags = FlagMap.valid_compiler_flags()
         if name == 'arch' or name == 'architecture':
-            parts = value.split('-')
-            if len(parts) == 3:
-                platform, op_sys, target = parts
-            else:
-                platform, op_sys, target = None, None, value
-
-            assert(self.architecture.platform is None)
-            assert(self.architecture.platform_os is None)
-            assert(self.architecture.target is None)
-            assert(self.architecture.os_string is None)
-            assert(self.architecture.target_string is None)
-            self._set_platform(platform)
-            self._set_os(op_sys)
-            self._set_target(target)
+            parts = tuple(value.split('-'))
+            plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
+            self._set_architecture(plat, os, tgt)
         elif name == 'platform':
-            self._set_platform(value)
+            self._set_architecture(platform=value)
         elif name == 'os' or name == 'operating_system':
-            if self.architecture.platform:
-                self._set_os(value)
-            else:
-                self.architecture.os_string = value
+            self._set_architecture(platform_os=value)
         elif name == 'target':
-            if self.architecture.platform:
-                self._set_target(value)
-            else:
-                self.architecture.target_string = value
+            self._set_architecture(target=value)
         elif name in valid_flags:
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
             self._add_variant(name, value)
+
+    def _set_architecture(self, platform=None, platform_os=None, target=None):
+        """Called by the parser to set the architecture."""
+        if self.architecture and self.architecture.concrete:
+            raise DuplicateArchitectureError(
+                "Spec for '%s' cannot have two architectures." % self.name)
+
+        new_spec = ArchSpec(platform, platform_os, target)
+        if not self.architecture:
+            self.architecture = new_spec
+        else:
+            self.architecture.constrain(new_spec)
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
@@ -797,53 +799,6 @@ class Spec(object):
             raise DuplicateCompilerSpecError(
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
-
-    def _set_platform(self, value):
-        """Called by the parser to set the architecture platform"""
-        if isinstance(value, basestring):
-            mod_path = spack.platform_path
-            mod_string = 'spack.platformss'
-            names = list_modules(mod_path)
-            if value in names:
-                # Create a platform object from the name
-                mod_name = mod_string + value
-                path = join_path(mod_path, value) + '.py'
-                mod = imp.load_source(mod_name, path)
-                class_name = mod_to_class(value)
-                if not hasattr(mod, class_name):
-                    tty.die(
-                        'No class %s defined in %s' % (class_name, mod_name))
-                cls = getattr(mod, class_name)
-                if not inspect.isclass(cls):
-                    tty.die('%s.%s is not a class' % (mod_name, class_name))
-                platform = cls()
-            else:
-                tty.die("No platform class %s defined." % value)
-        else:
-            # The value is a platform
-            platform = value
-
-        self.architecture.platform = platform
-
-        # Set os and target if we previously got strings for them
-        if self.architecture.os_string:
-            self._set_os(self.architecture.os_string)
-            self.architecture.os_string = None
-        if self.architecture.target_string:
-            self._set_target(self.architecture.target_string)
-            self.architecture.target_string = None
-
-    def _set_os(self, value):
-        """Called by the parser to set the architecture operating system"""
-        arch = self.architecture
-        if arch.platform:
-            arch.platform_os = arch.platform.operating_system(value)
-
-    def _set_target(self, value):
-        """Called by the parser to set the architecture target"""
-        arch = self.architecture
-        if arch.platform:
-            arch.target = arch.platform.target(value)
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
@@ -1137,7 +1092,7 @@ class Spec(object):
             spec.versions = VersionList.from_dict(node)
 
         if 'arch' in node:
-            spec.architecture = spack.architecture.arch_from_dict(node['arch'])
+            spec.architecture = ArchSpec.from_dict(node)
 
         if 'compiler' in node:
             spec.compiler = CompilerSpec.from_dict(node)
@@ -2070,7 +2025,8 @@ class Spec(object):
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
-        self.architecture = other.architecture
+        self.architecture = other.architecture.copy() if other.architecture \
+            else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
             self._dependents = DependencyMap()
@@ -2635,10 +2591,11 @@ class SpecParser(spack.parse.Parser):
 
         # If the spec has an os or a target and no platform, give it
         # the default platform
+        platform_default = spack.architecture.platform().name
         for spec in specs:
             for s in spec.traverse():
-                if s.architecture.os_string or s.architecture.target_string:
-                    s._set_platform(spack.architecture.platform())
+                if s.architecture.platform_os or s.architecture.target:
+                    s._set_architecture(platform=platform_default)
         return specs
 
     def parse_compiler(self, text):
@@ -2680,7 +2637,7 @@ class SpecParser(spack.parse.Parser):
         spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
-        spec.architecture = spack.architecture.Arch()
+        spec.architecture = None
         spec.compiler = None
         spec.external = None
         spec.external_module = None
