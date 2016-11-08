@@ -672,6 +672,32 @@ in GNU Autotools. If all flags are set, the order is
 ``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++ and
 ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compiler environment variables and additional RPATHs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the exceptional case a compiler requires setting special environment
+variables, like an explicit library path, these can bet set in an extra 
+section in the compiler configuration; the user can also specify
+additional RPATHs:
+
+.. code-block:: yaml
+
+  compilers:
+    - compiler:
+        spec: gcc@4.9.3
+        paths:
+          cc: /opt/gcc/bin/gcc
+          c++: /opt/gcc/bin/g++
+          f77: /opt/gcc/bin/gfortran
+          fc: /opt/gcc/bin/gfortran
+        environment:
+          set:
+            LD_LIBRARY_PATH : /opt/gcc/lib
+        extra_rpaths:
+        - /path/to/some/compiler/runtime/directory
+        - /path/to/some/other/compiler/runtime/directory
+
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
 ^^^^^^^^^^^^^^^^^^^^^^^

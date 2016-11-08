@@ -140,6 +140,16 @@ def compiler_info(args):
                 print "\tflags:"
                 for flag, flag_value in c.flags.iteritems():
                     print "\t\t%s = %s" % (flag, flag_value)
+            if len(c.environment) != 0:
+                if len(c.environment['set']) != 0:
+                    print "\tenvironment:"
+                    print "\t    set:"
+                    for key, value in c.environment['set'].iteritems():
+                        print "\t        %s = %s" % (key, value)
+            if c.extra_rpaths:
+                print "\tExtra rpaths:"
+                for extra_rpath in c.extra_rpaths:
+                    print "\t\t%s" % extra_rpath
             print "\tmodules  = %s" % c.modules
             print "\toperating system  = %s" % c.operating_system
 

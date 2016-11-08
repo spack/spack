@@ -113,7 +113,8 @@ class Compiler(object):
     PrgEnv_compiler = None
 
     def __init__(self, cspec, operating_system,
-                 paths, modules=[], alias=None, **kwargs):
+                 paths, modules=[], alias=None, environment=None,
+                 extra_rpaths=None, **kwargs):
         self.operating_system = operating_system
         self.spec = cspec
         self.modules = modules
@@ -134,6 +135,9 @@ class Compiler(object):
                 self.fc = self.f77
             else:
                 self.fc  = check(paths[3])
+
+        self.environment = environment
+        self.extra_rpaths = extra_rpaths or []
 
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
