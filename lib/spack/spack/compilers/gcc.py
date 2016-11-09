@@ -41,8 +41,9 @@ class Gcc(Compiler):
     fc_names = ['gfortran']
 
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    # Homebrew and Linuxes may build gcc with -X, -X.Y suffixes
-    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d']
+    # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
+    # Old compatibility versions may contain XY suffixes.
+    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'gcc/gcc',

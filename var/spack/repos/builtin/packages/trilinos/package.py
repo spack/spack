@@ -36,7 +36,7 @@ import sys
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(Package):
+class Trilinos(CMakePackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -124,12 +124,12 @@ class Trilinos(Package):
             raise RuntimeError('The superlu-dist variant can only be used' +
                                ' with Trilinos @12.0.1:')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
         self.variants_check()
 
         cxx_flags = []
         options = []
-        options.extend(std_cmake_args)
 
         mpi_bin = spec['mpi'].prefix.bin
         # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
@@ -157,8 +157,17 @@ class Trilinos(Package):
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
             '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
-                'ON' if '+hypre' in spec else 'OFF')
+                'ON' if '+hypre' in spec else 'OFF'),
+            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
         ])
+
+        if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
+            # Panzer uses some std:chrono that is not recognized by Intel
+            # Don't know which (maybe all) Trilinos versions this applies to
+            # Don't know which (maybe all) Intel versions this applies to
+            options.extend([
+                '-DTrilinos_ENABLE_Panzer:BOOL=OFF'
+            ])
 
         if '+hdf5' in spec:
             options.extend([
@@ -188,19 +197,15 @@ class Trilinos(Package):
             options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
         # Fortran lib
-        libgfortran = os.path.dirname(os.popen(
-            '%s --print-file-name libgfortran.a' %
-            join_path(mpi_bin, 'mpif90')).read())
-        options.extend([
-            '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
-                libgfortran),
-            '-DTrilinos_ENABLE_Fortran=ON'
-        ])
-
-        # for build-debug only:
-        # options.extend([
-        #    '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
-        # ])
+        if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+            libgfortran = os.path.dirname(os.popen(
+                '%s --print-file-name libgfortran.a' %
+                join_path(mpi_bin, 'mpif90')).read())
+            options.extend([
+                '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
+                    libgfortran),
+                '-DTrilinos_ENABLE_Fortran=ON'
+            ])
 
         # suite-sparse related
         if '+suite-sparse' in spec:
@@ -321,27 +326,20 @@ class Trilinos(Package):
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
+        return options
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()
-            make('install')
-
-            # When trilinos is built with Python, libpytrilinos is included
-            # through cmake configure files. Namely, Trilinos_LIBRARIES in
-            # TrilinosConfig.cmake contains pytrilinos. This leads to a
-            # run-time error: Symbol not found: _PyBool_Type and prevents
-            # Trilinos to be used in any C++ code, which links executable
-            # against the libraries listed in Trilinos_LIBRARIES.  See
-            # https://github.com/Homebrew/homebrew-science/issues/2148#issuecomment-103614509
-            # A workaround it to remove PyTrilinos from the COMPONENTS_LIST :
-            if '+python' in self.spec:
-                filter_file(r'(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)',
-                            (r'\1\3'),
-                            '%s/cmake/Trilinos/TrilinosConfig.cmake' %
-                            prefix.lib)
-
-            # The shared libraries are not installed correctly on Darwin;
-            # correct this
-            if (sys.platform == 'darwin') and ('+shared' in spec):
-                fix_darwin_install_name(prefix.lib)
+    @CMakePackage.sanity_check('install')
+    def filter_python(self):
+        # When trilinos is built with Python, libpytrilinos is included
+        # through cmake configure files. Namely, Trilinos_LIBRARIES in
+        # TrilinosConfig.cmake contains pytrilinos. This leads to a
+        # run-time error: Symbol not found: _PyBool_Type and prevents
+        # Trilinos to be used in any C++ code, which links executable
+        # against the libraries listed in Trilinos_LIBRARIES.  See
+        # https://github.com/Homebrew/homebrew-science/issues/2148#issuecomment-103614509
+        # A workaround is to remove PyTrilinos from the COMPONENTS_LIST :
+        if '+python' in self.spec:
+            filter_file(r'(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)',
+                        (r'\1\3'),
+                        '%s/cmake/Trilinos/TrilinosConfig.cmake' %
+                        self.prefix.lib)

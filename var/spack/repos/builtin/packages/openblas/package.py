@@ -50,6 +50,9 @@ class Openblas(Package):
     provides('lapack')
 
     patch('make.patch')
+    #  This patch is in a pull request to OpenBLAS that has not been handled
+    #  https://github.com/xianyi/OpenBLAS/pull/915
+    patch('openblas_icc.patch', when='%intel')
 
     @property
     def blas_libs(self):
@@ -124,6 +127,8 @@ class Openblas(Package):
 
         include_flags = ["-I%s" % join_path(spec.prefix, "include")]
         link_flags = self.lapack_libs.ld_flags.split()
+        if self.compiler.name == 'intel':
+            link_flags.extend(["-lifcore"])
         link_flags.extend(["-lpthread"])
         if '+openmp' in spec:
             link_flags.extend([self.compiler.openmp_flag])

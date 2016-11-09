@@ -27,12 +27,14 @@ import re
 import sys
 
 import llnl.util.tty as tty
-import spack
-import spack.config
-import spack.spec
 from llnl.util.lang import *
 from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
+
+import spack
+import spack.config
+import spack.spec
+import spack.store
 
 #
 # Settings for commands that modify configuration
@@ -135,7 +137,7 @@ def elide_list(line_list, max_num=10):
 
 
 def disambiguate_spec(spec):
-    matching_specs = spack.installed_db.query(spec)
+    matching_specs = spack.store.db.query(spec)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 

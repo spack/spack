@@ -25,7 +25,6 @@
 import collections
 import errno
 import fileinput
-import getpass
 import glob
 import numbers
 import os
@@ -46,7 +45,6 @@ __all__ = [
     'can_access',
     'change_sed_delimiter',
     'copy_mode',
-    'expand_user',
     'filter_file',
     'find_libraries',
     'fix_darwin_install_name',
@@ -227,16 +225,6 @@ def install_tree(src, dest, **kwargs):
 def is_exe(path):
     """True if path is an executable file."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
-
-
-def expand_user(path):
-    """Find instances of '%u' in a path and replace with the current user's
-       username."""
-    username = getpass.getuser()
-    if not username and '%u' in path:
-        tty.die("Couldn't get username to complete path '%s'" % path)
-
-    return path.replace('%u', username)
 
 
 def mkdirp(*paths):

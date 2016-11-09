@@ -95,7 +95,11 @@ class DefaultConcretizer(object):
                                      not b.external and b.external_module):
                 # We're choosing between different providers, so
                 # maintain order from provider sort
-                return candidates.index(a) - candidates.index(b)
+                index_of_a = next(i for i in range(0, len(candidates))
+                                  if a.satisfies(candidates[i]))
+                index_of_b = next(i for i in range(0, len(candidates))
+                                  if b.satisfies(candidates[i]))
+                return index_of_a - index_of_b
 
             result = cmp_specs(a, b)
             if result != 0:
@@ -381,14 +385,15 @@ class DefaultConcretizer(object):
                                                   arch.platform_os)
 
         # copy concrete version into other_compiler
-        index = 0
-        while not _proper_compiler_style(matches[index], spec.architecture):
-            index += 1
-            if index == len(matches) - 1:
-                arch = spec.architecture
-                raise UnavailableCompilerVersionError(spec.compiler,
-                                                      arch.platform_os)
-        spec.compiler = matches[index].copy()
+        try:
+            spec.compiler = next(
+                c for c in matches
+                if _proper_compiler_style(c, spec.architecture)).copy()
+        except StopIteration:
+            raise UnavailableCompilerVersionError(
+                spec.compiler, spec.architecture.platform_os
+            )
+
         assert(spec.compiler.concrete)
         return True  # things changed.
 
