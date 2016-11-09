@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
+import os
 
 
 def _verbs_dir():
@@ -92,11 +92,10 @@ class Openmpi(AutotoolsPackage):
 
     # Additional support options
     variant('java', default=False, description='Build Java support')
-    variant('sqlite3', default=False, description='Build sqlite3 support')
-    variant('vt', default=True,
-            description='Build support for contributed package vt')
+    variant('sqlite3', default=False, description='Build SQLite3 support')
+    variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
-            description='Enable MPI_THREAD_MULTIPLE support')
+            description='Enable multithreading support')
 
     # TODO: support for CUDA is missing
 
@@ -159,28 +158,36 @@ class Openmpi(AutotoolsPackage):
         config_args = [
             '--enable-shared',
             '--enable-static',
-            '--with-hwloc={0}'.format(spec['hwloc'].prefix),
+            '--enable-mpi-cxx',
             # Schedulers
             '--with-tm' if '+tm' in spec else '--without-tm',
             '--with-slurm' if '+slurm' in spec else '--without-slurm',
             # Fabrics
             '--with-psm' if '+psm' in spec else '--without-psm',
-            '--with-psm2' if '+psm2' in spec else '--without-psm2',
-            '--with-pmi' if '+pmi' in spec else '--without-pmi',
-            '--with-mxm' if '+mxm' in spec else '--without-mxm',
-            # Other options
-            '--enable-java' if '+java' in spec else '--disable-java',
-            '--enable-mpi-java' if '+java' in spec else '--disable-mpi-java',
-            '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
-            '--enable-vt' if '+vt' in spec else '--disable-vt',
-            ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
-                else '--disable-mpi-thread-multiple')
         ]
 
-        # for Open-MPI 2.0+, C++ bindings are disabled by default.
-        if spec.satisfies('@2.0:'):
-            config_args.append('--enable-mpi-cxx')
+        # Intel PSM2 support
+        if spec.satisfies('@1.10:'):
+            if '+psm2' in spec:
+                config_args.append('--with-psm2')
+            else:
+                config_args.append('--without-psm2')
 
+        # PMI support
+        if spec.satisfies('@1.5.5:'):
+            if '+pmi' in spec:
+                config_args.append('--with-pmi')
+            else:
+                config_args.append('--without-pmi')
+
+        # Mellanox Messaging support
+        if spec.satisfies('@1.5.4:'):
+            if '+mxm' in spec:
+                config_args.append('--with-mxm')
+            else:
+                config_args.append('--without-mxm')
+
+        # OpenFabrics verbs support
         if '+verbs' in spec:
             path = _verbs_dir()
             if path is not None and path not in ('/usr', '/usr/local'):
@@ -189,6 +196,43 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--with-{0}'.format(self.verbs))
         else:
             config_args.append('--without-{0}'.format(self.verbs))
+
+        # Hwloc support
+        if spec.satisfies('@1.5.2:'):
+            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+
+        # Java support
+        if spec.satisfies('@1.7.4:'):
+            if '+java' in spec:
+                config_args.extend([
+                    '--enable-java',
+                    '--enable-mpi-java',
+                    '--with-jdk-dir={0}'.format(spec['jdk'].prefix)
+                ])
+            else:
+                config_args.extend([
+                    '--disable-java',
+                    '--disable-mpi-java'
+                ])
+
+        # SQLite3 support
+        if spec.satisfies('@1.7.3:1.999'):
+            if '+sqlite3' in spec:
+                config_args.append('--with-sqlite3')
+            else:
+                config_args.append('--without-sqlite3')
+
+        # VampirTrace support
+        if spec.satisfies('@1.3:1.999'):
+            if '+vt' not in spec:
+                config_args.append('--enable-contrib-no-build=vt')
+
+        # Multithreading support
+        if spec.satisfies('@1.5.4:'):
+            if '+thread_multiple' in spec:
+                config_args.append('--enable-mpi-thread-multiple')
+            else:
+                config_args.append('--disable-mpi-thread-multiple')
 
         return config_args
 
