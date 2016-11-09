@@ -76,7 +76,6 @@ attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
 import os
-import imp
 import inspect
 
 from llnl.util.lang import memoized, list_modules, key_ordering
@@ -419,31 +418,8 @@ class Arch(object):
              str(self.target) if self.target else None)))
 
 
-def _target_from_dict(target_name, plat=None):
-    """ Creates new instance of target and assigns all the attributes of
-        that target from the dictionary
-    """
-    if not plat:
-        plat = platform()
-    return plat.target(target_name)
-
-
-def _operating_system_from_dict(os_name, plat=None):
-    """ uses platform's operating system method to grab the constructed
-        operating systems that are valid on the platform.
-    """
-    if not plat:
-        plat = platform()
-    if isinstance(os_name, dict):
-        name = os_name['name']
-        version = os_name['version']
-        return plat.operating_system(name + version)
-    else:
-        return plat.operating_system(os_name)
-
-
-def _platform_from_dict(platform_name):
-    """ Constructs a platform from a dictionary. """
+def get_platform(platform_name):
+    """Returns a platform object that corresponds to the given name."""
     platform_list = all_platforms()
     for p in platform_list:
         if platform_name.replace("_", "").lower() == p.__name__.lower():
@@ -458,63 +434,23 @@ def verify_platform(platform_name):
     platform_names = [p.__name__.lower() for p in all_platforms()]
 
     if platform_name not in platform_names:
-        raise ValueError("%s is not a supported platform" % platform_name)
+        tty.die("%s is not a supported platform; supported platforms are %s" %
+            (platform_name, platform_names))
 
 
-def arch_from_dict(d):
-    """ Uses _platform_from_dict, _operating_system_from_dict, _target_from_dict
-        helper methods to recreate the arch tuple from the dictionary read from
-        a yaml file
-    """
-    arch = Arch()
+def arch_for_spec(arch_spec):
+    """Transforms the given architecture spec into an architecture objct."""
+    arch_spec = spack.spec.ArchSpec(arch_spec)
+    assert(arch_spec.concrete)
 
-    if isinstance(d, basestring):
-        # We have an old spec using a string for the architecture
-        arch.platform = Platform('spack_compatibility')
-        arch.platform_os = OperatingSystem('unknown', '')
-        arch.target = Target(d)
+    arch_plat = get_platform(arch_spec.platform)
+    if not (arch_plat.operating_system(arch_spec.platform_os) and \
+            arch_plat.target(arch_spec.target)):
+        raise ValueError(
+            "Can't recreate arch for spec %s on current arch %s; "
+            "spec architecture is too different" % (arch_spec, sys_type()))
 
-        arch.os_string = None
-        arch.target_string = None
-    else:
-        if d is None:
-            return None
-        platform_name = d['platform']
-        os_name = d['platform_os']
-        target_name = d['target']
-
-        # NOTE: The way that the following code handles constructing
-        # new architectures is the root cause of a number of bugs
-        # that crop up when attempting to use a single Spack instance
-        # to handle installs on multiple architectures.
-        #
-        # The main problem is that Spack constructs a new architecture
-        # using the current host architecture as a base.  In order to
-        # accurately recreate architecture objects for other platforms,
-        # all of the information about the other platform should be
-        # given to this function and that platform should be used as
-        # the base instead.  Facilitating this change will require
-        # updating the Spack package YAML to accomodate all of the
-        # information about the host platform.
-
-        if platform_name:
-            arch.platform = _platform_from_dict(platform_name)
-        else:
-            arch.platform = None
-        if target_name:
-            arch.target = _target_from_dict(target_name, arch.platform)
-        else:
-            arch.target = None
-        if os_name:
-            arch.platform_os = _operating_system_from_dict(os_name,
-                                                           arch.platform)
-        else:
-            arch.platform_os = None
-
-        arch.os_string = None
-        arch.target_string = None
-
-    return arch
+    return Arch(arch_plat, arch_spec.platform_os, arch_spec.target)
 
 
 @memoized

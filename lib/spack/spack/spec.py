@@ -104,7 +104,6 @@ from operator import attrgetter
 from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
@@ -115,7 +114,6 @@ import spack.compilers as compilers
 import spack.error
 import spack.parse
 from spack.build_environment import get_path_from_module, load_module
-from spack.util.naming import mod_to_class
 from spack.util.prefix import Prefix
 from spack.util.string import *
 import spack.util.spack_yaml as syaml
@@ -316,7 +314,8 @@ class ArchSpec(object):
         sdict, odict = self.to_cmp_dict(), other.to_cmp_dict()
 
         if strict or self.concrete:
-            return sdict == odict
+            return all(getattr(self, attr) == getattr(other, attr)
+                       for attr in odict if odict[attr])
         else:
             return all(getattr(self, attr) == getattr(other, attr)
                        for attr in odict if sdict[attr] and odict[attr])
@@ -1928,25 +1927,10 @@ class Spec(object):
 
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
-        sarch, oarch = self.architecture, other.architecture
-        if sarch and oarch:
-            if ((sarch.platform and
-                 oarch.platform and
-                 sarch.platform != oarch.platform) or
-
-                (sarch.platform_os and
-                 oarch.platform_os and
-                 sarch.platform_os != oarch.platform_os) or
-
-                (sarch.target and
-                 oarch.target and
-                 sarch.target != oarch.target)):
+        if self.architecture and other.architecture:
+            if not self.architecture.satisfies(other.architecture, strict):
                 return False
-
-        elif strict and ((oarch and not sarch) or
-                         (oarch.platform and not sarch.platform) or
-                         (oarch.platform_os and not sarch.platform_os) or
-                         (oarch.target and not sarch.target)):
+        elif strict and (other.architecture and not self.architecture):
             return False
 
         if not self.compiler_flags.satisfies(
