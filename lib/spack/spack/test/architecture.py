@@ -54,10 +54,7 @@ class ArchitectureTest(MockPackagesTest):
         arch.platform_os = arch.platform.operating_system('default_os')
         arch.target = arch.platform.target('default_target')
 
-        d = arch.to_dict()
-
-        new_arch = spack.architecture.arch_from_dict(d)
-
+        new_arch = spack.architecture.Arch.from_dict(arch.to_dict())
         self.assertEqual(arch, new_arch)
 
         self.assertTrue(isinstance(arch, spack.architecture.Arch))
@@ -114,10 +111,12 @@ class ArchitectureTest(MockPackagesTest):
         """Test when user inputs just frontend that both the frontend target
             and frontend operating system match
         """
-        frontend_os = self.platform.operating_system("frontend")
-        frontend_target = self.platform.target("frontend")
+        frontend_os = str(self.platform.operating_system("frontend"))
+        frontend_target = str(self.platform.target("frontend"))
+
         frontend_spec = Spec("libelf os=frontend target=frontend")
         frontend_spec.concretize()
+
         self.assertEqual(frontend_os, frontend_spec.architecture.platform_os)
         self.assertEqual(frontend_target, frontend_spec.architecture.target)
 
@@ -125,19 +124,22 @@ class ArchitectureTest(MockPackagesTest):
         """Test when user inputs backend that both the backend target and
             backend operating system match
         """
-        backend_os = self.platform.operating_system("backend")
-        backend_target = self.platform.target("backend")
+        backend_os = str(self.platform.operating_system("backend"))
+        backend_target = str(self.platform.target("backend"))
+
         backend_spec = Spec("libelf os=backend target=backend")
         backend_spec.concretize()
+
         self.assertEqual(backend_os, backend_spec.architecture.platform_os)
         self.assertEqual(backend_target, backend_spec.architecture.target)
 
     def test_user_defaults(self):
-        default_os = self.platform.operating_system("default_os")
-        default_target = self.platform.target("default_target")
+        default_os = str(self.platform.operating_system("default_os"))
+        default_target = str(self.platform.target("default_target"))
 
         default_spec = Spec("libelf")  # default is no args
         default_spec.concretize()
+
         self.assertEqual(default_os, default_spec.architecture.platform_os)
         self.assertEqual(default_target, default_spec.architecture.target)
 
@@ -156,8 +158,9 @@ class ArchitectureTest(MockPackagesTest):
             spec = Spec("libelf os=%s target=%s" % (o, t))
             spec.concretize()
             results.append(spec.architecture.platform_os ==
-                           self.platform.operating_system(o))
-            results.append(spec.architecture.target == self.platform.target(t))
+                           str(self.platform.operating_system(o)))
+            results.append(spec.architecture.target ==
+                           str(self.platform.target(t)))
         res = all(results)
 
         self.assertTrue(res)

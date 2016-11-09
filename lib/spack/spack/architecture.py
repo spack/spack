@@ -126,8 +126,7 @@ class Target(object):
 @key_ordering
 class Platform(object):
     """ Abstract class that each type of Platform will subclass.
-        Will return a instance of it once it
-        is returned
+        Will return a instance of it once it is returned.
     """
 
     priority        = None  # Subclass sets number. Controls detection order
@@ -139,6 +138,9 @@ class Platform(object):
     back_os         = None
     default_os      = None
 
+    reserved_targets = ['default_target', 'frontend', 'fe', 'backend', 'be']
+    reserved_oss = ['default_os', 'frontend', 'fe', 'backend', 'be']
+
     def __init__(self, name):
         self.targets = {}
         self.operating_sys = {}
@@ -149,7 +151,7 @@ class Platform(object):
         Raises an error if the platform specifies a name
         that is reserved by spack as an alias.
         """
-        if name in ['frontend', 'fe', 'backend', 'be', 'default_target']:
+        if name in Platform.reserved_targets:
             raise ValueError(
                 "%s is a spack reserved alias "
                 "and cannot be the name of a target" % name)
@@ -174,7 +176,7 @@ class Platform(object):
         """ Add the operating_system class object into the
             platform.operating_sys dictionary
         """
-        if name in ['frontend', 'fe', 'backend', 'be', 'default_os']:
+        if name in Platform.reserved_oss:
             raise ValueError(
                 "%s is a spack reserved alias "
                 "and cannot be the name of an OS" % name)
@@ -409,13 +411,17 @@ class Arch(object):
         return (platform, platform_os, target)
 
     def to_dict(self):
-        return syaml_dict((
-            ('platform',
-             str(self.platform) if self.platform else None),
-            ('platform_os',
-             str(self.platform_os) if self.platform_os else None),
-            ('target',
-             str(self.target) if self.target else None)))
+        str_or_none = lambda v: str(v) if v else None
+        d = syaml_dict([
+            ('platform', str_or_none(self.platform)),
+            ('platform_os', str_or_none(self.platform_os)),
+            ('target', str_or_none(self.target))])
+        return syaml_dict([('arch', d)])
+
+    @staticmethod
+    def from_dict(d):
+        spec = spack.spec.ArchSpec.from_dict(d)
+        return arch_for_spec(spec)
 
 
 def get_platform(platform_name):

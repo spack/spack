@@ -283,7 +283,7 @@ class ArchSpec(object):
             self.platform = to_attr_string(args[0])
             self.platform_os = to_attr_string(args[1])
             self.target = to_attr_string(args[2])
-        else:
+        elif len(args) != 0:
             raise TypeError("Can't make arch spec from %s" % args)
 
     def _autospec(self, spec_like):
@@ -305,9 +305,74 @@ class ArchSpec(object):
 
     @platform.setter
     def platform(self, value):
+        """ The platform of the architecture spec will be verified as a
+            supported Spack platform before it's set to ensure all specs
+            refer to valid platforms.
+        """
+        value = str(value) if value is not None else None
+
         if value is not None:
             spack.architecture.verify_platform(value)
+
         self._platform = value
+
+    @property
+    def platform_os(self):
+        return self._platform_os
+
+    @platform_os.setter
+    def platform_os(self, value):
+        """ The OS of the architecture spec will update the platform field
+            if the OS is set to one of the reserved OS types so that the
+            default OS type can be resolved.  Since the reserved OS
+            information is only available for the host machine, the platform
+            will assumed to be the host machine's platform.
+        """
+        value = str(value) if value is not None else None
+
+        if value in spack.architecture.Platform.reserved_oss:
+            curr_platform = str(spack.architecture.platform())
+            self.platform = self.platform or curr_platform
+
+            if self.platform != curr_platform:
+                raise ValueError(
+                    "Can't set arch spec OS to reserved value '%s' when the "
+                    "arch platform (%s) isn't the current platform (%s)" %
+                    (value, self.platform, curr_platform))
+
+            spec_platform = spack.architecture.get_platform(self.platform)
+            value = str(spec_platform.operating_system(value))
+
+        self._platform_os = value
+
+    @property
+    def target(self):
+        return self._target
+
+    @target.setter
+    def target(self, value):
+        """ The target of the architecture spec will update the platform field
+            if the target is set to one of the reserved target types so that
+            the default target type can be resolved.  Since the reserved target
+            information is only available for the host machine, the platform
+            will assumed to be the host machine's platform.
+        """
+        value = str(value) if value is not None else None
+
+        if value in spack.architecture.Platform.reserved_targets:
+            curr_platform = str(spack.architecture.platform())
+            self.platform = self.platform or curr_platform
+
+            if self.platform != curr_platform:
+                raise ValueError(
+                    "Can't set arch spec target to reserved value '%s' when "
+                    "the arch platform (%s) isn't the current platform (%s)" %
+                    (value, self.platform, curr_platform))
+
+            spec_platform = spack.architecture.get_platform(self.platform)
+            value = str(spec_platform.target(value))
+
+        self._target = value
 
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
@@ -321,9 +386,10 @@ class ArchSpec(object):
                        for attr in odict if sdict[attr] and odict[attr])
 
     def constrain(self, other):
-        """Projects all architecture fields that are specified in the given
-        spec onto the instance spec if they're missing from the instance spec.
-        This will only work if the two specs are compatible."""
+        """ Projects all architecture fields that are specified in the given
+            spec onto the instance spec if they're missing from the instance
+            spec. This will only work if the two specs are compatible.
+        """
         other = self._autospec(other)
 
         if not self.satisfies(other):

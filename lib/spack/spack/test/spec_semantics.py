@@ -133,14 +133,49 @@ class SpecSematicsTest(MockPackagesTest):
 
     def test_satisfies_architecture(self):
         self.check_satisfies(
+            'foo platform=test',
+            'platform=test')
+        self.check_satisfies(
+            'foo platform=test',
+            'platform=test target=frontend')
+        self.check_satisfies(
+            'foo platform=test',
+            'platform=test os=frontend target=frontend')
+        self.check_satisfies(
+            'foo platform=test os=frontend target=frontend',
+            'platform=test')
+        self.check_unsatisfiable(
+            'foo platform=test',
+            'platform=linux os=frontend target=frontend')
+
+        self.check_satisfies(
+            'foo arch=test-None-None',
+            'platform=test')
+        self.check_satisfies(
+            'foo arch=test-None-frontend',
+            'platform=test target=frontend')
+        self.check_satisfies(
+            'foo arch=test-frontend-frontend',
+            'platform=test os=frontend target=frontend')
+        self.check_satisfies(
+            'foo arch=test-frontend-frontend',
+            'platform=test')
+        self.check_unsatisfiable(
+            'foo arch=test-frontend-frontend',
+            'platform=test os=frontend target=backend')
+
+        self.check_satisfies(
             'foo platform=test target=frontend os=frontend',
             'platform=test target=frontend os=frontend')
         self.check_satisfies(
             'foo platform=test target=backend os=backend',
-            'platform=test target=backend', 'platform=test os=backend')
+            'platform=test target=backend os=backend')
         self.check_satisfies(
             'foo platform=test target=default_target os=default_os',
-            'platform=test target=default_target os=default_os')
+            'platform=test os=default_os')
+        self.check_unsatisfiable(
+            'foo platform=test target=default_target os=default_os',
+            'platform=linux target=default_target os=default_os')
 
     def test_satisfies_dependencies(self):
         self.check_satisfies('mpileaks^mpich', '^mpich')
