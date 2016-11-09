@@ -63,6 +63,18 @@ class SuiteSparse(Package):
             'CC=cc',
             'CXX=c++',
             'F77=f77',
+            'CUDA_ROOT     =',
+            'GPU_BLAS_PATH =',
+            'GPU_CONFIG    =',
+            'CUDA_PATH     =',
+            'CUDART_LIB    =',
+            'CUBLAS_LIB    =',
+            'CUDA_INC_PATH =',
+            'NV20          =',
+            'NV30          =',
+            'NV35          =',
+            'NVCC          = echo',
+            'NVCCFLAGS     =',
         ])
         if '+fpic' in spec:
             make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
