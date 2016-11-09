@@ -25,26 +25,13 @@
 from spack import *
 
 
-class Libelf(AutotoolsPackage):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Nmap(AutotoolsPackage):
+    """Nmap ("Network Mapper") is a free and open source (license) 
+       utility for network discovery and security auditing. 
+       It also provides ncat an updated nc"""
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    homepage = "https://nmap.org"
+    url      = "https://nmap.org/dist/nmap-7.31.tar.bz2"
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-
-    provides('elf')
-    depends_on('automake', type='build')
-
-    def configure_args(self):
-        args = ["--enable-shared",
-                "--disable-dependency-tracking",
-                "--disable-debug"]
-        return args
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    version('7.31', 'f2f6660142a777862342a58cc54258ea')
+    version('7.30', '8d86797d5c9e56de571f9630c0e6b5f8')

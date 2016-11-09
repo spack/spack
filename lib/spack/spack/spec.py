@@ -475,10 +475,10 @@ class FlagMap(HashableMap):
 
     def satisfies(self, other, strict=False):
         if strict or (self.spec and self.spec._concrete):
-            return all(f in self and set(self[f]) <= set(other[f])
+            return all(f in self and set(self[f]) == set(other[f])
                        for f in other)
         else:
-            return all(set(self[f]) <= set(other[f])
+            return all(set(self[f]) == set(other[f])
                        for f in other if (other[f] != [] and f in self))
 
     def constrain(self, other):
@@ -2212,6 +2212,9 @@ class Spec(object):
                              ${SPACK_PREFIX}/opt
             ${PREFIX}        The package prefix
 
+        Note these are case-insensitive: for example you can specify either
+        ``${PACKAGE}`` or ``${package}``.
+
         Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
         ``$-20_`` for a left-justified name.
@@ -2325,7 +2328,8 @@ class Spec(object):
                     continue
 
                 if section_id == 'PACKAGE' or section_id == 'NAME':
-                    write(fmt % self.name, '@')
+                    name = self.name if self.name else ''
+                    write(fmt % name, '@')
                 elif section_id.startswith('VERSION'):
                     if section_id.startswith('VERSION:') and self.concrete:
                         _, specificity = named_str.split(':')
@@ -2344,7 +2348,7 @@ class Spec(object):
                 elif section_id == 'COMPILERNAME':
                     if self.compiler:
                         write(fmt % self.compiler.name, '%')
-                elif section_id == 'COMPILERVER':
+                elif section_id in ['COMPILERVER', 'COMPILERVERSION']:
                     if self.compiler:
                         write(fmt % self.compiler.versions, '%')
                 elif section_id == 'COMPILERFLAGS':
@@ -2433,12 +2437,24 @@ class Spec(object):
     def __str__(self):
         return self.format() + self.dep_string()
 
+    def _install_status(self):
+        """Helper for tree to print DB install status."""
+        if not self.concrete:
+            return None
+        try:
+            record = spack.store.db.get_record(self)
+            return record.installed
+        except KeyError:
+            return None
+
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
-        showid = kwargs.pop('ids',   False)
+        hashes = kwargs.pop('hashes', True)
+        hlen = kwargs.pop('hashlen', None)
+        install_status = kwargs.pop('install_status', True)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
@@ -2447,8 +2463,6 @@ class Spec(object):
         check_kwargs(kwargs, self.tree)
 
         out = ""
-        cur_id = 0
-        ids = {}
         for d, node in self.traverse(
                 order='pre', cover=cover, depth=True, deptypes=deptypes):
             if prefix is not None:
@@ -2456,11 +2470,17 @@ class Spec(object):
             out += " " * indent
             if depth:
                 out += "%-4d" % d
-            if not id(node) in ids:
-                cur_id += 1
-                ids[id(node)] = cur_id
-            if showid:
-                out += "%-4d" % ids[id(node)]
+            if install_status:
+                status = node._install_status()
+                if status is None:
+                    out += "     "  # Package isn't installed
+                elif status:
+                    out += colorize("@g{[+]}  ", color=color)  # installed
+                else:
+                    out += colorize("@r{[-]}  ", color=color)  # missing
+
+            if hashes:
+                out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
             out += ("    " * d)
             if d > 0:
                 out += "^"

@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class EnvironmentModules(Package):
@@ -30,7 +31,7 @@ class EnvironmentModules(Package):
     modification of a user's environment via modulefiles."""
 
     homepage = "https://sourceforge.net/p/modules/wiki/Home/"
-    url      = "http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz"
+    url = "http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz"
 
     version('3.2.10', '8b097fdcb90c514d7540bb55a3cb90fb')
 
@@ -40,22 +41,38 @@ class EnvironmentModules(Package):
     def install(self, spec, prefix):
         tcl_spec = spec['tcl']
 
+        # We are looking for tclConfig.sh
+        tcl_config_name = 'tclConfig.sh'
+        tcl_config_dir_options = [tcl_spec.prefix.lib,
+                                  tcl_spec.prefix.lib64]
+
+        tcl_config_found = False
+        for tcl_config_dir in tcl_config_dir_options:
+            tcl_config_found = os.path.exists(
+                join_path(tcl_config_dir, tcl_config_name))
+            if tcl_config_found:
+                break
+
+        if not tcl_config_found:
+            raise InstallError('Failed to locate ' + tcl_config_name)
+
         # See: https://sourceforge.net/p/modules/bugs/62/
-        CPPFLAGS = ['-DUSE_INTERP_ERRORLINE']
+        cpp_flags = ['-DUSE_INTERP_ERRORLINE']
+
         config_args = [
             "--without-tclx",
             "--with-tclx-ver=0.0",
-            "--prefix=%s" % prefix,
+            "--prefix=" + prefix,
             # It looks for tclConfig.sh
-            "--with-tcl=%s" % join_path(tcl_spec.prefix, 'lib'),
-            "--with-tcl-ver=%d.%d" % (tcl_spec.version.version[
-                                      0], tcl_spec.version.version[1]),
+            "--with-tcl=" + tcl_config_dir,
+            "--with-tcl-ver=%d.%d" % (
+                tcl_spec.version.version[0], tcl_spec.version.version[1]),
             '--disable-debug',
             '--disable-dependency-tracking',
             '--disable-silent-rules',
             '--disable-versioning',
-            '--datarootdir=%s' % prefix.share,
-            'CPPFLAGS=%s' % ' '.join(CPPFLAGS)
+            '--datarootdir=' + prefix.share,
+            'CPPFLAGS=' + ' '.join(cpp_flags)
         ]
 
         configure(*config_args)

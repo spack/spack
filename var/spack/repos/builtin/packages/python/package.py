@@ -346,7 +346,7 @@ sys.__egginsert = p + len(new)
 
         super(Python, self).activate(ext_pkg, **args)
 
-        exts = spack.install_layout.extension_map(self.spec)
+        exts = spack.store.layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
         self.write_easy_install_pth(exts)
 
@@ -354,7 +354,7 @@ sys.__egginsert = p + len(new)
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        exts = spack.install_layout.extension_map(self.spec)
+        exts = spack.store.layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]

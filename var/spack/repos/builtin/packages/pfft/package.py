@@ -23,38 +23,42 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Texlive(Package):
-    """TeX Live is a free software distribution for the TeX typesetting
-       system"""
+class Pfft(AutotoolsPackage):
+    """PFFT is a software library for computing massively parallel,
+       fast Fourier transformations on distributed memory architectures.
+       PFFT can be understood as a generalization of FFTW-MPI to
+       multidimensional data decomposition."""
 
-    homepage = "http://www.tug.org/texlive"
+    homepage = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en"
+    url      = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software/pfft-1.0.8-alpha.tar.gz"
 
-    # pull from specific site because the texlive mirrors do not all
-    # update in synchrony.
-    version('live', '6d171d370f3a2f2b936b9b0c87e8d0fe',
-            url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
+    version('1.0.8-alpha', '46457fbe8e38d02ff87d439b63dc0709')
 
-    # There does not seem to be a complete list of schemes.
-    # Examples include:
-    #   full scheme (everything)
-    #   medium scheme (small + more packages and languages)
-    #   small scheme (basic + xetex, metapost, a few languages)
-    #   basic scheme (plain and latex)
-    #   minimal scheme (plain only)
-    # See:
-    # https://www.tug.org/texlive/doc/texlive-en/texlive-en.html#x1-25025r6
-    variant('scheme',  default="small",
-            description='Package subset to install (e.g. full, small, basic)')
-
-    depends_on('perl', type='build')
+    depends_on('fftw+mpi+pfft_patches')
+    depends_on('mpi')
 
     def install(self, spec, prefix):
-        env = os.environ
-        env['TEXLIVE_INSTALL_PREFIX'] = prefix
-        perl = which('perl')
-        scheme = spec.variants['scheme'].value
-        perl('./install-tl', '-scheme', scheme,
-             '-portable', '-profile', '/dev/null')
+        options = ['--prefix={0}'.format(prefix)]
+        if not self.compiler.f77 or not self.compiler.fc:
+            options.append("--disable-fortran")
+
+        configure(*options)
+        make()
+        if self.run_tests:
+            make("check")
+        make("install")
+
+        if '+float' in spec['fftw']:
+            configure('--enable-float', *options)
+            make()
+            if self.run_tests:
+                make("check")
+            make("install")
+        if '+long_double' in spec['fftw']:
+            configure('--enable-long-double', *options)
+            make()
+            if self.run_tests:
+                make("check")
+            make("install")

@@ -39,8 +39,5 @@ class EverytraceExample(CMakePackage):
     # Currently the only MPI this everytrace works with.
     depends_on('openmpi')
 
-    def configure_args(self):
-        return []
-
     def setup_environment(self, spack_env, env):
         env.prepend_path('PATH', join_path(self.prefix, 'bin'))
