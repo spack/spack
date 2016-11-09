@@ -682,7 +682,7 @@ class MergedTclModule(TclModule):
         path_elements = list()
         
         for dep, dep_scheme in (
-                CONFIGURATION[self.name].get('dep_naming_schemes', {})
+                _module_config[self.name].get('dep_naming_schemes', {})
                 .iteritems()):
             if dep == self.spec.name:
                 continue

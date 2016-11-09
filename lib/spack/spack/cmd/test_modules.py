@@ -18,7 +18,7 @@ def setup_parser(subparser):
 
 
 def test_modules(parser, args):    
-    specs = spack.installed_db.query(args.merge_spec)
+    specs = spack.store.db.query(args.merge_spec)
     
     #module = TclModule(specs[0])
     #collect_output = StringIO.StringIO()
