@@ -379,14 +379,14 @@ class EnvModule(object):
         if output:
             output.write(module_file_content)
         elif overwrite or (not os.path.exists(self.file_name)):
-            #TODO: this is currently placed here because MergeTclModule doesnt
-            #necessarily have all the details that .tokens wants
+            # TODO: this is currently placed here because MergeTclModule doesnt
+            # necessarily have all the details that .tokens wants
             tty.debug("\tWRITE : %s [%s]" %
                       (self.spec.cshort_spec, self.file_name))
 
             module_dir = os.path.dirname(self.file_name)
             if not os.path.exists(module_dir):
-                mkdirp(module_dir)        
+                mkdirp(module_dir)
 
             with open(self.file_name, 'w') as f:
                 f.write(module_file_content)
@@ -555,7 +555,7 @@ class TclModule(EnvModule):
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }
-    
+
     environment_modifications_formats_general = {
         PrependPath:
         'prepend-path --delim "{separator}" {name} \"{value}\"\n',
@@ -657,10 +657,10 @@ class MergedTclModule(TclModule):
         if_start = 'if [ {env_var} == "{val}" ] {{\n'.format(
             env_var=self.env_var, val=val)
         yield if_start
-        
+
         for x in TclModule(spec).process_environment_command():
             yield x
-        
+
         yield '}\n'
 
     def process_environment_command(self):
@@ -672,7 +672,7 @@ class MergedTclModule(TclModule):
             if len(matching) > 1:
                 raise ValueError(
                     "Multiple specs match constraint: " + str(constraint_spec))
-            
+
             match = iter(matching).next()
             for x in self.process_conditional_env(match, val):
                 yield x
@@ -680,20 +680,20 @@ class MergedTclModule(TclModule):
     @property
     def extra_path_elements(self):
         path_elements = list()
-        
+
         for dep, dep_scheme in (
                 _module_config[self.name].get('dep_naming_schemes', {})
                 .iteritems()):
             if dep == self.spec.name:
                 continue
-            
+
             dep_specs = list(s[dep] for s in self.specs if dep in s)
             if not dep_specs:
                 continue
-            
+
             if len(dep_specs) != len(self.specs):
                 raise ValueError()
-                
+
             if any(dep_specs[0] != s for s in dep_specs[1:]):
                 raise ValueError()
 
@@ -701,10 +701,10 @@ class MergedTclModule(TclModule):
         return path_elements
 
     def module_specific_content(self, configuration):
-        #TODO: the superclass implementation should eventually be suitable but
-        #as of now the .tokens property unconditionally extracts details which
-        #may not be present for the query spec (e.g. it always grabs the
-        #compiler)
+        # TODO: the superclass implementation should eventually be suitable but
+        # as of now the .tokens property unconditionally extracts details which
+        # may not be present for the query spec (e.g. it always grabs the
+        # compiler)
         return tuple()
 
 # To construct an arbitrary hierarchy of module files:
