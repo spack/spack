@@ -158,7 +158,7 @@ class Openmpi(AutotoolsPackage):
 
         config_args = [
             '--enable-shared',
-            '--enable-static'
+            '--enable-static',
             '--with-hwloc={0}'.format(spec['hwloc'].prefix),
             # Schedulers
             '--with-tm' if '+tm' in spec else '--without-tm',
@@ -172,9 +172,9 @@ class Openmpi(AutotoolsPackage):
             '--enable-java' if '+java' in spec else '--disable-java',
             '--enable-mpi-java' if '+java' in spec else '--disable-mpi-java',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
-            '--enable-vt' if '+vt' in spec else '--disable-vt'
+            '--enable-vt' if '+vt' in spec else '--disable-vt',
             ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
-                else '--disable-mpi-thread-multiple'),
+                else '--disable-mpi-thread-multiple')
         ]
 
         # for Open-MPI 2.0+, C++ bindings are disabled by default.
