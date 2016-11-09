@@ -302,6 +302,23 @@ def set_build_environment_variables(pkg, env, dirty=False):
             if '/macports/' in p:
                 env.remove_path('PATH', p)
 
+    # Set environment variables if specified for
+    # the given compiler
+    compiler = pkg.compiler
+    environment = compiler.environment
+    if 'set' in environment:
+        env_to_set = environment['set']
+        for key, value in env_to_set.iteritems():
+            env.set('SPACK_ENV_SET_%s' % key, value)
+            env.set('%s' % key, value)
+        # Let shell know which variables to set
+        env_variables = ":".join(env_to_set.keys())
+        env.set('SPACK_ENV_TO_SET', env_variables)
+
+    if compiler.extra_rpaths:
+        extra_rpaths = ':'.join(compiler.extra_rpaths)
+        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
+
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, [
         '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
