@@ -1051,6 +1051,7 @@ class PackageBase(object):
         # FIXME : Make this part of the 'install' behavior ?
         mkdirp(self.prefix.bin)
         touch(join_path(self.prefix.bin, 'fake'))
+        mkdirp(self.prefix.include)
         mkdirp(self.prefix.lib)
         mkdirp(self.prefix.man1)
 
