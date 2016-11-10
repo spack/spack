@@ -95,7 +95,7 @@ class Openmpi(AutotoolsPackage):
     variant('sqlite3', default=False, description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
-            description='Enable multithreading support')
+            description='Enable MPI_THREAD_MULTIPLE support')
 
     # TODO: support for CUDA is missing
 
