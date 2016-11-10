@@ -28,9 +28,11 @@ import os
 import llnl.util.tty as tty
 import nose
 import spack
+import spack.architecture
 from llnl.util.filesystem import join_path
 from llnl.util.tty.colify import colify
 from spack.test.tally_plugin import Tally
+from spack.platforms.test import Test as TestPlatform
 """Names of tests to be included in Spack's test suite"""
 
 # All the tests Spack knows about.
@@ -84,6 +86,13 @@ test_names = [
 ]
 
 
+def setup_tests():
+    """Prepare the environment for the Spack tests to be run."""
+    test_platform = TestPlatform()
+    spack.architecture.real_platform = spack.architecture.platform
+    spack.architecture.platform = lambda: test_platform
+
+
 def list_tests():
     """Return names of all tests that can be run for Spack."""
     return test_names
@@ -117,6 +126,8 @@ def run(names, outputDir, verbose=False):
         runOpts += ["--with-xunit",
                     "--xunit-file={0}".format(xmlOutputPath)]
     argv = [""] + runOpts + modules
+
+    setup_tests()
     nose.run(argv=argv, addplugins=[tally])
 
     succeeded = not tally.failCount and not tally.errorCount

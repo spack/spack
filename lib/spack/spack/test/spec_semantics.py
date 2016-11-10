@@ -146,7 +146,7 @@ class SpecSematicsTest(MockPackagesTest):
             'platform=test')
         self.check_unsatisfiable(
             'foo platform=test',
-            'platform=linux os=frontend target=frontend')
+            'platform=linux os=redhat6 target=x86_32')
 
         self.check_satisfies(
             'foo arch=test-None-None',
@@ -174,8 +174,8 @@ class SpecSematicsTest(MockPackagesTest):
             'foo platform=test target=default_target os=default_os',
             'platform=test os=default_os')
         self.check_unsatisfiable(
-            'foo platform=test target=default_target os=default_os',
-            'platform=linux target=default_target os=default_os')
+            'foo platform=test target=x86_32 os=redhat6',
+            'platform=linux target=x86_32 os=redhat6')
 
     def test_satisfies_dependencies(self):
         self.check_satisfies('mpileaks^mpich', '^mpich')

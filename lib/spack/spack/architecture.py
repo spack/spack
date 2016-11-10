@@ -243,7 +243,7 @@ class OperatingSystem(object):
         self.version = version
 
     def __str__(self):
-        return self.name + self.version
+        return "%s%s" % (self.name, self.version)
 
     def __repr__(self):
         return self.__str__()
@@ -441,7 +441,7 @@ def verify_platform(platform_name):
 
     if platform_name not in platform_names:
         tty.die("%s is not a supported platform; supported platforms are %s" %
-            (platform_name, platform_names))
+                (platform_name, platform_names))
 
 
 def arch_for_spec(arch_spec):
@@ -450,7 +450,7 @@ def arch_for_spec(arch_spec):
     assert(arch_spec.concrete)
 
     arch_plat = get_platform(arch_spec.platform)
-    if not (arch_plat.operating_system(arch_spec.platform_os) and \
+    if not (arch_plat.operating_system(arch_spec.platform_os) and
             arch_plat.target(arch_spec.target)):
         raise ValueError(
             "Can't recreate arch for spec %s on current arch %s; "

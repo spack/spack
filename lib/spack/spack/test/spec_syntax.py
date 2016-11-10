@@ -183,18 +183,23 @@ class SpecSyntaxTest(unittest.TestCase):
                           self.check_parse, "x ^y%gcc%intel")
 
     def test_duplicate_arch(self):
-        self.assertRaises(DuplicateArchitectureError,
-                          self.check_parse, "x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
 
-        self.assertRaises(DuplicateArchitectureError,
-                          self.check_parse, "x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
-        self.assertRaises(DuplicateArchitectureError,
-                          self.check_parse, "x arch=linux-rhel7-ppc64le arch=linux-rhel7-x86_64")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x arch=linux-rhel7-ppc64le arch=linux-rhel7-x86_64")
 
-        self.assertRaises(DuplicateArchitectureError,
-                          self.check_parse, "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
-        self.assertRaises(DuplicateArchitectureError,
-                          self.check_parse, "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
 
     # ========================================================================
     # Lex checks

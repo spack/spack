@@ -72,7 +72,7 @@ class ArchitectureTest(MockPackagesTest):
                                    spack.architecture.Target))
 
     def test_platform(self):
-        output_platform_class = spack.architecture.platform()
+        output_platform_class = spack.architecture.real_platform()
         if os.path.exists('/opt/cray/craype'):
             my_platform_class = Cray()
         elif os.path.exists('/bgsys'):

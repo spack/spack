@@ -850,7 +850,7 @@ class Spec(object):
         if name == 'arch' or name == 'architecture':
             parts = tuple(value.split('-'))
             plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
-            self._set_architecture(plat, os, tgt)
+            self._set_architecture(platform=plat, platform_os=os, target=tgt)
         elif name == 'platform':
             self._set_architecture(platform=value)
         elif name == 'os' or name == 'operating_system':
@@ -863,17 +863,21 @@ class Spec(object):
         else:
             self._add_variant(name, value)
 
-    def _set_architecture(self, platform=None, platform_os=None, target=None):
+    def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
+        arch_attrs = ['platform', 'platform_os', 'target']
         if self.architecture and self.architecture.concrete:
             raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
 
-        new_spec = ArchSpec(platform, platform_os, target)
         if not self.architecture:
-            self.architecture = new_spec
+            new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
+            self.architecture = ArchSpec(*new_vals)
         else:
-            self.architecture.constrain(new_spec)
+            new_attrvals = [(a, v) for a, v in kwargs.iteritems() 
+                            if a in arch_attrs]
+            for new_attr, new_value in new_attrvals:
+                setattr(self.architecture, new_attr, new_value)
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
