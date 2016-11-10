@@ -877,7 +877,12 @@ class Spec(object):
             new_attrvals = [(a, v) for a, v in kwargs.iteritems() 
                             if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
-                setattr(self.architecture, new_attr, new_value)
+                if getattr(self.architecture, new_attr):
+                    raise DuplicateArchitectureError(
+                        "Spec for '%s' cannot have two '%s' specified "
+                        "for its architecture" % (self.name, new_attr))
+                else:
+                    setattr(self.architecture, new_attr, new_value)
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""

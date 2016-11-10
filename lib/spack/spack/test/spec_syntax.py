@@ -120,6 +120,10 @@ class SpecSyntaxTest(unittest.TestCase):
             'mvapich_foo'
             '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4'
             '^stackwalker@8.1_1e')
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
         self.check_parse(
@@ -143,6 +147,22 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse(
             "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
+
+        self.check_parse(
+            "x arch=test-redhat6-None"
+            "^y arch=test-None-x86_64"
+            "^z arch=linux-None-None",
+
+            "x os=fe"
+            "^y target=be"
+            "^z platform=linux")
+
+        self.check_parse(
+            "x arch=test-debian6-x86_64"
+            "^y arch=test-debian6-x86_64",
+
+            "x os=default_os target=default_target"
+            "^y os=default_os target=default_target")
 
         self.check_parse("x^y", "x@: ^y@:")
 
@@ -182,7 +202,7 @@ class SpecSyntaxTest(unittest.TestCase):
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x ^y%gcc%intel")
 
-    def test_duplicate_arch(self):
+    def test_duplicate_architecture(self):
         self.assertRaises(
             DuplicateArchitectureError, self.check_parse,
             "x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
@@ -200,6 +220,35 @@ class SpecSyntaxTest(unittest.TestCase):
         self.assertRaises(
             DuplicateArchitectureError, self.check_parse,
             "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
+
+    def test_duplicate_architecture_component(self):
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x os=fe os=fe")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x os=fe os=be")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x target=fe target=fe")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x target=fe target=be")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x platform=test platform=test")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x platform=test platform=test")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x os=fe platform=test target=fe os=fe")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x target=be platform=test os=be os=fe")
 
     # ========================================================================
     # Lex checks

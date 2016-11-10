@@ -136,6 +136,9 @@ class SpecSematicsTest(MockPackagesTest):
             'foo platform=test',
             'platform=test')
         self.check_satisfies(
+            'foo platform=linux',
+            'platform=linux')
+        self.check_satisfies(
             'foo platform=test',
             'platform=test target=frontend')
         self.check_satisfies(
@@ -144,9 +147,16 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_satisfies(
             'foo platform=test os=frontend target=frontend',
             'platform=test')
+
         self.check_unsatisfiable(
-            'foo platform=test',
-            'platform=linux os=redhat6 target=x86_32')
+            'foo platform=linux',
+            'platform=test os=redhat6 target=x86_32')
+        self.check_unsatisfiable(
+            'foo os=redhat6',
+            'platform=test os=debian6 target=x86_64')
+        self.check_unsatisfiable(
+            'foo target=x86_64',
+            'platform=test os=redhat6 target=x86_32')
 
         self.check_satisfies(
             'foo arch=test-None-None',
