@@ -202,20 +202,23 @@ def find(compiler_spec, scope=None):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, scope=None, **kwargs):
+def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    platform = kwargs.get('platform', None)
     config = all_compilers_config(scope)
 
     def get_compilers(cspec):
         compilers = []
 
         for items in config:
-            if items['compiler']['spec'] != str(cspec):
-                continue
             items = items['compiler']
+            if items['spec'] != str(cspec):
+                continue
+
+            os = items.get('operating_system', None)
+            if arch_spec and os != arch_spec.platform_os:
+                continue
 
             if not ('paths' in items and
                     all(n in items['paths'] for n in _path_instance_vars)):
@@ -234,11 +237,6 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
             mods = items.get('modules')
             if mods == 'None':
                 mods = []
-
-            os = None
-            if 'operating_system' in items:
-                os = spack.architecture._operating_system_from_dict(
-                    items['operating_system'], platform)
 
             alias = items.get('alias', None)
             compiler_flags = items.get('flags', {})
@@ -259,17 +257,15 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec, arch):
+def compiler_for_spec(compiler_spec, arch_spec):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
-    operating_system = arch.platform_os
     assert(compiler_spec.concrete)
+    assert(arch_spec.concrete)
 
-    compilers = [
-        c for c in compilers_for_spec(compiler_spec, platform=arch.platform)
-        if c.operating_system == operating_system]
+    compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec)
     if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, operating_system)
+        raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
     if len(compilers) > 1:
         raise CompilerSpecInsufficientlySpecificError(compiler_spec)
     return compilers[0]

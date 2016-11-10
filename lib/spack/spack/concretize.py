@@ -352,13 +352,8 @@ class DefaultConcretizer(object):
         # Takes advantage of the proper logic already existing in
         # compiler_for_spec Should think whether this can be more
         # efficient
-        def _proper_compiler_style(cspec, arch):
-            platform = arch.platform
-            compilers = spack.compilers.compilers_for_spec(cspec,
-                                                           platform=platform)
-            return filter(lambda c: c.operating_system ==
-                          arch.platform_os, compilers)
-            # return compilers
+        def _proper_compiler_style(cspec, aspec):
+            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
 
         all_compilers = spack.compilers.all_compilers()
 
