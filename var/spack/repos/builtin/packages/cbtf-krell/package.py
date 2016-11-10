@@ -80,8 +80,8 @@ class CbtfKrell(Package):
     depends_on("binutils@2.24+krellpatch")
 
     # collectionTool
-    depends_on("boost@1.50.0:")
-    depends_on("dyninst@8.2.1:")
+    depends_on("boost@1.50.0:1.59.0")
+    depends_on("dyninst@9.2.0")
     depends_on("mrnet@5.0.1:+lwthreads")
 
     depends_on("xerces-c@3.1.1:")

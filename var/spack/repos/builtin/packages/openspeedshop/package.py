@@ -118,8 +118,8 @@ class Openspeedshop(Package):
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
-    depends_on("boost@1.50.0:")
-    depends_on("dyninst@9.1.0:")
+    depends_on("boost@1.50.0:1.59.0")
+    depends_on("dyninst@9.2.0")
     depends_on("libxml2+python")
     depends_on("qt@3.3.8b+krellpatch")
 
