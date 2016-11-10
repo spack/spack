@@ -25,7 +25,7 @@ def prepare():
         return
     dir = os.getcwd()
     patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    if not spack.install_layout.check_installed(patchelf_spec):
+    if not spack.store.layout.check_installed(patchelf_spec):
         patchelf = spack.repo.get(patchelf_spec)
         patchelf.do_install()
     os.chdir(dir)
@@ -71,7 +71,7 @@ def write_buildinfo_file(spec):
 
     # Create buildinfo data and write it to disk
     buildinfo = {}
-    buildinfo['buildpath'] = spack.install_path
+    buildinfo['buildpath'] = spack.store.layout.path_for_spec(spec)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries']  = binary_to_relocate
     filename = buildinfo_file_name(spec)
@@ -182,7 +182,7 @@ def relocate_package(package):
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(package)
-    new_path = spack.install_path
+    new_path = spack.store.layout.install_path
     old_path = buildinfo['buildpath']
     if old_path == new_path:
         return True  # No need to relocate
