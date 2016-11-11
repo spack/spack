@@ -182,7 +182,7 @@ def relocate_package(package):
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(package)
-    new_path = spack.store.layout.install_path
+    new_path = spack.store.layout.path_for_spec(package.spec)
     old_path = buildinfo['buildpath']
     if old_path == new_path:
         return True  # No need to relocate
