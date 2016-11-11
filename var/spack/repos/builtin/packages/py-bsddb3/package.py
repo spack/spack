@@ -25,20 +25,25 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class PyBsddb3(Package):
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    """"py-bsddb3" are the Python "bindings" for the excellent Oracle
+    Berkeley DB. They are included in stardard Python version 2.3 thru
+    2.7, but here you will find a vastly updated version. Python 3.x
+    doesn't include native Berkeley DB support, you need to install
+    this library by your own.
+    """
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    homepage = "https://www.jcea.es/programacion/pybsddb.htm"
+    version('6.2.1', '17cdf893a9bf09ef50773d2a35715a0e',
+        url='https://pypi.python.org/packages/95/1c/e8fb33007192f30b9a7276560c3c16499ab2a2c08abc59141b84e1afd3a9/bsddb3-6.1.1.tar.gz')
 
     extends('python')
-    depends_on('binutils', type='build')
+    depends_on('python@3:')
+    # depends_on('berkeleydb')    # Not yet in Spack, usually on systems
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))
+
+    # For testing... see here for an example that uses BerkeleyDB
+    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/

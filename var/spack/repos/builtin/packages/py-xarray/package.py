@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,20 +25,22 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class PyXarray(Package):
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    """xarray (formerly xray) is an open source project and Python package
+    that aims to bring the labeled data power of pandas to the
+    physical sciences, by providing N-dimensional variants of the core
+    pandas data structures.
+    """
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    homepage = "http://xarray.pydata.org"
+    url = "https://github.com/pydata/xarray/tarball/v0.8.2"
+
+    version('0.8.2', '393fe6a66f61180e48e736e1cc77be73')
 
     extends('python')
-    depends_on('binutils', type='build')
+    depends_on('py-pandas@0.15.0:', type=nolink)
+    depends_on('py-numpy@1.7:', type=nolink)
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

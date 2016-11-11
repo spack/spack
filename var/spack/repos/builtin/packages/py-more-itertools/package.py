@@ -25,20 +25,16 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class PyMoreItertools(Package):
+    """Additions to the standard Python itertools package."""
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "https://github.com/erikrose/more-itertools"
+    url      = "https://pypi.python.org/packages/3d/4d/5900efaab46680e3c6c7a2fd87e4531f87e101ec35f6941621dc7f097e82/more-itertools-2.2.tar.gz#md5=b8d328a33f966bf40bb829bcf8da35ce"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('2.2', 'b8d328a33f966bf40bb829bcf8da35ce')
 
     extends('python')
-    depends_on('binutils', type='build')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

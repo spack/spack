@@ -25,6 +25,7 @@
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
+from __future__ import print_function
 from itertools import product as iproduct
 from pprint import pformat
 
@@ -202,7 +203,8 @@ class ProviderIndex(object):
                 "error parsing YAML ProviderIndex cache:", str(e))
 
         if not isinstance(yfile, dict):
-            raise ProviderIndexError("YAML ProviderIndex was not a dict.")
+            raise ProviderIndexError(
+                "YAML ProviderIndex was not a dict.")
 
         if 'provider_index' not in yfile:
             raise ProviderIndexError(
