@@ -1119,7 +1119,6 @@ class PackageBase(object):
                    make_jobs=None,
                    run_tests=False,
                    fake=False,
-                   fetch_binary="never",
                    explicit=False,
                    dirty=None,
                    **kwargs):
@@ -1156,7 +1155,6 @@ class PackageBase(object):
             tty.msg("%s is externally installed in %s" %
                     (self.name, self.spec.external))
             return
-
         # Ensure package is not already installed
         layout = spack.store.layout
         with self._prefix_read_lock():
@@ -1178,6 +1176,7 @@ class PackageBase(object):
 
         tty.msg("Installing %s" % self.name)
 
+        fetch_binary=kwargs.pop('fetch_binary', 'never')
         # First, install dependencies recursively.
         if install_deps:
             for dep in self.spec.dependencies():
@@ -1237,7 +1236,7 @@ class PackageBase(object):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
-                if fake:
+                if fake or install_binary:
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.

@@ -311,6 +311,7 @@ def install(parser, args, **kwargs):
         'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
+        'fetch_binary': args.fetch_binary,
         'dirty': args.dirty
     })
 
