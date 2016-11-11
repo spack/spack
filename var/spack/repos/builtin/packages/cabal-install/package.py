@@ -25,20 +25,27 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class CabalInstall(Package):
+    """The 'cabal' command-line program simplifies the process of managing
+       Haskell software by automating the fetching, configuration,
+       compilation and installation of Haskell libraries and programs."""
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "http://www.haskell.org/cabal/"
+    url      = "http://hackage.haskell.org/package/cabal-install-1.24.0.0/cabal-install-1.24.0.0.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('1.24.0.0', 'beb998cdc385523935620381abe393f4')
 
-    extends('python')
-    depends_on('binutils', type='build')
+    depends_on('zlib')
+    depends_on('ghc')
+
+    # @mvkorpel's fix from:
+    # https://github.com/haskell/cabal/issues/3440
+    # It works around problem deciding whether to use collect2 or ld.
+    # The symptom is a complaint about "Setup: Unrecognized flags:..."
+    patch('bootstrap.patch')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        bash = which("bash")
+        bash("bootstrap.sh", "--sandbox", prefix)
+        # TODO
+        # install "bash-completion/cabal"

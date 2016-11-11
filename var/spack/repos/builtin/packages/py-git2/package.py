@@ -25,20 +25,28 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class PyGit2(Package):
+    """Pygit2 is a set of Python bindings to the libgit2 shared library,
+    libgit2 implements the core of Git.
+    """
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.pygit2.org/"
+    url      = "https://pypi.python.org/packages/aa/56/84dcce942a48d4b7b970cfb7a779b8db1d904e5ec5f71e7a67a63a23a4e2/pygit2-0.24.1.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545')
 
     extends('python')
-    depends_on('binutils', type='build')
+    depends_on('libgit2@0.24.2')
+    depends_on('py-cffi', type=nolink)
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        # See: https://github.com/libgit2/pygit2/blob/master/pygit2/_build.py
+        env['LIBGIT2'] = spec['libgit2'].prefix
+        env['LIBGIT2_LIB'] = spec['libgit2'].prefix.lib
+
+        # Will this make Python add RPATHs?
+        # See: https://github.com/libgit2/pygit2/issues/134
+        # env['LD_RUN_PATH'] = spec['libgit2'].prefix.lib
+
+        setup_py('install', '--prefix={0}'.format(prefix))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,20 +25,28 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class PyGiss(Package):
+    """Misc. Python Stuff."""
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "https://github.com/citibeth/pygiss"
+    url      = "https://github.com/citibeth/pygiss/tarball/v0.1.0"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('0.1.2', '1c1c745c2818a6930c29c6ec7f835943')
+    version('0.1.1', '172d468690a8b8f474884d7a60064bc7')
+    version('develop', git='https://github.com/citibeth/pygiss.git', branch='develop')
+    version('glint2', git='https://github.com/citibeth/pygiss.git', branch='glint2')
 
+    # Requires python@3:
     extends('python')
-    depends_on('binutils', type='build')
+
+    depends_on('python@3:')
+    depends_on('py-numpy+blas+lapack')
+    depends_on('py-netcdf')
+    depends_on('py-matplotlib')
+    depends_on('py-basemap')
+    depends_on('py-proj')
+    depends_on('py-scipy')
+    depends_on('py-six')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

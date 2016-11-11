@@ -25,20 +25,35 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class Ghc(Package):
+    """The Glasgow Haskell Compiler is a state-of-the-art, open source
+       compiler and interactive environment for the functional language
+       Haskell."""
+    homepage = "https://www.haskell.org/ghc/"
+    url      = "http://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-src.tar.xz"
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    version('8.0.1', 'c185b8a1f3e67e43533ec590b751c2ff')
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
-
-    extends('python')
-    depends_on('binutils', type='build')
+    depends_on('gmp')
+    depends_on('ncurses')
+    depends_on('libffi')
+    depends_on('libedit')       # docs say, but I can't see where.
+    depends_on('perl')
+    depends_on('python')
+    depends_on('py-sphinx')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        bootstrap_ghc = which('ghc')
+        configure_args = [
+            "--prefix=%s" % prefix,
+            "--with-ghc=%s" % bootstrap_ghc,
+            "--with-gmp-includes=%s" % spec['gmp'].prefix.include,
+            "--with-gmp-libraries=%s" % spec['gmp'].prefix.lib,
+            "--with-curses-includes=%s" % spec['ncurses'].prefix.include,
+            "--with-curses-libraries=%s" % spec['ncurses'].prefix.lib,
+            "--with-ffi-includes=%s" % spec['libffi'].prefix.include,
+            "--with-ffi-libraries=%s" % spec['libffi'].prefix.lib,
+        ]
+        configure(*configure_args)
+        make()
+        make('install')

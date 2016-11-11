@@ -25,20 +25,23 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class Libgit2(Package):
+    """libgit2 is a portable, pure C implementation of the Git core
+    methods provided as a re-entrant linkable library with a solid
+    API, allowing you to write native speed custom Git applications in
+    any language which supports C bindings.
+    """
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "https://libgit2.github.com/"
+    url      = "https://github.com/libgit2/libgit2/archive/v0.24.2.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('0.24.2', '735661b5b73e3c120d13e2bae21e49b3')
 
-    extends('python')
-    depends_on('binutils', type='build')
+    depends_on('cmake@2.8:', type='build')
+    depends_on('libssh2')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        with working_dir('spack-build', create=True):
+            cmake('..', *std_cmake_args)
+            make()
+            make('install')

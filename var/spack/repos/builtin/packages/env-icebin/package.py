@@ -25,20 +25,32 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class EnvIcebin(Package):
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = ""
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('1.0')
 
-    extends('python')
-    depends_on('binutils', type='build')
+    # Running ModelE
+    depends_on('env-modele')
+
+    # Regridding...
+    depends_on('icebin')
+
+    # Python environment
+    depends_on('py-rtree')
+    depends_on('py-giss')
+    depends_on('py-proj')
+    depends_on('py-pyside')
+
+    # Utilities
+    depends_on('emacs')
+    depends_on('git')
+
+    def url_for_version(self, version):
+        return 'https://github.com/citibeth/dummy/tarball/v1.0'
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        with open(os.path.join(spec.prefix, 'dummy.txt'), 'w') as out:
+            out.write('This is a bundle\n')
+

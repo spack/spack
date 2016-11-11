@@ -25,20 +25,28 @@
 from spack import *
 
 
-class PyCython(Package):
-    """The Cython compiler for writing C extensions for the Python language."""
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+class Libssh2(Package):
+    """libssh2 is a client-side C library implementing the SSH2 protocol"""
 
-    version('0.23.5', '66b62989a67c55af016c916da36e7514')
-    version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
+    homepage = "https://www.libssh2.org/"
+    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
 
-    # These versions contain illegal Python3 code...
-    version('0.22', '1ae25add4ef7b63ee9b4af697300d6b6')
-    version('0.21.2', 'd21adb870c75680dc857cd05d41046a4')
+    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
 
-    extends('python')
-    depends_on('binutils', type='build')
+    variant('shared', default=True,
+            description="Build shared libraries")
+
+    depends_on('cmake@2.8.11:', type='build')
+    depends_on('openssl')
+    depends_on('zlib')
+    depends_on('xz')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        cmake_args = std_cmake_args + [
+            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+
+        with working_dir('spack-build', create=True):
+            cmake('..', *cmake_args)
+            make()
+            make('install')
+
