@@ -26,19 +26,20 @@
 import os
 import spack
 import spack.spec
+from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 from llnl.util.lang import memoized
+
 
 class ABI(object):
     """This class provides methods to test ABI compatibility between specs.
        The current implementation is rather rough and could be improved."""
 
     def architecture_compatible(self, parent, child):
-        """Returns true iff the parent and child specs have ABI compatible targets."""
-        return not parent.architecture or not child.architecture \
-                        or parent.architecture == child.architecture
-
+        """Return true if parent and child have ABI compatible targets."""
+        return not parent.architecture or not child.architecture or \
+            parent.architecture == child.architecture
 
     @memoized
     def _gcc_get_libstdcxx_version(self, version):
@@ -54,15 +55,16 @@ class ABI(object):
         output = None
         if compiler.cxx:
             rungcc = Executable(compiler.cxx)
-            libname = "libstdc++.so"
+            libname = "libstdc++." + dso_suffix
         elif compiler.cc:
             rungcc = Executable(compiler.cc)
-            libname = "libgcc_s.so"
+            libname = "libgcc_s." + dso_suffix
         else:
             return None
         try:
-            output = rungcc("--print-file-name=%s" % libname, return_output=True)
-        except ProcessError, e:
+            output = rungcc("--print-file-name=%s" % libname,
+                            return_output=True)
+        except ProcessError:
             return None
         if not output:
             return None
@@ -70,7 +72,6 @@ class ABI(object):
         if not libpath:
             return None
         return os.path.basename(libpath)
-
 
     @memoized
     def _gcc_compiler_compare(self, pversion, cversion):
@@ -82,7 +83,6 @@ class ABI(object):
             return False
         return plib == clib
 
-
     def _intel_compiler_compare(self, pversion, cversion):
         """Returns true iff the intel version pversion and cversion
            are ABI compatible"""
@@ -92,9 +92,8 @@ class ABI(object):
             return False
         return pversion.version[:2] == cversion.version[:2]
 
-
     def compiler_compatible(self, parent, child, **kwargs):
-        """Returns true iff the compilers for parent and child specs are ABI compatible"""
+        """Return true if compilers for parent and child are ABI compatible."""
         if not parent.compiler or not child.compiler:
             return True
 
@@ -109,8 +108,8 @@ class ABI(object):
         # TODO: into compiler classes?
         for pversion in parent.compiler.versions:
             for cversion in child.compiler.versions:
-                # For a few compilers use specialized comparisons.  Otherwise
-                # match on version match.
+                # For a few compilers use specialized comparisons.
+                # Otherwise match on version match.
                 if pversion.satisfies(cversion):
                     return True
                 elif (parent.compiler.name == "gcc" and
@@ -121,9 +120,8 @@ class ABI(object):
                     return True
         return False
 
-
     def compatible(self, parent, child, **kwargs):
         """Returns true iff a parent and child spec are ABI compatible"""
         loosematch = kwargs.get('loose', False)
         return self.architecture_compatible(parent, child) and \
-               self.compiler_compatible(parent, child, loose=loosematch)
+            self.compiler_compatible(parent, child, loose=loosematch)

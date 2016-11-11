@@ -56,6 +56,5 @@ class PyAstropy(Package):
     depends_on('expat')
 
     def install(self, spec, prefix):
-        python('setup.py', 'build', '--use-system-cfitsio',
-               '--use-system-expat')
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('build', '--use-system-cfitsio', '--use-system-expat')
+        setup_py('install', '--prefix={0}'.format(prefix))

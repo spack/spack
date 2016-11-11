@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Externaltool(Package):
     homepage = "http://somewhere.com"
     url      = "http://somewhere.com/tool-1.0.tar.gz"

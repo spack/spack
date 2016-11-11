@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyLockfile(Package):
     """The lockfile package exports a LockFile class which provides a
        simple API for locking files. Unlike the Windows msvcrt.locking
@@ -44,4 +45,4 @@ class PyLockfile(Package):
     depends_on("py-setuptools", type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

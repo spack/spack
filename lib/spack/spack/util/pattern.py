@@ -31,15 +31,15 @@ def composite(interface=None, method_list=None, container=list):
     """Returns a class decorator that patches a class adding all the methods
     it needs to be a composite for a given interface.
 
-    :param interface: class exposing the interface to which the composite
-    object must conform. Only non-private and non-special methods will be
-    taken into account
+    :param interface: class exposing the interface to which the composite \
+        object must conform. Only non-private and non-special methods will \
+        be taken into account
 
     :param method_list: names of methods that should be part of the composite
 
-    :param container: container for the composite object (default = list).
-    Must fulfill the MutableSequence contract. The composite class will expose
-    the container API to manage object composition
+    :param container: container for the composite object (default = list). \
+        Must fulfill the MutableSequence contract. The composite class will \
+        expose the container API to manage object composition
 
     :return: class decorator
     """
@@ -53,7 +53,9 @@ def composite(interface=None, method_list=None, container=list):
     # Check if at least one of the 'interface' or the 'method_list' arguments
     # are defined
     if interface is None and method_list is None:
-        raise TypeError("Either 'interface' or 'method_list' must be defined on a call to composite")  # NOQA : ignore=E501
+        raise TypeError(
+            "Either 'interface' or 'method_list' must be defined on a call "
+            "to composite")
 
     def cls_decorator(cls):
         # Retrieve the base class of the composite. Inspect its methods and
@@ -102,7 +104,8 @@ def composite(interface=None, method_list=None, container=list):
             # python@2.7: interface_methods = {name: method for name, method in
             # inspect.getmembers(interface, predicate=no_special_no_private)}
             interface_methods = {}
-            for name, method in inspect.getmembers(interface, predicate=no_special_no_private):  # NOQA: ignore=E501
+            for name, method in inspect.getmembers(
+                    interface, predicate=no_special_no_private):
                 interface_methods[name] = method
             ##########
             # python@2.7: interface_methods_dict = {name: IterateOver(name,
@@ -118,7 +121,8 @@ def composite(interface=None, method_list=None, container=list):
         # python@2.7: cls_method = {name: method for name, method in
         # inspect.getmembers(cls, predicate=inspect.ismethod)}
         cls_method = {}
-        for name, method in inspect.getmembers(cls, predicate=inspect.ismethod):  # NOQA: ignore=E501
+        for name, method in inspect.getmembers(
+                cls, predicate=inspect.ismethod):
             cls_method[name] = method
         ##########
         dictionary_for_type_call.update(cls_method)
@@ -136,3 +140,9 @@ class Bunch(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+
+class Args(Bunch):
+    """Subclass of Bunch to write argparse args more naturally."""
+    def __init__(self, *flags, **kwargs):
+        super(Args, self).__init__(flags=tuple(flags), kwargs=kwargs)

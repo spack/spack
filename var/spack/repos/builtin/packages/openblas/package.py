@@ -30,22 +30,40 @@ import os
 class Openblas(Package):
     """OpenBLAS: An optimized BLAS library"""
     homepage = "http://www.openblas.net"
-    url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
+    url = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
+    version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    variant('shared', default=True,  description="Build shared libraries as well as static libs.")  # NOQA: ignore=E501
-    variant('openmp', default=False, description="Enable OpenMP support.")
-    variant('fpic',   default=True,  description="Build position independent code")  # NOQA: ignore=E501
+    variant('shared', default=True,
+            description="Build shared libraries as well as static libs.")
+    variant('openmp', default=False,
+            description="Enable OpenMP support.")
+    variant('fpic',   default=True,
+            description="Build position independent code")
 
     # virtual dependency
     provides('blas')
     provides('lapack')
 
     patch('make.patch')
+    #  This patch is in a pull request to OpenBLAS that has not been handled
+    #  https://github.com/xianyi/OpenBLAS/pull/915
+    patch('openblas_icc.patch', when='%intel')
+
+    @property
+    def blas_libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            ['libopenblas'], root=self.prefix, shared=shared, recurse=True
+        )
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
 
     def install(self, spec, prefix):
         # As of 06/2016 there is no mechanism to specify that packages which
@@ -96,40 +114,10 @@ class Openblas(Package):
         # no quotes around prefix (spack doesn't use a shell)
         make('install', "PREFIX=%s" % prefix, *make_defs)
 
-        # Blas virtual package should provide blas.a and libblas.a
-        with working_dir(prefix.lib):
-            symlink('libopenblas.a', 'blas.a')
-            symlink('libopenblas.a', 'libblas.a')
-            if '+shared' in spec:
-                symlink('libopenblas.%s' % dso_suffix,
-                        'libblas.%s' % dso_suffix)
-
-        # Lapack virtual package should provide liblapack.a
-        with working_dir(prefix.lib):
-            symlink('libopenblas.a', 'liblapack.a')
-            if '+shared' in spec:
-                symlink('libopenblas.%s' % dso_suffix,
-                        'liblapack.%s' % dso_suffix)
-
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
         self.check_install(spec)
-
-    def setup_dependent_package(self, module, dspec):
-        # This is WIP for a prototype interface for virtual packages.
-        # We can update this as more builds start depending on BLAS/LAPACK.
-        libdir = find_library_path('libopenblas.a',
-                                   self.prefix.lib64,
-                                   self.prefix.lib)
-
-        self.spec.blas_static_lib   = join_path(libdir, 'libopenblas.a')
-        self.spec.lapack_static_lib = self.spec.blas_static_lib
-
-        if '+shared' in self.spec:
-            self.spec.blas_shared_lib   = join_path(libdir, 'libopenblas.%s' %
-                                                    dso_suffix)
-            self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def check_install(self, spec):
         source_file = join_path(os.path.dirname(self.module.__file__),
@@ -138,10 +126,10 @@ class Openblas(Package):
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = ["-L%s" % join_path(spec.prefix, "lib"),
-                      "-llapack",
-                      "-lblas",
-                      "-lpthread"]
+        link_flags = self.lapack_libs.ld_flags.split()
+        if self.compiler.name == 'intel':
+            link_flags.extend(["-lifcore"])
+        link_flags.extend(["-lpthread"])
         if '+openmp' in spec:
             link_flags.extend([self.compiler.openmp_flag])
 

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class TrivialInstallTestPackage(Package):
     """This package is a stub with a trivial install method.  It allows us
        to test the install and uninstall logic of spack."""

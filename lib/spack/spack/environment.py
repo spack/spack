@@ -1,4 +1,4 @@
-#
+##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+##############################################################################
 import collections
 import inspect
 import json
@@ -261,21 +261,22 @@ class EnvironmentModifications(object):
 
     @staticmethod
     def from_sourcing_files(*args, **kwargs):
-        """
-        Creates an instance of EnvironmentModifications that, if executed,
+        """Creates an instance of EnvironmentModifications that, if executed,
         has the same effect on the environment as sourcing the files passed as
         parameters
 
-        Args:
-            *args: list of files to be sourced
-
-        Returns:
-            instance of EnvironmentModifications
+        :param \*args: list of files to be sourced
+        :rtype: instance of EnvironmentModifications
         """
+
         env = EnvironmentModifications()
         # Check if the files are actually there
-        if not all(os.path.isfile(file) for file in args):
-            raise RuntimeError('trying to source non-existing files')
+        files = [line.split(' ')[0] for line in args]
+        non_existing = [file for file in files if not os.path.isfile(file)]
+        if non_existing:
+            message = 'trying to source non-existing files\n'
+            message += '\n'.join(non_existing)
+            raise RuntimeError(message)
         # Relevant kwd parameters and formats
         info = dict(kwargs)
         info.setdefault('shell', '/bin/bash')
@@ -287,7 +288,10 @@ class EnvironmentModifications(object):
         shell = '{shell}'.format(**info)
         shell_options = '{shell_options}'.format(**info)
         source_file = '{source_command} {file} {concatenate_on_success}'
-        dump_environment = 'python -c "import os, json; print json.dumps(dict(os.environ))"'  # NOQA: ignore=E501
+
+        dump_cmd = "import os, json; print json.dumps(dict(os.environ))"
+        dump_environment = 'python -c "%s"' % dump_cmd
+
         # Construct the command that will be executed
         command = [source_file.format(file=file, **info) for file in args]
         command.append(dump_environment)
@@ -326,8 +330,10 @@ class EnvironmentModifications(object):
         for x in unset_variables:
             env.unset(x)
         # Variables that have been modified
-        common_variables = set(this_environment).intersection(set(after_source_env))  # NOQA: ignore=E501
-        modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]  # NOQA: ignore=E501
+        common_variables = set(
+            this_environment).intersection(set(after_source_env))
+        modified_variables = [x for x in common_variables
+                              if this_environment[x] != after_source_env[x]]
 
         def return_separator_if_any(first_value, second_value):
             separators = ':', ';'
@@ -405,7 +411,7 @@ def set_or_unset_not_first(variable, changes, errstream):
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
-        message = 'Suspicious requests to set or unset the variable \'{var}\' found'  # NOQA: ignore=E501
+        message = "Suspicious requests to set or unset '{var}' found"
         errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good

@@ -43,15 +43,13 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
-import sys
 import functools
-import collections
 
 from llnl.util.lang import *
 
 import spack.architecture
 import spack.error
-from spack.spec import parse_anonymous_spec, Spec
+from spack.spec import parse_anonymous_spec
 
 
 class SpecMultiMethod(object):
@@ -89,12 +87,12 @@ class SpecMultiMethod(object):
 
        See the docs for decorators below for more details.
     """
+
     def __init__(self, default=None):
         self.method_list = []
         self.default = default
         if default:
             functools.update_wrapper(self, default)
-
 
     def register(self, spec, method):
         """Register a version of a method for a particular sys_type."""
@@ -105,11 +103,19 @@ class SpecMultiMethod(object):
         else:
             assert(self.__name__ == method.__name__)
 
-
     def __get__(self, obj, objtype):
         """This makes __call__ support instance methods."""
-        return functools.partial(self.__call__, obj)
-
+        # Method_list is a list of tuples (constraint, method)
+        # Here we are going to assume that we have at least one
+        # element in the list. The first registered function
+        # will be the one 'wrapped'.
+        wrapped_method = self.method_list[0][1]
+        # Call functools.wraps manually to get all the attributes
+        # we need to be disguised as the wrapped_method
+        func = functools.wraps(wrapped_method)(
+            functools.partial(self.__call__, obj)
+        )
+        return func
 
     def __call__(self, package_self, *args, **kwargs):
         """Find the first method with a spec that matches the
@@ -126,7 +132,6 @@ class SpecMultiMethod(object):
             raise NoSuchMethodError(
                 type(package_self), self.__name__, spec,
                 [m[0] for m in self.method_list])
-
 
     def __str__(self):
         return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
@@ -195,11 +200,13 @@ class when(object):
        platform-specific versions.  There's not much we can do to get
        around this because of the way decorators work.
     """
+
     def __init__(self, spec):
         pkg = get_calling_module_name()
         if spec is True:
             spec = pkg
-        self.spec = parse_anonymous_spec(spec, pkg) if spec is not False else None
+        self.spec = (parse_anonymous_spec(spec, pkg)
+                     if spec is not False else None)
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope
@@ -218,12 +225,14 @@ class when(object):
 
 class MultiMethodError(spack.error.SpackError):
     """Superclass for multimethod dispatch errors"""
+
     def __init__(self, message):
         super(MultiMethodError, self).__init__(message)
 
 
 class NoSuchMethodError(spack.error.SpackError):
     """Raised when we can't find a version of a multi-method."""
+
     def __init__(self, cls, method_name, spec, possible_specs):
         super(NoSuchMethodError, self).__init__(
             "Package %s does not support %s called with %s.  Options are: %s"

@@ -27,6 +27,7 @@ import sys
 
 from spack import *
 
+
 class CBlosc(Package):
     """Blosc, an extremely fast, multi-threaded, meta-compressor library"""
     homepage = "http://www.blosc.org"

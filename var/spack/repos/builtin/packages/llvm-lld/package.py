@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class LlvmLld(Package):
     """lld - The LLVM Linker
        lld is a new set of modular code for creating linker tools."""

@@ -22,10 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
 import spack.architecture as architecture
 
-description = "Print the architecture for this machine"
+description = "Print architecture information about this machine."
+
+
+def setup_parser(subparser):
+    parts = subparser.add_mutually_exclusive_group()
+    parts.add_argument(
+        '-p', '--platform', action='store_true', default=False,
+        help="Print only the platform.")
+
 
 def arch(parser, args):
-    print architecture.sys_type()
+    if args.platform:
+        print architecture.platform()
+    else:
+        print architecture.sys_type()

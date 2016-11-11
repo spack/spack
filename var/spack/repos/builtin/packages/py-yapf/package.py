@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyYapf(Package):
     """ Yet Another Python Formatter """
     homepage = "https://github.com/google/yapf"
@@ -36,4 +37,4 @@ class PyYapf(Package):
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

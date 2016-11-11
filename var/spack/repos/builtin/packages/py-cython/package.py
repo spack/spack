@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCython(Package):
     """The Cython compiler for writing C extensions for the Python language."""
     homepage = "https://pypi.python.org/pypi/cython"
@@ -39,4 +40,4 @@ class PyCython(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

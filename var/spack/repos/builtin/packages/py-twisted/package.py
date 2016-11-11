@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyTwisted(Package):
     """An asynchronous networking framework written in Python"""
     homepage = "https://twistedmatrix.com/"
@@ -37,4 +38,4 @@ class PyTwisted(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

@@ -28,19 +28,20 @@ from spack import *
 class Mvapich2(Package):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2b.tar.gz"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
 
-    version('2.2b', '5651e8b7a72d7c77ca68da48f3a5d108')
-    version('2.2a', 'b8ceb4fc5f5a97add9b3ff1b9cbe39d2')
-    version('2.0',  '9fbb68a4111a8b6338e476dc657388b4')
-    version('1.9',  '5dc58ed08fd3142c260b70fe297e127c')
+    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e')
+    version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
+    version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
+    version('1.9', '5dc58ed08fd3142c260b70fe297e127c')
 
     patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
     provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
 
-    variant('debug', default=False, description='Enables debug information and error messages at run-time')
+    variant('debug', default=False,
+            description='Enable debug info and error messages at run-time')
 
     ##########
     # TODO : Process managers should be grouped into the same variant,
@@ -51,10 +52,14 @@ class Mvapich2(Package):
     GFORKER = 'gforker'
     REMSHELL = 'remshell'
     SLURM_INCOMPATIBLE_PMS = (HYDRA, GFORKER, REMSHELL)
-    variant(SLURM, default=False, description='Sets slurm as the only process manager')
-    variant(HYDRA, default=False, description='Sets hydra as one of the process managers')
-    variant(GFORKER, default=False, description='Sets gforker as one of the process managers')
-    variant(REMSHELL, default=False, description='Sets remshell as one of the process managers')
+    variant(SLURM, default=False,
+            description='Set slurm as the only process manager')
+    variant(HYDRA, default=False,
+            description='Set hydra as one of the process managers')
+    variant(GFORKER, default=False,
+            description='Set gforker as one of the process managers')
+    variant(REMSHELL, default=False,
+            description='Set remshell as one of the process managers')
     ##########
 
     ##########
@@ -67,15 +72,28 @@ class Mvapich2(Package):
     NEMESIS = 'nemesis'
     MRAIL = 'mrail'
     SUPPORTED_NETWORKS = (PSM, SOCK, NEMESIS, NEMESISIB, NEMESISIBTCP)
-    variant(PSM, default=False, description='Configures a build for QLogic PSM-CH3')
-    variant(SOCK, default=False, description='Configures a build for TCP/IP-CH3')
-    variant(NEMESISIBTCP, default=False, description='Configures a build for both OFA-IB-Nemesis and TCP/IP-Nemesis')
-    variant(NEMESISIB, default=False, description='Configures a build for OFA-IB-Nemesis')
-    variant(NEMESIS, default=False, description='Configures a build for TCP/IP-Nemesis')
-    variant(MRAIL, default=False, description='Configures a build for OFA-IB-CH3')
+    variant(
+        PSM, default=False,
+        description='Configure for QLogic PSM-CH3')
+    variant(
+        SOCK, default=False,
+        description='Configure for TCP/IP-CH3')
+    variant(
+        NEMESISIBTCP, default=False,
+        description='Configure for both OFA-IB-Nemesis and TCP/IP-Nemesis')
+    variant(
+        NEMESISIB, default=False,
+        description='Configure for OFA-IB-Nemesis')
+    variant(
+        NEMESIS, default=False,
+        description='Configure for TCP/IP-Nemesis')
+    variant(
+        MRAIL, default=False,
+        description='Configure for OFA-IB-CH3')
     ##########
 
     # FIXME : CUDA support is missing
+    depends_on('bison')
     depends_on('libpciaccess')
 
     def url_for_version(self, version):
@@ -208,8 +226,19 @@ class Mvapich2(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
         self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        self.spec.mpicxx_shared_libs = [
+            join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
+            join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
+        ]
 
     def install(self, spec, prefix):
+        # Until we can pass variants such as +fortran through virtual
+        # dependencies depends_on('mpi'), require Fortran compiler to
+        # avoid delayed build errors in dependents.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError('Mvapich2 requires both C and Fortran ',
+                               'compilers!')
+
         # we'll set different configure flags depending on our
         # environment
         configure_args = [

@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
+
 
 class M4(Package):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
@@ -33,16 +35,23 @@ class M4(Package):
 
     patch('pgi.patch', when='@1.4.17')
 
-    variant('sigsegv', default=True, description="Build the libsigsegv dependency")
+    variant('sigsegv', default=True,
+            description="Build the libsigsegv dependency")
 
     depends_on('libsigsegv', when='+sigsegv')
 
     def install(self, spec, prefix):
         configure_args = []
         if 'libsigsegv' in spec:
-            configure_args.append('--with-libsigsegv-prefix=%s' % spec['libsigsegv'].prefix)
+            configure_args.append('--with-libsigsegv-prefix=%s' %
+                                  spec['libsigsegv'].prefix)
         else:
             configure_args.append('--without-libsigsegv-prefix')
+
+        # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
+        if (sys.platform == "darwin") and (spec.satisfies('%gcc')) and \
+           (spec.architecture.platform_os.version == "10.12"):
+            configure_args.append('ac_cv_type_struct_sched_param=yes')
 
         configure("--prefix=%s" % prefix, *configure_args)
         make()

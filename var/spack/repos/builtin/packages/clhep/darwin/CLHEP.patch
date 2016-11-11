@@ -1,0 +1,11 @@
+--- CLHEP/CMakeLists.txt	2016-06-20 14:41:12.000000000 -0500
++++ CLHEP/CMakeLists.txt	2016-06-20 14:40:57.000000000 -0500
+@@ -37,7 +37,7 @@
+ # If Policy CMP0042 exists, use OLD to prefer the use of install names
+ # instead of the new @rpath default. 
+ if(POLICY CMP0042)
+-  cmake_policy(SET CMP0042 NEW)
++  cmake_policy(SET CMP0042 OLD)
+ endif()
+ 
+ set(CMAKE_MODULE_PATH 

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyWheel(Package):
     """A built-package format for Python."""
 
@@ -36,4 +37,4 @@ class PyWheel(Package):
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

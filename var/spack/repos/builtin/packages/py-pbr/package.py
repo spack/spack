@@ -23,10 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class PyPbr(Package):
-    """PBR is a library that injects some useful and sensible default behaviors into your setuptools run."""
+    """PBR is a library that injects some useful and sensible default
+       behaviors into your setuptools run."""
     homepage = "https://pypi.python.org/pypi/pbr"
     url      = "https://pypi.python.org/packages/source/p/pbr/pbr-1.8.1.tar.gz"
 
@@ -37,6 +38,4 @@ class PyPbr(Package):
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
-
-
+        setup_py('install', '--prefix=%s' % prefix)

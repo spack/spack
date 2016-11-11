@@ -23,10 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
+
 
 class Libdwarf(Package):
     homepage = "http://www.prevanders.net/dwarf.html"

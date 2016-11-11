@@ -36,7 +36,8 @@ import llnl.util.tty as tty
 import pyqver2
 import spack
 
-spack_max_version = (2,6)
+spack_max_version = (2, 6)
+
 
 class PythonVersionTest(unittest.TestCase):
 
@@ -51,11 +52,9 @@ class PythonVersionTest(unittest.TestCase):
                     if re.match(r'^[^.#].*\.py$', filename):
                         yield os.path.join(root, filename)
 
-
     def package_py_files(self):
         for name in spack.repo.all_package_names():
             yield spack.repo.filename_for_package_name(name)
-
 
     def check_python_versions(self, *files):
         # dict version -> filename -> reasons
@@ -66,7 +65,7 @@ class PythonVersionTest(unittest.TestCase):
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():
                     if ver > spack_max_version:
-                        if not ver in all_issues:
+                        if ver not in all_issues:
                             all_issues[ver] = {}
                         all_issues[ver][fn] = reasons
 
@@ -87,7 +86,7 @@ class PythonVersionTest(unittest.TestCase):
 
             tty.error("These files require version %d.%d:" % v)
             maxlen = max(len(f) for f, prob in msgs)
-            fmt = "%%-%ds%%s" % (maxlen+3)
+            fmt = "%%-%ds%%s" % (maxlen + 3)
             print fmt % ('File', 'Reason')
             print fmt % ('-' * (maxlen), '-' * 20)
             for msg in msgs:
@@ -95,10 +94,8 @@ class PythonVersionTest(unittest.TestCase):
 
         self.assertTrue(len(all_issues) == 0)
 
-
     def test_core_module_compatibility(self):
         self.check_python_versions(*self.pyfiles(spack.lib_path))
-
 
     def test_package_module_compatibility(self):
         self.check_python_versions(*self.pyfiles(spack.packages_path))

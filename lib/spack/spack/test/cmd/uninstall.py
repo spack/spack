@@ -23,11 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.test.mock_database
-
+import spack.store
 from spack.cmd.uninstall import uninstall
 
 
 class MockArgs(object):
+
     def __init__(self, packages, all=False, force=False, dependents=False):
         self.packages = packages
         self.all = all
@@ -37,6 +38,7 @@ class MockArgs(object):
 
 
 class TestUninstall(spack.test.mock_database.MockDatabase):
+
     def test_uninstall(self):
         parser = None
         # Multiple matches
@@ -49,7 +51,7 @@ class TestUninstall(spack.test.mock_database.MockDatabase):
         args = MockArgs(['callpath'], all=True, dependents=True)
         uninstall(parser, args)
 
-        all_specs = spack.install_layout.all_specs()
+        all_specs = spack.store.layout.all_specs()
         self.assertEqual(len(all_specs), 7)
         # query specs with multiple configurations
         mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]

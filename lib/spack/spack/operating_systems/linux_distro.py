@@ -1,6 +1,6 @@
 import re
-import platform as py_platform
 from spack.architecture import OperatingSystem
+
 
 class LinuxDistro(OperatingSystem):
     """ This class will represent the autodetected operating system
@@ -9,9 +9,16 @@ class LinuxDistro(OperatingSystem):
         autodetection using the python module platform and the method
         platform.dist()
     """
+
     def __init__(self):
-        distname, version, _ = py_platform.linux_distribution(
-            full_distribution_name=False)
+        try:
+            # This will throw an error if imported on a non-Linux platform.
+            from external.distro import linux_distribution
+            distname, version, _ = linux_distribution(
+                full_distribution_name=False)
+            distname, version = str(distname), str(version)
+        except ImportError as e:
+            distname, version = 'unknown', ''
 
         # Grabs major version from tuple on redhat; on other platforms
         # grab the first legal identifier in the version field.  On

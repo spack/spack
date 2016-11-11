@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Automaded(Package):
     """AutomaDeD (Automata-based Debugging for Dissimilar parallel
        tasks) is a tool for automatic diagnosis of performance and

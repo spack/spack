@@ -32,10 +32,10 @@ class Pcre(Package):
     homepage = "http://www.pcre.org"""
     url      = "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.36.tar.bz2"
 
-    version('8.36', 'b767bc9af0c20bc9c1fe403b0d41ad97')
+    version('8.39', 'e3fca7650a0556a2647821679d81f585')
     version('8.38', '00aabbfe56d5a48b270f999b508c5ad2')
 
-    patch("intel.patch")
+    patch("intel.patch", when='@8.38')
 
     variant('utf', default=True,
             description='Enable support for UTF-8/16/32, '

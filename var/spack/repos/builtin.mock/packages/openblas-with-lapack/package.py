@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class OpenblasWithLapack(Package):
     """Dummy version of OpenBLAS that also provides LAPACK, for testing."""
     homepage = "http://www.openblas.net"

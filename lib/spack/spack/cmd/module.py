@@ -29,10 +29,10 @@ import os
 import shutil
 import sys
 
+import llnl.util.filesystem as filesystem
 import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import llnl.util.filesystem as filesystem
 from spack.modules import module_types
 
 description = "Manipulate module files"
@@ -118,7 +118,8 @@ def loads(mtype, specs, args):
         seen_add = seen.add
         for spec in specs_from_user_constraint:
             specs.extend(
-                [item for item in spec.traverse(order='post', cover='nodes') if not (item in seen or seen_add(item))]  # NOQA: ignore=E501
+                [item for item in spec.traverse(order='post', cover='nodes')
+                 if not (item in seen or seen_add(item))]
             )
 
     module_cls = module_types[mtype]
@@ -178,7 +179,9 @@ def rm(mtype, specs, args):
 
     # Ask for confirmation
     if not args.yes_to_all:
-        tty.msg('You are about to remove {0} module files the following specs:\n'.format(mtype))  # NOQA: ignore=E501
+        tty.msg(
+            'You are about to remove {0} module files the following specs:\n'
+            .format(mtype))
         spack.cmd.display_specs(specs_with_modules, long=True)
         print('')
         spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
@@ -197,7 +200,9 @@ def refresh(mtype, specs, args):
         return
 
     if not args.yes_to_all:
-        tty.msg('You are about to regenerate {name} module files for the following specs:\n'.format(name=mtype))  # NOQA: ignore=E501
+        tty.msg(
+            'You are about to regenerate {name} module files for:\n'
+            .format(name=mtype))
         spack.cmd.display_specs(specs, long=True)
         print('')
         spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
@@ -205,7 +210,8 @@ def refresh(mtype, specs, args):
     cls = module_types[mtype]
 
     # Detect name clashes
-    writers = [cls(spec) for spec in specs]
+    writers = [cls(spec) for spec in specs
+               if spack.repo.exists(spec.name)]  # skip unknown packages.
     file2writer = collections.defaultdict(list)
     for item in writers:
         file2writer[item.file_name].append(item)
@@ -238,18 +244,20 @@ def module(parser, args):
             'known': True
         },
     }
-    arguments.ConstraintAction.qualifiers.update(constraint_qualifiers)
-
+    query_args = constraint_qualifiers.get(args.subparser_name, {})
+    specs = args.specs(**query_args)
     module_type = args.module_type
     constraint = args.constraint
     try:
-        callbacks[args.subparser_name](module_type, args.specs, args)
+        callbacks[args.subparser_name](module_type, specs, args)
     except MultipleMatches:
-        message = 'the constraint \'{query}\' matches multiple packages, and this is not allowed in this context'  # NOQA: ignore=E501
+        message = ('the constraint \'{query}\' matches multiple packages, '
+                   'and this is not allowed in this context')
         tty.error(message.format(query=constraint))
-        for s in args.specs:
+        for s in specs:
             sys.stderr.write(s.format(color=True) + '\n')
         raise SystemExit(1)
     except NoMatch:
-        message = 'the constraint \'{query}\' match no package, and this is not allowed in this context'  # NOQA: ignore=E501
+        message = ('the constraint \'{query}\' match no package, '
+                   'and this is not allowed in this context')
         tty.die(message.format(query=constraint))

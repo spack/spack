@@ -23,10 +23,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class PyPandas(Package):
-    """pandas is a Python package providing fast, flexible, and expressive data structures designed to make working with relational or labeled data both easy and intuitive. It aims to be the fundamental high-level building block for doing practical, real world data analysis in Python. Additionally, it has the broader goal of becoming the most powerful and flexible open source data analysis / manipulation tool available in any language."""
+    """pandas is a Python package providing fast, flexible, and expressive
+       data structures designed to make working with relational or
+       labeled data both easy and intuitive. It aims to be the
+       fundamental high-level building block for doing practical, real
+       world data analysis in Python. Additionally, it has the broader
+       goal of becoming the most powerful and flexible open source data
+       analysis / manipulation tool available in any language.
+
+    """
     homepage = "http://pandas.pydata.org/"
     url      = "https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73"
 
@@ -43,4 +51,4 @@ class PyPandas(Package):
     depends_on('py-bottleneck', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

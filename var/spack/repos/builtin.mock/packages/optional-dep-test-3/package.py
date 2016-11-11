@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class OptionalDepTest3(Package):
     """Depends on the optional-dep-test package"""
 

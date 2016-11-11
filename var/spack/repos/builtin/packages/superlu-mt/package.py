@@ -37,11 +37,13 @@ class SuperluMt(Package):
 
     version('3.1', '06ac62f1b4b7d17123fffa0d0c315e91')
 
-    variant('blas',    default=True,  description='Build with external BLAS library')
+    variant('blas',    default=True,
+            description='Build with external BLAS library')
 
     # Must choose one or the other
     variant('openmp',  default=False, description='Build with OpenMP support')
-    variant('pthread', default=True,  description='Build with POSIX threads support')
+    variant('pthread', default=True,
+            description='Build with POSIX threads support')
 
     # NOTE: must link with a single-threaded BLAS library
     depends_on('blas', when='+blas')
@@ -84,7 +86,7 @@ class SuperluMt(Package):
         if '+blas' in spec:
             config.extend([
                 'BLASDEF    = -DUSE_VENDOR_BLAS',
-                'BLASLIB    = -L{0} -lblas'.format(spec['blas'].prefix.lib)
+                'BLASLIB    = {0}'.format(spec['blas'].blas_libs.ld_flags)
             ])
         else:
             config.append('BLASLIB    = ../lib/libblas$(PLAT).a')

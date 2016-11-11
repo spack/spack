@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Netgauge(Package):
     """Netgauge is a high-precision network parameter measurement
     tool. It supports benchmarking of many different network protocols

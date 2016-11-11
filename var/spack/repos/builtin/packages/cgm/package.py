@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cgm(Package):
     """The Common Geometry Module, Argonne (CGMA) is a code library
        which provides geometry functionality used for mesh generation and
@@ -33,7 +34,7 @@ class Cgm(Package):
 
     version('13.1.1', '4e8dbc4ba8f65767b29f985f7a23b01f')
     version('13.1.0', 'a6c7b22660f164ce893fb974f9cb2028')
-    version('13.1'  , '95f724bda04919fc76818a5b7bc0b4ed')
+    version('13.1', '95f724bda04919fc76818a5b7bc0b4ed')
 
     depends_on("mpi")
 
@@ -41,7 +42,6 @@ class Cgm(Package):
         filter_file('^(#include "CGMParallelConventions.h")',
                     '//\1',
                     'geom/parallel/CGMReadParallel.cpp')
-
 
     def install(self, spec, prefix):
         configure("--with-mpi",

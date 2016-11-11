@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Ninja(Package):
     """ A small, fast Make alternative """
     homepage = "https://martine.github.io/ninja/"
@@ -35,7 +36,6 @@ class Ninja(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        sh = which('sh')
         python('configure.py', '--bootstrap')
 
         cp = which('cp')

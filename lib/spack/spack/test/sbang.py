@@ -26,6 +26,7 @@
 Test that Spack's shebang filtering works correctly.
 """
 import os
+import stat
 import unittest
 import tempfile
 import shutil
@@ -41,7 +42,9 @@ lua_line_patched = "--!/this/" + ('x' * 200) + "/is/lua\n"
 sbang_line       = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
 last_line        = "last!\n"
 
+
 class SbangTest(unittest.TestCase):
+
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 
@@ -74,10 +77,8 @@ class SbangTest(unittest.TestCase):
             f.write(long_line)
             f.write(last_line)
 
-
     def tearDown(self):
-         shutil.rmtree(self.tempdir, ignore_errors=True)
-
+        shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def test_shebang_handling(self):
         filter_shebangs_in_directory(self.tempdir)
@@ -104,3 +105,14 @@ class SbangTest(unittest.TestCase):
             self.assertEqual(f.readline(), sbang_line)
             self.assertEqual(f.readline(), long_line)
             self.assertEqual(f.readline(), last_line)
+
+    def test_shebang_handles_non_writable_files(self):
+        # make a file non-writable
+        st = os.stat(self.long_shebang)
+        not_writable_mode = st.st_mode & ~stat.S_IWRITE
+        os.chmod(self.long_shebang, not_writable_mode)
+
+        self.test_shebang_handling()
+
+        st = os.stat(self.long_shebang)
+        self.assertEqual(oct(not_writable_mode), oct(st.st_mode))

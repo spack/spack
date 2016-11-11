@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyScientificpython(Package):
     """ScientificPython is a collection of Python modules for
        scientific computing. It contains support for geometry,
@@ -37,4 +38,4 @@ class PyScientificpython(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

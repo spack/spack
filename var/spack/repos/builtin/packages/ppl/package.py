@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ppl(Package):
     """The Parma Polyhedra Library (PPL) provides numerical
     abstractions especially targeted at applications in the field of

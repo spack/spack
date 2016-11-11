@@ -63,12 +63,13 @@ class SvnFetchTest(MockPackagesTest):
 
     def try_fetch(self, rev, test_file, args):
         """Tries to:
-           1. Fetch the repo using a fetch strategy constructed with
-              supplied args.
-           2. Check if the test_file is in the checked out repository.
-           3. Assert that the repository is at the revision supplied.
-           4. Add and remove some files, then reset the repo, and
-              ensure it's all there again.
+
+        1. Fetch the repo using a fetch strategy constructed with
+           supplied args.
+        2. Check if the test_file is in the checked out repository.
+        3. Assert that the repository is at the revision supplied.
+        4. Add and remove some files, then reset the repo, and
+           ensure it's all there again.
         """
         self.pkg.versions[ver('svn')] = args
 
@@ -94,17 +95,15 @@ class SvnFetchTest(MockPackagesTest):
 
             self.assert_rev(rev)
 
-
     def test_fetch_default(self):
         """Test a default checkout and make sure it's on rev 1"""
         self.try_fetch(self.repo.r1, self.repo.r1_file, {
-            'svn' : self.repo.url
+            'svn': self.repo.url
         })
-
 
     def test_fetch_r1(self):
         """Test fetching an older revision (0)."""
         self.try_fetch(self.repo.r0, self.repo.r0_file, {
-            'svn'      : self.repo.url,
-            'revision' : self.repo.r0
+            'svn': self.repo.url,
+            'revision': self.repo.r0
         })

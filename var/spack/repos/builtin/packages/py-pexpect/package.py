@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPexpect(Package):
     """Pexpect allows easy control of interactive console applications."""
     homepage = "https://pypi.python.org/pypi/pexpect"
@@ -34,4 +35,4 @@ class PyPexpect(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

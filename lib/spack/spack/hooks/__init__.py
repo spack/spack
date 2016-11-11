@@ -24,7 +24,7 @@
 ##############################################################################
 """This package contains modules with hooks for various stages in the
    Spack install process.  You can add modules here and they'll be
-   executaed by package at various times during the package lifecycle.
+   executed by package at various times during the package lifecycle.
 
    Each hook is just a function that takes a package as a parameter.
    Hooks are not executed in any particular order.
@@ -41,9 +41,11 @@
    features.
 """
 import imp
-from llnl.util.lang import memoized, list_modules
-from llnl.util.filesystem import join_path
+
 import spack
+from llnl.util.filesystem import join_path
+from llnl.util.lang import memoized, list_modules
+
 
 @memoized
 def all_hook_modules():
@@ -58,6 +60,7 @@ def all_hook_modules():
 
 
 class HookRunner(object):
+
     def __init__(self, hook_name):
         self.hook_name = hook_name
 
@@ -68,12 +71,11 @@ class HookRunner(object):
                 if hasattr(hook, '__call__'):
                     hook(pkg)
 
-
 #
 # Define some functions that can be called to fire off hooks.
 #
-pre_install    = HookRunner('pre_install')
-post_install   = HookRunner('post_install')
+pre_install = HookRunner('pre_install')
+post_install = HookRunner('post_install')
 
-pre_uninstall  = HookRunner('pre_uninstall')
+pre_uninstall = HookRunner('pre_uninstall')
 post_uninstall = HookRunner('post_uninstall')

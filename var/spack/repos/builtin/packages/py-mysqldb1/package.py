@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyMysqldb1(Package):
     """Legacy mysql bindings for python"""
     homepage = "https://github.com/farcepest/MySQLdb1"
@@ -35,5 +36,4 @@ class PyMysqldb1(Package):
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
-
+        setup_py('install', '--prefix=%s' % prefix)

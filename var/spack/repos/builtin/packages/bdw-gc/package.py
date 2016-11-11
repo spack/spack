@@ -34,7 +34,8 @@ class BdwGc(Package):
 
     version('7.4.4', '96d18b0448a841c88d56e4ab3d180297')
 
-    variant('libatomic-ops', default=True, description='Use external libatomic-ops')
+    variant('libatomic-ops', default=True,
+            description='Use external libatomic-ops')
 
     depends_on('libatomic-ops', when='+libatomic-ops')
 

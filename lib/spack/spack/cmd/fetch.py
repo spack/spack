@@ -29,16 +29,21 @@ import spack.cmd
 
 description = "Fetch archives for packages"
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
     subparser.add_argument(
-        '-m', '--missing', action='store_true', help="Also fetch all missing dependencies")
+        '-m', '--missing', action='store_true',
+        help="Also fetch all missing dependencies")
     subparser.add_argument(
-        '-D', '--dependencies', action='store_true', help="Also fetch all dependencies")
+        '-D', '--dependencies', action='store_true',
+        help="Also fetch all dependencies")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to fetch")
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to fetch")
+
 
 def fetch(parser, args):
     if not args.packages:
@@ -50,7 +55,6 @@ def fetch(parser, args):
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         if args.missing or args.dependencies:
-            to_fetch = set()
             for s in spec.traverse(deptype_query=spack.alldeps):
                 package = spack.repo.get(s)
                 if args.missing and package.installed:
