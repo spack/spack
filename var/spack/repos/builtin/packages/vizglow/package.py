@@ -23,27 +23,36 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
+import os
 
 
-class Libelf(AutotoolsPackage):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Vizglow(Package):
+    """VizGlow software tool is used for high-fidelity multi-dimensional
+    modeling of non-equilibrium plasma discharges.
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    Note: VizGlow is licensed software. You will need to create an account on
+    the EsgeeTech homepage and download VizGlow yourself. Spack will search
+    your current directory for a file of this format. Alternatively, add this
+    file to a mirror so that Spack can find it. For instructions on how to
+    set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+    homepage = "http://esgeetech.com/products/vizglow-plasma-modeling/"
 
-    provides('elf')
+    version('2.2a-15', 'be2b5044f30f2b2c3bbe87a0037bf228', expand=False,
+            url="file://{0}/VizGlow_v2.2alpha15-Linux-x86_64-R31October2016-Install".format(os.getcwd()))
 
-    def configure_args(self):
-        args = ["--enable-shared",
-                "--disable-dependency-tracking",
-                "--disable-debug"]
-        return args
+    # Licensing
+    license_required = True
+    license_comment = '#'
+    license_files = ['esgeelm.lic']
+    license_vars = ['ESGEE_LICENSE_FILE']
 
     def install(self, spec, prefix):
-        make('install', parallel=False)
+        installer = glob.glob('VizGlow*Install')[0]
+
+        chmod = which('chmod')
+        chmod('+x', installer)
+
+        installer = Executable(installer)
+        installer('--mode', 'silent', '--prefix', prefix)

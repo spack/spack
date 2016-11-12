@@ -25,25 +25,16 @@
 from spack import *
 
 
-class Libelf(AutotoolsPackage):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Libwebsockets(CMakePackage):
+    """C library for lightweight websocket clients and servers."""
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    homepage = "https://github.com/warmcat/libwebsockets"
+    url      = "https://github.com/warmcat/libwebsockets/archive/v2.1.0.tar.gz"
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+    version('2.1.0', '4df3be57dee43aeebd54a3ed56568f50')
+    version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
+    version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
 
-    provides('elf')
-
-    def configure_args(self):
-        args = ["--enable-shared",
-                "--disable-dependency-tracking",
-                "--disable-debug"]
-        return args
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    depends_on('cmake', type='build')
+    depends_on('zlib')
+    depends_on('openssl')

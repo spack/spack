@@ -25,25 +25,13 @@
 from spack import *
 
 
-class Libelf(AutotoolsPackage):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Jansson(CMakePackage):
+    """Jansson is a C library for encoding, decoding and manipulating JSON
+       data."""
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    homepage = "http://www.digip.org/jansson/"
+    url      = "https://github.com/akheron/jansson/archive/v2.9.tar.gz"
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+    version('2.9', 'd2db25c437b359fc5a065ed938962237')
 
-    provides('elf')
-
-    def configure_args(self):
-        args = ["--enable-shared",
-                "--disable-dependency-tracking",
-                "--disable-debug"]
-        return args
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    depends_on('cmake', type='build')

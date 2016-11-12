@@ -22,28 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Libelf(AutotoolsPackage):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class PyPudb(Package):
+    """Full-screen console debugger for Python"""
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    homepage = "http://mathema.tician.de/software/pudb"
+    url      = "https://pypi.io/packages/source/p/pudb/pudb-2016.2.tar.gz"
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+    version('2016.2', '4573b70163329c1cb59836a357bfdf7c')
 
-    provides('elf')
+    extends('python')
 
-    def configure_args(self):
-        args = ["--enable-shared",
-                "--disable-dependency-tracking",
-                "--disable-debug"]
-        return args
+    depends_on('py-setuptools', type='build')
+    depends_on('py-urwid@1.1.1:', type=nolink)
+    depends_on('py-pygments@1.0:', type=nolink)
 
     def install(self, spec, prefix):
-        make('install', parallel=False)
+        setup_py('install', '--prefix={0}'.format(prefix))

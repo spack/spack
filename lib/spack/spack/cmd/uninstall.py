@@ -101,7 +101,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
             has_errors = True
 
         # No installed package matches the query
-        if len(matching) == 0:
+        if len(matching) == 0 and spec is not any:
             tty.error("%s does not match any installed packages." % spec)
             has_errors = True
 
@@ -195,6 +195,10 @@ def uninstall(parser, args):
         tty.die("uninstall requires at least one package argument.")
 
     uninstall_list = get_uninstall_list(args)
+
+    if not uninstall_list:
+        tty.msg("There are no package to uninstall.")
+        return
 
     if not args.yes_to_all:
         tty.msg("The following packages will be uninstalled : ")
