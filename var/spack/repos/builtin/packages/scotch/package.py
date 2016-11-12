@@ -85,16 +85,29 @@ class Scotch(Package):
             '-DIDXSIZE64'
         ]
 
+        if self.spec.satisfies('platform=darwin'):
+            cflags.extend([
+                '-Drestrict=__restrict'
+            ])
+
         # Library Build Type #
         if '+shared' in self.spec:
-            makefile_inc.extend([
-                # todo change for Darwin systems
-                'LIB       = .so',
-                'CLIBFLAGS = -shared -fPIC',
-                'RANLIB    = echo',
-                'AR        = $(CC)',
-                'ARFLAGS   = -shared $(LDFLAGS) -o'
-            ])
+            if self.spec.satisfies('platform=darwin'):
+                makefile_inc.extend([
+                    'LIB       = .dylib',
+                    'CLIBFLAGS = -dynamiclib -fPIC',
+                    'RANLIB    = echo',
+                    'AR        = $(CC)',
+                    'ARFLAGS   = -dynamiclib $(LDFLAGS) -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % prefix.lib  # noqa
+                ])
+            else:
+                makefile_inc.extend([
+                    'LIB       = .so',
+                    'CLIBFLAGS = -shared -fPIC',
+                    'RANLIB    = echo',
+                    'AR        = $(CC)',
+                    'ARFLAGS   = -shared $(LDFLAGS) -o'
+                ])
             cflags.append('-fPIC')
         else:
             makefile_inc.extend([
@@ -126,7 +139,11 @@ class Scotch(Package):
             ldflags.append('-L%s -lz' % (self.spec['zlib'].prefix.lib))
 
         cflags.append('-DCOMMON_PTHREAD')
-        ldflags.append('-lm -lrt -pthread')
+        if self.spec.satisfies('platform=darwin'):
+            cflags.append('-DCOMMON_PTHREAD_BARRIER')
+            ldflags.append('-lm -pthread')
+        else:
+            ldflags.append('-lm -lrt -pthread')
 
         makefile_inc.append('LDFLAGS   = %s' % ' '.join(ldflags))
 
