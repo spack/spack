@@ -103,13 +103,14 @@ class Netcdf(Package):
         if 'dap' in spec:
             config_args.append('--enable-dap')
 
-        # Make sure Netcdf links against Spack's curl, otherwise
-        # otherwise it may pick up system's curl, which can give link
-        # errors, e.g.:
-        # undefined reference to `SSL_CTX_use_certificate_chain_file`
-        LIBS.append("-lcurl")
-        CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-        LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
+        if 'dap' in spec:
+            # Make sure Netcdf links against Spack's curl, otherwise
+            # otherwise it may pick up system's curl, which can give link
+            # errors, e.g.:
+            # undefined reference to `SSL_CTX_use_certificate_chain_file`
+            LIBS.append("-lcurl")
+            CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
+            LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
