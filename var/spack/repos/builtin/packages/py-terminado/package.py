@@ -25,23 +25,19 @@
 from spack import *
 
 
-class PyIpython(Package):
-    """IPython provides a rich toolkit to help you make the most out of using
-       Python interactively."""
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-2.3.1.tar.gz"
+class PyTerminado(Package):
+    """Terminals served to term.js using Tornado websockets"""
 
-    version('5.1.0', '47c8122420f65b58784cb4b9b4af35e3')
-    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
-    version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    homepage = "https://pypi.python.org/pypi/terminado"
+    url      = "https://pypi.io/packages/source/t/terminado/terminado-0.6.tar.gz"
+
+    version('0.6', '5b6c65da27fe1ed07a9f80f0588cdaba')
 
     extends('python')
-    depends_on('py-pygments', type=nolink)
-    depends_on('py-setuptools', type=nolink)
-    depends_on('py-backports-shutil-get-terminal-size', when="^python@:3.2.999")
-    depends_on('py-pathlib2', when="^python@:3.3.999")
-    depends_on('py-pickleshare')
-    depends_on('py-simplegeneric')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-tornado@4:')
+    depends_on('py-ptyprocess')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

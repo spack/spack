@@ -25,23 +25,27 @@
 from spack import *
 
 
-class PyIpython(Package):
-    """IPython provides a rich toolkit to help you make the most out of using
-       Python interactively."""
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-2.3.1.tar.gz"
+class PyJupyterConsole(Package):
+    """Jupyter Terminal Console"""
 
-    version('5.1.0', '47c8122420f65b58784cb4b9b4af35e3')
-    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
-    version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    homepage = "https://github.com/jupyter/jupyter_console"
+    url      = "https://github.com/jupyter/jupyter_console/archive/5.0.0.tar.gz"
+
+    version('5.0.0', '08a9fde32a45c9e2e0b4cec6eca249c2')
+    version('4.1.1', 'a8b077ae0a5c57e9518ac039ad5febb8')
+    version('4.1.0', '9c655076262760bdbeeada9d7f586237')
+    version('4.0.3', '0e928ea261e7f8154698cf69ed4f2459')
+    version('4.0.2', 'f2e174938c91136549b908bd39fa5d59')
 
     extends('python')
-    depends_on('py-pygments', type=nolink)
-    depends_on('py-setuptools', type=nolink)
-    depends_on('py-backports-shutil-get-terminal-size', when="^python@:3.2.999")
-    depends_on('py-pathlib2', when="^python@:3.3.999")
-    depends_on('py-pickleshare')
-    depends_on('py-simplegeneric')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('py-jupyter-client')
+    depends_on('py-ipython')
+    depends_on('py-ipykernel')
+    depends_on('py-pygments')
+    depends_on('py-prompt-toolkit@1.0.0:1.999.999')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

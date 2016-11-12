@@ -25,23 +25,32 @@
 from spack import *
 
 
-class PyIpython(Package):
-    """IPython provides a rich toolkit to help you make the most out of using
-       Python interactively."""
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-2.3.1.tar.gz"
+class PyIpykernel(Package):
+    """IPython Kernel for Jupyter"""
 
-    version('5.1.0', '47c8122420f65b58784cb4b9b4af35e3')
-    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
-    version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    homepage = "https://pypi.python.org/pypi/ipykernel"
+    url      = "https://github.com/ipython/ipykernel/archive/4.5.0.tar.gz"
+
+    version('4.5.0', 'ea6aaf431b100452905aaca208edac72')
+    version('4.4.1', 'c0033e524aa9e05ed18879641ffe6e0f')
+    version('4.4.0', '8e626a1708ceff83412180d2ff2f3e57')
+    version('4.3.1', '971eee85d630eb4bafcd52531c79673f')
+    version('4.3.0', '5961164fe908faf798232a265ed48c73')
+    version('4.2.2', '4ac8ae11f1eef4920bf4a5383e13ab50')
+    version('4.2.1', 'de583ee9c84db6296269ce7de0afb63f')
+    version('4.2.0', 'fc535e4e020a41cd2b55508302b155bb')
+    version('4.1.1', '51376850c46fb006e1f8d1cd353507c5')
+    version('4.1.0', '638a43e4f8a15872f749090c3f0827b6')
 
     extends('python')
-    depends_on('py-pygments', type=nolink)
-    depends_on('py-setuptools', type=nolink)
-    depends_on('py-backports-shutil-get-terminal-size', when="^python@:3.2.999")
-    depends_on('py-pathlib2', when="^python@:3.3.999")
-    depends_on('py-pickleshare')
-    depends_on('py-simplegeneric')
+
+    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-traitlets@4.1.0:')
+    depends_on('py-tornado@4.0:')
+    depends_on('py-ipython@4.0:')
+    depends_on('py-jupyter-client')
+    depends_on('py-pexpect')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

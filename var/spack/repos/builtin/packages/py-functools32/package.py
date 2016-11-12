@@ -35,7 +35,7 @@ class PyFunctools32(Package):
 
     version('3.2.3-2', '09f24ffd9af9f6cd0f63cb9f4e23d4b2')
 
-    extends('python', type=nolink)
+    extends('python')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

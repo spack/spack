@@ -25,25 +25,42 @@
 from spack import *
 
 
-class PyTornado(Package):
-    """Tornado is a Python web framework and asynchronous networking
-    library."""
-    homepage = "https://github.com/tornadoweb/tornado"
-    # base https://pypi.python.org/pypi/tornado/
-    url      = "https://github.com/tornadoweb/tornado/archive/v4.4.0.tar.gz"
+class PyJupyterNotebook(Package):
+    """Jupyter Interactive Notebook"""
 
-    version('4.4.0', 'c28675e944f364ee96dda3a8d2527a87ed28cfa3')
-    
+    homepage = "https://github.com/jupyter/notebook"
+    url      = "https://github.com/jupyter/notebook/archive/4.2.3.tar.gz"
+
+    version('4.2.3', '5c6b0b1303adacd8972c4db21eda3e98')
+    version('4.2.2', '7f9717ae4fed930d187a44c0707b6379')
+    version('4.2.1', '4286f1eaf608257bd69cad4042c7c2fe')
+    version('4.2.0', '136be6b72fe9db7f0269dc7fa5652a62')
+    version('4.1.0', '763ab54b3fc69f6225b9659b6994e756')
+    version('4.0.6', 'd70d8a6d01893f4b64df9edbc0e13b52')
+    version('4.0.5', '2681a70e4c62aafe7ce69f1da5799ac8')
+    version('4.0.4', 'ab72f28f6af8107d71241a4110e92c05')
+    version('4.0.3', '119beea793865ee4b1673a50043ead2a')
+    version('4.0.2', '77f371e9a23a840d14d8a60fee7ba1b7')
+
+    variant('terminal', default=False, description="Enable terminal functionality")
+
     extends('python')
     
     depends_on('py-setuptools', type='build')
-    
-    # requirements from setup.py
-    depends_on('py-backports-ssl-match-hostname', when='^python@:2.7.8')
-    depends_on('py-singledispatch', when='^python@:3.3')
-    depends_on('py-certifi', when='^python@:3.3')
-    depends_on('py-backports-abc@0.4:', when='^python@:3.4')
-    
+    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('npm', type='build')
+    depends_on('py-jinja2')
+    depends_on('py-tornado@4:')
+    depends_on('py-ipython-genutils')
+    depends_on('py-traitlets')
+    depends_on('py-jupyter-core')
+    depends_on('py-jupyter-client')
+    depends_on('py-jupyter-console')
+    depends_on('py-nbformat')
+    depends_on('py-nbconvert')
+    depends_on('py-ipykernel')
+    depends_on('py-terminado@0.3.3:', when="+terminal")
+    depends_on('py-ipywidgets', when="+terminal")
+
     def install(self, spec, prefix):
-        setup_py('build')
         setup_py('install', '--prefix={0}'.format(prefix))

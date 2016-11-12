@@ -34,22 +34,23 @@ class NodeJs(Package):
     homepage = "https://nodejs.org/"
     url      = "https://nodejs.org/download/release/v6.3.0/node-v6.3.0.tar.gz"
 
+    version('7.1.0', '1db5df2cb025f9c70e83d9cf21c4266a')
     version('6.3.0', '8c14e5c89d66d4d060c91b3ba15dfd31')
     version('6.2.2', '1120e8bf191fdaee42206d031935210d')
 
     # variant('bash-completion', default=False, description='Build with bash-completion support for npm')  # NOQA: ignore=E501
-    variant('debug',           default=False, description='Include debugger support')
-    variant('doc',             default=False, description='Compile with documentation')
-    variant('icu4c',           default=False, description='Build with support for all locales instead of just English')
-    variant('openssl',         default=True,  description='Build with Spacks OpenSSL instead of the bundled version')
-    variant('zlib',            default=True,  description='Build with Spacks zlib instead of the bundled version')
+    variant('debug', default=False, description='Include debugger support')
+    variant('doc', default=False, description='Compile with documentation')
+    variant('icu4c', default=False, description='Build with support for all locales instead of just English')
+    variant('openssl', default=True,  description='Build with Spacks OpenSSL instead of the bundled version')
+    variant('zlib', default=True,  description='Build with Spacks zlib instead of the bundled version')
 
-    # depends_on('libtool',         type='build') # if sys.platform != 'darwin'
-    depends_on('pkg-config',      type='build')
-    depends_on('python@2.7:',     type='build')
+    depends_on('libtool', type='build', when=sys.platform != 'darwin')
+    depends_on('pkg-config', type='build')
+    depends_on('python@2.7:2.7.999', type='build')
     # depends_on('bash-completion', when="+bash-completion")
-    depends_on('icu4c',           when='+icu4c')
-    depends_on('openssl',         when='+openssl')
+    depends_on('icu4c', when='+icu4c')
+    depends_on('openssl', when='+openssl')
 
     def install(self, spec, prefix):
         options = []
@@ -62,8 +63,12 @@ class NodeJs(Package):
         # On OSX, the system libtool must be used
         # So, we ensure that this is the case by...
         if sys.platform == 'darwin':
-            result_which = subprocess.check_output(["which", "libtool"])
-            result_whereis = subprocess.check_output(["whereis", "libtool"])
+            process_pipe = subprocess.Popen(["which", "libtool"], 
+                                            stdout=subprocess.PIPE)
+            result_which = process_pipe.communicate()[0]
+            process_pipe = subprocess.Popen(["whereis", "libtool"], 
+                                            stdout=subprocess.PIPE)
+            result_whereis = process_pipe.communicate()[0]
             assert result_which == result_whereis, (
                 'On OSX the system libtool must be used. Please'
                 '(temporarily) remove \n %s or its link to libtool from'
