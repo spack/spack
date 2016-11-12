@@ -41,6 +41,7 @@ class Netcdf(Package):
 
     variant('mpi',  default=True,  description='Enables MPI parallelism')
     variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('dap', default=False, description='Enable DAP support')
     # These variants control the number of dimensions (i.e. coordinates and
     # attributes) and variables (e.g. time, entity ID, number of coordinates)
     # that can be used in any particular NetCDF file.
@@ -51,9 +52,7 @@ class Netcdf(Package):
 
     depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
-
-    # Required for DAP support
-    depends_on("curl@7.18.0:")
+    depends_on("curl@7.18.0:", when='+dap')
 
     # Required for NetCDF-4 support
     depends_on("zlib@1.2.5:")
@@ -99,9 +98,10 @@ class Netcdf(Package):
             # necessary for HDF5 support
             "--enable-netcdf-4",
             "--enable-dynamic-loading",
-            # necessary for DAP support
-            "--enable-dap"
         ]
+
+        if 'dap' in spec:
+            config_args.append('--enable-dap')
 
         # Make sure Netcdf links against Spack's curl, otherwise
         # otherwise it may pick up system's curl, which can give link
