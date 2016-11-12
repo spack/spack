@@ -42,12 +42,12 @@ class PyTornado(Package):
     extends('python')
     depends_on('py-setuptools', type='build')
     depends_on('py-certifi')
-    depends_on('py-backports-abc', when="^python@:2")
-    depends_on('py-singledispatch', when="^python@:2")
-    depends_on('py-futures', when="+futures^python@:2")
-    depends_on('py-monotonic', when="+monotonic^python@:2")
-    depends_on('py-pycurl', when="+curl")
-    depends_on('py-twisted', when="+twisted")
+    depends_on('py-backports-abc', when='^python@:2')
+    depends_on('py-singledispatch', when='^python@:2')
+    depends_on('py-futures', when='+futures^python@:2')
+    depends_on('py-monotonic', when='+monotonic^python@:2')
+    depends_on('py-pycurl', when='+curl')
+    depends_on('py-twisted', when='+twisted')
 
     def install(self, spec, prefix):
         setup_py('build')
