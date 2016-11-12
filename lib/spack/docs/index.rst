@@ -63,6 +63,7 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Step-by-step
 
+   basic_usage_tutorial
    module_file_tutorial
    package_tutorial
 
