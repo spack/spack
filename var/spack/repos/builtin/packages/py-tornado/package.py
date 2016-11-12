@@ -34,18 +34,15 @@ class PyTornado(Package):
 
     version('4.4.0', 'c28675e944f364ee96dda3a8d2527a87ed28cfa3')
     
-    variant('futures', default=True, description="recommended thread pool and for tornado.netutil.ThreadedResolver")
-    variant('monotonic', default=True, description="enable support for a monotonic clock")
     variant('curl', default=True, description="for tornado.curl_httpclient")
     variant('twisted', default=True, description="for tornado.platform.twisted")
 
     extends('python')
+
     depends_on('py-setuptools', type='build')
+    #Temporary dependence on python 3 until the 'when' issue get's fixed #2310
+    depends_on('python@3:')
     depends_on('py-certifi')
-    depends_on('py-backports-abc', when='^python@:2')
-    depends_on('py-singledispatch', when='^python@:2')
-    depends_on('py-futures', when='+futures^python@:2')
-    depends_on('py-monotonic', when='+monotonic^python@:2')
     depends_on('py-pycurl', when='+curl')
     depends_on('py-twisted', when='+twisted')
 
