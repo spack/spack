@@ -30,6 +30,7 @@ import sys
 
 import llnl.util.tty as tty
 import spack
+import spack.store
 import spack.cmd
 import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
@@ -130,7 +131,7 @@ def setup(self, args):
         tty.die("spack setup only takes one spec.")
 
     # Take a write lock before checking for existence.
-    with spack.installed_db.write_transaction():
+    with spack.store.db.write_transaction():
         spec = specs[0]
         if not spack.repo.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)
