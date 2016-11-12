@@ -37,7 +37,7 @@ class PyJsonschema(Package):
     extends('python')
     depends_on('py-setuptools', type='build')
     depends_on('py-vcversioner')
-    depends_on('py-functools32')
+    depends_on('py-functools32', when="^python@2.7")
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

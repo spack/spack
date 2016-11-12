@@ -25,23 +25,28 @@
 from spack import *
 
 
-class PyIpython(Package):
-    """IPython provides a rich toolkit to help you make the most out of using
-       Python interactively."""
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-2.3.1.tar.gz"
+class PyJupyterClient(Package):
+    """Jupyter protocol client APIs"""
 
-    version('5.1.0', '47c8122420f65b58784cb4b9b4af35e3')
-    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
-    version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    homepage = "https://github.com/jupyter/jupyter_client"
+    url      = "https://github.com/jupyter/jupyter_client/archive/4.4.0.tar.gz"
+
+    version('4.4.0', 'a0bd6fe6ba7c504fbc962a88a2a56a90')
+    version('4.3.0', '257d9f5429dac4d9511db84d201d3a9e')
+    version('4.2.2', '988ea87554215a83c6ad52e554d8d8c4')
+    version('4.2.1', '16994e5cace322c777456bc5a26502d7')
+    version('4.2.0', '61c43c9f243e42f1945fae5d56d0d23c')
+    version('4.1.1', '8436e4a3266a442f576cdfef39dc0e19')
+    version('4.1.0', 'cf42048b889c8434fbb5813a9eec1d34')
+    version('4.0.0', '00fa63c67cb3adf359d09dc4d803aff5')
 
     extends('python')
-    depends_on('py-pygments', type=nolink)
-    depends_on('py-setuptools', type=nolink)
-    depends_on('py-backports-shutil-get-terminal-size', when="^python@:3.2.999")
-    depends_on('py-pathlib2', when="^python@:3.3.999")
-    depends_on('py-pickleshare')
-    depends_on('py-simplegeneric')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('py-traitlets')
+    depends_on('py-jupyter-core')
+    depends_on('py-zmq@13:')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

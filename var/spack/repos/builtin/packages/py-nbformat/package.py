@@ -25,23 +25,23 @@
 from spack import *
 
 
-class PyIpython(Package):
-    """IPython provides a rich toolkit to help you make the most out of using
-       Python interactively."""
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-2.3.1.tar.gz"
+class PyNbformat(Package):
+    """The Jupyter Notebook format"""
 
-    version('5.1.0', '47c8122420f65b58784cb4b9b4af35e3')
-    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
-    version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    homepage = "https://github.com/jupyter/nbformat"
+    url      = "https://github.com/jupyter/nbformat/archive/4.1.0.tar.gz"
+
+    version('4.1.0', '826b4fc4ec42553b20144f53b57b4e7b')
+    version('4.0.1', 'ab7172e517c9d561c0c01eef5631b4c8')
+    version('4.0.0', '7cf61359fa4e9cf3ef5e969e2fcb909e')
 
     extends('python')
-    depends_on('py-pygments', type=nolink)
-    depends_on('py-setuptools', type=nolink)
-    depends_on('py-backports-shutil-get-terminal-size', when="^python@:3.2.999")
-    depends_on('py-pathlib2', when="^python@:3.3.999")
-    depends_on('py-pickleshare')
-    depends_on('py-simplegeneric')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-ipython-genutils')
+    depends_on('py-traitlets')
+    depends_on('py-jsonschema')
+    depends_on('py-jupyter-core')
 
     def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))
