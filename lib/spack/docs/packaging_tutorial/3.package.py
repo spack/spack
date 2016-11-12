@@ -1,3 +1,5 @@
+# flake8: noqa
+
 class Mpileaks(AutotoolsPackage):
     """Tool to detect and report MPI objects like MPI_Requests and MPI_Datatypes"""
     homepage = "https://github.com/hpc/mpileaks"

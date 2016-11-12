@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from spack import *
 
 class Mpileaks(AutotoolsPackage):
