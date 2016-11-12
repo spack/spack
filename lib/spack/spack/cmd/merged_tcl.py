@@ -14,7 +14,7 @@ def setup_parser(subparser):
         'merge_spec', help="specs of packages to install")
 
 
-def test_modules(parser, args):
+def merged_tcl(parser, args):
     specs = spack.store.db.query(args.merge_spec)
 
     env_var = "compiler"
