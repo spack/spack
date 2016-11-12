@@ -40,13 +40,12 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials
+   :caption: Basics
 
    features
    getting_started
    basic_usage
    workflows
-   module_file_tutorial
 
 .. toctree::
    :maxdepth: 2
@@ -59,6 +58,13 @@ or refer to the full manual below.
    module_file_support
    package_list
    command_index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Step-by-step
+
+   module_file_tutorial
+   package_tutorial
 
 .. toctree::
    :maxdepth: 2
