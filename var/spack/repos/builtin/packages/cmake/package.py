@@ -46,7 +46,7 @@ class Cmake(Package):
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
-    variant('ncurses', default=False,  description='Enables the build of the ncurses gui')
+    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
     depends_on('curl',           when='~ownlibs')
     depends_on('expat',          when='~ownlibs')
