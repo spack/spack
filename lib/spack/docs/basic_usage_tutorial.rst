@@ -18,6 +18,59 @@ Enterprise Linux.
 
 .. _basics-tutorial-install:
 
+----------------
+Installing Spack
+----------------
+
+Spack works out of the box. Simply clone spack and get going.
+
+.. code-block:: console
+
+  becker33:~$ git clone https://github.com/LLNL/spack.git
+  Initialized empty Git repository in /g/g0/becker33/testclone/spack/.git/
+  remote: Counting objects: 47125, done.
+  remote: Compressing objects: 100% (68/68), done.
+  remote: Total 47125 (delta 16), reused 2 (delta 2), pack-reused 47047
+  Receiving objects: 100% (47125/47125), 12.02 MiB | 2.11 MiB/s, done.
+  Resolving deltas: 100% (23044/23044), done.
+  becker33:~$ cd spack
+
+Then add Spack to your path.
+
+.. code-block:: console
+
+  becker33:spack$ export PATH=~/spack/bin/spack:$PATH
+
+You're good to go!
+
+-----------------
+What is in Spack?
+-----------------
+
+The ``spack list`` command shows available packages.
+
+.. code-block:: console
+
+  becker33:spack$ spack list
+  ==> 1016 packages.
+  abinit                           hwloc                  piranha              r-rjava
+  ack                              hydra                  pixman               r-rjson
+  activeharmony                    hypre                  pkg-config           r-rjsonio
+  ...
+
+The ``spack list`` command can also take a query string. Spack
+automatically adds wildcards to both ends of the string. For example,
+we can view all available python packages.
+
+.. code-block:: console
+
+  becker33:spack$ spack list py
+  ==> 129 packages.
+  py-3to2            py-epydoc          py-nestle         py-pycparser         py-six
+  py-alabaster       py-flake8          py-netcdf         py-pydatalog         py-sncosmo
+  py-argcomplete     py-funcsigs        py-networkx       py-pyelftools        py-snowballstemmer
+  ...
+
 -------------------
 Installing Packages
 -------------------
@@ -847,10 +900,11 @@ uses ``mpich``.
           ^superlu-dist@5.1.1
 
 
-The ``spack find -d`` command shows the dependency information as a
-tree. While that is often sufficient, many complicated packages cannot be
-fully represented as a tree. Again, the ``spack graph`` command shows the
-full DAG of the dependency information.
+As we discussed before, the ``spack find -d`` command shows the
+dependency information as a tree. While that is often sufficient, many
+complicated packages, including trilinos, have dependencies that
+cannot be fully represented as a tree. Again, the ``spack graph``
+command shows the full DAG of the dependency information.
 
 .. code-block:: console
 
@@ -932,16 +986,13 @@ that we didn't really need.
   $ spack find libelf
   ==> 6 installed packages.
   -- linux-redhat6-x86_64 / gcc@4.4.7 -----------------------------
-  libelf@0.8.12
-  libelf@0.8.12
-  libelf@0.8.13
+  libelf@0.8.12  libelf@0.8.12  libelf@0.8.13
 
   -- linux-redhat6-x86_64 / intel@15.0.4 --------------------------
   libelf@0.8.13
 
   -- linux-redhat6-x86_64 / intel@16.0.3 --------------------------
-  libelf@0.8.12
-  libelf@0.8.13
+  libelf@0.8.12  libelf@0.8.13
 
 
 We can uninstall packages by spec using the same syntax as install.
@@ -1047,11 +1098,11 @@ We will go over some additional uses for the `spack find` command not
 already covered in the :ref:`basics-tutorial-install` and
 :ref:`basics-tutorial-uninstall` sections.
 
-Spack find can accept what we call "anonymous specs." These are
-expressions in spec syntax that do not contain a package name. For
-example, `spack find %intel` will return every package built with the
-intel compiler, and ``spack find cppflags=\\"-O3\\"`` will return every
-package which was built with ``cppflags=\\"-O3\\"``.
+The ``spack find`` command can accept what we call "anonymous specs."
+These are expressions in spec syntax that do not contain a package
+name. For example, `spack find %intel` will return every package built
+with the intel compiler, and ``spack find cppflags=\\"-O3\\"`` will
+return every package which was built with ``cppflags=\\"-O3\\"``.
 
 .. code-block:: console
 
@@ -1068,9 +1119,9 @@ package which was built with ``cppflags=\\"-O3\\"``.
   libelf@0.8.12
 
 
-The find command can also show which packages were installed
+The ``find`` command can also show which packages were installed
 explicitly (rather than pulled in as a dependency) using the ``-e``
-flag. The ``-E`` flag shows implicit installs only. The find command can
+flag. The ``-E`` flag shows implicit installs only. The ``find`` command can
 also show the path to which a spack package was installed using the ``-p``
 command.
 
@@ -1110,59 +1161,18 @@ compilers`` command is an alias for the command ``spack compiler list``.
   gcc@4.4.7
 
   -- intel --------------------------------------------------------
-  intel@16.0.3
-  intel@16.0.2
-  intel@16.0.1
-  intel@16.0.0
-  intel@15.0.4
-  intel@15.0.3
-  intel@15.0.1
-  intel@15.0.0
-  intel@14.0.4
-  intel@14.0.3
-  intel@14.0.2
-  intel@14.0.1
-  intel@14.0.0
-  intel@13.1.1
-  intel@13.1.0
-  intel@13.0.1
-  intel@13.0.0
-  intel@12.1.5
-  intel@12.1.3
-  intel@12.1.2
-  intel@12.1.0
-  intel@12.0.4
-  intel@11.1
-  intel@10.1
-  intel@10.0
-  intel@9.1
+  intel@16.0.3  intel@15.0.1  intel@14.0.0  intel@12.1.3  intel@10.0
+  intel@16.0.2  intel@15.0.0  intel@13.1.1  intel@12.1.2  intel@9.1
+  intel@16.0.1  intel@14.0.4  intel@13.1.0  intel@12.1.0
+  intel@16.0.0  intel@14.0.3  intel@13.0.1  intel@12.0.4
+  intel@15.0.4  intel@14.0.2  intel@13.0.0  intel@11.1
+  intel@15.0.3  intel@14.0.1  intel@12.1.5  intel@10.1
 
   -- pgi ----------------------------------------------------------
-  pgi@16.5-0
-  pgi@16.3-0
-  pgi@16.1-0
-  pgi@15.10-0
-  pgi@15.7-0
-  pgi@15.5-0
-  pgi@15.1-0
-  pgi@14.10-0
-  pgi@14.7-0
-  pgi@14.3-0
-  pgi@13.10-0
-  pgi@13.6-0
-  pgi@13.2-0
-  pgi@13.1-1
-  pgi@12.8-0
-  pgi@12.1-0
-  pgi@11.10-0
-  pgi@11.1-0
-  pgi@10.9-0
-  pgi@10.2-0
-  pgi@9.0-4
-  pgi@8.0-1
-  pgi@7.1-3
-  pgi@7.0-6
-
+  pgi@16.5-0   pgi@15.7-0   pgi@14.7-0   pgi@13.2-0  pgi@11.10-0  pgi@9.0-4
+  pgi@16.3-0   pgi@15.5-0   pgi@14.3-0   pgi@13.1-1  pgi@11.1-0   pgi@8.0-1
+  pgi@16.1-0   pgi@15.1-0   pgi@13.10-0  pgi@12.8-0  pgi@10.9-0   pgi@7.1-3
+  pgi@15.10-0  pgi@14.10-0  pgi@13.6-0   pgi@12.1-0  pgi@10.2-0   pgi@7.0-6
 
 The compilers are maintained in a YAML file that can be hand-edited
 for special cases. Spack also has tools to add compilers, and
@@ -1231,13 +1241,13 @@ return no new compilers.
 
 .. code-block:: console
 
-  $ spack compiler find /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
+  $ spack compiler add /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
   ==> Found no new compilers
 
 If we had done a real install, the output would have been as follows:
 
 .. code-block:: console
 
-  $ spack compiler find /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
+  $ spack compiler add /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
   ==> Added 1 new compiler to /g/g0/becker33/.spack/linux/compilers.yaml
       gcc@6.1.0
