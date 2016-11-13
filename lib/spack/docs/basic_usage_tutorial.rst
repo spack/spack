@@ -38,6 +38,7 @@ Spack works out of the box. Simply clone spack and get going.
 Then add Spack to your path.
 
 .. code-block:: console
+
   becker33:spack$ export PATH=~/spack/bin/spack:$PATH
 
 You're good to go!
@@ -49,6 +50,7 @@ What is in Spack?
 The ``spack list`` command shows available packages.
 
 .. code-block:: console
+
   becker33:spack$ spack list
   ==> 1016 packages.
   abinit                           hwloc                  piranha              r-rjava
@@ -61,6 +63,7 @@ automatically adds wildcards to both ends of the string. For example,
 we can view all available python packages.
 
 .. code-block:: console
+
   becker33:spack$ spack list py
   ==> 129 packages.
   py-3to2            py-epydoc          py-nestle         py-pycparser         py-six
