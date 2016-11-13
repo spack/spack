@@ -61,11 +61,9 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Step-by-step
+   :caption: Tutorial
 
-   basic_usage_tutorial
-   module_file_tutorial
-   package_tutorial
+   tutorial_sc16
 
 .. toctree::
    :maxdepth: 2
