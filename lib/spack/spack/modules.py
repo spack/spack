@@ -646,6 +646,9 @@ class TclModule(EnvModule):
             yield line
 
 
+# TODO: this will likely need its own naming_scheme and conflict scheme (at
+# which point module_specific content should pull from object members vs.
+# directly from the config.
 class MergedTclModule(TclModule):
     def __init__(self, query_spec, specs, env_var, spec_to_val):
         super(MergedTclModule, self).__init__(query_spec)
