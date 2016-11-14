@@ -1,3 +1,4 @@
+# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -22,28 +23,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install mpileaks
+#
+# You can edit this file again by typing:
+#
+#     spack edit mpileaks
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class Libelf(AutotoolsPackage):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Mpileaks(AutotoolsPackage):
+    """FIXME: Put a proper description of your package here."""
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.example.com"
+    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+    version('1.0', '8838c574b39202a57d7c2d68692718aa')
 
-    provides('elf')
+    # FIXME: Add dependencies if required.
+    # depends_on('m4', type='build')
+    # depends_on('autoconf', type='build')
+    # depends_on('automake', type='build')
+    # depends_on('libtool', type='build')
+    # depends_on('foo')
 
     def configure_args(self):
-        args = ["--enable-shared",
-                "--disable-dependency-tracking",
-                "--disable-debug"]
-        return args
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+       # FIXME: Add arguments other than --prefix
+       # FIXME: If not needed delete the function
+       args = []
+       return args
