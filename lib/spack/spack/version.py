@@ -146,6 +146,10 @@ class Version(object):
     def dashed(self):
         return '-'.join(str(x) for x in self.version)
 
+    @property
+    def joined(self):
+        return ''.join(str(x) for x in self.version)
+
     def up_to(self, index):
         """Return a version string up to the specified component, exclusive.
            e.g., if this is 10.8.2, self.up_to(2) will return '10.8'.

@@ -96,8 +96,7 @@ class Cantera(Package):
             options.extend([
                 'build_thread_safe=yes',
                 'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
-                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib),
-                'boost_thread_lib=boost_thread-mt,boost_system-mt'
+                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib)
             ])
         else:
             options.append('build_thread_safe=no')

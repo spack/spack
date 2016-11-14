@@ -32,9 +32,11 @@ class Paraver(Package):
         is expressed on its input trace format.  Traces for parallel MPI,
         OpenMP and other programs can be genereated with Extrae."""
     homepage = "http://www.bsc.es/computer-sciences/performance-tools/paraver"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/paraver-sources-4.5.3.tar.gz"
+    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/paraver-sources-4.6.2.tar.gz"
 
-    version('4.5.3', '625de9ec0d639acd18d1aaa644b38f72')
+    # NOTE: Paraver provides only latest version for download.
+    #       Don't keep/add older versions.
+    version('4.6.2', 'c54e124382b597574628b00e31649803')
 
     depends_on("boost")
     # depends_on("extrae")

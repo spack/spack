@@ -25,6 +25,7 @@
 """
 These tests ensure that our lock works correctly.
 """
+import os
 import shutil
 import tempfile
 import unittest
@@ -44,7 +45,6 @@ class LockTest(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.lock_path = join_path(self.tempdir, 'lockfile')
-        touch(self.lock_path)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir, ignore_errors=True)
@@ -64,98 +64,185 @@ class LockTest(unittest.TestCase):
     #
     # Process snippets below can be composed into tests.
     #
-    def acquire_write(self, barrier):
-        lock = Lock(self.lock_path)
-        lock.acquire_write()  # grab exclusive lock
-        barrier.wait()
-        barrier.wait()  # hold the lock until exception raises in other procs.
+    def acquire_write(self, start=0, length=0):
+        def fn(barrier):
+            lock = Lock(self.lock_path, start, length)
+            lock.acquire_write()  # grab exclusive lock
+            barrier.wait()
+            barrier.wait()  # hold the lock until timeout in other procs.
+        return fn
 
-    def acquire_read(self, barrier):
-        lock = Lock(self.lock_path)
-        lock.acquire_read()  # grab shared lock
-        barrier.wait()
-        barrier.wait()  # hold the lock until exception raises in other procs.
+    def acquire_read(self, start=0, length=0):
+        def fn(barrier):
+            lock = Lock(self.lock_path, start, length)
+            lock.acquire_read()  # grab shared lock
+            barrier.wait()
+            barrier.wait()  # hold the lock until timeout in other procs.
+        return fn
 
-    def timeout_write(self, barrier):
-        lock = Lock(self.lock_path)
-        barrier.wait()  # wait for lock acquire in first process
-        self.assertRaises(LockError, lock.acquire_write, 0.1)
-        barrier.wait()
+    def timeout_write(self, start=0, length=0):
+        def fn(barrier):
+            lock = Lock(self.lock_path, start, length)
+            barrier.wait()  # wait for lock acquire in first process
+            self.assertRaises(LockError, lock.acquire_write, 0.1)
+            barrier.wait()
+        return fn
 
-    def timeout_read(self, barrier):
-        lock = Lock(self.lock_path)
-        barrier.wait()  # wait for lock acquire in first process
-        self.assertRaises(LockError, lock.acquire_read, 0.1)
-        barrier.wait()
+    def timeout_read(self, start=0, length=0):
+        def fn(barrier):
+            lock = Lock(self.lock_path, start, length)
+            barrier.wait()  # wait for lock acquire in first process
+            self.assertRaises(LockError, lock.acquire_read, 0.1)
+            barrier.wait()
+        return fn
 
     #
     # Test that exclusive locks on other processes time out when an
     # exclusive lock is held.
     #
     def test_write_lock_timeout_on_write(self):
-        self.multiproc_test(self.acquire_write, self.timeout_write)
+        self.multiproc_test(self.acquire_write(), self.timeout_write())
 
     def test_write_lock_timeout_on_write_2(self):
         self.multiproc_test(
-            self.acquire_write, self.timeout_write, self.timeout_write)
+            self.acquire_write(), self.timeout_write(), self.timeout_write())
 
     def test_write_lock_timeout_on_write_3(self):
         self.multiproc_test(
-            self.acquire_write, self.timeout_write, self.timeout_write,
-            self.timeout_write)
+            self.acquire_write(), self.timeout_write(), self.timeout_write(),
+            self.timeout_write())
+
+    def test_write_lock_timeout_on_write_ranges(self):
+        self.multiproc_test(
+            self.acquire_write(0, 1), self.timeout_write(0, 1))
+
+    def test_write_lock_timeout_on_write_ranges_2(self):
+        self.multiproc_test(
+            self.acquire_write(0, 64), self.acquire_write(65, 1),
+            self.timeout_write(0, 1), self.timeout_write(63, 1))
+
+    def test_write_lock_timeout_on_write_ranges_3(self):
+        self.multiproc_test(
+            self.acquire_write(0, 1), self.acquire_write(1, 1),
+            self.timeout_write(), self.timeout_write(), self.timeout_write())
+
+    def test_write_lock_timeout_on_write_ranges_4(self):
+        self.multiproc_test(
+            self.acquire_write(0, 1), self.acquire_write(1, 1),
+            self.acquire_write(2, 456), self.acquire_write(500, 64),
+            self.timeout_write(), self.timeout_write(), self.timeout_write())
 
     #
     # Test that shared locks on other processes time out when an
     # exclusive lock is held.
     #
     def test_read_lock_timeout_on_write(self):
-        self.multiproc_test(self.acquire_write, self.timeout_read)
+        self.multiproc_test(self.acquire_write(), self.timeout_read())
 
     def test_read_lock_timeout_on_write_2(self):
         self.multiproc_test(
-            self.acquire_write, self.timeout_read, self.timeout_read)
+            self.acquire_write(), self.timeout_read(), self.timeout_read())
 
     def test_read_lock_timeout_on_write_3(self):
         self.multiproc_test(
-            self.acquire_write, self.timeout_read, self.timeout_read,
-            self.timeout_read)
+            self.acquire_write(), self.timeout_read(), self.timeout_read(),
+            self.timeout_read())
+
+    def test_read_lock_timeout_on_write_ranges(self):
+        """small write lock, read whole file."""
+        self.multiproc_test(self.acquire_write(0, 1), self.timeout_read())
+
+    def test_read_lock_timeout_on_write_ranges_2(self):
+        """small write lock, small read lock"""
+        self.multiproc_test(self.acquire_write(0, 1), self.timeout_read(0, 1))
+
+    def test_read_lock_timeout_on_write_ranges_3(self):
+        """two write locks, overlapping read locks"""
+        self.multiproc_test(
+            self.acquire_write(0, 1), self.acquire_write(64, 128),
+            self.timeout_read(0, 1), self.timeout_read(128, 256))
 
     #
     # Test that exclusive locks time out when shared locks are held.
     #
     def test_write_lock_timeout_on_read(self):
-        self.multiproc_test(self.acquire_read, self.timeout_write)
+        self.multiproc_test(self.acquire_read(), self.timeout_write())
 
     def test_write_lock_timeout_on_read_2(self):
         self.multiproc_test(
-            self.acquire_read, self.timeout_write, self.timeout_write)
+            self.acquire_read(), self.timeout_write(), self.timeout_write())
 
     def test_write_lock_timeout_on_read_3(self):
         self.multiproc_test(
-            self.acquire_read, self.timeout_write, self.timeout_write,
-            self.timeout_write)
+            self.acquire_read(), self.timeout_write(), self.timeout_write(),
+            self.timeout_write())
+
+    def test_write_lock_timeout_on_read_ranges(self):
+        self.multiproc_test(self.acquire_read(0, 1), self.timeout_write())
+
+    def test_write_lock_timeout_on_read_ranges_2(self):
+        self.multiproc_test(self.acquire_read(0, 1), self.timeout_write(0, 1))
+
+    def test_write_lock_timeout_on_read_ranges_3(self):
+        self.multiproc_test(
+            self.acquire_read(0, 1), self.acquire_read(10, 1),
+            self.timeout_write(0, 1), self.timeout_write(10, 1))
+
+    def test_write_lock_timeout_on_read_ranges_4(self):
+        self.multiproc_test(
+            self.acquire_read(0, 64),
+            self.timeout_write(10, 1), self.timeout_write(32, 1))
+
+    def test_write_lock_timeout_on_read_ranges_5(self):
+        self.multiproc_test(
+            self.acquire_read(64, 128),
+            self.timeout_write(65, 1), self.timeout_write(127, 1),
+            self.timeout_write(90, 10))
 
     #
     # Test that exclusive locks time while lots of shared locks are held.
     #
     def test_write_lock_timeout_with_multiple_readers_2_1(self):
         self.multiproc_test(
-            self.acquire_read, self.acquire_read, self.timeout_write)
+            self.acquire_read(), self.acquire_read(), self.timeout_write())
 
     def test_write_lock_timeout_with_multiple_readers_2_2(self):
         self.multiproc_test(
-            self.acquire_read, self.acquire_read, self.timeout_write,
-            self.timeout_write)
+            self.acquire_read(), self.acquire_read(), self.timeout_write(),
+            self.timeout_write())
 
     def test_write_lock_timeout_with_multiple_readers_3_1(self):
         self.multiproc_test(
-            self.acquire_read, self.acquire_read, self.acquire_read,
-            self.timeout_write)
+            self.acquire_read(), self.acquire_read(), self.acquire_read(),
+            self.timeout_write())
 
     def test_write_lock_timeout_with_multiple_readers_3_2(self):
         self.multiproc_test(
-            self.acquire_read, self.acquire_read, self.acquire_read,
-            self.timeout_write, self.timeout_write)
+            self.acquire_read(), self.acquire_read(), self.acquire_read(),
+            self.timeout_write(), self.timeout_write())
+
+    def test_write_lock_timeout_with_multiple_readers_2_1_ranges(self):
+        self.multiproc_test(
+            self.acquire_read(0, 10), self.acquire_read(5, 10),
+            self.timeout_write(5, 5))
+
+    def test_write_lock_timeout_with_multiple_readers_2_3_ranges(self):
+        self.multiproc_test(
+            self.acquire_read(0, 10), self.acquire_read(5, 15),
+            self.timeout_write(0, 1), self.timeout_write(11, 3),
+            self.timeout_write(7, 1))
+
+    def test_write_lock_timeout_with_multiple_readers_3_1_ranges(self):
+        self.multiproc_test(
+            self.acquire_read(0, 5), self.acquire_read(5, 5),
+            self.acquire_read(10, 5),
+            self.timeout_write(0, 15))
+
+    def test_write_lock_timeout_with_multiple_readers_3_2_ranges(self):
+        self.multiproc_test(
+            self.acquire_read(0, 5), self.acquire_read(5, 5),
+            self.acquire_read(10, 5),
+            self.timeout_write(3, 10), self.timeout_write(5, 1))
 
     #
     # Test that read can be upgraded to write.
@@ -172,19 +259,42 @@ class LockTest(unittest.TestCase):
         lock.acquire_read()
         self.assertTrue(lock._reads == 1)
         self.assertTrue(lock._writes == 0)
+        self.assertTrue(lock._file.mode == 'r+')
 
         lock.acquire_write()
         self.assertTrue(lock._reads == 1)
         self.assertTrue(lock._writes == 1)
+        self.assertTrue(lock._file.mode == 'r+')
 
         lock.release_write()
         self.assertTrue(lock._reads == 1)
         self.assertTrue(lock._writes == 0)
+        self.assertTrue(lock._file.mode == 'r+')
 
         lock.release_read()
         self.assertTrue(lock._reads == 0)
         self.assertTrue(lock._writes == 0)
-        self.assertTrue(lock._fd is None)
+        self.assertTrue(lock._file is None)
+
+    #
+    # Test that read-only file can be read-locked but not write-locked.
+    #
+    def test_upgrade_read_to_write_fails_with_readonly_file(self):
+        # ensure lock file exists the first time, so we open it read-only
+        # to begin wtih.
+        touch(self.lock_path)
+        os.chmod(self.lock_path, 0444)
+
+        lock = Lock(self.lock_path)
+        self.assertTrue(lock._reads == 0)
+        self.assertTrue(lock._writes == 0)
+
+        lock.acquire_read()
+        self.assertTrue(lock._reads == 1)
+        self.assertTrue(lock._writes == 0)
+        self.assertTrue(lock._file.mode == 'r')
+
+        self.assertRaises(LockError, lock.acquire_write)
 
     #
     # Longer test case that ensures locks are reusable. Ordering is

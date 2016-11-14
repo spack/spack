@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libtiff(Package):
+class Libtiff(AutotoolsPackage):
     """libtiff graphics format library"""
     homepage = "http://www.simplesystems.org/libtiff/"
     url      = "ftp://download.osgeo.org/libtiff/tiff-4.0.3.tar.gz"
@@ -36,9 +36,3 @@ class Libtiff(Package):
     depends_on('jpeg')
     depends_on('zlib')
     depends_on('xz')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

@@ -30,16 +30,21 @@ class Libdrm(Package):
     rendering  manager, on  Linux,  BSD and  other  operating
     systems that support the  ioctl interface."""
 
-    homepage = "http://dri.freedesktop.org/libdrm/"  # no real website...
+    homepage = "http://dri.freedesktop.org/libdrm/"
     url      = "http://dri.freedesktop.org/libdrm/libdrm-2.4.59.tar.gz"
 
+    version('2.4.70', 'a8c275bce5f3d71a5ca25e8fb60df084')
     version('2.4.59', '105ac7af1afcd742d402ca7b4eb168b6')
     version('2.4.33', '86e4e3debe7087d5404461e0032231c8')
 
-    depends_on('libpciaccess')
+    depends_on('libpciaccess@0.10:')
+    depends_on('libpthread-stubs')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix),
+                  '--enable-static',
+                  'LIBS=-lrt')  # This fixes a bug with `make check`
 
         make()
-        make("install")
+        make('check')
+        make('install')

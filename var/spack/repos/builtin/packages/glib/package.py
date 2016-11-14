@@ -42,7 +42,7 @@ class Glib(Package):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkg-config+internal_glib', type='build')
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')

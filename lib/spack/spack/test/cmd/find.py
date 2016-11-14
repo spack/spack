@@ -52,5 +52,3 @@ class FindTest(unittest.TestCase):
         args.implicit = True
         q_args = query_arguments(args)
         self.assertEqual(q_args['explicit'], False)
-        args.explicit = True
-        self.assertRaises(SystemExit, query_arguments, args)

@@ -25,6 +25,7 @@
 from spack import *
 import sys
 import os
+from glob import glob
 
 
 class Boost(Package):
@@ -41,8 +42,8 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 2
 
-    version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')  # TODO: fix build
-    version('1.61.0', '6095876341956f65f9d35939ccea1a9f', preferred=True)
+    version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
+    version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
     version('1.59.0', '6aa9a5c6a4ca1016edd0ed1178e3cb87')
     version('1.58.0', 'b8839650e61e9c1c0a89f371dd475546')
@@ -110,12 +111,14 @@ class Boost(Package):
             description="Additionally build shared libraries")
     variant('multithreaded', default=True,
             description="Build multi-threaded versions of libraries")
-    variant('singlethreaded', default=True,
+    variant('singlethreaded', default=False,
             description="Build single-threaded versions of libraries")
     variant('icu', default=False,
             description="Build with Unicode and ICU suport")
     variant('graph', default=False,
             description="Build the Boost Graph library")
+    variant('taggedlayout', default=False,
+            description="Augment library names with build options")
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
@@ -153,6 +156,26 @@ class Boost(Package):
         # fallback to gcc if no toolset found
         return 'gcc'
 
+    def bjam_python_line(self, spec):
+        from os.path import dirname, splitext
+        pydir = 'python%s.%s*' % spec['python'].version.version[:2]
+        incs = join_path(spec['python'].prefix.include, pydir, "pyconfig.h")
+        incs = glob(incs)
+        incs = " ".join([dirname(u) for u in incs])
+
+        pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
+        all_libs = join_path(spec['python'].prefix.lib, pylib)
+        libs = [u for u in all_libs if splitext(u)[1] == dso_suffix]
+        if len(libs) == 0:
+            libs = [u for u in all_libs if splitext(u)[1] == '.a']
+
+        libs = " ".join(libs)
+        return 'using python : %s : %s : %s : %s ;\n' % (
+            spec['python'].version.up_to(2),
+            join_path(spec['python'].prefix.bin, 'python'),
+            incs, libs
+        )
+
     def determine_bootstrap_options(self, spec, withLibs, options):
         boostToolsetId = self.determine_toolset(spec)
         options.append('--with-toolset=%s' % boostToolsetId)
@@ -178,9 +201,7 @@ class Boost(Package):
                 f.write('using mpi : %s ;\n' %
                         join_path(spec['mpi'].prefix.bin, 'mpicxx'))
             if '+python' in spec:
-                f.write('using python : %s : %s ;\n' %
-                        (spec['python'].version.up_to(2),
-                         join_path(spec['python'].prefix.bin, 'python')))
+                f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -208,12 +229,20 @@ class Boost(Package):
         if '+singlethreaded' in spec:
             threadingOpts.append('single')
         if not threadingOpts:
-            raise RuntimeError("""At least one of {singlethreaded,
-                               multithreaded} must be enabled""")
+            raise RuntimeError("At least one of {singlethreaded, " +
+                               "multithreaded} must be enabled")
+
+        if '+taggedlayout' in spec:
+            layout = 'tagged'
+        else:
+            if len(threadingOpts) > 1:
+                raise RuntimeError("Cannot build both single and " +
+                                   "multi-threaded targets with system layout")
+            layout = 'system'
 
         options.extend([
             'link=%s' % ','.join(linkTypes),
-            '--layout=tagged'
+            '--layout=%s' % layout
         ])
 
         if not spec.satisfies('%intel'):
@@ -222,6 +251,12 @@ class Boost(Package):
             ])
 
         return threadingOpts
+
+    def add_buildopt_symlinks(self, prefix):
+        with working_dir(prefix.lib):
+            for lib in os.listdir(os.curdir):
+                prefix, remainder = lib.split('.', 1)
+                symlink(lib, '%s-mt.%s' % (prefix, remainder))
 
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
@@ -281,10 +316,15 @@ class Boost(Package):
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
+        b2('--clean')
+
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
         for threadingOpt in threadingOpts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
+
+        if '+multithreaded' in spec and '~taggedlayout' in spec:
+            self.add_buildopt_symlinks(prefix)
 
         # The shared libraries are not installed correctly
         # on Darwin; correct this

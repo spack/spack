@@ -66,13 +66,6 @@ class Mkl(IntelInstaller):
         for f in os.listdir(mkl_dir):
             os.symlink(os.path.join(mkl_dir, f), os.path.join(self.prefix, f))
 
-        # Unfortunately MKL libs are natively distrubted in prefix/lib/intel64.
-        # To make MKL play nice with Spack, symlink all files to prefix/lib:
-        mkl_lib_dir = os.path.join(prefix, "lib", "intel64")
-        for f in os.listdir(mkl_lib_dir):
-            os.symlink(os.path.join(mkl_lib_dir, f),
-                       os.path.join(self.prefix, "lib", f))
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
         spack_env.set('MKLROOT', self.prefix)

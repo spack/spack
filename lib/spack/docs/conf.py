@@ -69,7 +69,7 @@ os.environ['COLIFY_SIZE'] = '25x120'
 #
 with open('package_list.rst', 'w') as plist_file:
     subprocess.Popen(
-        [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
+        [spack_root + '/bin/spack', 'list', '--format=rst'], stdout=plist_file)
 
 #
 # Find all the `cmd-spack-*` references and add them to a command index
