@@ -654,7 +654,7 @@ class MergedTclModule(TclModule):
         self.spec_to_val = spec_to_val
 
     def process_conditional_env(self, spec, val):
-        if_start = 'if [ {env_var} == "{val}" ] {{\n'.format(
+        if_start = 'if [ ${env_var} == "{val}" ] {{\n'.format(
             env_var=self.env_var, val=val)
         yield if_start
 

@@ -6,19 +6,30 @@ from spack.modules import MergedTclModule
 
 import StringIO
 
-description = "Test out merged module functionality"
+description = "Create TCL module which loads different instances of a Spack \
+package depending on the value of an environment variable"
+
+_module_config = spack.config.get_config('modules')
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'merge_spec', help="specs of packages to install")
+        'merge_spec', 
+        help="""All installed specs which match this query spec will be
+merged into one tcl module""")
 
 
 def merged_tcl(parser, args):
     specs = spack.store.db.query(args.merge_spec)
 
-    env_var = "compiler"
-    spec_to_val = {"%gcc@4.4.7": "gcc_4.4.7", "%gcc@4.8.5": "gcc_4.8.5"}
+    if 'merge' not in _module_config['tcl']:
+        raise ValueError("TCL section has no 'merge' subsection")
+    env_vars = _module_config['tcl']['merge']
+    if len(env_vars) > 1:
+        raise ValueError("Spack package choice can currently only be " + 
+                         "conditioned on a single environment variable")
+    (env_var, spec_to_val), = env_vars.items()
+
     query_spec = spack.spec.Spec(args.merge_spec)
     merged_module = MergedTclModule(query_spec, specs, env_var, spec_to_val)
     collect_output = StringIO.StringIO()

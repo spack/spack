@@ -164,7 +164,20 @@ schema = {
                     'allOf': [
                         # Base configuration
                         {'$ref': '#/definitions/module_type_configuration'},
-                        {}  # Specific tcl extensions
+                        {
+                            'merge': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {
+                                    'type': 'object',
+                                    'patternProperties': {
+                                        r'\w[\w-]*': {
+                                            '$ref': '#/definitions/dictionary_of_strings'  # NOQA: ignore=E501
+                                        }
+                                    }
+                                }
+                            }
+                        }  # Specific tcl extensions
                     ]},
                 'dotkit': {
                     'allOf': [
