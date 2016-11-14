@@ -653,9 +653,10 @@ class MergedTclModule(TclModule):
         self.env_var = env_var
         self.spec_to_val = spec_to_val
 
-    def process_conditional_env(self, spec, val):
-        if_start = 'if [ ${env_var} == "{val}" ] {{\n'.format(
-            env_var=self.env_var, val=val)
+    def process_conditional_env(self, spec, val, else_if=False):
+        condition_type = 'else if' if else_if else 'if'
+        if_start = '{cnd_type} [ ${env_var} == "{val}" ] {{\n'.format(
+            cnd_type=condition_type, env_var=self.env_var, val=val)
         yield if_start
 
         for x in TclModule(spec).process_environment_command():
@@ -664,6 +665,7 @@ class MergedTclModule(TclModule):
         yield '}\n'
 
     def process_environment_command(self):
+        first_item = True
         for constraint_spec, val in self.spec_to_val.iteritems():
             matching = list(
                 s for s in self.specs if s.satisfies(constraint_spec))
@@ -674,8 +676,10 @@ class MergedTclModule(TclModule):
                     "Multiple specs match constraint: " + str(constraint_spec))
 
             match = iter(matching).next()
-            for x in self.process_conditional_env(match, val):
+            for x in self.process_conditional_env(match, val, not first_item):
                 yield x
+
+            first_item = False
 
     @property
     def extra_path_elements(self):

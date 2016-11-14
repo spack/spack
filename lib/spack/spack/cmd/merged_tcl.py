@@ -14,7 +14,7 @@ _module_config = spack.config.get_config('modules')
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'merge_spec', 
+        'merge_spec',
         help="""All installed specs which match this query spec will be
 merged into one tcl module""")
 
@@ -26,7 +26,7 @@ def merged_tcl(parser, args):
         raise ValueError("TCL section has no 'merge' subsection")
     env_vars = _module_config['tcl']['merge']
     if len(env_vars) > 1:
-        raise ValueError("Spack package choice can currently only be " + 
+        raise ValueError("Spack package choice can currently only be " +
                          "conditioned on a single environment variable")
     (env_var, spec_to_val), = env_vars.items()
 
