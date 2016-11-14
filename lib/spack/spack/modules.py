@@ -700,13 +700,6 @@ class MergedTclModule(TclModule):
             path_elements.append(dep_specs[0].format(dep_scheme))
         return path_elements
 
-    def module_specific_content(self, configuration):
-        # TODO: the superclass implementation should eventually be suitable but
-        # as of now the .tokens property unconditionally extracts details which
-        # may not be present for the query spec (e.g. it always grabs the
-        # compiler)
-        return tuple()
-
 # To construct an arbitrary hierarchy of module files:
 # 1. Parse the configuration file and check that all the items in
 #    hierarchical_scheme are indeed virtual packages
