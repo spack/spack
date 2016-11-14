@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class E(Package):
     """Simple package with no dependencies"""
 

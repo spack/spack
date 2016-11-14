@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PySqlalchemy(Package):
     """The Python SQL Toolkit and Object Relational Mapper"""
 
@@ -35,4 +36,4 @@ class PySqlalchemy(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

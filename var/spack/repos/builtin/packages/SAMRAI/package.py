@@ -24,12 +24,14 @@
 ##############################################################################
 from spack import *
 
+
 class Samrai(Package):
     """SAMRAI (Structured Adaptive Mesh Refinement Application Infrastructure)
-       is an object-oriented C++ software library enables exploration of numerical,
-       algorithmic, parallel computing, and software issues associated with applying
-       structured adaptive mesh refinement (SAMR) technology in large-scale parallel
-       application development.
+       is an object-oriented C++ software library enables exploration of
+       numerical, algorithmic, parallel computing, and software issues
+       associated with applying structured adaptive mesh refinement
+       (SAMR) technology in large-scale parallel application development.
+
     """
     homepage = "https://computation.llnl.gov/project/SAMRAI/"
     url      = "https://computation.llnl.gov/project/SAMRAI/download/SAMRAI-v3.9.1.tar.gz"

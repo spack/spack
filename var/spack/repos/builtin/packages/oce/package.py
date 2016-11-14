@@ -40,7 +40,8 @@ class Oce(Package):
     version('0.16.1', '4d591b240c9293e879f50d86a0cb2bb3')
     version('0.16',   '7a4b4df5a104d75a537e25e7dd387eca')
 
-    variant('tbb', default=True, description='Build with Intel Threading Building Blocks')
+    variant('tbb', default=True,
+            description='Build with Intel Threading Building Blocks')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')
@@ -52,6 +53,11 @@ class Oce(Package):
     # https://github.com/tpaviot/oce/issues/605
     # https://github.com/tpaviot/oce/commit/61cb965b9ffeca419005bc15e635e67589c421dd.patch
     patch('null.patch', when='@0.16:0.17.1')
+
+    # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
+    # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
+    if (platform.system() == "Darwin") and (platform.mac_ver()[0] == '10.12'):
+        patch('sierra.patch')
 
     def install(self, spec, prefix):
         options = []

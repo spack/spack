@@ -40,24 +40,25 @@ class Cp2k(Package):
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('plumed', default=False, description='Enable PLUMED support')
 
-    depends_on('python')  # Build dependency
+    depends_on('python', type='build')
 
     depends_on('lapack')
     depends_on('blas')
     depends_on('fftw')
+    depends_on('libint@:1.2', when='@3.0')
 
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+mpi')
+    depends_on('plumed+shared+mpi', when='+plumed+mpi')
+    depends_on('plumed+shared~mpi', when='+plumed~mpi')
+    depends_on('pexsi', when='+mpi')
+    depends_on('wannier90', when='+mpi')
+    depends_on('elpa', when='+mpi')
 
-    # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
-    # TODO : add dependency on elpa
     # TODO : add dependency on CUDA
-    # TODO : add dependency on PEXSI
-    # TODO : add dependency on QUIP
-    # TODO : add dependency on plumed
-    # TODO : add dependency on libwannier90
 
     parallel = False
 
@@ -70,22 +71,6 @@ class Cp2k(Package):
 
         # Write the custom makefile
         with open(makefile, 'w') as mkf:
-            mkf.write('CC = {0.compiler.cc}\n'.format(self))
-            if '%intel' in self.spec:
-                # CPP is a commented command in Intel arch of CP2K
-                # This is the hack through which cp2k developers avoid doing :
-                #
-                # ${CPP} <file>.F > <file>.f90
-                #
-                # and use `-fpp` instead
-                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
-                mkf.write('AR = xiar -r\n')
-            else:
-                mkf.write('CPP = {0.compiler.cc} -E\n'.format(self))
-                mkf.write('AR = ar -r\n')
-            fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
-            mkf.write('FC = {0}\n'.format(fc))
-            mkf.write('LD = {0}\n'.format(fc))
             # Optimization flags
             optflags = {
                 'gcc': ['-O2',
@@ -102,14 +87,52 @@ class Cp2k(Package):
             }
             cppflags = [
                 '-D__FFTW3',
+                '-D__LIBINT',
                 '-I' + spec['fftw'].prefix.include
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags.extend([
                 '-I' + spec['fftw'].prefix.include
             ])
-            ldflags = ['-L' + spec['fftw'].prefix.lib]
-            libs = []
+            fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
+            ldflags = [fftw.search_flags]
+            libs = [
+                join_path(spec['libint'].prefix.lib, 'libint.so'),
+                join_path(spec['libint'].prefix.lib, 'libderiv.so'),
+                join_path(spec['libint'].prefix.lib, 'libr12.so')
+            ]
+            if '+plumed' in self.spec:
+                # Include Plumed.inc in the Makefile
+                mkf.write('include {0}\n'.format(
+                    join_path(self.spec['plumed'].prefix.lib,
+                              'plumed',
+                              'src',
+                              'lib',
+                              'Plumed.inc')
+                ))
+                # Add required macro
+                cppflags.extend(['-D__PLUMED2'])
+                libs.extend([
+                    join_path(self.spec['plumed'].prefix.lib,
+                              'libplumed.{0}'.format(dso_suffix))
+                ])
+
+            mkf.write('CC = {0.compiler.cc}\n'.format(self))
+            if '%intel' in self.spec:
+                # CPP is a commented command in Intel arch of CP2K
+                # This is the hack through which cp2k developers avoid doing :
+                #
+                # ${CPP} <file>.F > <file>.f90
+                #
+                # and use `-fpp` instead
+                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
+                mkf.write('AR = xiar -r\n')
+            else:
+                mkf.write('CPP = {0.compiler.cc} -E\n'.format(self))
+                mkf.write('AR = ar -r\n')
+            fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
+            mkf.write('FC = {0}\n'.format(fc))
+            mkf.write('LD = {0}\n'.format(fc))
             # Intel
             if '%intel' in self.spec:
                 cppflags.extend([
@@ -125,23 +148,47 @@ class Cp2k(Package):
             if '+mpi' in self.spec:
                 cppflags.extend([
                     '-D__parallel',
+                    '-D__LIBPEXSI',
+                    '-D__WANNIER90',
+                    '-D__ELPA3',
                     '-D__SCALAPACK'
                 ])
-                ldflags.extend([
-                    '-L' + spec['scalapack'].prefix.lib
+                fcflags.extend([
+                    '-I' + join_path(
+                        spec['elpa'].prefix,
+                        'include',
+                        'elpa-{0}'.format(str(spec['elpa'].version)),
+                        'modules'
+                    ),
+                    '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
-                libs.extend(spec['scalapack'].scalapack_shared_libs)
-
+                scalapack = spec['scalapack'].scalapack_libs
+                ldflags.append(scalapack.search_flags)
+                libs.extend([
+                    join_path(spec['elpa'].prefix.lib,
+                              'libelpa.{0}'.format(dso_suffix)),
+                    join_path(spec['wannier90'].prefix.lib, 'libwannier.a'),
+                    join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
+                    join_path(spec['superlu-dist'].prefix.lib,
+                              'libsuperlu_dist.a'),
+                    join_path(
+                        spec['parmetis'].prefix.lib,
+                        'libparmetis.{0}'.format(dso_suffix)
+                    ),
+                    join_path(
+                        spec['metis'].prefix.lib,
+                        'libmetis.{0}'.format(dso_suffix)
+                    ),
+                ])
+                libs.extend(scalapack)
+                libs.extend(self.spec['mpi'].mpicxx_shared_libs)
+                libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
-            ldflags.extend([
-                '-L' + spec['lapack'].prefix.lib,
-                '-L' + spec['blas'].prefix.lib
-            ])
-            libs.extend([
-                join_path(spec['fftw'].prefix.lib, 'libfftw3.so'),
-                spec['lapack'].lapack_shared_lib,
-                spec['blas'].blas_shared_lib
-            ])
+            lapack = spec['lapack'].lapack_libs
+            blas = spec['blas'].blas_libs
+
+            ldflags.append((lapack + blas).search_flags)
+            libs.extend([str(x) for x in (fftw, lapack, blas)])
 
             # Write compiler flags to file
             mkf.write('CPPFLAGS = {0}\n'.format(' '.join(cppflags)))

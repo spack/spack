@@ -55,7 +55,8 @@ class Python(Package):
     extendable = True
 
     variant('tk',   default=False, description='Provide support for Tkinter')
-    variant('ucs4', default=False, description='Enable UCS4 (wide) unicode strings')
+    variant('ucs4', default=False,
+            description='Enable UCS4 (wide) unicode strings')
     # From https://docs.python.org/2/c-api/unicode.html: Python's default
     # builds use a 16-bit type for Py_UNICODE and store Unicode values
     # internally as UCS2. It is also possible to build a UCS4 version of Python
@@ -72,6 +73,8 @@ class Python(Package):
     depends_on("zlib")
     depends_on("tk",  when="+tk")
     depends_on("tcl", when="+tk")
+
+    patch('ncurses.patch')
 
     @when('@2.7,3.4:')
     def patch(self):
@@ -109,6 +112,8 @@ class Python(Package):
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
+        if spec.satisfies("platform=darwin") and ('%gcc' in spec):
+            config_args.append('--disable-toolbox-glue')
 
         if '+ucs4' in spec:
             if spec.satisfies('@:2.7'):
@@ -117,7 +122,8 @@ class Python(Package):
                 config_args.append('--with-wide-unicode')
             elif spec.satisfies('@3.3:'):
                 # https://docs.python.org/3.3/whatsnew/3.3.html
-                raise ValueError('+ucs4 variant not compatible with Python 3.3 and beyond')  # NOQA: ignore=E501
+                raise ValueError(
+                    '+ucs4 variant not compatible with Python 3.3 and beyond')
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
@@ -130,6 +136,8 @@ class Python(Package):
 
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
+    #
+    # Note: Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
     #
     #    if '+tk' in spec:
     #        env['TK_LIBRARY']  = join_path(spec['tk'].prefix.lib,
@@ -194,8 +202,27 @@ class Python(Package):
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         """Set PYTHONPATH to include site-packages dir for the
         extension and any other python extensions it depends on."""
-        pythonhome = self.prefix
-        spack_env.set('PYTHONHOME', pythonhome)
+        # The python executable for version 3 may be python3 or python
+        # See https://github.com/LLNL/spack/pull/2173#issuecomment-257170199
+        pythonex = 'python{0}'.format('3' if self.spec.satisfies('@3') else '')
+        if os.path.isdir(self.prefix.bin):
+            base = self.prefix.bin
+        else:
+            base = self.prefix
+        if not os.path.isfile(os.path.join(base, pythonex)):
+            if self.spec.satisfies('@3'):
+                python = Executable(os.path.join(base, 'python'))
+                version = python('-c', 'import sys; print(sys.version)',
+                                 output=str)
+                if version.startswith('3'):
+                    pythonex = 'python'
+                else:
+                    raise RuntimeError('Cannot locate python executable')
+            else:
+                raise RuntimeError('Cannot locate python executable')
+        python = Executable(os.path.join(base, pythonex))
+        prefix = python('-c', 'import sys; print(sys.prefix)', output=str)
+        spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
         for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
@@ -319,7 +346,7 @@ sys.__egginsert = p + len(new)
 
         super(Python, self).activate(ext_pkg, **args)
 
-        exts = spack.install_layout.extension_map(self.spec)
+        exts = spack.store.layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
         self.write_easy_install_pth(exts)
 
@@ -327,7 +354,7 @@ sys.__egginsert = p + len(new)
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        exts = spack.install_layout.extension_map(self.spec)
+        exts = spack.store.layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]

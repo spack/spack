@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyelftools(Package):
-    """A pure-Python library for parsing and analyzing ELF files and DWARF debugging information"""
+    """A pure-Python library for parsing and analyzing ELF files and DWARF
+       debugging information"""
     homepage = "https://pypi.python.org/pypi/pyelftools"
     url      = "https://pypi.python.org/packages/source/p/pyelftools/pyelftools-0.23.tar.gz"
 
@@ -34,4 +36,4 @@ class PyPyelftools(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

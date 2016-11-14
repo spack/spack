@@ -28,9 +28,6 @@ from spack.version import *
 
 
 class PreferredPackages(object):
-    # Arbitrary, but consistent
-    _default_order = {'compiler': ['gcc', 'intel', 'clang', 'pgi', 'xlc']}
-
     def __init__(self):
         self.preferred = spack.config.get_config('packages')
         self._spec_for_pkgname_cache = {}
@@ -128,9 +125,6 @@ class PreferredPackages(object):
         key = (pkgname, component, second_key)
         if key not in self._spec_for_pkgname_cache:
             pkglist = self._order_for_package(pkgname, component, second_key)
-            if not pkglist:
-                if component in self._default_order:
-                    pkglist = self._default_order[component]
             if component == 'compiler':
                 self._spec_for_pkgname_cache[key] = \
                     [spack.spec.CompilerSpec(s) for s in pkglist]
@@ -156,7 +150,7 @@ class PreferredPackages(object):
         """Return True iff the named package has a list of preferred
            providers"""
         return bool(self._order_for_package(pkgname, 'providers',
-                    provider_str, False))
+                                            provider_str, False))
 
     def spec_preferred_variants(self, pkgname):
         """Return a VariantMap of preferred variants and their values"""

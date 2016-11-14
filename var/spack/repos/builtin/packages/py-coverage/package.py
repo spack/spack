@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyCoverage(Package):
     """ Testing coverage checker for python """
-    # FIXME: add a proper url for your package's homepage here.
+
     homepage = "http://nedbatchelder.com/code/coverage/"
     url      = "https://pypi.python.org/packages/source/c/coverage/coverage-4.0a6.tar.gz"
 
@@ -37,4 +38,4 @@ class PyCoverage(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import subprocess
 
 from spack import *
 
@@ -44,10 +45,20 @@ class Plumed(Package):
 
     version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
 
+    # Variants. PLUMED by default builds a number of optional modules.
+    # The ones listed here are not built by default for various reasons,
+    # such as stability, lack of testing, or lack of demand.
+    variant('crystallization', default=False,
+            description='Build support for optional crystallization module.')
+    variant('imd', default=False,
+            description='Build support for optional imd module.')
+    variant('manyrestraints', default=False,
+            description='Build support for optional manyrestraints module.')
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
 
+    # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on('zlib')
     depends_on('blas')
     depends_on('lapack')
@@ -55,11 +66,46 @@ class Plumed(Package):
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
 
+    depends_on('autoconf', type='build')
+
+    # Dictionary mapping PLUMED versions to the patches it provides
+    # interactively
+    plumed_patches = {
+        '2.2.3': {
+            'amber-14': '1',
+            'gromacs-4.5.7': '2',
+            'gromacs-4.6.7': '3',
+            'gromacs-5.0.7': '4',
+            'gromacs-5.1.2': '5',
+            'lammps-6Apr13': '6',
+            'namd-2.8': '7',
+            'namd-2.9': '8',
+            'espresso-5.0.2': '9'
+        }
+    }
+
+    def apply_patch(self, other):
+        plumed = subprocess.Popen(
+            [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
+            stdin=subprocess.PIPE
+        )
+        opts = Plumed.plumed_patches[str(self.version)]
+        search = '{0.name}-{0.version}'.format(other)
+        choice = opts[search] + '\n'
+        plumed.stdin.write(choice)
+        plumed.wait()
+
     def setup_dependent_package(self, module, ext_spec):
         # Make plumed visible from dependent packages
         module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
 
     def install(self, spec, prefix):
+        # This part is needed to avoid linking with gsl cblas
+        # interface which will mask the cblas interface
+        # provided by optimized libraries due to linking order
+        filter_file('-lgslcblas', '', 'configure.ac')
+        autoreconf('-ivf')
+
         # From plumed docs :
         # Also consider that this is different with respect to what some other
         # configure script does in that variables such as MPICXX are
@@ -68,16 +114,44 @@ class Plumed(Package):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = [
-            'CXX={0}'.format(spec['mpi'].mpicxx)
-        ] if '+mpi' in self.spec else []
+        configure_opts = ['--prefix=' + prefix]
 
+        # If using MPI then ensure the correct compiler wrapper is used.
+        if '+mpi' in spec:
+            configure_opts.extend([
+                '--enable-mpi',
+                'CXX={0}'.format(spec['mpi'].mpicxx)
+            ])
+
+            # If the MPI dependency is provided by the intel-mpi package then
+            # the following additional argument is required to allow it to
+            # build.
+            if spec.satisfies('^intel-mpi'):
+                configure_opts.extend([
+                    'STATIC_LIBS=-mt_mpi'
+                ])
+
+        # Additional arguments
         configure_opts.extend([
-            '--prefix={0}'.format(prefix),
-            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),  # NOQA: ignore=E501
-            '--enable-mpi={0}'.format('yes' if '+mpi' in spec else 'no'),
+            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
             '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
         ])
+
+        # Construct list of optional modules
+        module_opts = []
+        module_opts.extend([
+            '+crystallization' if (
+                '+crystallization' in spec) else '-crystallization',
+            '+imd' if '+imd' in spec else '-imd',
+            '+manyrestraints' if (
+                '+manyrestraints' in spec) else '-manyrestraints'
+        ])
+
+        # If we have specified any optional modules then add the argument to
+        # enable or disable them.
+        if module_opts:
+            configure_opts.extend([
+                '--enable-modules={0}'.format("".join(module_opts))])
 
         configure(*configure_opts)
         make()

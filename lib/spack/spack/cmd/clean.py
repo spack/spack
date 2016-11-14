@@ -31,6 +31,7 @@ import spack.cmd
 
 description = "Remove build stage and source tarball for packages."
 
+
 def setup_parser(subparser):
     subparser.add_argument('packages', nargs=argparse.REMAINDER,
                            help="specs of packages to clean")

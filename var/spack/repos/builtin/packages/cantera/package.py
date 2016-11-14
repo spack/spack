@@ -35,11 +35,16 @@ class Cantera(Package):
 
     version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
 
-    variant('lapack',     default=True,  description='Build with external BLAS/LAPACK libraries')
-    variant('threadsafe', default=True,  description='Build threadsafe, requires Boost')
-    variant('sundials',   default=True,  description='Build with external Sundials')
-    variant('python',     default=False, description='Build the Cantera Python module')
-    variant('matlab',     default=False, description='Build the Cantera Matlab toolbox')
+    variant('lapack',     default=True,
+            description='Build with external BLAS/LAPACK libraries')
+    variant('threadsafe', default=True,
+            description='Build threadsafe, requires Boost')
+    variant('sundials',   default=True,
+            description='Build with external Sundials')
+    variant('python',     default=False,
+            description='Build the Cantera Python module')
+    variant('matlab',     default=False,
+            description='Build the Cantera Matlab toolbox')
 
     # Required dependencies
     depends_on('scons', type='build')
@@ -80,8 +85,9 @@ class Cantera(Package):
 
         # BLAS/LAPACK support
         if '+lapack' in spec:
+            lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
             options.extend([
-                'blas_lapack_libs=lapack,blas',
+                'blas_lapack_libs={0}'.format(','.join(lapack_blas.names)),
                 'blas_lapack_dir={0}'.format(spec['lapack'].prefix.lib)
             ])
 
@@ -90,8 +96,7 @@ class Cantera(Package):
             options.extend([
                 'build_thread_safe=yes',
                 'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
-                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib),
-                'boost_thread_lib=boost_thread-mt,boost_system-mt'
+                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib)
             ])
         else:
             options.append('build_thread_safe=no')

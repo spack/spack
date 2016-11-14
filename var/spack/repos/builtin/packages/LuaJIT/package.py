@@ -25,6 +25,7 @@
 import os
 from spack import *
 
+
 class Luajit(Package):
     """Flast flexible JITed lua"""
     homepage = "http://www.luajit.org"

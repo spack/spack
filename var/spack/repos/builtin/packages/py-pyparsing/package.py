@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyparsing(Package):
     """A Python Parsing Module."""
     homepage = "https://pypi.python.org/pypi/pyparsing"
@@ -34,4 +35,4 @@ class PyPyparsing(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

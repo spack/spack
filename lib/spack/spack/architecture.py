@@ -83,14 +83,15 @@ from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 
 import spack
-import spack.compilers
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
+from spack.util.spack_yaml import syaml_dict
 import spack.error as serr
 
 
 class NoPlatformError(serr.SpackError):
+
     def __init__(self):
         super(NoPlatformError, self).__init__(
             "Could not determine a platform for this machine.")
@@ -274,6 +275,8 @@ class OperatingSystem(object):
         # Once the paths are cleaned up, do a search for each type of
         # compiler.  We can spawn a bunch of parallel searches to reduce
         # the overhead of spelunking all these directories.
+        # NOTE: we import spack.compilers here to avoid init order cycles
+        import spack.compilers
         types = spack.compilers.all_compiler_types()
         compiler_lists = parmap(lambda cmp_cls:
                                 self.find_compiler(cmp_cls, *filtered_path),
@@ -383,6 +386,13 @@ class Arch(object):
     def __contains__(self, string):
         return string in str(self)
 
+    # TODO: make this unnecessary: don't include an empty arch on *every* spec.
+    def __nonzero__(self):
+        return (self.platform is not None or
+                self.platform_os is not None or
+                self.target is not None)
+    __bool__ = __nonzero__
+
     def _cmp_key(self):
         if isinstance(self.platform, Platform):
             platform = self.platform.name
@@ -399,12 +409,13 @@ class Arch(object):
         return (platform, platform_os, target)
 
     def to_dict(self):
-        d = {}
-        d['platform'] = str(self.platform) if self.platform else None
-        d['platform_os'] = str(self.platform_os) if self.platform_os else None
-        d['target'] = str(self.target) if self.target else None
-
-        return d
+        return syaml_dict((
+            ('platform',
+             str(self.platform) if self.platform else None),
+            ('platform_os',
+             str(self.platform_os) if self.platform_os else None),
+            ('target',
+             str(self.target) if self.target else None)))
 
 
 def _target_from_dict(target_name, plat=None):

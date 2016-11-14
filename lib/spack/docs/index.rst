@@ -3,8 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+===================
 Spack Documentation
-=================================
+===================
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -27,7 +28,7 @@ Get spack from the `github repository
 <https://github.com/llnl/spack>`_ and install your first
 package:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ git clone https://github.com/llnl/spack.git
    $ cd spack/bin
@@ -36,23 +37,47 @@ package:
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
-Table of Contents
----------------------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Basics
 
    features
    getting_started
    basic_usage
-   packaging_guide
-   mirrors
+   workflows
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference Manual
+
    configuration
-   developer_guide
-   command_index
+   config_yaml
+   build_settings
+   mirrors
+   module_file_support
    package_list
+   command_index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Step-by-step
+
+   basic_usage_tutorial
+   module_file_tutorial
+   package_tutorial
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributing to Spack
+
+   contribution_guide
+   packaging_guide
+   developer_guide
    API Docs <spack>
 
+
+==================
 Indices and tables
 ==================
 

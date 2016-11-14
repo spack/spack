@@ -37,6 +37,9 @@ class Atlas(Package):
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
+    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
+            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
+
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
             url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
@@ -51,6 +54,7 @@ class Atlas(Package):
             url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
+    variant('pthread', default=False, description='Use multithreaded libraries')
 
     provides('blas')
     provides('lapack')
@@ -107,18 +111,32 @@ class Atlas(Package):
             make("install")
             self.install_test()
 
-    def setup_dependent_package(self, module, dspec):
+    @property
+    def blas_libs(self):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
         # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
-        name = 'libsatlas.%s' % dso_suffix
-        libdir = find_library_path(name,
-                                   self.prefix.lib64,
-                                   self.prefix.lib)
-
+        is_threaded = '+pthread' in self.spec
         if '+shared' in self.spec:
-            self.spec.blas_shared_lib   = join_path(libdir, name)
-            self.spec.lapack_shared_lib = self.spec.blas_shared_lib
+            to_find = ['libtatlas'] if is_threaded else ['libsatlas']
+            shared = True
+        else:
+            interfaces = [
+                'libptcblas',
+                'libptf77blas'
+            ] if is_threaded else [
+                'libcblas',
+                'libf77blas'
+            ]
+            to_find = ['liblapack'] + interfaces + ['libatlas']
+            shared = False
+        return find_libraries(
+            to_find, root=self.prefix, shared=shared, recurse=True
+        )
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
 
     def install_test(self):
         source_file = join_path(os.path.dirname(self.module.__file__),
@@ -126,9 +144,8 @@ class Atlas(Package):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = ["-I%s" % join_path(self.spec.prefix, "include")]
-        link_flags = ["-L%s" % join_path(self.spec.prefix, "lib"),
-                      "-lsatlas"]
+        include_flags = ["-I%s" % self.spec.prefix.include]
+        link_flags = self.lapack_libs.ld_flags.split()
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)
         compare_output_file(output, blessed_file)

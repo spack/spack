@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Description:
+#     Runs source code style checks on Spack.
+#     See $SPACK_ROOT/.flake8 for a list of
+#     approved exceptions.
+#
+# Usage:
+#     run-flake8-tests
+#
+# Notes:
+#     Requires flake8.
+#
+
+QA_DIR="$(dirname "$0")"
+SPACK_ROOT="$QA_DIR/../../.."
+
+# Array of dependencies
+deps=(
+    flake8
+)
+
+# Check for dependencies
+"$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
+
+# Add Spack to the PATH.
+export PATH="$SPACK_ROOT/bin:$PATH"
+
+exec spack flake8

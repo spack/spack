@@ -23,11 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """LinkTree class for setting up trees of symbolic links."""
-__all__ = ['LinkTree']
 
 import os
 import shutil
 from llnl.util.filesystem import *
+
+__all__ = ['LinkTree']
 
 empty_file_name = '.spack-empty'
 
@@ -43,12 +44,12 @@ class LinkTree(object):
     modified.
 
     """
+
     def __init__(self, source_root):
         if not os.path.exists(source_root):
             raise IOError("No such file or directory: '%s'", source_root)
 
         self._root = source_root
-
 
     def find_conflict(self, dest_root, **kwargs):
         """Returns the first file in dest that conflicts with src"""
@@ -61,9 +62,9 @@ class LinkTree(object):
                 return dest
         return None
 
-
     def merge(self, dest_root, **kwargs):
-        """Link all files in src into dest, creating directories if necessary."""
+        """Link all files in src into dest, creating directories
+           if necessary."""
         kwargs['order'] = 'pre'
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
@@ -82,7 +83,6 @@ class LinkTree(object):
             else:
                 assert(not os.path.exists(dest))
                 os.symlink(src, dest)
-
 
     def unmerge(self, dest_root, **kwargs):
         """Unlink all files in dest that exist in src.

@@ -24,8 +24,9 @@
 ##############################################################################
 from spack import *
 
+
 class Mpe2(Package):
-    """Message Passing Extensions (MPE) -- Parallel, shared X window graphics"""
+    """Message Passing Extensions (MPE): Parallel, shared X window graphics"""
 
     homepage = "http://www.mcs.anl.gov/research/projects/perfvis/software/MPE/"
     url      = "ftp://ftp.mcs.anl.gov/pub/mpi/mpe/mpe2-1.3.0.tar.gz"

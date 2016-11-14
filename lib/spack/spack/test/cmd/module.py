@@ -33,16 +33,17 @@ import spack.test.mock_database
 class TestModule(spack.test.mock_database.MockDatabase):
 
     def _get_module_files(self, args):
-        return [
-            modules.module_types[args.module_type](spec).file_name for spec in args.specs  # NOQA: ignore=E501
-        ]
+        return [modules.module_types[args.module_type](spec).file_name
+                for spec in args.specs()]
 
     def test_module_common_operations(self):
         parser = argparse.ArgumentParser()
         module.setup_parser(parser)
+
         # Try to remove a non existing module [tcl]
         args = parser.parse_args(['rm', 'doesnotexist'])
         self.assertRaises(SystemExit, module.module, parser, args)
+
         # Remove existing modules [tcl]
         args = parser.parse_args(['rm', '-y', 'mpileaks'])
         module_files = self._get_module_files(args)
@@ -51,22 +52,28 @@ class TestModule(spack.test.mock_database.MockDatabase):
         module.module(parser, args)
         for item in module_files:
             self.assertFalse(os.path.exists(item))
+
         # Add them back [tcl]
         args = parser.parse_args(['refresh', '-y', 'mpileaks'])
         module.module(parser, args)
         for item in module_files:
             self.assertTrue(os.path.exists(item))
+
         # TODO : test the --delete-tree option
         # TODO : this requires having a separate directory for test modules
+
         # Try to find a module with multiple matches
         args = parser.parse_args(['find', 'mpileaks'])
         self.assertRaises(SystemExit, module.module, parser, args)
+
         # Try to find a module with no matches
         args = parser.parse_args(['find', 'doesnotexist'])
         self.assertRaises(SystemExit, module.module, parser, args)
+
         # Try to find a module
         args = parser.parse_args(['find', 'libelf'])
         module.module(parser, args)
+
         # Remove existing modules [dotkit]
         args = parser.parse_args(['rm', '-y', '-m', 'dotkit', 'mpileaks'])
         module_files = self._get_module_files(args)
@@ -75,6 +82,7 @@ class TestModule(spack.test.mock_database.MockDatabase):
         module.module(parser, args)
         for item in module_files:
             self.assertFalse(os.path.exists(item))
+
         # Add them back [dotkit]
         args = parser.parse_args(['refresh', '-y', '-m', 'dotkit', 'mpileaks'])
         module.module(parser, args)

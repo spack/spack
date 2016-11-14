@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Mpich2(Package):
     homepage   = "http://www.mpich.org"
     url        = "http://www.mpich.org/static/downloads/1.5/mpich2-1.5.tar.gz"

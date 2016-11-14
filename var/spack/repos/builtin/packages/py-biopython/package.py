@@ -24,8 +24,13 @@
 ##############################################################################
 from spack import *
 
+
 class PyBiopython(Package):
-    """It is a distributed collaborative effort to develop Python libraries and applications which address the needs of current and future work in bioinformatics."""
+    """A distributed collaborative effort to develop Python libraries and
+       applications which address the needs of current and future work in
+       bioinformatics.
+
+    """
     homepage = "http://biopython.org/wiki/Main_Page"
     url      = "http://biopython.org/DIST/biopython-1.65.tar.gz"
 
@@ -36,4 +41,4 @@ class PyBiopython(Package):
     depends_on('py-numpy', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

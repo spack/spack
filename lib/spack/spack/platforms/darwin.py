@@ -1,6 +1,7 @@
-import subprocess
+import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.mac_os import MacOs
+
 
 class Darwin(Platform):
     priority    = 89
@@ -21,6 +22,4 @@ class Darwin(Platform):
 
     @classmethod
     def detect(self):
-        platform = subprocess.Popen(['uname', '-a'], stdout = subprocess.PIPE)
-        platform, _ = platform.communicate()
-        return 'darwin' in platform.strip().lower()
+        return 'darwin' in platform.system().lower()

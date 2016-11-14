@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCsvkit(Package):
     """A library of utilities for working with CSV, the king of tabular file
     formats"""
@@ -43,4 +44,4 @@ class PyCsvkit(Package):
     depends_on('py-openpyxl', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

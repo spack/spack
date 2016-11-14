@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyDateutil(Package):
     """Extensions to the standard Python datetime module."""
     homepage = "https://pypi.python.org/pypi/dateutil"
@@ -38,4 +39,4 @@ class PyDateutil(Package):
     depends_on('py-six', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

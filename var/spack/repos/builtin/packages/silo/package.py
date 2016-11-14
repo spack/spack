@@ -38,9 +38,11 @@ class Silo(Package):
 
     variant('fortran', default=True, description='Enable Fortran support')
     variant('shared', default=True, description='Build shared libraries')
-    variant('silex', default=False, description='Builds Silex, a GUI for viewing Silo files')
+    variant('silex', default=False,
+            description='Builds Silex, a GUI for viewing Silo files')
 
-    depends_on('hdf5')
+    # silo uses the obsolete function H5Pset_fapl_mpiposix:
+    depends_on("hdf5 @:1.8.12")
     depends_on('qt', when='+silex')
 
     def install(self, spec, prefix):
@@ -55,8 +57,10 @@ class Silo(Package):
 
         configure(
             '--prefix=%s' % prefix,
-            '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include, spec['hdf5'].prefix.lib),
-            '--with-zlib=%s,%s' % (spec['zlib'].prefix.include, spec['zlib'].prefix.lib),
+            '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
+                                   spec['hdf5'].prefix.lib),
+            '--with-zlib=%s,%s' % (spec['zlib'].prefix.include,
+                                   spec['zlib'].prefix.lib),
             '--enable-install-lite-headers',
             *config_args)
 

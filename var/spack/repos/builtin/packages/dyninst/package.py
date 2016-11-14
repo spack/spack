@@ -24,13 +24,24 @@
 ##############################################################################
 from spack import *
 
+
 class Dyninst(Package):
     """API for dynamic binary instrumentation.  Modify programs while they
     are executing without recompiling, re-linking, or re-executing."""
+
     homepage = "https://paradyn.org"
-    url      = "http://www.dyninst.org/sites/default/files/downloads/dyninst/8.1.2/DyninstAPI-8.1.2.tgz"
+    url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
 
+    # version 9.2.1b was the latest git commit when trying to port to a
+    # ppc64le system to get fixes in computeAddrWidth independent of 
+    # endianness. This version can be removed if the next release includes
+    # this change. The actual commit was
+    # b8596ad4023ec40ac07e669ff8ea3ec06e262703
+    version('9.2.1b', git='https://github.com/dyninst/dyninst.git',
+            commit='859cb778e20b619443c943c96dd1851da763142b')
+    version('9.2.0', 'ad023f85e8e57837ed9de073b59d6bab',
+            url="https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz")
     version('9.1.0', '5c64b77521457199db44bec82e4988ac',
             url="http://www.paradyn.org/release9.1.0/DyninstAPI-9.1.0.tgz")
     version('8.2.1', 'abf60b7faabe7a2e4b54395757be39c7',
@@ -40,30 +51,46 @@ class Dyninst(Package):
     version('8.1.1', 'd1a04e995b7aa70960cd1d1fac8bd6ac',
             url="http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz")
 
+    variant('stat_dysect', default=False,
+            description="patch for STAT's DySectAPI")
+
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
 
+    patch('stat_dysect.patch', when='+stat_dysect')
+    patch('stackanalysis_h.patch', when='@9.2.0')
+
     # new version uses cmake
     def install(self, spec, prefix):
+        if spec.satisfies('@:8.1'):
+            configure("--prefix=" + prefix)
+            make()
+            make("install")
+            return
+
         libelf = spec['libelf'].prefix
         libdwarf = spec['libdwarf'].prefix
 
         with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
-                  '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
-                  '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                  '-DLIBELF_INCLUDE_DIR=%s'   % join_path(libelf.include, 'libelf'),
-                  '-DLIBELF_LIBRARIES=%s'     % join_path(libelf.lib, 'libelf.so'),
-                  '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
-                  '-DLIBDWARF_LIBRARIES=%s'   % join_path(libdwarf.lib, 'libdwarf.so'),
-                  *std_cmake_args)
-
+            args = ['..',
+                    '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
+                    '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
+                    '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                    '-DLIBELF_INCLUDE_DIR=%s'   % join_path(
+                        libelf.include, 'libelf'),
+                    '-DLIBELF_LIBRARIES=%s'     % join_path(
+                        libelf.lib, 'libelf.so'),
+                    '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
+                    '-DLIBDWARF_LIBRARIES=%s'   % join_path(
+                        libdwarf.lib, 'libdwarf.so')]
+            if spec.satisfies('arch=linux-redhat7-ppc64le'):
+                args.append('-Darch_ppc64_little_endian=1')
+            args += std_cmake_args
+            cmake(*args)
             make()
             make("install")
-
 
     @when('@:8.1')
     def install(self, spec, prefix):

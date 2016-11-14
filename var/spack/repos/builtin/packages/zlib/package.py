@@ -24,19 +24,12 @@
 ##############################################################################
 from spack import *
 
-class Zlib(Package):
-    """zlib is designed to be a free, general-purpose, legally unencumbered --
-       that is, not covered by any patents -- lossless data-compression library for
-       use on virtually any computer hardware and operating system.
-    """
+
+class Zlib(AutotoolsPackage):
+    """A free, general-purpose, legally unencumbered lossless
+       data-compression library."""
 
     homepage = "http://zlib.net"
-    url      = "http://zlib.net/zlib-1.2.8.tar.gz"
+    url = "http://zlib.net/zlib-1.2.8.tar.gz"
 
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

@@ -24,14 +24,20 @@
 ##############################################################################
 from spack import *
 
+
 class Gperftools(Package):
-    """Google's fast malloc/free implementation, especially for multi-threaded applications.
-       Contains tcmalloc, heap-checker, heap-profiler, and cpu-profiler."""
+    """Google's fast malloc/free implementation, especially for
+       multi-threaded applications.  Contains tcmalloc, heap-checker,
+       heap-profiler, and cpu-profiler.
+
+    """
     homepage = "https://code.google.com/p/gperftools"
     url      = "https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz"
 
-    version('2.4', '2171cea3bbe053036fb5d5d25176a160', url="https://github.com/gperftools/gperftools/releases/download/gperftools-2.4/gperftools-2.4.tar.gz")
-    version('2.3', 'f54dd119f0e46ac1f13264f8d97adf90', url="https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz")
+    version('2.4', '2171cea3bbe053036fb5d5d25176a160',
+            url="https://github.com/gperftools/gperftools/releases/download/gperftools-2.4/gperftools-2.4.tar.gz")
+    version('2.3', 'f54dd119f0e46ac1f13264f8d97adf90',
+            url="https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz")
 
     depends_on("libunwind")
 

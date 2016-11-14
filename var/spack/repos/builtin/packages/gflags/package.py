@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
+
 
 class Gflags(Package):
     """The gflags package contains a C++ library that implements

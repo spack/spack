@@ -24,12 +24,14 @@
 ##############################################################################
 from spack import *
 
+
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
+    version('3.6.1',    'd6dd661380adacdb12f41b926ec99545')
     version('3.6.0',    'aa40fbecf49d99c083415c2411d12db9')
     version('3.5.2',    '701386a1b5ec95f8d1075ecf96383e02')
     version('3.5.1',    'ca051f4a66375c89d1a524e726da0296')
@@ -40,20 +42,33 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ncurses', default=True, description='Enables the build of the ncurses gui')
-    variant('openssl', default=True, description="Enables CMake's OpenSSL features")
-    variant('qt', default=False, description='Enables the build of cmake-gui')
-    variant('doc', default=False, description='Enables the generation of html and man page documentation')
+    variant('ownlibs', default=True, description='Use CMake-provided third-party libraries')
+    variant('qt',      default=False, description='Enables the build of cmake-gui')
+    variant('doc',     default=False, description='Enables the generation of html and man page documentation')
+    variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
+    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    depends_on('ncurses', when='+ncurses')
-    depends_on('openssl', when='+openssl')
-    depends_on('qt', when='+qt')
+    depends_on('curl',           when='~ownlibs')
+    depends_on('expat',          when='~ownlibs')
+    # depends_on('jsoncpp',        when='~ownlibs')  # circular dependency
+    depends_on('zlib',           when='~ownlibs')
+    depends_on('bzip2',          when='~ownlibs')
+    depends_on('xz',             when='~ownlibs')
+    depends_on('libarchive',     when='~ownlibs')
+    depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
-    depends_on('py-sphinx', when='+doc', type='build')
+    depends_on('py-sphinx',      when='+doc', type='build')
+    depends_on('openssl',        when='+openssl')
+    depends_on('ncurses',        when='+ncurses')
+
+    # Cannot build with Intel, should be fixed in 3.6.2
+    # https://gitlab.kitware.com/cmake/cmake/issues/16226
+    patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
-        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
+        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (
+            version.up_to(2), version)
 
     def validate(self, spec):
         """
@@ -71,12 +86,27 @@ class Cmake(Package):
         # Consistency check
         self.validate(spec)
 
-        # configure, build, install:
-        options = ['--prefix=%s' % prefix]
-        options.append('--parallel=%s' % str(make_jobs))
+        options = [
+            '--prefix={0}'.format(prefix),
+            '--parallel={0}'.format(make_jobs)]
+        if spec.satisfies("@3:"):
+            options.append(
+                # jsoncpp requires CMake to build
+                # use CMake-provided library to avoid circular dependency
+                '--no-system-jsoncpp'
+            )
+
+        if '+ownlibs' in spec:
+            # Build and link to the CMake-provided third-party libraries
+            options.append('--no-system-libs')
+        else:
+            # Build and link to the Spack-installed third-party libraries
+            options.append('--system-libs')
 
         if '+qt' in spec:
             options.append('--qt-gui')
+        else:
+            options.append('--no-qt-gui')
 
         if '+doc' in spec:
             options.append('--sphinx-html')
@@ -86,6 +116,10 @@ class Cmake(Package):
             options.append('--')
             options.append('-DCMAKE_USE_OPENSSL=ON')
 
-        configure(*options)
+        bootstrap = Executable('./bootstrap')
+        bootstrap(*options)
+
         make()
+        if self.run_tests:
+            make('test')  # some tests fail, takes forever
         make('install')

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyUrwid(Package):
     """A full-featured console UI library"""
     homepage = "http://urwid.org/"
@@ -36,5 +37,4 @@ class PyUrwid(Package):
     extends("python")
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
-
+        setup_py('install', '--prefix=%s' % prefix)

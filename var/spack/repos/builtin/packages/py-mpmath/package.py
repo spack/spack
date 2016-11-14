@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyMpmath(Package):
     """A Python library for arbitrary-precision floating-point arithmetic."""
     homepage = "http://mpmath.org"
@@ -34,4 +35,4 @@ class PyMpmath(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

@@ -34,17 +34,29 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
+    # Alternate location if main server is down.
+    # version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
     version('5.0.1', 'b477573fdcc87babe861f62316833db0')
 
-    variant('mpi', default=True, description='Activate the compilation of MUMPS with the MPI support')
-    variant('scotch', default=False, description='Activate Scotch as a possible ordering library')
-    variant('ptscotch', default=False, description='Activate PT-Scotch as a possible ordering library')
-    variant('metis', default=False, description='Activate Metis as a possible ordering library')
-    variant('parmetis', default=False, description='Activate Parmetis as a possible ordering library')
-    variant('double', default=True, description='Activate the compilation of dmumps')
-    variant('float', default=True, description='Activate the compilation of smumps')
-    variant('complex', default=True, description='Activate the compilation of cmumps and/or zmumps')
-    variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
+    variant('mpi', default=True,
+            description='Compile MUMPS with MPI support')
+    variant('scotch', default=False,
+            description='Activate Scotch as a possible ordering library')
+    variant('ptscotch', default=False,
+            description='Activate PT-Scotch as a possible ordering library')
+    variant('metis', default=False,
+            description='Activate Metis as a possible ordering library')
+    variant('parmetis', default=False,
+            description='Activate Parmetis as a possible ordering library')
+    variant('double', default=True,
+            description='Activate the compilation of dmumps')
+    variant('float', default=True,
+            description='Activate the compilation of smumps')
+    variant('complex', default=True,
+            description='Activate the compilation of cmumps and/or zmumps')
+    variant('idx64', default=False,
+            description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
@@ -52,6 +64,7 @@ class Mumps(Package):
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
+    depends_on('lapack')
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
@@ -61,12 +74,14 @@ class Mumps(Package):
     # end before install
     # def patch(self):
     def write_makefile_inc(self):
-        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and '+mpi' not in self.spec:  # NOQA: ignore=E501
-            raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')  # NOQA: ignore=E501
+        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
+                '+mpi' not in self.spec):
+            raise RuntimeError(
+                'You cannot use the variants parmetis or ptscotch without mpi')
 
-        makefile_conf = ["LIBBLAS = %s" % to_link_flags(
-            self.spec['blas'].blas_shared_lib)
-        ]
+        lapack_blas = (self.spec['lapack'].lapack_libs +
+                       self.spec['blas'].blas_libs)
+        makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
 
         orderings = ['-Dpord']
 
@@ -115,7 +130,7 @@ class Mumps(Package):
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
-                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # NOQA: ignore=E501
+                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # noqa
                  'OPTL    = %s -O ' % fpic,
                  'OPTC    = %s -O -DINTSIZE64' % fpic])
         else:
@@ -125,11 +140,12 @@ class Mumps(Package):
                  'OPTC    = %s -O ' % fpic])
 
         if '+mpi' in self.spec:
+            scalapack = self.spec['scalapack'].scalapack_libs
             makefile_conf.extend(
                 ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
                  "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
                  "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "SCALAP = %s" % self.spec['scalapack'].fc_link,
+                 "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
@@ -140,7 +156,13 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        makefile_conf.append("CDEFS   = -DAdd_")
+        if self.compiler.name == 'intel':
+            # Intel Fortran compiler provides the main() function so
+            # C examples linked with the Fortran compiler require a
+            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+            makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
+        else:
+            makefile_conf.append("CDEFS   = -DAdd_")
 
         if '+shared' in self.spec:
             if sys.platform == 'darwin':
@@ -148,13 +170,13 @@ class Mumps(Package):
                 # 10.10. Use gfortran. (Homebrew)
                 makefile_conf.extend([
                     'LIBEXT=.dylib',
-                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'], prefix.lib),  # NOQA: ignore=E501
+                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'], prefix.lib),  # noqa
                     'RANLIB=echo'
                 ])
             else:
                 makefile_conf.extend([
                     'LIBEXT=.so',
-                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,  # NOQA: ignore=E501
+                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,  # noqa
                     'RANLIB=echo'
                 ])
         else:

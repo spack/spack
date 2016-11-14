@@ -62,16 +62,18 @@ class Lua(Package):
         else:
             target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS=-L%s -L%s ' % (
+             'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncurses',
+             'CC=%s -std=gnu99' % spack_cc,
              target)
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS=-L%s -L%s ' % (
+             'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncurses',
+             'CC=%s -std=gnu99' % spack_cc,
              'install')
 
         with working_dir(os.path.join('luarocks', 'luarocks')):

@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Bear(Package):
-    """Bear is a tool that generates a compilation database for clang tooling from non-cmake build systems."""
+    """Bear is a tool that generates a compilation database for clang tooling
+    from non-cmake build systems."""
     homepage = "https://github.com/rizsotto/Bear"
     url      = "https://github.com/rizsotto/Bear/archive/2.0.4.tar.gz"
 

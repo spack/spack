@@ -77,16 +77,16 @@ class Intel(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html"""
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
     # TODO: can also try the online installer (will download files on demand)
     version('16.0.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
         % os.getcwd())
     version('16.0.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
         % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")

@@ -1,27 +1,47 @@
 language: python
 
-python:
-  - "2.6"
-  - "2.7"
-env:
-  - TEST_TYPE=unit
-  - TEST_TYPE=flake8
+# Only build master and develop on push; do not build every branch.
+branches:
+  only:
+    - master
+    - develop
 
-# Exclude flake8 from python 2.6
+# Construct build matrix
+python:
+  - 2.6
+  - 2.7
+
+env:
+  - TEST_SUITE=unit CYAML=true
+  - TEST_SUITE=unit CYAML=false
+  - TEST_SUITE=flake8
+  - TEST_SUITE=doc
+
 matrix:
   exclude:
-  - python: "2.6"
-    env: TEST_TYPE=flake8
+  - python: 2.6
+    # Flake8 no longer supports Python 2.6
+    env: TEST_SUITE=flake8
 
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 
-# Install coveralls to obtain code coverage
-install:
-  - "pip install coveralls"
-  - "pip install flake8"
+# Docs need graphviz to build
+addons:
+  apt:
+    packages:
+      - graphviz
+      - libyaml-dev
 
-before_install:
+# Install various dependencies
+install:
+  - pip install coveralls
+  - pip install flake8
+  - pip install sphinx
+  - pip install mercurial
+  - if [[ $CYAML == true ]]; then pip install --global-option "--with-libyaml" pyyaml; fi
+
+before_script:
   # Need this for the git tests to succeed.
   - git config --global user.email "spack@example.com"
   - git config --global user.name "Test User"
@@ -29,18 +49,13 @@ before_install:
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
-script:
-  # Run unit tests with code coverage plus install libdwarf
-  - 'if [ "$TEST_TYPE" = "unit" ]; then share/spack/qa/run-unit-tests; fi'
-  # Run flake8 code style checks.
-  - 'if [ "$TEST_TYPE" = "flake8" ]; then share/spack/qa/run-flake8; fi'
+script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - 'if [ "$TEST_TYPE" = "unit" ] && [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then coveralls; fi'
+  - if [[ $TEST_SUITE == unit && $CYAML == false && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
 
 notifications:
   email:
-    recipients:
-      - tgamblin@llnl.gov
+    recipients: tgamblin@llnl.gov
     on_success: change
     on_failure: always

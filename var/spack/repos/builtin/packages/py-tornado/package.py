@@ -33,11 +33,19 @@ class PyTornado(Package):
     url      = "https://github.com/tornadoweb/tornado/archive/v4.4.0.tar.gz"
 
     version('4.4.0', 'c28675e944f364ee96dda3a8d2527a87ed28cfa3')
+    
+    variant('curl', default=True, description="for tornado.curl_httpclient")
+    variant('twisted', default=True, description="for tornado.platform.twisted")
 
     extends('python')
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-backports-abc')
+    #Temporary dependence on python 3 until the 'when' issue get's fixed #2310
+    depends_on('python@3:')
     depends_on('py-certifi')
+    depends_on('py-pycurl', when='+curl')
+    depends_on('py-twisted', when='+twisted')
 
     def install(self, spec, prefix):
+        setup_py('build')
         setup_py('install', '--prefix={0}'.format(prefix))
