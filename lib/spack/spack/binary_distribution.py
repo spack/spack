@@ -71,7 +71,7 @@ def write_buildinfo_file(spec):
 
     # Create buildinfo data and write it to disk
     buildinfo = {}
-    buildinfo['buildpath'] = spack.store.layout.path_for_spec(spec)
+    buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries']  = binary_to_relocate
     filename = buildinfo_file_name(spec)
@@ -182,7 +182,7 @@ def relocate_package(package):
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(package)
-    new_path = spack.store.layout.path_for_spec(package.spec)
+    new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     if old_path == new_path:
         return True  # No need to relocate
