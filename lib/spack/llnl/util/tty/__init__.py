@@ -67,12 +67,12 @@ def set_stacktrace(flag):
 
 
 def process_stacktrace(countback):
-    """Returns a string with the file and line of the stackframe 'countback' frames from the bottom of the stack"""
+    """Gives file and line frame 'countback' frames from the bottom"""
     st = traceback.extract_stack()
-    #First entry should be bin/spack. Use this to get spack 'root'.
-    #bin/spack is 9 characters, the length of the 'root' is then len-9.
-    root_len = len(st[0][0])-9
-    st_idx = len(st)-countback-1
+    # First entry should be bin/spack. Use this to get spack 'root'.
+    # bin/spack is 9 characters, the length of the 'root' is then len-9.
+    root_len = len(st[0][0]) - 9
+    st_idx = len(st) - countback - 1
     st_text = "%s:%i " % (st[st_idx][0][root_len:], st[st_idx][1])
     return st_text
 
@@ -96,7 +96,8 @@ def info(message, *args, **kwargs):
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
-    cprint("@%s{%s==>} %s" % (format, st_text, cescape(str(message))), stream=stream)
+    cprint("@%s{%s==>} %s" % (format, st_text, cescape(str(message))),
+           stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
