@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 06:50 svarrette>
+# Time-stamp: <Tue 2016-11-15 07:10 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -141,21 +141,23 @@ _spack()
                                {-h,--help}'[show this help message and exit]' \
                                {-v,--verbose}'[Print additional output during builds]' \
                                "*::args:__spack_packages" && ret=0;;
-                (create)   __spack_create     && ret=0 ;;
+                (create)   __spack_create      && ret=0 ;;
                 (deactivate)
                     _arguments -C \
                                {-h,--help}'[show this help message and exit]' \
                                {-f,--force}'[Run deactivation even if spec is NOT currently activated.]' \
                                {-a,--all}'[Deactivate all extensions of an extendable package, or deactivate an extension AND its dependencies.]' \
                                "*::args:__spack_packages" && ret=0;;
-                (debug)   __spack_debug      && ret=0;;
-                (dependends|doc)
+                (debug)   __spack_debug        && ret=0;;
+                (dependends|doc|env)
                     _arguments -C \
                                {-h,--help}'[show this help message and exit]' \
                                '*::args:_nothing' && ret=0;;
-                (diy)     __spack_diy        && ret=0;;
-                (edit)    __spack_edit       && ret=0;;
-
+                (diy)        __spack_diy        && ret=0;;
+                (edit)       __spack_edit       && ret=0;;
+                (extensions) __spack_extensions && ret=0;;
+                (fetch)      __spack_fetch      && ret=0;;
+                (find)       __spack_find       && ret=0;;
                 (list|providers|reindex)
                     _nothing
                     ;;
@@ -489,7 +491,7 @@ __spack_diy()
                '--dirty[Do NOT clean environment before installing.]' \
                "*::args:__spack_packages"
 }
-###############################
+######################################################################
 # spack edit [-h] [-f] [-c | -t | -m | -r REPO | -N NAMESPACE] [name]
 #
 #positional arguments:
@@ -509,5 +511,73 @@ __spack_edit()
                {-N,--namespace}'[Specify a namespace to edit]::NAMESPACE:' \
                "*::args:__spack_installed_packages"
 }
+###########################################
+# spack extensions [-h] [-l | -p | -d] ...
+#
+#positional arguments:
+#  spec         Spec of package to list extensions for
+##
+__spack_extensions()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-l,--long}'[Show dependency hashes as well as versions.]' \
+               {-p,--path}'[Show paths to extension install directories]' \
+               {-d,--deps}'[Show full dependency DAG of extensions]' \
+               "*::args:_nothing"
+    # TODO: __specs
+}
+###########################################
+# spack fetch [-h] [-n] [-m] [-D] ...
+#
+#positional arguments:
+#  packages            specs of packages to fetch
+##
+__spack_fetch()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-n,--no-checksum}'[Do not check packages against checksum]' \
+               {-m,--missing}'[Also fetch all missing dependencies]' \
+               {-D,--dependencies}'[Also fetch all dependencies]' \
+               "*::args:__spack_packages"
+}
+#########################################################################
+# spack find [-h] [-s | -p | -d] [-l] [-L] [-f] [-e | -E] [-u] [-m] [-v]
+#            [-M] [-N]
+#            [constraint [constraint ...]]
+#
+#positional arguments:
+#  constraint          Constraint to select a subset of installed packages
+##
+__spack_find()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-s,--short}'[Show only specs (default)]' \
+               {-p,--paths}'[Show paths to package install directories]' \
+               {-d,--deps}'[Show full dependency DAG of installed packages]' \
+               {-l,--long}'[Show dependency hashes as well as versions.]' \
+               {-L,--very-long}'[Show full dependency hashes as well as versions.]' \
+               {-f,--show-flags}'[Show spec compiler flags.]' \
+               {-e,--explicit}'[Show only specs that were installed explicitly]'\
+               {-E,--implicit}'[Show only specs that were installed as dependencies]' \
+               {-u,--unknown}'[Show only specs Spack does not have a package for.]' \
+               {-m,--missing}'[Show missing dependencies as well as installed specs.]' \
+               {-v,--variants}'[Show variants in output (can be long)]' \
+               {-M,--only-missing}'[Show only missing dependencies.]' \
+               {-N,--namespace}'[Show fully qualified package names.]'
+}
+
+
+
+
+
 
 _spack "$@"
