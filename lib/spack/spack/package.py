@@ -1238,7 +1238,7 @@ class PackageBase(object):
                 spack.hooks.pre_install(self)
                 if fake or install_binary:
                     self.do_fake_install()
-                    if install_binary :
+                    if install_binary:
                         spack.binary_distribution.extract_tarball(self)
                         spack.binary_distribution.relocate_package(self)
                 else:

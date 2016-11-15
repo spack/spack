@@ -26,6 +26,7 @@ def get_existing_elf_rpaths(path_name, patchelf_executable):
         tty.die('relocation not supported for this platform')
     return retval
 
+
 def modify_macho_object(path_name, old_dir, new_dir):
     """
     Modify MachO binaries by changing rpaths,and id and dependency lib paths.
@@ -34,15 +35,18 @@ def modify_macho_object(path_name, old_dir, new_dir):
 
           cmd LC_ID_DYLIB
       cmdsize 160
-         name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2-apple/tcl-8.6.5-xfeydlhaojmei6iws2rnxndvriym242k/lib/libtcl8.6.dylib (offset 24)
+         name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
+    -apple/tcl-8.6.5-xfeydlhaojmei6iws2rnxndvriym242k/lib/libtcl8.6.dylib (offset 24)
 
           cmd LC_LOAD_DYLIB
       cmdsize 160
-         name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2-apple/zlib-1.2.8-cyvcqvrzlgurne424y55hxvfucvz2354/lib/libz.1.dylib (offset 24)
+         name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
+    -apple/zlib-1.2.8-cyvcqvrzlgurne424y55hxvfucvz2354/lib/libz.1.dylib (offset 24)
 
           cmd LC_RPATH
       cmdsize 128
-         path /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2-apple/xz-5.2.2-d4ecxpuzf2g3ycz3cnj3xmdj7zdnuqwb/lib (offset 12)
+         path /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
+    -apple/xz-5.2.2-d4ecxpuzf2g3ycz3cnj3xmdj7zdnuqwb/lib (offset 12)
   
     the old install dir in LC_LOAD_DYLIB is replace with the new install dir  using 
         install_name_tool -id newid binary
@@ -76,17 +80,17 @@ def modify_macho_object(path_name, old_dir, new_dir):
             if lhs == 'path' and last_cmd == 'LC_RPATH':
                 rpaths.append(rhs)
             if lhs == 'name' and last_cmd == 'LC_ID_DYLIB':
-                idpath=rhs
+                idpath = rhs
             if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
                 deps.append(rhs)
-    id = idpath.replace(old_dir,new_dir)
+    id = idpath.replace(old_dir, new_dir)
     nrpaths = []
     for rpath in rpaths:
-        nrpath = rpath.replace(old_dir,new_dir)
+        nrpath = rpath.replace(old_dir, new_dir)
         nrpaths.append(nrpath)
     ndeps = []
     for dep in deps:
-        ndep = dep.replace(old_dir,new_dir)
+        ndep = dep.replace(old_dir, new_dir)
         ndeps.append(ndep)
 
     st = os.stat(path_name)
@@ -94,8 +98,8 @@ def modify_macho_object(path_name, old_dir, new_dir):
     if not wmode:
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
 
-    if id :
-        command = ("install_name_tool -id  %s  %s" % (id,path_name) )
+    if id:
+        command = ("install_name_tool -id  %s  %s" % (id, path_name))
         status, output = getstatusoutput(command)
         if status != 0:
             tty.warn('failed writing id for %s.' % path_name)
@@ -103,15 +107,15 @@ def modify_macho_object(path_name, old_dir, new_dir):
 
     for orig, new in zip(deps, ndeps):
         command = ("install_name_tool -change  %s %s %s" % 
-                         (orig, new, path_name))
+                  (orig, new, path_name))
         status, output = getstatusoutput(command)
         if status != 0:
             tty.warn('failed writing dep for %s.' % path_name)
             tty.warn(output)
 
     for orig, new in zip(rpaths, nrpaths):
-        command= ("install_name_tool -rpath %s %s %s" % 
-                         (orig,new,path_name) )
+        command = ("install_name_tool -rpath %s %s %s" % 
+                  (orig,new,path_name))
         status, output = getstatusoutput(command)
         if status != 0:
             tty.warn('failed writing id for %s.' % path_name)
@@ -119,7 +123,6 @@ def modify_macho_object(path_name, old_dir, new_dir):
 
     os.chmod(path_name, st.st_mode)
     return
-
 
 
 def get_filetype(path_name):
@@ -186,7 +189,8 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths  = substitute_rpath(orig_rpaths, old_dir, new_dir)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths, patchelf_executable)
+        modify_elf_object(path_name, orig_rpaths, new_rpaths, 
+                         patchelf_executable)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 

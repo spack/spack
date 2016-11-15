@@ -146,13 +146,13 @@ def download_tarball(package):
     Download binary tarball for given package into stage area
     Return True if successful
     """
-    mirrors=spack.config.get_config('mirrors')
+    mirrors = spack.config.get_config('mirrors')
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
     tarball = tarball_path_name(package.spec)
     for key in mirrors:
-        url=mirrors[key]+"/"+tarball
+        url = mirrors[key] + "/" + tarball
         print url
         # stage the tarball into standard place
         stage = Stage(url, name=package.stage.path)

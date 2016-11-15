@@ -15,7 +15,7 @@ your spack mirror and then downloaded and installed by others.
 
 
 Creating binary tarballs
------------------------
+-----------------------------
 
 Tarballs of sofware built can be created via ``spack create-tarball``.
 It allows either to tar up a single package or a package including all
@@ -42,7 +42,7 @@ spack mirror.
 
 
 Installing binary tarballs
------------------------
+--------------------------------
 
 To install binary tarballs, one has to add the corresponding spack mirror
 with ``spack mirror add <name> <url>``. Afterwards binaries can be installed
@@ -67,7 +67,7 @@ it will continue with building locally.
 
 
 Relocation
------------------------
+-------------------------------
 
 Initial build and later installation do not necessarily happen at the same
 location. Spack provides a very basic relocation capability and corrects for
