@@ -28,12 +28,14 @@ import textwrap
 import fcntl
 import termios
 import struct
+import traceback
 from StringIO import StringIO
 
 from llnl.util.tty.color import *
 
 _debug   = False
 _verbose = False
+_stacktrace = False
 indent  = "  "
 
 
@@ -45,6 +47,10 @@ def is_debug():
     return _debug
 
 
+def is_stacktrace():
+    return _stacktrace
+
+
 def set_debug(flag):
     global _debug
     _debug = flag
@@ -53,10 +59,29 @@ def set_debug(flag):
 def set_verbose(flag):
     global _verbose
     _verbose = flag
+    
+
+def set_stacktrace(flag):
+    global _stacktrace
+    _stacktrace = flag
+
+
+def process_stacktrace(countback):
+    """Returns a string with the file and line of the stackframe 'countback' frames from the bottom of the stack"""
+    st = traceback.extract_stack()
+    #First entry should be bin/spack. Use this to get spack 'root'.
+    #bin/spack is 9 characters, the length of the 'root' is then len-9.
+    root_len = len(st[0][0])-9
+    st_idx = len(st)-countback-1
+    st_text = "%s:%i " % (st[st_idx][0][root_len:], st[st_idx][1])
+    return st_text
 
 
 def msg(message, *args):
-    cprint("@*b{==>} %s" % cescape(message))
+    st_text = ""
+    if _stacktrace:
+        st_text = process_stacktrace(2)
+    cprint("@*b{%s==>} %s" % (st_text, cescape(message)))
     for arg in args:
         print indent + str(arg)
 
@@ -66,8 +91,12 @@ def info(message, *args, **kwargs):
     stream = kwargs.get('stream', sys.stdout)
     wrap   = kwargs.get('wrap', False)
     break_long_words = kwargs.get('break_long_words', False)
+    st_countback = kwargs.get('countback', 3)
 
-    cprint("@%s{==>} %s" % (format, cescape(str(message))), stream=stream)
+    st_text = ""
+    if _stacktrace:
+        st_text = process_stacktrace(st_countback)
+    cprint("@%s{%s==>} %s" % (format, st_text, cescape(str(message))), stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
@@ -105,6 +134,7 @@ def warn(message, *args, **kwargs):
 
 
 def die(message, *args, **kwargs):
+    kwargs.setdefault('countback', 4)
     error(message, *args, **kwargs)
     sys.exit(1)
 
