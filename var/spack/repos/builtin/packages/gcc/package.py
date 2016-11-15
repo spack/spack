@@ -58,7 +58,7 @@ class Gcc(Package):
         provides('golang', when='@4.7.1:')
 
     patch('piclibs.patch', when='+piclibs')
-    patch('gcc-backport.patch', when='@4.7:5.3')
+    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.

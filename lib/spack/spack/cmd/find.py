@@ -52,14 +52,8 @@ def setup_parser(subparser):
         const='deps',
         help='Show full dependency DAG of installed packages')
 
-    subparser.add_argument('-l', '--long',
-                           action='store_true',
-                           dest='long',
-                           help='Show dependency hashes as well as versions.')
-    subparser.add_argument('-L', '--very-long',
-                           action='store_true',
-                           dest='very_long',
-                           help='Show dependency hashes as well as versions.')
+    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',
                            dest='show_flags',
@@ -121,7 +115,7 @@ def find(parser, args):
     q_args = query_arguments(args)
     query_specs = args.specs(**q_args)
     # Exit early if no package matches the constraint
-    if not query_specs:
+    if not query_specs and args.constraint:
         msg = "No package matches the query: {0}".format(args.contraint)
         tty.msg(msg)
         return

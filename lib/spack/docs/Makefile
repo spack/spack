@@ -3,7 +3,8 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    = -E
-SPHINXBUILD   = sphinx-build
+JOBS          ?= $(shell python -c 'import multiprocessing; print multiprocessing.cpu_count()')
+SPHINXBUILD   = sphinx-build -j $(JOBS)
 PAPER         =
 BUILDDIR      = _build
 

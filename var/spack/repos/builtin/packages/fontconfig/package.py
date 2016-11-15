@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fontconfig(Package):
+class Fontconfig(AutotoolsPackage):
     """Fontconfig customizing font access"""
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
     url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz"
@@ -36,10 +36,6 @@ class Fontconfig(Package):
     depends_on('libxml2')
     depends_on('pkg-config', type='build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--enable-libxml2",
-                  "--disable-docs")
-
-        make()
-        make("install")
+    def configure_args(self):
+        args = ["--enable-libxml2", "--disable-docs"]
+        return args

@@ -150,4 +150,11 @@ class Tau(Package):
     def setup_environment(self, spack_env, run_env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
         files = glob.glob(pattern)
-        run_env.set('TAU_MAKEFILE', files[0])
+
+        # This function is called both at install time to set up
+        # the build environment and after install to generate the associated
+        # module file. In the former case there is no `self.prefix.lib`
+        # directory to inspect. The conditional below will set `TAU_MAKEFILE`
+        # in the latter case.
+        if files:
+            run_env.set('TAU_MAKEFILE', files[0])

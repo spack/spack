@@ -175,6 +175,18 @@ if [[ -z $command ]]; then
 fi
 
 #
+# Set paths as defined in the 'environment' section of the compiler config
+#   names are stored in SPACK_ENV_TO_SET
+#   values are stored in SPACK_ENV_SET_<varname>
+#
+IFS=':' read -ra env_set_varnames <<< "$SPACK_ENV_TO_SET"
+for varname in "${env_set_varnames[@]}"; do
+    spack_varname="SPACK_ENV_SET_$varname"
+    export $varname=${!spack_varname}
+    unset $spack_varname
+done
+
+#
 # Filter '.' and Spack environment directories out of PATH so that
 # this script doesn't just call itself
 #
@@ -310,6 +322,16 @@ elif [[ $mode == ld ]]; then
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
 fi
+
+# Set extra RPATHs
+IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
+for extra_rpath in "${extra_rpaths[@]}"; do
+    if [[ $mode == ccld ]]; then
+        $add_rpaths && args=("$rpath$extra_rpath" "${args[@]}")
+    elif [[ $mode == ld ]]; then
+        $add_rpaths && args=("-rpath" "$extra_rpath" "${args[@]}")
+    fi
+done
 
 # Add SPACK_LDLIBS to args
 case "$mode" in

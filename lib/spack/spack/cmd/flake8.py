@@ -52,6 +52,9 @@ exemptions = {
         # Exempt lines with urls and descriptions from overlong line errors.
         501: [r'^\s*homepage\s*=',
               r'^\s*url\s*=',
+              r'^\s*git\s*=',
+              r'^\s*svn\s*=',
+              r'^\s*hg\s*=',
               r'^\s*version\(.*\)',
               r'^\s*variant\(.*\)',
               r'^\s*depends_on\(.*\)',
@@ -63,7 +66,7 @@ exemptions = {
     # exemptions applied to all files.
     r'.py$': {
         # Exempt lines with URLs from overlong line errors.
-        501: [r'^(https?|file)\:']
+        501: [r'(https?|file)\:']
     },
 }
 
@@ -74,26 +77,30 @@ exemptions = dict((re.compile(file_pattern),
                   for file_pattern, error_dict in exemptions.items())
 
 
-def filter_file(source, dest):
+def filter_file(source, dest, output=False):
     """Filter a single file through all the patterns in exemptions."""
     with open(source) as infile:
         parent = os.path.dirname(dest)
         mkdirp(parent)
 
         with open(dest, 'w') as outfile:
-            for file_pattern, errors in exemptions.items():
-                if not file_pattern.search(source):
-                    continue
+            for line in infile:
+                line = line.rstrip()
 
-                for line in infile:
-                    line = line.rstrip()
+                for file_pattern, errors in exemptions.items():
+                    if not file_pattern.search(source):
+                        continue
 
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
                                 line += ("  # NOQA: ignore=%d" % code)
                                 break
-                    outfile.write(line + '\n')
+
+                oline = line + '\n'
+                outfile.write(oline)
+                if output:
+                    sys.stdout.write(oline)
 
 
 def setup_parser(subparser):
@@ -101,6 +108,9 @@ def setup_parser(subparser):
         '-k', '--keep-temp', action='store_true',
         help="Do not delete temporary directory where flake8 runs. "
              "Use for debugging, to see filtered files.")
+    subparser.add_argument(
+        '-o', '--output', action='store_true',
+        help="Send filtered files to stdout as well as temp files.")
     subparser.add_argument(
         '-r', '--root-relative', action='store_true', default=False,
         help="print root-relative paths (default is cwd-relative)")
@@ -142,7 +152,7 @@ def flake8(parser, args):
         for filename in file_list:
             src_path = os.path.join(spack.prefix, filename)
             dest_path = os.path.join(temp, filename)
-            filter_file(src_path, dest_path)
+            filter_file(src_path, dest_path, args.output)
 
         # run flake8 on the temporary tree.
         with working_dir(temp):

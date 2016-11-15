@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Tree(Package):
@@ -39,8 +40,24 @@ class Tree(Package):
     version('1.7.0', 'abe3e03e469c542d8e157cdd93f4d8a6')
 
     def install(self, spec, prefix):
-        filter_file(r'^prefix =.*', 'prefix = %s' % prefix, 'Makefile')
-        filter_file(r'^CFLAGS', '# use spack settings instead... CFLAGS',
-                    'Makefile')
-        make()
-        make('install')
+        objs = [
+            'tree.o',
+            'unix.o',
+            'html.o',
+            'xml.o',
+            'json.o',
+            'hash.o',
+            'color.o'
+        ]
+        if (sys.platform == 'darwin'):
+            objs.append('strverscmp.o')
+
+        args = [
+            'prefix=%s' % prefix,
+            'CC=%s' % spack_cc,
+            'CFLAGS=',
+            'OBJS=%s' % ' '.join(objs),
+            'install'
+        ]
+
+        make(*args)
