@@ -1,0 +1,362 @@
+#compdef spack
+########################################################################################
+# -*- mode:sh; -*-
+# Time-stamp: <Mon 2016-11-14 18:54 svarrette>
+#
+# ZSH completion for [Spack](https://github.com/LLNL/spack)
+#
+# Copyright (c) 2016 Sebastien Varrette <Sebastien.Varrette@uni.lu>
+#
+# Just because I was tired of typing all commands during the Spack tutorial at SC'16
+# As I'm not a zsh-completion expert, consider this as a preliminary quick and dirty
+# a real expert should review and complete using genzshcomp for instance
+#
+# Reasonable resources I checked to build this file:
+#  - the _bundle, _vagrant, _packer and _yum completion file
+# and these howto:
+#  - https://github.com/zsh-users/zsh-completions/blob/master/zsh-completions-howto.org
+#  - http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Completion-Functions
+#  - https://zv.github.io/note/a-review-of-zsh-completion-utilities
+
+########################################################################################
+# Enable this completion file by adding somewhere in your zsh configuration (most
+# probably ~/.zshrc):
+#     fpath=($SPACK_ROOT/contrib/completion $fpath)
+#
+typeset -A opt_args
+
+##################
+__spack_packages()
+{
+    # inspired by _vagrant
+    _wanted application expl 'command' compadd $(command spack list | sort)
+}
+
+############################
+__spack_installed_packages()
+{
+    # inspired by _vagrant
+    _wanted application expl 'command' compadd $(command spack find | sort)
+}
+
+
+# Main dispatcher
+_spack()
+{
+    local -a _spack_cmds
+    _spack_cmds=(
+        'activate:Activate a package extension.'
+        'arch:Print architecture information about this machine.'
+        'bootstrap:Create a new installation of spack in another prefix'
+        'build:Stops at build stage when installing a package, if possible'
+        'cd:cd to spack directories in the shell.'
+        'checksum:Checksum available versions of a package.'
+        'clean:Remove build stage and source tarball for packages.'
+        'compiler:Manage compilers'
+        "compilers:List available compilers. Same as 'spack compiler list'."
+        'config:Get and set configuration options.'
+        'configure:Stops at configuration stage when installing a package, if possible'
+        'create:Create a new package file from an archive URL'
+        'deactivate:Deactivate a package extension.'
+        'debug:Debugging commands for troubleshooting Spack.'
+        'dependents:Show installed packages that depend on another.'
+        'diy:Do-It-Yourself: build from an existing source directory.'
+        'doc:Run pydoc from within spack.'
+        'edit:Open package files in $EDITOR'
+        'env:Run a command with the install environment for a spec.'
+        'extensions:List extensions for package.'
+        'fetch:Fetch archives for packages'
+        'find:Find installed spack packages'
+        'flake8:Runs source code style checks on Spack. Requires flake8.'
+        'graph:Generate graphs of package dependency relationships.'
+        'help:Get help on spack and its commands'
+        'info:Get detailed information on a particular package'
+        'install:Build and install packages'
+        'list:Print available spack packages to stdout in different formats'
+        'load:Add package to environment using modules.'
+        'location:Print out locations of various directories used by Spack'
+        'md5:Calculate md5 checksums for files/urls.'
+        'mirror:Manage mirrors.'
+        'module:Manipulate module files'
+        'patch:Patch expanded archive sources in preparation for install'
+        'pkg:Query packages associated with particular git revisions.'
+        'providers:List packages that provide a particular virtual package'
+        'purge:Remove temporary build files and/or downloaded archives'
+        'python:Launch an interpreter as spack would launch a command'
+        "reindex:Rebuild Spack's package database."
+        'repo:Manage package source repositories.'
+        'restage:Revert checked out package source code.'
+        "setup:Create a configuration script and module, but don't build."
+        'spec:print out abstract and concrete versions of a spec.'
+        'stage:Expand downloaded archive in preparation for install'
+        'test:Run unit tests'
+        'uninstall:Remove an installed package'
+        'unload:Remove package from environment using module.'
+        'unuse:Remove package from environment using dotkit.'
+        'url-parse:Show parsing of a URL, optionally spider web for versions.'
+        'urls:Inspect urls used by packages in spack.'
+        'use:Add package to environment using dotkit.'
+        'versions:List available versions of a package'
+        'view:Produce a single-rooted directory view of a spec.'
+    )
+
+    local curcontext="$curcontext" state line ret=1
+    typeset -A opt_args
+
+    _arguments -C \
+               '(- *)'{-h,--help}'[show this help message and exit]' \
+               '(- *)'{--version,-V}"[show program's version number and exit]" \
+               '(- *)'{-d,--debug}'[Write out debug logs during compile]' \
+               '(- *)'{-D,--pdb}'[Run spack under the pdb debugger]' \
+               '(- *)'{-k,--insecure}'[Do not check ssl certificates when downloading.]' \
+               '(- *)'{-m,--mock}'[Use mock packages instead of real ones]' \
+               '(- *)'{-p,--profile}'[Profile execution using cProfile]' \
+               '(- *)'{-n,--dry_run}'[Perform a trial run with (normally) no changes made]' \
+               '(- *)'{-v,--verbose}'[Print additional output during builds]' \
+               ': :->command' \
+               '*:: :->options' && ret=0
+    case $state in
+        (command)
+            _describe -t commands 'spack' _spack_cmds && ret=0
+            ;;
+        (options)
+            curcontext=${curcontext%:*}-$line[1]:
+            case $line[1] in
+                (activate)
+                    __spack_activate  && ret=0;;
+                (arch)
+                    __spack_arch      && ret=0;;
+                (bootstrap)
+                    __spack_bootstrap && ret=0;;
+                (build)
+                    __spack_build     && ret=0;;
+                (cd)
+                    __spack_cd        && ret=0;;
+                (checksum)
+                    __spack_checksum  && ret=0;;
+                (clean)
+                    __spack_clean     && ret=0;;
+                (compiler)
+                    __spack_compiler  && ret=0;;
+                (compilers|list|providers|reindex)
+                    _nothing
+                    ;;
+            esac
+            ;;
+    esac
+    return ret
+}
+
+###############################
+# spack activate [-h] [-f] ...
+#
+# positional arguments:
+#  spec         spec of package extension to activate.
+##
+__spack_activate()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-f,--force}'[Activate without first activating dependencies.]' \
+               '*::args:_files'
+}
+
+###############################
+# spack arch [-h] [-p]
+##
+__spack_arch()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               {-p,--platform}'[Print only the platform.]'
+}
+###############################
+# spack bootstrap [-h] [-r REMOTE] prefix
+#
+#positional arguments:
+#  prefix                names of prefix where we should install spack
+##
+__spack_bootstrap()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    # TODO: cache potential remotes
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]:' \
+               {-r,--remote}'[name of the remote to bootstrap from]:remote' \
+               '*::args:_files'
+}
+###############################
+# spack build [-h] [-v] ...
+#
+#positional arguments:
+#  package        spec of the package to install
+##
+__spack_build()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    # TODO: cache potential remotes
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]:' \
+               {-v,--verbose}'[Print additional output during builds]' \
+               '*::args:_files'
+}
+###########################################################
+# spack cd [-h] [-m | -r | -i | -p | -P | -s | -S | -b] ...
+#
+#positional arguments:
+#  spec               spec of package to fetch directory for.
+##
+__spack_cd()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    # TODO: cache potential remotes
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]:' \
+               {-m,--module-dir}'[Spack python module directory.]' \
+               {-r,--spack-root}'[Spack installation root.]' \
+               {-i,--install-dir}'[Install prefix for spec (spec need not be installed).]' \
+               {-p,--package-dir}'[Directory enclosing a spec''s package.py file.]' \
+               {-P,--packages}'[Top-level packages directory for Spack.]' \
+               {-s,--stage-dir}'[Stage directory for a spec.]' \
+               {-S,--stages}'[Top level Stage directory.]' \
+               {-b,--build-dir}'[Checked out or expanded source directory for a spec (requires it to be staged first).]' \
+               '*::args:_files'
+}
+###############################
+# spack checksum [-h] [--keep-stage] PACKAGE ...
+#
+# positional arguments:
+#   PACKAGE       Package to list versions for
+#   versions      Versions to generate checksums for
+##
+__spack_checksum()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]:' \
+               '--keep-stage[Don''t clean up staging area when command completes.]' \
+               '*::args:__spack_packages'
+}
+###############################
+# spack clean [-h] ...
+#
+# positional arguments:
+#  packages    specs of packages to clean
+##
+__spack_clean()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    # TODO: cache potential remotes
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               '*::args:__spack_installed_packages'
+    # TODO: shouldn't it be __spack_packages?
+}
+###############################
+# spack compiler [-h] SUBCOMMAND ...
+##
+__spack_compiler()
+{
+    local -a _spack_compiler_cmds
+    _spack_compiler_cmds=(
+        'find:Search the system for compilers to add to Spack configuration.'
+        'remove:Remove compiler by spec.'
+        'list:list available compilers'
+        'info:Show compiler paths.'
+    )
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               ':command:->command' \
+               '*::options:->options'
+    case $state in
+        (command)
+            _describe -t commands "spack compiler subcommand" _spack_compiler_cmds
+            ;;
+        (options)
+            case $line[1] in
+                (find|add)
+                    __spack_compiler_find && ret=0
+                    ;;
+                (remove|rm)
+                    __spack_compiler_remove && ret=0
+                    ;;
+                (list)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               '*--scope:Configuration scope to read from:(defaults defaults/darwin site site/darwin user user/darwin)' && ret=0
+                    # TODO: Most probably darwin stuff heritated from the running machine --
+                    # extrapolate appropriate values using _wanted (see __spack_package)
+                    ;;
+                (info)
+                    __spack_compiler_info && ret=0
+                    ;;
+            esac
+            ;;
+    esac
+    return ret
+}
+####
+# spack compiler find [-h]
+#                     [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+#                     ...
+#
+#positional arguments:
+#  add_paths
+##
+__spack_compiler_find()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+               "*::args:_files"
+}
+####
+# spack compiler remove [-h] [-a]
+#                            [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+#                             compiler_spec
+#positional arguments:
+#  compiler_spec
+##
+__spack_compiler_remove()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               {-a,--all}'[Remove ALL compilers that match spec.]' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+               "*::args:__spack_installed_packages"
+    # TODO: filter package on compilers?
+}
+####
+# spack compiler info [-h]
+#                     [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+#                     compiler_spec
+##
+__spack_compiler_info()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+               "*::args:__spack_installed_packages"
+    # TODO: filter package on compilers?
+}
+
+
+
+_spack "$@"
