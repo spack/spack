@@ -48,4 +48,4 @@ class PySncosmo(Package):
     depends_on('py-nestle', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

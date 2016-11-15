@@ -25,10 +25,8 @@
 from spack import *
 
 
-class Autoconf(Package):
-    """
-    Autoconf -- system configuration part of autotools
-    """
+class Autoconf(AutotoolsPackage):
+    """Autoconf -- system configuration part of autotools"""
     homepage = 'https://www.gnu.org/software/autoconf/'
     url = 'http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
 
@@ -54,8 +52,3 @@ class Autoconf(Package):
                        'ifnames']
         for name in executables:
             setattr(module, name, self._make_executable(name))
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

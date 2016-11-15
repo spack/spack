@@ -9,7 +9,7 @@ class Mkl(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html.
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
 
     To set the threading layer at run time set MKL_THREADING_LAYER
     variable to one of the following values: INTEL (default), SEQUENTIAL, PGI.
@@ -65,13 +65,6 @@ class Mkl(IntelInstaller):
         mkl_dir = os.path.join(self.intel_prefix, "mkl")
         for f in os.listdir(mkl_dir):
             os.symlink(os.path.join(mkl_dir, f), os.path.join(self.prefix, f))
-
-        # Unfortunately MKL libs are natively distrubted in prefix/lib/intel64.
-        # To make MKL play nice with Spack, symlink all files to prefix/lib:
-        mkl_lib_dir = os.path.join(prefix, "lib", "intel64")
-        for f in os.listdir(mkl_lib_dir):
-            os.symlink(os.path.join(mkl_lib_dir, f),
-                       os.path.join(self.prefix, "lib", f))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package

@@ -37,24 +37,37 @@ package:
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
------------------
-Table of Contents
------------------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorials
 
    features
    getting_started
    basic_usage
-   packaging_guide
-   mirrors
+   workflows
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference Manual
+
    configuration
-   developer_guide
-   case_studies
-   command_index
+   config_yaml
+   build_settings
+   mirrors
+   module_file_support
    package_list
+   command_index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributing to Spack
+
+   contribution_guide
+   packaging_guide
+   developer_guide
    API Docs <spack>
+
 
 ==================
 Indices and tables

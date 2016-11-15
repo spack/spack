@@ -66,21 +66,21 @@ class PyNumpy(Package):
             'numpy/core/include')
 
     def install(self, spec, prefix):
-        libraries    = []
-        library_dirs = []
+        # for build notes see http://www.scipy.org/scipylib/building/linux.html
+        lapackblas = LibraryList('')
+        if '+lapack' in spec:
+            lapackblas += spec['lapack'].lapack_libs
 
         if '+blas' in spec:
-            libraries.append('blas')
-            library_dirs.append(spec['blas'].prefix.lib)
-        if '+lapack' in spec:
-            libraries.append('lapack')
-            library_dirs.append(spec['lapack'].prefix.lib)
+            lapackblas += spec['blas'].blas_libs
 
         if '+blas' in spec or '+lapack' in spec:
             with open('site.cfg', 'w') as f:
                 f.write('[DEFAULT]\n')
-                f.write('libraries=%s\n'    % ','.join(libraries))
-                f.write('library_dirs=%s\n' % ':'.join(library_dirs))
-                f.write('rpath=%s\n' % ':'.join(library_dirs))
+                f.write('libraries=%s\n'    % ','.join(lapackblas.names))
+                f.write('library_dirs=%s\n' % ':'.join(lapackblas.directories))
+                if not ((platform.system() == "Darwin") and
+                        (platform.mac_ver()[0] == '10.12')):
+                    f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
 
         setup_py('install', '--prefix={0}'.format(prefix))

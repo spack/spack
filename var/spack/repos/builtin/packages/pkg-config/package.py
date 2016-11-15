@@ -30,23 +30,27 @@ class PkgConfig(Package):
     and libraries"""
 
     homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    url = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
 
     version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
     version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
 
     parallel = False
+    variant('internal_glib', default=True,
+            description='Builds with internal glib')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        args = ["--prefix={0}".format(prefix),
+                "--enable-shared"]
+        if "+internal_glib" in spec:
+            # There's a bootstrapping problem here;
+            # glib uses pkg-config as well, so break
+            # the cycle by using the internal glib.
+            args.append("--with-internal-glib")
+        configure(*args)
 
         make()
         make("install")

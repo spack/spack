@@ -41,4 +41,4 @@ class PyNestle(Package):
     depends_on('py-scipy', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

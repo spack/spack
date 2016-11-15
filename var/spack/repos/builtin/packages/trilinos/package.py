@@ -149,16 +149,24 @@ class Trilinos(Package):
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_BLAS=ON',
             '-DBLAS_LIBRARY_NAMES=%s' % ';'.join(blas.names),
-            '-DBLAS_LIBRARY_DIRS=%s' % spec['blas'].prefix.lib,
+            '-DBLAS_LIBRARY_DIRS=%s' % ';'.join(blas.directories),
             '-DTPL_ENABLE_LAPACK=ON',
             '-DLAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
-            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix.lib,
+            '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
             '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
                 'ON' if '+hypre' in spec else 'OFF')
         ])
+
+        if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
+            # Panzer uses some std:chrono that is not recognized by Intel
+            # Don't know which (maybe all) Trilinos versions this applies to
+            # Don't know which (maybe all) Intel versions this applies to
+            options.extend([
+                '-DTrilinos_ENABLE_Panzer:BOOL=OFF'
+            ])
 
         if '+hdf5' in spec:
             options.extend([
@@ -178,15 +186,25 @@ class Trilinos(Package):
         else:
             options.extend(['-DTPL_ENABLE_Boost:BOOL=OFF'])
 
+        if '+hdf5' in spec:
+            options.extend([
+                '-DTPL_ENABLE_HDF5:BOOL=ON',
+                '-DHDF5_INCLUDE_DIRS:PATH=%s' % spec['hdf5'].prefix.include,
+                '-DHDF5_LIBRARY_DIRS:PATH=%s' % spec['hdf5'].prefix.lib
+            ])
+        else:
+            options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
+
         # Fortran lib
-        libgfortran = os.path.dirname(os.popen(
-            '%s --print-file-name libgfortran.a' %
-            join_path(mpi_bin, 'mpif90')).read())
-        options.extend([
-            '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
-                libgfortran),
-            '-DTrilinos_ENABLE_Fortran=ON'
-        ])
+        if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+            libgfortran = os.path.dirname(os.popen(
+                '%s --print-file-name libgfortran.a' %
+                join_path(mpi_bin, 'mpif90')).read())
+            options.extend([
+                '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
+                    libgfortran),
+                '-DTrilinos_ENABLE_Fortran=ON'
+            ])
 
         # for build-debug only:
         # options.extend([

@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack import architecture
 
 
 class Sqlite(Package):
@@ -38,6 +39,9 @@ class Sqlite(Package):
             url='http://www.sqlite.org/2016/sqlite-autoconf-3120200.tar.gz')
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
+        config = ["--prefix=" + prefix]
+        if self.get_arch() == 'ppc64le':
+            config.append("--build=powerpc64le-redhat-linux-gnu")
+        configure(*config)
         make()
         make("install")

@@ -47,6 +47,7 @@ class Cp2k(Package):
     depends_on('lapack')
     depends_on('blas')
     depends_on('fftw')
+    depends_on('libint@:1.2', when='@3.0')
 
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -56,10 +57,8 @@ class Cp2k(Package):
     depends_on('wannier90', when='+mpi')
     depends_on('elpa', when='+mpi')
 
-    # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
     # TODO : add dependency on CUDA
-    # TODO : add dependency on QUIP
 
     parallel = False
 
@@ -88,7 +87,7 @@ class Cp2k(Package):
             }
             cppflags = [
                 '-D__FFTW3',
-                '-D__LIBPEXSI',
+                '-D__LIBINT',
                 '-I' + spec['fftw'].prefix.include
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
@@ -97,7 +96,11 @@ class Cp2k(Package):
             ])
             fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
             ldflags = [fftw.search_flags]
-            libs = []
+            libs = [
+                join_path(spec['libint'].prefix.lib, 'libint.so'),
+                join_path(spec['libint'].prefix.lib, 'libderiv.so'),
+                join_path(spec['libint'].prefix.lib, 'libr12.so')
+            ]
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
                 mkf.write('include {0}\n'.format(
@@ -145,6 +148,7 @@ class Cp2k(Package):
             if '+mpi' in self.spec:
                 cppflags.extend([
                     '-D__parallel',
+                    '-D__LIBPEXSI',
                     '-D__WANNIER90',
                     '-D__ELPA3',
                     '-D__SCALAPACK'

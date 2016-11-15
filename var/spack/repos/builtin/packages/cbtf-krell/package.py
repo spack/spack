@@ -74,7 +74,7 @@ class CbtfKrell(Package):
             description="Build mpi experiment collector for mpich MPI.")
 
     # Dependencies for cbtf-krell
-    depends_on("cmake@3.0.2", type='build')
+    depends_on("cmake@3.0.2:", type='build')
 
     # For binutils service
     depends_on("binutils@2.24+krellpatch")
@@ -82,7 +82,7 @@ class CbtfKrell(Package):
     # collectionTool
     depends_on("boost@1.50.0:")
     depends_on("dyninst@8.2.1:")
-    depends_on("mrnet@5.0.1:+lwthreads+krellpatch")
+    depends_on("mrnet@5.0.1:+lwthreads")
 
     depends_on("xerces-c@3.1.1:")
     depends_on("cbtf")
@@ -138,34 +138,22 @@ class CbtfKrell(Package):
 
         # openmpi
         if '+openmpi' in spec:
-            MPIOptions.extend([
-                '-DOPENMPI_DIR=%s' % spec['openmpi'].prefix
-            ])
+            MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
         if '+mpich' in spec:
-            MPIOptions.extend([
-                '-DMPICH_DIR=%s' % spec['mpich'].prefix
-            ])
+            MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
         if '+mpich2' in spec:
-            MPIOptions.extend([
-                '-DMPICH2_DIR=%s' % spec['mpich2'].prefix
-            ])
+            MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
         if '+mvapich' in spec:
-            MPIOptions.extend([
-                '-DMVAPICH_DIR=%s' % spec['mvapich'].prefix
-            ])
+            MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
         if '+mvapich2' in spec:
-            MPIOptions.extend([
-                '-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix
-            ])
+            MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
         if '+mpt' in spec:
-            MPIOptions.extend([
-                '-DMPT_DIR=%s' % spec['mpt'].prefix
-            ])
+            MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
         cmakeOptions.extend(MPIOptions)
 

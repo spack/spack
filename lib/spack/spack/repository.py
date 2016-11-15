@@ -42,9 +42,9 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.error
-import spack.config
 import spack.spec
 from spack.provider_index import ProviderIndex
+from spack.util.path import canonicalize_path
 from spack.util.naming import *
 
 #
@@ -94,19 +94,6 @@ class SpackNamespace(ModuleType):
         return getattr(self, name)
 
 
-def substitute_spack_prefix(path):
-    """Replaces instances of $spack with Spack's prefix."""
-    return re.sub(r'^\$spack', spack.prefix, path)
-
-
-def canonicalize_path(path):
-    """Substitute $spack, expand user home, take abspath."""
-    path = substitute_spack_prefix(path)
-    path = os.path.expanduser(path)
-    path = os.path.abspath(path)
-    return path
-
-
 class RepoPath(object):
     """A RepoPath is a list of repos that function as one.
 
@@ -128,6 +115,7 @@ class RepoPath(object):
 
         # If repo_dirs is empty, just use the configuration
         if not repo_dirs:
+            import spack.config
             repo_dirs = spack.config.get_config('repos')
             if not repo_dirs:
                 raise NoRepoConfiguredError(
@@ -632,12 +620,12 @@ class Repo(object):
 
         # Read the old ProviderIndex, or make a new one.
         key = self._cache_file
-        index_existed = spack.user_cache.init_entry(key)
+        index_existed = spack.misc_cache.init_entry(key)
         if index_existed and not self._needs_update:
-            with spack.user_cache.read_transaction(key) as f:
+            with spack.misc_cache.read_transaction(key) as f:
                 self._provider_index = ProviderIndex.from_yaml(f)
         else:
-            with spack.user_cache.write_transaction(key) as (old, new):
+            with spack.misc_cache.write_transaction(key) as (old, new):
                 if old:
                     self._provider_index = ProviderIndex.from_yaml(old)
                 else:
@@ -713,7 +701,7 @@ class Repo(object):
             self._all_package_names = []
 
             # Get index modification time.
-            index_mtime = spack.user_cache.mtime(self._cache_file)
+            index_mtime = spack.misc_cache.mtime(self._cache_file)
 
             for pkg_name in os.listdir(self.packages_path):
                 # Skip non-directories in the package root.

@@ -42,7 +42,8 @@ class Icu4c(Package):
 
     def install(self, spec, prefix):
         with working_dir('source'):
-            configure('--prefix={0}'.format(prefix))
+            configure('--prefix={0}'.format(prefix),
+                      '--enable-rpath')
 
             make()
             make('check')

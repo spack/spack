@@ -38,6 +38,7 @@ class Vim(Package):
     url      = "ftp://ftp.vim.org/pub/vim/unix/vim-7.4.tar.bz2"
     list_url = "http://ftp.vim.org/pub/vim/unix/"
 
+    version('8.0',     '808d2ebdab521e18bc5e0eaede0db867')
     version('7.4',     '607e135c559be642f210094ad023dc65')
     version('7.3',     '5b9510a17074e2b37d8bb38ae09edbf2')
     version('7.2',     'f0901284b338e448bfd79ccca0041254')
@@ -65,6 +66,8 @@ class Vim(Package):
 
     variant('gui', default=False, description="build with gui (gvim)")
     # virtual dependency?
+
+    depends_on('ncurses', when="@8.0:")
 
     def install(self, spec, prefix):
         feature_set = None
