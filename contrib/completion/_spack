@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 09:31 svarrette>
+# Time-stamp: <Tue 2016-11-15 14:00 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -17,7 +17,6 @@
 #  - https://github.com/zsh-users/zsh-completions/blob/master/zsh-completions-howto.org
 #  - http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Completion-Functions
 #  - https://zv.github.io/note/a-review-of-zsh-completion-utilities
-
 ########################################################################################
 # Enable this completion file by adding somewhere in your zsh configuration (most
 # probably ~/.zshrc):
@@ -37,6 +36,12 @@ __spack_installed_packages()
 {
     # inspired by _vagrant
     _wanted application expl 'command' compadd $(command spack find | sort)
+}
+__mirrors()
+{
+    _wanted application expl 'command' compadd $(command spack mirror list |\
+                                                     awk '{ print $1}' | \
+                                                     sort)
 }
 ############################
 __specs()
@@ -166,10 +171,29 @@ _spack()
                 (find)       __spack_find       && ret=0;;
                 (flake8)     __spack_flake8     && ret=0;;
                 (graph)      __spack_graph      && ret=0;;
-
-                (list|providers|reindex)
-                    _nothing
+                (help)
+                    # could do better here to avoid repetition
+                    _describe -t commands 'spack help' _spack_cmds && ret=0
                     ;;
+                (info)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               "*::args:__spack_packages" && ret=0;;
+                (install)    __spack_install    && ret=0;;
+                (list)       __spack_list       && ret=0;;
+                (load)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               "*::args:__specs" && ret=0;;
+                (location)   __spack_location   && ret=0;;
+                (md5)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               "*::args:_files" && ret=0;;
+                (mirror)      __spack_mirror    && ret=0;;
+
+
+
             esac
             ;;
     esac
@@ -464,7 +488,7 @@ __spack_debug()
                '*::options:->options'
     case $state in
         (command)
-        _describe -t commands "falkor debug subcommand" _spack_debug_cmds
+        _describe -t commands "spack debug subcommand" _spack_debug_cmds
         ;;
         (options)
             case $line[1] in
@@ -600,7 +624,7 @@ __spack_flake8()
                {-r,--root-relative}'[print root-relative paths (default is cwd-relative)]' \
                "*::args:_files"
 }
-#######################################
+############################################################
 # spack graph [-h] [-a | -d] [-n] [-s] [-i] [-t DEPTYPE] ...
 #
 #positional arguments:
@@ -620,10 +644,169 @@ __spack_graph()
                {-t,--deptype}'[Comma-separated list of deptypes to traverse. default=build,link,run.]' \
                "*::args:__specs"
 }
-
-
-
-
-
+#########################################################################
+# spack install [-h] [--only {package,dependencies}] [-j JOBS]
+#               [--keep-prefix] [--keep-stage] [-n] [-v] [--fake]
+#               [--clean | --dirty] [--run-tests] [--log-format {junit}]
+#               [--log-file LOG_FILE]
+#               ...
+# positional arguments:
+#  package               spec of the package to install
+##
+__spack_install()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--only[Select the mode of installation (default: with all deps)]:::(package dependencies):' \
+               {-j,--jobs}'[Explicitly set number of make jobs.  Default is #cpus.]' \
+               '--keep-prefix[Don''t remove the install prefix if installation fails.]' \
+               '--keep-stage[Don''t remove the build stage if installation succeeds.]' \
+               {-n,--no-checksum}'[Do not check packages against checksum]' \
+               {-v,--verbose}'[Display verbose build output while installing.]' \
+               '--fake[Fake install. Just remove prefix and create a fake file.]' \
+               '--clean[Clean environment before installing package.]' \
+               '--dirty[Do NOT clean environment before installing.]' \
+               '--run-tests[Run package level tests during installation.]' \
+               '--log-format[Format to be used for log files.]:::(junit):' \
+               '--log-file[Filename for the log file. If not passed a default will be used.]' \
+               "*::args:__spack_packages"
+}
+############################################################
+# spack list [-h] [-d] [--format {rst,name_only}] ...
+#
+#positional arguments:
+#  filter                Optional case-insensitive glob patterns to filter
+#                        results.
+##
+__spack_list()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-d,--search-description}'[Filtering will also search the description for a match.]' \
+               '--format[Format to be used to print the output \[default: name_only\]]:::(rst name_only):' \
+               "*::args:_nothing"
+}
+############################################################
+# spack location [-h] [-m | -r | -i | -p | -P | -s | -S | -b] ...
+#
+#positional arguments:
+#  spec               spec of package to fetch directory for.
+##
+__spack_location()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-m,--module-dir}'[Spack python module directory.]' \
+               {-r,--spack-root}'[Spack installation root.]' \
+               {-i,--install-dir}'[Install prefix for spec (spec need not be installed).]' \
+               {-p,--package-dir}'[Directory enclosing a spec''s package.py file.]' \
+               {-P,--packages}'[Top-level packages directory for Spack.]' \
+               {-s,--stage-dir}'[Stage directory for a spec.]' \
+               {-S,--stages}'[Top level Stage directory.]' \
+               {-b,--build-dir}'[Checked out or expanded source directory for a spec (requires it to be staged first).]' \
+               "*::args:__specs"
+    # __spack_installed_packages?
+}
+######
+# spack mirror [-h] [-n] SUBCOMMAND ...
+##
+__spack_mirror()
+{
+    local -a _spack_mirror_cmds
+    _spack_mirror_cmds=(
+        'create:Create a directory to be used as a spack mirror, and fill it with package archives.'
+        'add:Add a mirror to Spack.'
+        'remove:Remove a mirror by name'
+        'list:Print out available mirrors to the console.'
+    )
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               {-n,--no-checksum}'[Do not check fetched packages against checksum]' \
+               ':command:->command' \
+               '*::options:->options'
+    case $state in
+        (command)
+        _describe -t commands "spack mirror subcommand" _spack_mirror_cmds
+        ;;
+        (options)
+            case $line[1] in
+                (create)    __spack_mirror_create;;
+                (add)       __spack_mirror_add;;
+                (remove|rm) __spack_mirror_remove;;
+                (list)      __spack_mirror_list;;
+            esac
+            ;;
+    esac
+}
+############################################################
+# spack mirror add [-h]
+#                  [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+#                  name url
+#positional arguments:
+#  name                  Mnemonic name for mirror.
+#  url                   URL of mirror directory from 'spack mirror create'.
+##
+__spack_mirror_add()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+               ":name:_nothing" \
+               ":url:_nothing"
+}
+#################################################################
+# spack mirror create [-h] [-d DIRECTORY] [-f FILE] [-D] [-o] ...
+#
+#positional arguments:
+#  specs                 Specs of packages to put in mirror
+##
+__spack_mirror_create()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-d,--directory}'[Directory in which to create mirror.]:directory:_directories' \
+               {-f,--file}'[File with specs of packages to put in mirror.]:file:_files' \
+               {-D,--dependencies}'[Also fetch all dependencies]' \
+               {-o,--one-version-per-spec}'[Only fetch one ''preferred'' version per spec, not all known.]' \
+               "*::args:__specs"
+}
+############################################################
+# spack mirror remove [-h]
+#                     [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+#                     name
+##
+__spack_mirror_remove()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+               "*::name:__mirrors" \
+}
+############################################################
+# spack mirror list [-h]
+#                   [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+##
+__spack_mirror_list()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)'
+}
 
 _spack "$@"
