@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 16:18 svarrette>
+# Time-stamp: <Tue 2016-11-15 16:30 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -175,7 +175,7 @@ _spack()
                     # could do better here to avoid repetition
                     _describe -t commands 'spack help' _spack_cmds && ret=0
                     ;;
-                (info)
+                (info|restage)
                     _arguments -C \
                                {-h,--help}'[show this help message and exit]' \
                                "*::args:__spack_packages" && ret=0;;
@@ -205,7 +205,8 @@ _spack()
                                {-h,--help}'[show this help message and exit]:' \
                                '-c[Command to execute.]:command:' && ret=0;;
                 (repo)        __spack_repo      && ret=0;;
-
+                (setup)       __spack_setup     && ret=0;;
+                (spec)        __spack_spec      && ret=0;;
             esac
             ;;
     esac
@@ -1005,6 +1006,38 @@ __spack_repo()
             esac
             ;;
     esac
+}
+########################################################################
+# spack setup [-h] [-i] [-v] [--clean | --dirty] ...
+##
+__spack_setup()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-i,--ignore-dependencies}'[Do not try to install dependencies of requested packages.]' \
+               {-v,--verbose}'[Display verbose build output while installing.]' \
+               '--clean[Clean environment before installing package.]' \
+               '--dirty[Do NOT clean environment before installing.]' \
+               "*::args:__specs"
+}
+
+########################################################################
+#
+##
+__spack_spec()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-l,--long}'[Show dependency hashes as well as versions.]' \
+               {-L,--very-long}'[Show full dependency hashes as well as versions.]' \
+               {-y,--yaml}'[Print concrete spec as YAML.]' \
+               {-c,--cover}'[How extensively to traverse the DAG. (default: nodes).]:::(nodes edges paths):"' \
+               {-i,--install-status}'[Show install status of packages.  Packages can be: installed \[+\], missing and needed by an installed package \[-\], or not installed (no annotation).]' \
+               "*::args:__specs"
 }
 
 
