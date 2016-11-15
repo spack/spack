@@ -36,22 +36,27 @@ def modify_macho_object(path_name, old_dir, new_dir):
           cmd LC_ID_DYLIB
       cmdsize 160
          name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
-    -apple/tcl-8.6.5-xfeydlhaojmei6iws2rnxndvriym242k/lib/libtcl8.6.dylib (offset 24)
+    -apple/tcl-8.6.5-xfeydlhaojmei6iws2rnxndvriym242k/lib/libtcl8.6.dylib 
+    (offset 24)
 
           cmd LC_LOAD_DYLIB
       cmdsize 160
          name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
-    -apple/zlib-1.2.8-cyvcqvrzlgurne424y55hxvfucvz2354/lib/libz.1.dylib (offset 24)
+    -apple/zlib-1.2.8-cyvcqvrzlgurne424y55hxvfucvz2354/lib/libz.1.dylib 
+    (offset 24)
 
           cmd LC_RPATH
       cmdsize 128
          path /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
-    -apple/xz-5.2.2-d4ecxpuzf2g3ycz3cnj3xmdj7zdnuqwb/lib (offset 12)
+    -apple/xz-5.2.2-d4ecxpuzf2g3ycz3cnj3xmdj7zdnuqwb/lib 
+    (offset 12)
   
-    the old install dir in LC_LOAD_DYLIB is replace with the new install dir  using 
+    the old install dir in LC_LOAD_DYLIB is replaced with the new install dir
+    using 
         install_name_tool -id newid binary
 
-    the old install dir in LC_LOAD_DYLIB is replaced with the new install dir  using 
+    the old install dir in LC_LOAD_DYLIB is replaced with the new install dir
+    using 
         install_name_tool -change old new binary
 
     the old install dir in LC_RPATH is replaced with the new install dir using
@@ -107,7 +112,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
 
     for orig, new in zip(deps, ndeps):
         command = ("install_name_tool -change  %s %s %s" % 
-                  (orig, new, path_name))
+                   (orig, new, path_name))
         status, output = getstatusoutput(command)
         if status != 0:
             tty.warn('failed writing dep for %s.' % path_name)
@@ -115,7 +120,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
 
     for orig, new in zip(rpaths, nrpaths):
         command = ("install_name_tool -rpath %s %s %s" % 
-                  (orig,new,path_name))
+                   (orig, new, path_name))
         status, output = getstatusoutput(command)
         if status != 0:
             tty.warn('failed writing id for %s.' % path_name)
@@ -185,7 +190,7 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
     Change RPATHs in given elf or mach-o file
     """
     if platform.system() == 'Darwin':
-        modify_macho_object(path_name, old_dir, new_dir)
+                            modify_macho_object(path_name, old_dir, new_dir)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths  = substitute_rpath(orig_rpaths, old_dir, new_dir)
