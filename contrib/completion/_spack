@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 07:10 svarrette>
+# Time-stamp: <Tue 2016-11-15 09:31 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -38,7 +38,13 @@ __spack_installed_packages()
     # inspired by _vagrant
     _wanted application expl 'command' compadd $(command spack find | sort)
 }
-
+############################
+__specs()
+{
+    # Honestly, I have no clue how to properly parse and help on spack specs
+    # Need expert of zsh here to map the grammar
+    _nothing
+}
 
 # Main dispatcher
 _spack()
@@ -158,6 +164,9 @@ _spack()
                 (extensions) __spack_extensions && ret=0;;
                 (fetch)      __spack_fetch      && ret=0;;
                 (find)       __spack_find       && ret=0;;
+                (flake8)     __spack_flake8     && ret=0;;
+                (graph)      __spack_graph      && ret=0;;
+
                 (list|providers|reindex)
                     _nothing
                     ;;
@@ -180,7 +189,7 @@ __spack_activate()
     _arguments -s -S \
                {-h,--help}'[show this help message and exit]:' \
                {-f,--force}'[Activate without first activating dependencies.]' \
-               '*::args:_files'
+               '*::args:__specs'
 }
 
 ###############################
@@ -224,7 +233,7 @@ __spack_build()
     _arguments -C \
                {-h,--help}'[show this help message and exit]:' \
                {-v,--verbose}'[Print additional output during builds]' \
-               '*::args:_files'
+               '*::args:__spack_packages'
 }
 ###########################################################
 # spack cd [-h] [-m | -r | -i | -p | -P | -s | -S | -b] ...
@@ -247,7 +256,7 @@ __spack_cd()
                {-s,--stage-dir}'[Stage directory for a spec.]' \
                {-S,--stages}'[Top level Stage directory.]' \
                {-b,--build-dir}'[Checked out or expanded source directory for a spec (requires it to be staged first).]' \
-               '*::args:_files'
+               '*::args:__specs'
 }
 ###############################
 # spack checksum [-h] [--keep-stage] PACKAGE ...
@@ -447,7 +456,6 @@ __spack_debug()
     _spack_debug_cmds=(
         'create-db-tarball:Create a tarball of Spack''s installation metadata.'
     )
-
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
@@ -490,6 +498,7 @@ __spack_diy()
                '--clean[Clean environment before installing package.]' \
                '--dirty[Do NOT clean environment before installing.]' \
                "*::args:__spack_packages"
+    # TODO: __specs ?
 }
 ######################################################################
 # spack edit [-h] [-f] [-c | -t | -m | -r REPO | -N NAMESPACE] [name]
@@ -526,8 +535,7 @@ __spack_extensions()
                {-l,--long}'[Show dependency hashes as well as versions.]' \
                {-p,--path}'[Show paths to extension install directories]' \
                {-d,--deps}'[Show full dependency DAG of extensions]' \
-               "*::args:_nothing"
-    # TODO: __specs
+               "*::args:__specs"
 }
 ###########################################
 # spack fetch [-h] [-n] [-m] [-D] ...
@@ -572,7 +580,45 @@ __spack_find()
                {-m,--missing}'[Show missing dependencies as well as installed specs.]' \
                {-v,--variants}'[Show variants in output (can be long)]' \
                {-M,--only-missing}'[Show only missing dependencies.]' \
-               {-N,--namespace}'[Show fully qualified package names.]'
+               {-N,--namespace}'[Show fully qualified package names.]' \
+               "*::args:_nothing"
+}
+#######################################
+# spack flake8 [-h] [-k] [-o] [-r] ...
+#
+#positional arguments:
+#  files                specific files to check
+##
+__spack_flake8()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-k,--keep-temp}'[Do not delete temporary directory where flake8 runs. Use for debugging, to see filtered files.]' \
+               {-o,--output}'[Send filtered files to stdout as well as temp files.]' \
+               {-r,--root-relative}'[print root-relative paths (default is cwd-relative)]' \
+               "*::args:_files"
+}
+#######################################
+# spack graph [-h] [-a | -d] [-n] [-s] [-i] [-t DEPTYPE] ...
+#
+#positional arguments:
+#  specs                 specs of packages to graph.
+##
+__spack_graph()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-a,--ascii}'[Draw graph as ascii to stdout (default).]' \
+               {-d,--dot}'[Generate graph in dot format and print to stdout.]' \
+               {-n,--normalize}'[Skip concretization; only print normalized spec.]' \
+               {-s,--static}'[Use static information from packages, not dynamic spec info.]' \
+               {-i,--installed}'[Graph all installed specs in dot format (implies --dot).]' \
+               {-t,--deptype}'[Comma-separated list of deptypes to traverse. default=build,link,run.]' \
+               "*::args:__specs"
 }
 
 
