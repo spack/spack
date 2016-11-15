@@ -17,6 +17,9 @@ def setup_parser(subparser):
         'merge_spec',
         help="""All installed specs which match this query spec will be
 merged into one tcl module""")
+    subparser.add_argument(
+        '--output-file', dest='output_file',
+        help="""Write module contents to the specified file""")
 
 
 def merged_tcl(parser, args):
@@ -32,9 +35,11 @@ def merged_tcl(parser, args):
 
     query_spec = spack.spec.Spec(args.merge_spec)
     merged_module = MergedTclModule(query_spec, specs, env_var, spec_to_val)
-    collect_output = StringIO.StringIO()
-    merged_module.write(output=collect_output)
 
-    print(collect_output.getvalue())
-
-    print(merged_module.extra_path_elements)
+    if args.output_file:
+        with open(args.output_file, 'w') as F:
+            merged_module.write(output=F)
+    else:
+        collect_output = StringIO.StringIO()
+        merged_module.write(output=collect_output)
+        print(collect_output.getvalue())
