@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 14:00 svarrette>
+# Time-stamp: <Tue 2016-11-15 14:31 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -191,6 +191,7 @@ _spack()
                                {-h,--help}'[show this help message and exit]' \
                                "*::args:_files" && ret=0;;
                 (mirror)      __spack_mirror    && ret=0;;
+                (module)      __spack_module    && ret=0;;
 
 
 
@@ -807,6 +808,96 @@ __spack_mirror_list()
     _arguments -s -S \
                {-h,--help}'[show this help message and exit]:' \
                '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)'
+}
+
+##################################
+# spack module [-h] SUBCOMMAND ...
+##
+__spack_module()
+{
+    local -a _spack_module_cmds
+    _spack_module_cmds=(
+            'refresh:Regenerate module files'
+            'find:Find module files for packages'
+            'rm:Remove module files'
+            'loads:Prompt the list of modules associated with a constraint'
+    )
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               ':command:->command' \
+               '*::options:->options'
+    case $state in
+        (command)
+        _describe -t commands "spack module subcommand" _spack_module_cmds
+        ;;
+        (options)
+            case $line[1] in
+                (refresh) __spack_module_refresh;;
+                (find)    __spack_module_find;;
+                (rm)      __spack_module_remove;;
+                (loads)   __spack_module_loads;;
+            esac
+            ;;
+    esac
+}
+##################################################################
+# spack module refresh [-h] [--delete-tree] [-m {tcl,dotkit}] [-y]
+#                      [constraint [constraint ...]]
+##
+__spack_module_refresh()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--delete-tree[Delete the module file tree before refresh]' \
+               {-m,--module-type}'[Type of module files]:type:(tcl dotkit)' \
+               {-y,--yes-to-all}'[Assume "yes" is the answer to every confirmation request.]' \
+               "*::args:_nothing"
+}
+########################################################################
+# spack module find [-h] [-m {tcl,dotkit}] [constraint [constraint ...]]
+##
+__spack_module_find()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-m,--module-type}'[Type of module files]:type:(tcl dotkit)' \
+               "*::args:_nothing"
+}
+########################################################################
+# spack module rm [-h] [-m {tcl,dotkit}] [-y]
+##
+__spack_module_remove()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-m,--module-type}'[Type of module files]:type:(tcl dotkit)' \
+               {-y,--yes-to-all}'[Assume "yes" is the answer to every confirmation request.]' \
+               "*::args:_nothing"
+}
+########################################################################
+# spack module loads [-h] [--input-only] [-p PREFIX] [-m {tcl,dotkit}]
+#                    [-r]
+#                    [constraint [constraint ...]]
+##
+__spack_module_loads()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--input-only[ Generate input for module command (instead of a shell script)]' \
+               {-p,--prefix}'[Prepend to module names when issuing module load commands]:prefix' \
+               {-m,--module-type}'[Type of module files]:type:(tcl dotkit)' \
+               {-r,--dependencies}'[Recursively traverse spec dependencies]' \
+               "*::args:_nothing"
 }
 
 _spack "$@"
