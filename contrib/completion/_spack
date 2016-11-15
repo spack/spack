@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Mon 2016-11-14 18:54 svarrette>
+# Time-stamp: <Tue 2016-11-15 06:50 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -122,23 +122,41 @@ _spack()
         (options)
             curcontext=${curcontext%:*}-$line[1]:
             case $line[1] in
-                (activate)
-                    __spack_activate  && ret=0;;
-                (arch)
-                    __spack_arch      && ret=0;;
-                (bootstrap)
-                    __spack_bootstrap && ret=0;;
-                (build)
-                    __spack_build     && ret=0;;
-                (cd)
-                    __spack_cd        && ret=0;;
-                (checksum)
-                    __spack_checksum  && ret=0;;
-                (clean)
-                    __spack_clean     && ret=0;;
-                (compiler)
-                    __spack_compiler  && ret=0;;
-                (compilers|list|providers|reindex)
+                (activate)  __spack_activate  && ret=0;;
+                (arch)      __spack_arch      && ret=0;;
+                (bootstrap) __spack_bootstrap && ret=0;;
+                (build)     __spack_build     && ret=0;;
+                (cd)        __spack_cd        && ret=0;;
+                (checksum)  __spack_checksum  && ret=0;;
+                (clean)     __spack_clean     && ret=0;;
+                (compiler)  __spack_compiler  && ret=0;;
+                (compilers)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+                               "*::args:__spack_packages" && ret=0;;
+                (config)    __spack_config    && ret=0;;
+                (configure)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               {-v,--verbose}'[Print additional output during builds]' \
+                               "*::args:__spack_packages" && ret=0;;
+                (create)   __spack_create     && ret=0 ;;
+                (deactivate)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               {-f,--force}'[Run deactivation even if spec is NOT currently activated.]' \
+                               {-a,--all}'[Deactivate all extensions of an extendable package, or deactivate an extension AND its dependencies.]' \
+                               "*::args:__spack_packages" && ret=0;;
+                (debug)   __spack_debug      && ret=0;;
+                (dependends|doc)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               '*::args:_nothing' && ret=0;;
+                (diy)     __spack_diy        && ret=0;;
+                (edit)    __spack_edit       && ret=0;;
+
+                (list|providers|reindex)
                     _nothing
                     ;;
             esac
@@ -357,6 +375,139 @@ __spack_compiler_info()
     # TODO: filter package on compilers?
 }
 
+###############################
+# spack config [-h]
+#              [--scope {defaults,defaults/darwin,site,site/darwin,user,user/darwin}]
+#              SUBCOMMAND ...
+##
+__spack_config()
+{
+    local -a _spack_config_cmds
+    _spack_config_cmds=(
+        'get:Print configuration values.'
+        'edit:Edit configuration file.'
+    )
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
+               ':command:->command' \
+               '*::options:->options'
+    case $state in
+        (command)
+            _describe -t commands "spack config subcommand" _spack_config_cmds
+            ;;
+        (options)
+            case $line[1] in
+                (get|edit)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               '*--scope:Configuration scope to read from:(defaults defaults/darwin site site/darwin user user/darwin)' && ret=0
+                    ;;
+            esac
+            ;;
+    esac
+    return ret
+}
+###############################
+# spack create [-h] [--keep-stage] [-n NAME] [-r REPO] [-N NAMESPACE]
+#              [-f]
+#              [url]
+#
+#positional arguments:
+#  url                   url of package archive
+##
+__spack_create()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               '--keep-stage[Don''t clean up staging area when command completes.]' \
+               {-n,--name}'[Override the autodetected name for the created package.]::NAME:_files' \
+               {-r,--repo}'[Path to a repository where the package should be created.]::REPO:' \
+               {-N,--namespace}'[Specify a namespace for the package. Must be the namespace of a repository registered with Spack.]::NAMESPACE:' \
+               {-f,--force}'[Overwrite any existing package file with the same name.]' \
+               '*::args:_nothing'
+}
+######
+# spack debug [-h] SUBCOMMAND ...
+#
+#positional arguments:
+#  SUBCOMMAND
+#    create-db-tarball
+#                     Create a tarball of Spack's installation metadata.
+##
+__spack_debug()
+{
+    local -a _spack_debug_cmds
+    _spack_debug_cmds=(
+        'create-db-tarball:Create a tarball of Spack''s installation metadata.'
+    )
 
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+    _arguments -C \
+               {-h,--help}'[show this help message and exit]' \
+               ':command:->command' \
+               '*::options:->options'
+    case $state in
+        (command)
+        _describe -t commands "falkor debug subcommand" _spack_debug_cmds
+        ;;
+        (options)
+            case $line[1] in
+                (create-db-tarball)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               '*::args:_nothing'
+                    ;;
+            esac
+            ;;
+    esac
+}
+###############################
+# spack diy [-h] [-i] [--keep-prefix] [--skip-patch] [-q]
+#           [--clean | --dirty]
+#           ...
+#positional arguments:
+#  spec                  specs to use for install. Must contain package AND
+#                        version.
+##
+__spack_diy()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-i,--ignore-dependencies}'[Do not try to install dependencies of requested packages.]' \
+               '--keep-prefix[Don''t remove the install prefix if installation fails.]' \
+               '--skip-patch[Skip patching for the DIY build.]' \
+               {-q,--quiet}'[Do not display verbose build output while installing.]' \
+               '--clean[Clean environment before installing package.]' \
+               '--dirty[Do NOT clean environment before installing.]' \
+               "*::args:__spack_packages"
+}
+###############################
+# spack edit [-h] [-f] [-c | -t | -m | -r REPO | -N NAMESPACE] [name]
+#
+#positional arguments:
+#  name                  name of package to edit
+##
+__spack_edit()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-f,--force}'[Open a new file in \$EDITOR even if package doesn''t exist.]' \
+               '--command[Edit the command with the supplied name.]' \
+               {-t,--test}'[Edit the test with the supplied name.]' \
+               {-m,--module}'[Edit the main spack module with the supplied name.]' \
+               {-r,--repo}'[Path to a repository to edit package in.]::REPO:' \
+               {-N,--namespace}'[Specify a namespace to edit]::NAMESPACE:' \
+               "*::args:__spack_installed_packages"
+}
 
 _spack "$@"
