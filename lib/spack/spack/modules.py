@@ -657,18 +657,22 @@ class MergedTclModule(TclModule):
         self.spec_to_val = spec_to_val
 
     def process_conditional_env(self, spec, val, else_if=False):
-        condition_type = 'else if' if else_if else 'if'
-        if_start = '{cnd_type} [ ${env_var} == "{val}" ] {{\n'.format(
+        condition_type = 'elseif' if else_if else 'if'
+        if_start = '{cnd_type} {{ ${env_var} == "{val}" }} {{\n'.format(
             cnd_type=condition_type, env_var=self.env_var, val=val)
         yield if_start
 
         for x in TclModule(spec).process_environment_command():
-            yield x
+            yield '\t' + x
 
         yield '}\n'
 
     def process_environment_command(self):
         first_item = True
+        
+        init_cnd_var = 'set {0} $env({0})\n\n'.format(self.env_var)
+        yield init_cnd_var
+        
         for constraint_spec, val in self.spec_to_val.iteritems():
             matching = list(
                 s for s in self.specs if s.satisfies(constraint_spec))
