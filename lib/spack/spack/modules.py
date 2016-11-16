@@ -669,10 +669,10 @@ class MergedTclModule(TclModule):
 
     def process_environment_command(self):
         first_item = True
-        
+
         init_cnd_var = 'set {0} $env({0})\n\n'.format(self.env_var)
         yield init_cnd_var
-        
+
         for constraint_spec, val in self.spec_to_val.iteritems():
             matching = list(
                 s for s in self.specs if s.satisfies(constraint_spec))
