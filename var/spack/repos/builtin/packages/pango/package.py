@@ -37,11 +37,16 @@ class Pango(Package):
 
     version('1.36.8', '217a9a753006275215fa9fa127760ece')
     version('1.40.1', '6fc88c6529890d6c8e03074d57a3eceb')
+    version('1.40.3', '17c26720f5a862a12f7e1745e2f1d966')
 
     depends_on("pkg-config", type="build")
     depends_on("harfbuzz")
     depends_on("cairo")
     depends_on("glib")
+    
+    def url_for_version(self, version):
+        base_url = "http://ftp.gnome.org/pub/gnome/sources/pango"
+        return "{}/{}/pango-{}.tar.xz".format(base_url , version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
