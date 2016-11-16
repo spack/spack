@@ -61,7 +61,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
 
     the old install dir in LC_RPATH is replaced with the new install dir using
         install_name_tool  -rpath old new binary
-   
+       
     """
     command = which('otool')
     output  = command("-l", path_name, output=str, err=str)
@@ -195,7 +195,7 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths  = substitute_rpath(orig_rpaths, old_dir, new_dir)
         modify_elf_object(path_name, orig_rpaths, new_rpaths, 
-                         patchelf_executable)
+                          patchelf_executable)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 

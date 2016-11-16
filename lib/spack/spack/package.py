@@ -1177,7 +1177,7 @@ class PackageBase(object):
 
         tty.msg("Installing %s" % self.name)
 
-        fetch_binary=kwargs.pop('fetch_binary', 'never')
+        fetch_binary = kwargs.pop('fetch_binary', 'never')
         # First, install dependencies recursively.
         if install_deps:
             for dep in self.spec.dependencies():
@@ -1212,7 +1212,7 @@ class PackageBase(object):
             else:
                 tty.warn("No binary package for %s found."
                          % self.name)
-	# Set parallelism before starting build.
+        # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
         # Then install the package itself.
