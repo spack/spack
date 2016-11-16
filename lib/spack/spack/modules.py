@@ -650,6 +650,8 @@ class TclModule(EnvModule):
 # which point module_specific content should pull from object members vs.
 # directly from the config.
 class MergedTclModule(TclModule):
+    name = 'merged_tcl'
+
     def __init__(self, query_spec, specs, env_var, spec_to_val):
         super(MergedTclModule, self).__init__(query_spec)
         self.specs = list(specs)
