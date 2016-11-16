@@ -175,7 +175,9 @@ HDF5 version {version} {version}
             # TODO: Automate these path and library settings
             cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
             cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"), "-lhdf5",
+               "-L%s" % join_path(spec.prefix, "lib"),
+               "-L%s" % join_path(spec.prefix, "lib64"),
+               "-lhdf5",
                "-lz")
             try:
                 check = Executable('./check')
