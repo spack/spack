@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -89,6 +89,16 @@ class NetlibLapack(Package):
             '-DLAPACKE:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
         if spec.satisfies('@3.6.0:'):
             cmake_args.extend(['-DCBLAS=ON'])  # always build CBLAS
+
+        if self.compiler.name == 'intel':
+            # Intel compiler finds serious syntax issues when trying to
+            # build CBLAS and LapackE
+            cmake_args.extend(['-DCBLAS=OFF'])
+            cmake_args.extend(['-DLAPACKE:BOOL=OFF'])
+
+        # deprecated routines are commonly need by, for example, suitesparse
+        # Note that OpenBLAS spack is built with deprecated routines
+        cmake_args.extend(['-DBUILD_DEPRECATED:BOOL=ON'])
 
         if '+external-blas' in spec:
             cmake_args.extend([

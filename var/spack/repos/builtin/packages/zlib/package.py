@@ -25,19 +25,11 @@
 from spack import *
 
 
-class Zlib(Package):
+class Zlib(AutotoolsPackage):
     """A free, general-purpose, legally unencumbered lossless
        data-compression library."""
 
     homepage = "http://zlib.net"
-    url      = "http://zlib.net/zlib-1.2.8.tar.gz"
+    url = "http://zlib.net/zlib-1.2.8.tar.gz"
 
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        if self.run_tests:
-            make('test')
-        make('install')

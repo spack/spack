@@ -23,8 +23,8 @@ class PackagingTest(MockPackagesTest):
         # We use a fake package, so skip the checksum.
         spack.do_checksum = False
         self.tmpdir = tempfile.mkdtemp()
-        self.orig_layout = spack.install_layout
-        spack.install_layout = YamlDirectoryLayout(self.tmpdir)
+        self.orig_layout = spack.store.layout
+        spack.store.layout = YamlDirectoryLayout(self.tmpdir)
 
     def tearDown(self):
         super(PackagingTest, self).tearDown()
@@ -34,7 +34,7 @@ class PackagingTest(MockPackagesTest):
         spack.do_checksum = True
 
         # restore spack's layout.
-        spack.install_layout = self.orig_layout
+        spack.store.layout = self.orig_layout
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def set_up_mirror(self):

@@ -35,6 +35,7 @@ class Hypre(Package):
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
+    version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
@@ -61,9 +62,9 @@ class Hypre(Package):
         configure_args = [
             '--prefix=%s' % prefix,
             '--with-lapack-libs=%s' % ' '.join(lapack.names),
-            '--with-lapack-lib-dirs=%s' % spec['lapack'].prefix.lib,
+            '--with-lapack-lib-dirs=%s' % ' '.join(lapack.directories),
             '--with-blas-libs=%s' % ' '.join(blas.names),
-            '--with-blas-lib-dirs=%s' % spec['blas'].prefix.lib
+            '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
 
         if '+shared' in self.spec:

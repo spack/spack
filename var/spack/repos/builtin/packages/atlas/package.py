@@ -37,6 +37,9 @@ class Atlas(Package):
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
+    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
+            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
+
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
             url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0

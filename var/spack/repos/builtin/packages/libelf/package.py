@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libelf(Package):
+class Libelf(AutotoolsPackage):
     """libelf lets you read, modify or create ELF object files in an
        architecture-independent way. The library takes care of size
        and endian issues, e.g. you can process a file for SPARC
@@ -39,12 +39,11 @@ class Libelf(Package):
 
     provides('elf')
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--enable-shared",
-                  "--disable-dependency-tracking",
-                  "--disable-debug")
-        make()
+    def configure_args(self):
+        args = ["--enable-shared",
+                "--disable-dependency-tracking",
+                "--disable-debug"]
+        return args
 
-        # The mkdir commands in libelf's install can fail in parallel
-        make("install", parallel=False)
+    def install(self, spec, prefix):
+        make('install', parallel=False)

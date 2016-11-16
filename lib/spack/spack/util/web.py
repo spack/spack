@@ -227,7 +227,16 @@ def find_versions_of_archive(*archive_urls, **kwargs):
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        regexes.append(os.path.basename(url_regex))
+        url_regex = os.path.basename(url_regex)
+
+        # We need to add a $ anchor to the end of the regex to prevent
+        # Spack from picking up signature files like:
+        #   .asc
+        #   .md5
+        #   .sha256
+        #   .sig
+        # However, SourceForge downloads still need to end in '/download'.
+        regexes.append(url_regex + '(\/download)?$')
 
     # Build a dict version -> URL from any links that match the wildcards.
     versions = {}

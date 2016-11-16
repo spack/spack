@@ -24,6 +24,24 @@
 ##############################################################################
 import os
 
+system_paths = ['/', '/usr/', '/usr/local']
+suffixes = ['lib', 'lib64', 'include']
+system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths]
+system_bins = [os.path.join(p, 'bin') for p in system_paths]
+
+
+def filter_system_paths(paths):
+    return [p for p in paths if p not in system_dirs]
+
+
+def filter_system_bin_paths(paths):
+    # Turn the iterable into a list. Assume it's a list from here on.
+    _paths = list(paths)
+    bins = [p for p in _paths if p in system_bins]
+    nobins = [p for p in _paths if p not in system_bins]
+    # put bins infront as PATH is set by: prepend_path('PATH', item)
+    return bins + nobins
+
 
 def get_path(name):
     path = os.environ.get(name, "").strip()

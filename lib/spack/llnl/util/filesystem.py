@@ -25,7 +25,6 @@
 import collections
 import errno
 import fileinput
-import getpass
 import glob
 import numbers
 import os
@@ -39,15 +38,33 @@ from contextlib import contextmanager
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
-__all__ = ['set_install_permissions', 'install', 'install_tree',
-           'traverse_tree',
-           'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
-           'force_remove', 'join_path', 'ancestor', 'can_access',
-           'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
-           'set_executable', 'copy_mode', 'unset_executable_mode',
-           'remove_dead_links', 'remove_linked_tree',
-           'fix_darwin_install_name', 'find_libraries', 'LibraryList']
+__all__ = [
+    'FileFilter',
+    'LibraryList',
+    'ancestor',
+    'can_access',
+    'change_sed_delimiter',
+    'copy_mode',
+    'filter_file',
+    'find_libraries',
+    'fix_darwin_install_name',
+    'force_remove',
+    'force_symlink',
+    'install',
+    'install_tree',
+    'is_exe',
+    'join_path',
+    'mkdirp',
+    'remove_dead_links',
+    'remove_if_dead_link',
+    'remove_linked_tree',
+    'set_executable',
+    'set_install_permissions',
+    'touch',
+    'touchp',
+    'traverse_tree',
+    'unset_executable_mode',
+    'working_dir']
 
 
 def filter_file(regex, repl, *filenames, **kwargs):
@@ -208,16 +225,6 @@ def install_tree(src, dest, **kwargs):
 def is_exe(path):
     """True if path is an executable file."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
-
-
-def expand_user(path):
-    """Find instances of '%u' in a path and replace with the current user's
-       username."""
-    username = getpass.getuser()
-    if not username and '%u' in path:
-        tty.die("Couldn't get username to complete path '%s'" % path)
-
-    return path.replace('%u', username)
 
 
 def mkdirp(*paths):
@@ -388,10 +395,20 @@ def remove_dead_links(root):
     """
     for file in os.listdir(root):
         path = join_path(root, file)
-        if os.path.islink(path):
-            real_path = os.path.realpath(path)
-            if not os.path.exists(real_path):
-                os.unlink(path)
+        remove_if_dead_link(path)
+
+
+def remove_if_dead_link(path):
+    """
+    Removes the argument if it is a dead link, does nothing otherwise
+
+    Args:
+        path: the potential dead link
+    """
+    if os.path.islink(path):
+        real_path = os.path.realpath(path)
+        if not os.path.exists(real_path):
+            os.unlink(path)
 
 
 def remove_linked_tree(path):

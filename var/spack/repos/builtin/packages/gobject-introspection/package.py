@@ -39,6 +39,8 @@ class GobjectIntrospection(Package):
     depends_on("glib@2.48.1")
     depends_on("python")
     depends_on("cairo")
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

@@ -37,4 +37,4 @@ class PySympy(Package):
     depends_on('py-mpmath', when='@1.0:')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

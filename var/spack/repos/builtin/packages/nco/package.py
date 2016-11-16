@@ -32,6 +32,7 @@ class Nco(Package):
     homepage = "https://sourceforge.net/projects/nco"
     url      = "https://github.com/nco/nco/archive/4.5.5.tar.gz"
 
+    version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
 
     # See "Compilation Requirements" at:
@@ -39,18 +40,21 @@ class Nco(Package):
     variant('mpi', default=True)
 
     depends_on('netcdf')
-    depends_on('netcdf+mpi', when='+mpi')
-    depends_on('netcdf~mpi', when='~mpi')
-    depends_on('antlr@2.7.7+cxx')    # (required for ncap2)
-    depends_on('gsl')  # (desirable for ncap2)
-    depends_on('udunits2')       # (allows dimensional unit transformations)
-    # depends_on('opendap')      # (enables network transparency),
+    depends_on('antlr@2.7.7+cxx')  # required for ncap2
+    depends_on('gsl')              # desirable for ncap2
+    depends_on('udunits2')         # allows dimensional unit transformations
+    # depends_on('opendap')        # enables network transparency
 
     def install(self, spec, prefix):
+        # Workaround until variant forwarding works properly
+        if '+mpi' in spec and spec.satisfies('^netcdf~mpi'):
+            raise RuntimeError('Invalid spec. Package netcdf requires '
+                               'netcdf+mpi, but spec asked for netcdf~mpi.')
+
         opts = [
             '--prefix=%s' % prefix,
-            '--disable-openmp',    # TODO: Make this a variant
-            '--disable-dap',        # TODO: Make this a variant
+            '--disable-openmp',  # TODO: Make this a variant
+            '--disable-dap',     # TODO: Make this a variant
             '--disable-esmf']
         configure(*opts)
         make()

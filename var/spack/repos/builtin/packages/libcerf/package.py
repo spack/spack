@@ -38,6 +38,12 @@ class Libcerf(Package):
     version('1.3', 'b3504c467204df71e62aeccf73a25612')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        options = []
+        # Clang reports unused functions as errors, see
+        # http://clang.debian.net/status.php?version=3.8.1&key=UNUSED_FUNCTION
+        if spec.satisfies('%clang'):
+            options.append('CFLAGS=-Wno-unused-function')
+
+        configure('--prefix=%s' % prefix, *options)
         make()
         make("install")

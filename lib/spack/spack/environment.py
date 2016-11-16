@@ -271,8 +271,12 @@ class EnvironmentModifications(object):
 
         env = EnvironmentModifications()
         # Check if the files are actually there
-        if not all(os.path.isfile(file) for file in args):
-            raise RuntimeError('trying to source non-existing files')
+        files = [line.split(' ')[0] for line in args]
+        non_existing = [file for file in files if not os.path.isfile(file)]
+        if non_existing:
+            message = 'trying to source non-existing files\n'
+            message += '\n'.join(non_existing)
+            raise RuntimeError(message)
         # Relevant kwd parameters and formats
         info = dict(kwargs)
         info.setdefault('shell', '/bin/bash')

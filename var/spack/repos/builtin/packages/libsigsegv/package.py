@@ -30,6 +30,8 @@ class Libsigsegv(Package):
     homepage = "https://www.gnu.org/software/libsigsegv/"
     url      = "ftp://ftp.gnu.org/gnu/libsigsegv/libsigsegv-2.10.tar.gz"
 
+    patch('patch.new_config_guess', when='@2.10')
+
     version('2.10', '7f96fb1f65b3b8cbc1582fb7be774f0f')
 
     def install(self, spec, prefix):

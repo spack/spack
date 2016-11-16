@@ -26,7 +26,6 @@
 system and configuring Spack to use multiple compilers.
 """
 import imp
-import platform
 
 from llnl.util.lang import list_modules
 from llnl.util.filesystem import join_path
@@ -41,14 +40,9 @@ from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
-_other_instance_vars = ['modules', 'operating_system']
+_other_instance_vars = ['modules', 'operating_system', 'environment',
+                        'extra_rpaths']
 _cache_config_file = []
-
-# TODO: customize order in config file
-if platform.system() == 'Darwin':
-    _default_order = ['clang', 'gcc', 'intel']
-else:
-    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
 
 
 def _auto_compiler_spec(function):
@@ -65,8 +59,11 @@ def _to_dict(compiler):
     d['spec'] = str(compiler.spec)
     d['paths'] = dict((attr, getattr(compiler, attr, None))
                       for attr in _path_instance_vars)
+    d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
     d['operating_system'] = str(compiler.operating_system)
     d['modules'] = compiler.modules if compiler.modules else []
+    d['environment'] = compiler.environment if compiler.environment else {}
+    d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -168,18 +165,6 @@ def all_compilers(scope=None, init_config=True):
             for s in all_compilers_config(scope, init_config)]
 
 
-def default_compiler():
-    versions = []
-    for name in _default_order:
-        versions = find(name)
-        if versions:
-            break
-    else:
-        raise NoCompilersError()
-
-    return sorted(versions)[-1]
-
-
 def find_compilers(*paths):
     """Return a list of compilers found in the suppied paths.
        This invokes the find_compilers() method for each operating
@@ -212,7 +197,7 @@ def supported(compiler_spec):
 @_auto_compiler_spec
 def find(compiler_spec, scope=None):
     """Return specs of available compilers that match the supplied
-       compiler spec.  Return an list if nothing found."""
+       compiler spec.  Return an empty list if nothing found."""
     return [c for c in all_compilers(scope) if c.satisfies(compiler_spec)]
 
 
@@ -221,7 +206,7 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    platform = kwargs.get("platform", None)
+    platform = kwargs.get('platform', None)
     config = all_compilers_config(scope)
 
     def get_compilers(cspec):
@@ -241,7 +226,7 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
             compiler_paths = []
             for c in _path_instance_vars:
                 compiler_path = items['paths'][c]
-                if compiler_path != "None":
+                if compiler_path != 'None':
                     compiler_paths.append(compiler_path)
                 else:
                     compiler_paths.append(None)
@@ -250,21 +235,19 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
             if mods == 'None':
                 mods = []
 
+            os = None
             if 'operating_system' in items:
                 os = spack.architecture._operating_system_from_dict(
                     items['operating_system'], platform)
-            else:
-                os = None
 
-            alias = items['alias'] if 'alias' in items else None
-
-            flags = {}
-            for f in spack.spec.FlagMap.valid_compiler_flags():
-                if f in items:
-                    flags[f] = items[f]
+            alias = items.get('alias', None)
+            compiler_flags = items.get('flags', {})
+            environment = items.get('environment', {})
+            extra_rpaths = items.get('extra_rpaths', [])
 
             compilers.append(
-                cls(cspec, os, compiler_paths, mods, alias, **flags))
+                cls(cspec, os, compiler_paths, mods, alias, environment,
+                    extra_rpaths, **compiler_flags))
 
         return compilers
 

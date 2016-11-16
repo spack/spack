@@ -98,7 +98,7 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import hashlib
 import imp
-import sys
+import ctypes
 from StringIO import StringIO
 from operator import attrgetter
 
@@ -111,6 +111,7 @@ from llnl.util.tty.color import *
 
 import spack
 import spack.architecture
+import spack.store
 import spack.compilers as compilers
 import spack.error
 import spack.parse
@@ -120,6 +121,7 @@ from spack.util.prefix import Prefix
 from spack.util.string import *
 import spack.util.spack_yaml as syaml
 from spack.util.spack_yaml import syaml_dict
+from spack.util.crypto import prefix_bits
 from spack.version import *
 from spack.provider_index import ProviderIndex
 
@@ -201,6 +203,9 @@ special_types = {
 }
 
 legal_deps = tuple(special_types) + alldeps
+
+"""Max integer helps avoid passing too large a value to cyaml."""
+maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
 def validate_deptype(deptype):
@@ -470,10 +475,10 @@ class FlagMap(HashableMap):
 
     def satisfies(self, other, strict=False):
         if strict or (self.spec and self.spec._concrete):
-            return all(f in self and set(self[f]) <= set(other[f])
+            return all(f in self and set(self[f]) == set(other[f])
                        for f in other)
         else:
-            return all(set(self[f]) <= set(other[f])
+            return all(set(self[f]) == set(other[f])
                        for f in other if (other[f] != [] and f in self))
 
     def constrain(self, other):
@@ -852,7 +857,7 @@ class Spec(object):
                        children in the dependency DAG.
 
            cover    [=nodes|edges|paths]
-               Determines how extensively to cover the dag.  Possible vlaues:
+               Determines how extensively to cover the dag.  Possible values:
 
                'nodes': Visit each node in the dag only once.  Every node
                         yielded by this function will be unique.
@@ -960,23 +965,24 @@ class Spec(object):
 
     @property
     def prefix(self):
-        return Prefix(spack.install_layout.path_for_spec(self))
+        return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
-        """
-        Return a hash of the entire spec DAG, including connectivity.
-        """
+        """Return a hash of the entire spec DAG, including connectivity."""
         if self._hash:
             return self._hash[:length]
         else:
-            # XXX(deptype): ignore 'build' dependencies here
             yaml_text = syaml.dump(
-                self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+                self.to_node_dict(), default_flow_style=True, width=maxint)
             sha = hashlib.sha1(yaml_text)
-            b32_hash = base64.b32encode(sha.digest()).lower()[:length]
+            b32_hash = base64.b32encode(sha.digest()).lower()
             if self.concrete:
                 self._hash = b32_hash
-            return b32_hash
+            return b32_hash[:length]
+
+    def dag_hash_bit_prefix(self, bits):
+        """Get the first <bits> bits of the DAG hash as an integer type."""
+        return base32_prefix_bits(self.dag_hash(), bits)
 
     def to_node_dict(self):
         d = syaml_dict()
@@ -999,6 +1005,8 @@ class Spec(object):
         if self.architecture:
             d['arch'] = self.architecture.to_dict()
 
+        # TODO: restore build dependencies here once we have less picky
+        # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
         if deps:
             d['dependencies'] = syaml_dict([
@@ -2194,10 +2202,15 @@ class Spec(object):
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
             ${SHA1}          Dependencies 8-char sha1 prefix
+            ${HASH:len}      DAG hash with optional length specifier
 
             ${SPACK_ROOT}    The spack root directory
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
+            ${PREFIX}        The package prefix
+
+        Note these are case-insensitive: for example you can specify either
+        ``${PACKAGE}`` or ``${package}``.
 
         Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
@@ -2289,6 +2302,7 @@ class Spec(object):
                                          "'%s'" % format_string)
                     named_str += c
                     continue
+                named_str = named_str.upper()
                 if named_str == 'PACKAGE':
                     name = self.name if self.name else ''
                     write(fmt % self.name, '@')
@@ -2301,7 +2315,7 @@ class Spec(object):
                 elif named_str == 'COMPILERNAME':
                     if self.compiler:
                         write(fmt % self.compiler.name, '%')
-                elif named_str == 'COMPILERVER':
+                elif named_str in ['COMPILERVER', 'COMPILERVERSION']:
                     if self.compiler:
                         write(fmt % self.compiler.versions, '%')
                 elif named_str == 'COMPILERFLAGS':
@@ -2319,7 +2333,16 @@ class Spec(object):
                 elif named_str == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % spack.install_path)
+                    out.write(fmt % spack.store.root)
+                elif named_str == 'PREFIX':
+                    out.write(fmt % self.prefix)
+                elif named_str.startswith('HASH'):
+                    if named_str.startswith('HASH:'):
+                        _, hashlen = named_str.split(':')
+                        hashlen = int(hashlen)
+                    else:
+                        hashlen = None
+                    out.write(fmt % (self.dag_hash(hashlen)))
 
                 named = False
 
@@ -2373,12 +2396,24 @@ class Spec(object):
     def __str__(self):
         return self.format() + self.dep_string()
 
+    def _install_status(self):
+        """Helper for tree to print DB install status."""
+        if not self.concrete:
+            return None
+        try:
+            record = spack.store.db.get_record(self)
+            return record.installed
+        except KeyError:
+            return None
+
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
-        showid = kwargs.pop('ids',   False)
+        hashes = kwargs.pop('hashes', True)
+        hlen = kwargs.pop('hashlen', None)
+        install_status = kwargs.pop('install_status', True)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
@@ -2387,8 +2422,6 @@ class Spec(object):
         check_kwargs(kwargs, self.tree)
 
         out = ""
-        cur_id = 0
-        ids = {}
         for d, node in self.traverse(
                 order='pre', cover=cover, depth=True, deptypes=deptypes):
             if prefix is not None:
@@ -2396,11 +2429,17 @@ class Spec(object):
             out += " " * indent
             if depth:
                 out += "%-4d" % d
-            if not id(node) in ids:
-                cur_id += 1
-                ids[id(node)] = cur_id
-            if showid:
-                out += "%-4d" % ids[id(node)]
+            if install_status:
+                status = node._install_status()
+                if status is None:
+                    out += "     "  # Package isn't installed
+                elif status:
+                    out += colorize("@g{[+]}  ", color=color)  # installed
+                else:
+                    out += colorize("@r{[-]}  ", color=color)  # missing
+
+            if hashes:
+                out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
             out += ("    " * d)
             if d > 0:
                 out += "^"
@@ -2514,7 +2553,7 @@ class SpecParser(spack.parse.Parser):
     def spec_by_hash(self):
         self.expect(ID)
 
-        specs = spack.installed_db.query()
+        specs = spack.store.db.query()
         matches = [spec for spec in specs if
                    spec.dag_hash()[:len(self.token.value)] == self.token.value]
 
@@ -2721,6 +2760,16 @@ def parse_anonymous_spec(spec_like, pkg_name):
                          % (anon_spec.name, pkg_name))
 
     return anon_spec
+
+
+def base32_prefix_bits(hash_string, bits):
+    """Return the first <bits> bits of a base32 string as an integer."""
+    if bits > len(hash_string) * 5:
+        raise ValueError("Too many bits! Requested %d bit prefix of '%s'."
+                         % (bits, hash_string))
+
+    hash_bytes = base64.b32decode(hash_string, casefold=True)
+    return prefix_bits(hash_bytes, bits)
 
 
 class SpecError(spack.error.SpackError):

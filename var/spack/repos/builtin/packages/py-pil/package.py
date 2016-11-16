@@ -37,7 +37,10 @@ class PyPil(Package):
 
     provides('pil')
 
+    # py-pil currently only works with Python2.
+    # If you are using Python 3, try using py-pillow instead.
     extends('python')
+    depends_on('python@1.5.2:2.8')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

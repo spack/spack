@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import glob
-import string
 
 
 class Mfem(Package):
@@ -35,11 +33,11 @@ class Mfem(Package):
 
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
-            url='http://goo.gl/Y9T75B', expand=False, preferred=True)
+            url='http://goo.gl/Y9T75B', preferred=True, extension='.tar.gz')
 
     version('3.1',
             '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
-            url='http://goo.gl/xrScXn', expand=False)
+            url='http://goo.gl/xrScXn', extension='.tar.gz')
 #    version('3.1', git='https://github.com/mfem/mfem.git',
 #            commit='dbae60fe32e071989b52efaaf59d7d0eb2a3b574')
 
@@ -48,8 +46,11 @@ class Mfem(Package):
     variant('suite-sparse', default=False,
             description='Activate support for SuiteSparse')
     variant('mpi', default=False, description='Activate support for MPI')
+    variant('superlu-dist', default=False,
+            description='Activate support for SuperLU_Dist')
     variant('lapack', default=False, description='Activate support for LAPACK')
     variant('debug', default=False, description='Build debug version')
+    variant('netcdf', default=False, description='Activate NetCDF support')
 
     depends_on('blas', when='+lapack')
     depends_on('lapack', when='+lapack')
@@ -68,6 +69,12 @@ class Mfem(Package):
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
     depends_on('cmake', when='^metis@5:', type='build')
 
+    depends_on('superlu-dist', when='@3.2: +superlu-dist')
+
+    depends_on('netcdf', when='@3.2: +netcdf')
+    depends_on('zlib', when='@3.2: +netcdf')
+    depends_on('hdf5', when='@3.2: +netcdf')
+
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
@@ -81,6 +88,12 @@ class Mfem(Package):
             raise InstallError('To work around CMake bug with clang, must ' +
                                'build mfem with mfem[+variants] %clang ' +
                                '^cmake %gcc to force CMake to build with gcc')
+        if '@:3.1' in spec and '+superlu-dist' in spec:
+            raise InstallError('MFEM does not support SuperLU_DIST for ' +
+                               'versions 3.1 and earlier')
+        if '@:3.1' in spec and '+netcdf' in spec:
+            raise InstallError('MFEM does not support NetCDF for versions' +
+                               '3.1 and earlier')
         return
 
     def install(self, spec, prefix):
@@ -102,7 +115,14 @@ class Mfem(Package):
                 'HYPRE_LIB=-L%s' % spec['hypre'].prefix.lib +
                 ' -lHYPRE'])
 
-        if '+metis' in spec:
+        if 'parmetis' in spec:
+            metis_lib = '-L%s -lparmetis -lmetis' % spec['parmetis'].prefix.lib
+            metis_str = 'MFEM_USE_METIS_5=YES'
+            options.extend([metis_str,
+                            'METIS_DIR=%s' % spec['parmetis'].prefix,
+                            'METIS_OPT=-I%s' % spec['parmetis'].prefix.include,
+                            'METIS_LIB=%s' % metis_lib])
+        elif 'metis' in spec:
             metis_lib = '-L%s -lmetis' % spec['metis'].prefix.lib
             if spec['metis'].satisfies('@5:'):
                 metis_str = 'MFEM_USE_METIS_5=YES'
@@ -114,14 +134,27 @@ class Mfem(Package):
                 'METIS_OPT=-I%s' % spec['metis'].prefix.include,
                 'METIS_LIB=%s' % metis_lib])
 
-        if '+mpi' in spec:
+        if 'mpi' in spec:
             options.extend(['MFEM_USE_MPI=YES'])
+
+        if '+superlu-dist' in spec:
+            superlu_lib = '-L%s' % spec['superlu-dist'].prefix.lib
+            superlu_lib += ' -lsuperlu_dist'
+            sl_inc = 'SUPERLU_OPT=-I%s' % spec['superlu-dist'].prefix.include
+            options.extend(['MFEM_USE_SUPERLU=YES',
+                            'SUPERLU_DIR=%s' % spec['superlu-dist'].prefix,
+                            sl_inc,
+                            'SUPERLU_LIB=%s' % superlu_lib])
 
         if '+suite-sparse' in spec:
             ssp = spec['suite-sparse'].prefix
             ss_lib = '-L%s' % ssp.lib
-            ss_lib += (' -lumfpack -lcholmod -lcolamd -lamd -lcamd' +
-                       ' -lccolamd -lsuitesparseconfig')
+
+            if '@3.2:' in spec:
+                ss_lib += ' -lklu -lbtf'
+
+            ss_lib += (' -lumfpack -lcholmod -lcolamd' +
+                       ' -lamd -lcamd -lccolamd -lsuitesparseconfig')
 
             no_librt_archs = ['darwin-i686', 'darwin-x86_64']
             no_rt = any(map(lambda a: spec.satisfies('=' + a),
@@ -135,15 +168,22 @@ class Mfem(Package):
                             'SUITESPARSE_OPT=-I%s' % ssp.include,
                             'SUITESPARSE_LIB=%s' % ss_lib])
 
+        if '+netcdf' in spec:
+            np = spec['netcdf'].prefix
+            zp = spec['zlib'].prefix
+            h5p = spec['hdf5'].prefix
+            nlib = '-L%s -lnetcdf ' % np.lib
+            nlib += '-L%s -lhdf5_hl -lhdf5 ' % h5p.lib
+            nlib += '-L%s -lz' % zp.lib
+            options.extend(['MFEM_USE_NETCDF=YES',
+                            'NETCDF_DIR=%s' % np,
+                            'HDF5_DIR=%s' % h5p,
+                            'ZLIB_DIR=%s' % zp,
+                            'NETCDF_OPT=-I%s' % np.include,
+                            'NETCDF_LIB=%s' % nlib])
+
         if '+debug' in spec:
             options.extend(['MFEM_DEBUG=YES'])
-
-        # Dirty hack to cope with URL redirect
-        tgz_file = string.split(self.url, '/')[-1]
-        tar = which('tar')
-        tar('xzvf', tgz_file)
-        cd(glob.glob('mfem*')[0])
-        # End dirty hack to cope with URL redirect
 
         make('config', *options)
         make('all')

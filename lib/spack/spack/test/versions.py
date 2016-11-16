@@ -392,6 +392,7 @@ class VersionsTest(unittest.TestCase):
             self.assertEqual(v.dotted, '1.2.3')
             self.assertEqual(v.dashed, '1-2-3')
             self.assertEqual(v.underscored, '1_2_3')
+            self.assertEqual(v.joined, '123')
 
     def test_repr_and_str(self):
 
@@ -428,3 +429,6 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(str(b), '1_2-3')
         # Raise TypeError on tuples
         self.assertRaises(TypeError, b.__getitem__, 1, 2)
+
+if __name__ == '__main__':
+    unittest.main()

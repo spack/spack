@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 import sys
+import shutil
 
 
-class Graphviz(Package):
+class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
     homepage = "http://www.graphviz.org"
     url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
@@ -46,11 +47,13 @@ class Graphviz(Package):
     depends_on("swig")
     depends_on("python")
     depends_on("ghostscript")
+    depends_on("freetype")
+    depends_on("libtool", type='build')
     depends_on("pkg-config", type='build')
 
-    def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        if '+perl' not in spec:
+    def configure_args(self):
+        options = []
+        if '+perl' not in self.spec:
             options.append('--disable-perl')
 
         # On OSX fix the compiler error:
@@ -59,7 +62,9 @@ class Graphviz(Package):
         #       include <X11/Xlib.h>
         if sys.platform == 'darwin':
             options.append('CFLAGS=-I/opt/X11/include')
+        options.append('--with-ltdl-lib=%s/lib' % self.spec['libtool'].prefix)
 
-        configure(*options)
-        make()
-        make("install")
+        # A hack to patch config.guess in the libltdl sub directory
+        shutil.copyfile('./config/config.guess', 'libltdl/config/config.guess')
+
+        return options
