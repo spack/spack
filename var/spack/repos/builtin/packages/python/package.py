@@ -134,6 +134,25 @@ class Python(Package):
 
         self.filter_compilers(spec, prefix)
 
+        # TODO:
+        # On OpenSuse 13, python uses <prefix>/lib64/python2.7/lib-dynload/*.so
+        # instead of <prefix>/lib/python2.7/lib-dynload/*.so. Oddly enough the
+        # result is that Python can not find modules like cPickle. A workaround
+        # for now is to symlink to `lib`:
+        src = os.path.join(prefix,
+                           'lib64',
+                           'python{0}'.format(self.version.up_to(2)),
+                           'lib-dynload')
+        dst = os.path.join(prefix,
+                           'lib',
+                           'python{0}'.format(self.version.up_to(2)),
+                           'lib-dynload')
+        if os.path.isdir(src) and not os.path.isdir(dst):
+            mkdirp(dst)
+            for f in os.listdir(src):
+                os.symlink(os.path.join(src, f),
+                           os.path.join(dst, f))
+
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
     #
