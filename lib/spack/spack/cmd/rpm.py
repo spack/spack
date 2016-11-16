@@ -605,6 +605,60 @@ def generate_rpms_transitive(args):
         cfg_store.complete_specs()
 
 
+class DependencyConfig(object):
+    def __init__(self, build_norpm_deps, ignore_deps, rpm_db, subspace_cfg,
+                 infer_build_norpm_deps=False, infer_ignore_deps=False):
+        self.build_norpm_deps = build_norpm_deps
+        self.overwrite_build_norpm_deps = self.build_norpm_deps is not None
+        self.ignore_deps = ignore_deps
+
+        self.infer_build_norpm_deps = infer_build_norpm_deps
+        self.infer_ignore_deps = infer_ignore_deps
+
+        self.rpm_db = rpm_db
+        self.subspace_cfg = subspace_cfg
+
+    def collect_transitive_ignore_deps(self, pkg_spec):
+        collected = set()
+        for spec in pkg_spec.traverse():
+            rpm = self._prev_rpm(pkg_spec)
+            if rpm:
+                collected.update(rpm.ignore_deps)
+        return collected
+
+    def _prev_rpm(self, pkg_spec):
+        namespace = self.subspace_cfg.get_namespace(pkg_spec.name)
+        rpm_name = namespace.name(pkg_spec)
+        return self.rpm_db.get(rpm_name, None)
+
+    def ignore_deps_for_pkg(self, pkg_spec):
+        collected = set(self.ignore_deps)
+        collected.update(self.subspace_cfg.get_ignore_deps(pkg_spec.name))
+
+        # Infer which packages to ignore based on prior RPMs
+        if self.infer_ignore_deps:
+            collected.update(self.collect_transitive_ignore_deps(pkg_spec))
+        return collected
+
+    def build_norpm_deps_for_pkg(self, pkg_spec):
+        collected = set()
+        if self.overwrite_build_norpm_deps:
+            collected.update(self.build_norpm_deps)
+        else:
+            rpm = self._prev_rpm(pkg_spec)
+            if rpm and rpm.non_rpm_deps:
+                collected.update(rpm.non_rpm_deps)
+
+        # Infer which packages not to create as RPMs based on dependency info
+        # stored in the package.py file
+        if self.infer_build_norpm_deps:
+            dependencies = pkg_spec.dependencies_dict()
+            collected.update(
+                dep_name for dep_name, dep in dependencies.iteritems()
+                if set(dep.deptypes) == set(['build']))
+        return collected
+
+
 def resolve_autoname(
         pkg_spec, subspace_cfg, rpm_db, new, build_norpm_deps, ignore_deps,
         visited=None, infer_build_norpm_deps=False, infer_ignore_deps=False):
