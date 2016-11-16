@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 16:30 svarrette>
+# Time-stamp: <Tue 2016-11-15 17:45 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -197,7 +197,6 @@ _spack()
                                {-h,--help}'[show this help message and exit]' \
                                {-n,--no-checksum}'[Do not check downloaded packages against checksumPrint additional output during builds]' \
                                "*::args:__spack_installed_packages" && ret=0;;
-
                 (pkg)         __spack_pkg       && ret=0;;
                 (purge)       __spack_purge     && ret=0;;
                 (python)
@@ -207,6 +206,16 @@ _spack()
                 (repo)        __spack_repo      && ret=0;;
                 (setup)       __spack_setup     && ret=0;;
                 (spec)        __spack_spec      && ret=0;;
+                (stage)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               {-n,--no-checksum}'[Do not check downloaded packages against checksumPrint additional output during builds]' \
+                               {-p,--path}'[Path to stage package, does not add to spack tree]:path:_directories' \
+                               "*::args:__specs" && ret=0;;
+                (test)        __spack_test      && ret=0;;
+                (uninstall)   __spack_uninstall && ret=0;;
+                (unload|unuse) _nothing          && ret=0;; ## NOT WORKING
+
             esac
             ;;
     esac
@@ -1023,8 +1032,8 @@ __spack_setup()
                "*::args:__specs"
 }
 
-########################################################################
-#
+##################################################################
+# spack spec [-h] [-l] [-L] [-y] [-c {nodes,edges,paths}] [-I] ...
 ##
 __spack_spec()
 {
@@ -1038,6 +1047,40 @@ __spack_spec()
                {-c,--cover}'[How extensively to traverse the DAG. (default: nodes).]:::(nodes edges paths):"' \
                {-i,--install-status}'[Show install status of packages.  Packages can be: installed \[+\], missing and needed by an installed package \[-\], or not installed (no annotation).]' \
                "*::args:__specs"
+}
+########################################################################
+# spack test [-h] [-l] [--createXmlOutput] [--xmlOutputDir XMLOUTPUTDIR]
+#            [-v]
+#            [names [names ...]]
+# positional arguments:
+#  names                 Names of tests to run.
+##
+__spack_test()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-l,--list}'[Show available tests]' \
+               '--createXmlOutput[Create JUnit XML from test results]' \
+               '--xmlOutputDir[Nose creates XML files in this directory]' \
+               {-v,--verbose}'[verbose output]' \
+               "*::args:_nothing"
+}
+########################################################################
+# spack uninstall [-h] [-f] [-a] [-d] [-y] ...
+##
+__spack_uninstall()
+{
+    local curcontext=$curcontext state line ret=1
+    declare -A opt_args
+    _arguments -s -S \
+               {-h,--help}'[show this help message and exit]:' \
+               {-f,--force}'[Remove regardless of whether other packages depend on this one.]' \
+               {-a,--all}'[USE CAREFULLY. Remove ALL installed packages that match each supplied spec. i.e., if you say uninstall \`libelf\`, ALL versions of \`libelf\` are uninstalled. If no spec is supplied all installed software will be uninstalled. This is both useful and dangerous, like rm -r.]' \
+               {-d,--dependents}"[Also uninstall any packages that depend on the ones given via command line.]" \
+               {-y,--yes-to-all}'[Assume \"yes\" is the answer to every confirmation requested]' \
+               "*::args:__spack_installed_packages"
 }
 
 
