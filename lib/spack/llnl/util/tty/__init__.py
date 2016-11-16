@@ -69,9 +69,13 @@ def set_stacktrace(flag):
 def process_stacktrace(countback):
     """Gives file and line frame 'countback' frames from the bottom"""
     st = traceback.extract_stack()
-    # First entry should be bin/spack. Use this to get spack 'root'.
-    # bin/spack is 9 characters, the length of the 'root' is then len-9.
-    root_len = len(st[0][0]) - 9
+    # All entries will be spack files based on how this function is called.
+    # We use commonprefix to find what the spack 'root' directory is.
+    file_list = []
+    for frame in st:
+        file_list.append(frame[0])
+    root_dir = os.path.commonprefix(file_list)
+    root_len = len(root_dir)
     st_idx = len(st) - countback - 1
     st_text = "%s:%i " % (st[st_idx][0][root_len:], st[st_idx][1])
     return st_text
