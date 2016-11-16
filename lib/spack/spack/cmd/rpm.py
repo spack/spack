@@ -582,10 +582,11 @@ def generate_rpms_transitive(args):
         tty.die("Only 1 top-level package can be specified")
     top_spec = iter(specs).next()
     new = set()
+    dependency_cfg = DependencyConfig(
+        build_norpm_deps, ignore_deps, rpm_db, subspace_cfg,
+        args.infer_build_norpm_deps, args.infer_ignore_deps)
     rpm = resolve_autoname(
-        top_spec, subspace_cfg, rpm_db, new, build_norpm_deps, ignore_deps,
-        infer_build_norpm_deps=args.infer_build_norpm_deps,
-        infer_ignore_deps=args.infer_ignore_deps)
+        top_spec, subspace_cfg, rpm_db, new, dependency_cfg)
 
     # RPMs may have been created that are not going to be used
     new &= rpm.transitive_deps()
@@ -660,8 +661,7 @@ class DependencyConfig(object):
 
 
 def resolve_autoname(
-        pkg_spec, subspace_cfg, rpm_db, new, build_norpm_deps, ignore_deps,
-        visited=None, infer_build_norpm_deps=False, infer_ignore_deps=False):
+        pkg_spec, subspace_cfg, rpm_db, new, dependency_cfg, visited=None):
     """Because this automatically generates rpm names it can create rpms
     transitively.
 
@@ -679,84 +679,35 @@ def resolve_autoname(
 
     namespace = subspace_cfg.get_namespace(pkg_spec.name)
     rpm_name = namespace.name(pkg_spec)
-
-    rpm = rpm_db[rpm_name].rpm if rpm_name in rpm_db else None
-
     if pkg_spec in visited:
-        return rpm
+        return rpm_db[rpm_name].rpm
     visited.add(pkg_spec)
 
-    # Unlike specified build dependencies, inferred build dependencies are not
-    # propagated transitively.
-    all_build_norpm_deps = set()
-    if build_norpm_deps is not None:
-        # Prefer using build deps specified by the user. If not specified, use
-        # whatever build dependencies were associated with the previous release
-        # of the RPM.
-        all_build_norpm_deps.update(build_norpm_deps)
-    elif rpm and rpm.non_rpm_deps:
-        all_build_norpm_deps.update(rpm.non_rpm_deps)
-
-    all_ignore_deps = set()
-    if ignore_deps is not None:
-        all_ignore_deps.update(ignore_deps)
-    else:
-        all_ignore_deps.update(subspace_cfg.get_ignore_deps(pkg_spec.name))
-        if rpm and rpm.ignore_deps:
-            all_ignore_deps.update(rpm.ignore_deps)
-
-    dependencies = pkg_spec.dependencies_dict()
-    if infer_build_norpm_deps:
-        all_build_norpm_deps.update(
-            dep_name for dep_name, dep in dependencies.iteritems()
-            if set(dep.deptypes) == set(['build']))
+    ignore_deps = dependency_cfg.ignore_deps_for_pkg(pkg_spec)
+    build_norpm_deps = dependency_cfg.build_norpm_deps_for_pkg(pkg_spec)
+    omit_deps = ignore_deps | build_norpm_deps
 
     rpm_deps = set()
-    skipped = set()
-    for dep_name, dep in dependencies.iteritems():
-        if dep_name in all_ignore_deps | all_build_norpm_deps:
+    for dep_name, dep in pkg_spec.dependencies_dict().iteritems():
+        if dep_name in omit_deps:
             pass
         else:
-            if subspace_cfg.get_namespace(dep.spec.name, required=False):
-                dep_rpm = resolve_autoname(
-                    dep.spec, subspace_cfg, rpm_db, new,
-                    build_norpm_deps, ignore_deps, visited,
-                    infer_build_norpm_deps=infer_build_norpm_deps,
-                    infer_ignore_deps=infer_ignore_deps)
-                rpm_deps.add(dep_rpm)
-            else:
-                skipped.add(dep.spec.name)
-
-    if infer_ignore_deps:
-        transitive_deps = (
-            set(itertools.chain.from_iterable(x.transitive_deps()
-                for x in rpm_deps)) |
-            rpm_deps)
-        all_ignore_deps.update(itertools.chain.from_iterable(
-            x.ignore_deps for x in transitive_deps))
-    if skipped:
-        tty.debug("Skipped: " + ', '.join(skipped))
-    skipped -= all_ignore_deps
-    if skipped:
-        raise MissingNamespaceError(
-            "The following packages are not ignored" +
-            " and are missing namespace information: [{0}]".format(
-                ', '.join(skipped)))
-
-    omitDeps = all_build_norpm_deps | all_ignore_deps
-    rpm_deps = set(x for x in rpm_deps if x.pkg_name not in omitDeps)
+            dep_rpm = resolve_autoname(
+                dep.spec, subspace_cfg, rpm_db, new, dependency_cfg, visited)
+            rpm_deps.add(dep_rpm)
 
     dep_pkg_names = set(x.pkg_name for x in rpm_deps)
     transitive_norpm = get_build_norpm_transitive(
-        pkg_spec, all_build_norpm_deps, all_ignore_deps, dep_pkg_names)
+        pkg_spec, build_norpm_deps, ignore_deps, dep_pkg_names)
 
     ignore_deps = (set(x.name for x in pkg_spec.traverse()) &
-                   all_ignore_deps)
+                   ignore_deps)
+    build_norpm_deps = set(pkg_spec.dependencies_dict()) & build_norpm_deps
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
         namespace.path(pkg_spec), rpm_deps,
         nonrpm_dep_specs=list(x.format() for x in transitive_norpm),
-        non_rpm_deps=set(dependencies) & all_build_norpm_deps,
+        non_rpm_deps=build_norpm_deps,
         ignore_deps=ignore_deps,
         provides_name=namespace.provides_name(pkg_spec),
         root=namespace.root, name_spec=namespace.name_spec,
