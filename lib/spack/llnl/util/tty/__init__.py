@@ -69,11 +69,13 @@ def set_stacktrace(flag):
 def process_stacktrace(countback):
     """Gives file and line frame 'countback' frames from the bottom"""
     st = traceback.extract_stack()
-    # All entries will be spack files based on how this function is called.
-    # We use commonprefix to find what the spack 'root' directory is.
+    # Not all entries may be spack files, we have to remove those that aren't.
     file_list = []
     for frame in st:
-        file_list.append(frame[0])
+        # Check that the file is a spack file
+        if frame[0].find("/spack") >= 0:
+            file_list.append(frame[0])
+    # We use commonprefix to find what the spack 'root' directory is.
     root_dir = os.path.commonprefix(file_list)
     root_len = len(root_dir)
     st_idx = len(st) - countback - 1
