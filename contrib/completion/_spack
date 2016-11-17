@@ -1,7 +1,7 @@
 #compdef spack
 ########################################################################################
 # -*- mode:sh; -*-
-# Time-stamp: <Tue 2016-11-15 17:45 svarrette>
+# Time-stamp: <Wed 2016-11-16 22:20 svarrette>
 #
 # ZSH completion for [Spack](https://github.com/LLNL/spack)
 #
@@ -175,7 +175,7 @@ _spack()
                     # could do better here to avoid repetition
                     _describe -t commands 'spack help' _spack_cmds && ret=0
                     ;;
-                (info|restage)
+                (info|restage|use|versions)
                     _arguments -C \
                                {-h,--help}'[show this help message and exit]' \
                                "*::args:__spack_packages" && ret=0;;
@@ -215,7 +215,17 @@ _spack()
                 (test)        __spack_test      && ret=0;;
                 (uninstall)   __spack_uninstall && ret=0;;
                 (unload|unuse) _nothing          && ret=0;; ## NOT WORKING
-
+                (url-parse)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]' \
+                               {-s,--spider}'[Spider the source page for versions.]' \
+                               "*::args:_nothing" && ret=0;;
+                (urls)
+                    _arguments -s \
+                               {-h,--help}'[show this help message and exit]' \
+                               {-c,--color}'[Color the parsed version and name in the urls shown.  Version will be cyan, name red.]' \
+                               {-e,--extrapolation}'[Color the versions used for extrapolation as well.Additional versions are green, names magenta.]' && ret=0;;
+                (view) __spack_view  && ret=0;;
             esac
             ;;
     esac
@@ -351,9 +361,9 @@ __spack_compiler()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
-               ':command:->command' \
-               '*::options:->options'
+               '--help[show this help message and exit]' \
+               ': :->command' \
+               '*:: :->options'
     case $state in
         (command)
             _describe -t commands "spack compiler subcommand" _spack_compiler_cmds
@@ -447,7 +457,7 @@ __spack_config()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
+               '--help[show this help message and exit]' \
                '--scope[Configuration scope to modify]:scope:(defaults defaults/darwin site site/darwin user user/darwin)' \
                ':command:->command' \
                '*::options:->options'
@@ -505,7 +515,7 @@ __spack_debug()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
+               '--help[show this help message and exit]' \
                ':command:->command' \
                '*::options:->options'
     case $state in
@@ -750,8 +760,8 @@ __spack_mirror()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
-               {-n,--no-checksum}'[Do not check fetched packages against checksum]' \
+               '--help[show this help message and exit]' \
+               '--no-checksum[Do not check fetched packages against checksum]' \
                ':command:->command' \
                '*::options:->options'
     case $state in
@@ -846,7 +856,7 @@ __spack_module()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
+               '--help[show this help message and exit]' \
                ':command:->command' \
                '*::options:->options'
     case $state in
@@ -937,7 +947,7 @@ __spack_pkg()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
+               '--help[show this help message and exit]' \
                ':command:->command' \
                '*::options:->options'
     case $state in
@@ -989,7 +999,7 @@ __spack_repo()
     local curcontext="$curcontext" state line
     typeset -A opt_args
     _arguments -C \
-               {-h,--help}'[show this help message and exit]' \
+               '--help[show this help message and exit]' \
                ':command:->command' \
                '*::options:->options'
     case $state in
@@ -1083,6 +1093,45 @@ __spack_uninstall()
                "*::args:__spack_installed_packages"
 }
 
+#########################################################################
+#  spack view [-h] [-v] [-e EXCLUDE] [-d {true,false,yes,no}] ACTION ...
+##
+__spack_view()
+{
+    local -a _spack_view_cmds
+    # Dunno how to treat alternatives
+    _spack_view_cmds=(
+        'symlink:Add package files to a filesystem view via symbolic links.'
+        'hardlink:Add packages files to a filesystem via via hard links.'
+        'remove:Remove packages from a filesystem view'
+        'statlink:Check status of packages in a filesystem view.'
+    )
 
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+    _arguments -C \
+               '--help[show this help message and exit]' \
+               '--exclude[Exclude packages with names matching the given regex pattern.]:excl:' \
+               '--dependencies[Follow dependencies.]:::(true false yes no)' \
+               '--verbose[Display verbose output]' \
+               ':command:->command' \
+               '*::options:->options'
+
+
+    case $state in
+        (command)
+            _describe -t commands "spack view subcommand" _spack_view_cmds
+            ;;
+        (options)
+            case $line[1] in
+                (symlink|add|soft|hardlink|hard|remove|rm|statlink|status|check)
+                    _arguments -C \
+                               {-h,--help}'[show this help message and exit]:' \
+                               ":path:_files" \
+                               ":spec:__specs";;
+            esac
+            ;;
+    esac
+}
 
 _spack "$@"
