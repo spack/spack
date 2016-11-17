@@ -412,8 +412,6 @@ class Rpm(object):
         other_rpm_dep_names = frozenset(x.name for x in other.rpm_deps)
         if self.name != other.name:
             raise ValueError("Diff is not useful for different RPM packages.")
-        # TODO: This compares everything except nonrpm_dep_specs (as of now
-        # those are not stored/parsed)
         to_compare = list([
             (self.pkg_spec, other.pkg_spec),
             (self.path, other.path), (rpm_dep_names, other_rpm_dep_names),
