@@ -2304,20 +2304,22 @@ class Spec(object):
                         raise ValueError("Error: unterminated ${ in format:"
                                          "'%s'" % format_string)
                     named_str += c
-                    continue;
-                
+                    continue
+
                 if named_str.startswith('DEP:'):
                     _, pkgName, attribute = named_str.split(':', 2)
-                    implementingSpecs = list(x for x in spec.traverse() if
+                    implementingSpecs = list(
+                        x for x in spec.traverse() if
                         (x.name == pkgName or x.package.provides(pkgName)))
                     if not implementingSpecs:
-                        raise ValueError("Error: {0} is not a dependency of {1}"
+                        raise ValueError(
+                            "Error: {0} is not a dependency of {1}"
                             .format(pkgName, self.name))
                     spec = iter(implementingSpecs).next()
                 else:
                     attribute = named_str
                     spec = self
-                
+
                 attr_id = attribute.upper()
                 if attr_id in ['PACKAGE', 'NAME']:
                     name = spec.name or ''
@@ -2331,7 +2333,7 @@ class Spec(object):
                         versionStr = str(spec.versions)
                     else:
                         versionStr = None
-                        
+
                     if versionStr:
                         write(fmt % versionStr, '@')
                 elif attr_id == 'COMPILER':
