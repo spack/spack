@@ -1066,7 +1066,7 @@ def rpm(parser, args):
         generate_rpms_transitive(args)
 
 
-def create_rpm_source(dst_path, spec_file_path):
+def create_rpm_source(dst_path, spec_file_path, stage_resources=True):
     cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
     cfg_store = ConfigStore(None, specs_dir=cfg_dir)
     _, spec_fname = os.path.split(spec_file_path)
@@ -1088,6 +1088,22 @@ def create_rpm_source(dst_path, spec_file_path):
 
     for subdir in ['bin', 'lib', 'etc', 'var/spack/repos']:
         spack_move(subdir)
+
+    if stage_resources:
+        mkdirp(os.path.join(spack_dst, 'var/spack/stage'))
+
+        rpm_props = cfg_store.get_rpm_properties(rpm_name)
+        specs = [rpm_props.pkg_spec]
+        for spec in specs:
+            spec = spack.spec.Spec(spec)
+            spec._mark_concrete()
+            package = spack.repo.get(spec)
+            package.do_stage()
+            source_path = os.path.abspath(package.stage.archive_file)
+            relative_path = os.path.relpath(source_path, spack.spack_root)
+            dst_dir = os.path.join(spack_dst, os.path.dirname(relative_path))
+            mkdirp(dst_dir)
+            shutil.move(source_path, dst_dir)
 
 
 def populate_cache(spack_origin_path, spec_file_path):
