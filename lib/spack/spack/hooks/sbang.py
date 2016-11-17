@@ -66,6 +66,10 @@ def filter_shebang(path):
     if re.search(r'^#!(/[^/]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
 
+    # Use //! instead of #! on second line for node.js.
+    if re.search(r'^#!(/[^/]*)*node\b', original):
+        original = re.sub(r'^#', '//', original)
+
     # Change non-writable files to be writable if needed.
     saved_mode = None
     if not os.access(path, os.W_OK):
