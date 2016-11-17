@@ -122,7 +122,6 @@ class RpmTest(unittest.TestCase):
         rpmX = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1),
                    MockNamespace.path(specX1), set([rpmY1, rpmZ1]))
         rpmDb = self.rpmDb1
-        rpmDb[rpmX.name] = RpmInfo(rpmX, None)
 
         resultRpm = resolve_autoname(specX1, subspaceCfg, rpmDb, self.new,
                                      MockDependencyConfig())
