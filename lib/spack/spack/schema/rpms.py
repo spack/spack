@@ -1,4 +1,3 @@
-##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -22,9 +21,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for packages.yaml configuration files.
+"""Schema for rpms.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/packages.py
+.. literalinclude:: ../spack/schema/mirrors.py
    :lines: 32-
 """
 
@@ -35,7 +34,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        r'packages': {
+        r'rpms': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,
@@ -45,42 +44,29 @@ schema = {
                     'default': {},
                     'additionalProperties': False,
                     'properties': {
-                        'version': {
-                            'type': 'array',
-                            'default': [],
-                            # version strings
-                            'items': {'anyOf': [{'type': 'string'},
-                                                {'type': 'number'}]}},
-                        'compiler': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {'type': 'string'}},  # compiler specs
-                        'buildable': {
-                            'type':  'boolean',
-                            'default': True,
-                        },
-                        'modules': {
+                        'name': {'type': 'string'},
+                        'prefix': {'type': 'string'},
+                        'provides': {'type': 'string'},
+                        'subspaces': {
                             'type': 'object',
-                            'default': {},
-                        },
-                        'providers': {
-                            'type':  'object',
-                            'default': {},
-                            'additionalProperties': False,
                             'patternProperties': {
                                 r'\w[\w-]*': {
-                                    'type': 'array',
-                                    'default': [],
-                                    'items': {'type': 'string'}, }, }, },
-                        'paths': {
-                            'type': 'object',
-                            'default': {},
-                        },
-                        'variants': {
-                            'oneOf': [
-                                {'type': 'string'},
-                                {'type': 'array',
-                                 'items': {'type': 'string'}}],
+                                    'type': 'object',
+                                    'properties': {
+                                        'name': {'type': 'string'},
+                                        'prefix': {'type': 'string'},
+                                        'provides': {'type': 'string'},
+                                        'compiler': {
+                                            'type': 'array',
+                                            'default': [],
+                                            'items': {'type': 'string'}},
+                                        'version': {
+                                            'type': 'array',
+                                            'default': [],
+                                            'items': {'anyOf': [
+                                                {'type': 'string'},
+                                                {'type': 'number'}]}},
+                                    }}}
                         },
                     },
                 },

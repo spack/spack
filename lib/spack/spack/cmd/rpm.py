@@ -744,7 +744,7 @@ def resolve_pkg_to_namespace(universal_subspace=None):
     but it has a default then that will be used (if the subspace is not
     available and there is no default, that is an error).
     """
-    packages = spack.config.get_config('packages')
+    packages = spack.config.get_config('rpms')
     pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
     pkg_to_namespace = {}
     for pkg_name, info in packages.iteritems():
@@ -764,10 +764,8 @@ def resolve_pkg_to_namespace(universal_subspace=None):
 
 def resolve_pkg_to_subspace(universal_subspace=None):
     pkg_to_subspace = {}
-    packages = spack.config.get_config('packages')
+    packages = spack.config.get_config('rpms')
     for pkg_name, info in packages.iteritems():
-        # TODO: since these can be specified at the package level, use a more
-        # descriptive name? like 'name' -> 'rpmnameprojection'
         if all(p in info for p in ['name', 'prefix']):
             default_subspace = info
         else:
