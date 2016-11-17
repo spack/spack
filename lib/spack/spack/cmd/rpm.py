@@ -329,7 +329,9 @@ def read_rpms_transitive(cfg_store, rpm_name, rpm_db):
     rpm = Rpm(
         rpm_name, rpm_props.pkg_name, rpm_props.pkg_spec, rpm_props.path,
         rpm_deps, non_rpm_deps=rpm_props.non_rpm_deps,
-        ignore_deps=rpm_props.ignore_deps, provides_name=specProps.PROVIDES)
+        ignore_deps=rpm_props.ignore_deps, provides_name=specProps.PROVIDES,
+        root=rpm_props.root, name_spec=rpm_props.name_spec,
+        provides_spec=rpm_props.provides_spec)
 
     rpm_spec = RpmSpec(
         rpm_name, summary=specProps.SUMMARY, group=specProps.GROUP,
@@ -388,7 +390,8 @@ class Rpm(object):
     def __init__(
             self, name, pkg_name, pkg_spec, path, rpm_deps,
             nonrpm_dep_specs=None, non_rpm_deps=None, ignore_deps=None,
-            provides_name=None):
+            provides_name=None, root=None, name_spec=None,
+            provides_spec=None):
         self.name = name
         self.pkg_name = pkg_name
         self.pkg_spec = pkg_spec
@@ -403,6 +406,9 @@ class Rpm(object):
         self.ignore_deps = ignore_deps or set()
         self.nonrpm_dep_specs = nonrpm_dep_specs or list()
         self.provides_name = provides_name if provides_name != name else None
+        self.root = root
+        self.name_spec = name_spec
+        self.provides_spec = provides_spec
 
     def diff(self, other):
         """Compare with another instance of the same RPM package. Note this
@@ -478,12 +484,17 @@ class Rpm(object):
             set(self.rpm_deps)))
 
     def write_files_for_install(
-            self, rpm_spec, cfg_store, redirect=True, spack_rpm_props=None):
+            self, rpm_spec, cfg_store, redirect=True):
         spec_vars = self.new_rpm_spec_variables(rpm_spec, redirect=redirect)
         cfg_store.save_spec_properties(self.name, spec_vars.to_json())
 
-        if spack_rpm_props:
-            cfg_store.save_rpm_properties(self.name, spack_rpm_props.to_json())
+        spack_rpm_props = SpackRpmProperties(
+            pkg_name=self.pkg_name, pkg_spec=self.pkg_spec, path=self.path,
+            rpm_deps=set(dep_rpm.name for dep_rpm in self.rpm_deps),
+            non_rpm_deps=self.non_rpm_deps, ignore_deps=self.ignore_deps,
+            root=self.root, name_spec=self.name_spec,
+            provides_spec=self.provides_spec)
+        cfg_store.save_rpm_properties(self.name, spack_rpm_props.to_json())
 
         system_pkg_cfg = list()
         for dep in self.ignore_deps:
@@ -549,10 +560,9 @@ def generate_rpms_transitive(args):
         tty.die("Only 1 top-level package can be specified")
     top_spec = iter(specs).next()
     new = set()
-    pkg_to_rpmprops = dict()
     rpm = resolve_autoname(
         top_spec, namespace_store, rpm_db, new, build_deps, ignore_deps,
-        pkg_to_rpmprops, infer_build_deps=args.infer_build_deps,
+        infer_build_deps=args.infer_build_deps,
         infer_ignore_deps=args.infer_ignore_deps)
 
     # RPMs may have been created that are not going to be used
@@ -567,8 +577,7 @@ def generate_rpms_transitive(args):
         tty.msg("New or updated rpm: " + rpm.name)
         rpm_spec = rpm_db[rpm.name].spec
         rpm.write_files_for_install(
-            rpm_spec, cfg_store, redirect=(not args.no_redirect),
-            spack_rpm_props=pkg_to_rpmprops[rpm.pkg_name])
+            rpm_spec, cfg_store, redirect=(not args.no_redirect))
 
     if not args.properties_only:
         cfg_store.complete_specs()
@@ -576,8 +585,7 @@ def generate_rpms_transitive(args):
 
 def resolve_autoname(
         pkg_spec, namespace_store, rpm_db, new, build_deps, ignore_deps,
-        pkg_to_rpmprops, visited=None, infer_build_deps=False,
-        infer_ignore_deps=False):
+        visited=None, infer_build_deps=False, infer_ignore_deps=False):
     """Because this automatically generates rpm names it can create rpms
     transitively.
 
@@ -632,12 +640,12 @@ def resolve_autoname(
         if dep_name in inferred_ignore_deps:
             pass
         elif dep_name in inferred_build_deps:
-            nonrpm_dep_specs.append(str(dep.spec))
+            nonrpm_dep_specs.append(dep.spec)
         else:
             if namespace_store.get_namespace(dep.spec.name, required=False):
                 dep_rpm = resolve_autoname(
                     dep.spec, namespace_store, rpm_db, new,
-                    build_deps, ignore_deps, pkg_to_rpmprops, visited,
+                    build_deps, ignore_deps, visited,
                     infer_build_deps=infer_build_deps,
                     infer_ignore_deps=infer_ignore_deps)
                 rpm_deps.add(dep_rpm)
@@ -663,13 +671,19 @@ def resolve_autoname(
     omitDeps = inferred_build_deps | inferred_ignore_deps
     rpm_deps = set(x for x in rpm_deps if x.pkg_name not in omitDeps)
 
+    transitive_norpm = get_build_norpm_transitive(
+        pkg_spec, inferred_build_deps, inferred_ignore_deps)
+
+    ignore_deps = (set(x.name for x in pkg_spec.traverse()) &
+                   inferred_ignore_deps)
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
         namespace.path(pkg_spec), rpm_deps, nonrpm_dep_specs=nonrpm_dep_specs,
         non_rpm_deps=set(dependencies) & inferred_build_deps,
-        ignore_deps=set(x.name for x in pkg_spec.traverse()) &
-            inferred_ignore_deps,  # NOQA: ignore=E131
-        provides_name=namespace.provides_name(pkg_spec))
+        ignore_deps=ignore_deps,
+        provides_name=namespace.provides_name(pkg_spec),
+        root=namespace.root, name_spec=namespace.name_spec,
+        provides_spec=namespace.provides_spec)
 
     if rpm_name not in rpm_db:
         rpm_spec = RpmSpec.new(rpm_name, pkg_spec)
@@ -701,14 +715,31 @@ def resolve_autoname(
 
     # TODO: if package.py contents change then a new rpm release should be made
 
-    pkg_to_rpmprops[pkg_spec.name] = SpackRpmProperties(
-        pkg_name=rpm.pkg_name, pkg_spec=rpm.pkg_spec, path=rpm.path,
-        rpm_deps=set(dep_rpm.name for dep_rpm in rpm.rpm_deps),
-        non_rpm_deps=rpm.non_rpm_deps, ignore_deps=rpm.ignore_deps,
-        root=namespace.root, name_spec=namespace.name_spec,
-        provides_spec=namespace.provides_spec)
-
     return rpm
+
+
+def disconnected(pkg_spec, remove):
+    return (set(pkg_spec.traverse()) -
+            connected_after_removal(pkg_spec, remove))
+
+
+def connected_after_removal(pkg_spec, remove):
+    return set(x for x in pkg_spec.traverse(
+               visited=set(remove), cover='edges', key=lambda x: x.name)
+               if x.name not in remove)
+
+
+def get_build_norpm_transitive(pkg_spec, norpm_deps, ignore_deps):
+    transitive_norpm = disconnected(pkg_spec, norpm_deps)
+    transitive_norpm -= disconnected(pkg_spec, ignore_deps)
+    return transitive_norpm
+
+
+def get_pkgspec_for_rpm(concrete_spec, transitive_norpm):
+    base = concrete_spec.format()
+    base += ' '.join([concrete_spec[x].format() for x in transitive_norpm
+                      if x in concrete_spec])
+    return base    
 
 
 class MissingNamespaceError(Exception):
