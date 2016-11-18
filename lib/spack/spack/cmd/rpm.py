@@ -50,11 +50,20 @@ def setup_parser(subparser):
         '--universal-subspace', dest='universal_subspace',
         help="choose the subspace to use for all packages (where available)")
     subparser.add_argument(
-        '--build-deps', dest='build_deps',
-        help="comma-separated packages which should not become rpms")
+        '--build-norpm-deps', dest='build_norpm_deps',
+        help="""comma-separated packages which should not become rpms, but
+should be built by Spack as part of creating a dependent package""")
     subparser.add_argument(
         '--ignore-deps', dest='ignore_deps',
         help="comma-separated packages which should not be managed by Spack")
+    subparser.add_argument(
+        '--infer-build-norpm-deps', dest='infer_build_norpm_deps',
+        action="store_true",
+        help="""<RPM name> <package name> <root dir>: use package dependency
+types to infer whether a package should not be an rpm""")
+    subparser.add_argument(
+        '--infer-ignore-deps', dest='infer_ignore_deps', action="store_true",
+        help="track packages maintained by spack but ignored by dependencies")
     subparser.add_argument(
         '--specs-dir', dest='specs_dir',
         help="parse rpm config from spec files in this directory")
@@ -79,13 +88,6 @@ in --specs-dir)""")
         '--bootstrap', dest='bootstrap', nargs=3,
         help="""create properties files from spec for rpm which has (up to now)
 not been managed with Spack""")
-    subparser.add_argument(
-        '--infer-build-deps', dest='infer_build_deps', action="store_true",
-        help="""<RPM name> <package name> <root dir>: use package dependency
-types to infer whether a package should not be an rpm""")
-    subparser.add_argument(
-        '--infer-ignore-deps', dest='infer_ignore_deps', action="store_true",
-        help="track packages maintained by spack but ignored by dependencies")
     subparser.add_argument(
         '--no-redirect', dest='no_redirect', action="store_true",
         help="Spack installation in spec file will not redirect")
@@ -561,7 +563,7 @@ def generate_rpms_transitive(args):
         args.universal_subspace, args.get_namespace_from_specs,
         args.default_namespace, cfg_store)
 
-    build_deps = expandOption(args.build_deps)
+    build_norpm_deps = expandOption(args.build_norpm_deps)
     ignore_deps = expandOption(args.ignore_deps)
 
     specs = spack.cmd.parse_specs(args.package, concretize=True)
@@ -570,8 +572,8 @@ def generate_rpms_transitive(args):
     top_spec = iter(specs).next()
     new = set()
     rpm = resolve_autoname(
-        top_spec, namespace_store, rpm_db, new, build_deps, ignore_deps,
-        infer_build_deps=args.infer_build_deps,
+        top_spec, namespace_store, rpm_db, new, build_norpm_deps, ignore_deps,
+        infer_build_norpm_deps=args.infer_build_norpm_deps,
         infer_ignore_deps=args.infer_ignore_deps)
 
     # RPMs may have been created that are not going to be used
@@ -593,8 +595,8 @@ def generate_rpms_transitive(args):
 
 
 def resolve_autoname(
-        pkg_spec, namespace_store, rpm_db, new, build_deps, ignore_deps,
-        visited=None, infer_build_deps=False, infer_ignore_deps=False):
+        pkg_spec, namespace_store, rpm_db, new, build_norpm_deps, ignore_deps,
+        visited=None, infer_build_norpm_deps=False, infer_ignore_deps=False):
     """Because this automatically generates rpm names it can create rpms
     transitively.
 
@@ -621,38 +623,38 @@ def resolve_autoname(
 
     # Unlike specified build dependencies, inferred build dependencies are not
     # propagated transitively.
-    inferred_build_deps = set()
-    if build_deps is not None:
+    all_build_norpm_deps = set()
+    if build_norpm_deps is not None:
         # Prefer using build deps specified by the user. If not specified, use
         # whatever build dependencies were associated with the previous release
         # of the RPM.
-        inferred_build_deps.update(build_deps)
+        all_build_norpm_deps.update(build_norpm_deps)
     elif rpm and rpm.non_rpm_deps:
-        inferred_build_deps.update(rpm.non_rpm_deps)
+        all_build_norpm_deps.update(rpm.non_rpm_deps)
 
-    inferred_ignore_deps = set()
+    all_ignore_deps = set()
     if ignore_deps is not None:
-        inferred_ignore_deps.update(ignore_deps)
+        all_ignore_deps.update(ignore_deps)
     elif rpm and rpm.ignore_deps:
-        inferred_ignore_deps.update(rpm.ignore_deps)
+        all_ignore_deps.update(rpm.ignore_deps)
 
     dependencies = pkg_spec.dependencies_dict()
-    if infer_build_deps:
-        inferred_build_deps.update(
+    if infer_build_norpm_deps:
+        all_build_norpm_deps.update(
             dep_name for dep_name, dep in dependencies.iteritems()
             if set(dep.deptypes) == set(['build']))
 
     rpm_deps = set()
     skipped = set()
     for dep_name, dep in dependencies.iteritems():
-        if dep_name in inferred_ignore_deps | inferred_build_deps:
+        if dep_name in all_ignore_deps | all_build_norpm_deps:
             pass
         else:
             if namespace_store.get_namespace(dep.spec.name, required=False):
                 dep_rpm = resolve_autoname(
                     dep.spec, namespace_store, rpm_db, new,
-                    build_deps, ignore_deps, visited,
-                    infer_build_deps=infer_build_deps,
+                    build_norpm_deps, ignore_deps, visited,
+                    infer_build_norpm_deps=infer_build_norpm_deps,
                     infer_ignore_deps=infer_ignore_deps)
                 rpm_deps.add(dep_rpm)
             else:
@@ -663,31 +665,31 @@ def resolve_autoname(
             set(itertools.chain.from_iterable(x.transitive_deps()
                 for x in rpm_deps)) |
             rpm_deps)
-        inferred_ignore_deps.update(itertools.chain.from_iterable(
+        all_ignore_deps.update(itertools.chain.from_iterable(
             x.ignore_deps for x in transitive_deps))
     if skipped:
         tty.debug("Skipped: " + ', '.join(skipped))
-    skipped -= inferred_ignore_deps
+    skipped -= all_ignore_deps
     if skipped:
         raise MissingNamespaceError(
             "The following packages are not ignored" +
             " and are missing namespace information: [{0}]".format(
                 ', '.join(skipped)))
 
-    omitDeps = inferred_build_deps | inferred_ignore_deps
+    omitDeps = all_build_norpm_deps | all_ignore_deps
     rpm_deps = set(x for x in rpm_deps if x.pkg_name not in omitDeps)
 
     dep_pkg_names = set(x.pkg_name for x in rpm_deps)
     transitive_norpm = get_build_norpm_transitive(
-        pkg_spec, inferred_build_deps, inferred_ignore_deps, dep_pkg_names)
+        pkg_spec, all_build_norpm_deps, all_ignore_deps, dep_pkg_names)
 
     ignore_deps = (set(x.name for x in pkg_spec.traverse()) &
-                   inferred_ignore_deps)
+                   all_ignore_deps)
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
         namespace.path(pkg_spec), rpm_deps,
         nonrpm_dep_specs=list(x.format() for x in transitive_norpm),
-        non_rpm_deps=set(dependencies) & inferred_build_deps,
+        non_rpm_deps=set(dependencies) & all_build_norpm_deps,
         ignore_deps=ignore_deps,
         provides_name=namespace.provides_name(pkg_spec),
         root=namespace.root, name_spec=namespace.name_spec,
