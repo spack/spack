@@ -71,4 +71,17 @@ class Mkl(IntelInstaller):
         spack_env.set('MKLROOT', self.prefix)
 
     def setup_environment(self, spack_env, env):
+        # Remove paths that were guessed but are incorrect for this package.
+        env.remove_path('LIBRARY_PATH',
+                        join_path(self.prefix, 'lib'))
+        env.remove_path('LD_LIBRARY_PATH',
+                        join_path(self.prefix, 'lib'))
+        env.prepend_path('LD_LIBRARY_PATH',
+                         join_path(self.prefix, 'lib', 'intel64'))
+        env.prepend_path('LIBRARY_PATH',
+                         join_path(self.prefix, 'lib', 'intel64'))
+        env.prepend_path('LD_LIBRARY_PATH',
+                         join_path(self.prefix, 'lib', 'intel64'))
+        env.prepend_path('LIBRARY_PATH',
+                         join_path(self.prefix, 'lib', 'intel64'))
         env.set('MKLROOT', self.prefix)

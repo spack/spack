@@ -76,11 +76,38 @@ class PyNumpy(Package):
 
         if '+blas' in spec or '+lapack' in spec:
             with open('site.cfg', 'w') as f:
-                f.write('[DEFAULT]\n')
-                f.write('libraries=%s\n'    % ','.join(lapackblas.names))
+                if '^mkl' in spec:
+                    # Even though the intel-parallel-studio package provides
+                    # mkl that package will not work here with a non-Intel
+                    # compiler due to header collision.
+                    f.write('[mkl]\n')
+                    f.write('libraries=mkl_rt\n')
+                else:
+                    if spec.satisfies('@:1.9.2'):
+                        f.write('[DEFAULT]\n')
+                    else:
+                        f.write('[ALL]\n')
+
+                    f.write('libraries=%s\n'    % ','.join(lapackblas.names))
+
                 f.write('library_dirs=%s\n' % ':'.join(lapackblas.directories))
                 if not ((platform.system() == "Darwin") and
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
+
+        # TODO: Get MKL working with the Intel compilers.
+        #
+        # Ironically, MKL does not work with the Intel compilers within Spack.
+        # The issue is that the compiler path is not in the environment and the
+        # numpy build system can not find xiar. Loading the compiler
+        # environment module before the build will get things working but that
+        # is not really a good work-around.
+        #
+        # Once MKL can be used with the Intel compilers the call to setup would
+        # look like:
+        #    setup_py('config', '--compiler=intelem',
+        #             'build_clib', '--compiler=intelem',
+        #             'build_ext', '--compiler=intelem',
+        #             'install', '--prefix={0}'.format(prefix))
 
         setup_py('install', '--prefix={0}'.format(prefix))
