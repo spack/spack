@@ -1100,7 +1100,7 @@ def create_rpm_source(dst_path, spec_file_path, stage_resources=False):
         mkdirp(os.path.join(spack_dst, 'var/spack/cache'))
 
         rpm_props = cfg_store.get_rpm_properties(rpm_name)
-        specs = [rpm_props.pkg_spec]
+        specs = [rpm_props.pkg_spec] + list(rpm_props.non_rpm_dep_specs)
         for spec in specs:
             tty.msg("Staging: " + str(spec))
             spec = spack.spec.Spec(spec)
