@@ -101,9 +101,6 @@ when there is no other option""")
         help="""When creating rpm source, stage packages to avoid downloading
 them at build time""")
     subparser.add_argument(
-        '--rpm-cache', dest='rpm_cache', nargs=2,
-        help="""<spack-origin> <spec-path>: set up spack cache for RPM""")
-    subparser.add_argument(
         'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
 
@@ -1063,9 +1060,6 @@ def rpm(parser, args):
     if args.rpm_source:
         dst_path, spec_path = args.rpm_source
         create_rpm_source(dst_path, spec_path, args.stage_resources)
-    elif args.rpm_cache:
-        spack_origin_path, spec_path = args.rpm_cache
-        populate_cache(spack_origin_path, spec_path)
     else:
         generate_rpms_transitive(args)
 
