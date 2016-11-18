@@ -1018,6 +1018,11 @@ class ConfigStore(object):
 
 
 class NamespaceStore(object):
+    """This constructs subspaces using: rpm properties files of existing
+    Spack-built packages; rpms.yaml configuration file. Using the rpm
+    properties files is optional; if they are used then they have priority
+    over the yaml config.
+    """
     def set_up_namespaces(
             self, universal_subspace, get_namespace_from_specs,
             default_namespace, cfg_store):
