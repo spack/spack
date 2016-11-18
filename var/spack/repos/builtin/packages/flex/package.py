@@ -28,12 +28,21 @@ from spack import *
 class Flex(Package):
     """Flex is a tool for generating scanners."""
 
-    homepage = "http://flex.sourceforge.net/"
-    url = "http://download.sourceforge.net/flex/flex-2.5.39.tar.gz"
+    homepage = "https://github.com/westes/flex"
+    url = "https://github.com/westes/flex/archive/v2.6.2.tar.gz"
+    
+    def url_for_version(self, version):
+        base_url = "https://github.com/westes/flex/archive"
+        if version >= Version("2.6.0"):
+            return "{0}/v{1}.tar.gz".format(base_url, version)
+        else:
+            return "{0}/flex-{1}.tar.gz".format(base_url, version)
 
-    version('2.6.0', '5724bcffed4ebe39e9b55a9be80859ec')
-    version('2.5.39', 'e133e9ead8ec0a58d81166b461244fde')
-
+    version('2.6.2', 'acde3a89ef2b376aac94586fd5fda460')
+    version('2.6.1', 'c4f31e0e4bd1711b7c91f16ef526ad90')
+    version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
+    version('2.5.39', '5865e76ac69c05699f476515592750d7')
+                
     depends_on("bison", type='build')
     depends_on("m4", type='build')
 
