@@ -1039,7 +1039,9 @@ class NamespaceStore(object):
             self.default_namespace = None
 
     def get_namespace(self, pkg_name, required=True):
-        namespace = self.pkg_to_namespace.get(pkg_name, self.default_namespace)
+        namespace = self.pkg_to_namespace.get(
+            pkg_name, 
+            self.pkg_to_namespace.get('all', self.default_namespace))
         if not namespace and required:
             raise MissingNamespaceError("No namespace for " + pkg_name)
         return namespace
