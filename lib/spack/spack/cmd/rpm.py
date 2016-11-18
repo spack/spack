@@ -351,12 +351,15 @@ class SpackRpmProperties(Properties):
     RPM .spec file."""
     PROPERTIES = set([
         'pkg_name', 'pkg_spec', 'path', 'rpm_deps', 'non_rpm_deps',
-        'ignore_deps', 'root', 'name_spec', 'provides_spec'])
+        'non_rpm_dep_specs', 'ignore_deps', 'root', 'name_spec',
+        'provides_spec'])
 
     CONVERSION = {
         'pkgName': 'pkg_name', 'pkgSpec': 'pkg_spec', 'rpmDeps': 'rpm_deps',
         'nonRpmDeps': 'non_rpm_deps', 'ignoreDeps': 'ignore_deps',
         'nameSpec': 'name_spec', 'providesSpec': 'provides_spec'}
+
+    DEFAULT_PROPERTIES = {'non_rpm_dep_specs': list}
 
     @staticmethod
     def convert_old_names(properties):
@@ -383,8 +386,12 @@ class SpackRpmProperties(Properties):
 
     @staticmethod
     def from_json(string):
-        return SpackRpmProperties(
-            **SpackRpmProperties.convert_old_names(json.loads(string)))
+        json_data = SpackRpmProperties.convert_old_names(json.loads(string))
+        for prop, initializer in (SpackRpmProperties.
+                DEFAULT_PROPERTIES.iteritems()):
+            if prop not in json_data:
+                json_data[prop] = initializer()
+        return SpackRpmProperties(**json_data)
 
 
 class Rpm(object):
@@ -494,7 +501,8 @@ class Rpm(object):
             rpm_deps=set(dep_rpm.name for dep_rpm in self.rpm_deps),
             non_rpm_deps=self.non_rpm_deps, ignore_deps=self.ignore_deps,
             root=self.root, name_spec=self.name_spec,
-            provides_spec=self.provides_spec)
+            provides_spec=self.provides_spec,
+            non_rpm_dep_specs=self.nonrpm_dep_specs)
         cfg_store.save_rpm_properties(self.name, spack_rpm_props.to_json())
 
         system_pkg_cfg = list()
@@ -635,13 +643,10 @@ def resolve_autoname(
             if set(dep.deptypes) == set(['build']))
 
     rpm_deps = set()
-    nonrpm_dep_specs = list()
     skipped = set()
     for dep_name, dep in dependencies.iteritems():
-        if dep_name in inferred_ignore_deps:
+        if dep_name in inferred_ignore_deps | inferred_build_deps:
             pass
-        elif dep_name in inferred_build_deps:
-            nonrpm_dep_specs.append(dep.spec)
         else:
             if namespace_store.get_namespace(dep.spec.name, required=False):
                 dep_rpm = resolve_autoname(
@@ -679,7 +684,8 @@ def resolve_autoname(
                    inferred_ignore_deps)
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
-        namespace.path(pkg_spec), rpm_deps, nonrpm_dep_specs=nonrpm_dep_specs,
+        namespace.path(pkg_spec), rpm_deps,
+        nonrpm_dep_specs=list(x.format() for x in transitive_norpm),
         non_rpm_deps=set(dependencies) & inferred_build_deps,
         ignore_deps=ignore_deps,
         provides_name=namespace.provides_name(pkg_spec),
