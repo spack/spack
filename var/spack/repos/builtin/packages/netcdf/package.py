@@ -39,8 +39,12 @@ class Netcdf(Package):
     version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
-    variant('mpi',  default=True,  description='Enables MPI parallelism')
-    variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('mpi',     default=True,  description='Enables MPI parallelism')
+    variant('hdf4',    default=False, description='Enable HDF4 support')
+    variant('shared',  default=True,  description='Enable shared library')
+    variant('parallel-netcdf', default=False, description='Enable PnetCDF support')
+    variant('dap',     default=False, description='Enable DAP support')
+    variant('cdmremote', default=False, description='Enable CDM Remote support')
     # These variants control the number of dimensions (i.e. coordinates and
     # attributes) and variables (e.g. time, entity ID, number of coordinates)
     # that can be used in any particular NetCDF file.
@@ -51,9 +55,9 @@ class Netcdf(Package):
 
     depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
-
-    # Required for DAP support
-    depends_on("curl@7.18.0:")
+    depends_on("curl@7.18.0:", when='+dap')
+    depends_on("curl@7.18.0:", when='+cdmremote')
+    depends_on('parallel-netcdf', when='@4.2.1.1:+parallel-netcdf')
 
     # Required for NetCDF-4 support
     depends_on("zlib@1.2.5:")
@@ -84,6 +88,7 @@ class Netcdf(Package):
                                'hdf5+mpi, but spec asked for hdf5~mpi.')
 
         # Environment variables
+        CFLAGS   = []
         CPPFLAGS = []
         LDFLAGS  = []
         LIBS     = []
@@ -93,23 +98,38 @@ class Netcdf(Package):
             "--enable-fsync",
             "--enable-v2",
             "--enable-utilities",
-            "--enable-shared",
             "--enable-static",
             "--enable-largefile",
             # necessary for HDF5 support
             "--enable-netcdf-4",
             "--enable-dynamic-loading",
-            # necessary for DAP support
-            "--enable-dap"
         ]
 
-        # Make sure Netcdf links against Spack's curl, otherwise
-        # otherwise it may pick up system's curl, which can give link
-        # errors, e.g.:
-        # undefined reference to `SSL_CTX_use_certificate_chain_file`
-        LIBS.append("-lcurl")
-        CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-        LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
+        if '+shared' in spec:
+            config_args.append('--enable-shared')
+        else:
+            config_args.append('--disable-shared')
+            # We don't have shared libraries but we still want it to be
+            # possible to use this library in shared builds
+            CFLAGS.append('-fPIC')
+
+        if '+dap' in spec:
+            config_args.append('--enable-dap')
+        else:
+            config_args.append('--disable-dap')
+
+        if '+cdmremote' in spec:
+            config_args.append('--enable-cdmremote')
+        else:
+            config_args.append('--disable-cdmremote')
+
+        if '+dap' in spec or '+cdmremote' in spec:
+            # Make sure Netcdf links against Spack's curl, otherwise it may
+            # pick up system's curl, which can give link errors, e.g.:
+            #   undefined reference to `SSL_CTX_use_certificate_chain_file`
+            LIBS.append("-lcurl")
+            CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
+            LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
@@ -131,10 +151,18 @@ class Netcdf(Package):
             LDFLAGS.append("-L%s/lib"     % spec['szip'].prefix)
             LIBS.append("-l%s"         % "sz")
 
+        # PnetCDF support
+        if '+parallel-netcdf' in spec:
+            config_args.append('--enable-pnetcdf')
+            config_args.append('CC=%s' % spec['mpi'].mpicc)
+            CPPFLAGS.append("-I%s/include" % spec['parallel-netcdf'].prefix)
+            LDFLAGS.append("-L%s/lib"      % spec['parallel-netcdf'].prefix)
+
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # Use the netcdf-fortran package to install Fortran support.
 
+        config_args.append('CFLAGS=%s'   % ' '.join(CFLAGS))
         config_args.append('CPPFLAGS=%s' % ' '.join(CPPFLAGS))
         config_args.append('LDFLAGS=%s'  % ' '.join(LDFLAGS))
         config_args.append('LIBS=%s'     % ' '.join(LIBS))
