@@ -389,8 +389,8 @@ class SpackRpmProperties(Properties):
     @staticmethod
     def from_json(string):
         json_data = SpackRpmProperties.convert_old_names(json.loads(string))
-        for prop, initializer in (SpackRpmProperties.
-                DEFAULT_PROPERTIES.iteritems()):
+        for prop, initializer in (
+                SpackRpmProperties.DEFAULT_PROPERTIES.iteritems()):
             if prop not in json_data:
                 json_data[prop] = initializer()
         return SpackRpmProperties(**json_data)
@@ -750,7 +750,7 @@ def get_pkgspec_for_rpm(concrete_spec, transitive_norpm):
     base = concrete_spec.format()
     base += ' '.join([concrete_spec[x].format() for x in transitive_norpm
                       if x in concrete_spec])
-    return base    
+    return base
 
 
 class MissingNamespaceError(Exception):
@@ -1042,7 +1042,7 @@ class NamespaceStore(object):
 
     def get_namespace(self, pkg_name, required=True):
         namespace = self.pkg_to_namespace.get(
-            pkg_name, 
+            pkg_name,
             self.pkg_to_namespace.get('all', self.default_namespace))
         if not namespace and required:
             raise MissingNamespaceError("No namespace for " + pkg_name)
@@ -1112,7 +1112,7 @@ def create_rpm_source(dst_path, spec_file_path, cache_resources=False):
             package = spack.repo.get(spec)
             package.do_stage()
             source_path = os.path.abspath(package.stage.archive_file)
-            
+
             for component in package.stage:
                 relative_path = component.mirror_path
                 dst_path = os.path.join(
