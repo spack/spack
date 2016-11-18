@@ -773,56 +773,6 @@ class CustomizedNamespace(object):
         return os.path.join(self.root, spec.name, self.provides_name(spec))
 
 
-# TODO: move this to config?
-def resolve_pkg_to_namespace(universal_subspace=None):
-    """If you only have 1 subspace or want to specify a default
-    subspace, you can place the descriptors at the package level. If
-    you want to create a subspace which is not default then an explicit
-    subspace must be created under the package level.
-    'universal_subspace' will choose the same subspace for each package
-    where available; if the subspace is not available for the package
-    but it has a default then that will be used (if the subspace is not
-    available and there is no default, that is an error).
-    """
-    packages = spack.config.get_config('rpms')
-    pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
-    pkg_to_namespace = {}
-    for pkg_name, info in packages.iteritems():
-        if pkg_name in pkg_to_subspace:
-            subspace = info['subspaces'][pkg_to_subspace[pkg_name]]
-        elif all(p in info for p in ['name', 'prefix']):
-            subspace = info
-        else:
-            continue
-        name_spec = subspace['name']
-        provides_spec = subspace.get('provides', name_spec)
-        root = subspace['prefix']
-        pkg_to_namespace[pkg_name] = CustomizedNamespace(
-            name_spec, provides_spec, root)
-    return pkg_to_namespace
-
-
-def resolve_pkg_to_subspace(universal_subspace=None):
-    pkg_to_subspace = {}
-    packages = spack.config.get_config('rpms')
-    for pkg_name, info in packages.iteritems():
-        if all(p in info for p in ['name', 'prefix']):
-            default_subspace = info
-        else:
-            default_subspace = None
-
-        subspaces = info['subspaces'] if 'subspaces' in info else {}
-        if universal_subspace in subspaces:
-            pkg_to_subspace[pkg_name] = universal_subspace
-        elif default_subspace:
-            pass
-        else:
-            tty.msg(
-                "{0}: universal subspace not specified,".format(pkg_name) +
-                " and/or no suitable default")
-    return pkg_to_subspace
-
-
 class RpmInfo(object):
     def __init__(self, rpm, rpm_spec):
         self.rpm = rpm
@@ -1059,6 +1009,56 @@ class NamespaceStore(object):
             rpm_props = cfg_store.get_rpm_properties(rpm_name)
             pkg_to_namespace[rpm_props.pkg_name] = rpm_props.namespace()
         return pkg_to_namespace
+
+
+# TODO: move this to config?
+def resolve_pkg_to_namespace(universal_subspace=None):
+    """If you only have 1 subspace or want to specify a default
+    subspace, you can place the descriptors at the package level. If
+    you want to create a subspace which is not default then an explicit
+    subspace must be created under the package level.
+    'universal_subspace' will choose the same subspace for each package
+    where available; if the subspace is not available for the package
+    but it has a default then that will be used (if the subspace is not
+    available and there is no default, that is an error).
+    """
+    packages = spack.config.get_config('rpms')
+    pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
+    pkg_to_namespace = {}
+    for pkg_name, info in packages.iteritems():
+        if pkg_name in pkg_to_subspace:
+            subspace = info['subspaces'][pkg_to_subspace[pkg_name]]
+        elif all(p in info for p in ['name', 'prefix']):
+            subspace = info
+        else:
+            continue
+        name_spec = subspace['name']
+        provides_spec = subspace.get('provides', name_spec)
+        root = subspace['prefix']
+        pkg_to_namespace[pkg_name] = CustomizedNamespace(
+            name_spec, provides_spec, root)
+    return pkg_to_namespace
+
+
+def resolve_pkg_to_subspace(universal_subspace=None):
+    pkg_to_subspace = {}
+    packages = spack.config.get_config('rpms')
+    for pkg_name, info in packages.iteritems():
+        if all(p in info for p in ['name', 'prefix']):
+            default_subspace = info
+        else:
+            default_subspace = None
+
+        subspaces = info['subspaces'] if 'subspaces' in info else {}
+        if universal_subspace in subspaces:
+            pkg_to_subspace[pkg_name] = universal_subspace
+        elif default_subspace:
+            pass
+        else:
+            tty.msg(
+                "{0}: universal subspace not specified,".format(pkg_name) +
+                " and/or no suitable default")
+    return pkg_to_subspace
 
 
 def retrieve_file_contents(path):
