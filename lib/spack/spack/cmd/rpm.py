@@ -677,8 +677,9 @@ def resolve_autoname(
     omitDeps = inferred_build_deps | inferred_ignore_deps
     rpm_deps = set(x for x in rpm_deps if x.pkg_name not in omitDeps)
 
+    dep_pkg_names = set(x.pkg_name for x in rpm_deps)
     transitive_norpm = get_build_norpm_transitive(
-        pkg_spec, inferred_build_deps, inferred_ignore_deps)
+        pkg_spec, inferred_build_deps, inferred_ignore_deps, dep_pkg_names)
 
     ignore_deps = (set(x.name for x in pkg_spec.traverse()) &
                    inferred_ignore_deps)
@@ -736,9 +737,10 @@ def connected_after_removal(pkg_spec, remove):
                if x.name not in remove)
 
 
-def get_build_norpm_transitive(pkg_spec, norpm_deps, ignore_deps):
+def get_build_norpm_transitive(pkg_spec, norpm_deps, ignore_deps, rpm_deps):
     transitive_norpm = disconnected(pkg_spec, norpm_deps)
-    transitive_norpm -= disconnected(pkg_spec, ignore_deps)
+    transitive_norpm -= disconnected(
+        pkg_spec, set(ignore_deps) | set(rpm_deps))
     return transitive_norpm
 
 
