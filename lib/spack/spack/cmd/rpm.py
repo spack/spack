@@ -97,8 +97,8 @@ when there is no other option""")
         '--rpm-source', dest='rpm_source', nargs=2,
         help="<dst-path> <spec-path>: create source directory for RPM")
     subparser.add_argument(
-        '--stage-resources', dest='stage_resources', action="store_true",
-        help="""When creating rpm source, stage packages to avoid downloading
+        '--no-network-build', dest='no_network_build', action="store_true",
+        help="""When creating rpm source, cache packages to avoid downloading
 them at build time""")
     subparser.add_argument(
         'package', nargs=argparse.REMAINDER, help="spec of package to install")
@@ -1067,12 +1067,12 @@ def expandOption(opt):
 def rpm(parser, args):
     if args.rpm_source:
         dst_path, spec_path = args.rpm_source
-        create_rpm_source(dst_path, spec_path, args.stage_resources)
+        create_rpm_source(dst_path, spec_path, args.no_network_build)
     else:
         generate_rpms_transitive(args)
 
 
-def create_rpm_source(dst_path, spec_file_path, stage_resources=False):
+def create_rpm_source(dst_path, spec_file_path, cache_resources=False):
     cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
     cfg_store = ConfigStore(None, specs_dir=cfg_dir)
     _, spec_fname = os.path.split(spec_file_path)
@@ -1096,7 +1096,7 @@ def create_rpm_source(dst_path, spec_file_path, stage_resources=False):
         tty.msg("Moving: " + subdir)
         spack_move(subdir)
 
-    if stage_resources:
+    if cache_resources:
         mkdirp(os.path.join(spack_dst, 'var/spack/cache'))
 
         rpm_props = cfg_store.get_rpm_properties(rpm_name)
