@@ -95,7 +95,11 @@ types to infer whether a package should not be an rpm""")
 when there is no other option""")
     subparser.add_argument(
         '--rpm-source', dest='rpm_source', nargs=2,
-        help="""<dst-path> <spec-path>: create source directory for RPM""")
+        help="<dst-path> <spec-path>: create source directory for RPM")
+    subparser.add_argument(
+        '--stage-resources', dest='stage_resources', action="store_true",
+        help="""When creating rpm source, stage packages to avoid downloading
+them at build time""")
     subparser.add_argument(
         '--rpm-cache', dest='rpm_cache', nargs=2,
         help="""<spack-origin> <spec-path>: set up spack cache for RPM""")
@@ -1058,7 +1062,7 @@ def expandOption(opt):
 def rpm(parser, args):
     if args.rpm_source:
         dst_path, spec_path = args.rpm_source
-        create_rpm_source(dst_path, spec_path)
+        create_rpm_source(dst_path, spec_path, args.stage_resources)
     elif args.rpm_cache:
         spack_origin_path, spec_path = args.rpm_cache
         populate_cache(spack_origin_path, spec_path)
@@ -1066,7 +1070,7 @@ def rpm(parser, args):
         generate_rpms_transitive(args)
 
 
-def create_rpm_source(dst_path, spec_file_path, stage_resources=True):
+def create_rpm_source(dst_path, spec_file_path, stage_resources=False):
     cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
     cfg_store = ConfigStore(None, specs_dir=cfg_dir)
     _, spec_fname = os.path.split(spec_file_path)
@@ -1087,55 +1091,30 @@ def create_rpm_source(dst_path, spec_file_path, stage_resources=True):
         shutil.copytree(os.path.join(spack_prefix, subdir), dst)
 
     for subdir in ['bin', 'lib', 'etc', 'var/spack/repos']:
+        tty.msg("Moving: " + subdir)
         spack_move(subdir)
 
     if stage_resources:
-        mkdirp(os.path.join(spack_dst, 'var/spack/stage'))
+        mkdirp(os.path.join(spack_dst, 'var/spack/cache'))
 
         rpm_props = cfg_store.get_rpm_properties(rpm_name)
         specs = [rpm_props.pkg_spec]
         for spec in specs:
+            tty.msg("Staging: " + str(spec))
             spec = spack.spec.Spec(spec)
             spec._mark_concrete()
             package = spack.repo.get(spec)
             package.do_stage()
             source_path = os.path.abspath(package.stage.archive_file)
-            relative_path = os.path.relpath(source_path, spack.spack_root)
-            dst_dir = os.path.join(spack_dst, os.path.dirname(relative_path))
-            mkdirp(dst_dir)
-            shutil.move(source_path, dst_dir)
+            
+            for component in package.stage:
+                relative_path = component.mirror_path
+                dst_path = os.path.join(
+                    spack_dst, 'var/spack/cache', relative_path)
+                mkdirp(os.path.dirname(dst_path))
+                shutil.move(source_path, dst_path)
 
-
-def populate_cache(spack_origin_path, spec_file_path):
-    """This is invoked in the spack source directory that is created for the
-    rpm. It uses the origin spack repository cache as a mirror and attempts to
-    cache sources needed to build a package.
-    """
-    cfg_dir = os.path.join(os.path.dirname(spec_file_path), os.pardir)
-    cfg_store = ConfigStore(None, specs_dir=cfg_dir)
-    _, spec_fname = os.path.split(spec_file_path)
-    rpm_name = spec_fname[:-5]
-    rpm_props = cfg_store.get_rpm_properties(rpm_name)
-
-    specs = [rpm_props.pkg_spec]
-
-    local_mirror = '_local_cache'
-    mirrors = spack.config.get_config('mirrors')
-    try:
-        mirrors[local_mirror] = 'file://' + os.path.abspath(
-            os.path.join(spack_origin_path, 'var', 'spack', 'cache'))
-        spack.config.update_config('mirrors', mirrors)
-
-        for spec in specs:
-            spec = spack.spec.Spec(spec)
-            spec._mark_concrete()
-            package = spack.repo.get(spec)
-            package.do_stage()
             package.do_clean()
-    finally:
-        if local_mirror in mirrors:
-            del mirrors[local_mirror]
-        spack.config.update_config('mirrors', mirrors)
 
 
 def default_spec():
