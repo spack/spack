@@ -76,7 +76,12 @@ class PyNumpy(PythonPackage):
 
         if '+blas' in spec or '+lapack' in spec:
             with open('site.cfg', 'w') as f:
-                f.write('[DEFAULT]\n')
+                # The section title for the defaults changed in @1.10, see
+                # https://github.com/numpy/numpy/blob/master/site.cfg.example
+                if spec.satisfies('@:1.9.2'):
+                    f.write('[DEFAULT]\n')
+                else:
+                    f.write('[ALL]\n')
                 f.write('libraries=%s\n'    % ','.join(lapackblas.names))
                 f.write('library_dirs=%s\n' % ':'.join(lapackblas.directories))
                 if not ((platform.system() == "Darwin") and
