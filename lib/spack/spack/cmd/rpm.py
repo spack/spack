@@ -558,8 +558,8 @@ def generate_rpms_transitive(args):
     else:
         rpm_db = {}
 
-    namespace_store = NamespaceStore()
-    namespace_store.set_up_namespaces(
+    subspace_cfg = SubspaceConfig()
+    subspace_cfg.set_up_namespaces(
         args.universal_subspace, args.get_namespace_from_specs,
         args.default_namespace, cfg_store)
 
@@ -572,7 +572,7 @@ def generate_rpms_transitive(args):
     top_spec = iter(specs).next()
     new = set()
     rpm = resolve_autoname(
-        top_spec, namespace_store, rpm_db, new, build_norpm_deps, ignore_deps,
+        top_spec, subspace_cfg, rpm_db, new, build_norpm_deps, ignore_deps,
         infer_build_norpm_deps=args.infer_build_norpm_deps,
         infer_ignore_deps=args.infer_ignore_deps)
 
@@ -595,7 +595,7 @@ def generate_rpms_transitive(args):
 
 
 def resolve_autoname(
-        pkg_spec, namespace_store, rpm_db, new, build_norpm_deps, ignore_deps,
+        pkg_spec, subspace_cfg, rpm_db, new, build_norpm_deps, ignore_deps,
         visited=None, infer_build_norpm_deps=False, infer_ignore_deps=False):
     """Because this automatically generates rpm names it can create rpms
     transitively.
@@ -612,7 +612,7 @@ def resolve_autoname(
     if not visited:
         visited = set()
 
-    namespace = namespace_store.get_namespace(pkg_spec.name)
+    namespace = subspace_cfg.get_namespace(pkg_spec.name)
     rpm_name = namespace.name(pkg_spec)
 
     rpm = rpm_db[rpm_name].rpm if rpm_name in rpm_db else None
@@ -635,8 +635,13 @@ def resolve_autoname(
     all_ignore_deps = set()
     if ignore_deps is not None:
         all_ignore_deps.update(ignore_deps)
-    elif rpm and rpm.ignore_deps:
-        all_ignore_deps.update(rpm.ignore_deps)
+    else:
+        #TODO: grab ignore deps from yaml config for pkg, or from 'all' if
+        #there is none for the package, or from 'all' if there is a package
+        #but it defines no ignoredeps and 'fallback' is True
+        all_ignore_deps.update(subspace_cfg.get_ignore_deps(pkg_spec.name))
+        if rpm and rpm.ignore_deps:
+            all_ignore_deps.update(rpm.ignore_deps)
 
     dependencies = pkg_spec.dependencies_dict()
     if infer_build_norpm_deps:
@@ -650,9 +655,9 @@ def resolve_autoname(
         if dep_name in all_ignore_deps | all_build_norpm_deps:
             pass
         else:
-            if namespace_store.get_namespace(dep.spec.name, required=False):
+            if subspace_cfg.get_namespace(dep.spec.name, required=False):
                 dep_rpm = resolve_autoname(
-                    dep.spec, namespace_store, rpm_db, new,
+                    dep.spec, subspace_cfg, rpm_db, new,
                     build_norpm_deps, ignore_deps, visited,
                     infer_build_norpm_deps=infer_build_norpm_deps,
                     infer_ignore_deps=infer_ignore_deps)
@@ -967,8 +972,15 @@ class ConfigStore(object):
         self.save_spec(rpm_name, spec_contents)
 
 
-class NamespaceStore(object):
-    """This constructs subspaces using: rpm properties files of existing
+class SubspaceConfig(object):
+    """Manages configuration for:
+    
+    - Determining descriptors for Spack packages (to generate names from specs)
+    - Specifying spack packages that are system-managed (as an alternative to
+      the options and in addition to what is collected from existing Spack RPM
+      deps)
+
+    Name projections are created from: rpm properties files of existing
     Spack-built packages; rpms.yaml configuration file. Using the rpm
     properties files is optional; if they are used then they have priority
     over the yaml config.
@@ -977,12 +989,12 @@ class NamespaceStore(object):
             self, universal_subspace, get_namespace_from_specs,
             default_namespace, cfg_store):
 
+        self.pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
         # Preferred compilers and versions can be associated with
         # subspaces. The global preferences object is updated based on
         # the specified subspace to prefer the desired compiler/version
         # for the associated package.
-        spack.pkgsort.pkg_to_subspace = resolve_pkg_to_subspace(
-            universal_subspace)
+        spack.pkgsort.pkg_to_subspace = self.pkg_to_subspace
         pkg_to_namespace = resolve_pkg_to_namespace(universal_subspace)
         if get_namespace_from_specs:
             pkg_to_namespace.update(self.get_namespaces_from_specs(cfg_store))
@@ -994,6 +1006,9 @@ class NamespaceStore(object):
                 name_spec, name_spec, prefix)
         else:
             self.default_namespace = None
+
+    def get_ignore_deps(self, pkg_name):
+        pass
 
     def get_namespace(self, pkg_name, required=True):
         namespace = self.pkg_to_namespace.get(
