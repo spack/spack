@@ -100,6 +100,12 @@ class Tau(Package):
                 compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
         ##########
 
+        # on bg-q we dont need compiler names. We also have to set fortran
+        # because spack set EXTRADIRCXX spack wrapper directory and then
+        # tau use relative path to find fortran link libraries.
+        if 'bgq' in spec.architecture and spec.satisfies('%xl'):
+            compiler_options = ['-pdt_c++=xlC']
+
         # Construct the string of custom compiler flags and append it to
         # compiler related options
         useropt = ' '.join(useropt)
@@ -151,6 +157,9 @@ class Tau(Package):
             else:
                 raise InstallError('OMPT supported only with Intel compiler!')
 
+        if 'bgq' in spec.architecture:
+            options.extend(['-arch=bgq', '-BGQTIMERS'])
+
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
@@ -162,6 +171,9 @@ class Tau(Package):
 
         # create tau compiler wrappers
         self.create_tau_compiler_wrapper()
+
+        if 'bgq' in spec.architecture and spec.satisfies('%xl'):
+            self.fix_bgq_path()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -207,3 +219,15 @@ class Tau(Package):
     def setup_dependent_environment(self, module, spec, dep_spec):
         files = self.get_makefiles()
         os.environ['TAU_MAKEFILE'] = files[0] if files else ''
+
+    def fix_bgq_path(self):
+        # tau links to some fortran libraries which are located in
+        # /opt/ibmcmp/xlf/bg/14.1/bglib64/. Spack set fortran wrappers
+        # which tau use. But Tau also use wrapper path to get path
+        # of /opt/ibmcmp/xlf/bg/14.1/bglib64. But it use wrappers
+        # path which obviously break the links. For now get path from
+        # SPACK_FC and patch Makefile.
+        fc = os.environ['SPACK_FC']
+        extra_dir = os.path.dirname(os.path.dirname(fc))
+        makefile = self.get_makefiles()[0]
+        filter_file(r'EXTRADIR=.*', r'EXTRADIR=%s' % extra_dir, makefile)

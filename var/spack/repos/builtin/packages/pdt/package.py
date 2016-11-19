@@ -55,6 +55,11 @@ class Pdt(Package):
             filter_file(r'typedef __gnuc_va_list ', r'typedef __darwin_va_list ', 'include/kai/stdarg.h')
 
     def install(self, spec, prefix):
-        configure('-prefix=%s' % prefix)
+        options = ['-prefix=%s' % prefix]
+
+        if self.compiler.name == 'xl':
+            options.append('-XLC')
+
+        configure(*options)
         make()
         make('install')
