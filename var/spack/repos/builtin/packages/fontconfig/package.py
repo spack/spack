@@ -28,7 +28,7 @@ from spack import *
 class Fontconfig(AutotoolsPackage):
     """Fontconfig is a library for configuring/customizing font access"""
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
-    url = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz"
+    url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz"
 
     version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
 
@@ -42,6 +42,5 @@ class Fontconfig(AutotoolsPackage):
                 "--enable-libxml2",
                 "--disable-docs",
                 "--with-default-fonts=%s" %
-                spec['font-util'].prefix + "/share/fonts",
-        ]
+                spec['font-util'].prefix + "/share/fonts"]
         return args
