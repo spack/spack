@@ -55,4 +55,4 @@ class Fastqc(Package):
         """Add <prefix> to the path; the package has a script at the
            top level.
         """
-        #env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))
+        # env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))
