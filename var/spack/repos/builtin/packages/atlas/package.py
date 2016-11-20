@@ -71,7 +71,10 @@ class Atlas(Package):
         # TODO: using, say, MSRs.  Or move this to a variant.
 
     def install(self, spec, prefix):
-
+        # reference to other package managers
+        # https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/a/atlas.py
+        # https://github.com/macports/macports-ports/blob/master/math/atlas/Portfile
+        # https://github.com/Homebrew/homebrew-science/pull/3571
         options = []
         if '+shared' in spec:
             options.extend([
