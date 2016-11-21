@@ -128,6 +128,8 @@ parser.add_argument('-p', '--profile', action='store_true',
                     help="Profile execution using cProfile.")
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="Print additional output during builds")
+parser.add_argument('-s', '--stacktrace', action='store_true',
+                    help="Add stacktrace information to all printed statements")
 parser.add_argument('-V', '--version', action='version',
                     version="%s" % spack.spack_version)
 
@@ -155,6 +157,7 @@ def main():
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
+    tty.set_stacktrace(args.stacktrace)
     spack.debug = args.debug
 
     if spack.debug:
