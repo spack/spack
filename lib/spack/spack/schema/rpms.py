@@ -47,6 +47,30 @@ schema = {
                         'name': {'type': 'string'},
                         'prefix': {'type': 'string'},
                         'provides': {'type': 'string'},
+                        'add-system-deps': {
+                            'type': 'array',
+                            'items': {'type': 'string'}
+                        },
+                        'add-system-build-deps': {
+                            'type': 'array',
+                            'items': {'type': 'string'}
+                        },
+                        'ignore-deps': {
+                            'type': 'array',
+                            'items': {'type': 'string'}
+                        },
+                        'dep-map': {
+                            'type': 'object',
+                            'patternProperties': {
+                                r'\w[\w-]*': {'type': 'string'}
+                            }
+                        },
+                        'build-dep-map': {
+                            'type': 'object',
+                            'patternProperties': {
+                                r'\w[\w-]*': {'type': 'string'}
+                            }
+                        },
                         'subspaces': {
                             'type': 'object',
                             'patternProperties': {
@@ -56,6 +80,18 @@ schema = {
                                         'name': {'type': 'string'},
                                         'prefix': {'type': 'string'},
                                         'provides': {'type': 'string'},
+                                        'add-system-deps': {
+                                            'type': 'array',
+                                            'items': {'type': 'string'}
+                                        },
+                                        'add-system-build-deps': {
+                                            'type': 'array',
+                                            'items': {'type': 'string'}
+                                        },
+                                        'ignore-deps': {
+                                            'type': 'array',
+                                            'items': {'type': 'string'}
+                                        },
                                         'compiler': {
                                             'type': 'array',
                                             'default': [],

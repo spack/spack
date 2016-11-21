@@ -45,8 +45,7 @@ class PreferredPackages(object):
             pkglist.append('all')
         if (pkgname in self.pkg_to_subspace and
                 component in ['compiler', 'version']):
-            subspace = self.preferred[pkgname]['subspaces'][
-                self.pkg_to_subspace[pkgname]]
+            subspace = self.pkg_to_subspace[pkgname]
             if component in subspace:
                 return [str(s).strip() for s in subspace[component]]
         for pkg in pkglist:

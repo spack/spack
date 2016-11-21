@@ -636,9 +636,6 @@ def resolve_autoname(
     if ignore_deps is not None:
         all_ignore_deps.update(ignore_deps)
     else:
-        #TODO: grab ignore deps from yaml config for pkg, or from 'all' if
-        #there is none for the package, or from 'all' if there is a package
-        #but it defines no ignoredeps and 'fallback' is True
         all_ignore_deps.update(subspace_cfg.get_ignore_deps(pkg_spec.name))
         if rpm and rpm.ignore_deps:
             all_ignore_deps.update(rpm.ignore_deps)
@@ -995,7 +992,7 @@ class SubspaceConfig(object):
         # the specified subspace to prefer the desired compiler/version
         # for the associated package.
         spack.pkgsort.pkg_to_subspace = self.pkg_to_subspace
-        pkg_to_namespace = resolve_pkg_to_namespace(universal_subspace)
+        pkg_to_namespace = resolve_pkg_to_namespace(self.pkg_to_subspace)
         if get_namespace_from_specs:
             pkg_to_namespace.update(self.get_namespaces_from_specs(cfg_store))
         self.pkg_to_namespace = pkg_to_namespace
@@ -1008,7 +1005,7 @@ class SubspaceConfig(object):
             self.default_namespace = None
 
     def get_ignore_deps(self, pkg_name):
-        pass
+        return self._get_subspace_property(pkg_name, 'ignore-deps', [])
 
     def get_namespace(self, pkg_name, required=True):
         namespace = self.pkg_to_namespace.get(
@@ -1017,6 +1014,11 @@ class SubspaceConfig(object):
         if not namespace and required:
             raise MissingNamespaceError("No namespace for " + pkg_name)
         return namespace
+
+    def _get_subspace_property(self, pkg_name, prop, default=None):
+        subspace = self.pkg_to_subspace.get(pkg_name, {})
+        default_subspace = self.pkg_to_subspace.get('all', {})
+        return subspace.get(prop, default_subspace.get(prop, default))
 
     def get_namespaces_from_specs(self, cfg_store):
         pkg_to_namespace = {}
@@ -1027,25 +1029,12 @@ class SubspaceConfig(object):
 
 
 # TODO: move this to config?
-def resolve_pkg_to_namespace(universal_subspace=None):
-    """If you only have 1 subspace or want to specify a default
-    subspace, you can place the descriptors at the package level. If
-    you want to create a subspace which is not default then an explicit
-    subspace must be created under the package level.
-    'universal_subspace' will choose the same subspace for each package
-    where available; if the subspace is not available for the package
-    but it has a default then that will be used (if the subspace is not
-    available and there is no default, that is an error).
-    """
+def resolve_pkg_to_namespace(pkg_to_subspace):
     packages = spack.config.get_config('rpms')
-    pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
     pkg_to_namespace = {}
     for pkg_name, info in packages.iteritems():
-        if pkg_name in pkg_to_subspace:
-            subspace = info['subspaces'][pkg_to_subspace[pkg_name]]
-        elif all(p in info for p in ['name', 'prefix']):
-            subspace = info
-        else:
+        subspace = pkg_to_subspace.get(pkg_name, {})
+        if not all(p in subspace for p in ['name', 'prefix']):
             continue
         name_spec = subspace['name']
         provides_spec = subspace.get('provides', name_spec)
@@ -1059,20 +1048,8 @@ def resolve_pkg_to_subspace(universal_subspace=None):
     pkg_to_subspace = {}
     packages = spack.config.get_config('rpms')
     for pkg_name, info in packages.iteritems():
-        if all(p in info for p in ['name', 'prefix']):
-            default_subspace = info
-        else:
-            default_subspace = None
-
-        subspaces = info['subspaces'] if 'subspaces' in info else {}
-        if universal_subspace in subspaces:
-            pkg_to_subspace[pkg_name] = universal_subspace
-        elif default_subspace:
-            pass
-        else:
-            tty.msg(
-                "{0}: universal subspace not specified,".format(pkg_name) +
-                " and/or no suitable default")
+        subspaces = info.get('subspaces', {})
+        pkg_to_subspace[pkg_name] = subspaces.get(universal_subspace, info)
     return pkg_to_subspace
 
 
