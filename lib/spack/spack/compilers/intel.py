@@ -65,6 +65,10 @@ class Intel(Compiler):
         else:
             return "-std=c++11"
 
+    @property
+    def pic_flag(self):
+        return "-fPIC"
+
     @classmethod
     def default_version(cls, comp):
         """The '--version' option seems to be the most consistent one
