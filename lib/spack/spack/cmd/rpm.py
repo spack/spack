@@ -971,7 +971,7 @@ class ConfigStore(object):
 
 class SubspaceConfig(object):
     """Manages configuration for:
-    
+
     - Determining descriptors for Spack packages (to generate names from specs)
     - Specifying spack packages that are system-managed (as an alternative to
       the options and in addition to what is collected from existing Spack RPM
