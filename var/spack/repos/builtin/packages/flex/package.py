@@ -38,6 +38,8 @@ class Flex(AutotoolsPackage):
                 
     depends_on("bison", type='build')
     depends_on("m4", type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
     
     def url_for_version(self, version):
         base_url = "https://github.com/westes/flex/archive"
@@ -45,3 +47,7 @@ class Flex(AutotoolsPackage):
             return "{0}/v{1}.tar.gz".format(base_url, version)
         else:
             return "{0}/flex-{1}.tar.gz".format(base_url, version)
+        
+    def autoreconf(self, spec, prefix):
+        autogen = Executable('./autogen.sh')
+        autogen()
