@@ -24,7 +24,7 @@ directly with automatically generated module files.
    we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
    for more details.
 
-.. _shell_support:
+.. _shell-support:
 
 -------------
 Shell support
