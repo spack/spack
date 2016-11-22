@@ -69,7 +69,7 @@ class MockSubspaceConfig(object):
     def get_ignore_deps(self, pkg_name):
         return list()
 
-namespaceStore = MockSubspaceConfig()
+subspaceCfg = MockSubspaceConfig()
 
 # The following spec instantiations build a simple dependency dag:
 #
@@ -99,7 +99,7 @@ class RpmTest(unittest.TestCase):
         buildDeps = None
         ignoreDeps = None
         rpmDb = self.rpmDb1
-        resultRpm = resolve_autoname(specY1, namespaceStore, rpmDb, self.new, 
+        resultRpm = resolve_autoname(specY1, subspaceCfg, rpmDb, self.new, 
             buildDeps, ignoreDeps)
 
         self.assertEqual(rpmY1, resultRpm)   
@@ -112,7 +112,7 @@ class RpmTest(unittest.TestCase):
 
         buildDeps = None
         ignoreDeps = None
-        resultRpm = resolve_autoname(specX1, namespaceStore, rpmDb, self.new, 
+        resultRpm = resolve_autoname(specX1, subspaceCfg, rpmDb, self.new, 
             buildDeps, ignoreDeps)
 
         self.assertEqual(rpmX, resultRpm)
@@ -126,7 +126,7 @@ class RpmTest(unittest.TestCase):
 
         buildDeps = set()
         ignoreDeps = None
-        resultRpm = resolve_autoname(specX1, namespaceStore, rpmDb, self.new, 
+        resultRpm = resolve_autoname(specX1, subspaceCfg, rpmDb, self.new, 
             buildDeps, ignoreDeps)
 
         expected = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1), 
@@ -138,7 +138,7 @@ class RpmTest(unittest.TestCase):
         rpmDb = self.rpmDb1
         buildDeps = None
         ignoreDeps = None
-        resultRpm = resolve_autoname(specX1, namespaceStore, rpmDb, self.new, 
+        resultRpm = resolve_autoname(specX1, subspaceCfg, rpmDb, self.new, 
             buildDeps, ignoreDeps, visited=set([specY1]))
             
         expected = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1), 
