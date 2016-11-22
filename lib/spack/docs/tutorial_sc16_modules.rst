@@ -34,7 +34,7 @@ Prerequisites
 Before proceeding further ensure:
 
 - you have LMod or Environment Modules available
-- have :ref:`shell support <shell_support>` activated in Spack
+- have :ref:`shell support <shell-support>` activated in Spack
 
 If you need to install Lmod or Environment module you can refer
 to the documentation :ref:`here <InstallEnvironmentModules>`.

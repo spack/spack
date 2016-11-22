@@ -15,12 +15,12 @@ the live demo scripts to see how Spack is used in practice.
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: http://software.llnl.gov/spack/files/Spack-SC16-Tutorial.pdf
+   :target: http://llnl.github.io/spack/files/Spack-SC16-Tutorial.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
 
-`Download Slides <software.llnl.gov/spack/files/Spack-SC16-Tutorial.pdf>`_.
+`Download Slides <llnl.github.io/spack/files/Spack-SC16-Tutorial.pdf>`_.
 
 **Full citation:** Todd Gamblin, Massimiliano Culpo, Gregory Becker, Matt
 Legendre, Greg Lee, Elizabeth Fischer, and Benedikt Hegner.
