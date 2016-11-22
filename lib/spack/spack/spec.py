@@ -426,7 +426,7 @@ class ArchSpec(object):
     @staticmethod
     def from_dict(d):
         if type(d['arch']) != type(d):
-            return ArchSpec('spackcompat', 'v08', d['arch'])
+            return ArchSpec('spackcompat', 'unknown', d['arch'])
         d = d['arch']
         return ArchSpec(d['platform'], d['platform_os'], d['target'])
 
