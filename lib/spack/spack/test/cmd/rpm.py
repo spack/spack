@@ -15,7 +15,7 @@ class MockSpec(object):
     def format(self):
         return self.__str__()
 
-    def traverse(self):
+    def traverse(self, visited=None, cover=None, key=None):
         specs = set(dep.spec for dep in self.deps.itervalues())
         return set(itertools.chain([self], 
             itertools.chain.from_iterable(
@@ -62,11 +62,14 @@ class MockNamespace(object):
     def provides_spec(self):
         return "MockNamespace.providesSpec"
 
-class MockNamespaceStore(object):
+class MockSubspaceConfig(object):
     def get_namespace(self, pkgName, required=False):
         return MockNamespace()
 
-namespaceStore = MockNamespaceStore()
+    def get_ignore_deps(self, pkg_name):
+        return list()
+
+namespaceStore = MockSubspaceConfig()
 
 # The following spec instantiations build a simple dependency dag:
 #
@@ -88,7 +91,6 @@ class RpmTest(unittest.TestCase):
     def setUp(self):
         super(RpmTest, self).setUp()
         self.new = set()
-        self.pkgToRpmProps = {}
         self.rpmDb1 = {
             rpmY1.name: RpmInfo(rpmY1, None), 
             rpmZ1.name: RpmInfo(rpmZ1, None)}
@@ -98,7 +100,7 @@ class RpmTest(unittest.TestCase):
         ignoreDeps = None
         rpmDb = self.rpmDb1
         resultRpm = resolve_autoname(specY1, namespaceStore, rpmDb, self.new, 
-            buildDeps, ignoreDeps, self.pkgToRpmProps)
+            buildDeps, ignoreDeps)
 
         self.assertEqual(rpmY1, resultRpm)   
 
@@ -111,7 +113,7 @@ class RpmTest(unittest.TestCase):
         buildDeps = None
         ignoreDeps = None
         resultRpm = resolve_autoname(specX1, namespaceStore, rpmDb, self.new, 
-            buildDeps, ignoreDeps, self.pkgToRpmProps)
+            buildDeps, ignoreDeps)
 
         self.assertEqual(rpmX, resultRpm)
 
@@ -125,7 +127,7 @@ class RpmTest(unittest.TestCase):
         buildDeps = set()
         ignoreDeps = None
         resultRpm = resolve_autoname(specX1, namespaceStore, rpmDb, self.new, 
-            buildDeps, ignoreDeps, self.pkgToRpmProps)
+            buildDeps, ignoreDeps)
 
         expected = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1), 
             MockNamespace.path(specX1), set([rpmY1, rpmZ1]))
@@ -137,8 +139,7 @@ class RpmTest(unittest.TestCase):
         buildDeps = None
         ignoreDeps = None
         resultRpm = resolve_autoname(specX1, namespaceStore, rpmDb, self.new, 
-            buildDeps, ignoreDeps, self.pkgToRpmProps, 
-            visited=set([specY1]))
+            buildDeps, ignoreDeps, visited=set([specY1]))
             
         expected = Rpm(MockNamespace.name(specX1), specX1.name, str(specX1), 
             MockNamespace.path(specX1), set([rpmZ1, rpmY1]))

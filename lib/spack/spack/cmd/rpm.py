@@ -322,7 +322,8 @@ class RpmSpecParser(object):
         # Spack/rpm-install
         rpm_props = SpackRpmProperties(
             pkg_name=pkg_name, pkg_spec=None, path=None,
-            rpm_deps=[], non_rpm_deps=[], ignore_deps=[], root=root,
+            rpm_deps=[], non_rpm_deps=[], ignore_deps=[],
+            non_rpm_dep_specs=[], root=root,
             name_spec=rpm_name, provides_spec=provides)
 
         return spec_vars, rpm_props
