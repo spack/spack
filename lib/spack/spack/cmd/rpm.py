@@ -753,10 +753,9 @@ def connected_after_removal(pkg_spec, remove):
 
 
 def get_build_norpm_transitive(pkg_spec, norpm_deps, ignore_deps, rpm_deps):
-    transitive_norpm = disconnected(pkg_spec, norpm_deps)
-    transitive_norpm -= disconnected(
-        pkg_spec, set(ignore_deps) | set(rpm_deps))
-    return transitive_norpm
+    return (connected_after_removal(
+                pkg_spec, set(ignore_deps) | set(rpm_deps)) -  # NOQA: ignore=E126
+            set([pkg_spec]))
 
 
 def get_pkgspec_for_rpm(concrete_spec, transitive_norpm):
