@@ -44,66 +44,76 @@ description = "Create RPM specs and sources for RPM installs"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
+    sp = subparser.add_subparsers(
+        metavar='SUBCOMMAND', dest='rpm_command')
+
+    # Create RPM specs
+    spec_parser = sp.add_parser('spec', help=rpm_spec.__doc__)
+    spec_parser.add_argument(
         '--output-dir', dest='output_dir', help="rpmbuild SOURCES directory")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--universal-subspace', dest='universal_subspace',
         help="choose the subspace to use for all packages (where available)")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--build-norpm-deps', dest='build_norpm_deps',
         help="""comma-separated packages which should not become rpms, but
 should be built by Spack as part of creating a dependent package""")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--ignore-deps', dest='ignore_deps',
         help="comma-separated packages which should not be managed by Spack")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--infer-build-norpm-deps', dest='infer_build_norpm_deps',
         action="store_true",
-        help="""<RPM name> <package name> <root dir>: use package dependency
-types to infer whether a package should not be an rpm""")
-    subparser.add_argument(
+        help="""Use package dependency types to infer whether a package should
+not be an rpm""")
+    spec_parser.add_argument(
         '--infer-ignore-deps', dest='infer_ignore_deps', action="store_true",
         help="track packages maintained by spack but ignored by dependencies")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--specs-dir', dest='specs_dir',
         help="parse rpm config from spec files in this directory")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--pkgs-dir', dest='pkgs_dir',
         help="spec templates/filters are stored here")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--rpm-db-from-spec', dest='rpm_db_spec',
         help="""create rpm db from a given spec (default is to use all specs
 in --specs-dir)""")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--complete-specs', dest='complete_specs', action="store_true",
         help="create specs from existing properties files")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--properties-only', dest='properties_only', action="store_true",
         help="only create properties files, do not create specs")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--get-namespace-from-specs', dest='get_namespace_from_specs',
         action="store_true",
         help="get package namespaces from property files in spec directories")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--bootstrap', dest='bootstrap', nargs=3,
-        help="""create properties files from spec for rpm which has (up to now)
-not been managed with Spack""")
-    subparser.add_argument(
+        help="""<RPM name> <package name> <root dir>: create properties files
+from spec for rpm which has (up to now) not been managed with Spack""")
+    spec_parser.add_argument(
         '--no-redirect', dest='no_redirect', action="store_true",
         help="Spack installation in spec file will not redirect")
-    subparser.add_argument(
+    spec_parser.add_argument(
         '--default-namespace', dest='default_namespace', nargs=2,
         help="""<name-scheme> <prefix-root>: use this name scheme for packages
 when there is no other option""")
-    subparser.add_argument(
-        '--rpm-source', dest='rpm_source', nargs=2,
-        help="<dst-path> <spec-path>: create source directory for RPM")
-    subparser.add_argument(
+    spec_parser.add_argument(
+        'package', nargs=argparse.REMAINDER, help="spec of package to install")
+
+    source_parser = sp.add_parser('source', help=rpm_source.__doc__)
+    source_parser.add_argument(
+        'destination_path',
+        help="The source archive is created under this directory")
+    source_parser.add_argument(
+        'spec_path',
+        help="Path to an RPM spec file created by spack")
+    source_parser.add_argument(
         '--no-network-build', dest='no_network_build', action="store_true",
         help="""When creating rpm source, cache packages to avoid downloading
 them at build time""")
-    subparser.add_argument(
-        'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
 
 class Properties(object):
@@ -1065,12 +1075,23 @@ def expandOption(opt):
         return set(opt.split(','))
 
 
+def rpm_spec(args):
+    """Given a Spack spec, create RPM spec. This also creates Spack-specific
+    property files to manage future updates to the RPM."""
+    generate_rpms_transitive(args)
+
+
+def rpm_source(args):
+    """Package this Spack repository into a source archive that the RPM spec
+    can use to build the RPM."""
+    create_rpm_source(
+        args.destination_path, args.spec_path, args.no_network_build)
+
+
 def rpm(parser, args):
-    if args.rpm_source:
-        dst_path, spec_path = args.rpm_source
-        create_rpm_source(dst_path, spec_path, args.no_network_build)
-    else:
-        generate_rpms_transitive(args)
+    action = {'spec': rpm_spec,
+              'source': rpm_source}
+    action[args.rpm_command](args)
 
 
 def create_rpm_source(dst_path, spec_file_path, cache_resources=False):
