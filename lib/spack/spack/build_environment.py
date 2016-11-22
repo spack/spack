@@ -307,6 +307,23 @@ def set_build_environment_variables(pkg, env, dirty=False):
             if '/macports/' in p:
                 env.remove_path('PATH', p)
 
+    # Set environment variables if specified for
+    # the given compiler
+    compiler = pkg.compiler
+    environment = compiler.environment
+    if 'set' in environment:
+        env_to_set = environment['set']
+        for key, value in env_to_set.iteritems():
+            env.set('SPACK_ENV_SET_%s' % key, value)
+            env.set('%s' % key, value)
+        # Let shell know which variables to set
+        env_variables = ":".join(env_to_set.keys())
+        env.set('SPACK_ENV_TO_SET', env_variables)
+
+    if compiler.extra_rpaths:
+        extra_rpaths = ':'.join(compiler.extra_rpaths)
+        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
+
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, [
         '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
@@ -652,10 +669,10 @@ def fork(pkg, function, dirty=False):
     carries on.
     """
 
-    def child_execution(child_connection):
+    def child_execution(child_connection, input_stream):
         try:
             setup_package(pkg, dirty=dirty)
-            function()
+            function(input_stream)
             child_connection.send(None)
         except:
             # catch ANYTHING that goes wrong in the child process
@@ -683,11 +700,18 @@ def fork(pkg, function, dirty=False):
             child_connection.close()
 
     parent_connection, child_connection = multiprocessing.Pipe()
-    p = multiprocessing.Process(
-        target=child_execution,
-        args=(child_connection,)
-    )
-    p.start()
+    try:
+        # Forward sys.stdin to be able to activate / deactivate
+        # verbosity pressing a key at run-time
+        input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+        p = multiprocessing.Process(
+            target=child_execution,
+            args=(child_connection, input_stream)
+        )
+        p.start()
+    finally:
+        # Close the input stream in the parent process
+        input_stream.close()
     child_exc = parent_connection.recv()
     p.join()
 

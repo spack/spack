@@ -39,6 +39,9 @@ class Fftw(Package):
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
 
+    patch('pfft-3.3.5.patch', when="@3.3.5+pfft_patches", level=0)
+    patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
+
     variant(
         'float', default=True,
         description='Produces a single precision version of the library')
@@ -51,8 +54,13 @@ class Fftw(Package):
                     '(works only with GCC and libquadmath)')
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('mpi', default=False, description='Activate MPI support')
+    variant(
+        'pfft_patches', default=False,
+        description='Add extra transpose functions for PFFT compatibility')
 
     depends_on('mpi', when='+mpi')
+    depends_on('automake', type='build', when='+pfft_patches')
+    depends_on('autoconf', type='build', when='+pfft_patches')
 
     # TODO : add support for architecture specific optimizations as soon as
     # targets are supported
@@ -76,6 +84,10 @@ class Fftw(Package):
             options.append("--disable-fortran")
         if '+mpi' in spec:
             options.append('--enable-mpi')
+
+        if '+pfft_patches' in spec:
+            autoreconf = which('autoreconf')
+            autoreconf('-ifv')
 
         configure(*options)
         make()

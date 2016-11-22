@@ -120,7 +120,14 @@ class log_output(object):
     daemon joining. If echo is True, also prints the output to stdout.
     """
 
-    def __init__(self, filename, echo=False, force_color=False, debug=False):
+    def __init__(
+            self,
+            filename,
+            echo=False,
+            force_color=False,
+            debug=False,
+            input_stream=sys.stdin
+    ):
         self.filename = filename
         # Various output options
         self.echo = echo
@@ -132,46 +139,57 @@ class log_output(object):
         self.directAssignment = False
         self.read, self.write = os.pipe()
 
-        # Sets a daemon that writes to file what it reads from a pipe
-        self.p = multiprocessing.Process(
-            target=self._spawn_writing_daemon,
-            args=(self.read,),
-            name='logger_daemon'
-        )
-        self.p.daemon = True
         # Needed to un-summon the daemon
         self.parent_pipe, self.child_pipe = multiprocessing.Pipe()
+        # Input stream that controls verbosity interactively
+        self.input_stream = input_stream
 
     def __enter__(self):
-        self.p.start()
+        # Sets a daemon that writes to file what it reads from a pipe
+        try:
+            fwd_input_stream = os.fdopen(
+                os.dup(self.input_stream.fileno())
+            )
+            self.p = multiprocessing.Process(
+                target=self._spawn_writing_daemon,
+                args=(self.read, fwd_input_stream),
+                name='logger_daemon'
+            )
+            self.p.daemon = True
+            self.p.start()
+        finally:
+            fwd_input_stream.close()
         return log_output.OutputRedirection(self)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.parent_pipe.send(True)
         self.p.join(60.0)  # 1 minute to join the child
 
-    def _spawn_writing_daemon(self, read):
+    def _spawn_writing_daemon(self, read, input_stream):
         # Parent: read from child, skip the with block.
         read_file = os.fdopen(read, 'r', 0)
         with open(self.filename, 'w') as log_file:
-            with keyboard_input(sys.stdin):
+            with keyboard_input(input_stream):
                 while True:
-                    rlist, _, _ = select.select([read_file, sys.stdin], [], [])
-                    if not rlist:
-                        break
+                    # Without the last parameter (timeout) select will wait
+                    # until at least one of the two streams are ready. This
+                    # may cause the function to hang.
+                    rlist, _, _ = select.select(
+                        [read_file, input_stream], [], [], 0
+                    )
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
-                    if sys.stdin in rlist:
-                        if sys.stdin.read(1) == 'v':
+                    if input_stream in rlist:
+                        if input_stream.read(1) == 'v':
                             self.echo = not self.echo
 
                     # Handle output from the with block process.
                     if read_file in rlist:
+                        # If we arrive here it means that
+                        # read_file was ready for reading : it
+                        # should never happen that line is false-ish
                         line = read_file.readline()
-                        if not line:
-                            # For some reason we never reach this point...
-                            break
 
                         # Echo to stdout if requested.
                         if self.echo:

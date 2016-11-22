@@ -475,10 +475,10 @@ class FlagMap(HashableMap):
 
     def satisfies(self, other, strict=False):
         if strict or (self.spec and self.spec._concrete):
-            return all(f in self and set(self[f]) <= set(other[f])
+            return all(f in self and set(self[f]) == set(other[f])
                        for f in other)
         else:
-            return all(set(self[f]) <= set(other[f])
+            return all(set(self[f]) == set(other[f])
                        for f in other if (other[f] != [] and f in self))
 
     def constrain(self, other):
@@ -2212,6 +2212,9 @@ class Spec(object):
                              ${SPACK_PREFIX}/opt
             ${PREFIX}        The package prefix
 
+        Note these are case-insensitive: for example you can specify either
+        ``${PACKAGE}`` or ``${package}``.
+
         Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
         ``$-20_`` for a left-justified name.
@@ -2315,13 +2318,15 @@ class Spec(object):
                     attribute = named_str
                     spec = self
                 
-                if attribute == 'PACKAGE' or attribute == 'NAME':
+                attr_id = attribute.upper()
+                if attr_id in ['PACKAGE', 'NAME']:
+                    name = spec.name or ''
                     write(fmt % spec.name, '@')
-                elif attribute.startswith('VERSION'):
+                elif attr_id.startswith('VERSION'):
                     if attribute.startswith('VERSION:') and self.concrete:
                         _, specificity = attribute.split(':')
                         specificity = int(specificity)
-                        versionStr = str(self.version[:specificity])
+                        versionStr = str(spec.version[:specificity])
                     elif spec.versions and spec.versions != _any_version:
                         versionStr = str(spec.versions)
                     else:
@@ -2329,40 +2334,40 @@ class Spec(object):
                         
                     if versionStr:
                         write(fmt % versionStr, '@')
-                elif attribute == 'COMPILER':
+                elif attr_id == 'COMPILER':
                     if spec.compiler:
                         write(fmt % spec.compiler, '%')
-                elif attribute == 'COMPILERNAME':
+                elif attr_id == 'COMPILERNAME':
                     if spec.compiler:
                         write(fmt % spec.compiler.name, '%')
-                elif attribute == 'COMPILERVER':
+                elif attr_id in ['COMPILERVER', 'COMPILERVERSION']:
                     if spec.compiler:
                         write(fmt % spec.compiler.versions, '%')
-                elif named_str == 'COMPILERFLAGS':
+                elif attr_id == 'COMPILERFLAGS':
                     if spec.compiler:
                         write(fmt % str(spec.compiler_flags), '%')
-                elif attribute == 'OPTIONS':
+                elif attr_id == 'OPTIONS':
                     if spec.variants:
                         write(fmt % str(spec.variants), '+')
-                elif attribute == 'ARCHITECTURE':
+                elif attr_id == 'ARCHITECTURE':
                     if spec.architecture and str(spec.architecture):
                         write(fmt % str(spec.architecture), ' arch=')
-                elif attribute == 'SHA1':
+                elif attr_id == 'SHA1':
                     if spec.dependencies:
                         out.write(fmt % str(spec.dag_hash(7)))
-                elif attribute.startswith('VARIANT'):
+                elif attr_id.startswith('VARIANT'):
                     _, setting, ifTrueStr = attribute.split(':')
                     if setting in spec:
                         out.write(fmt % ifTrueStr)
-                elif attribute == 'SPACK_ROOT':
+                elif attr_id == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
-                elif named_str == 'SPACK_INSTALL':
+                elif attr_id == 'SPACK_INSTALL':
                     out.write(fmt % spack.store.root)
-                elif named_str == 'PREFIX':
-                    out.write(fmt % self.prefix)
-                elif named_str.startswith('HASH'):
-                    if named_str.startswith('HASH:'):
-                        _, hashlen = named_str.split(':')
+                elif attr_id == 'PREFIX':
+                    out.write(fmt % spec.prefix)
+                elif attr_id.startswith('HASH'):
+                    if attr_id.startswith('HASH:'):
+                        _, hashlen = attribute.split(':')
                         hashlen = int(hashlen)
                     else:
                         hashlen = None
@@ -2420,12 +2425,24 @@ class Spec(object):
     def __str__(self):
         return self.format() + self.dep_string()
 
+    def _install_status(self):
+        """Helper for tree to print DB install status."""
+        if not self.concrete:
+            return None
+        try:
+            record = spack.store.db.get_record(self)
+            return record.installed
+        except KeyError:
+            return None
+
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
-        showid = kwargs.pop('ids',   False)
+        hashes = kwargs.pop('hashes', True)
+        hlen = kwargs.pop('hashlen', None)
+        install_status = kwargs.pop('install_status', True)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
@@ -2434,8 +2451,6 @@ class Spec(object):
         check_kwargs(kwargs, self.tree)
 
         out = ""
-        cur_id = 0
-        ids = {}
         for d, node in self.traverse(
                 order='pre', cover=cover, depth=True, deptypes=deptypes):
             if prefix is not None:
@@ -2443,11 +2458,17 @@ class Spec(object):
             out += " " * indent
             if depth:
                 out += "%-4d" % d
-            if not id(node) in ids:
-                cur_id += 1
-                ids[id(node)] = cur_id
-            if showid:
-                out += "%-4d" % ids[id(node)]
+            if install_status:
+                status = node._install_status()
+                if status is None:
+                    out += "     "  # Package isn't installed
+                elif status:
+                    out += colorize("@g{[+]}  ", color=color)  # installed
+                else:
+                    out += colorize("@r{[-]}  ", color=color)  # missing
+
+            if hashes:
+                out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
             out += ("    " * d)
             if d > 0:
                 out += "^"

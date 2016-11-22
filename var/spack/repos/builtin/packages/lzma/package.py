@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Lzma(Package):
+class Lzma(AutotoolsPackage):
     """LZMA Utils are legacy data compression software with high compression
     ratio. LZMA Utils are no longer developed, although critical bugs may be
     fixed as long as fixing them doesn't require huge changes to the code.
@@ -39,11 +39,3 @@ class Lzma(Package):
     url      = "http://tukaani.org/lzma/lzma-4.32.7.tar.gz"
 
     version('4.32.7', '2a748b77a2f8c3cbc322dbd0b4c9d06a')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        if self.run_tests:
-            make('check')  # one of the tests fails for me
-        make('install')

@@ -96,8 +96,6 @@ class InstallPhase(object):
         # install phase, thus return a properly set wrapper
         phase = getattr(instance, self.name)
 
-        print phase
-
         @functools.wraps(phase)
         def phase_wrapper(spec, prefix):
             # Check instance attributes at the beginning of a phase
@@ -395,7 +393,8 @@ class PackageBase(object):
     The install function is designed so that someone not too terribly familiar
     with Python could write a package installer.  For example, we put a number
     of commands in install scope that you can use almost like shell commands.
-    These include make, configure, cmake, rm, rmtree, mkdir, mkdirp, and others.
+    These include make, configure, cmake, rm, rmtree, mkdir, mkdirp, and
+    others.
 
     You can see above in the cmake script that these commands are used to run
     configure and make almost like they're used on the command line.  The
@@ -410,9 +409,9 @@ class PackageBase(object):
     pollute other namespaces, and it allows you to more easily implement an
     install function.
 
-    For a full list of commands and variables available in module scope, see the
-    add_commands_to_module() function in this class. This is where most of
-    them are created and set on the module.
+    For a full list of commands and variables available in module scope, see
+    the add_commands_to_module() function in this class. This is where most
+    of them are created and set on the module.
 
     **Parallel Builds**
 
@@ -691,7 +690,8 @@ class PackageBase(object):
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
-        resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
+        resource_mirror = spack.mirror.mirror_archive_path(
+            self.spec, fetcher, resource.name)
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
@@ -706,7 +706,6 @@ class PackageBase(object):
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-        # Build the composite stage
         stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
         return stage
 
@@ -1063,6 +1062,7 @@ class PackageBase(object):
         # FIXME : Make this part of the 'install' behavior ?
         mkdirp(self.prefix.bin)
         touch(join_path(self.prefix.bin, 'fake'))
+        mkdirp(self.prefix.include)
         mkdirp(self.prefix.lib)
         mkdirp(self.prefix.man1)
 
@@ -1213,7 +1213,7 @@ class PackageBase(object):
         self.make_jobs = make_jobs
 
         # Then install the package itself.
-        def build_process():
+        def build_process(input_stream):
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
 
@@ -1255,9 +1255,11 @@ class PackageBase(object):
                     # Spawn a daemon that reads from a pipe and redirects
                     # everything to log_path
                     redirection_context = log_output(
-                        log_path, verbose,
-                        sys.stdout.isatty(),
-                        True
+                        log_path,
+                        echo=verbose,
+                        force_color=sys.stdout.isatty(),
+                        debug=True,
+                        input_stream=input_stream
                     )
                     with redirection_context as log_redirection:
                         for phase_name, phase in zip(self.phases, self._InstallPhase_phases):  # NOQA: ignore=E501
