@@ -1115,7 +1115,7 @@ def create_rpm_source(dst_path, spec_file_path, cache_resources=False):
         shutil.copytree(os.path.join(spack_prefix, subdir), dst)
 
     for subdir in ['bin', 'lib', 'etc', 'var/spack/repos']:
-        tty.msg("Moving: " + subdir)
+        tty.msg("Copying: " + subdir)
         spack_move(subdir)
 
     if cache_resources:
@@ -1136,7 +1136,7 @@ def create_rpm_source(dst_path, spec_file_path, cache_resources=False):
                 dst_path = os.path.join(
                     spack_dst, 'var/spack/cache', relative_path)
                 mkdirp(os.path.dirname(dst_path))
-                shutil.move(source_path, dst_path)
+                shutil.copy(source_path, dst_path)
 
             package.do_clean()
 
