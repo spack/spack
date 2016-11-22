@@ -43,11 +43,11 @@ class Variant(object):
 
         :param str name: name of the variant
         :param str default: default value for the variant in case
-        nothing has been specified
+            nothing has been specified
         :param str description: purpose of the variant
         :param sequence values: sequence of allowed values or a callable
-        accepting a single value as argument and returning True if the
-        value is good, False otherwise
+            accepting a single value as argument and returning True if the
+            value is good, False otherwise
         :param bool exclusive: whether multiple CSV are allowed
         """
         self.name = name
@@ -73,14 +73,14 @@ class Variant(object):
 
         :param VariantSpec vspec: instance to be validated
         :param Package pkg: the package that required the validation,
-        if available
+            if available
 
         :raises InconsistentValidationError: if vspec.name doesn't
-        match self.name
+            match self.name
         :raises MultipleValuesInExclusiveVariantError: if vspec has
-        multiple values but self.exclusive ==True
+            multiple values but self.exclusive ==True
         :raises InvalidVariantValueError: if vspec.value contains
-        invalid values
+            invalid values
         """
         # Check the name of the variant
         if self.name != vspec.name:
@@ -169,7 +169,7 @@ class VariantSpec(object):
         Does not try to validate.
 
         :param VariantSpec other: constraint to be met for the method to
-        return True
+            return True
         :return: True or False
         :rtype: bool
         """
@@ -272,7 +272,7 @@ class VariantMap(lang.HashableMap):
 
         :param VariantMap other: VariantMap to satisfy
         :param bool strict: if True return False if a key is in other and
-        not in self, otherwise discard that key and proceed with evaluation
+            not in self, otherwise discard that key and proceed with evaluation
 
         :return: True or False
         :rtype: bool
@@ -293,8 +293,6 @@ class VariantMap(lang.HashableMap):
         :param VariantMap other: instance against which we constrain self
         :return: True or False
         :rtype: bool
-        :raises UnsatisfiableVariantSpecError: if a constraint is incompatible
-        with self
         """
         if other.spec._concrete:
             for k in self:
@@ -345,6 +343,7 @@ class DuplicateVariantError(error.SpecError):
 
 class UnknownVariantError(error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
+
     def __init__(self, pkg, variant):
         super(UnknownVariantError, self).__init__(
             'Package {0} has no variant {1}!'.format(pkg, variant)
@@ -352,6 +351,7 @@ class UnknownVariantError(error.SpecError):
 
 
 class InconsistentValidationError(error.SpecError):
+
     def __init__(self, vspec, variant):
         msg = 'trying to validate variant "{0.name}" with the validator of "{1.name}"'  # NOQA: ignore=E501
         super(InconsistentValidationError, self).__init__(
@@ -360,6 +360,7 @@ class InconsistentValidationError(error.SpecError):
 
 
 class MultipleValuesInExclusiveVariantError(error.SpecError):
+
     def __init__(self, variant, pkg):
         msg = 'multiple values are not allowed for variant "{0.name}"{1}'
         pkg_info = ''
@@ -372,6 +373,7 @@ class MultipleValuesInExclusiveVariantError(error.SpecError):
 
 class InvalidVariantValueError(error.SpecError):
     """Raised when a valid variant has at least an invalid value."""
+
     def __init__(self, variant, invalid_values, pkg):
         msg = 'invalid values for variant "{0.name}"{2}: {1}\n'
         pkg_info = ''
@@ -384,6 +386,7 @@ class InvalidVariantValueError(error.SpecError):
 
 class UnsatisfiableVariantSpecError(error.UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
+
     def __init__(self, provided, required):
         super(UnsatisfiableVariantSpecError, self).__init__(
             provided, required, "variant")
