@@ -310,10 +310,6 @@ class ArchSpec(object):
             refer to valid platforms.
         """
         value = str(value) if value is not None else None
-
-        if value is not None:
-            spack.architecture.verify_platform(value)
-
         self._platform = value
 
     @property
@@ -429,6 +425,8 @@ class ArchSpec(object):
 
     @staticmethod
     def from_dict(d):
+        if type(d['arch']) != type(d):
+            return ArchSpec('spackcompat', 'v08', d['arch'])
         d = d['arch']
         return ArchSpec(d['platform'], d['platform_os'], d['target'])
 
@@ -874,7 +872,7 @@ class Spec(object):
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
             self.architecture = ArchSpec(*new_vals)
         else:
-            new_attrvals = [(a, v) for a, v in kwargs.iteritems() 
+            new_attrvals = [(a, v) for a, v in kwargs.iteritems()
                             if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
