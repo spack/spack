@@ -25,18 +25,11 @@
 from spack import *
 
 
-class Flex(Package):
+class Flex(AutotoolsPackage):
     """Flex is a tool for generating scanners."""
 
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/archive/v2.6.2.tar.gz"
-    
-    def url_for_version(self, version):
-        base_url = "https://github.com/westes/flex/archive"
-        if version >= Version("2.6.0"):
-            return "{0}/v{1}.tar.gz".format(base_url, version)
-        else:
-            return "{0}/flex-{1}.tar.gz".format(base_url, version)
 
     version('2.6.2', 'acde3a89ef2b376aac94586fd5fda460')
     version('2.6.1', 'c4f31e0e4bd1711b7c91f16ef526ad90')
@@ -45,9 +38,10 @@ class Flex(Package):
                 
     depends_on("bison", type='build')
     depends_on("m4", type='build')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")
+    
+    def url_for_version(self, version):
+        base_url = "https://github.com/westes/flex/archive"
+        if version >= Version("2.6.0"):
+            return "{0}/v{1}.tar.gz".format(base_url, version)
+        else:
+            return "{0}/flex-{1}.tar.gz".format(base_url, version)
