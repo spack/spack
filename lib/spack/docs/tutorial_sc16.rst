@@ -20,7 +20,7 @@ the live demo scripts to see how Spack is used in practice.
    :align: left
    :alt: Slide Preview
 
-`Download Slides <llnl.github.io/spack/files/Spack-SC16-Tutorial.pdf>`_.
+`Download Slides <http://llnl.github.io/spack/files/Spack-SC16-Tutorial.pdf>`_.
 
 **Full citation:** Todd Gamblin, Massimiliano Culpo, Gregory Becker, Matt
 Legendre, Greg Lee, Elizabeth Fischer, and Benedikt Hegner.
