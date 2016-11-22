@@ -90,3 +90,19 @@ class SpackYamlTest(unittest.TestCase):
         check(self.data['config_file']['some_list'][2],   8,  8)
         check(self.data['config_file']['another_list'],  10, 10)
         check(self.data['config_file']['some_key'],      11, 11)
+
+    def test_yaml_aliases(self):
+        aliased_list_1 = ['foo']
+        aliased_list_2 = []
+        dict_with_aliases = {
+            'a': aliased_list_1,
+            'b': aliased_list_1,
+            'c': aliased_list_1,
+            'd': aliased_list_2,
+            'e': aliased_list_2,
+            'f': aliased_list_2,
+        }
+        string = syaml.dump(dict_with_aliases)
+
+        # ensure no YAML aliases appear in syaml dumps.
+        self.assertFalse('*id' in string)

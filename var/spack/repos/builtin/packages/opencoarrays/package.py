@@ -34,8 +34,9 @@ class Opencoarrays(CMakePackage):
     """
 
     homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/opencoarrays/releases/download/1.6.2/OpenCoarrays-1.6.2.tar.gz"
+    url      = "https://github.com/sourceryinstitute/opencoarrays/releases/download/1.7.4/OpenCoarrays-1.7.4.tar.gz"
 
+    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
     version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
 
     depends_on('cmake', type='build')
@@ -43,11 +44,8 @@ class Opencoarrays(CMakePackage):
 
     provides('coarrays')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            args = std_cmake_args
-            args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-            args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-            cmake('..', *args)
-            make()
-            make("install")
+    def cmake_args(self):
+        args = []
+        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
+        return args

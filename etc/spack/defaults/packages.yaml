@@ -15,6 +15,7 @@
 # -------------------------------------------------------------------------
 packages:
   all:
+    compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
       mpi: [openmpi, mpich]
       blas: [openblas]

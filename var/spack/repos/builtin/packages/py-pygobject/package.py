@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPygobject(Package):
+class PyPygobject(AutotoolsPackage):
     """bindings for the GLib, and GObject,
        to be used in Python."""
 
@@ -43,6 +43,4 @@ class PyPygobject(Package):
     patch('pygobject-2.28.6-introspection-1.patch')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install", parallel=False)
+        make('install', parallel=False)
