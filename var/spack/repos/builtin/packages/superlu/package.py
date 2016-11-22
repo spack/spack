@@ -23,7 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+import glob
+import os
 
 class Superlu(Package):
     """SuperLU is a general purpose library for the direct solution of large,
@@ -34,21 +35,86 @@ class Superlu(Package):
     url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_5.2.1.tar.gz"
 
     version('5.2.1', '3a1a9bff20cb06b7d97c46d337504447')
+    version('4.3', 'b72c6309f25e9660133007b82621ba7c')
 
-    depends_on('blas')
+    variant('blas', default=True, description='Build with external BLAS library')
+
+    depends_on('blas', when='+blas')
+
+    # Pre-cmake configuration method
+    def configure(self, spec):
+        # List of configuration options
+        config = []
+
+        # Generic options
+        config.extend([
+            'PLAT       = _x86_64',
+            'SuperLUroot = %s' % self.stage.source_path,
+            #'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu$(PLAT).a',
+            'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu_{0}.a'.format(self.spec.version),
+        ])
+
+        # The BLAS library
+        if '+blas' in spec:
+            config.extend([
+                'BLASDEF    = -DUSE_VENDOR_BLAS',
+                'BLASLIB    = {0}'.format(spec['blas'].blas_libs.ld_flags)
+                # or BLASLIB      = -L/usr/lib64 -lblas
+            ])
+        else:
+            config.append('BLASLIB    = ../lib/libblas$(PLAT).a')
+
+        # Generic options
+        config.extend([
+            'TMGLIB     = libtmglib.a',
+            'LIBS       = $(SUPERLULIB) $(BLASLIB)',
+            'ARCH       = ar',
+            'ARCHFLAGS  = cr',
+            'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
+            'CC         = {0}'.format(os.environ['CC']),
+            'CFLAGS     = -O3 -fPIC',
+            'NOOPTS     = -fPIC',
+            'FORTRAN    = {0}'.format(os.environ['FC']),
+            'FFLAGS     = -O2 -fPIC',
+            'LOADER     = {0}'.format(os.environ['CC']),
+            'LOADOPTS   = -fPIC',
+            'CDEFS      = -DAdd_'
+        ])
+
+        # Write configuration options to include file
+        with open('make.inc', 'w') as inc:
+            for option in config:
+                inc.write('{0}\n'.format(option))
 
     def install(self, spec, prefix):
-        cmake_args = [
-            '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
-            # BLAS support
-            '-Denable_blaslib=OFF',
-            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_libs.joined())
-        ]
-
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-
-            make()
-            make('install')
+        if spec.satisfies('@5.2.1:'):
+           #CMake installation method
+           cmake_args = [
+               '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'
+           ]
+           # The BLAS library
+           if '+blas' in spec:
+               cmake_args.extend([
+                   '-Denable_blaslib=OFF',
+                   '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_libs.joined())
+               ])
+           else:
+               cmake_args.extend([
+                   '-Denable_blaslib=ON'
+               ])
+           cmake_args.extend(std_cmake_args)
+           with working_dir('spack-build', create=True):
+               cmake('..', *cmake_args)
+               make()
+               make('install')
+        else:
+           #Pre-cmake installation method
+           self.configure(spec)
+           if '+blas' not in spec:
+               make('blaslib',parallel=False)
+           make(parallel=False)
+           install_tree('lib', prefix.lib)
+           headers = glob.glob(join_path('SRC', '*.h'))
+           mkdir(prefix.include)
+           for h in headers:
+               install(h, prefix.include) 
