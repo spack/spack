@@ -49,6 +49,7 @@ class Tau(Package):
             description='Downloads and builds various dependencies')
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=True, description='Use OpenMP threads')
+    variant('pthread', default=True, description='Activates Pthread support')
     variant('mpi', default=True,
             description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
@@ -139,6 +140,9 @@ class Tau(Package):
 
         if '+openmp' in spec:
             options.append('-openmp')
+
+        if '+pthread' in spec:
+            options.append('-pthread')
 
         if '+mpi' in spec:
             options.append('-mpi')
