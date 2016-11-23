@@ -26,6 +26,7 @@ from spack import *
 import glob
 import os
 
+
 class Superlu(Package):
     """SuperLU is a general purpose library for the direct solution of large,
     sparse, nonsymmetric systems of linear equations on high performance
@@ -43,7 +44,7 @@ class Superlu(Package):
     depends_on('cmake', when='@5.2.1:', type='build')
     depends_on('blas')
 
-    #CMake installation method
+    # CMake installation method
     @when('@5.2.1:')
     def install(self, spec, prefix):
         cmake_args = [
@@ -63,7 +64,7 @@ class Superlu(Package):
             make()
             make('install')
 
-    #Pre-cmake installation method
+    # Pre-cmake installation method
     @when('@4.3')
     def install(self, spec, prefix):
         config = []
@@ -72,9 +73,9 @@ class Superlu(Package):
         config.extend([
             'PLAT       = _x86_64',
             'SuperLUroot = %s' % self.stage.source_path,
-            #'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu$(PLAT).a',
+            # 'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu$(PLAT).a',
             'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu_{0}.a' \
-                .format(self.spec.version),
+            .format(self.spec.version),
             'BLASDEF    = -DUSE_VENDOR_BLAS',
             'BLASLIB    = {0}'.format(spec['blas'].blas_libs.ld_flags),
             # or BLASLIB      = -L/usr/lib64 -lblas
@@ -92,10 +93,10 @@ class Superlu(Package):
         if '+fpic' in spec:
             config.extend([
                 # Use these lines instead when pic_flag capability arrives
-                #'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
-                #'NOOPTS     = {0}'.format(self.compiler.pic_flag),
-                #'FFLAGS     = -O2 {0}'.format(self.compiler.pic_flag),
-                #'LOADOPTS   = {0}'.format(self.compiler.pic_flag)
+                # 'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
+                # 'NOOPTS     = {0}'.format(self.compiler.pic_flag),
+                # 'FFLAGS     = -O2 {0}'.format(self.compiler.pic_flag),
+                # 'LOADOPTS   = {0}'.format(self.compiler.pic_flag)
                 'CFLAGS     = -O3 -fPIC',
                 'NOOPTS     = -fPIC',
                 'FFLAGS     = -O2 -fPIC',
