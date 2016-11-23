@@ -59,11 +59,10 @@ class Flex(AutotoolsPackage):
 
         return url
 
+    def autoreconf(self, spec, prefix):
+        pass
+
     @when('@:2.6.0')
     def autoreconf(self, spec, prefix):
         libtoolize('--install', '--force')
         autoreconf('--install', '--force')
-
-    @when('@2.6.1:')
-    def autoreconf(self, spec, prefix):
-        pass
