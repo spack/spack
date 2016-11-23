@@ -77,6 +77,7 @@ def print_text_info(pkg):
 
         maxv = max(len(v) for v in sorted(pkg.variants))
         maxl = max(len(v.allowed_values) for _, v in pkg.variants.items())
+        maxl = max(maxl, 14)  # 14 is length of the column heading
         fmt = "%%-%ss%%-10s%%-%ss%%s" % (maxv + 4, maxl + 4)
 
         print("    " + fmt % ('Name',   'Default',   'Allowed values', 'Description'))
