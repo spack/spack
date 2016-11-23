@@ -38,7 +38,15 @@ class Variant(object):
     variant directive.
     """
 
-    def __init__(self, name, default, description, values=(True, False), exclusive=True):  # NOQA: ignore=E501
+    def __init__(
+            self,
+            name,
+            default,
+            description,
+            values=(True, False),
+            exclusive=True,
+            validator=None
+    ):
         """Initialize a package variant.
 
         :param str name: name of the variant
@@ -49,23 +57,26 @@ class Variant(object):
             accepting a single value as argument and returning True if the
             value is good, False otherwise
         :param bool exclusive: whether multiple CSV are allowed
+        :param callable validator: optional callable used to enforce
+            additional logic on the set of values being validated
         """
         self.name = name
         self.default = default
         self.description = str(description)
 
         if inspect.isroutine(values):
-            # If 'values' is a callable, assume it is a custom validator
-            # and reset the values to be explicit during debug
-            self.validator = values
+            # If 'values' is a callable, assume it is a single value
+            # validator and reset the values to be explicit during debug
+            self.single_value_validator = values
             self.values = None
         else:
             # Otherwise assume values is the set of allowed explicit values
             self.values = tuple(values)
             allowed = self.values + (self.default,)
-            self.validator = lambda x: x in allowed
+            self.single_value_validator = lambda x: x in allowed
 
         self.exclusive = exclusive
+        self.group_validator = validator
 
     def validate_or_raise(self, vspec, pkg=None):
         """Validate a variant spec against this package variant. Raises an
@@ -93,12 +104,23 @@ class Variant(object):
         if self.exclusive and len(value) != 1:
             raise MultipleValuesInExclusiveVariantError(vspec, pkg)
         # Check and record the values that are not allowed
-        not_allowed_values = [x for x in value if not self.validator(x)]
+        not_allowed_values = [
+            x for x in value if not self.single_value_validator(x)
+        ]
         if not_allowed_values:
             raise InvalidVariantValueError(self, not_allowed_values, pkg)
+        # Validate the group of values if needed
+        if self.group_validator is not None:
+            self.group_validator(value)
 
     @property
     def allowed_values(self):
+        """Returns a string representation of the allowed values for
+        printing purposes
+
+        :return: representation of the allowed values
+        :rtype: str
+        """
         v = ''
         if self.values is not None:
             v = tuple(str(x) for x in self.values)
@@ -323,8 +345,14 @@ class VariantMap(lang.HashableMap):
 
     @property
     def concrete(self):
+        """Returns True if the spec is concrete in terms of variants
+
+        :return: True or False
+        :rtype: bool
+        """
         return self.spec._concrete or all(
-            v in self for v in self.spec.package_class.variants)
+            v in self for v in self.spec.package_class.variants
+        )
 
     def copy(self):
         """Return an instance of VariantMap equivalent to self

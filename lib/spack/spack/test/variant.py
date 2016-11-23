@@ -124,7 +124,10 @@ class VariantTest(unittest.TestCase):
     def test_callable_validator(self):
 
         def validator(x):
-            return isinstance(int(x), numbers.Integral)
+            try:
+                return isinstance(int(x), numbers.Integral)
+            except ValueError:
+                return False
 
         a = Variant(
             'foo',
@@ -137,6 +140,18 @@ class VariantTest(unittest.TestCase):
         a.validate_or_raise(vspec)
         vspec.value = 2056
         a.validate_or_raise(vspec)
+        vspec.value = 'foo'
+        self.assertRaises(InvalidVariantValueError, a.validate_or_raise, vspec)
+
+    def test_representation(self):
+        a = Variant(
+            'foo',
+            default='',
+            description='',
+            values=('bar', 'baz', 'foobar'),
+            exclusive=True
+        )
+        self.assertEqual(a.allowed_values, 'bar, baz, foobar')
 
 
 class VariantMapTest(unittest.TestCase):

@@ -22,8 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import sys
+
+from spack import *
+from spack.error import SpackError
+
+
+def _process_manager_validator(values):
+    if len(values) > 1 and 'slurm' in values:
+        raise SpackError(
+            'slurm cannot be activated along with other process managers'
+        )
 
 
 class Mvapich2(AutotoolsPackage):
@@ -68,16 +77,17 @@ class Mvapich2(AutotoolsPackage):
         default='',
         description='List of the process managers to activate',
         values=('slurm', 'hydra', 'gforker', 'remshell'),
-        exclusive=False
+        exclusive=False,
+        validator=_process_manager_validator
     )
-    SLURM_INCOMPATIBLE_PMS = ('hydra', 'gforker', 'remshell')
 
     variant(
         'fabrics',
         default='',
         description='The fabric enabled for this build',
-        values=('psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp'),  # NOQA: ignore=E501
-        exclusive=True
+        values=(
+            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp'
+        )
     )
 
     # FIXME : CUDA support is missing
@@ -94,18 +104,15 @@ class Mvapich2(AutotoolsPackage):
     @property
     def process_manager_options(self):
         spec = self.spec
-        has_slurm = False
 
-        # Slurm incompatible variants
-        slurm_incompatible_pms = []
-        for x in Mvapich2.SLURM_INCOMPATIBLE_PMS:
+        other_pms = []
+        for x in ('hydra', 'gforker', 'remshell'):
             if 'process_managers={0}'.format(x) in spec:
-                slurm_incompatible_pms.append(x)
-        opts = ['--with-pm=%s' % ':'.join(slurm_incompatible_pms)]
+                other_pms.append(x)
+        opts = ['--with-pm=%s' % ':'.join(other_pms)]
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
-            has_slurm = True
             if self.version > Version('2.0'):
                 opts = [
                     '--with-pmi=pmi2',
@@ -116,11 +123,6 @@ class Mvapich2(AutotoolsPackage):
                     '--with-pmi=slurm',
                     '--with-pm=no'
                 ]
-        # Check for incompatibilities
-        if has_slurm and slurm_incompatible_pms:
-            raise RuntimeError(
-                'slurm cannot be activated along with other process managers'
-            )
 
         return opts
 
