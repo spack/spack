@@ -39,7 +39,7 @@ class PyPyqt(Package):
 
     # TODO: allow qt5 when conditional deps are supported.
     # TODO: Fix version matching so that @4 works like @:4
-    depends_on('qt@:4')
+    depends_on('qt@:4+phonon+dbus')
 
     def install(self, spec, prefix):
         python('configure.py',
