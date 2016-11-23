@@ -29,18 +29,21 @@ class YamlCpp(Package):
     """A YAML parser and emitter in C++"""
 
     homepage = "https://github.com/jbeder/yaml-cpp"
-    url      = 
+    url      = \
     "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
 
     version('0.5.3', '4e47733d98266e46a1a73ae0a72954eb')
+
+    variant('fpic',    default=False,
+            description='Build with position independent code')
 
     depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             args = std_cmake_args
-            args += ['-DCMAKE_CXX_FLAGS=-std=c++11',
-                     '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']
+            if '+fpic' in spec: 
+                args += ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']
             cmake('..', *args)
             make()
             make("install")
