@@ -76,19 +76,22 @@ def print_text_info(pkg):
         pad = padder(pkg.variants, 4)
 
         maxv = max(len(v) for v in sorted(pkg.variants))
-        fmt = "%%-%ss%%-10s%%s" % (maxv + 4)
+        maxl = max(len(v.allowed_values) for _, v in pkg.variants.items())
+        fmt = "%%-%ss%%-10s%%-%ss%%s" % (maxv + 4, maxl + 4)
 
-        print("    " + fmt % ('Name',   'Default',   'Description'))
+        print("    " + fmt % ('Name',   'Default',   'Allowed values', 'Description'))
         print()
         for name in sorted(pkg.variants):
             v = pkg.variants[name]
-            default = 'on' if v.default else 'off'
+            default = 'on' if v.default is True else 'off'
+            if not isinstance(v.default, bool):
+                default = v.default
 
             lines = textwrap.wrap(v.description)
             lines[1:] = ["      " + (" " * maxv) + l for l in lines[1:]]
             desc = "\n".join(lines)
 
-            print("    " + fmt % (name, default, desc))
+            print("    " + fmt % (name, default, v.allowed_values, desc))
 
     print()
     print("Installation Phases:")

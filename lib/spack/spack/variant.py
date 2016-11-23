@@ -97,6 +97,13 @@ class Variant(object):
         if not_allowed_values:
             raise InvalidVariantValueError(self, not_allowed_values, pkg)
 
+    @property
+    def allowed_values(self):
+        v = ''
+        if self.values is not None:
+            v = tuple(str(x) for x in self.values)
+        return ', '.join(v)
+
 
 @lang.key_ordering
 class VariantSpec(object):
