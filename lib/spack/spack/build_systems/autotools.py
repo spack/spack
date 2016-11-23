@@ -307,7 +307,6 @@ class AutotoolsPackage(PackageBase):
                         line = '--{0}-{1}'.format(active, value)
                         if active_parameters is not None and active_parameters(value):  # NOQA=ignore=E501
                             line += '={0}'.format(active_parameters(value))
-                        print(line)
                         return line
                     return '--{0}-{1}'.format(inactive, value)
                 line_generator = _default_generator
