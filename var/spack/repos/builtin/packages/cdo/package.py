@@ -25,9 +25,10 @@
 from spack import *
 
 
-class Cdo(Package):
+class Cdo(AutotoolsPackage):
     """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+    Climate and NWP model Data.
+    """
 
     homepage = "https://code.zmaw.de/projects/cdo"
     url      = "https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz"
@@ -38,84 +39,32 @@ class Cdo(Package):
     version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2',
             url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
 
-    variant('szip', default=True, description='Enable szip compression for GRIB1')
-    variant('hdf5', default=False, description='Enable HDF5 support')
-    variant('netcdf', default=True, description='Enable NetCDF support')
-    variant('udunits2', default=True, description='Enable UDUNITS2 support')
-    variant('grib', default=True, description='Enable GRIB_API support')
-    variant('libxml2', default=True, description='Enable libxml2 support')
-    variant('proj', default=True, description='Enable PROJ library for cartographic projections')
-    variant('curl', default=True, description='Enable curl support')
-    variant('fftw', default=True, description='Enable support for fftw3')
-    variant('magics', default=True, description='Enable Magics library support')
+    variant(
+        'enable',
+        default='',
+        description='Enable support for various tools',
+        values=('szip', 'hdf5', 'netcdf', 'udunits2', 'grib', 'libxml2', 'proj', 'curl', 'fftw', 'magics'),  # NOQA: ignore=E501
+        exclusive=False
+    )
 
-    depends_on('szip', when='+szip')
-    depends_on('netcdf', when='+netcdf')
-    depends_on('hdf5+threadsafe', when='+hdf5')
-    depends_on('udunits2', when='+udunits2')
-    depends_on('grib-api', when='+grib')
-    depends_on('libxml2', when='+libxml2')
-    depends_on('proj', when='+proj')
-    depends_on('curl', when='+curl')
-    depends_on('fftw', when='+fftw')
-    depends_on('magics', when='+magics')
+    depends_on('szip', when='enable=szip')
+    depends_on('netcdf', when='enable=netcdf')
+    depends_on('hdf5+threadsafe', when='enable=hdf5')
+    depends_on('udunits2', when='enable=udunits2')
+    depends_on('grib-api', when='enable=grib')
+    depends_on('libxml2', when='enable=libxml2')
+    depends_on('proj', when='enable=proj')
+    depends_on('curl', when='enable=curl')
+    depends_on('fftw', when='enable=fftw')
+    depends_on('magics', when='enable=magics')
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix=" + prefix,
-                       "--enable-shared",
-                       "--enable-static"]
-
-        if '+szip' in spec:
-            config_args.append('--with-szlib=' + spec['szip'].prefix)
-        else:
-            config_args.append('--without-szlib')
-
-        if '+hdf5' in spec:
-            config_args.append('--with-hdf5=' + spec['hdf5'].prefix)
-        else:
-            config_args.append('--without-hdf5')
-
-        if '+netcdf' in spec:
-            config_args.append('--with-netcdf=' + spec['netcdf'].prefix)
-        else:
-            config_args.append('--without-netcdf')
-
-        if '+udunits2' in spec:
-            config_args.append('--with-udunits2=' + spec['udunits2'].prefix)
-        else:
-            config_args.append('--without-udunits2')
-
-        if '+grib' in spec:
-            config_args.append('--with-grib_api=' + spec['grib-api'].prefix)
-        else:
-            config_args.append('--without-grib_api')
-
-        if '+libxml2' in spec:
-            config_args.append('--with-libxml2=' + spec['libxml2'].prefix)
-        else:
-            config_args.append('--without-libxml2')
-
-        if '+proj' in spec:
-            config_args.append('--with-proj=' + spec['proj'].prefix)
-        else:
-            config_args.append('--without-proj')
-
-        if '+curl' in spec:
-            config_args.append('--with-curl=' + spec['curl'].prefix)
-        else:
-            config_args.append('--without-curl')
-
-        if '+fftw' in spec:
-            config_args.append('--with-fftw3')
-        else:
-            config_args.append('--without-fftw3')
-
-        if '+magics' in spec:
-            config_args.append('--with-magics=' + spec['magics'].prefix)
-        else:
-            config_args.append('--without-magics')
-
-        configure(*config_args)
-
-        make()
-        make('install')
+    def configure_args(self):
+        spec = self.spec
+        config_args = [
+            '--enable-shared',
+            '--enable-static'
+        ]
+        config_args.extend(
+            self.with_or_without('enable', lambda x: spec[x].prefix)
+        )
+        return config_args
