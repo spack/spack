@@ -27,10 +27,10 @@ from spack import *
 
 
 class RCatools(Package):
-    """Contains several basic utility functions including: moving (rolling, running)
-    window statistic functions, read/write for GIF and ENVI binary files, fast
-    calculation of AUC, LogitBoost classifier, base64 encoder/decoder,
-    round-off-error-free sum and cumsum, etc."""
+    """Contains several basic utility functions including: moving (rolling,
+    running) window statistic functions, read/write for GIF and ENVI binary
+    files, fast calculation of AUC, LogitBoost classifier, base64
+    encoder/decoder, round-off-error-free sum and cumsum, etc."""
 
     homepage = "https://cran.r-project.org/package=caTools"
     url      = "https://cran.r-project.org/src/contrib/caTools_1.17.1.tar.gz"
