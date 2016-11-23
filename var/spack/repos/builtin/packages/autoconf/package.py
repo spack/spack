@@ -37,7 +37,6 @@ class Autoconf(AutotoolsPackage):
     version('2.13', '9de56d4a161a723228220b0f425dc711')
 
     depends_on('m4@1.4.6:',   type='build')
-    depends_on('perl@5.006:', type='build')
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

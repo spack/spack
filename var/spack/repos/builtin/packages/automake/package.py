@@ -36,7 +36,6 @@ class Automake(AutotoolsPackage):
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
 
     depends_on('autoconf', type='build')
-    depends_on('perl',     type='build')
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
