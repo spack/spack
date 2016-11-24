@@ -32,13 +32,12 @@ from spack import *
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
-    url = "https://go.googlesource.com/go"
+    url='https://storage.googleapis.com/golang/go1.7.3.src.tar.gz'
 
     extendable = True
 
-    version('1.6.2', git='https://go.googlesource.com/go', tag='go1.6.2')
-    version('1.5.4', git='https://go.googlesource.com/go', tag='go1.5.4')
-    version('1.4.2', git='https://go.googlesource.com/go', tag='go1.4.2')
+    version('1.7.3', '83d1b7bd4281479ab7d153e5152c9fc9')
+    version('1.6.2', 'd1b50fa98d9a71eeee829051411e6207')
 
     variant('test', default=True, description='Build and run tests as part of the build.')
 
@@ -48,6 +47,12 @@ class Go(Package):
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
     depends_on('go-bootstrap', type='build')
+
+    # https://github.com/golang/go/issues/17545
+    patch('time_test.patch', when='@1.6.2:1.7.3')
+
+    # https://github.com/golang/go/issues/17986
+    patch('misc-cgo-testcshared.patch', level=0, when='@1.6.2:1.7.3')
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the
@@ -64,6 +69,9 @@ class Go(Package):
     @when('@1.5.0:')
     def patch(self):
         pass
+
+    def url_for_version(self, version):
+        return "https://storage.googleapis.com/golang/go{0}.src.tar.gz".format(version)
 
     def install(self, spec, prefix):
         bash = which('bash')
