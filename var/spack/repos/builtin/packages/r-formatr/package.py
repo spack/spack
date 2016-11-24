@@ -44,7 +44,7 @@ class RFormatr(Package):
     depends_on('r-codetools', type=nolink)
     depends_on('r-shiny', type=nolink)
     depends_on('r-testit', type=nolink)
-    #depends_on('r-knitr', type=nolink) - mutual dependency
+    # depends_on('r-knitr', type=nolink) - mutual dependency
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
