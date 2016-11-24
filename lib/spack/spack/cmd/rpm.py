@@ -611,7 +611,7 @@ class DependencyConfig(object):
                  infer_build_norpm_deps=False, infer_ignore_deps=False):
         self.build_norpm_deps = build_norpm_deps
         self.overwrite_build_norpm_deps = self.build_norpm_deps is not None
-        self.ignore_deps = ignore_deps
+        self.ignore_deps = ignore_deps or set()
 
         self.infer_build_norpm_deps = infer_build_norpm_deps
         self.infer_ignore_deps = infer_ignore_deps
@@ -630,7 +630,8 @@ class DependencyConfig(object):
     def _prev_rpm(self, pkg_spec):
         namespace = self.subspace_cfg.get_namespace(pkg_spec.name)
         rpm_name = namespace.name(pkg_spec)
-        return self.rpm_db.get(rpm_name, None)
+        if rpm_name in self.rpm_db:
+            return self.rpm_db[rpm_name].rpm
 
     def ignore_deps_for_pkg(self, pkg_spec):
         collected = set(self.ignore_deps)
