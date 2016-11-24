@@ -162,7 +162,7 @@ class Stage(object):
     def __init__(
             self, url_or_fetch_strategy,
             name=None, mirror_path=None, keep=False, path=None, lock=True,
-            alternate_fetchers=None):
+            search_fn=None):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -198,7 +198,7 @@ class Stage(object):
         self.fetcher.set_stage(self)
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
-        self.alternate_fetchers = alternate_fetchers
+        self.search_fn = search_fn
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
 
@@ -416,10 +416,17 @@ class Stage(object):
                         self.mirror_path, digest, expand=expand,
                         extension=extension))
 
-        if self.alternate_fetchers:
-            fetchers.extend(self.alternate_fetchers)
+        def generate_fetchers():
+            for fetcher in fetchers:
+                yield fetcher
+            # The search function may be expensive, so wait until now to
+            # call it so the user can stop if a prior fetcher succeeded
+            if self.search_fn and not mirror_only:
+                dynamic_fetchers = self.search_fn()
+                for fetcher in dynamic_fetchers:
+                    yield fetcher
 
-        for fetcher in fetchers:
+        for fetcher in generate_fetchers():
             try:
                 fetcher.set_stage(self)
                 self.fetcher = fetcher
