@@ -2031,13 +2031,12 @@ class Spec(object):
         return clone
 
     def validate_or_raise(self):
-        """This checks that names of packages and compilers in this spec are real.
-           If they're not, it will raise either UnknownPackageError or
-           UnsupportedCompilerError.
+        """Checks that names and values in this spec are real. If they're not,
+        it will raise an appropriate exception.
         """
         # FIXME: this function should be lazy, and collect all the errors
         # FIXME: before raising the exceptions, instead of being greedy and
-        # FIXME: collect one at a time
+        # FIXME: raise just the first one encountered
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
@@ -2055,7 +2054,6 @@ class Spec(object):
                 pkg_variants = pkg_cls.variants
                 not_existing = set(spec.variants) - set(pkg_variants)
                 if not_existing:
-                    # FIXME: improve error message
                     raise UnknownVariantError(spec.name, not_existing)
 
                 for name, v in [(x, y) for (x, y) in spec.variants.items()]:
