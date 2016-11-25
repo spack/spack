@@ -40,6 +40,16 @@ class M4(Package):
 
     depends_on('libsigsegv', when='+sigsegv')
 
+    def _make_executable(self, name):
+        return Executable(join_path(self.prefix.bin, name))
+
+    def setup_dependent_package(self, module, dependent_spec):
+        # m4 is very likely to be a build dependency, so we add the
+        # executable it provides to the dependent module
+        executables = ['m4']
+        for name in executables:
+            setattr(module, name, self._make_executable(name))
+
     def install(self, spec, prefix):
         configure_args = []
         if 'libsigsegv' in spec:
