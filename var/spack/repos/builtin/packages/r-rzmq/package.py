@@ -29,7 +29,7 @@ from spack import *
 class RRzmq(Package):
     """Interface to the ZeroMQ lightweight messaging kernel."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://github.com/armstrtw/rzmq"
     url      = "https://cran.r-project.org/src/contrib/rzmq_0.7.7.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rzmq"
 
