@@ -25,21 +25,22 @@
 
 from spack import *
 
+
 class RRinside(Package):
     """C++ classes to embed R in C++ applications The 'RInside' packages makes
-    it easier to have "R inside" your C++ application by providing a C++ wrapper
-    class providing the R interpreter. As R itself is embedded into your
-    application, a shared library build of R is required. This works on Linux,
-    OS X and even on Windows provided you use the same tools used to build R
-    itself. Numerous examples are provided in the eight subdirectories of the
-    examples/ directory of the installed package: standard, mpi (for parallel
-    computing) qt (showing how to embed 'RInside' inside a Qt GUI application),
-    wt (showing how to build a "web-application" using the Wt toolkit),
-    armadillo (for 'RInside' use with 'RcppArmadillo') and eigen (for 'RInside'
-    use with 'RcppEigen'). The example use GNUmakefile(s) with GNU extensions,
-    so a GNU make is required (and will use the GNUmakefile automatically).
-    Doxygen-generated documentation of the C++ classes is available at the
-    'RInside' website as well."""
+    it easier to have "R inside" your C++ application by providing a C++
+    wrapperclass providing the R interpreter. As R itself is embedded into
+    your application, a shared library build of R is required. This works on
+    Linux, OS X and even on Windows provided you use the same tools used to
+    build R itself. Numerous examples are provided in the eight subdirectories
+    of the examples/ directory of the installed package: standard, mpi (for
+    parallel computing) qt (showing how to embed 'RInside' inside a Qt GUI
+    application), wt (showing how to build a "web-application" using the Wt
+    toolkit), armadillo (for 'RInside' use with 'RcppArmadillo') and eigen (for
+    'RInside' use with 'RcppEigen'). The example use GNUmakefile(s) with GNU
+    extensions, so a GNU make is required (and will use the GNUmakefile
+    automatically). Doxygen-generated documentation of the C++ classes is
+    available at the 'RInside' website as well."""
 
     homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
     url      = "https://cran.r-project.org/src/contrib/RInside_0.2.13.tar.gz"
