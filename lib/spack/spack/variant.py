@@ -121,10 +121,15 @@ class Variant(object):
         :return: representation of the allowed values
         :rtype: str
         """
-        v = ''
+        # Join an explicit set of allowed values
         if self.values is not None:
             v = tuple(str(x) for x in self.values)
-        return ', '.join(v)
+            return ', '.join(v)
+        # In case we were given a single-value validator
+        # print the docstring
+        docstring = inspect.getdoc(self.single_value_validator)
+        v = docstring if docstring else ''
+        return v
 
 
 @lang.key_ordering

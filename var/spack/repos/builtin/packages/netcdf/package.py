@@ -28,8 +28,9 @@ import numbers
 
 
 def is_integral(x):
+    """Any integer value"""
     try:
-        return isinstance(int(x), numbers.Integral)
+        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
     except ValueError:
         return False
 
