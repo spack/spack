@@ -27,6 +27,7 @@ from spack import *
 
 class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
+
     homepage = 'https://www.gnu.org/software/autoconf/'
     url = 'http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
 
@@ -35,7 +36,7 @@ class Autoconf(AutotoolsPackage):
     version('2.59', 'd4d45eaa1769d45e59dcb131a4af17a0')
     version('2.13', '9de56d4a161a723228220b0f425dc711')
 
-    depends_on('m4', type='build')
+    depends_on('m4@1.4.6:',   type='build')
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
