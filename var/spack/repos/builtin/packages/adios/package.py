@@ -89,6 +89,13 @@ class Adios(Package):
             msg = 'cannot build a fortran variant without a fortran compiler'
             raise RuntimeError(msg)
 
+    @when("+mpi platform=cray")
+    def setup_environment(self, spack_env, run_env):
+        """set MPICC, MPICXX to spack_cc on Cray"""
+        spack_env.set("MPICC", spack_cc)
+        spack_env.set("MPICXX", spack_cxx)
+
+
     def install(self, spec, prefix):
         self.validate(spec)
         # Handle compilation after spec validation
@@ -105,6 +112,7 @@ class Adios(Package):
 
         if '+mpi' in spec:
             extra_args.append('--with-mpi')
+            
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
         else:
