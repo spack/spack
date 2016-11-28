@@ -833,7 +833,7 @@ class Spec(object):
             except AttributeError:
                 # There has been no query yet: this means
                 # a spec is trying to access its own attributes
-                _ = instance[instance.name]
+                _ = instance[instance.name]  # NOQA: ignore=F841
                 query = instance.last_query
 
             callbacks_chain = []
