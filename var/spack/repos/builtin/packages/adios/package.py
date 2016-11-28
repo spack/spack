@@ -55,11 +55,7 @@ class Adios(Package):
     variant('szip', default=False, description='Enable szip transform support')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
-
-    # Lots of setting up here for this package
-    # module swap PrgEnv-intel PrgEnv-$COMP
-    # module load cray-hdf5/1.8.14
-    # module load python/2.7.10
+    variant('netcdf', default=False, description="Enable bp2ncd converter utility to NetCDF format")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -73,6 +69,7 @@ class Adios(Package):
     depends_on('szip', when='+szip')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('netcdf', when="+netcdf")
 
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
@@ -94,7 +91,7 @@ class Adios(Package):
         """set MPICC, MPICXX to spack_cc on Cray"""
         spack_env.set("MPICC", spack_cc)
         spack_env.set("MPICXX", spack_cxx)
-
+        spack_env.set("MPIFC", spack_fc)
 
     def install(self, spec, prefix):
         self.validate(spec)
@@ -112,7 +109,7 @@ class Adios(Package):
 
         if '+mpi' in spec:
             extra_args.append('--with-mpi')
-            
+
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
         else:
@@ -129,6 +126,8 @@ class Adios(Package):
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
+        if "+netcdf" in spec:
+            extra_args.append("--with-netcdf=%s" % spec['netcdf'].prefix)
 
         sh = which('sh')
         sh('./autogen.sh')
