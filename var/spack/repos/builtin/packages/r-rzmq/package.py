@@ -35,6 +35,8 @@ class RRzmq(Package):
 
     version('0.7.7', '8ba18fd1c222d1eb25bb622ccd2897e0')
 
+    depends_on('zeromq')
+
     extends('R')
 
     def install(self, spec, prefix):
