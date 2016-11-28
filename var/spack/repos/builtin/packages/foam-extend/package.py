@@ -39,7 +39,7 @@ class FoamExtend(Package):
 
     depends_on('mpi')
     depends_on('python')
-    depends_on('flex@:2.5.99')
+    depends_on('flex')
     depends_on('zlib')
     depends_on('cmake', type='build')
 
@@ -155,11 +155,11 @@ class FoamExtend(Package):
 
         if '+paraview' in self.spec:
             prefs_dict['PARAVIEW_SYSTEM'] = 1
-            prefs_dict['PARAVIEW_DIR'] = self.spec['paraview'].prefix,
-            prefs_dict['PARAVIEW_BIN_DIR'] = self.spec['paraview'].prefix.bin,
+            prefs_dict['PARAVIEW_DIR'] = self.spec['paraview'].prefix
+            prefs_dict['PARAVIEW_BIN_DIR'] = self.spec['paraview'].prefix.bin
             prefs_dict['QT_SYSTEM'] = 1
-            prefs_dict['QT_DIR'] = self.spec['qt'].prefix,
-            prefs_dict['QT_BIN_DIR'] = self.spec['qt'].prefix.bin,
+            prefs_dict['QT_DIR'] = self.spec['qt'].prefix
+            prefs_dict['QT_BIN_DIR'] = self.spec['qt'].prefix.bin
 
         # write the prefs files to define the configuration needed,
         # only the prefs.sh is used by this script but both are
@@ -215,6 +215,19 @@ class FoamExtend(Package):
                     for key, val in compiler_flags.iteritems():
                         fh.write('{0}{1} = {2}\n'.format(comp, key, val))
 
+        for _file in ['src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L',
+                      'src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L',
+                      'src/meshTools/triSurface/triSurface/interfaces/STL/readSTLASCII.L',
+                      'applications/utilities/preProcessing/fluentDataToFoam/fluentDataToFoam.L',
+                      'applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L',
+                      'applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L',
+                      'applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L',
+                      'applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L',
+                      'applications/utilities/mesh/conversion/fluent3DMeshToElmer/fluent3DMeshToElmer.L']:
+            filter_file(r'#if YY_FLEX_SUBMINOR_VERSION < 34',
+                        r'#if YY_FLEX_MAJOR_VERSION <= 2 && YY_FLEX_MINOR_VERSION <= 5 && YY_FLEX_SUBMINOR_VERSION < 34',
+                        _file)
+
     def setup_environment(self, spack_env, run_env):
         with working_dir(self.stage.path):
             spack_env.set('FOAM_INST_DIR', os.path.abspath('.'))
@@ -240,6 +253,7 @@ class FoamExtend(Package):
 
         if '+source' in spec:
             install_tree('src', join_path(install_path, 'src'))
+            install_tree('tutorials', join_path(install_path, 'tutorials'))
 
         install_tree('lib', join_path(install_path, 'lib'))
         install_tree('bin', join_path(install_path, 'bin'))
