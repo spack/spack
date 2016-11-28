@@ -152,7 +152,7 @@ class Openblas(MakefilePackage):
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = self.libs.ld_flags.split()
+        link_flags = spec.libs.link_flags.ld_flags.split()
         if self.compiler.name == 'intel':
             link_flags.extend(["-lifcore"])
         link_flags.extend(["-lpthread"])

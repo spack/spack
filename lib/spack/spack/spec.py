@@ -828,7 +828,14 @@ class Spec(object):
             then AttributeError is raised
             """
             pkg = instance.package
-            query = instance.last_query
+            try:
+                query = instance.last_query
+            except AttributeError:
+                # There has been no query yet: this means
+                # a spec is trying to access its own attributes
+                _ = instance[instance.name]
+                query = instance.last_query
+
             callbacks_chain = []
             # First in the chain : specialized attribute for virtual packages
             if query.isvirtual:
