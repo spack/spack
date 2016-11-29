@@ -114,6 +114,25 @@ class Openblas(Package):
         # no quotes around prefix (spack doesn't use a shell)
         make('install', "PREFIX=%s" % prefix, *make_defs)
 
+        # TODO: the links below are mainly there because client
+        # TODO: packages are wrongly written. Check if they can be removed
+		# NOTE: py-scipy requires these symlinks.  Please do not remove them
+		#       without checking that py-scipy can build without.
+        # Blas virtual package should provide blas.a and libblas.a
+        with working_dir(prefix.lib):
+            symlink('libopenblas.a', 'blas.a')
+            symlink('libopenblas.a', 'libblas.a')
+            if '+shared' in spec:
+                symlink('libopenblas.%s' % dso_suffix,
+                        'libblas.%s' % dso_suffix)
+
+        # Lapack virtual package should provide liblapack.a
+        with working_dir(prefix.lib):
+            symlink('libopenblas.a', 'liblapack.a')
+            if '+shared' in spec:
+                symlink('libopenblas.%s' % dso_suffix,
+                        'liblapack.%s' % dso_suffix)
+
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.

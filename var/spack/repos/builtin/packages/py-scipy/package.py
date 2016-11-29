@@ -40,6 +40,8 @@ class PyScipy(Package):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     extends('python')
+    depends_on('blas')
+    depends_on('lapack')
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-nose', type='build')
     # Known not to work with 2.23, 2.25
