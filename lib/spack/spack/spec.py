@@ -2399,7 +2399,7 @@ class Spec(object):
                     # Regular specs
                     (x for x in self.traverse() if x.name == name),
                     # Virtual specs
-                    (x for x in self.traverse()
+                    (x.copy() for x in self.traverse()
                      if (not x.virtual) and x.package.provides(name))
                 )
             )
