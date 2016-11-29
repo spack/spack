@@ -27,11 +27,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install uuid
+#     spack install cmor
 #
 # You can edit this file again by typing:
 #
-#     spack edit uuid
+#     spack edit cmor
 #
 # See the Spack documentation for more information on packaging.
 # If you submit this package back to Spack as a pull request,
@@ -40,18 +40,45 @@
 from spack import *
 
 
-class Uuid(Package):
-    """OSSP uuid is a ISO-C:1999 application programming interface (API) and corresponding command line interface (CLI) 
-    for the generation of DCE 1.1, ISO/IEC 11578:1996 and RFC 4122 compliant Universally Unique Identifier (UUID)"""
+class Cmor(Package):
 
-    homepage = "http://www.ossp.org/pkg/lib/uuid/"
-    url = 'http://www.mirrorservice.org/sites/ftp.ossp.org/pkg/lib/uuid/uuid-1.6.2.tar.gz'
+    """Climate Model Output Rewriter Version 3"""
 
-    version('1.6.2', '5db0d43a9022a6ebbbc25337ae28942f')
+    homepage = "http://cmor.llnl.gov/"
+    url  = "https://github.com/PCMDI/cmor"
+
+    version('3.1.2', git="https://github.com/PCMDI/cmor.git", commit='f599ddcd56fa9037e3900cecad859dfc36d36f31')
+
+    variant('uuid', default=True, description='Enable UUID support')
+    variant('netcdf', default=True, description='Enable NetCDF support')
+    variant('udunits2', default=True, description='Enable UDUNITS2 support')
+    variant('hdf5', default=True, description='Enable HDF5 support')   
+    variant('python', default=False, description='Enable PYTHON support')
+    variant('py-numpy', default=False, description='Enable NUMPY-PYTHON support')
+
+    depends_on('uuid')
+    depends_on('netcdf')
+    depends_on('udunits2')
+    depends_on('hdf5')
+    # depends_on('python', when='+python')
+    depends_on('py-numpy', when='+python')
+
+    extends('python', when='+python')
 
     def install(self, spec, prefix):
-        
-        configure('--prefix={0}'.format(prefix))
 
-        make()
-        make('install')
+	config_args = ['--prefix=' + prefix]
+
+
+	if '+python' in spec:
+		config_args.append('--with-python={0}'.format(spec['python'].prefix))
+
+        configure(*config_args)
+
+	if '+python' in spec:
+		make('python')
+	else:
+		make()
+
+	make('install')
+
