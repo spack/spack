@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class RIrkernel(Package):
     """R kernel for Jupyter"""
 
