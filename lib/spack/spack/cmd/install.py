@@ -26,6 +26,7 @@ import argparse
 import codecs
 import functools
 import os
+import platform
 import time
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
@@ -106,9 +107,10 @@ class TestResult(object):
 
 
 class TestSuite(object):
-    def __init__(self):
+    def __init__(self, spec):
         self.root = ET.Element('testsuite')
         self.tests = []
+        self.spec = spec
 
     def append(self, item):
         if not isinstance(item, TestCase):
@@ -128,6 +130,8 @@ class TestSuite(object):
         )
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
+        self.root.set('name', str(self.spec))
+        self.root.set('hostname', platform.node())
 
         for item in self.tests:
             self.root.append(item.element)
@@ -322,7 +326,7 @@ def install(parser, args, **kwargs):
         if not log_filename:
             log_filename = default_log_file(spec)
         # Create the test suite in which to log results
-        test_suite = TestSuite()
+        test_suite = TestSuite(spec)
         # Decorate PackageBase.do_install to get installation status
         PackageBase.do_install = junit_output(
             spec, test_suite
