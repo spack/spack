@@ -130,7 +130,7 @@ class TestSuite(object):
         )
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
-        self.root.set('name', str(self.spec))
+        self.root.set('name', self.spec.short_spec)
         self.root.set('hostname', platform.node())
 
         for item in self.tests:
@@ -247,7 +247,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.ERRORED,
+                    TestResult.FAILED,
                     message='Unable to fetch package',
                     text=text
                 )
@@ -257,7 +257,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.ERRORED,
+                    TestResult.FAILED,
                     message='Unexpected exception thrown during install',
                     text=text
                 )
@@ -267,7 +267,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.ERRORED,
+                    TestResult.FAILED,
                     message='Unknown error',
                     text=text
                 )
