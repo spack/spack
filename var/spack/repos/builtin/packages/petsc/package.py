@@ -37,6 +37,7 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
+    version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
     version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
     version('3.6.4', '7632da2375a3df35b8891c9526dbdde7')
@@ -67,6 +68,9 @@ class Petsc(Package):
             description='Activates support for SuperluDist (only parallel)')
 
     # Virtual dependencies
+    # Git repository needs sowing to build Fortran interface
+    depends_on('sowing', when='@develop')
+    
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
@@ -127,6 +131,7 @@ class Petsc(Package):
     def install(self, spec, prefix):
         options = ['--with-ssl=0',
                    '--download-c2html=0',
+                   '--download-sowing=0',		   
                    '--download-hwloc=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
