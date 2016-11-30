@@ -80,6 +80,8 @@ class AutotoolsPackage(PackageBase):
                 return True
             except:
                 pass
+        else:
+            return True
 
         # Look for a spack-installed automake package
         if 'automake' in self.spec:
