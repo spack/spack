@@ -96,6 +96,8 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import base64
+import csv
+import cStringIO
 import hashlib
 import imp
 import itertools
@@ -755,15 +757,15 @@ class DependencyMap(HashableMap):
 
 
 def _libs_default_handler(descriptor, spec, cls):
-    """Default handler when looking for 'libs' attribute
+    """Default handler when looking for 'libs' attribute. The default
+    tries to search for 'lib{spec.name}' recursively starting from
+    `spec.prefix`.
 
-    The default tries to search for 'lib{spec.name}' recursively starting
-    from spec.prefix
-
-    Args:
-        descriptor: descriptor that trigdered the call
-        spec: spec that is being queried
-        cls: type(spec)
+    :param ForwardQueryToPackage descriptor: descriptor that triggered
+        the call
+    :param Spec spec: spec that is being queried
+    :param type(spec) cls: type of spec, to match the signature of the
+        descriptor `__get__` method
     """
     name = 'lib' + spec.name
     shared = '+shared' in spec
@@ -773,14 +775,14 @@ def _libs_default_handler(descriptor, spec, cls):
 
 
 def _cppflags_default_handler(descriptor, spec, cls):
-    """Default handler when looking for cppflags attribute
+    """Default handler when looking for cppflags attribute. The default
+    just returns '-I{spec.prefix.include}'.
 
-    The default just returns '-I{spec.prefix.include}'
-
-    Args:
-        descriptor: descriptor that trigdered the call
-        spec: spec that is being queried
-        cls: type(spec)
+    :param ForwardQueryToPackage descriptor: descriptor that triggered
+        the call
+    :param Spec spec: spec that is being queried
+    :param type(spec) cls: type of spec, to match the signature of the
+        descriptor `__get__` method
     """
     return '-I' + spec.prefix.include
 
@@ -792,14 +794,13 @@ class Spec(object):
         """Descriptor used to forward queries from Spec to Package"""
 
         def __init__(self, attribute_name, default_handler=None):
-            """
-            Initializes the instance of the descriptor
+            """Initializes the instance of the descriptor
 
-            Args:
-                attribute_name: name of the attribute to be searched for in \
-                    the Package instance
-                default_handler: [optional] default function to be called \
-                    if the attribute was not found in the Package instance
+            :param str attribute_name: name of the attribute to be
+                searched for in the Package instance
+            :param callable default_handler: [optional] default function
+                to be called if the attribute was not found in the Package
+                instance
             """
             self.attribute_name = attribute_name
             # Turn the default handler into a function with the right
@@ -2386,19 +2387,39 @@ class Spec(object):
         return self.versions[0]
 
     def __getitem__(self, name):
-        """Get a dependency from the spec by its name.
+        """Get a dependency from the spec by its name. This call implicitly
+        sets a query state in the package being retrieved. The behavior of
+        packages may be influenced by additional query parameters that are
+        passed after a colon symbol.
 
-        This call implicitly sets a query to package for the queried spec.
+        Note that if a virtual package is queried a copy of the Spec is
+        returned while for non-virtual a reference is returned.
         """
         query_parameters = name.split(':')
+        if len(query_parameters) > 2:
+            msg = 'key has more than one \':\' symbol.'
+            msg += ' At most one is admitted.'
+            raise KeyError(msg)
+
         name, query_parameters = query_parameters[0], query_parameters[1:]
+        if query_parameters:
+            # We have extra query parameters, which are comma separated
+            # values
+            f = cStringIO.StringIO(query_parameters.pop())
+            try:
+                query_parameters = next(csv.reader(f, skipinitialspace=True))
+            except StopIteration:
+                query_parameters = ['']
 
         try:
             value = next(
                 itertools.chain(
                     # Regular specs
                     (x for x in self.traverse() if x.name == name),
-                    # Virtual specs
+                    # Virtual specs: they return a copy in case the same
+                    # package provides more than one service, so that the
+                    # query state won't be modified accidentally by later
+                    # queries.
                     (x.copy() for x in self.traverse()
                      if (not x.virtual) and x.package.provides(name))
                 )
