@@ -184,7 +184,7 @@ class CDashTestCase(object):
 
     results = {
         TestResult.PASSED: 'passed',
-        TestResult.SKIPPED: 'passed',
+        TestResult.SKIPPED: 'notrun',
         TestResult.FAILED: 'failed',
         TestResult.ERRORED: 'failed',
     }
@@ -195,9 +195,9 @@ class CDashTestCase(object):
         name_element = ET.SubElement(self.element, 'Name')
         name_element.text = name
         path_element = ET.SubElement(self.element, 'Path')
-        path_element.text = "TODO"
+        path_element.text = ""
         cmd_line_element = ET.SubElement(self.element, 'FullCommandLine')
-        cmd_line_element.text = "TODO"
+        cmd_line_element.text = "spack install"
         self.result = ET.SubElement(self.element, 'Results')
 
     def set_duration(self, duration):
@@ -221,7 +221,7 @@ class CDashTestCase(object):
         cmd_line.set('type', 'text/string')
         cmd_line.set('name', 'Command Line')
         value = ET.SubElement(cmd_line, 'Value')
-        value.text = "TODO"
+        value.text = "spack install"
         # Logs
         logs = ET.SubElement(self.result, 'Measurement')
         value = ET.SubElement(logs, 'Value')
@@ -238,29 +238,31 @@ def fetch_text(path):
         )
 
 
-class CDashReport(object):
-    def __init__(self, spec, filename):
+class CDashTestSuite(object):
+    def __init__(self, spec, filename, slot='Experimental'):
         self.spec = spec
+        self.slot = slot
         self.tests = []
-        # TODO BuildStamp
+        self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
-        if filename is not None:
-            # TODO
-            raise NotImplementedError(
-                'The CDash report filename cannot be configured')
+        self.filename = filename
 
     def create_filename(self, spec, subdir, step):
-        fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
-        basename = fmt.format(x=spec, hash=spec.dag_hash())
-        dirname = fs.join_path(spack.var_path, subdir)
-        fs.mkdirp(dirname)
-        return fs.join_path(dirname, basename)
+        if self.filename is not None:
+            return "%s.%s.xml" % (self.filename, step)
+        else:
+            fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
+            basename = fmt.format(x=spec, hash=spec.dag_hash())
+            dirname = fs.join_path(spack.var_path, subdir)
+            fs.mkdirp(dirname)
+            return fs.join_path(dirname, basename)
 
     def create_template(self):
         template = ET.Element('Site')
         template.set('BuildName', str(self.spec.short_spec))
         template.set('Name', platform.node())
-        template.set('Type', 'Nightly')
+        template.set('Type', self.slot)
+        template.set('BuildStamp', self.buildstamp)
         return template
 
     def create_testcase(self, name, spec):
@@ -294,13 +296,14 @@ class CDashReport(object):
         start_time.text = self.now()
         end_time = ET.SubElement(configure, 'EndDateTime')
         end_time.text = self.now()
-        # TODO: the following needs more useful data
         command = ET.SubElement(configure, "ConfigureCommand")
         command.text = "spack install"
         status = ET.SubElement(configure, "ConfigureStatus")
-        status.text = "Spack install called successfully"
+        status.text = '0'
         minutes = ET.SubElement(configure, "ElapsedMinutes")
-        minutes.text = "0.0"
+        minutes.text = '0.0'
+        log = ET.SubElement(configure, 'Log')
+        log.text = str(self.spec)
         return report
 
     def prepare_build_report(self):
@@ -309,7 +312,7 @@ class CDashReport(object):
         start_element = ET.SubElement(build, 'StartDateTime')
         start_element.text = self.now()
         command_element = ET.SubElement(build, 'BuildCommand')
-        command_element.text = 'TODO'
+        command_element.text = 'spack install'
         log_element = ET.SubElement(build, 'Log')
         log_element.set('Encoding', 'base64')
         stop_element = ET.SubElement(build, 'EndDateTime')
@@ -450,7 +453,7 @@ def install(parser, args, **kwargs):
     spec = specs.pop()
 
     test_suites = {"junit": JUnitTestSuite,
-                   "cdash": CDashReport}
+                   "cdash": CDashTestSuite}
 
     # Check if we were asked to produce some log for dashboards
     if args.log_format is not None:
