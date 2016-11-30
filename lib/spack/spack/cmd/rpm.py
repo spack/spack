@@ -67,7 +67,8 @@ should be built by Spack as part of creating a dependent package""")
         help="""Use package dependency types to infer whether a package should
 not be an rpm""")
     spec_parser.add_argument(
-        '--infer-ignore-deps', dest='infer_ignore_deps', action="store_true",
+        '--infer-ignore-from-rpms', dest='infer_ignore_from_rpms',
+        action="store_true",
         help="track packages maintained by spack but ignored by dependencies")
     spec_parser.add_argument(
         '--specs-dir', dest='specs_dir',
@@ -412,7 +413,8 @@ class Rpm(object):
             self, name, pkg_name, pkg_spec, path, rpm_deps,
             nonrpm_dep_specs=None, non_rpm_deps=None, ignore_deps=None,
             provides_name=None, root=None, name_spec=None,
-            provides_spec=None):
+            provides_spec=None, ignore_to_external=None,
+            externals=None, replace=None):
         self.name = name
         self.pkg_name = pkg_name
         self.pkg_spec = pkg_spec
@@ -427,6 +429,10 @@ class Rpm(object):
         self.ignore_deps = ignore_deps or set()
         self.nonrpm_dep_specs = nonrpm_dep_specs or list()
         self.provides_name = provides_name if provides_name != name else None
+
+        self.externals = externals
+        self.replace = replace
+
         self.root = root
         self.name_spec = name_spec
         self.provides_spec = provides_spec
@@ -520,6 +526,9 @@ class Rpm(object):
 
         system_pkg_cfg = list()
         for dep in self.ignore_deps:
+            if dep in self.externals:
+                continue
+
             depCfg = cfg_store.determine_dep_pkg_cfg(self.name, dep)
             if not depCfg:
                 tty.msg("No package.yaml associated with dependency " + dep)
@@ -528,6 +537,9 @@ class Rpm(object):
         path_cfg = self.path_config()
         for pkgCfg in system_pkg_cfg:
             spack.config._merge_yaml(path_cfg, pkgCfg)
+        if self.externals:
+            externals_cfg = {'packages': self.externals}
+            spack.config._merge_yaml(path_cfg, externals_cfg)
         if path_cfg:
             cfg_store.savePkgCfg(
                 self.name, yaml.dump(path_cfg, default_flow_style=False))
@@ -584,7 +596,7 @@ def generate_rpms_transitive(args):
     new = set()
     dependency_cfg = DependencyConfig(
         build_norpm_deps, ignore_deps, rpm_db, subspace_cfg,
-        args.infer_build_norpm_deps, args.infer_ignore_deps)
+        args.infer_build_norpm_deps, args.infer_ignore_from_rpms)
     rpm = resolve_autoname(
         top_spec, subspace_cfg, rpm_db, new, dependency_cfg)
 
@@ -608,13 +620,15 @@ def generate_rpms_transitive(args):
 
 class DependencyConfig(object):
     def __init__(self, build_norpm_deps, ignore_deps, rpm_db, subspace_cfg,
-                 infer_build_norpm_deps=False, infer_ignore_deps=False):
+                 infer_build_norpm_deps=False, infer_ignore_from_rpms=False,
+                 infer_ignore_from_nobuild=True):
         self.build_norpm_deps = build_norpm_deps
         self.overwrite_build_norpm_deps = self.build_norpm_deps is not None
         self.ignore_deps = ignore_deps or set()
 
         self.infer_build_norpm_deps = infer_build_norpm_deps
-        self.infer_ignore_deps = infer_ignore_deps
+        self.infer_ignore_from_rpms = infer_ignore_from_rpms
+        self.infer_ignore_from_nobuild = infer_ignore_from_nobuild
 
         self.rpm_db = rpm_db
         self.subspace_cfg = subspace_cfg
@@ -638,9 +652,39 @@ class DependencyConfig(object):
         collected.update(self.subspace_cfg.get_ignore_deps(pkg_spec.name))
 
         # Infer which packages to ignore based on prior RPMs
-        if self.infer_ignore_deps:
+        if self.infer_ignore_from_rpms:
             collected.update(self.collect_transitive_ignore_deps(pkg_spec))
+        if self.infer_ignore_from_nobuild:
+            collected.update(self.nobuild_from_pkgs_cfg())
         return collected
+
+    def nobuild_from_pkgs_cfg(self):
+        packages = spack.config.get_config('packages')
+        return set(pkg_name for pkg_name, info in packages.iteritems()
+                   if info.get('buildable', False))
+
+    def external_pkg_cfg(self, pkg_spec, ignore_deps):
+        packages = spack.config.get_config('packages')
+        externals = {}
+        replace = {}
+        for pkg_name, info in packages.iteritems():
+            if pkg_name in ignore_deps:
+                dep = pkg_spec[pkg_name]
+                path_entries = info.get('paths', {})
+                for spec, path in path_entries.iteritems():
+                    if spack.spec.Spec(spec).satisfies(dep):
+                        externals[str(pkg_name)] = {
+                            'paths': {str(spec): str(path)},
+                            'buildable': False}
+                        break
+
+                replace_entries = info.get('rpms', {})
+                for spec, rpms in replace_entries.iteritems():
+                    if spack.spec.Spec(spec).satisfies(dep):
+                        replace[pkg_name] = rpms
+                        break
+        return externals, replace
+        #TODO: how to extract whether these are just buildrequires or both [requires, buildrequires]?
 
     def build_norpm_deps_for_pkg(self, pkg_spec):
         collected = set()
@@ -703,6 +747,7 @@ def resolve_autoname(
 
     ignore_deps = (set(x.name for x in pkg_spec.traverse()) &
                    ignore_deps)
+    externals, replace = dependency_cfg.external_pkg_cfg(pkg_spec, ignore_deps)
     build_norpm_deps = set(pkg_spec.dependencies_dict()) & build_norpm_deps
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
@@ -712,7 +757,8 @@ def resolve_autoname(
         ignore_deps=ignore_deps,
         provides_name=namespace.provides_name(pkg_spec),
         root=namespace.root, name_spec=namespace.name_spec,
-        provides_spec=namespace.provides_spec)
+        provides_spec=namespace.provides_spec,
+        externals=externals)
 
     if rpm_name not in rpm_db:
         rpm_spec = RpmSpec.new(rpm_name, pkg_spec)

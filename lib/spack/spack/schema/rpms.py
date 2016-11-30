@@ -59,18 +59,6 @@ schema = {
                             'type': 'array',
                             'items': {'type': 'string'}
                         },
-                        'dep-map': {
-                            'type': 'object',
-                            'patternProperties': {
-                                r'\w[\w-]*': {'type': 'string'}
-                            }
-                        },
-                        'build-dep-map': {
-                            'type': 'object',
-                            'patternProperties': {
-                                r'\w[\w-]*': {'type': 'string'}
-                            }
-                        },
                         'subspaces': {
                             'type': 'object',
                             'patternProperties': {

@@ -76,6 +76,17 @@ schema = {
                             'type': 'object',
                             'default': {},
                         },
+                        'rpms': {
+                            'type': 'object',
+                            'default': {},
+                            'patternProperties': {
+                                r'\w[\w-]*': {
+                                    'type': 'array',
+                                    'default': [],
+                                    'items': {'type': 'string'}, 
+                                },
+                            },
+                        },
                         'variants': {
                             'oneOf': [
                                 {'type': 'string'},
