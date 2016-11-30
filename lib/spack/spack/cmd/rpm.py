@@ -687,7 +687,6 @@ class DependencyConfig(object):
                         replace[pkg_name] = rpms
                         break
         return externals, replace
-        #TODO: how to extract whether these are just buildrequires or both [requires, buildrequires]?
 
     def split_by_rpm_deptype(self, pkg_spec, replace, spack_rpms):
         build_deps = (set(pkg_spec.traverse()) -
