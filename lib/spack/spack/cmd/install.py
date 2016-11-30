@@ -88,7 +88,7 @@ the dependencies."""
     subparser.add_argument(
         '--log-format',
         default=None,
-        choices=['junit'],
+        choices=['cdash', 'junit'],
         help="Format to be used for log files."
     )
     subparser.add_argument(
@@ -106,20 +106,26 @@ class TestResult(object):
     ERRORED = 3
 
 
-class TestSuite(object):
-    def __init__(self, spec):
+class JUnitTestSuite(object):
+    def __init__(self, spec, logfile):
+        self.spec = spec
         self.root = ET.Element('testsuite')
         self.tests = []
-        self.spec = spec
+        if logfile is not None:
+            self.logfile = logfile
+        else:
+            fmt = 'test-{x.name}-{x.version}-{hash}.xml'
+            basename = fmt.format(x=spec, hash=spec.dag_hash())
+            dirname = fs.join_path(spack.var_path, 'junit-report')
+            fs.mkdirp(dirname)
+            self.logfile = fs.join_path(dirname, basename)
 
-    def append(self, item):
-        if not isinstance(item, TestCase):
-            raise TypeError(
-                'only TestCase instances may be appended to TestSuite'
-            )
-        self.tests.append(item)  # Append the item to the list of tests
+    def create_testcase(self, name, spec):
+        item = JUnitTestCase(name, spec)
+        self.tests.append(item)
+        return item
 
-    def dump(self, filename):
+    def dump(self):
         # Prepare the header for the entire test suite
         number_of_errors = sum(
             x.result_type == TestResult.ERRORED for x in self.tests
@@ -130,19 +136,19 @@ class TestSuite(object):
         )
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
-        self.root.set('name', self.spec.short_spec)
+        self.root.set('name', str(self.spec))
         self.root.set('hostname', platform.node())
 
         for item in self.tests:
             self.root.append(item.element)
 
-        with codecs.open(filename, 'wb', 'utf-8') as file:
+        with codecs.open(self.logfile, 'wb', 'utf-8') as file:
             xml_string = ET.tostring(self.root)
             xml_string = xml.dom.minidom.parseString(xml_string).toprettyxml()
             file.write(xml_string)
 
 
-class TestCase(object):
+class JUnitTestCase(object):
 
     results = {
         TestResult.PASSED: None,
@@ -163,7 +169,7 @@ class TestCase(object):
     def set_result(self, result_type,
                    message=None, error_type=None, text=None):
         self.result_type = result_type
-        result = TestCase.results[self.result_type]
+        result = JUnitTestCase.results[self.result_type]
         if result is not None and result is not TestResult.PASSED:
             subelement = ET.SubElement(self.element, result)
             if error_type is not None:
@@ -172,6 +178,54 @@ class TestCase(object):
                 subelement.set('message', str(message))
             if text is not None:
                 subelement.text = text
+
+
+class CDashTestCase(object):
+
+    results = {
+        TestResult.PASSED: 'passed',
+        TestResult.SKIPPED: 'passed',
+        TestResult.FAILED: 'failed',
+        TestResult.ERRORED: 'failed',
+    }
+
+    def __init__(self, classname, name):
+        self.name = name
+        self.element = ET.Element('Test')
+        name_element = ET.SubElement(self.element, 'Name')
+        name_element.text = name
+        path_element = ET.SubElement(self.element, 'Path')
+        path_element.text = "TODO"
+        cmd_line_element = ET.SubElement(self.element, 'FullCommandLine')
+        cmd_line_element.text = "TODO"
+        self.result = ET.SubElement(self.element, 'Results')
+
+    def set_duration(self, duration):
+        execution_time = ET.SubElement(self.result, 'NamedMeasurement')
+        execution_time.set('type', 'numeric/double')
+        execution_time.set('name', 'Execution Time')
+        value = ET.SubElement(execution_time, 'Value')
+        value.text = str(duration)
+
+    def set_result(self, result_type,
+                   message=None, error_type=None, text=None):
+        self.element.set('Status', CDashTestCase.results[result_type])
+        # Completion Status
+        completion_status = ET.SubElement(self.result, 'NamedMeasurement')
+        completion_status.set('type', 'text/string')
+        completion_status.set('name', 'Completion Status')
+        value = ET.SubElement(completion_status, 'Value')
+        value.text = 'Completed'
+        # Command line
+        cmd_line = ET.SubElement(self.result, 'NamedMeasurement')
+        cmd_line.set('type', 'text/string')
+        cmd_line.set('name', 'Command Line')
+        value = ET.SubElement(cmd_line, 'Value')
+        value.text = "TODO"
+        # Logs
+        logs = ET.SubElement(self.result, 'Measurement')
+        value = ET.SubElement(logs, 'Value')
+        value.text = message
 
 
 def fetch_text(path):
@@ -184,7 +238,96 @@ def fetch_text(path):
         )
 
 
-def junit_output(spec, test_suite):
+class CDashReport(object):
+    def __init__(self, spec, filename):
+        self.spec = spec
+        self.tests = []
+        # TODO BuildStamp
+        self.configure_report = self.prepare_configure_report_()
+        if filename is not None:
+            # TODO
+            raise NotImplementedError(
+                'The CDash report filename cannot be configured')
+
+    def create_filename(self, spec, subdir, step):
+        fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
+        basename = fmt.format(x=spec, hash=spec.dag_hash())
+        dirname = fs.join_path(spack.var_path, subdir)
+        fs.mkdirp(dirname)
+        return fs.join_path(dirname, basename)
+
+    def create_template(self):
+        template = ET.Element('Site')
+        template.set('BuildName', str(self.spec.short_spec))
+        template.set('Name', platform.node())
+        template.set('Type', 'Nightly')
+        return template
+
+    def create_testcase(self, name, spec):
+        item = CDashTestCase(name, spec)
+        self.tests.append(item)
+        return item
+
+    def dump(self):
+        filename = self.create_filename(self.spec, 'cdash', 'configure')
+        self.dump_report(self.configure_report, filename)
+        build_report = self.prepare_build_report()
+        filename = self.create_filename(self.spec, 'cdash', 'build')
+        self.dump_report(build_report, filename)
+        test_report = self.prepare_test_report()
+        filename = self.create_filename(self.spec, 'cdash', 'test')
+        self.dump_report(test_report, filename)
+
+    def dump_report(self, report, filename):
+        with codecs.open(filename, 'wb', 'utf-8') as file:
+            xml_string = ET.tostring(report)
+            xml_string = xml.dom.minidom.parseString(xml_string).toprettyxml()
+            file.write(xml_string)
+
+    def now(self):
+        return time.strftime("%a %b %d %H:%M:%S %Z")
+
+    def prepare_configure_report_(self):
+        report = self.create_template()
+        configure = ET.SubElement(report, 'Configure')
+        start_time = ET.SubElement(configure, 'StartDateTime')
+        start_time.text = self.now()
+        end_time = ET.SubElement(configure, 'EndDateTime')
+        end_time.text = self.now()
+        # TODO: the following needs more useful data
+        command = ET.SubElement(configure, "ConfigureCommand")
+        command.text = "spack install"
+        status = ET.SubElement(configure, "ConfigureStatus")
+        status.text = "Spack install called successfully"
+        minutes = ET.SubElement(configure, "ElapsedMinutes")
+        minutes.text = "0.0"
+        return report
+
+    def prepare_build_report(self):
+        report = self.create_template()
+        build = ET.SubElement(report, 'Build')
+        start_element = ET.SubElement(build, 'StartDateTime')
+        start_element.text = self.now()
+        command_element = ET.SubElement(build, 'BuildCommand')
+        command_element.text = 'TODO'
+        log_element = ET.SubElement(build, 'Log')
+        log_element.set('Encoding', 'base64')
+        stop_element = ET.SubElement(build, 'EndDateTime')
+        stop_element.text = self.now()
+        return report
+
+    def prepare_test_report(self):
+        report = self.create_template()
+        testing = ET.SubElement(report, 'Testing')
+        testlist = ET.SubElement(testing, 'TestList')
+        for item in self.tests:
+            test_element = ET.SubElement(testlist, "Test")
+            test_element.text = item.name
+            testing.append(item.element)
+        return report
+
+
+def dashboard_output(spec, test_suite):
     # Cycle once and for all on the dependencies and skip
     # the ones that are already installed. This ensures that
     # for the same spec, the same number of entries will be
@@ -192,14 +335,13 @@ def junit_output(spec, test_suite):
     for x in spec.traverse(order='post'):
         package = spack.repo.get(x)
         if package.installed:
-            test_case = TestCase(package.name, x.short_spec)
+            test_case = test_suite.create_testcase(package.name, x.short_spec)
             test_case.set_duration(0.0)
             test_case.set_result(
                 TestResult.SKIPPED,
                 message='Skipped [already installed]',
                 error_type='already_installed'
             )
-            test_suite.append(test_case)
 
     def decorator(func):
         @functools.wraps(func)
@@ -209,7 +351,8 @@ def junit_output(spec, test_suite):
             if self.installed:
                 return
 
-            test_case = TestCase(self.name, self.spec.short_spec)
+            test_case = test_suite.create_testcase(self.name,
+                                                   self.spec.short_spec)
             # Try to install the package
             try:
                 # If already installed set the spec as skipped
@@ -247,7 +390,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.FAILED,
+                    TestResult.ERRORED,
                     message='Unable to fetch package',
                     text=text
                 )
@@ -257,7 +400,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.FAILED,
+                    TestResult.ERRORED,
                     message='Unexpected exception thrown during install',
                     text=text
                 )
@@ -267,26 +410,13 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.FAILED,
+                    TestResult.ERRORED,
                     message='Unknown error',
                     text=text
                 )
 
-            # Try to get the log
-            test_suite.append(test_case)
         return wrapper
     return decorator
-
-
-def default_log_file(spec):
-    """Computes the default filename for the log file and creates
-    the corresponding directory if not present
-    """
-    fmt = 'test-{x.name}-{x.version}-{hash}.xml'
-    basename = fmt.format(x=spec, hash=spec.dag_hash())
-    dirname = fs.join_path(spack.var_path, 'junit-report')
-    fs.mkdirp(dirname)
-    return fs.join_path(dirname, basename)
 
 
 def install(parser, args, **kwargs):
@@ -319,16 +449,15 @@ def install(parser, args, **kwargs):
         tty.error('only one spec can be installed at a time.')
     spec = specs.pop()
 
+    test_suites = {"junit": JUnitTestSuite,
+                   "cdash": CDashReport}
+
     # Check if we were asked to produce some log for dashboards
     if args.log_format is not None:
-        # Compute the filename for logging
-        log_filename = args.log_file
-        if not log_filename:
-            log_filename = default_log_file(spec)
         # Create the test suite in which to log results
-        test_suite = TestSuite(spec)
+        test_suite = test_suites[args.log_format](spec, args.log_file)
         # Decorate PackageBase.do_install to get installation status
-        PackageBase.do_install = junit_output(
+        PackageBase.do_install = dashboard_output(
             spec, test_suite
         )(PackageBase.do_install)
 
@@ -347,4 +476,4 @@ def install(parser, args, **kwargs):
 
     # Dump log file if asked to
     if args.log_format is not None:
-        test_suite.dump(log_filename)
+        test_suite.dump()
