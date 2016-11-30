@@ -151,13 +151,15 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = spec.libs.link_flags.ld_flags.split()
+        include_flags = spec.cppflags
+        link_flags = spec.libs.ld_flags
         if self.compiler.name == 'intel':
-            link_flags.extend(["-lifcore"])
-        link_flags.extend(["-lpthread"])
+            link_flags += ' -lifcore'
+        link_flags += ' -lpthread'
         if '+openmp' in spec:
-            link_flags.extend([self.compiler.openmp_flag])
+            link_flags += ' ' + self.compiler.openmp_flag
 
-        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        output = compile_c_and_execute(
+            source_file, [include_flags], link_flags.split()
+        )
         compare_output_file(output, blessed_file)

@@ -102,7 +102,8 @@ import hashlib
 import imp
 import itertools
 import ctypes
-from StringIO import StringIO
+import copy
+from cStringIO import StringIO
 from operator import attrgetter
 
 from yaml.error import MarkedYAMLError
@@ -2420,16 +2421,21 @@ class Spec(object):
                     # package provides more than one service, so that the
                     # query state won't be modified accidentally by later
                     # queries.
-                    (x.copy() for x in self.traverse()
+                    (copy.deepcopy(x) for x in self.traverse()
                      if (not x.virtual) and x.package.provides(name))
                 )
             )
         except StopIteration:
             raise KeyError("No spec with name %s in %s" % (name, self))
 
+        is_virtual = Spec.is_virtual(name)
         value.set_query(
-            name, query_parameters, isvirtual=Spec.is_virtual(name)
+            name, query_parameters, isvirtual=is_virtual
         )
+        if is_virtual and self.concrete:
+            # deepcopy above doesn't treat this correctly
+            value.package.spec = value
+
         return value
 
     def __contains__(self, spec):
