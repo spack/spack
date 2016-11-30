@@ -73,6 +73,7 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide
    developer_guide
+   testing_guide
    Spack API Docs <spack>
    LLNL API Docs <llnl>
 
