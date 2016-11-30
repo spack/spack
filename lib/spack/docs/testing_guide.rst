@@ -24,7 +24,7 @@ To change the default behaviour, use
 
 .. code-block:: console
 
-   $ spack install --log-format=junit <spec>
+   $ spack install --log-file report --log-format=junit <spec>
 
 The logs contain one test case per package being built.
 
@@ -51,17 +51,17 @@ To create reports in this format, do
 
 .. code-block:: console
 
-   $ spack install --log-format=cdash <spec>
+   $ spack install --log-file report --log-format=cdash <spec>
 
 This will produce each one file for the configure, build, and test step.
 For spack only the test step is relevant, as the build of each package is 
 considered a test case. The CDash `build name` is the spec provided at command 
 line.
 
-To upload the results to an existing CDash instance, you can use the tool `curl`:
+To upload the reports to an existing CDash instance, you can use the tool `curl`:
 
 .. code-block:: console
 
-   $ curl --upload-file <buildxml> <cdash url>/submit.php?project=<projectname>
-   $ curl --upload-file <configurexml> <cdash url>/submit.php?project=<projectname>
-   $ curl --upload-file <testxml> <cdash url>/submit.php?project=<projectname>
+   $ curl --upload-file report.build.xml <cdash url>/submit.php?project=<projectname>
+   $ curl --upload-file report.configure.xml <cdash url>/submit.php?project=<projectname>
+   $ curl --upload-file report.test.xml <cdash url>/submit.php?project=<projectname>
