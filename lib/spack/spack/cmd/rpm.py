@@ -238,8 +238,9 @@ class RpmSpec(object):
         release_tag = "{0}-{1}".format(str(self.version), str(self.release))
         self.change_log.append((time, author, release_tag, comment))
 
-    def new_spec_variables(self, deps, install, install_path, author=None,
-                           comment=None, provides_name=None):
+    def new_spec_variables(self, requires, build_requires, install,
+                           install_path, author=None, comment=None,
+                           provides_name=None):
         if not author:
             author = "Spack"
         if not comment:
@@ -256,9 +257,9 @@ class RpmSpec(object):
         change_log = list(reversed(self.change_log))
 
         return RpmTemplateVars(
-            RPM_NAME=self.name, PROVIDES=provides_name,
-            RELEASE=self.release, REQUIRES=deps, BUILD_REQUIRES=deps,
-            INSTALL=install, PACKAGE_PATH=install_path, CHANGE_LOG=change_log,
+            RPM_NAME=self.name, PROVIDES=provides_name, RELEASE=self.release,
+            REQUIRES=requires, BUILD_REQUIRES=build_requires, INSTALL=install,
+            PACKAGE_PATH=install_path, CHANGE_LOG=change_log,
             SUMMARY=self.summary, LICENSE=license, VERSION=self.version,
             GROUP=self.group, SYSTEM_REQUIRES=self.system_requires,
             SYSTEM_BUILD_REQUIRES=self.system_build_requires)
@@ -414,7 +415,7 @@ class Rpm(object):
             nonrpm_dep_specs=None, non_rpm_deps=None, ignore_deps=None,
             provides_name=None, root=None, name_spec=None,
             provides_spec=None, ignore_to_external=None,
-            externals=None, replace=None):
+            externals=None, full_deps=None, build_deps=None):
         self.name = name
         self.pkg_name = pkg_name
         self.pkg_spec = pkg_spec
@@ -430,8 +431,9 @@ class Rpm(object):
         self.nonrpm_dep_specs = nonrpm_dep_specs or list()
         self.provides_name = provides_name if provides_name != name else None
 
-        self.externals = externals
-        self.replace = replace
+        self.externals = externals or {}
+        self.full_deps = full_deps
+        self.build_deps = build_deps
 
         self.root = root
         self.name_spec = name_spec
@@ -478,7 +480,8 @@ class Rpm(object):
         return {'packages': formatPaths} if formatPaths else {}
 
     def new_rpm_spec_variables(self, rpm_spec, redirect=True):
-        required_dep_names = list(x.dep_name for x in self.direct_deps())
+        requires = list(self.full_deps)
+        build_requires = list(self.full_deps) + list(self.build_deps)
 
         set_path = "--install-path={0}".format(self.path)
         install_args = ['./bin/spack install', '--verbose']
@@ -491,7 +494,7 @@ class Rpm(object):
         install = ' '.join(install_args)
 
         return rpm_spec.new_spec_variables(
-            required_dep_names, install, self.path,
+            requires, build_requires, install, self.path,
             provides_name=self.provides_name)
 
     def _transitive_paths(self):
@@ -686,6 +689,24 @@ class DependencyConfig(object):
         return externals, replace
         #TODO: how to extract whether these are just buildrequires or both [requires, buildrequires]?
 
+    def split_by_rpm_deptype(self, pkg_spec, replace, spack_rpms):
+        build_deps = (set(pkg_spec.traverse()) -
+                      set(pkg_spec.traverse(deptype=('link', 'run'))))
+        build_deps = set(x.name for x in build_deps)
+        build_rpms = set()
+        full_rpms = set()
+        for pkg_name, rpms in replace.iteritems():
+            if pkg_name in build_deps:
+                build_rpms.update(rpms)
+            else:
+                full_rpms.update(rpms)
+        for pkg_name, rpm in spack_rpms.iteritems():
+            if pkg_name in build_deps:
+                build_rpms.add(rpm)
+            else:
+                full_rpms.add(rpm)
+        return build_rpms, full_rpms
+
     def build_norpm_deps_for_pkg(self, pkg_spec):
         collected = set()
         if self.overwrite_build_norpm_deps:
@@ -749,6 +770,9 @@ def resolve_autoname(
                    ignore_deps)
     externals, replace = dependency_cfg.external_pkg_cfg(pkg_spec, ignore_deps)
     build_norpm_deps = set(pkg_spec.dependencies_dict()) & build_norpm_deps
+    spec_to_rpm_name = dict((x.pkg_name, x.name) for x in rpm_deps)
+    build_rpms, full_rpms = dependency_cfg.split_by_rpm_deptype(
+        pkg_spec, replace, spec_to_rpm_name)
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
         namespace.path(pkg_spec), rpm_deps,
@@ -757,8 +781,8 @@ def resolve_autoname(
         ignore_deps=ignore_deps,
         provides_name=namespace.provides_name(pkg_spec),
         root=namespace.root, name_spec=namespace.name_spec,
-        provides_spec=namespace.provides_spec,
-        externals=externals)
+        provides_spec=namespace.provides_spec, externals=externals,
+        full_deps=full_rpms, build_deps=build_rpms)
 
     if rpm_name not in rpm_db:
         rpm_spec = RpmSpec.new(rpm_name, pkg_spec)
