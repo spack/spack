@@ -661,7 +661,7 @@ class DependencyConfig(object):
     def nobuild_from_pkgs_cfg(self):
         packages = spack.config.get_config('packages')
         return set(pkg_name for pkg_name, info in packages.iteritems()
-                   if info.get('buildable', False))
+                   if not info.get('buildable', True))
 
     def external_pkg_cfg(self, pkg_spec, ignore_deps):
         packages = spack.config.get_config('packages')
