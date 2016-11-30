@@ -33,6 +33,12 @@ class Cairo(AutotoolsPackage):
 
     version('1.14.0', 'fc3a5edeba703f906f2241b394f0cced')
 
+    variant('X', default=True, description="Build with X11 support")
+
+    depends_on('libx11', when='+X')
+    depends_on('libxext', when='+X')
+    depends_on('libxrender', when='+X')
+    depends_on('libxcb', when='+X')
     depends_on("libpng")
     depends_on("glib")
     depends_on("pixman")
