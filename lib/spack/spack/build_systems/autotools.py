@@ -122,7 +122,7 @@ class AutotoolsPackage(PackageBase):
         """Perform any required patches."""
 
         if self.patch_config_guess and self.spec.satisfies(
-                'arch=linux-redhat7-ppc64le'):
+                'arch=linux-rhel7-ppc64le'):
             if not self.do_patch_config_guess():
                 raise RuntimeError('Failed to find suitable config.guess')
 
