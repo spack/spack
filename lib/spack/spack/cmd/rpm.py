@@ -706,6 +706,13 @@ class DependencyConfig(object):
                 full_rpms.add(rpm)
         return build_rpms, full_rpms
 
+    def direct_deps(self, pkg_spec):
+        deps = set(pkg_spec.dependencies())
+        indirect_deps = set(itertools.chain.from_iterable(
+            x.traverse(root=False) for x in deps))
+        direct = deps - indirect_deps
+        return set(x.name for x in direct)
+
     def build_norpm_deps_for_pkg(self, pkg_spec):
         collected = set()
         if self.overwrite_build_norpm_deps:
@@ -760,6 +767,9 @@ def resolve_autoname(
             dep_rpm = resolve_autoname(
                 dep.spec, subspace_cfg, rpm_db, new, dependency_cfg, visited)
             rpm_deps.add(dep_rpm)
+    direct_rpm_deps = set(
+        x for x in rpm_deps 
+        if x.pkg_name in dependency_cfg.direct_deps(pkg_spec))
 
     dep_pkg_names = set(x.pkg_name for x in rpm_deps)
     transitive_norpm = get_build_norpm_transitive(
@@ -769,7 +779,7 @@ def resolve_autoname(
                    ignore_deps)
     externals, replace = dependency_cfg.external_pkg_cfg(pkg_spec, ignore_deps)
     build_norpm_deps = set(pkg_spec.dependencies_dict()) & build_norpm_deps
-    spec_to_rpm_name = dict((x.pkg_name, x.name) for x in rpm_deps)
+    spec_to_rpm_name = dict((x.pkg_name, x.name) for x in direct_rpm_deps)
     build_rpms, full_rpms = dependency_cfg.split_by_rpm_deptype(
         pkg_spec, replace, spec_to_rpm_name)
     extra_build_rpms, extra_full_rpms = (
