@@ -772,6 +772,8 @@ def resolve_autoname(
     spec_to_rpm_name = dict((x.pkg_name, x.name) for x in rpm_deps)
     build_rpms, full_rpms = dependency_cfg.split_by_rpm_deptype(
         pkg_spec, replace, spec_to_rpm_name)
+    extra_build_rpms, extra_full_rpms = (
+        subspace_cfg.get_extra_system_deps(pkg_spec.name))
     rpm = Rpm(
         rpm_name, pkg_spec.name, pkg_spec.format(),
         namespace.path(pkg_spec), rpm_deps,
@@ -781,7 +783,8 @@ def resolve_autoname(
         provides_name=namespace.provides_name(pkg_spec),
         root=namespace.root, name_spec=namespace.name_spec,
         provides_spec=namespace.provides_spec, externals=externals,
-        full_deps=full_rpms, build_deps=build_rpms)
+        full_deps=full_rpms | extra_full_rpms,
+        build_deps=build_rpms | extra_build_rpms)
 
     if rpm_name not in rpm_db:
         rpm_spec = RpmSpec.new(rpm_name, pkg_spec)
@@ -1091,6 +1094,13 @@ class SubspaceConfig(object):
 
     def get_ignore_deps(self, pkg_name):
         return self._get_subspace_property(pkg_name, 'ignore-deps', [])
+
+    def get_extra_system_deps(self, pkg_name):
+        extra_full_deps = set(
+            self._get_subspace_property(pkg_name, 'add-system-deps', []))
+        extra_build_deps = set(
+            self._get_subspace_property(pkg_name, 'add-system-build-deps', []))
+        return extra_build_deps, extra_full_deps
 
     def get_namespace(self, pkg_name, required=True):
         namespace = self.pkg_to_namespace.get(

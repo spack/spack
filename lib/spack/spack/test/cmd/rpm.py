@@ -70,6 +70,9 @@ class MockSubspaceConfig(object):
     def get_namespace(self, pkgName, required=False):
         return MockNamespace()
 
+    def get_extra_system_deps(self, pkg_name):
+        return set(), set()
+
 
 class MockDependencyConfig(object):
     def __init__(self, spec_to_norpm=None, spec_to_ignore=None):
