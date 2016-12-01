@@ -86,7 +86,7 @@ class IntelParallelStudio(IntelInstaller):
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(self.prefix.lib, 'intel64'),
+            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
             shared=shared
         )
         system_libs = [
