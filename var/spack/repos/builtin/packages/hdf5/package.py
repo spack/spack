@@ -44,7 +44,7 @@ class Hdf5(AutotoolsPackage):
             # The link for the latest version differs from the links for
             # the previous releases. Do not forget to remove this once
             # the version 1.8.18 is not the latest one for the 1.8.* branch.
-            url='https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.gz')
+            url='http://hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.gz')
     version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
     version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
@@ -205,6 +205,11 @@ HDF5 version {version} {version}
         shutil.rmtree(checkdir)
 
     def url_for_version(self, version):
+        # If we have a specific URL for this version, return it.
+        version_urls = self.version_urls()
+        if version in version_urls:
+            return version_urls[version]
+
         base_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
 
         if version == Version("1.2.2"):
