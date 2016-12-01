@@ -82,6 +82,12 @@ class MockDependencyConfig(object):
     def build_norpm_deps_for_pkg(self, pkg_spec):
         return self.spec_to_norpm.get(pkg_spec, set())
 
+    def external_pkg_cfg(self, pkg_spec, ignore_deps):
+        return {}, {}
+
+    def split_by_rpm_deptype(self, pkg_spec, replace, spack_rpms):
+        return set(), set()
+
 
 subspaceCfg = MockSubspaceConfig()
 
@@ -161,8 +167,9 @@ class RpmTest(unittest.TestCase):
             group='examples',
             system_build_requires=['system_binutils'])
 
+        requires = build_requires = ['spack_bar', 'spack_baz']
         spec_vars = rpm_spec.new_spec_variables(
-            ['spack_bar', 'spack_baz'],
+            requires, build_requires,
             './bin/spack install foo@3.5',
             '/usr/spack/foo-3.5')
 
@@ -176,8 +183,9 @@ class RpmTest(unittest.TestCase):
             group='examples',
             system_build_requires=['system_binutils'])
 
+        requires = build_requires = ['spack_bar', 'spack_baz']
         spec_vars = rpm_spec.new_spec_variables(
-            ['spack_bar', 'spack_baz'],
+            requires, build_requires,
             './bin/spack install foo@3.5',
             '/usr/spack/foo-3.5')
 
