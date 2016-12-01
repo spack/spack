@@ -1,0 +1,22 @@
+#%Module
+## Mock module file for testing modules. Requires system to have tclmodules
+
+set              name             external-module
+set              version          1.0
+set              root             /global/homes/m/mamelara/myspack/var/spack/repos/builtin.mock/packages/$name/$version
+
+
+set             fullname          $name
+set             externalurl       http://www.example.com
+set             description       "Fake module for testing with spack"
+
+proc ModulesHelp { } {
+    global description externalurl
+    puts stderr "Description - $description"
+    puts stderr "Other Docs  - $externalurl"
+}
+
+module-whatis                   "$description"
+
+prepend-path       PATH                $root/bin
+prepend-path       MANPATH             $root/share
