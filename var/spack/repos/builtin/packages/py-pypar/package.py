@@ -32,8 +32,8 @@ class PyPypar(Package):
     homepage = "http://code.google.com/p/pypar/"
     url      = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz"
 
-    version('2.1.5_108', '7a1f28327d2a3b679f9455c843d850b8',
-            url = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz")
+    version('2.1.5_108', '7a1f28327d2a3b679f9455c843d850b8')
+
     extends('python')
     depends_on('mpi')
     depends_on('py-numpy')
@@ -41,3 +41,6 @@ class PyPypar(Package):
     def install(self, spec, prefix):
         with working_dir('source'):
             setup_py('install', '--prefix=%s' % prefix)
+
+    def url_for_version(self, version):
+        return "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-%s.tgz" % version
