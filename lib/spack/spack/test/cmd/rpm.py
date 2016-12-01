@@ -165,7 +165,7 @@ class RpmTest(unittest.TestCase):
             summary='example package summary',
             license='BSD',
             group='examples',
-            system_build_requires=['system_binutils'])
+            extra_build_requires=['system_binutils'])
 
         requires = build_requires = ['spack_bar', 'spack_baz']
         spec_vars = rpm_spec.new_spec_variables(
@@ -181,7 +181,7 @@ class RpmTest(unittest.TestCase):
             summary='example package summary',
             license='BSD',
             group='examples',
-            system_build_requires=['system_binutils'])
+            extra_build_requires=['system_binutils'])
 
         requires = build_requires = ['spack_bar', 'spack_baz']
         spec_vars = rpm_spec.new_spec_variables(

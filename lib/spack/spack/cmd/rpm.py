@@ -145,12 +145,12 @@ class RpmTemplateVars(Properties):
     PROPERTIES = set([
         'RPM_NAME', 'PROVIDES', 'VERSION', 'RELEASE', 'REQUIRES',
         'BUILD_REQUIRES', 'INSTALL', 'PACKAGE_PATH', 'CHANGE_LOG', 'SUMMARY',
-        'LICENSE', 'GROUP', 'SYSTEM_REQUIRES', 'SYSTEM_BUILD_REQUIRES'])
+        'LICENSE', 'GROUP', 'EXTRA_REQUIRES', 'EXTRA_BUILD_REQUIRES'])
 
     # When reading from properties files, allow for these to be unset. However
     # when the properties object is initialized in code these should be set.
     DEFAULT_PROPERTIES = {
-        'SYSTEM_REQUIRES': list, 'SYSTEM_BUILD_REQUIRES': list}
+        'EXTRA_REQUIRES': list, 'EXTRA_BUILD_REQUIRES': list}
 
     def __init__(self, **kwargs):
         super(RpmTemplateVars, self).__init__(
@@ -172,14 +172,14 @@ class RpmTemplateVars(Properties):
 
 def fill_spec_template(spec_vars, spec_template):
     requires = list(itertools.chain(
-        spec_vars.REQUIRES, spec_vars.SYSTEM_REQUIRES))
+        spec_vars.REQUIRES, spec_vars.EXTRA_REQUIRES))
     if requires:
         REQUIRES = 'Requires: ' + ' '.join(requires)
     else:
         REQUIRES = ''
 
     build_requires = list(itertools.chain(
-        spec_vars.BUILD_REQUIRES, spec_vars.SYSTEM_BUILD_REQUIRES))
+        spec_vars.BUILD_REQUIRES, spec_vars.EXTRA_BUILD_REQUIRES))
     if build_requires:
         BUILD_REQUIRES = 'BuildRequires: ' + ' '.join(build_requires)
     else:
@@ -213,7 +213,7 @@ class RpmSpec(object):
     """
     def __init__(self, rpm_name, summary=None, license=None, release=None,
                  change_log=None, version=None, group=None,
-                 system_requires=None, system_build_requires=None):
+                 extra_requires=None, extra_build_requires=None):
         self.name = rpm_name
         # The provided change log is expected to be ordered, with the oldest
         # entry first
@@ -223,8 +223,8 @@ class RpmSpec(object):
         self.group = group or 'Spack'
         self.summary = summary
         self.license = license
-        self.system_requires = system_requires or list()
-        self.system_build_requires = system_build_requires or list()
+        self.extra_requires = extra_requires or list()
+        self.extra_build_requires = extra_build_requires or list()
 
     @staticmethod
     def new(rpm_name, pkg_spec):
@@ -261,8 +261,8 @@ class RpmSpec(object):
             REQUIRES=requires, BUILD_REQUIRES=build_requires, INSTALL=install,
             PACKAGE_PATH=install_path, CHANGE_LOG=change_log,
             SUMMARY=self.summary, LICENSE=license, VERSION=self.version,
-            GROUP=self.group, SYSTEM_REQUIRES=self.system_requires,
-            SYSTEM_BUILD_REQUIRES=self.system_build_requires)
+            GROUP=self.group, EXTRA_REQUIRES=self.extra_requires,
+            EXTRA_BUILD_REQUIRES=self.extra_build_requires)
 
 
 class RpmSpecParser(object):
@@ -315,8 +315,8 @@ class RpmSpecParser(object):
             REQUIRES=None, BUILD_REQUIRES=None, INSTALL=None,
             PACKAGE_PATH=None, CHANGE_LOG=clog, SUMMARY=tags['summary'],
             LICENSE=tags['license'], VERSION=tags['version'],
-            GROUP=tags['group'], SYSTEM_REQUIRES=[],
-            SYSTEM_BUILD_REQUIRES=[])
+            GROUP=tags['group'], EXTRA_REQUIRES=[],
+            EXTRA_BUILD_REQUIRES=[])
 
         # non_rpm_deps is not recorded in a spec so must be filled manually.
         # ignore_deps has the same issue. rpm_deps could be inferred from the
@@ -353,8 +353,8 @@ def read_rpms_transitive(cfg_store, rpm_name, rpm_db):
         rpm_name, summary=specProps.SUMMARY, group=specProps.GROUP,
         license=specProps.LICENSE, release=int(specProps.RELEASE),
         change_log=specProps.CHANGE_LOG, version=specProps.VERSION,
-        system_requires=specProps.SYSTEM_REQUIRES,
-        system_build_requires=specProps.SYSTEM_BUILD_REQUIRES)
+        extra_requires=specProps.EXTRA_REQUIRES,
+        extra_build_requires=specProps.EXTRA_BUILD_REQUIRES)
 
     rpm_db[rpm_name] = RpmInfo(rpm, rpm_spec)
 
