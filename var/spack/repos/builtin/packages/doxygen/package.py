@@ -39,7 +39,7 @@ class Doxygen(Package):
     version('1.8.10', '79767ccd986f12a0f949015efb5f058f')
 
     # graphviz appears to be a run-time optional dependency
-    variant('graphviz', default=True,
+    variant('graphviz', default=False,
             description='Build with dot command support from Graphviz.')
 
     depends_on("cmake@2.8.12:", type='build')
