@@ -39,18 +39,21 @@ class Mysql(Package):
     version('5.7.11', 'f84d945a40ed876d10f8d5a7f4ccba32',
          url=list_url+"mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32"\
               "/mysql-5.7.11.tar.gz")
-    version('5.5.30', 'de881c1940aa05e78266e77c9ac3d129',
-         url=list_url+"mysql-5.5.30.tar.gz/de881c1940aa05e78266e77c9ac3d129"\
-              "/mysql-5.5.30.tar.gz")
+    version('5.5.30', '382ab22fd33ec4fb65ecd61d92b61736',
+         url=list_url+"mysql-5.5.30-nodocs.tar.gz/"\
+              "382ab22fd33ec4fb65ecd61d92b61736/mysql-5.5.30-nodocs.tar.gz")
     version('5.5.27', '070340bc98dcb7f646287c97f1b91a1e',
-         url=list_url+"mysql-5.5.27.tar.gz/070340bc98dcb7f646287c97f1b91a1e"\
-              "/mysql-5.5.27.tar.gz")
-    version('5.5.19', 'a78cf450974e9202bd43674860349b5a',
-        url=list_url+"mysql-5.5.19.tar.gz/a78cf450974e9202bd43674860349b5a"\
-              "/mysql-5.5.19.tar.gz")
-    version('5.5.18', '38b65815249f3bcacf3b0ee85171c486',
-        url=list_url+"mysql-5.5.18.tar.gz/38b65815249f3bcacf3b0ee85171c486"\
-              "/mysql-5.5.18.tar.gz")
+         url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
+              "mysql-5.5.27-nodocs.tar.gz/fc115ac6b28412298886651cffc70ccf/"\
+              "mysql-5.5.27-nodocs.tar.gz")
+    version('5.5.19', '76c434e3db654f59d06b220daaeeed39',
+        url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
+              "mysql-5.5.19-nodocs.tar.gz/76c434e3db654f59d06b220daaeeed39"\
+              "/mysql-5.5.19-nodocs.tar.gz")
+    version('5.5.18', '22e4bbacb27efdb38c0b54b5c5fab3e8',
+        url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
+              "mysql-5.5.18-nodocs.tar.gz/22e4bbacb27efdb38c0b54b5c5fab3e8"\
+              "/mysql-5.5.18-nodocs.tar.gz")
 
     patch('mysql-5.7.11.patch', when='@5.7.11')
 
