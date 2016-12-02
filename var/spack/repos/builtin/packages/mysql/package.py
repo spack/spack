@@ -39,10 +39,10 @@ class Mysql(Package):
     version('5.7.11', 'f84d945a40ed876d10f8d5a7f4ccba32',
          url=list_url+"mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32"\
               "/mysql-5.7.11.tar.gz")
-    version('5.5.30', 'fc115ac6b28412298886651cffc70ccf',
+    version('5.5.30', '382ab22fd33ec4fb65ecd61d92b61736',
          url=list_url+"mysql-5.5.30-nodocs.tar.gz/"\
               "382ab22fd33ec4fb65ecd61d92b61736/mysql-5.5.30-nodocs.tar.gz")
-    version('5.5.27', '070340bc98dcb7f646287c97f1b91a1e',
+    version('5.5.27', 'fc115ac6b28412298886651cffc70ccf',
          url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
               "mysql-5.5.27-nodocs.tar.gz/fc115ac6b28412298886651cffc70ccf/"\
               "mysql-5.5.27-nodocs.tar.gz")
