@@ -25,7 +25,6 @@
 import llnl.util.tty as tty
 
 from spack import *
-import spack
 
 
 class Openssl(Package):
