@@ -45,7 +45,6 @@ class Superlu(Package):
     depends_on('blas')
 
     # CMake installation method
-    @when('@5.2.1:')
     def install(self, spec, prefix):
         cmake_args = [
             '-Denable_blaslib=OFF',
@@ -93,14 +92,10 @@ class Superlu(Package):
         if '+fpic' in spec:
             config.extend([
                 # Use these lines instead when pic_flag capability arrives
-                # 'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
-                # 'NOOPTS     = {0}'.format(self.compiler.pic_flag),
-                # 'FFLAGS     = -O2 {0}'.format(self.compiler.pic_flag),
-                # 'LOADOPTS   = {0}'.format(self.compiler.pic_flag)
-                'CFLAGS     = -O3 -fPIC',
-                'NOOPTS     = -fPIC',
-                'FFLAGS     = -O2 -fPIC',
-                'LOADOPTS   = -fPIC'
+                'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
+                'NOOPTS     = {0}'.format(self.compiler.pic_flag),
+                'FFLAGS     = -O2 {0}'.format(self.compiler.pic_flag),
+                'LOADOPTS   = {0}'.format(self.compiler.pic_flag)
             ])
         else:
             config.extend([
