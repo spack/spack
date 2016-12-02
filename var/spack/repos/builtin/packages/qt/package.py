@@ -270,7 +270,7 @@ class Qt(Package):
     def install(self, spec, prefix):
         self.configure()
         make()
-        if self.installCtxt.destdir:
-            make("install", "INSTALL_ROOT=" + self.installCtxt.destdir)
+        if self.install_context.destdir:
+            make("install", "INSTALL_ROOT=" + self.install_context.destdir)
         else:
             make("install")
