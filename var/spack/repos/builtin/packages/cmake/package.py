@@ -89,7 +89,7 @@ class Cmake(Package):
         options = [
             '--prefix={0}'.format(prefix),
             '--parallel={0}'.format(make_jobs)]
-        if spec.satisfies("@3:"):
+        if spec.satisfies("@3.2:"):
             options.append(
                 # jsoncpp requires CMake to build
                 # use CMake-provided library to avoid circular dependency
