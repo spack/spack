@@ -151,9 +151,32 @@ class AutotoolsPackage(PackageBase):
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
         inspect.getmodule(self).configure(*options)
 
+    def make_targets_test(self):
+        """Should return an iterable containing all the targets that
+        must be passed to `make` to check the build.
+
+        Default: look for 'check' and 'test'
+        """
+        targets = []
+
+        for default_test_target in ['test', 'check']:
+            if _make_target_exists(default_test_target):
+                targets.append(default_test_target)
+
+        return targets
+
+    def make_targets_build(self):
+        """Method to be overridden. Should return an iterable containing
+        all the targets that must be passed to `make`
+        """
+        return []
+
     def build(self, spec, prefix):
-        """The usual `make` after configure"""
-        inspect.getmodule(self).make()
+        """The usual `make` after configure,
+        for the targets specified in `build_make_targets`
+        """
+        for build_target in self.make_targets_build():
+            inspect.getmodule(self).make(build_target)
 
     def install(self, spec, prefix):
         """...and the final `make install` after configure"""
@@ -175,11 +198,14 @@ class AutotoolsPackage(PackageBase):
             tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     def check(self):
-        """Default test : search the Makefile for targets `test` and `check`
-        and run them if found.
+        """Run make targets for tests, if found
         """
-        self._if_make_target_execute('test')
-        self._if_make_target_execute('check')
+        if not self.make_targets_test():
+            tty.msg('No make targets found for tests')
+            return
+
+        for test_target in self.make_targets_test():
+            inspect.getmodule(self).make(test_target)
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
