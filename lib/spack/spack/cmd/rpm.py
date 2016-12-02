@@ -768,7 +768,7 @@ def resolve_autoname(
                 dep.spec, subspace_cfg, rpm_db, new, dependency_cfg, visited)
             rpm_deps.add(dep_rpm)
     direct_rpm_deps = set(
-        x for x in rpm_deps 
+        x for x in rpm_deps
         if x.pkg_name in dependency_cfg.direct_deps(pkg_spec))
 
     dep_pkg_names = set(x.pkg_name for x in rpm_deps)
