@@ -1075,7 +1075,7 @@ class PackageBase(object):
         with open(file, 'r') as f:
             matches = [line for line in f.readlines() if regex.match(line)]
 
-        return bool(matches) # False if empty
+        return bool(matches)  # False if empty
 
     def _if_make_target_execute(self, target):
         if _make_target_exists(target):
