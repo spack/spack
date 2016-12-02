@@ -92,7 +92,7 @@ class FoamExtend(Package):
             filter_file(
                 r'-lMGridGen',
                 r'-lmgrid',
-                'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # noqa
+                'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # noqa: E501
 
         # Get the wmake arch and compiler
         (arch, foam_compiler) = self.set_arch()
@@ -215,17 +215,20 @@ class FoamExtend(Package):
                     for key, val in compiler_flags.iteritems():
                         fh.write('{0}{1} = {2}\n'.format(comp, key, val))
 
-        for _file in ['src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L',
-                      'src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L',
-                      'src/meshTools/triSurface/triSurface/interfaces/STL/readSTLASCII.L',
-                      'applications/utilities/preProcessing/fluentDataToFoam/fluentDataToFoam.L',
-                      'applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L',
-                      'applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L',
-                      'applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L',
-                      'applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L',
-                      'applications/utilities/mesh/conversion/fluent3DMeshToElmer/fluent3DMeshToElmer.L']:
+        _files_to_patch = [
+            'src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L',  # noqa: E501
+            'src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L',  # noqa: E501
+            'src/meshTools/triSurface/triSurface/interfaces/STL/readSTLASCII.L',  # noqa: E501
+            'applications/utilities/preProcessing/fluentDataToFoam/fluentDataToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/fluent3DMeshToElmer/fluent3DMeshToElmer.L'  # noqa: E501
+        ]
+        for _file in _files_to_patch:
             filter_file(r'#if YY_FLEX_SUBMINOR_VERSION < 34',
-                        r'#if YY_FLEX_MAJOR_VERSION <= 2 && YY_FLEX_MINOR_VERSION <= 5 && YY_FLEX_SUBMINOR_VERSION < 34',
+                        r'#if YY_FLEX_MAJOR_VERSION <= 2 && YY_FLEX_MINOR_VERSION <= 5 && YY_FLEX_SUBMINOR_VERSION < 34',   # noqa: E501
                         _file)
 
     def setup_environment(self, spack_env, run_env):
