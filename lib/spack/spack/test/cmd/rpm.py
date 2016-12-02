@@ -75,9 +75,11 @@ class MockSubspaceConfig(object):
 
 
 class MockDependencyConfig(object):
-    def __init__(self, spec_to_norpm=None, spec_to_ignore=None):
+    def __init__(self, spec_to_norpm=None, spec_to_ignore=None,
+                 spec_to_direct=None):
         self.spec_to_norpm = spec_to_norpm or {}
         self.spec_to_ignore = spec_to_ignore or {}
+        self.spec_to_direct = spec_to_direct or {}
 
     def ignore_deps_for_pkg(self, pkg_spec):
         return self.spec_to_ignore.get(pkg_spec, set())
@@ -90,6 +92,9 @@ class MockDependencyConfig(object):
 
     def split_by_rpm_deptype(self, pkg_spec, replace, spack_rpms):
         return set(), set()
+
+    def direct_deps(self, pkg_spec):
+        return self.spec_to_direct.get(pkg_spec, set())
 
 
 subspaceCfg = MockSubspaceConfig()
