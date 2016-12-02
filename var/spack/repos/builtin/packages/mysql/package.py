@@ -39,7 +39,7 @@ class Mysql(Package):
     version('5.7.11', 'f84d945a40ed876d10f8d5a7f4ccba32',
          url=list_url+"mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32"\
               "/mysql-5.7.11.tar.gz")
-    version('5.5.30', '382ab22fd33ec4fb65ecd61d92b61736',
+    version('5.5.30', 'fc115ac6b28412298886651cffc70ccf',
          url=list_url+"mysql-5.5.30-nodocs.tar.gz/"\
               "382ab22fd33ec4fb65ecd61d92b61736/mysql-5.5.30-nodocs.tar.gz")
     version('5.5.27', '070340bc98dcb7f646287c97f1b91a1e',
@@ -73,12 +73,19 @@ class Mysql(Package):
             cmake_args.append('-DCMAKE_BUILD_TYPE:STRING=Release')
 
         cmake_args.extend([
-            '-DCMAKE_PREFIX_PATH=%s' % join_path(spec['openssl'].prefix),
-            '-DWITH_SSL=%s' % join_path(spec['openssl'].prefix),
             '-DDOWNLOAD_BOOST=1',
             '-DWITH_BOOST='+build_directory+'/boost',
             '-DCMAKE_C_FLAGS=-static-libgcc -lcrypto -lz -ldl',
         ])
+
+        if spec.satisfies('@:5.5'):
+            cmake_args.append('-DWITH_SSL=yes')
+        else:
+            cmake_args.append('-DWITH_SSL=%s'
+                % join_path(spec['openssl'].prefix))
+            cmake_args.append('-DCMAKE_PREFIX_PATH=%s'
+                % join_path(spec['openssl'].prefix))
+        cmake_args.extend(std_cmake_args)
 
         cmake_args.extend(std_cmake_args)
 
