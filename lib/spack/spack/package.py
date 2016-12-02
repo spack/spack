@@ -1061,27 +1061,26 @@ class PackageBase(object):
         mkdirp(self.prefix.lib)
         mkdirp(self.prefix.man1)
 
-    def _make_target_exists(self, target):
+    def _if_make_target_execute(self, target):
         try:
             # Check if we have a makefile
             file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
             file = file.pop()
         except IndexError:
             tty.msg('No Makefile found in the build directory')
-            return False
+            return
 
         # Check if 'target' is in the makefile
         regex = re.compile('^' + target + ':')
         with open(file, 'r') as f:
             matches = [line for line in f.readlines() if regex.match(line)]
 
-        return bool(matches)  # False if empty
-
-    def _if_make_target_execute(self, target):
-        if _make_target_exists(target):
-            inspect.getmodule(self).make(target)
-        else:
+        if not matches:
             tty.msg('Target \'' + target + ':\' not found in Makefile')
+            return
+
+        # Execute target
+        inspect.getmodule(self).make(target)
 
     def _get_needed_resources(self):
         resources = []
