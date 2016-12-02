@@ -2417,11 +2417,7 @@ class Spec(object):
                 itertools.chain(
                     # Regular specs
                     (x for x in self.traverse() if x.name == name),
-                    # Virtual specs: they return a copy in case the same
-                    # package provides more than one service, so that the
-                    # query state won't be modified accidentally by later
-                    # queries.
-                    (copy.deepcopy(x) for x in self.traverse()
+                    (x for x in self.traverse()
                      if (not x.virtual) and x.package.provides(name))
                 )
             )
@@ -2429,12 +2425,21 @@ class Spec(object):
             raise KeyError("No spec with name %s in %s" % (name, self))
 
         is_virtual = Spec.is_virtual(name)
-        value.set_query(
-            name, query_parameters, isvirtual=is_virtual
-        )
-        if is_virtual and self.concrete:
-            # deepcopy above doesn't treat this correctly
-            value.package.spec = value
+
+        if self.concrete:
+            # If the spec is already concrete and it's virtual
+            # then it is a query from a package routed through
+            # a virtual spec name. In that case return a copy
+            # to treat correctly packages that provide more than
+            # one service.
+            if is_virtual:
+                value = copy.deepcopy(value)
+                # deepcopy above cannot treat this circular reference
+                # correctly
+                value.package.spec = value
+            value.set_query(
+                name, query_parameters, isvirtual=is_virtual
+            )
 
         return value
 
