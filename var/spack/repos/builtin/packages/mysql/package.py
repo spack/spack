@@ -24,36 +24,26 @@
 ##############################################################################
 
 from spack import *
-import os
+
 
 class Mysql(Package):
     """The MySQL software delivers a very fast, multi-threaded, multi-user,
-       and robust SQL (Structured Query Language) database server."""
+    and robust SQL (Structured Query Language) database server."""
 
     homepage = "http://dev.mysql.com/"
-    url      = """http://pkgs.fedoraproject.org/repo/pkgs/community-mysql/
-                  mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32/
-                  mysql-5.7.11.tar.gz"""
+    url      = "http://pkgs.fedoraproject.org/repo/pkgs/community-mysql/mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32/mysql-5.7.11.tar.gz"
     list_url = "http://pkgs.fedoraproject.org/repo/pkgs/community-mysql/"
 
     version('5.7.11', 'f84d945a40ed876d10f8d5a7f4ccba32',
-         url=list_url+"mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32"\
-              "/mysql-5.7.11.tar.gz")
+         url="http://pkgs.fedoraproject.org/repo/pkgs/community-mysql/mysql-5.7.11.tar.gz/f84d945a40ed876d10f8d5a7f4ccba32/mysql-5.7.11.tar.gz")
     version('5.5.30', '382ab22fd33ec4fb65ecd61d92b61736',
-         url=list_url+"mysql-5.5.30-nodocs.tar.gz/"\
-              "382ab22fd33ec4fb65ecd61d92b61736/mysql-5.5.30-nodocs.tar.gz")
+         url="http://pkgs.fedoraproject.org/repo/pkgs/community-mysql/mysql-5.5.30-nodocs.tar.gz/382ab22fd33ec4fb65ecd61d92b61736/mysql-5.5.30-nodocs.tar.gz")
     version('5.5.27', 'fc115ac6b28412298886651cffc70ccf',
-         url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
-              "mysql-5.5.27-nodocs.tar.gz/fc115ac6b28412298886651cffc70ccf/"\
-              "mysql-5.5.27-nodocs.tar.gz")
+         url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/mysql-5.5.27-nodocs.tar.gz/fc115ac6b28412298886651cffc70ccf/mysql-5.5.27-nodocs.tar.gz")
     version('5.5.19', '76c434e3db654f59d06b220daaeeed39',
-        url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
-              "mysql-5.5.19-nodocs.tar.gz/76c434e3db654f59d06b220daaeeed39"\
-              "/mysql-5.5.19-nodocs.tar.gz")
+        url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/mysql-5.5.19-nodocs.tar.gz/76c434e3db654f59d06b220daaeeed39/mysql-5.5.19-nodocs.tar.gz")
     version('5.5.18', '22e4bbacb27efdb38c0b54b5c5fab3e8',
-        url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/"\
-              "mysql-5.5.18-nodocs.tar.gz/22e4bbacb27efdb38c0b54b5c5fab3e8"\
-              "/mysql-5.5.18-nodocs.tar.gz")
+        url="http://pkgs.fedoraproject.org/repo/pkgs/mysql/mysql-5.5.18-nodocs.tar.gz/22e4bbacb27efdb38c0b54b5c5fab3e8/mysql-5.5.18-nodocs.tar.gz")
 
     patch('mysql-5.7.11.patch', when='@5.7.11')
 
@@ -74,22 +64,22 @@ class Mysql(Package):
 
         cmake_args.extend([
             '-DDOWNLOAD_BOOST=1',
-            '-DWITH_BOOST='+build_directory+'/boost',
+            '-DWITH_BOOST=' + build_directory + '/boost',
             '-DCMAKE_C_FLAGS=-static-libgcc -lcrypto -lz -ldl',
         ])
 
         if spec.satisfies('@:5.5'):
             cmake_args.append('-DWITH_SSL=yes')
         else:
-            cmake_args.append('-DWITH_SSL=%s'
-                % join_path(spec['openssl'].prefix))
-            cmake_args.append('-DCMAKE_PREFIX_PATH=%s'
-                % join_path(spec['openssl'].prefix))
+            sslprefix = spec['openssl'].prefix
+            cmake_args.append('-DWITH_SSL=%s' % join_path(sslprefix))
+            cmake_args.append('-DCMAKE_PREFIX_PATH=%s' % join_path(sslprefix))
+
         cmake_args.extend(std_cmake_args)
 
         cmake_args.extend(std_cmake_args)
 
         with working_dir(build_directory, create=True):
-            cmake(source_directory,*cmake_args)
+            cmake(source_directory, *cmake_args)
             make()
             make("install")
