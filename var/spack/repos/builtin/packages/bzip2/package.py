@@ -84,14 +84,14 @@ class Bzip2(Package):
         mf.filter(
             r'echo ".so man1/([^"]+)" > \$\(PREFIX\)/man/man1/(\S+)',
             r'echo ".so man1/\1" > {0}/$(PREFIX)/man/man1/\2'.format(
-                self.installCtxt.destdir))
+                self.install_context.destdir))
 
     def install(self, spec, prefix):
         # Build the dynamic library first
         make('-f', 'Makefile-libbz2_so')
         # Build the static library and everything else
         make()
-        if self.installCtxt.destdir:
+        if self.install_context.destdir:
             self.setup_makefile_for_redirect()
             make_redir('install', 'PREFIX={0}'.format(prefix))
         else:

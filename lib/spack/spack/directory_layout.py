@@ -137,9 +137,9 @@ class DirectoryLayout(object):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
-        installCtxt = spec.package.installCtxt
-        path = installCtxt.redirect_path(self.path_for_spec(spec))
-        root = installCtxt.destdir or self.root
+        install_context = spec.package.install_context
+        path = install_context.redirect_path(self.path_for_spec(spec))
+        root = install_context.destdir or self.root
         if root.endswith(os.sep):
             root = root[:-len(os.sep)]
         assert(path.startswith(root))
@@ -258,10 +258,10 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        installCtxt = spec.package.installCtxt
-        installCtxt.mkdirp_redirect(self.metadata_path(spec))
+        install_context = spec.package.install_context
+        install_context.mkdirp_redirect(self.metadata_path(spec))
         self.write_spec(
-            spec, installCtxt.redirect_path(self.spec_file_path(spec)))
+            spec, install_context.redirect_path(self.spec_file_path(spec)))
 
     def check_installed(self, spec):
         _check_concrete(spec)
