@@ -32,8 +32,7 @@ class Blitz(AutotoolsPackage):
 
     version('1.0.0', '9f040b9827fe22228a892603671a77af')
 
-    def build_targets(self):
-        return ['lib']
+    build_targets = ['lib']
 
     def check(self):
         make('check-testsuite')
