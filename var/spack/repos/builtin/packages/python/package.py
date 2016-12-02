@@ -270,7 +270,7 @@ class Python(Package):
         )
 
         module.python = PythonExe(
-            python_path, ext_spec.package.installCtxt.destdir)
+            python_path, ext_spec.package.install_context.destdir)
         module.setup_py = (
             lambda *args, **kwargs:
             module.python(*(['setup.py'] + list(args)), **kwargs))
@@ -285,7 +285,7 @@ class Python(Package):
 
         # Make the site packages directory for extensions
         if ext_spec.package.is_extension:
-            ext_spec.package.installCtxt.mkdirp_redirect(
+            ext_spec.package.install_context.mkdirp_redirect(
                 module.site_packages_dir)
 
     # ========================================================================

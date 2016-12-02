@@ -450,13 +450,12 @@ def set_module_variables_for_package(pkg, module):
     m = module
     m.make_jobs = jobs
 
-    pkgCtxt = pkg.installCtxt
-    destdir = pkgCtxt.destdir
+    pkg_ctxt = pkg.install_context
 
     # TODO: make these build deps that can be installed if not found.
-    m.make  = MakeExecutable('make', jobs, destdir)
-    m.gmake = MakeExecutable('gmake', jobs, destdir)
-    m.make_redir = MakeExecutable('make-redir', jobs, destdir)
+    m.make  = MakeExecutable('make', jobs, pkg_ctxt.destdir)
+    m.gmake = MakeExecutable('gmake', jobs, pkg_ctxt.destdir)
+    m.make_redir = MakeExecutable('make-redir', jobs, pkg_ctxt.destdir)
     m.scons = MakeExecutable('scons', jobs)
 
     # easy shortcut to os.environ
@@ -480,28 +479,28 @@ def set_module_variables_for_package(pkg, module):
     m.spack_fc  = join_path(link_dir, pkg.compiler.link_paths['fc'])
 
     # Emulate some shell commands for convenience
-    if pkgCtxt.destdir:
-        m.pwd = pkgCtxt.pwd_redirect
-        m.symlink = pkgCtxt.symlink_redirect
-        m.mkdirp  = pkgCtxt.mkdirp_redirect
-        m.glob_redirect = pkgCtxt.glob_redirect
+    if pkg_ctxt.destdir:
+        m.pwd = pkg_ctxt.pwd_redirect
+        m.symlink = pkg_ctxt.symlink_redirect
+        m.mkdirp  = pkg_ctxt.mkdirp_redirect
+        m.glob_redirect = pkg_ctxt.glob_redirect
 
-        m.cd = RedirectedCommand(os.chdir, pkgCtxt, 1)
-        m.mkdir = RedirectedCommand(os.mkdir, pkgCtxt, 1)
-        m.makedirs = RedirectedCommand(os.makedirs, pkgCtxt, 1)
-        m.remove = RedirectedCommand(os.remove, pkgCtxt, 1)
-        m.removedirs = RedirectedCommand(os.removedirs, pkgCtxt, 1)
+        m.cd = RedirectedCommand(os.chdir, pkg_ctxt, 1)
+        m.mkdir = RedirectedCommand(os.mkdir, pkg_ctxt, 1)
+        m.makedirs = RedirectedCommand(os.makedirs, pkg_ctxt, 1)
+        m.remove = RedirectedCommand(os.remove, pkg_ctxt, 1)
+        m.removedirs = RedirectedCommand(os.removedirs, pkg_ctxt, 1)
 
-        m.install = pkgCtxt.install_redirect
-        m.install_tree = RedirectedCommand(install_tree, pkgCtxt, 2)
-        m.move = RedirectedCommand(shutil.move, pkgCtxt, 2)
-        m.rmtree = RedirectedCommand(shutil.rmtree, pkgCtxt, 1)
-        m.cp = RedirectedCommand(which('cp'), pkgCtxt, 2)
+        m.install = pkg_ctxt.install_redirect
+        m.install_tree = RedirectedCommand(install_tree, pkg_ctxt, 2)
+        m.move = RedirectedCommand(shutil.move, pkg_ctxt, 2)
+        m.rmtree = RedirectedCommand(shutil.rmtree, pkg_ctxt, 1)
+        m.cp = RedirectedCommand(which('cp'), pkg_ctxt, 2)
 
         # These are only set for redirected installations of pkg
-        m.working_dir  = pkgCtxt.working_dir_redirect
-        m.open = pkgCtxt.open_redirect
-        m.force_symlink = pkgCtxt.force_symlink_redirect
+        m.working_dir  = pkg_ctxt.working_dir_redirect
+        m.open = pkg_ctxt.open_redirect
+        m.force_symlink = pkg_ctxt.force_symlink_redirect
     else:
         m.glob_redirect = glob.glob
         m.pwd = os.getcwd

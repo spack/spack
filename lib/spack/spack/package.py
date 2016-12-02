@@ -895,7 +895,7 @@ class PackageBase(object):
         return self.spec.prefix
 
     @property
-    def installCtxt(self):
+    def install_context(self):
         if self.name in spack.store.layout.redirected:
             destdir = spack.store.layout.destdir
         else:
@@ -1339,13 +1339,13 @@ class PackageBase(object):
         # (can happen with spack setup)
         try:
             # log_install_path and env_install_path are inside this
-            shutil.rmtree(self.installCtxt.redirect_path(packages_dir))
+            shutil.rmtree(self.install_context.redirect_path(packages_dir))
         except Exception:
             # FIXME : this potentially catches too many things...
             pass
 
-        self.installCtxt.install_redirect(self.log_path, log_install_path)
-        self.installCtxt.install_redirect(self.env_path, env_install_path)
+        self.install_context.install_redirect(self.log_path, log_install_path)
+        self.install_context.install_redirect(self.env_path, env_install_path)
         dump_packages(self.spec, packages_dir)
 
     def sanity_check_prefix(self):
@@ -1356,7 +1356,7 @@ class PackageBase(object):
                 path_list = [path_list]
 
             for path in path_list:
-                abs_path = self.installCtxt.redirect_path(
+                abs_path = self.install_context.redirect_path(
                     os.path.join(self.prefix, path))
                 if not predicate(abs_path):
                     raise InstallError(
@@ -1367,7 +1367,7 @@ class PackageBase(object):
         check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
         installed = set(os.listdir(
-            self.installCtxt.redirect_path(self.prefix)))
+            self.install_context.redirect_path(self.prefix)))
         installed.difference_update(
             spack.store.layout.hidden_file_paths)
         if not installed:
@@ -1762,8 +1762,8 @@ def dump_packages(spec, path):
        namespace in the spec DAG, and fills the repos wtih package
        files and patch files for every node in the DAG.
     """
-    installCtxt = spec.package.installCtxt
-    installCtxt.mkdirp_redirect(path)
+    install_context = spec.package.install_context
+    install_context.mkdirp_redirect(path)
 
     # Copy in package.py files from any dependencies.
     # Note that we copy them in as they are in the *install* directory
@@ -1791,7 +1791,7 @@ def dump_packages(spec, path):
                          node.name)
 
         # Create a destination repository
-        dest_repo_root = installCtxt.redirect_path(
+        dest_repo_root = install_context.redirect_path(
             join_path(path, node.namespace))
         if not os.path.exists(dest_repo_root):
             spack.repository.create_repo(dest_repo_root)
