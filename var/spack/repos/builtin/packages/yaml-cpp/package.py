@@ -25,7 +25,7 @@
 from spack import *
 
 
-class YamlCpp(Package):
+class YamlCpp(CMakePackage):
     """A YAML parser and emitter in C++"""
 
     homepage = "https://github.com/jbeder/yaml-cpp"
@@ -39,11 +39,13 @@ class YamlCpp(Package):
 
     depends_on('cmake', type='build')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            args = std_cmake_args
-            if '+fpic' in spec: 
-                args += ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']
-            cmake('..', *args)
-            make()
-            make("install")
+    def cmake_args(self):
+        spec = self.spec
+        options = []
+
+        if '+fpic' in spec: 
+            options.extend([
+                '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true'
+            ])
+
+        return options
