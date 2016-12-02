@@ -1,0 +1,34 @@
+From ef812a25619d37924dbc856ba73384aae13be8e1 Mon Sep 17 00:00:00 2001
+From: Daniel Black <daniel.black@au.ibm.com>
+Date: Tue, 5 Apr 2016 17:04:23 +1000
+Subject: [PATCH] correct make_pair for c++11
+
+---
+ client/auth_utils.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/client/auth_utils.cc b/client/auth_utils.cc
+index 21416bb..1a77661 100644
+--- a/client/auth_utils.cc
++++ b/client/auth_utils.cc
+@@ -61,7 +61,7 @@ int parse_cnf_file(istream &sin, map<string, string > *options,
+     getline(sin, option_value);
+     trim(&option_value);
+     if (option_name.length() > 0)
+-      options->insert(make_pair<string, string >(option_name, option_value));
++      options->insert(make_pair<string &, string &>(option_name, option_value));
+   }
+   return ALL_OK;
+   } catch(...)
+diff -ur mysql-5.7.11/cmake/boost.cmake mysql/5.7.11/cmake/boost.cmake
+--- a/cmake/boost.cmake   2016-02-02 00:31:58.000000000 +0100
++++ b/cmake/boost.cmake   2016-06-18 11:53:18.000000000 +0200
+@@ -34,7 +34,7 @@
+ SET(BOOST_PACKAGE_NAME "boost_1_59_0")
+ SET(BOOST_TARBALL "${BOOST_PACKAGE_NAME}.tar.gz")
+ SET(BOOST_DOWNLOAD_URL
+-  "http://sourceforge.net/projects/boost/files/boost/1.59.0/${BOOST_TARBALL}"
++  "http://service-spi.web.cern.ch/service-spi/external/tarFiles/${BOOST_TARBALL}"
+   )
+
+ SET(OLD_PACKAGE_NAMES "boost_1_55_0 boost_1_56_0 boost_1_57_0 boost_1_58_0")
