@@ -425,8 +425,21 @@ class ArchSpec(object):
 
     @staticmethod
     def from_dict(d):
-        if type(d['arch']) != type(d):
-            return ArchSpec('spackcompat', 'unknown', d['arch'])
+        """Import an ArchSpec from raw YAML/JSON data.
+
+        This routine implements a measure of compatibility with older
+        versions of Spack.  Spack releases before 0.10 used a single
+        string with no OS or platform identifiers.  We import old Spack
+        architectures with platform ``spack09``, OS ``unknown``, and the
+        old arch string as the target.
+
+        Specs from `0.10` or later have a more fleshed out architecture
+        descriptor with a platform, an OS, and a target.
+
+        """
+        if not isinstance(d['arch'], dict):
+            return ArchSpec('spack09', 'unknown', d['arch'])
+
         d = d['arch']
         return ArchSpec(d['platform'], d['platform_os'], d['target'])
 
