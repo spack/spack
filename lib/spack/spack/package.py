@@ -898,7 +898,14 @@ class PackageBase(object):
         return self.spec.prefix
 
     @property
-    # TODO: Change this to architecture
+    def architecture(self):
+        """Get the spack.architecture.Arch object that represents the
+        environment in which this package will be built."""
+        if not self.spec.concrete:
+            raise ValueError("Can only get the arch for concrete package.")
+        return spack.architecture.arch_for_spec(self.spec.architecture)
+
+    @property
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
