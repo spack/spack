@@ -45,7 +45,7 @@ class Emacs(Package):
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('gtkplus', when='+X toolkit=gtk')
+    depends_on('gtkplus+X', when='+X toolkit=gtk')
 
     def install(self, spec, prefix):
         args = []
