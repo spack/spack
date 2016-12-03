@@ -28,7 +28,6 @@ import glob
 import llnl.util.tty as tty
 from spack import *
 
-#
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
 #
@@ -43,7 +42,7 @@ from spack import *
 #
 # - on CentOS 7 systems (and possibly others) you need to have the
 #   glibc package installed or various static cgo tests fail.
-#
+
 
 class Go(Package):
     """The golang compiler and build environment"""
