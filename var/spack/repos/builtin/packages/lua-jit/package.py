@@ -22,36 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
 
 
-class Imagemagick(Package):
-    """ImageMagick is a software suite to create, edit, compose,
-    or convert bitmap images."""
+class LuaJit(Package):
+    """Flast flexible JITed lua"""
+    homepage = "http://www.luajit.org"
+    url      = "http://luajit.org/download/LuaJIT-2.0.4.tar.gz"
 
-    homepage = "http://www.imagemagick.org"
-    url = "https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz"
-
-    version('7.0.2-7', 'c59cdc8df50e481b2bd1afe09ac24c08')
-    version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
-
-    depends_on('jpeg')
-    depends_on('pango')
-    depends_on('libtool', type='build')
-    depends_on('libpng')
-    depends_on('freetype')
-    depends_on('fontconfig')
-    depends_on('libtiff')
-    depends_on('ghostscript')
-    depends_on('ghostscript-fonts')
-
-    def url_for_version(self, version):
-        return "https://github.com/ImageMagick/ImageMagick/archive/{0}.tar.gz".format(version)
+    version('2.0.4', 'dd9c38307f2223a504cbfb96e477eca0')
 
     def install(self, spec, prefix):
-        gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
-        configure('--prefix={0}'.format(prefix),
-                  '--with-gs-font-dir={0}'.format(gs_font_dir))
-        make()
-        make('check')
-        make('install')
+        # Linking with the C++ compiler is a dirty hack to deal with the fact
+        # that unwinding symbols are not included by libc, this is necessary
+        # on some platforms for the final link stage to work
+        make("install", "PREFIX=" + prefix, "TARGET_LD=" + os.environ['CXX'])
