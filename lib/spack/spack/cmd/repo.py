@@ -106,7 +106,7 @@ def repo_add(args):
 
     repos.insert(0, canon_path)
     spack.config.update_config('repos', repos, args.scope)
-    tty.msg("Created repo with namespace '%s'." % repo.namespace)
+    tty.msg("Added repo with namespace '%s'." % repo.namespace)
 
 
 def repo_remove(args):

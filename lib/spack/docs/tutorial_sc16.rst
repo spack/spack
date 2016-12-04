@@ -1,7 +1,7 @@
 .. _spack-101:
 
 =============================
-Spack 101
+Spack 101 Tutorial
 =============================
 
 This is a 3-hour introduction to Spack with lectures and live demos.  It

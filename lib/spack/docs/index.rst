@@ -46,34 +46,29 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Reference Manual
-
-   configuration
-   config_yaml
-   build_settings
-   mirrors
-   module_file_support
-   package_list
-   command_index
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Tutorial
-
    tutorial_sc16
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contributing to Spack
+   :caption: Reference
+
+   configuration
+   config_yaml
+   build_settings
+   repositories
+   mirrors
+   module_file_support
+   command_index
+   package_list
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributing
 
    contribution_guide
    packaging_guide
    developer_guide
    API Docs <spack>
-
 
 ==================
 Indices and tables
