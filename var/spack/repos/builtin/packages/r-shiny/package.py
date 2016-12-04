@@ -45,7 +45,7 @@ class RShiny(Package):
     depends_on('r-xtable', type=nolink)
     depends_on('r-digest', type=nolink)
     depends_on('r-htmltools', type=nolink)
-    depends_on('r-R6', type=nolink)
+    depends_on('r-r6', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

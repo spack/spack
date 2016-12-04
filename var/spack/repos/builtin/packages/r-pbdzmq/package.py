@@ -43,7 +43,7 @@ class RPbdzmq(Package):
 
     extends('R')
 
-    depends_on('r-R6', type=nolink)
+    depends_on('r-r6', type=nolink)
     depends_on('zeromq')
 
     def install(self, spec, prefix):

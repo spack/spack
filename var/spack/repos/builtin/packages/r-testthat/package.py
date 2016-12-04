@@ -41,7 +41,7 @@ class RTestthat(Package):
     depends_on('r-crayon', type=nolink)
     depends_on('r-praise', type=nolink)
     depends_on('r-magrittr', type=nolink)
-    depends_on('r-R6', type=nolink)
+    depends_on('r-r6', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

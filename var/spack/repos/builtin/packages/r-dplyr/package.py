@@ -38,7 +38,7 @@ class RDplyr(Package):
     extends('R')
 
     depends_on('r-assertthat', type=nolink)
-    depends_on('r-R6', type=nolink)
+    depends_on('r-r6', type=nolink)
     depends_on('r-rcpp', type=nolink)
     depends_on('r-tibble', type=nolink)
     depends_on('r-magrittr', type=nolink)
