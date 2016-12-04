@@ -34,7 +34,7 @@ class YamlCpp(CMakePackage):
 
     version('0.5.3', '4e47733d98266e46a1a73ae0a72954eb')
 
-    variant('fpic',    default=False,
+    variant('pic',    default=False,
             description='Build with position independent code')
 
     depends_on('cmake', type='build')
@@ -43,7 +43,7 @@ class YamlCpp(CMakePackage):
         spec = self.spec
         options = []
 
-        if '+fpic' in spec: 
+        if '+pic' in spec: 
             options.extend([
                 '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true'
             ])

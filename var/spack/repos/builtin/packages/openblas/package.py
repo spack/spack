@@ -42,7 +42,7 @@ class Openblas(Package):
             description="Build shared libraries as well as static libs.")
     variant('openmp', default=False,
             description="Enable OpenMP support.")
-    variant('fpic',   default=True,
+    variant('pic',   default=True,
             description="Build position independent code")
 
     # virtual dependency
@@ -88,7 +88,7 @@ class Openblas(Package):
         if '+shared' in spec:
             make_targets += ['shared']
         else:
-            if '+fpic' in spec:
+            if '+pic' in spec:
                 make_defs.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
             make_defs += ['NO_SHARED=1']
 

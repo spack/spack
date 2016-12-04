@@ -46,9 +46,9 @@ class NetlibScalapack(Package):
         description='Build the shared library version'
     )
     variant(
-        'fpic',
+        'pic',
         default=False,
-        description='Build with -fpic compiler option'
+        description='Build with -pic compiler option'
     )
 
     provides('scalapack')
@@ -83,7 +83,7 @@ class NetlibScalapack(Package):
             '-DBLAS_LIBRARIES=%s' % (blas.joined(';'))
         ])
 
-        if '+fpic' in spec:
+        if '+pic' in spec:
             options.extend([
                 "-DCMAKE_C_FLAGS=-fPIC",
                 "-DCMAKE_Fortran_FLAGS=-fPIC"

@@ -84,7 +84,7 @@ class Trilinos(CMakePackage):
 
     depends_on('cmake', type='build')
 
-    # Everything should be compiled with -fpic
+    # Everything should be compiled with +pic
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
