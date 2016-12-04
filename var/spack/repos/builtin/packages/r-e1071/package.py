@@ -36,7 +36,7 @@ class RE1071(Package):
 
     version('1.6-7', 'd109a7e3dd0c905d420e327a9a921f5a')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-class', type=nolink)
 

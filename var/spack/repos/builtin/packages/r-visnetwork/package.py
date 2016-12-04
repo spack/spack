@@ -35,7 +35,7 @@ class RVisnetwork(Package):
 
     version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-htmlwidgets', type=nolink)
     depends_on('r-htmltools', type=nolink)

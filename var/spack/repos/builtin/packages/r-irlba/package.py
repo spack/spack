@@ -36,7 +36,7 @@ class RIrlba(Package):
 
     version('2.0.0', '557674cf8b68fea5b9f231058c324d26')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
 

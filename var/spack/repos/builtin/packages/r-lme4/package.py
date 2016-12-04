@@ -37,7 +37,7 @@ class RLme4(Package):
 
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
     depends_on('r-mass', type=nolink)

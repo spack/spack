@@ -35,7 +35,7 @@ class RRjava(Package):
 
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
-    extends('R')
+    extends('r')
 
     depends_on('jdk')
 

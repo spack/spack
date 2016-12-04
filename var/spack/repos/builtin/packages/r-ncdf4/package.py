@@ -47,7 +47,7 @@ class RNcdf4(Package):
 
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 
-    extends('R')
+    extends('r')
 
     depends_on('netcdf')
 

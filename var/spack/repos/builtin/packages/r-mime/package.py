@@ -36,7 +36,7 @@ class RMime(Package):
     version('0.5', '87e00b6d57b581465c19ae869a723c4d')
     version('0.4', '789cb33e41db2206c6fc7c3e9fbc2c02')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

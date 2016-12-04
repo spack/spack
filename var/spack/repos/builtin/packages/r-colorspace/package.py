@@ -37,7 +37,7 @@ class RColorspace(Package):
 
     version('1.2-6', 'a30191e9caf66f77ff4e99c062e9dce1')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -37,7 +37,7 @@ class REvaluate(Package):
 
     version('0.9', '877d89ce8a9ef7f403b1089ca1021775')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-stringr', type=nolink)
 

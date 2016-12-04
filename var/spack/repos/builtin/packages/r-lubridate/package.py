@@ -39,7 +39,7 @@ class RLubridate(Package):
 
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-stringr', type=nolink)
 

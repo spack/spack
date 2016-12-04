@@ -35,7 +35,7 @@ class RTestthat(Package):
 
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-digest', type=nolink)
     depends_on('r-crayon', type=nolink)

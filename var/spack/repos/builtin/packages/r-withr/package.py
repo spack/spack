@@ -37,7 +37,7 @@ class RWithr(Package):
 
     version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

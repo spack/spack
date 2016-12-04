@@ -39,7 +39,7 @@ class RR6(Package):
 
     version('2.1.2', 'b6afb9430e48707be87638675390e457')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -36,7 +36,7 @@ class RSparsem(Package):
 
     version('1.7', '7b5b0ab166a0929ef6dcfe1d97643601')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

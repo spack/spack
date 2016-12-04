@@ -36,7 +36,7 @@ class RHttr(Package):
 
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-jsonlite', type=nolink)
     depends_on('r-mime', type=nolink)

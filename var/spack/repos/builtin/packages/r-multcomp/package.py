@@ -38,7 +38,7 @@ class RMultcomp(Package):
 
     version('1.4-6', 'f1353ede2ed78b23859a7f1f1f9ebe88')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-mvtnorm', type=nolink)
     depends_on('r-survival', type=nolink)

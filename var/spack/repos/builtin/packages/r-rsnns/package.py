@@ -41,7 +41,7 @@ class RRsnns(Package):
 
     version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-rcpp', type=nolink)
 

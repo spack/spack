@@ -35,7 +35,7 @@ class RDplyr(Package):
 
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-assertthat', type=nolink)
     depends_on('r-r6', type=nolink)

@@ -37,7 +37,7 @@ class RShiny(Package):
 
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-httpuv', type=nolink)
     depends_on('r-mime', type=nolink)

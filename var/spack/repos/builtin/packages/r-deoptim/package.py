@@ -36,7 +36,7 @@ class RDeoptim(Package):
     
     version('2.2-3', 'ed406e6790f8f1568aa9bec159f80326')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

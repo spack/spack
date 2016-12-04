@@ -36,7 +36,7 @@ class RHtmlwidgets(Package):
 
     version('0.6', '7fa522d2eda97593978021bda9670c0e')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-htmltools', type=nolink)
     depends_on('r-jsonlite', type=nolink)

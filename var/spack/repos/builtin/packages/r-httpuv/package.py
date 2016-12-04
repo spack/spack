@@ -40,7 +40,7 @@ class RHttpuv(Package):
 
     version('1.3.3', 'c78ae068cf59e949b9791be987bb4489')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-rcpp', type=nolink)
 

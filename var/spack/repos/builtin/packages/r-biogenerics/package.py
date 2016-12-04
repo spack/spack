@@ -36,7 +36,7 @@ class RBiocgenerics(Package):
             git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
             branch='release-3.2')
 
-    extends('R')
+    extends('r')
 
     def validate(self, spec):
         """

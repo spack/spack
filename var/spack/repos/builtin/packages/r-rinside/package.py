@@ -48,7 +48,7 @@ class RRinside(Package):
 
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-rcpp', type=nolink)
 

@@ -38,7 +38,7 @@ class RCrayon(Package):
 
     version('1.3.2', 'fe29c6204d2d6ff4c2f9d107a03d0cb9')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

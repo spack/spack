@@ -35,7 +35,7 @@ class RMatrixmodels(Package):
 
     version('0.4-1', '65b3ab56650c62bf1046a3eb1f1e19a0')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
 
