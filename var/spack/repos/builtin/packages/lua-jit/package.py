@@ -29,7 +29,7 @@ from spack import *
 class LuaJit(Package):
     """Flast flexible JITed lua"""
     homepage = "http://www.luajit.org"
-    url      = "http://luajit.org/download/lua-jit-2.0.4.tar.gz"
+    url      = "http://luajit.org/download/LuaJIT-2.0.4.tar.gz"
 
     version('2.0.4', 'dd9c38307f2223a504cbfb96e477eca0')
 
