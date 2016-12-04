@@ -326,6 +326,9 @@ class Llvm(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('CXXFLAGS', self.compiler.cxx11_flag)
+        cmake_build_lib = join_path(
+            self.stage.source_path,'spack-build','lib')
+        spack_env.prepend_path('LD_LIBRARY_PATH',cmake_build_lib) 
 
     def build_type(self):
         if '+debug' in self.spec:
