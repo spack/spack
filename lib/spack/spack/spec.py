@@ -449,6 +449,9 @@ class ArchSpec(object):
     def __repr__(self):
         return str(self)
 
+    def __contains__(self, string):
+        return string in str(self)
+
 
 @key_ordering
 class CompilerSpec(object):
