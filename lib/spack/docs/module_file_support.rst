@@ -374,7 +374,7 @@ and has similar effects on module file of dependees. Even in this case
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
+  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
      :lines: 128-129,146-151
 
 .. _modules-yaml:
