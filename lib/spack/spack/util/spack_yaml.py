@@ -151,6 +151,7 @@ class OrderedLineLoader(Loader):
         mark(mapping, node)
         return mapping
 
+
 # register above new constructors
 OrderedLineLoader.add_constructor(
     u'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
