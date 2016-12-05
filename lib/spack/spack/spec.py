@@ -96,39 +96,36 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import base64
-import csv
 import cStringIO
-import hashlib
-import imp
-import itertools
-import ctypes
 import copy
+import csv
+import ctypes
+import hashlib
+import itertools
 from cStringIO import StringIO
 from operator import attrgetter
 
-from yaml.error import MarkedYAMLError
-
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, find_libraries
-from llnl.util.lang import *
-from llnl.util.tty.color import *
-
 import spack
 import spack.architecture
-import spack.store
 import spack.compilers as compilers
 import spack.error
 import spack.parse
-from spack.build_environment import get_path_from_module, load_module
-from spack.util.prefix import Prefix
-from spack.util.pattern import Bunch
-from spack.util.string import *
-import spack.util.spack_yaml as syaml
+import spack.store
 import spack.util.spack_json as sjson
-from spack.util.spack_yaml import syaml_dict
-from spack.util.crypto import prefix_bits
-from spack.version import *
+import spack.util.spack_yaml as syaml
+from llnl.util.filesystem import find_libraries
+from llnl.util.lang import *
+from llnl.util.tty.color import *
+from spack.build_environment import get_path_from_module, load_module
 from spack.provider_index import ProviderIndex
+from spack.util.crypto import prefix_bits
+from spack.util.pattern import Bunch
+from spack.util.prefix import Prefix
+from spack.util.spack_yaml import syaml_dict
+from spack.util.string import *
+from spack.version import *
+from yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
