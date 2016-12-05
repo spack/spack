@@ -25,6 +25,7 @@
 
 import inspect
 
+import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 from spack.package import PackageBase
 
@@ -54,7 +55,7 @@ class MakefilePackage(PackageBase):
 
     def edit(self, spec, prefix):
         """This phase cannot be defaulted for obvious reasons..."""
-        raise NotImplementedError('\'edit\' function not implemented')
+        tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
         """Default build phase : call make passing build_args"""

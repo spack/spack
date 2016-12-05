@@ -66,9 +66,6 @@ class Openblas(MakefilePackage):
     def lapack_libs(self):
         return self.blas_libs
 
-    def edit(self, spec, prefix):
-        pass
-
     @MakefilePackage.precondition('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
