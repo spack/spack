@@ -22,6 +22,9 @@ matrix:
   - python: 2.6
     # Flake8 no longer supports Python 2.6
     env: TEST_SUITE=flake8
+  - python: 2.6
+    # Sphinx no longer supports Python 2.6
+    env: TEST_SUITE=doc
 
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
