@@ -12,8 +12,7 @@ python:
   - 2.7
 
 env:
-  - TEST_SUITE=unit CYAML=true
-  - TEST_SUITE=unit CYAML=false
+  - TEST_SUITE=unit
   - TEST_SUITE=flake8
   - TEST_SUITE=doc
 
@@ -42,7 +41,6 @@ install:
   - pip install flake8
   - pip install sphinx
   - pip install mercurial
-  - if [[ $CYAML == true ]]; then pip install --global-option "--with-libyaml" pyyaml; fi
 
 before_script:
   # Need this for the git tests to succeed.
@@ -55,7 +53,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $CYAML == false && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
 
 notifications:
   email:
