@@ -41,14 +41,6 @@ SPACK_PREFIX = os.path.dirname(os.path.dirname(SPACK_FILE))
 SPACK_LIB_PATH = os.path.join(SPACK_PREFIX, "lib", "spack")
 sys.path.insert(0, SPACK_LIB_PATH)
 
-# Try to use system YAML if it is available, as it might have libyaml
-# support (for faster loading via C).  Load it before anything in
-# lib/spack/external so it will take precedence over Spack's PyYAML.
-try:
-    import yaml
-except ImportError:
-    pass   # ignore and use slow yaml
-
 # Add external libs
 SPACK_EXTERNAL_LIBS = os.path.join(SPACK_LIB_PATH, "external")
 sys.path.insert(0, SPACK_EXTERNAL_LIBS)
