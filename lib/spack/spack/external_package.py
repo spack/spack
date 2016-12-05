@@ -52,7 +52,7 @@ class PackageConfigEntry(object):
         self.specs = filtered_specs
         self.package[self.external_type] = filtered_specs
 
-    def _filter_specs(self, spec):
+    def _filter_specs(self, spec): 
         """Filter out specs that don't match the input spec"""
         return {k: v for k, v in self.specs_section().iteritems() if
                 k != str(spec)}
@@ -66,7 +66,7 @@ class PackageConfigEntry(object):
             specs_section = self._get_specs(external)
             if specs_section:
                 return external
-
+ 
     def config_entry(self):
         """Turn object into config entry"""
         return {self.package_name: self.package}
@@ -91,7 +91,6 @@ class PackagesConfig(object):
     def get_package(self, package_name):
         """
         Given a package name, return a PackageConfigEntry object.
-
         PackageConfigEntry represents a config entry. Can be manipulated
         """
         packages = spack.config.get_config("packages", self._scope)
@@ -99,9 +98,10 @@ class PackagesConfig(object):
                                   self._packages_config.get(package_name, {}))
 
     def update_package_config(self, package_entry):
-        """Update packages.yaml """
+        """Update packages.yaml package entry"""
         spack.config.update_config("packages", package_entry, self._scope)
-        package_name = package_entry.keys()[0]  # first entry is package name
+        # ordered dict so can assume first entry is package name
+        package_name = package_entry.keys()[0]
         tty.msg("Added {0} external package".format(package_name))
 
     def remove_entire_entry_from_config(self, package_name):
@@ -237,67 +237,47 @@ class ExternalPackage(object):
         """
         if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
-        self._spec = spec
-        self._external_location = external_location
-        self._external_type = external_type
-        self._buildable = buildable
+        self.spec = spec
+        self.external_location = external_location
+        self.external_type = external_type
+        self.buildable = buildable
 
     @property
     def version(self):
         """
-        Return Version object
         Requires that spec is well-formed and has a spec version attribute.
+        Return Version object
         """
-        return self._spec.version
+        return self.spec.version
 
     @property
     def name(self):
         """
-        Return name of the package.
         Requires that spec is well-formed and has a spec name attribute.
+        Return name of the package.
         """
-        return self._spec.name
-
-    @property
-    def external_type(self):
-        """
-        Return the type of the external package.
-        External packages can either be paths or module names.
-        """
-        return self._external_type
-
-    @property
-    def external_location(self):
-        """
-        Return the location of an external package.
-        Location can either be a path to the installed package or a module
-        name.
-        """
-        return self._external_location
-
-    @property
-    def spec(self):
-        """
-        Return Spec representation of external object.
-        Requires that spec be well-formed.
-        """
-        return self._spec
+        return self.spec.name
 
     def _cmp_key(self):
         """
         Return a tuple
         Uses a tuple of attributes to compare objects of similar type
         """
-        return (self._spec, self._external_location, self._external_type)
+        return (self.spec, self.external_location, self.external_type)
 
     def __str__(self):
-        return str(self._spec)
+        return str(self.spec)
 
     def __repr__(self):
-        return "ExternalPackage({0}, {1})".format(self._spec,
-                                                  self._external_location)
+        return "ExternalPackage({0}, {1})".format(self.spec,
+                                                  self.external_location)
 
+    @property
     def spec_section(self):
+        """Return the spec section of a package entry."""
+        return self.create_spec_section()
+
+    def create_spec_section(self):
         """
         Return the specs section entry to a package configuration.
         Specs section follow the form { package_spec : path/to/package }
@@ -305,12 +285,11 @@ class ExternalPackage(object):
         return syaml_dict([(str(self.spec), self.external_location)])
 
     def to_config_entry(self):
-        """
-        Return the config entry structure for an external package.
-        """
+        """Return the config entry structure for an external package."""
         # create the inner most yaml entry
-        entry = syaml_dict([("buildable", self._buildable),
-                            (self.external_type, self.spec_section())])
+        spec_section = self.create_spec_section()
+        entry = syaml_dict([("buildable", self.buildable),
+                            (self.external_type, spec_section)])
         return syaml_dict([(self.name, entry)])
 
     @classmethod
@@ -394,7 +373,7 @@ class ExternalPackage(object):
         else:
             modulecmd = spack.util.executable.which("modulecmd")
             if modulecmd:
-                modulecmd.add_default_args("python")
+                modulecmd.add_default_arg("python")
                 output = modulecmd("show", external_package_location,
                                    output=str, error=str)
                 if "ERROR" not in output:
@@ -448,7 +427,7 @@ def add_external_package(external_package, scope):
         package_entry = external_package.to_config_entry()
         packages_config.update_package_config(package_entry)
     elif not duplicate_specs(external_package.spec, specs_section):
-        existing_package_entry.update_specs(external_package.spec_section())
+        existing_package_entry.update_specs(external_package.spec_section)
         new_package_entry = existing_package_entry.config_entry()
         packages_config.update_package_config(new_package_entry)
     else:
