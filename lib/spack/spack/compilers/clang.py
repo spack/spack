@@ -77,6 +77,16 @@ class Clang(Compiler):
                 tty.die("Only Clang 3.3 and above support c++11.")
             else:
                 return "-std=c++11"
+    @property
+    def cxx14_flag(self):
+        if self.is_apple:
+            # FIXME: figure out from which version Apple's clang supports c++11
+            return "-std=c++14"
+        else:
+            if self.version < ver('3.4'):
+                tty.die("Only Clang 3.4 and above support c++14.")
+            else:
+                return "-std=c++14"
 
     @classmethod
     def default_version(cls, comp):
