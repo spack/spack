@@ -67,6 +67,8 @@ class Llvm(CMakePackage):
     variant('link_dylib', default=False,
             description="Build and link the libLLVM shared library rather "
             "than static")
+    variant('utils', default=False,
+            description="LLVM_INSTALL_UTILS  ")
     variant('all_targets', default=True,
             description="Build all supported targets, default targets "
             "<current arch>,NVPTX,AMDGPU,CppBackend")
@@ -374,6 +376,9 @@ class Llvm(CMakePackage):
 
         if '+link_dylib' in spec:
             cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
+
+        if '+utils' in spec:
+            cmake_args.append('-DLLVM_INSTALL_UTILS:Bool=ON')
 
         if '+all_targets' not in spec:  # all is default on cmake
             targets = ['CppBackend', 'NVPTX', 'AMDGPU']
