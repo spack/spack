@@ -63,6 +63,8 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on('mpi', when='+mpi')
     depends_on('szip', when='+szip')
@@ -120,6 +122,11 @@ class Hdf5(AutotoolsPackage):
             # '--enable-fortran2003' no longer exists as of version 1.10.0
             if spec.satisfies('@:1.8.16'):
                 extra_args.append('--enable-fortran2003')
+
+        if '+pic' in spec:
+            extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
