@@ -44,5 +44,6 @@ class Astyle(MakefilePackage):
         makefile = join_path(self.build_directory(), 'Makefile')
         filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
 
-    def install_args(self):
-        return ['prefix={0}'.format(prefix)]
+    @property
+    def install_targets(self):
+        return ['install', 'prefix={0}'.format(self.prefix)]
