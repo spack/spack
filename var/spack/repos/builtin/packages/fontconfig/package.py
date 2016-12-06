@@ -38,9 +38,9 @@ class Fontconfig(AutotoolsPackage):
     depends_on('font-util', type='build')
 
     def configure_args(self):
-        args = ["--prefix=%s" % prefix,
+        font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')
+
+        return ["--prefix={0}".format(self.prefix),
                 "--enable-libxml2",
                 "--disable-docs",
-                "--with-default-fonts=%s" %
-                spec['font-util'].prefix + "/share/fonts"]
-        return args
+                "--with-default-fonts={0}".format(font_path)]
