@@ -43,8 +43,8 @@ class Parmgridgen(Package):
     def install(self, spec, prefix):
         make_opts = [
             'make=make',
-            'COPTIONS=-fPIC',
-            'LDOPTIONS=-fPIC',
+            'COPTIONS={0}'.format(self.compiler.pic_flag),
+            'LDOPTIONS={0}'.format(self.compiler.pic_flag),
             'CC={0}'.format(self.compiler.cc),
             'PARCC={0}'.format(spec['mpi'].mpicc),
             'LD={0}'.format(self.compiler.cc),

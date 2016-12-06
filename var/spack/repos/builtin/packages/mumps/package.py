@@ -119,10 +119,10 @@ class Mumps(Package):
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
-        # when building shared libs need -fPIC, otherwise
+        # when building shared libs need a PIC flag, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        pic = '-fPIC' if '+shared' in self.spec else ''
+        pic = self.compiler.pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
         if '+idx64' in self.spec:

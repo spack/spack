@@ -48,7 +48,7 @@ class Hdf(Package):
 
     def install(self, spec, prefix):
         config_args = [
-            'CFLAGS=-fPIC',
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
             '--prefix={0}'.format(prefix),
             '--with-jpeg={0}'.format(spec['jpeg'].prefix),
             '--with-zlib={0}'.format(spec['zlib'].prefix),

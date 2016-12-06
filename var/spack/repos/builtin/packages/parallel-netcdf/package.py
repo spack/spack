@@ -49,7 +49,11 @@ class ParallelNetcdf(Package):
     def install(self, spec, prefix):
         args = list()
         if '+pic' in spec:
-            args.extend(['CFLAGS=-fPIC', 'CXXFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+            args.extend([
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+                'FFLAGS={0}'.format(self.compiler.pic_flag)
+            ])
         if '~cxx' in spec:
             args.append('--disable-cxx')
         if '~fortran' in spec:

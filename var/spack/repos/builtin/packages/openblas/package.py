@@ -89,7 +89,10 @@ class Openblas(Package):
             make_targets += ['shared']
         else:
             if '+pic' in spec:
-                make_defs.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+                make_defs.extend([
+                    'CFLAGS={0}'.format(self.compiler.pic_flag),
+                    'FFLAGS={0}'.format(self.compiler.pic_flag)
+                ])
             make_defs += ['NO_SHARED=1']
 
         # fix missing _dggsvd_ and _sggsvd_
