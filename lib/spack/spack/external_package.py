@@ -28,7 +28,7 @@ class PackageConfigEntry(object):
         self.specs = self._get_specs(self.external_type)
 
     def specs_section(self):
-        return self.specs
+        return self.specs.copy()
 
     def is_spec_empty(self):
         return self.specs == {}
@@ -52,10 +52,10 @@ class PackageConfigEntry(object):
         self.specs = filtered_specs
         self.package[self.external_type] = filtered_specs
 
-    def _filter_specs(self, spec): 
+    def _filter_specs(self, spec):
         """Filter out specs that don't match the input spec"""
         return {k: v for k, v in self.specs_section().iteritems() if
-                k != str(spec)}
+                spack.spec.Spec(k) != spec}
 
     def _get_specs(self, external_type):
         return self.package.get(external_type, {})
@@ -66,7 +66,7 @@ class PackageConfigEntry(object):
             specs_section = self._get_specs(external)
             if specs_section:
                 return external
- 
+
     def config_entry(self):
         """Turn object into config entry"""
         return {self.package_name: self.package}
@@ -102,7 +102,6 @@ class PackagesConfig(object):
         spack.config.update_config("packages", package_entry, self._scope)
         # ordered dict so can assume first entry is package name
         package_name = package_entry.keys()[0]
-        tty.msg("Added {0} external package".format(package_name))
 
     def remove_entire_entry_from_config(self, package_name):
         """Remove an entire package name from the config"""
@@ -442,21 +441,20 @@ def remove_package_from_packages_config(package_spec, scope):
     remove it. If it is the final entry of the spec, remove the entire entry.
     """
     packages_config = PackagesConfig(scope)
-    package_entry = packages_config.get_package(package_spec.name)
-    previous_specs_section = package_entry.specs_section()
+    prev_package_entry = packages_config.get_package(package_spec.name)
+    prev_specs_section = prev_package_entry.specs_section()
 
-    if previous_specs_section:
-        package_entry.remove_spec(package_spec)
+    if prev_specs_section:
+        prev_package_entry.remove_spec(package_spec)
     else:
         tty.die("Could not find spec {0}".format(package_spec))
 
-    if len(previous_specs_section) == len(package_entry.specs_section()):
+    if len(prev_specs_section) == len(prev_package_entry.specs_section()):
         raise PackageSpecInsufficientlySpecificError(package_spec)
-    elif package_entry.is_spec_empty():
+    elif prev_package_entry.is_spec_empty():
         packages_config.remove_entire_entry_from_config(package_spec.name)
     else:
-        packages_config.update_package_config(
-            package_entry.config_entry())
+        packages_config.update_package_config(prev_package_entry.config_entry())
 
 
 class PackageSpecInsufficientlySpecificError(spack.error.SpackError):
