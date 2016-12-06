@@ -79,6 +79,7 @@ def setup_parser(subparser):
                            default=spack.cmd.default_list_scope,
                            help="Configuration scope to read from")
 
+
 def external_add(args):
     """Add an external package to packages.yaml config."""
     package_spec = spack.spec.Spec(args.package_spec)
@@ -87,6 +88,8 @@ def external_add(args):
     external_package = ext_package.ExternalPackage.create_external_package(
                                             package_spec, external_location)
     ext_package.add_external_package(external_package, scope)
+    tty.msg("Added {0} to packages config scope={1}".format(package_spec,
+                                                            scope))
 
 
 def external_rm(args):
@@ -94,6 +97,8 @@ def external_rm(args):
     package_spec = spack.spec.Spec(args.package_spec)
     scope = args.scope
     ext_package.remove_package_from_packages_config(package_spec, scope)
+    tty.msg("Removed {0} from packages config scope={1}".format(package_spec,
+                                                                scope))
 
 
 def external_list(args):
@@ -111,7 +116,7 @@ def external_list(args):
 
 def display_package_specs(package_object):
     """Requires that package objects come in the form of a list.
-    Helper function for displaying specs from packageconfig objects"""
+    Helper function for displaying specs from PackageConfigEntry objects"""
     package = package_object[0]
     specs_to_display = package.specs_section()
     specs = specs_to_display.keys()
