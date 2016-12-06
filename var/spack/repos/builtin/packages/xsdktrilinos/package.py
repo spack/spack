@@ -56,7 +56,9 @@ class Xsdktrilinos(Package):
     depends_on('mpi')
     depends_on('hypre', when='+hypre')
     depends_on('petsc+mpi~complex', when='+petsc')
-    depends_on('trilinos')
+    depends_on('trilinos@12.6.4', when='@12.6.4')
+    depends_on('trilinos@12.8.1', when='@12.8.1')
+    depends_on('trilinos@develop', when='@develop')
 
     def install(self, spec, prefix):
         options = []
