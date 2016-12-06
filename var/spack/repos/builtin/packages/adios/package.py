@@ -95,7 +95,7 @@ class Adios(Package):
         extra_args = []
 
         # required, otherwise building its python bindings on ADIOS will fail
-        extra_args.append("CFLAGS=-fPIC")
+        extra_args.append("CFLAGS={0}".format(self.compiler.pic_flag))
 
         # always build external MXML, even in ADIOS 1.10.0+
         extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
