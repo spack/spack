@@ -26,21 +26,9 @@ from spack import *
 import os
 import sys
 
-# Trilinos is complicated to build, as an inspiration a couple of links to
-# other repositories which build it:
-# https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/t/trilinos.py#L111
-# https://github.com/koecher/candi/blob/master/deal.II-toolchain/packages/trilinos.package
-# https://gitlab.com/configurations/cluster-config/blob/master/trilinos.sh
-# https://github.com/Homebrew/homebrew-science/blob/master/trilinos.rb and some
-# relevant documentation/examples:
-# https://github.com/trilinos/Trilinos/issues/175
-
-
 class Xsdktrilinos(Package):
-    """The Trilinos Project is an effort to develop algorithms and enabling
-    technologies within an object-oriented software framework for the solution
-    of large-scale, complex multi-physics engineering and scientific problems.
-    A unique design feature of Trilinos is its focus on packages.
+    """xSDKTrilinos contains the portions of Trilinos that depend on PETSc
+    because they would cause a circular dependency if built as part of Trilinos.
     """
     homepage = "https://trilinos.org/"
     base_url = "https://github.com/trilinos/xSDKTrilinos/archive"
@@ -67,7 +55,7 @@ class Xsdktrilinos(Package):
     # MPI related dependencies
     depends_on('mpi')
     depends_on('hypre', when='+hypre')
-    depends_on('petsc', when='+petsc')
+    depends_on('petsc+mpi~complex', when='+petsc')
     depends_on('trilinos')
 
     def install(self, spec, prefix):
@@ -104,11 +92,6 @@ class Xsdktrilinos(Package):
                     libgfortran),
                 '-DxSDKTrilinos_ENABLE_Fortran=ON'
             ])
-
-        # for build-debug only:
-        # options.extend([
-        #    '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
-        # ])
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
