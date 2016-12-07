@@ -61,6 +61,7 @@ def _to_dict(compiler):
                       for attr in _path_instance_vars)
     d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
     d['operating_system'] = str(compiler.operating_system)
+    d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
     d['environment'] = compiler.environment if compiler.environment else {}
     d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
@@ -220,6 +221,10 @@ def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
             if arch_spec and os != arch_spec.platform_os:
                 continue
 
+            target = items.get('target', None)
+            if arch_spec and target != arch_spec.target and target != 'any':
+                continue
+
             if not ('paths' in items and
                     all(n in items['paths'] for n in _path_instance_vars)):
                 raise InvalidCompilerConfigurationError(cspec)
@@ -244,8 +249,8 @@ def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
             extra_rpaths = items.get('extra_rpaths', [])
 
             compilers.append(
-                cls(cspec, os, compiler_paths, mods, alias, environment,
-                    extra_rpaths, **compiler_flags))
+                cls(cspec, os, target, compiler_paths, mods, alias,
+                    environment, extra_rpaths, **compiler_flags))
 
         return compilers
 

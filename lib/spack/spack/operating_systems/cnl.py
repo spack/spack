@@ -1,5 +1,6 @@
 import re
 import os
+import platform
 
 from spack.architecture import OperatingSystem
 from spack.util.executable import *
@@ -57,7 +58,8 @@ class Cnl(OperatingSystem):
             for name, version in matches:
                 v = version
                 comp = cmp_cls(
-                    spack.spec.CompilerSpec(name + '@' + v), self,
+                    spack.spec.CompilerSpec(name + '@' + v),
+                    self, any,
                     ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
 
                 compilers.append(comp)
