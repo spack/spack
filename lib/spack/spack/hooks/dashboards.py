@@ -345,6 +345,7 @@ def dashboard_output(spec, test_suite):
         return wrapper
     return decorator
 
+
 # announce the existing test suites
 test_suites = {"junit": JUnitTestSuite,
                "cdash": CDashTestSuite}
