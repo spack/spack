@@ -222,7 +222,8 @@ def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
                 continue
 
             target = items.get('target', None)
-            if arch_spec and target != arch_spec.target and target != 'any':
+            if arch_spec and target and (target != arch_spec.target and
+                                         target != 'any'):
                 continue
 
             if not ('paths' in items and
