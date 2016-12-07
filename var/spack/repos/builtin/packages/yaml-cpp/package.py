@@ -29,8 +29,7 @@ class YamlCpp(CMakePackage):
     """A YAML parser and emitter in C++"""
 
     homepage = "https://github.com/jbeder/yaml-cpp"
-    url      = \
-    "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
+    url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
 
     version('0.5.3', '4e47733d98266e46a1a73ae0a72954eb')
 

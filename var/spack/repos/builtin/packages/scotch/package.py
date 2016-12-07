@@ -95,7 +95,9 @@ class Scotch(Package):
             if self.spec.satisfies('platform=darwin'):
                 makefile_inc.extend([
                     'LIB       = .dylib',
-                    'CLIBFLAGS = -dynamiclib {0}'.format(self.compiler.pic_flag),
+                    'CLIBFLAGS = -dynamiclib {0}'.format(
+                        self.compiler.pic_flag
+                    ),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -dynamiclib $(LDFLAGS) -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % prefix.lib  # noqa
