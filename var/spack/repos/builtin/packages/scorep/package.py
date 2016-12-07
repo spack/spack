@@ -72,8 +72,8 @@ class Scorep(Package):
                 "--with-papi-header=%s" % spec['papi'].prefix.include,
                 "--with-papi-lib=%s" % spec['papi'].prefix.lib,
                 "--enable-shared",
-                "CFLAGS=-fPIC",
-                "CXXFLAGS=-fPIC"]
+                "CFLAGS={0}".format(self.compiler.pic_flag),
+                "CXXFLAGS={0}".format(self.compiler.pic_flag)]
             configure(*configure_args)
             make()
             make("install")

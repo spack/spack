@@ -66,9 +66,11 @@ class SuperluDist(Package):
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = -fPIC -std=c99 -O2 -I%s -I%s' % (
-                spec['parmetis'].prefix.include, spec['metis'].prefix.include),
-            'NOOPTS       = -fPIC -std=c99',
+            'CFLAGS       = %s -std=c99 -O2 -I%s -I%s' % (
+                self.compiler.pic_flag, spec['parmetis'].prefix.include,
+                spec['metis'].prefix.include
+            ),
+            'NOOPTS       = %s -std=c99' % (self.compiler.pic_flag),
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
             'F90FLAGS     = -O2',
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),

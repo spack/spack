@@ -78,7 +78,7 @@ class Cantera(Package):
             'CXX={0}'.format(os.environ['CXX']),
             'F77={0}'.format(os.environ['F77']),
             'FORTRAN={0}'.format(os.environ['FC']),
-            'cc_flags=-fPIC',
+            'cc_flags={0}'.format(self.compiler.pic_flag),
             # Allow Spack environment variables to propagate through to SCons
             'env_vars=all'
         ]

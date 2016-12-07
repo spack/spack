@@ -38,7 +38,7 @@ class ParallelNetcdf(Package):
 
     variant('cxx', default=True, description='Build the C++ Interface')
     variant('fortran', default=True, description='Build the Fortran Interface')
-    variant('fpic', default=True,
+    variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
     depends_on("m4", type='build')
@@ -48,8 +48,12 @@ class ParallelNetcdf(Package):
     # https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL
     def install(self, spec, prefix):
         args = list()
-        if '+fpic' in spec:
-            args.extend(['CFLAGS=-fPIC', 'CXXFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+        if '+pic' in spec:
+            args.extend([
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+                'FFLAGS={0}'.format(self.compiler.pic_flag)
+            ])
         if '~cxx' in spec:
             args.append('--disable-cxx')
         if '~fortran' in spec:

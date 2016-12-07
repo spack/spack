@@ -48,8 +48,8 @@ class Otf2(Package):
     def install(self, spec, prefix):
         configure_args = ["--prefix=%s" % prefix,
                           "--enable-shared",
-                          "CFLAGS=-fPIC",
-                          "CXXFLAGS=-fPIC"]
+                          "CFLAGS={0}".format(self.compiler_pic_flag),
+                          "CXXFLAGS={0}".format(self.compiler_pic_flag)]
         configure(*configure_args)
         make()
         make("install")

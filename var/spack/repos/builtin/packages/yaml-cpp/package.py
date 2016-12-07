@@ -29,12 +29,11 @@ class YamlCpp(CMakePackage):
     """A YAML parser and emitter in C++"""
 
     homepage = "https://github.com/jbeder/yaml-cpp"
-    url      = \
-    "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
+    url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
 
     version('0.5.3', '4e47733d98266e46a1a73ae0a72954eb')
 
-    variant('fpic',    default=False,
+    variant('pic',    default=False,
             description='Build with position independent code')
 
     depends_on('cmake', type='build')
@@ -43,7 +42,7 @@ class YamlCpp(CMakePackage):
         spec = self.spec
         options = []
 
-        if '+fpic' in spec: 
+        if '+pic' in spec: 
             options.extend([
                 '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true'
             ])
