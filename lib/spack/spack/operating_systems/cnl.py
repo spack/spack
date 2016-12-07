@@ -1,6 +1,5 @@
 import re
 import os
-import platform
 
 from spack.architecture import OperatingSystem
 from spack.util.executable import *
