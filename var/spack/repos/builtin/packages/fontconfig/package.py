@@ -42,5 +42,5 @@ class Fontconfig(AutotoolsPackage):
                 "--enable-libxml2",
                 "--disable-docs",
                 "--with-default-fonts=%s" %
-                spec['font-util'].prefix + "/share/fonts"]
+                self.spec['font-util'].prefix + "/share/fonts"]
         return args
