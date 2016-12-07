@@ -34,7 +34,7 @@ class Texlive(Package):
 
     # pull from specific site because the texlive mirrors do not all
     # update in synchrony.
-    version('live', '6d171d370f3a2f2b936b9b0c87e8d0fe',
+    version('live', 'bdc04d216c87a195cb29f9f21ae84f3d',
             url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
 
     # There does not seem to be a complete list of schemes.
