@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 
 from llnl.util.lang import index_by
 import llnl.util.tty as tty
@@ -64,7 +65,10 @@ def setup_parser(subparser):
     ###############
     # external rm
     ###############
-    rm_parser = sp.add_parser('rm', help="Delete an entry from packages.yaml")
+    rm_parser = sp.add_parser('remove',
+            aliases=['rm'], help="Delete an entry from packages.yaml")
+    rm_parser.add_argument('-a', '--all', action='store_true',
+                           help='Remove ALL compilers that match spec.')
     rm_parser.add_argument("package_spec",
                            help="spec of a package to delete")
     rm_parser.add_argument("--scope", choices=scopes,
@@ -88,17 +92,40 @@ def external_add(args):
     external_package = ext_package.ExternalPackage.create_external_package(
                                             package_spec, external_location)
     ext_package.add_external_package(external_package, scope)
-    tty.msg("Added {0} to packages config scope={1}".format(package_spec,
-                                                            scope))
+    filename = spack.config.get_config_filename(scope, "packages")
+    tty.msg("Added {0} to {1}".format(package_spec, filename))
 
 
 def external_rm(args):
     """Removes an external package from packages.yaml"""
     package_spec = spack.spec.Spec(args.package_spec)
-    scope = args.scope
-    ext_package.remove_package_from_packages_config(package_spec, scope)
-    tty.msg("Removed {0} from packages config scope={1}".format(package_spec,
-                                                                scope))
+    packages_config = ext_package.PackagesConfig(args.scope)
+    package = packages_config.get_package(package_spec.name)
+    if package.is_empty():
+        tty.die("Could not find package for {0}".format(package_spec))
+
+    matches = []
+    specs = package.specs_section()
+    for spec in specs.keys(): # follows {spec: path_or_mod}
+        if spack.spec.Spec(spec).satisfies(package_spec):
+            matches.append(spec)
+
+    if not args.all and len(matches) > 1: 
+        tty.error(
+            "Multiple packages match spec {0}. Choose one:".format(
+                package_spec))
+        colify(sorted(matches), indent=4)
+        tty.msg("Or, use 'spack external rm -a' to remove all fo them.")
+        sys.exit(1)
+
+    for spec in matches:
+        package.remove_spec(spec)
+        tty.msg("Removed package: {0}".format(spec))
+
+    if package.is_spec_empty():
+        packages_config.remove_entire_entry_from_config(package_spec.name)
+    else:
+        packages_config.update_package_config(package.config_entry())
 
 
 def external_list(args):

@@ -54,8 +54,11 @@ class PackageConfigEntry(object):
 
     def _filter_specs(self, spec):
         """Filter out specs that don't match the input spec"""
+        matching_spec = spec
+        if isinstance(matching_spec, str):
+            matching_spec = spack.spec.Spec(matching_spec)
         return {k: v for k, v in self.specs_section().iteritems() if
-                spack.spec.Spec(k) != spec}
+                spack.spec.Spec(k) != matching_spec}
 
     def _get_specs(self, external_type):
         return self.package.get(external_type, {})
@@ -82,6 +85,7 @@ class PackagesConfig(object):
         get_package:              returns a PackageConfigEntry object
         update_package_config:    given a package dict, updates config file
         remove_entire_entry_from_config:    remove an entire package entry
+        all_external_packages:  return the entire contents of packages.yaml
     """
 
     def __init__(self, scope):
@@ -93,15 +97,12 @@ class PackagesConfig(object):
         Given a package name, return a PackageConfigEntry object.
         PackageConfigEntry represents a config entry. Can be manipulated
         """
-        packages = spack.config.get_config("packages", self._scope)
-        return PackageConfigEntry(package_name,
-                                  self._packages_config.get(package_name, {}))
+        package = self._packages_config.get(package_name, {})
+        return PackageConfigEntry(package_name, package)
 
     def update_package_config(self, package_entry):
         """Update packages.yaml package entry"""
         spack.config.update_config("packages", package_entry, self._scope)
-        # ordered dict so can assume first entry is package name
-        package_name = package_entry.keys()[0]
 
     def remove_entire_entry_from_config(self, package_name):
         """Remove an entire package name from the config"""
@@ -181,9 +182,9 @@ def detect_version(external_location):
     string.
     """
 
-    def execute(function_to_call):
+    def execute(function_to_call_and_args):
         """Helper method to call functions with or without arguments"""
-        func, args = function_to_call
+        func, args = function_to_call_and_args
         if args:
             return func(args)
         else:
@@ -209,21 +210,17 @@ class ExternalPackage(object):
     """
     Class creates external package objects.
     Attributes:
-        spec               Spec object that describes the external package
-        external_location  either a path or a module describing how package
-                           can be located.
-        external_type      Is the type a path or a module
-        buildable          Is package meant to be built by Spack?
-
-    Properties:
+        spec                Spec object that describes the external package
+        external_location   either a path or a module describing how package
+                            can be located.
+        external_type       Is the type a path or a module
+        buildable           Is package meant to be built by Spack?
         version             Returns the version of external_package
         name                Name of the package
-        external_type       Either module or path
-        external_location   How the package is meant to be found
-        spec                Returns spec object of external package
+
     Methods:
-        spec_section        Returns spec section of a config dict
-        to_config_entry     Constructs a "config" representation of object
+        spec_section             Returns spec section of a config dict
+        to_config_entry          Constructs a "config" representation of object
         create_external_package  Alternate constructor for ExternalPackage.
                                  This does do validate type and location
     """
@@ -271,10 +268,12 @@ class ExternalPackage(object):
         return "ExternalPackage({0}, {1})".format(self.spec,
                                                   self.external_location)
 
-    @property
     def spec_section(self):
         """Return the spec section of a package entry."""
-        return self.create_spec_section()
+        if not self.spec_section:
+            return self.create_spec_section()
+        else:
+            return self.spec_section
 
     def create_spec_section(self):
         """
@@ -411,7 +410,6 @@ def add_external_package(external_package, scope):
     Determines whether a package exists, if so then append to the existing
     entry. If there are no entries for the package, then add the new entry.
     """
-    packages_config = PackagesConfig(scope)
 
     def duplicate_specs(spec, existing_specs):
         for k in existing_specs.keys():
@@ -419,6 +417,7 @@ def add_external_package(external_package, scope):
                 return True
         return False
 
+    packages_config = PackagesConfig(scope)
     existing_package_entry = packages_config.get_package(external_package.name)
     specs_section = existing_package_entry.specs_section()
 
@@ -431,30 +430,6 @@ def add_external_package(external_package, scope):
         packages_config.update_package_config(new_package_entry)
     else:
         tty.msg("Added no new external packages")
-
-
-def remove_package_from_packages_config(package_spec, scope):
-    """
-    Remove a external package entry.
-
-    Given a package spec, search the config file for a matching spec and
-    remove it. If it is the final entry of the spec, remove the entire entry.
-    """
-    packages_config = PackagesConfig(scope)
-    prev_package_entry = packages_config.get_package(package_spec.name)
-    prev_specs_section = prev_package_entry.specs_section()
-
-    if prev_specs_section:
-        prev_package_entry.remove_spec(package_spec)
-    else:
-        tty.die("Could not find spec {0}".format(package_spec))
-
-    if len(prev_specs_section) == len(prev_package_entry.specs_section()):
-        raise PackageSpecInsufficientlySpecificError(package_spec)
-    elif prev_package_entry.is_spec_empty():
-        packages_config.remove_entire_entry_from_config(package_spec.name)
-    else:
-        packages_config.update_package_config(prev_package_entry.config_entry())
 
 
 class PackageSpecInsufficientlySpecificError(spack.error.SpackError):
