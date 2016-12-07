@@ -28,7 +28,7 @@ Test for multi_method dispatch.
 import spack
 from spack.multimethod import *
 from spack.version import *
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class MultiMethodTest(MockPackagesTest):

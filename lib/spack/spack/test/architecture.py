@@ -36,7 +36,7 @@ from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
 
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class ArchitectureTest(MockPackagesTest):

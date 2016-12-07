@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.spec import Spec
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class ConcretizeTest(MockPackagesTest):

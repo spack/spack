@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.test.mock_database
+import spack.test.mock.database
 import spack.store
 from spack.cmd.uninstall import uninstall
 
@@ -37,7 +37,7 @@ class MockArgs(object):
         self.yes_to_all = True
 
 
-class TestUninstall(spack.test.mock_database.MockDatabase):
+class TestUninstall(spack.test.mock.database.MockDatabase):
 
     def test_uninstall(self):
         parser = None

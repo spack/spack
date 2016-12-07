@@ -27,7 +27,7 @@ import spack.architecture
 from spack.spec import Spec, CompilerSpec
 from spack.version import ver
 from spack.concretize import find_spec
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class ConcretizeTest(MockPackagesTest):

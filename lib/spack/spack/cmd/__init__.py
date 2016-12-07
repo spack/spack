@@ -61,6 +61,7 @@ for file in os.listdir(command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
         commands.append(cmd)
+commands.append('test')
 commands.sort()
 
 

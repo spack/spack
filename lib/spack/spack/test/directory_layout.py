@@ -34,7 +34,7 @@ from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
 from spack.repository import RepoPath
 from spack.spec import Spec
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 # number of packages to test (to reduce test time)
 max_packages = 10

@@ -32,7 +32,7 @@ import spack.util.spack_json as sjson
 from spack.util.spack_yaml import syaml_dict
 
 from spack.spec import Spec
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class SpecYamlTest(MockPackagesTest):

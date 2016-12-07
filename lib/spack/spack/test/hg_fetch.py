@@ -26,9 +26,9 @@ import os
 import spack
 
 from spack.version import ver
-from spack.test.mock_repo import MockHgRepo
+from spack.test.mock.repo import MockHgRepo
 from llnl.util.filesystem import *
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class HgFetchTest(MockPackagesTest):

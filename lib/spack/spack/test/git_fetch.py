@@ -26,8 +26,8 @@ import os
 
 import spack
 from llnl.util.filesystem import *
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockGitRepo
+from spack.test.mock.packages_test import *
+from spack.test.mock.repo import MockGitRepo
 from spack.version import ver
 
 

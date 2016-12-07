@@ -32,7 +32,7 @@ import spack.spec
 import spack.cmd.compiler
 import spack.compilers
 from spack.version import Version
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 test_version = '4.5-spacktest'
 

@@ -33,7 +33,7 @@ import spack
 import spack.store
 from llnl.util.filesystem import join_path
 from llnl.util.tty.colify import colify
-from spack.test.mock_database import MockDatabase
+from spack.test.mock.database import MockDatabase
 
 
 def _print_ref_counts():

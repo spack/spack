@@ -23,39 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import pytest
-
-from spack.cmd.create import BuildSystemGuesser
-from spack.stage import Stage
-from spack.util.executable import which
+import imp
+import os.path
 
 
-@pytest.fixture(
-    scope='function',
-    params=[
-        ('configure', 'autotools'),
-        ('CMakeLists.txt', 'cmake'),
-        ('SConstruct', 'scons'),
-        ('setup.py', 'python'),
-        ('NAMESPACE', 'R'),
-        ('foobar', 'unknown')
-    ]
-)
-def url_and_system(request, tmpdir):
-    tar = which('tar')
-    orig_dir = tmpdir.chdir()
-    filename, system = request.param
-    tmpdir.ensure('archive', filename)
-    tar('czf', 'archive.tar.gz', 'archive')
-    url = 'file://' + str(tmpdir.join('archive.tar.gz'))
-    yield url, system
-    orig_dir.chdir()
+##########
+# Source bin file as if bin/spack was invoked directly
+##########
 
 
-def test_build_systems(url_and_system):
-    url, system = url_and_system
-    with Stage(url) as stage:
-        stage.fetch()
-        guesser = BuildSystemGuesser()
-        guesser(stage, url)
-        assert system == guesser.build_system
+def spack_bin_path_form_this_file():
+    t = __file__
+    t = os.path.realpath(os.path.expanduser(t))
+    t = os.path.dirname(os.path.dirname(t))
+    t = os.path.join(t, 'bin', 'spack')
+    return t
+
+
+# Compute the absolute path of the directory where the script resides
+SPACK_BIN_PATH = spack_bin_path_form_this_file()
+with open(SPACK_BIN_PATH) as f:
+    imp.load_source('__spack_bin', SPACK_BIN_PATH, f)

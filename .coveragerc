@@ -8,6 +8,7 @@ omit =
      lib/spack/env/*
      lib/spack/docs/*
      lib/spack/external/*
+concurrency = multiprocessing
 
 [report]
 # Regexes for lines to exclude from consideration

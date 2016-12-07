@@ -30,7 +30,7 @@ import spack.store
 from spack.spec import Spec
 from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
-from spack.test.mock_packages_test import MockPackagesTest
+from spack.test.mock.packages_test import MockPackagesTest
 
 
 class MockDatabase(MockPackagesTest):

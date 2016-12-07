@@ -25,7 +25,7 @@
 import spack
 from llnl.util.filesystem import join_path
 from spack.repository import Repo
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 from spack.util.naming import mod_to_class
 from spack.spec import *
 

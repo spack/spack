@@ -26,9 +26,9 @@ import os
 import re
 import spack
 
-from spack.test.mock_repo import svn, MockSvnRepo
+from spack.test.mock.repo import svn, MockSvnRepo
 from spack.version import ver
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 from llnl.util.filesystem import *
 
 

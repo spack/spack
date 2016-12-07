@@ -33,7 +33,7 @@ import spack.architecture
 import spack.package
 
 from spack.spec import Spec
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class SpecDagTest(MockPackagesTest):

@@ -43,4 +43,10 @@ spack config get compilers
 spack install -v libdwarf
 
 # Run unit tests with code coverage
-coverage run bin/spack test "$@"
+if [[ "$TRAVIS_PYTHON_VERSION" == 2.7 ]]; then
+    pytest --cov "$@"
+else
+    pytest "$@"
+fi
+
+# FIXME: also requires pytest and pytest-cov

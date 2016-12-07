@@ -204,7 +204,7 @@ mock_configs = {
 
 class MockPackagesTest(unittest.TestCase):
 
-    def initmock(self):
+    def setUp(self):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
         # real ones.
@@ -257,7 +257,7 @@ class MockPackagesTest(unittest.TestCase):
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg.dependency_types[spec.name] = set(deptypes)
 
-    def cleanmock(self):
+    def tearDown(self):
         """Restore the real packages path after any test."""
         spack.repo.swap(self.db)
         spack.config.config_scopes = self.real_scopes
@@ -273,9 +273,3 @@ class MockPackagesTest(unittest.TestCase):
 
         shutil.rmtree(spack.share_path, ignore_errors=True)
         spack.share_path = self.real_share_path
-
-    def setUp(self):
-        self.initmock()
-
-    def tearDown(self):
-        self.cleanmock()

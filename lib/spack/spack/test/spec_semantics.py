@@ -24,7 +24,7 @@
 ##############################################################################
 import spack.architecture
 from spack.spec import *
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class SpecSematicsTest(MockPackagesTest):

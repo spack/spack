@@ -26,7 +26,7 @@
 Tests ability of spack to extrapolate URL versions from existing versions.
 """
 import spack.url as url
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class UrlExtrapolateTest(unittest.TestCase):

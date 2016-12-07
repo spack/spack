@@ -42,7 +42,7 @@ from StringIO import StringIO
 import spack
 from spack.spec import Spec
 from spack.provider_index import ProviderIndex
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 
 class ProviderIndexTest(MockPackagesTest):

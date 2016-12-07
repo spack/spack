@@ -32,7 +32,7 @@ import spack
 import spack.config
 from spack.util.path import canonicalize_path
 from ordereddict_backport import OrderedDict
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 # Some sample compiler config data
 a_comps = {

@@ -29,7 +29,7 @@ import StringIO
 import spack.modules
 import spack.spec
 import llnl.util.filesystem
-from spack.test.mock_packages_test import MockPackagesTest
+from spack.test.mock.packages_test import MockPackagesTest
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
 

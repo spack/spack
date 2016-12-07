@@ -35,7 +35,7 @@ import spack.stage
 from llnl.util.filesystem import *
 from spack.stage import Stage
 from spack.util.executable import which
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 
 _test_tmp_path = None
 

@@ -27,8 +27,8 @@ import spack
 import spack.mirror
 
 from filecmp import dircmp
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import *
+from spack.test.mock.packages_test import *
+from spack.test.mock.repo import *
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']

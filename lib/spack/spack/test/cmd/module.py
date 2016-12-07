@@ -27,10 +27,10 @@ import os.path
 
 import spack.cmd.module as module
 import spack.modules as modules
-import spack.test.mock_database
+import spack.test.mock.database
 
 
-class TestModule(spack.test.mock_database.MockDatabase):
+class TestModule(spack.test.mock.database.MockDatabase):
 
     def _get_module_files(self, args):
         return [modules.module_types[args.module_type](spec).file_name

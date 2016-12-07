@@ -31,8 +31,8 @@ from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
 from spack.database import Database
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockArchive
+from spack.test.mock.packages_test import *
+from spack.test.mock.repo import MockArchive
 
 
 class InstallTest(MockPackagesTest):

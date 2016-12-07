@@ -24,7 +24,7 @@
 ##############################################################################
 import spack
 import spack.architecture
-from spack.test.mock_packages_test import *
+from spack.test.mock.packages_test import *
 from tempfile import mkdtemp
 
 
