@@ -1,14 +1,16 @@
 import spack.architecture
 from spack.test.mock_packages_test import *
+import spack.cmd.external
 import spack.config
 import spack.spec
 from spack.external_package import *
 
 class MockArgs(object):
-    def __init__(self, package_spec="", external_location="unknown"):
+    def __init__(self, package_spec="", external_location="", _all=False):
         self.package_spec = package_spec
         self.external_location = external_location
         self.scope = "site"  # Hardcoded for consistency in using site scope
+        self.all =_all
 
 
 def get_packages_config_file():
@@ -92,7 +94,8 @@ class ExternalCmdTest(MockPackagesTest):
     ########################
     def test_remove_correct_entry_from_config(self):
         spec = spack.spec.Spec("externalmodule@1.0%gcc@4.5.0")
-        remove_package_from_packages_config(spec, "site")
+        args = MockArgs(spec)
+        spack.cmd.external.external_rm(args)
         full_packages_config = get_packages_config_file()
         external_module_specs = get_specs_section(full_packages_config,
                                                   spec.name,
@@ -101,18 +104,22 @@ class ExternalCmdTest(MockPackagesTest):
                         not in external_module_specs.keys())
 
     def test_error_thrown_when_spec_not_specific(self):
-        spec = spack.spec.Spec("externalmodule@1.0")
-        with self.assertRaises(PackageSpecInsufficientlySpecificError):
-            remove_package_from_packages_config(spec, "site")
+        spec = spack.spec.Spec("externalvirtual")
+        args = MockArgs(spec)
+        with self.assertRaises(SystemExit): # tty.error Multiple packages match
+            spack.cmd.external.external_rm(args)
 
     def test_remove_entire_entry_after_specs_section_is_empty(self):
         spec = spack.spec.Spec("externaltool@1.0%gcc@4.5.0")
-        remove_package_from_packages_config(spec, "site")
+        args = MockArgs(spec)
+        spack.cmd.external.external_rm(args)
         full_packages_config = get_packages_config_file()
         self.assertTrue("externaltool" not in full_packages_config.keys())
         self.assertTrue("externalvirtual" in full_packages_config.keys())
 
     def test_remove_when_spec_is_not_found(self):
         spec = spack.spec.Spec("boost%gcc@6.1.0")
-        with self.assertRaises(SystemExit):  # tty.die error
-            remove_package_from_packages_config(spec, "site")
+        args = MockArgs(spec)
+        # tty.die(Could not find package for spec..)
+        with self.assertRaises(SystemExit): 
+            spack.cmd.external.external_rm(args)

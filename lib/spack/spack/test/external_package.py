@@ -74,21 +74,21 @@ class TestExternalPackage(MockPackagesTest):
     def test_when_external_type_not_detected(self):
         spec = spack.spec.Spec("externalpackage@1.8.5%gcc@6.1.0")
         non_existent_path = "path/to/externaltool"
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit): # tty.die error
             ExternalPackage.create_external_package(spec, non_existent_path)
 
-    def test_when_no_version_in_spec_and_no_version_detected(self): 
+    def test_when_no_version_in_spec_and_no_version_detected(self):
         package_spec = spack.spec.Spec("externaltool%gcc@4.3")
         self.make_fake_install_path("path/to/externaltool",
                                                  "externaltool")
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit): # tty.die error
             ExternalPackage.create_external_package(package_spec,
                                                     self.external_package_path)
 
         if spack.architecture.sys_type() == "cray":
             module_spec = spack.spec.Spec("externalmodule%gcc@4.3")
             no_version_module = "externalmodule"
-            with self.assertRaises(SystemExit):
+            with self.assertRaises(SystemExit): # tty.die error
                 ExternalPackage.create_external_package(module_spec,
                                                         no_version_module)
         else:
