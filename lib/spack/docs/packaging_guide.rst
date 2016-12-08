@@ -3120,6 +3120,8 @@ example:
 This graph can be provided as input to other graphing tools, such as
 those in `Graphviz <http://www.graphviz.org>`_.
 
+.. _packaging-shell-support:
+
 -------------------------
 Interactive shell support
 -------------------------

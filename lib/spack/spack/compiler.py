@@ -115,8 +115,8 @@ class Compiler(object):
     def __init__(self, cspec, operating_system,
                  paths, modules=[], alias=None, environment=None,
                  extra_rpaths=None, **kwargs):
-        self.operating_system = operating_system
         self.spec = cspec
+        self.operating_system = str(operating_system)
         self.modules = modules
         self.alias = alias
 

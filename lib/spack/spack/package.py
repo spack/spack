@@ -704,7 +704,13 @@ class PackageBase(object):
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
+
+        def download_search():
+            dynamic_fetcher = fs.from_list_url(self)
+            return [dynamic_fetcher] if dynamic_fetcher else []
+
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
+                      search_fn=download_search)
         return stage
 
     def _make_stage(self):
@@ -901,7 +907,14 @@ class PackageBase(object):
         return RedirectionInstallContext(self.prefix, destdir)
 
     @property
-    # TODO: Change this to architecture
+    def architecture(self):
+        """Get the spack.architecture.Arch object that represents the
+        environment in which this package will be built."""
+        if not self.spec.concrete:
+            raise ValueError("Can only get the arch for concrete package.")
+        return spack.architecture.arch_for_spec(self.spec.architecture)
+
+    @property
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:

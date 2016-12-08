@@ -240,47 +240,6 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-    def _concretize_operating_system(self, spec):
-        if spec.architecture.platform_os is not None and isinstance(
-                spec.architecture.platform_os,
-                spack.architecture.OperatingSystem):
-            return False
-
-        if spec.root.architecture and spec.root.architecture.platform_os:
-            if isinstance(spec.root.architecture.platform_os,
-                          spack.architecture.OperatingSystem):
-                spec.architecture.platform_os = \
-                    spec.root.architecture.platform_os
-        else:
-            spec.architecture.platform_os = \
-                spec.architecture.platform.operating_system('default_os')
-        return True  # changed
-
-    def _concretize_target(self, spec):
-        if spec.architecture.target is not None and isinstance(
-                spec.architecture.target, spack.architecture.Target):
-            return False
-        if spec.root.architecture and spec.root.architecture.target:
-            if isinstance(spec.root.architecture.target,
-                          spack.architecture.Target):
-                spec.architecture.target = spec.root.architecture.target
-        else:
-            spec.architecture.target = spec.architecture.platform.target(
-                'default_target')
-        return True  # changed
-
-    def _concretize_platform(self, spec):
-        if spec.architecture.platform is not None and isinstance(
-                spec.architecture.platform, spack.architecture.Platform):
-            return False
-        if spec.root.architecture and spec.root.architecture.platform:
-            if isinstance(spec.root.architecture.platform,
-                          spack.architecture.Platform):
-                spec.architecture.platform = spec.root.architecture.platform
-        else:
-            spec.architecture.platform = spack.architecture.platform()
-        return True  # changed?
-
     def concretize_architecture(self, spec):
         """If the spec is empty provide the defaults of the platform. If the
         architecture is not a basestring, then check if either the platform,
@@ -292,16 +251,25 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        if spec.architecture is None:
-            # Set the architecture to all defaults
-            spec.architecture = spack.architecture.Arch()
-            return True
+        root_arch = spec.root.architecture
+        sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        spec_changed = False
 
-        # Concretize the operating_system and target based of the spec
-        ret = any((self._concretize_platform(spec),
-                   self._concretize_operating_system(spec),
-                   self._concretize_target(spec)))
-        return ret
+        if spec.architecture is None:
+            spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec_changed = True
+
+        default_archs = [root_arch, sys_arch]
+        while not spec.architecture.concrete and default_archs:
+            arch = default_archs.pop(0)
+
+            replacement_fields = [k for k, v in arch.to_cmp_dict().iteritems()
+                                  if v and not getattr(spec.architecture, k)]
+            for field in replacement_fields:
+                setattr(spec.architecture, field, getattr(arch, field))
+                spec_changed = True
+
+        return spec_changed
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
@@ -343,13 +311,8 @@ class DefaultConcretizer(object):
         # Takes advantage of the proper logic already existing in
         # compiler_for_spec Should think whether this can be more
         # efficient
-        def _proper_compiler_style(cspec, arch):
-            platform = arch.platform
-            compilers = spack.compilers.compilers_for_spec(cspec,
-                                                           platform=platform)
-            return filter(lambda c: c.operating_system ==
-                          arch.platform_os, compilers)
-            # return compilers
+        def _proper_compiler_style(cspec, aspec):
+            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
 
         all_compilers = spack.compilers.all_compilers()
 

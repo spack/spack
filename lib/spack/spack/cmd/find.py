@@ -116,7 +116,7 @@ def find(parser, args):
     query_specs = args.specs(**q_args)
     # Exit early if no package matches the constraint
     if not query_specs and args.constraint:
-        msg = "No package matches the query: {0}".format(args.contraint)
+        msg = "No package matches the query: {0}".format(args.constraint)
         tty.msg(msg)
         return
     # Display the result
