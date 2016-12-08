@@ -1,16 +1,17 @@
 import spack.architecture
-from spack.test.mock_packages_test import *
+import spack.test.mock_packages_test as mock_test
 import spack.cmd.external
 import spack.config
 import spack.spec
-from spack.external_package import *
+import spack.external_package
+
 
 class MockArgs(object):
     def __init__(self, package_spec="", external_location="", _all=False):
         self.package_spec = package_spec
         self.external_location = external_location
         self.scope = "site"  # Hardcoded for consistency in using site scope
-        self.all =_all
+        self.all = _all
 
 
 def get_packages_config_file():
@@ -23,27 +24,25 @@ def get_specs_section(packages_config, name_of_package, external_type):
 
 # Create different types of packages
 def create_duplicate_package():
-    return ExternalPackage("externaltool@1.0%gcc@4.5.0",
-                           False,
-                           "paths",
-                           "path/to/external_tool")
+    spec = "externaltool@1.0%gcc@4.5.0"
+    return spack.external_package.ExternalPackage(spec, False, "paths",
+                                                  "path/to/external_tool")
 
 
 def create_new_external_package_to_add():
-    return ExternalPackage("externallibrary@1.9.5%gcc@6.1.0",
-                           False,
-                           "paths",
-                           "path/to/externallibrary")
+    spec = "externallibrary@1.9.5%gcc@6.1.0"
+    return spack.external_package.ExternalPackage(spec, False, "paths",
+                                                  "path/to/externallibrary")
 
 
 def create_external_package_to_add_to_existing_package():
-    return ExternalPackage("externaltool@1.5%gcc@4.5.0",
-                           False,
-                           "paths",
-                           "path/to/externaltool_ver1.5")
+    spec = "externaltool@1.5%gcc@4.5.0"
+    path_to_externaltool = "path/to/externaltool_ver1.5"
+    return spack.external_package.ExternalPackage(spec, False, "paths",
+                                                  path_to_externaltool)
 
 
-class ExternalCmdTest(MockPackagesTest):
+class ExternalCmdTest(mock_test.MockPackagesTest):
     """ Test the external creation of a external spec and also test
     that it gets properly written to a packages.yaml
     """
@@ -53,7 +52,7 @@ class ExternalCmdTest(MockPackagesTest):
 
     def test_append_new_entry_to_config(self):
         external_library = create_new_external_package_to_add()
-        add_external_package(external_library, "site")
+        spack.external_package.add_external_package(external_library, "site")
         full_packages_config = get_packages_config_file()
         self.assertTrue("externallibrary" in full_packages_config.keys())
 
@@ -67,7 +66,7 @@ class ExternalCmdTest(MockPackagesTest):
 
     def test_append_to_existing_entry(self):
         external_tool = create_external_package_to_add_to_existing_package()
-        add_external_package(external_tool, "site")
+        spack.external_package.add_external_package(external_tool, "site")
         full_packages_config = get_packages_config_file()
         self.assertTrue(1 == full_packages_config.keys().count("externaltool"))
 
@@ -80,7 +79,7 @@ class ExternalCmdTest(MockPackagesTest):
 
     def test_avoid_duplicate_to_existing_entry(self):
         external_tool = create_duplicate_package()
-        add_external_package(external_tool, "site")
+        spack.external_package.add_external_package(external_tool, "site")
         full_packages_config = get_packages_config_file()
         externaltool_specs = get_specs_section(full_packages_config,
                                                external_tool.name,
@@ -106,7 +105,7 @@ class ExternalCmdTest(MockPackagesTest):
     def test_error_thrown_when_spec_not_specific(self):
         spec = spack.spec.Spec("externalvirtual")
         args = MockArgs(spec)
-        with self.assertRaises(SystemExit): # tty.error Multiple packages match
+        with self.assertRaises(SystemExit):  # tty.error multiple pkg match
             spack.cmd.external.external_rm(args)
 
     def test_remove_entire_entry_after_specs_section_is_empty(self):

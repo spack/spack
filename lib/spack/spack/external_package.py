@@ -9,19 +9,27 @@ import spack.spec
 
 
 class PackageConfigEntry(object):
-    """
-    Class represents a package configuration entry.
+    """Class represents a package entry in a packages.yaml configuration file.
+
+    Entries from a packages.yaml file are in the form of:
+        {buildable: T or F,
+         paths|modules:
+             { spec1: path or module name,
+               spec2: path or module name}}
+
     Attributes:
-        package:        the entire dictionary for the package entry
-        package_name:   name of the package
-        external_type:  modules or paths
-        specs:          specs dictionary
-    Methods:
-        update_specs:   add a new spec to the specs dictionary
-        remove_spec:    given a spec, remove it from dictionary
-        config_entry:   turns package config entry into a syaml dict
+        package_name: string name of the package
+        package_entry: the dictionary entry taken from packages.yaml
+        external_type: whether a package is found via paths or modules
+        specs: the specs component of an entry
     """
+
     def __init__(self, package_name, package_entry):
+        """Inits a package config entry with a package name and entry
+
+        Finds the external type of an external package from the entry.
+        And also finds the specs dictionary from the nested package entry
+        """
         self.package_name = package_name
         self.package = package_entry
         self.external_type = self._find_external_type()
@@ -30,35 +38,46 @@ class PackageConfigEntry(object):
     def specs_section(self):
         return self.specs.copy()
 
-    def is_spec_empty(self):
-        return self.specs == {}
+    def contains_specs(self):
+        return self.specs != {}
 
     def is_empty(self):
         return self.package == {}
 
     def update_specs(self, update_spec):
-        """
-        Adds specs to the specs_section of a package config
-        updates the package_dict attribute
+        """Adds specs to the specs_section of a package config.
+
+        Updates the spec section of a package with a new spec. Requires
+        that the update_spec be a key, value dict pair.
+
+        Args:
+            update_spec: spec, path or module key value pair in a dict.
         """
         self.specs.update(update_spec)
         self.package[self.external_type] = self.specs
 
     def remove_spec(self, spec_to_be_removed):
+        """Remove a spec from the specs section
+
+        Filter the spec section by finding a match with another Spec
+
+        Args:
+            spec_to_be_removed: a Spec object to match
         """
-        Remove a spec from the specs section
-        """
+
         filtered_specs = self._filter_specs(spec_to_be_removed)
         self.specs = filtered_specs
         self.package[self.external_type] = filtered_specs
 
     def _filter_specs(self, spec):
-        """Filter out specs that don't match the input spec"""
         matching_spec = spec
         if isinstance(matching_spec, str):
             matching_spec = spack.spec.Spec(matching_spec)
-        return {k: v for k, v in self.specs_section().iteritems() if
-                spack.spec.Spec(k) != matching_spec}
+        filtered_specs = {}
+        for pkg_spec, external in self.specs_section().iteritems():
+            if spack.spec.Spec(pkg_spec) != matching_spec:
+                filtered_specs[pkg_spec] = external
+        return filtered_specs
 
     def _get_specs(self, external_type):
         return self.package.get(external_type, {})
@@ -71,71 +90,110 @@ class PackageConfigEntry(object):
                 return external
 
     def config_entry(self):
-        """Turn object into config entry"""
+        """Turn a PackagesConfigEntry into a syaml dict
+
+        Args:
+            None
+
+        Returns:
+            An syaml dict to be placed in a packages config file
+        """
         return {self.package_name: self.package}
 
 
 class PackagesConfig(object):
-    """
-    Class represents the packages.yaml config file.
+    """Class represents a packages.yaml configuration file.
 
-    Attributes:
-        scope:            scope of the config file to be manipulated
-    Methods:
-        get_package:              returns a PackageConfigEntry object
-        update_package_config:    given a package dict, updates config file
-        remove_entire_entry_from_config:    remove an entire package entry
-        all_external_packages:  return the entire contents of packages.yaml
+    PackagesConfig is an abstraction of the packages.yaml configuration file.
+    With a PackagesConfig object, entries can be updated and deleted.
+    The class also can return the entire contents of the configuration file.
     """
 
     def __init__(self, scope):
-        self._scope = scope
-        self._packages_config = spack.config.get_config("packages", scope)
+        """Inits class with a configuration scope.
+
+        Scope is a string that can be either site/user/defaults.
+        """
+        self.scope = scope
+        self.packages_config = spack.config.get_config("packages", scope)
 
     def get_package(self, package_name):
+        """Given a package name, return a PackageConfigEntry object.
+
+        PackageConfigEntry represents a config entry and is mutable.
+
+        Args:
+            package_name: the name of the package to retrieve.
+
+        Returns:
+            a PackageConfigEntry object.
         """
-        Given a package name, return a PackageConfigEntry object.
-        PackageConfigEntry represents a config entry. Can be manipulated
-        """
-        package = self._packages_config.get(package_name, {})
+        package = self.packages_config.get(package_name, {})
         return PackageConfigEntry(package_name, package)
 
     def update_package_config(self, package_entry):
-        """Update packages.yaml package entry"""
-        spack.config.update_config("packages", package_entry, self._scope)
+        """Update packages.yaml with a new entry.
+
+        Update a package config entry. This includes appending a new spec
+        or deleting an old one.
+
+        Args:
+            package_entry: a package dictionary that includes updated contents
+                the entry can include either a deleted item or a new one.
+        """
+        spack.config.update_config("packages", package_entry, self.scope)
 
     def remove_entire_entry_from_config(self, package_name):
-        """Remove an entire package name from the config"""
-        self._packages_config.pop(package_name)
+        """Remove an entire package name from the config.
+
+        Remove the entire package entry from packages.yaml. In order for this
+        to occur, the configuration file must be entirely overwritten since
+        dict.update() does not update with deleted items.
+
+        Args:
+            package_name: the name of the package to be deleted.
+        """
+        self.packages_config.pop(package_name)
         self._overwrite_package_config()
         tty.msg("Removed {0}".format(package_name))
 
     def all_external_packages(self):
+        """Return all the external packages listed in a packages.yaml file.
+
+        Args:
+            None
+        Returns:
+            a list of PackageConfigEntry's.
+        """
         all_packages = []
-        for package_name, entry in self._packages_config.iteritems():
+        for package_name, entry in self.packages_config.iteritems():
             if package_name == "all":
                 continue
             all_packages.append(PackageConfigEntry(package_name, entry))
         return all_packages
 
     def _overwrite_package_config(self):
-        scope = spack.config.validate_scope(self._scope)
-        scope.sections["packages"] = {'packages': self._packages_config}
+        scope = spack.config.validate_scope(self.scope)
+        scope.sections["packages"] = {'packages': self.packages_config}
         scope.write_section("packages")
 
 
 def detect_version_by_prefix(path):
-    """
-    Return a version string if it is detected from a prefix.
+    """Return a version string if it is detected from a prefix.
 
-    Parses through the path directory names and searches for a string.
-    If a match is found, return that string.
+    Return a string that matches a version format, i.e. X.X.X or a variant
+    of that. Checks to see if it is a valid version and then returns that
+    string.
+
+    Args:
+        path: path to the installation of a package.
+
+    Returns:
+        a string that represents the version of a package.
     """
 
     def directory_string_represents_version(directory_name):
-        """
-        Returns true if directory name satisfies a version format
-        """
+        """Returns true if directory name satisfies a version format"""
         try:
             if "-" in directory_name:
                 dir_list = directory_name.split("-")
@@ -156,11 +214,17 @@ def detect_version_by_prefix(path):
 
 
 def detect_version_by_module(module_name):
-    """
-    Return a version string.
+    """Attempt to detect a version via modulecmd.
 
-    Parses output of module command. If it is able to find a successful match
-    return the version string.
+    If tclmodules are present, it uses modulecmd avail to parse the output and
+    look for the version of a package.
+
+    Args:
+        module_name: The module name of a package. Requires it to be a valid
+            name.
+
+    Returns:
+        the version string.
     """
     module_command = spack.util.executable.which("modulecmd")
     if module_command:
@@ -174,12 +238,16 @@ def detect_version_by_module(module_name):
 
 
 def detect_version(external_location):
-    """
-    Return a version string from called methods.
+    """Attempts to detect the version of a package using different strategies.
 
-    Calls different ways to detect a version and places them in a set.
-    If the set size is equal to one then pop the string out and return the
-    string.
+    Uses different strategies to find a version either by the installed prefix
+    of a package or by it's module name.
+
+    Args:
+        external_location: can either be a path string or a module name string
+
+    Returns:
+        A version string.
     """
 
     def execute(function_to_call_and_args):
@@ -195,9 +263,11 @@ def detect_version(external_location):
                             (detect_version_by_prefix,
                              external_location)]
 
-    successful_checks = {ver for ver in map(execute, detection_strategies) 
-                         if ver is not None}
-
+    successful_checks = set()
+    version_attempts = map(execute, detection_strategies)
+    for ver in version_attempts:
+        if ver:
+            successful_checks.add(ver)
     # If our checks provided us with a single version then return that.
     # Return nothing even if multiple versions were found, we only want one
     # single version and want to avoid multiple version conflicts
@@ -207,30 +277,24 @@ def detect_version(external_location):
 
 @key_ordering
 class ExternalPackage(object):
-    """
-    Class creates external package objects.
-    Attributes:
-        spec                Spec object that describes the external package
-        external_location   either a path or a module describing how package
-                            can be located.
-        external_type       Is the type a path or a module
-        buildable           Is package meant to be built by Spack?
-        version             Returns the version of external_package
-        name                Name of the package
+    """Class creates external package objects.
 
-    Methods:
-        spec_section             Returns spec section of a config dict
-        to_config_entry          Constructs a "config" representation of object
-        create_external_package  Alternate constructor for ExternalPackage.
-                                 This does do validate type and location
+    An ExternalPackage object is constructred from a spec and the package
+    location. It validates the package location and attempts to find a
+    version if possible. The object can then be used to insert entries
+    into packages.yaml
+
+    Attributes:
+        spec: Spec object.
+        package_location:  either a path or a module name.
+        external_type: either paths or modules.
+        buildable: a boolean.
+        version: version of the external package.
+        name: name of the external package.
     """
 
     def __init__(self, spec, buildable, external_type, external_location):
-        """
-        Construct an external package object.
-        Does not check whether external type or external location are valid
-        types. 
-        """
+        """Construct an external package object."""
         if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
         self.spec = spec
@@ -240,25 +304,13 @@ class ExternalPackage(object):
 
     @property
     def version(self):
-        """
-        Requires that spec is well-formed and has a spec version attribute.
-        Return Version object
-        """
         return self.spec.version
 
     @property
     def name(self):
-        """
-        Requires that spec is well-formed and has a spec name attribute.
-        Return name of the package.
-        """
         return self.spec.name
 
     def _cmp_key(self):
-        """
-        Return a tuple
-        Uses a tuple of attributes to compare objects of similar type
-        """
         return (self.spec, self.external_location, self.external_type)
 
     def __str__(self):
@@ -269,21 +321,14 @@ class ExternalPackage(object):
                                                   self.external_location)
 
     def spec_section(self):
-        """Return the spec section of a package entry."""
-        if not self.spec_section:
-            return self.create_spec_section()
-        else:
-            return self.spec_section
+        """Getter for the spec section of a package dictionary."""
+        return self.create_spec_section()
 
     def create_spec_section(self):
-        """
-        Return the specs section entry to a package configuration.
-        Specs section follow the form { package_spec : path/to/package }
-        """
         return syaml_dict([(str(self.spec), self.external_location)])
 
     def to_config_entry(self):
-        """Return the config entry structure for an external package."""
+        """Turn an external package object to an syaml dict """
         # create the inner most yaml entry
         spec_section = self.create_spec_section()
         entry = syaml_dict([("buildable", self.buildable),
@@ -292,8 +337,7 @@ class ExternalPackage(object):
 
     @classmethod
     def create_external_package(cls, spec, external_location):
-        """
-        Return an external package object.
+        """Return an external package object.
 
         Calls methods to detect the external type of the specified external
         package location and also to detect a version. If the version is
@@ -303,6 +347,13 @@ class ExternalPackage(object):
         Once it is able to determine the external type and attempts to
         determine a version, then it will call the ExternalPackage's
         constructor to create an object.
+
+        Args:
+            spec: a spec string or Spec object.
+            package_location: either a prefix path string or a module name.
+
+        Returns:
+            an ExternalPackage object. 
         """
 
         def _get_version_from_spec(package_spec):
@@ -335,15 +386,13 @@ class ExternalPackage(object):
 
     @staticmethod
     def _update_spec(spec, spec_version, found_version):
-        """
-        Return a spec with a version.
+        """Return a spec with a version.
 
         Updates the spec with the version found. If there was no version
         detected then return the spec. If a version was found on the spec
         and there is a version that was detected and they do not match then
         raise an error. Otherwise, update the spec string and create a new
-        Spec object from the string.
-        """
+        Spec object from the string."""
         if not found_version:
             return spec
         if spec_version and spec_version != found_version:
@@ -351,21 +400,19 @@ class ExternalPackage(object):
         spec_string = str(spec)
         index = len(spec.name)  # index where we want to change version
         new_spec_string = spec_string[:index] + \
-                          "@{0}".format(found_version) + spec_string[index:]
+            "@{0}".format(found_version) + spec_string[index:]
         new_spec = spack.spec.Spec(new_spec_string)
         return new_spec
 
     @staticmethod
     def _find_external_type(external_package_location):
-        """
-        Return a external type detected from the given location.
+        """Return a external type detected from the given location.
 
         If the location is a directory or a real path then return "paths".
         Otherwise, check to see if location responds to module command.
         If it does, then return "modules".
 
-        If neither works, return "unknown"
-        """
+        If neither works, return "unknown" """
         if os.path.isdir(external_package_location):
             return "paths"
         else:
@@ -380,13 +427,11 @@ class ExternalPackage(object):
 
     @staticmethod
     def _validate_package_path_installation(path, spec):
-        """
-        Returns if and only if directories and/or files include the package
+        """Returns if and only if directories and/or files include the package
         name.
 
         Traverses a list of directories standard to an install path and checks
-        whether files are found that include the package name.
-        """
+        whether files are found that include the package name."""
         def find_spec_name_match_in_directory(dirpath):
             """Search package directory for files that match package name"""
             if os.path.exists(dirpath):
@@ -405,11 +450,9 @@ class ExternalPackage(object):
 
 
 def add_external_package(external_package, scope):
-    """
-    Add an external package entry to packages.yaml.
+    """Add an external package entry to packages.yaml.
     Determines whether a package exists, if so then append to the existing
-    entry. If there are no entries for the package, then add the new entry.
-    """
+    entry. If there are no entries for the package, then add the new entry."""
 
     def duplicate_specs(spec, existing_specs):
         for k in existing_specs.keys():
@@ -425,7 +468,7 @@ def add_external_package(external_package, scope):
         package_entry = external_package.to_config_entry()
         packages_config.update_package_config(package_entry)
     elif not duplicate_specs(external_package.spec, specs_section):
-        existing_package_entry.update_specs(external_package.spec_section)
+        existing_package_entry.update_specs(external_package.spec_section())
         new_package_entry = existing_package_entry.config_entry()
         packages_config.update_package_config(new_package_entry)
     else:
@@ -444,7 +487,8 @@ class SpecVersionMisMatch(spack.error.SpackError):
             "Found version and spec version do not match"
         )
 
+
 class UnknownExternalType(spack.error.SpackError):
     def __init__(self, package_spec):
         super(UnknownExternalType, self).__init__(
-                "Could not determine location of {}".format(package_spec))
+            "Could not determine location of {0}".format(package_spec))

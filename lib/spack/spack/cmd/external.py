@@ -26,8 +26,7 @@ import sys
 
 from llnl.util.lang import index_by
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify, colify_table
-from llnl.util.tty.color import colorize
+from llnl.util.tty.colify import colify
 import spack
 import spack.cmd
 import spack.compilers
@@ -36,19 +35,24 @@ import spack.external_package as ext_package
 import spack.error
 import spack.spec
 
+
 description = "Add an external package entry to packages.yaml"
 
 
 def setup_parser(subparser):
-    """
-    Sets up parser for external add and external rm. The arguments are as
-    follows:
-        spack external add [package_spec] [path or module]
+    """Sets up parser for external add and external rm.
+
+    Sets up command line parser for the spack external command. Usage is as
+    follows
+
+        spack external add [package_spec] [path_or_module]
+        spack external rm [package_spec]
+        spack external list
     """
     scopes = spack.config.config_scopes
     # Set up subcommands external and rm and list
     sp = subparser.add_subparsers(metavar="SUBCOMMAND",
-                                  dest = "external_command")
+                                  dest="external_command")
     ################
     # external add
     ################
@@ -65,8 +69,8 @@ def setup_parser(subparser):
     ###############
     # external rm
     ###############
-    rm_parser = sp.add_parser('remove',
-            aliases=['rm'], help="Delete an entry from packages.yaml")
+    rm_parser = sp.add_parser('remove', aliases=['rm'],
+                              help="Delete an entry from packages.yaml")
     rm_parser.add_argument('-a', '--all', action='store_true',
                            help='Remove ALL compilers that match spec.')
     rm_parser.add_argument("package_spec",
@@ -90,7 +94,7 @@ def external_add(args):
     external_location = args.external_location
     scope = args.scope
     external_package = ext_package.ExternalPackage.create_external_package(
-                                            package_spec, external_location)
+        package_spec, external_location)
     ext_package.add_external_package(external_package, scope)
     filename = spack.config.get_config_filename(scope, "packages")
     tty.msg("Added {0} to {1}".format(package_spec, filename))
@@ -106,11 +110,11 @@ def external_rm(args):
 
     matches = []
     specs = package.specs_section()
-    for spec in specs.keys(): # follows {spec: path_or_mod}
+    for spec in specs.keys():  # follows {spec: path_or_mod}
         if spack.spec.Spec(spec).satisfies(package_spec):
             matches.append(spec)
 
-    if not args.all and len(matches) > 1: 
+    if not args.all and len(matches) > 1:
         tty.error(
             "Multiple packages match spec {0}. Choose one:".format(
                 package_spec))
@@ -122,7 +126,7 @@ def external_rm(args):
         package.remove_spec(spec)
         tty.msg("Removed package: {0}".format(spec))
 
-    if package.is_spec_empty():
+    if not package.contains_specs():
         packages_config.remove_entire_entry_from_config(package_spec.name)
     else:
         packages_config.update_package_config(package.config_entry())
@@ -142,8 +146,7 @@ def external_list(args):
 
 
 def display_package_specs(package_object):
-    """Requires that package objects come in the form of a list.
-    Helper function for displaying specs from PackageConfigEntry objects"""
+    """Helper function for displaying specs from PackageConfigEntry objects"""
     package = package_object[0]
     specs_to_display = package.specs_section()
     specs = specs_to_display.keys()
@@ -158,6 +161,6 @@ def display_package_specs(package_object):
 
 def external(parser, args):
     action = {"add": external_add,
-              "rm" : external_rm,
+              "rm": external_rm,
               "list": external_list}
     action[args.external_command](args)
