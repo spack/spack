@@ -40,7 +40,7 @@ class TestExternalPackage(mock_test.MockPackagesTest):
     def setUp(self):
         set_to_modulepath(spack.mock_modulefiles_path)
         # tmp directory set to attribute so tests can append to this path
-        self.external_package_path = tempfile.mkdtemp() 
+        self.external_package_path = tempfile.mkdtemp()
         super(TestExternalPackage, self).setUp()
 
     def tearDown(self):
@@ -72,23 +72,28 @@ class TestExternalPackage(mock_test.MockPackagesTest):
     def test_when_external_type_not_detected(self):
         spec = spack.spec.Spec("externalpackage@1.8.5%gcc@6.1.0")
         non_existent_path = "path/to/externaltool"
-        with self.assertRaises(SystemExit):  # tty.die error
-            ExternalPackage.create_external_package(spec, non_existent_path)
+        # tty.die error
+        self.assertRaises(SystemExit,
+                          ExternalPackage.create_external_package,
+                          spec, non_existent_path)
 
     def test_when_no_version_in_spec_and_no_version_detected(self):
         package_spec = spack.spec.Spec("externaltool%gcc@4.3")
         self.make_fake_install_path("path/to/externaltool",
                                     "externaltool")
-        with self.assertRaises(SystemExit):  # tty.die error
-            ExternalPackage.create_external_package(package_spec,
-                                                    self.external_package_path)
+        # tty.die error
+        self.assertRaises(SystemExit,
+                          ExternalPackage.create_external_package,
+                          package_spec,
+                          self.external_package_path)
 
         if spack.architecture.sys_type() == "cray":
             module_spec = spack.spec.Spec("externalmodule%gcc@4.3")
             no_version_module = "externalmodule"
-            with self.assertRaises(SystemExit):  # tty.die error
-                ExternalPackage.create_external_package(module_spec,
-                                                        no_version_module)
+            self.assertRaises(SystemExit,
+                              ExternalPackage.create_external_package,
+                              module_spec,
+                              no_version_module)
         else:
             self.assertTrue(True)
 
@@ -96,9 +101,10 @@ class TestExternalPackage(mock_test.MockPackagesTest):
         spec = spack.spec.Spec("externalpackage@1.7.0%gcc@6.1.0")
         self.make_fake_install_path("external_package/1.8.5",
                                     "externalpackage")
-        with self.assertRaises(SpecVersionMisMatch):
-            ExternalPackage.create_external_package(spec,
-                                                    self.external_package_path)
+        self.assertRaises(SpecVersionMisMatch,
+                          ExternalPackage.create_external_package,
+                          spec,
+                          self.external_package_path)
 
     def test_proper_config_entry_creation(self):
         spec = spack.spec.Spec("externalpackage@1.8.5%gcc@6.1.0")

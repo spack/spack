@@ -105,8 +105,8 @@ class ExternalCmdTest(mock_test.MockPackagesTest):
     def test_error_thrown_when_spec_not_specific(self):
         spec = spack.spec.Spec("externalvirtual")
         args = MockArgs(spec)
-        with self.assertRaises(SystemExit):  # tty.error multiple pkg match
-            spack.cmd.external.external_rm(args)
+        # tty.die multiple packages match...
+        self.assertRaises(SystemExit, spack.cmd.external.external_rm, args)
 
     def test_remove_entire_entry_after_specs_section_is_empty(self):
         spec = spack.spec.Spec("externaltool@1.0%gcc@4.5.0")
@@ -120,5 +120,4 @@ class ExternalCmdTest(mock_test.MockPackagesTest):
         spec = spack.spec.Spec("boost%gcc@6.1.0")
         args = MockArgs(spec)
         # tty.die(Could not find package for spec..)
-        with self.assertRaises(SystemExit): 
-            spack.cmd.external.external_rm(args)
+        self.assertRaises(SystemExit, spack.cmd.external.external_rm, args)
