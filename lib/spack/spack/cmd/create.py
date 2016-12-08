@@ -26,7 +26,7 @@ from __future__ import print_function
 
 import os
 import re
-import string
+import sys
 
 import llnl.util.tty as tty
 import spack
@@ -43,7 +43,42 @@ from spack.util.naming import *
 
 description = "Create a new package file from an archive URL"
 
-package_template = string.Template("""\
+
+class PackageTemplate(object):
+    """Provides the default values to be used for the package file template"""
+    base_class_name = 'Package'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')"""
+
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
+
+    def __init__(self, name, url, version_hash_tuples):
+        self.name = name
+        self.class_name = mod_to_class(name)
+        self.url = url
+        self.version_hash_tuples = version_hash_tuples
+
+    @property
+    def versions(self):
+        """Adds a version() call to the package for each version found."""
+        max_len = max(len(str(v)) for v, h in self.version_hash_tuples)
+        format = "    version(%%-%ds, '%%s')" % (max_len + 2)
+        return '\n'.join(
+            format % ("'%s'" % v, h) for v, h in self.version_hash_tuples
+        )
+
+    def write(self, pkg_path):
+        """Writes the new package file."""
+
+        # Write out a template for the file
+        with open(pkg_path, "w") as pkg_file:
+            pkg_file.write("""\
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -73,11 +108,11 @@ package_template = string.Template("""\
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install ${name}
+#     spack install {name}
 #
 # You can edit this file again by typing:
 #
-#     spack edit ${name}
+#     spack edit {name}
 #
 # See the Spack documentation for more information on packaging.
 # If you submit this package back to Spack as a pull request,
@@ -86,52 +121,28 @@ package_template = string.Template("""\
 from spack import *
 
 
-class ${class_name}(${base_class_name}):
+class {class_name}({base_class_name}):
     ""\"FIXME: Put a proper description of your package here.""\"
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
-    url      = "${url}"
+    url      = "{url}"
 
-${versions}
+{versions}
 
-${dependencies}
+{dependencies}
 
-${body}
-""")
-
-
-class DefaultGuess(object):
-    """Provides the default values to be used for the package file template"""
-    base_class_name = 'Package'
-
-    dependencies = """\
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')"""
-
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')"""
-
-    def __init__(self, name, url, version_hash_tuples):
-        self.name = name
-        self.class_name = mod_to_class(name)
-        self.url = url
-        self.version_hash_tuples = version_hash_tuples
-
-    @property
-    def versions(self):
-        """Adds a version() call to the package for each version found."""
-        max_len = max(len(str(v)) for v, h in self.version_hash_tuples)
-        format = "    version(%%-%ds, '%%s')" % (max_len + 2)
-        return '\n'.join(
-            format % ("'%s'" % v, h) for v, h in self.version_hash_tuples
-        )
+{body}
+""".format(name=self.name,
+           class_name=self.class_name,
+           base_class_name=self.base_class_name,
+           url=self.url,
+           versions=self.versions,
+           dependencies=self.dependencies,
+           body=self.body))
 
 
-class AutotoolsGuess(DefaultGuess):
+class AutotoolsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for autotools-based packages"""
     base_class_name = 'AutotoolsPackage'
 
@@ -151,7 +162,7 @@ class AutotoolsGuess(DefaultGuess):
         return args"""
 
 
-class CMakeGuess(DefaultGuess):
+class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for cmake-based packages"""
     base_class_name = 'CMakePackage'
 
@@ -168,7 +179,7 @@ class CMakeGuess(DefaultGuess):
         return args"""
 
 
-class SconsGuess(DefaultGuess):
+class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for scons-based packages"""
     dependencies = """\
     # FIXME: Add additional dependencies if required.
@@ -181,7 +192,7 @@ class SconsGuess(DefaultGuess):
         scons('install')"""
 
 
-class BazelGuess(DefaultGuess):
+class BazelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for bazel-based packages"""
     dependencies = """\
     # FIXME: Add additional dependencies if required.
@@ -193,7 +204,7 @@ class BazelGuess(DefaultGuess):
         bazel()"""
 
 
-class PythonGuess(DefaultGuess):
+class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""
     dependencies = """\
     extends('python')
@@ -209,10 +220,10 @@ class PythonGuess(DefaultGuess):
 
     def __init__(self, name, *args):
         name = 'py-{0}'.format(name)
-        super(PythonGuess, self).__init__(name, *args)
+        super(PythonPackageTemplate, self).__init__(name, *args)
 
 
-class RGuess(DefaultGuess):
+class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
     dependencies = """\
     extends('r')
@@ -228,10 +239,10 @@ class RGuess(DefaultGuess):
 
     def __init__(self, name, *args):
         name = 'r-{0}'.format(name)
-        super(RGuess, self).__init__(name, *args)
+        super(RPackageTemplate, self).__init__(name, *args)
 
 
-class OctaveGuess(DefaultGuess):
+class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
     dependencies = """\
     extends('octave')
@@ -250,42 +261,48 @@ class OctaveGuess(DefaultGuess):
 
     def __init__(self, name, *args):
         name = 'octave-{0}'.format(name)
-        super(OctaveGuess, self).__init__(name, *args)
+        super(OctavePackageTemplate, self).__init__(name, *args)
+
+
+templates = {
+    'autotools': AutotoolsPackageTemplate,
+    'cmake':     CMakePackageTemplate,
+    'scons':     SconsPackageTemplate,
+    'bazel':     BazelPackageTemplate,
+    'python':    PythonPackageTemplate,
+    'r':         RPackageTemplate,
+    'octave':    OctavePackageTemplate,
+    'default':   PackageTemplate
+}
 
 
 def setup_parser(subparser):
-    subparser.add_argument('url', nargs='?', help="url of package archive")
+    subparser.add_argument(
+        'url', nargs='?',
+        help="url of package archive")
     subparser.add_argument(
         '--keep-stage', action='store_true',
-        help="Don't clean up staging area when command completes.")
+        help="don't clean up staging area when command completes")
     subparser.add_argument(
-        '-n', '--name', dest='alternate_name', default=None, metavar='NAME',
-        help="Override the autodetected name for the created package.")
+        '-n', '--name',
+        help="name of the package to create")
     subparser.add_argument(
-        '-r', '--repo', default=None,
-        help="Path to a repository where the package should be created.")
+        '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
+        help="build system template to use. options: %(choices)s")
+    subparser.add_argument(
+        '-r', '--repo',
+        help="path to a repository where the package should be created")
     subparser.add_argument(
         '-N', '--namespace',
-        help="Specify a namespace for the package. Must be the namespace of "
-        "a repository registered with Spack.")
+        help="namespace for the package")
     subparser.add_argument(
-        '-f', '--force', action='store_true', dest='force',
-        help="Overwrite any existing package file with the same name.")
+        '-f', '--force', action='store_true',
+        help="overwrite any existing package file with the same name")
 
     setup_parser.subparser = subparser
 
 
 class BuildSystemGuesser(object):
-
-    _choices = {
-        'autotools': AutotoolsGuess,
-        'cmake': CMakeGuess,
-        'scons': SconsGuess,
-        'bazel': BazelGuess,
-        'python': PythonGuess,
-        'r': RGuess,
-        'octave': OctaveGuess
-    }
 
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
@@ -336,34 +353,65 @@ class BuildSystemGuesser(object):
         self.build_system = build_system
 
     def make_guess(self, name, url, ver_hash_tuples):
-        cls = self._choices.get(self.build_system, DefaultGuess)
+        cls = templates.get(self.build_system, PackageTemplate)
         return cls(name, url, ver_hash_tuples)
 
 
-def guess_name_and_version(url, args):
-    # Try to deduce name and version of the new package from the URL
-    version = spack.url.parse_version(url)
-    if not version:
-        tty.die("Couldn't guess a version string from %s" % url)
+def get_name(args):
+    """Get the name of the package based on the supplied arguments.
 
-    # Try to guess a name.  If it doesn't work, allow the user to override.
-    if args.alternate_name:
-        name = args.alternate_name
-    else:
+    If a name was provided, always use that. Otherwise, if a URL was
+    provided, extract the name from that.
+
+    Returns package name."""
+
+    name = 'example'
+    if args.name:
+        name = args.name
+    elif args.url:
         try:
-            name = spack.url.parse_name(url, version)
+            name = spack.url.parse_name(args.url)
         except spack.url.UndetectableNameError:
             # Use a user-supplied name if one is present
             tty.die("Couldn't guess a name for this package. Try running:", "",
                     "spack create --name <name> <url>")
 
     if not valid_fully_qualified_module_name(name):
-        tty.die("Package name can only contain A-Z, a-z, 0-9, '_' and '-'")
+        tty.die("Package name can only contain a-z, 0-9, and '-'")
 
-    return name, version
+    return name
 
 
-def find_repository(spec, args):
+def get_url(args):
+    """Get the URL to use.
+
+    Returns a default URL if none is provided."""
+
+    url = 'http://www.example.com/example-1.2.3.tar.gz'
+    if args.url:
+        url = args.url
+
+    return url
+
+
+def get_build_system(args):
+    """Determine the build system template.
+
+    If a template is specified, always use that. Otherwise, if a URL
+    is provided, download the tarball and peek inside to guess what
+    build system it uses."""
+
+    template = 'default'
+    if args.template:
+        template = args.template
+    elif args.url:
+        pass
+
+    return template
+
+
+def get_repository(name, args):
+    spec = Spec(name)
     # figure out namespace for spec
     if spec.namespace and args.namespace and spec.namespace != args.namespace:
         tty.die("Namespaces '%s' and '%s' do not match." % (spec.namespace,
@@ -397,7 +445,7 @@ def find_repository(spec, args):
     return repo
 
 
-def fetch_tarballs(url, name, version):
+def fetch_tarballs(url, name):
     """Try to find versions of the supplied archive by scraping the web.
     Prompts the user to select how many to download if many are found."""
     versions = spack.util.web.find_versions_of_archive(url)
@@ -407,6 +455,7 @@ def fetch_tarballs(url, name, version):
     archives_to_fetch = 1
     if not versions:
         # If the fetch failed for some reason, revert to what the user provided
+        version = spack.url.parse_version(url)
         versions = {version: url}
     elif len(versions) > 1:
         tty.msg("Found %s versions of %s:" % (len(versions), name),
@@ -426,54 +475,58 @@ def fetch_tarballs(url, name, version):
 
 
 def create(parser, args):
-    url = args.url
-    if not url:
-        setup_parser.subparser.print_help()
-        return
+    # Gather information about the package to be created
+    name = get_name(args)
+    url = get_url(args)
+    build_system = get_build_system(args)
+    version_hash_tuples = [('1.2.3', '0123456789abcdef0123456789abcdef')]
 
-    # Figure out a name and repo for the package.
-    name, version = guess_name_and_version(url, args)
-    spec = Spec(name)
-    repo = find_repository(spec, args)
+    PackageClass = templates[build_system]
 
-    tty.msg("This looks like a URL for %s version %s" % (name, version))
-    tty.msg("Creating template for package %s" % name)
+    package = PackageClass(name, url, version_hash_tuples)
 
-    # Fetch tarballs (prompting user if necessary)
-    versions, urls = fetch_tarballs(url, name, version)
+    repo = get_repository(name, args)
 
-    # Try to guess what build system is used.
-    guesser = BuildSystemGuesser()
-    ver_hash_tuples = spack.cmd.checksum.get_checksums(
-        versions, urls,
-        first_stage_function=guesser,
-        keep_stage=args.keep_stage)
 
-    if not ver_hash_tuples:
-        tty.die("Could not fetch any tarballs for %s" % name)
+    ## Fetch tarballs (prompting user if necessary)
+    #url = args.url
+    #versions, urls = fetch_tarballs(url, name)
 
-    guess = guesser.make_guess(name, url, ver_hash_tuples)
+    ## Try to guess what build system is used.
+    #guesser = BuildSystemGuesser()
+    #ver_hash_tuples = spack.cmd.checksum.get_checksums(
+    #    versions, urls,
+    #    first_stage_function=guesser,
+    #    keep_stage=args.keep_stage)
+
+    #if not ver_hash_tuples:
+    #    tty.die("Could not fetch any tarballs for %s" % name)
+
+    #package = guesser.make_guess(name, url, ver_hash_tuples)
 
     # Create a directory for the new package.
-    pkg_path = repo.filename_for_package_name(guess.name)
+    pkg_path = repo.filename_for_package_name(package.name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
     else:
         mkdirp(os.path.dirname(pkg_path))
 
-    # Write out a template for the file
-    with open(pkg_path, "w") as pkg_file:
-        pkg_file.write(
-            package_template.substitute(
-                name=guess.name,
-                class_name=guess.class_name,
-                base_class_name=guess.base_class_name,
-                url=guess.url,
-                versions=guess.versions,
-                dependencies=guess.dependencies,
-                body=guess.body
-            )
-        )
+    tty.msg("Creating template for package %s" % package.name)
+
+    package.write(pkg_path)
+    ## Write out a template for the file
+    #with open(pkg_path, "w") as pkg_file:
+    #    pkg_file.write(
+    #        package_template.substitute(
+    #            name=guess.name,
+    #            class_name=guess.class_name,
+    #            base_class_name=guess.base_class_name,
+    #            url=guess.url,
+    #            versions=guess.versions,
+    #            dependencies=guess.dependencies,
+    #            body=guess.body
+    #        )
+    #    )
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)
