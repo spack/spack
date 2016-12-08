@@ -37,7 +37,7 @@ class Python(Package):
     """The Python programming language."""
 
     homepage = "http://www.python.org"
-    url      = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
+    url = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
 
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
@@ -54,7 +54,7 @@ class Python(Package):
 
     extendable = True
 
-    variant('tk',   default=False, description='Provide support for Tkinter')
+    variant('tk', default=False, description='Provide support for Tkinter')
     variant('ucs4', default=False,
             description='Enable UCS4 (wide) unicode strings')
     # From https://docs.python.org/2/c-api/unicode.html: Python's default
@@ -71,7 +71,7 @@ class Python(Package):
     depends_on("ncurses")
     depends_on("sqlite")
     depends_on("zlib")
-    depends_on("tk",  when="+tk")
+    depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
 
     patch('ncurses.patch')
@@ -197,7 +197,7 @@ class Python(Package):
         ]
 
         for filename in files:
-            filter_file(env['CC'],  self.compiler.cc,
+            filter_file(env['CC'], self.compiler.cc,
                         join_path(dirname, filename), **kwargs)
             filter_file(env['CXX'], self.compiler.cxx,
                         join_path(dirname, filename), **kwargs)
@@ -273,12 +273,12 @@ class Python(Package):
         module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir     = join_path(ext_spec.prefix,
-                                              self.python_lib_dir)
+        module.python_lib_dir = join_path(ext_spec.prefix,
+                                          self.python_lib_dir)
         module.python_include_dir = join_path(ext_spec.prefix,
                                               self.python_include_dir)
-        module.site_packages_dir  = join_path(ext_spec.prefix,
-                                              self.site_packages_dir)
+        module.site_packages_dir = join_path(ext_spec.prefix,
+                                             self.site_packages_dir)
 
         # Make the site packages directory for extensions
         if ext_spec.package.is_extension:
@@ -330,8 +330,8 @@ class Python(Package):
                         continue
                     if re.search(r'^(import|#)', line):
                         continue
-                    if ((ext.name != 'py-setuptools' and
-                         re.search(r'setuptools.*egg$', line))):
+                    if (ext.name != 'py-setuptools' and
+                            re.search(r'setuptools.*egg$', line)):
                         continue
 
                     paths.append(line)
