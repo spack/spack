@@ -571,15 +571,24 @@ class DependencySpec(object):
     - deptypes: strings representing the type of dependency this is.
     """
 
-    def __init__(self, spec, deptypes):
+    def __init__(self, spec, deptypes, default_deptypes=False):
         self.spec = spec
         self.deptypes = deptypes
+        self.default_deptypes = default_deptypes
+
+    def update_deptypes(self, deptypes):
+        if self.default_deptypes:
+            self.deptypes = deptypes
+            self.default_deptypes = False
+            return True
+        return False
 
     def _cmp_key(self):
         return self.spec
 
     def copy(self):
-        return DependencySpec(self.spec.copy(), self.deptype)
+        return DependencySpec(self.spec.copy(), self.deptype,
+                              self.default_deptypes)
 
     def __str__(self):
         return str(self.spec)
@@ -794,8 +803,8 @@ class Spec(object):
         # Spec(a, b) will copy a but just add b as a dep.
         for dep in dep_like:
             spec = dep if isinstance(dep, Spec) else Spec(dep)
-            # XXX(deptype): default deptypes
-            self._add_dependency(spec, ('build', 'link'))
+            self._add_dependency(
+                spec, ('build', 'link'), default_deptypes=True)
 
     def __getattr__(self, item):
         """Delegate to self.package if the attribute is not in the spec"""
@@ -905,13 +914,15 @@ class Spec(object):
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
-    def _add_dependency(self, spec, deptypes):
+    def _add_dependency(self, spec, deptypes, default_deptypes=False):
         """Called by the parser to add another spec as a dependency."""
         if spec.name in self._dependencies:
             raise DuplicateDependencyError(
                 "Cannot depend on '%s' twice" % spec)
-        self._dependencies[spec.name] = DependencySpec(spec, deptypes)
-        spec._dependents[self.name] = DependencySpec(self, deptypes)
+        self._dependencies[spec.name] = DependencySpec(
+            spec, deptypes, default_deptypes)
+        spec._dependents[self.name] = DependencySpec(
+            self, deptypes, default_deptypes)
 
     #
     # Public interface
@@ -998,7 +1009,7 @@ class Spec(object):
 
     def traverse_with_deptype(self, visited=None, d=0, deptype=None,
                               deptype_query=None, _self_deptype=None,
-                              **kwargs):
+                              _self_default_deptypes=False, **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -1080,7 +1091,8 @@ class Spec(object):
 
         # Preorder traversal yields before successors
         if yield_me and order == 'pre':
-            yield return_val(DependencySpec(self, _self_deptype))
+            yield return_val(
+                DependencySpec(self, _self_deptype, _self_default_deptypes))
 
         deps = self.dependencies_dict(deptype)
 
@@ -1098,13 +1110,16 @@ class Spec(object):
                 children = child.spec.traverse_with_deptype(
                     visited, d=d + 1, deptype=deptype,
                     deptype_query=deptype_query,
-                    _self_deptype=child.deptypes, **kwargs)
+                    _self_deptype=child.deptypes,
+                    _self_default_deptypes=child.default_deptypes,
+                    **kwargs)
                 for elt in children:
                     yield elt
 
         # Postorder traversal yields after successors
         if yield_me and order == 'post':
-            yield return_val(DependencySpec(self, _self_deptype))
+            yield return_val(
+                DependencySpec(self, _self_deptype, _self_default_deptypes))
 
     @property
     def short_spec(self):
@@ -1377,7 +1392,8 @@ class Spec(object):
 
             # add the replacement, unless it is already a dep of dependent.
             if concrete.name not in dependent._dependencies:
-                dependent._add_dependency(concrete, deptypes)
+                dependent._add_dependency(concrete, deptypes,
+                                          dep_spec.default_deptypes)
 
     def _replace_node(self, replacement):
         """Replace this spec with another.
@@ -1392,7 +1408,8 @@ class Spec(object):
             dependent = dep_spec.spec
             deptypes = dep_spec.deptypes
             del dependent._dependencies[self.name]
-            dependent._add_dependency(replacement, deptypes)
+            dependent._add_dependency(
+                replacement, deptypes, dep_spec.default_deptypes)
 
         for name, dep_spec in self._dependencies.items():
             del dep_spec.spec.dependents[self.name]
@@ -1600,9 +1617,11 @@ class Spec(object):
                 if spec.name not in flat_deps:
                     if copy:
                         dep_spec = DependencySpec(spec.copy(deps=False),
-                                                  deptypes)
+                                                  deptypes,
+                                                  depspec.default_deptypes)
                     else:
-                        dep_spec = DependencySpec(spec, deptypes)
+                        dep_spec = DependencySpec(
+                            spec, deptypes, depspec.default_deptypes)
                     flat_deps[spec.name] = dep_spec
                 else:
                     flat_deps[spec.name].spec.constrain(spec)
@@ -1731,6 +1750,11 @@ class Spec(object):
         if dep.name not in spec_deps:
             spec_deps[dep.name] = DependencySpec(dep.copy(), deptypes)
             changed = True
+        else:
+            changed = spec_deps[dep.name].update_deptypes(deptypes)
+            if changed and dep.name in self._dependencies:
+                child_spec = self._dependencies[dep.name].spec
+                child_spec._dependents[self.name].update_deptypes(deptypes)
         # Constrain package information with spec info
         try:
             changed |= spec_deps[dep.name].spec.constrain(dep)
@@ -1745,7 +1769,9 @@ class Spec(object):
         # Add merged spec to my deps and recurse
         dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(dependency.spec, dependency.deptypes)
+            self._add_dependency(
+                dependency.spec, dependency.deptypes,
+                dependency.default_deptypes)
 
         changed |= dependency.spec._normalize_helper(
             visited, spec_deps, provider_index)
@@ -1956,7 +1982,8 @@ class Spec(object):
             dep_spec_copy = other.get_dependency(name)
             dep_copy = dep_spec_copy.spec
             deptypes = dep_spec_copy.deptypes
-            self._add_dependency(dep_copy.copy(), deptypes)
+            self._add_dependency(dep_copy.copy(), deptypes,
+                                 dep_spec_copy.default_deptypes)
             changed = True
 
         return changed
@@ -2195,7 +2222,8 @@ class Spec(object):
                     #               here.
                     if depspec.spec.name not in new_spec._dependencies:
                         new_spec._add_dependency(
-                            new_nodes[depspec.spec.name], depspec.deptypes)
+                            new_nodes[depspec.spec.name], depspec.deptypes,
+                            depspec.default_deptypes)
 
         # These fields are all cached results of expensive operations.
         # If we preserved the original structure, we can copy them
@@ -2705,9 +2733,9 @@ class SpecParser(spack.parse.Parser):
                     else:
                         self.expect(ID)
                         dep = self.spec(self.token.value)
-                    # XXX(deptype): default deptypes
                     def_deptypes = ('build', 'link')
-                    specs[-1]._add_dependency(dep, def_deptypes)
+                    specs[-1]._add_dependency(
+                        dep, def_deptypes, default_deptypes=True)
 
                 else:
                     # Attempt to construct an anonymous spec, but check that
