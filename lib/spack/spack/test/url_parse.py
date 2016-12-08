@@ -326,3 +326,8 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'powerparser', '2.0.7',
             'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')
+
+    def test_r_xml_version(self):
+        self.check(
+            'xml', '3.98-1.4',
+            'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz')

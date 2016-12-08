@@ -163,7 +163,7 @@ def determine_url_file_extension(path):
     return ext
 
 
-def parse_version_offset(path):
+def parse_version_offset(path, debug=False):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
     original_path = path
@@ -209,8 +209,8 @@ def parse_version_offset(path):
         # e.g. lame-398-1
         (r'-((\d)+-\d)', stem),
 
-        # e.g. foobar_1.2-3
-        (r'_((\d+\.)+\d+(-\d+)?[a-z]?)', stem),
+        # e.g. foobar_1.2-3 or 3.98-1.4
+        (r'_((\d+\.)+\d+(-(\d+(\.\d+)?))?[a-z]?)', stem),
 
         # e.g. foobar-4.5.1
         (r'-((\d+\.)*\d+)$', stem),
@@ -246,6 +246,10 @@ def parse_version_offset(path):
         regex, match_string = vtype
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
+            if debug:
+                tty.msg("Parsing URL: %s" % path,
+                        "Matched %d: r'%s'" % (i, regex))
+
             version = match.group(1)
             start   = match.start(1)
 
@@ -266,9 +270,9 @@ def parse_version(path):
     return Version(ver)
 
 
-def parse_name_offset(path, v=None):
+def parse_name_offset(path, v=None, debug=False):
     if v is None:
-        v = parse_version(path)
+        v = parse_version(path, debug=debug)
 
     path, ext, suffix = split_url_extension(path)
 
