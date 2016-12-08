@@ -132,19 +132,17 @@ class Python(Package):
         make()
         make('install')
 
-        self.filter_compilers(spec, prefix)
+        self.filter_compilers(prefix)
 
         # TODO:
         # On OpenSuse 13, python uses <prefix>/lib64/python2.7/lib-dynload/*.so
         # instead of <prefix>/lib/python2.7/lib-dynload/*.so. Oddly enough the
         # result is that Python can not find modules like cPickle. A workaround
         # for now is to symlink to `lib`:
-        src = os.path.join(prefix,
-                           'lib64',
+        src = os.path.join(prefix.lib64,
                            'python{0}'.format(self.version.up_to(2)),
                            'lib-dynload')
-        dst = os.path.join(prefix,
-                           'lib',
+        dst = os.path.join(prefix.lib,
                            'python{0}'.format(self.version.up_to(2)),
                            'lib-dynload')
         if os.path.isdir(src) and not os.path.isdir(dst):
@@ -174,7 +172,7 @@ class Python(Package):
     #            >>> import Tkinter
     #            >>> Tkinter._test()
 
-    def filter_compilers(self, spec, prefix):
+    def filter_compilers(self, prefix):
         """Run after install to tell the configuration files and Makefiles
         to use the compilers that Spack built the package with.
 
@@ -184,23 +182,21 @@ class Python(Package):
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
-        dirname = join_path(prefix.lib,
-                            'python{0}'.format(self.version.up_to(2)))
+        lib_dirnames = [
+            join_path(lib_dir, 'python{0}'.format(self.version.up_to(2))) for
+            lib_dir in [prefix.lib, prefix.lib64]]
 
-        config = 'config'
-        if spec.satisfies('@3:'):
-            config = 'config-{0}m'.format(self.version.up_to(2))
+        config_dirname = 'config-{0}m'.format(
+            self.version.up_to(2)) if self.spec.satisfies('@3:') else 'config'
 
-        files = [
-            '_sysconfigdata.py',
-            join_path(config, 'Makefile')
-        ]
+        rel_filenames = ['_sysconfigdata.py',
+                         join_path(config_dirname, 'Makefile')]
 
-        for filename in files:
-            filter_file(env['CC'], self.compiler.cc,
-                        join_path(dirname, filename), **kwargs)
-            filter_file(env['CXX'], self.compiler.cxx,
-                        join_path(dirname, filename), **kwargs)
+        abs_filenames = [join_path(dirname, filename) for dirname in
+                         lib_dirnames for filename in rel_filenames]
+
+        filter_file(env['CC'], self.compiler.cc, *abs_filenames, **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx, *abs_filenames, **kwargs)
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.
