@@ -32,6 +32,7 @@ class Emacs(Package):
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=True, description="Enable a X toolkit (GTK+)")
