@@ -26,12 +26,10 @@ from spack import *
 
 
 class Cmor(AutotoolsPackage):
-    """
-    Climate Model Output Rewriter is used to produce CF-compliant netCDF files.
-    The structure of the files created by the library and the metadata they
-    contain fulfill the requirements of many of the climate community's standard
-    model experiments.
-    """
+    """Climate Model Output Rewriter is used to produce CF-compliant netCDF
+    files. The structure of the files created by the library and the metadata
+    they contain fulfill the requirements of many of the climate community's
+    standard model experiments."""
 
     homepage = "http://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.1.2.tar.gz"
