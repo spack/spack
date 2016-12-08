@@ -34,7 +34,7 @@ class RXml(Package):
     url      = "https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/XML"
 
-    version('3.98-1', '1a7f3ce6f264eeb109bfa57bedb26c14')
+    version('3.98-1', 'aa373d6d301934e166e2a26a5ffe2a2e')
 
     extends('R')
 
