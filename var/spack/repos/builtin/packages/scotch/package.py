@@ -50,7 +50,7 @@ class Scotch(Package):
     variant('metis', default=True,
             description='Build metis and parmetis wrapper libraries')
 
-    depends_on('flex', type='build')
+    depends_on('flex@:2.6.1', type='build')
     depends_on('bison', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
