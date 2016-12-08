@@ -248,7 +248,7 @@ def parse_version_offset(path, debug=False):
         if match and match.group(1) is not None:
             if debug:
                 tty.msg("Parsing URL: %s" % path,
-                        "Matched %d: r'%s'" % (i, regex))
+                        "  Matched regex %d: r'%s'" % (i, regex))
 
             version = match.group(1)
             start   = match.start(1)

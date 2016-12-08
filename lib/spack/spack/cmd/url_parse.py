@@ -36,9 +36,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-s', '--spider', action='store_true',
         help="Spider the source page for versions.")
-    subparser.add_argument(
-        '-d', '--debug', action='store_true',
-        help="Print debug output from the URL parsing.")
 
 
 def print_name_and_version(url):
@@ -56,16 +53,18 @@ def print_name_and_version(url):
 def url_parse(parser, args):
     url = args.url
 
-    ver,  vs, vl = spack.url.parse_version_offset(url, debug=args.debug)
-    name, ns, nl = spack.url.parse_name_offset(url, ver, debug=args.debug)
-    if args.debug:
-        print
+    ver,  vs, vl = spack.url.parse_version_offset(url, debug=True)
+    name, ns, nl = spack.url.parse_name_offset(url, ver, debug=True)
+    print
 
-    tty.msg("Parsing URL:")
+    tty.msg("Detected:")
     try:
         print_name_and_version(url)
     except spack.url.UrlParseError as e:
         tty.error(str(e))
+
+    print '    name:     %s' % name
+    print '    version:  %s' % ver
 
     print
     tty.msg("Substituting version 9.9.9b:")
