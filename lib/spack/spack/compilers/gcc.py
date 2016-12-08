@@ -74,6 +74,10 @@ class Gcc(Compiler):
         else:
             return "-std=c++14"
 
+    @property
+    def pic_flag(self):
+        return "-fPIC"
+
     @classmethod
     def fc_version(cls, fc):
         return get_compiler_version(

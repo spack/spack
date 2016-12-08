@@ -55,7 +55,7 @@ class ConstraintAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
         self.values = values
-        namespace.contraint = values
+        namespace.constraint = values
         namespace.specs = self._specs
 
     def _specs(self, **kwargs):

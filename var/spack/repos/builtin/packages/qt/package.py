@@ -51,6 +51,7 @@ class Qt(Package):
     variant('webkit',     default=False, description="Build the Webkit extension")
     variant('examples',   default=False, description="Build examples.")
     variant('dbus',       default=False, description="Build with D-Bus support.")
+    variant('phonon',     default=False, description="Build with phonon support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -179,7 +180,7 @@ class Qt(Package):
         if '~examples' in self.spec:
             config_args.extend(['-nomake', 'examples'])
 
-        if '@4' in self.spec:
+        if '@4' in self.spec and '~phonon' in self.spec:
             config_args.append('-no-phonon')
 
         if '+dbus' in self.spec:

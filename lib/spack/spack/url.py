@@ -305,6 +305,10 @@ def parse_name_offset(path, v=None):
             if match_string is stem:
                 start += offset
 
+            # package names should be lowercase and separated by dashes.
+            name = name.lower()
+            name = re.sub('[_.]', '-', name)
+
             return name, start, len(name)
 
     raise UndetectableNameError(path)

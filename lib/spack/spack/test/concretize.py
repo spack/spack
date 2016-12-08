@@ -250,7 +250,7 @@ class ConcretizeTest(MockPackagesTest):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.platform().name
+        platform = spack.architecture.real_platform().name
         if (platform == 'darwin' or platform == 'linux'):
             return
 

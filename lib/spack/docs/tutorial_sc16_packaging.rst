@@ -266,7 +266,7 @@ As per the error message, Spack has given us a ``spack-build.out`` debug log:
   configure: error: unable to locate ``adept-utils`` installation
 
 This gives us the output from the build, and it's fairly obvious that
-mpileaks isn't finding it's ``adept-utils`` package.  Spack has
+mpileaks isn't finding its ``adept-utils`` package.  Spack has
 automatically added the include and library directories of
 ``adept-utils`` to the compiler's search path, but some packages like
 mpileaks can sometimes be picky and still want things spelled out on
