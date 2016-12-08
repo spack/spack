@@ -251,8 +251,12 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        root_arch = spec.root.architecture
-        sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        root_arch = spec.link_root().architecture
+        if spec.build_dep() and spec.disjoint_build_tree():
+            sys_arch = spack.spec.ArchSpec(
+                spack.architecture.frontend_sys_type())
+        else:
+            sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         spec_changed = False
 
         if spec.architecture is None:
@@ -321,14 +325,21 @@ class DefaultConcretizer(object):
                 spec.compiler in all_compilers):
             return False
 
-        # Find the another spec that has a compiler, or the root if none do
-        other_spec = spec if spec.compiler else find_spec(
-            spec, lambda x: x.compiler)
+        if spec.compiler:
+            other_spec = spec
+        elif spec.build_dep() and spec.disjoint_build_tree():
+            link_root = spec.link_root()
+            build_subtree = list(link_root.traverse(direction='children'))
+            candidates = list(x for x in build_subtree if x.compiler)
+            other_spec = candidates[0] if candidates else link_root
+        else:
+            # Find another spec that has a compiler, or the root if none do.
+            # Prefer compiler info from other specs which are not build deps.
+            other_spec = (
+                find_spec(spec, lambda x: x.compiler and not x.build_dep()) or
+                spec.root)
 
-        if not other_spec:
-            other_spec = spec.root
         other_compiler = other_spec.compiler
-        assert(other_spec)
 
         # Check if the compiler is already fully specified
         if other_compiler in all_compilers:
@@ -372,16 +383,20 @@ class DefaultConcretizer(object):
             # changes
             return True
 
+        def compiler_match(spec1, spec2):
+            return ((spec1.compiler, spec1.architecture) ==
+                    (spec2.compiler, spec2.architecture))
+
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             try:
                 nearest = next(p for p in spec.traverse(direction='parents')
-                               if ((p.compiler == spec.compiler and
-                                    p is not spec) and
+                               if ((p is not spec) and
+                                   compiler_match(p, spec) and
                                    flag in p.compiler_flags))
-                if flag not in spec.compiler_flags or \
-                        not (sorted(spec.compiler_flags[flag]) >=
-                             sorted(nearest.compiler_flags[flag])):
+                if (flag not in spec.compiler_flags or
+                        (set(nearest.compiler_flags[flag]) -
+                            set(spec.compiler_flags[flag]))):
                     if flag in spec.compiler_flags:
                         spec.compiler_flags[flag] = list(
                             set(spec.compiler_flags[flag]) |
@@ -392,10 +407,11 @@ class DefaultConcretizer(object):
                     ret = True
 
             except StopIteration:
-                if (flag in spec.root.compiler_flags and
-                    ((flag not in spec.compiler_flags) or
-                     sorted(spec.compiler_flags[flag]) !=
-                     sorted(spec.root.compiler_flags[flag]))):
+                if (compiler_match(spec.root, spec) and
+                        flag in spec.root.compiler_flags and
+                        ((flag not in spec.compiler_flags) or
+                            (set(spec.root.compiler_flags[flag]) -
+                                set(spec.compiler_flags[flag])))):
                     if flag in spec.compiler_flags:
                         spec.compiler_flags[flag] = list(
                             set(spec.compiler_flags[flag]) |
@@ -419,10 +435,8 @@ class DefaultConcretizer(object):
                 if compiler.flags[flag] != []:
                     ret = True
             else:
-                if ((sorted(spec.compiler_flags[flag]) !=
-                     sorted(compiler.flags[flag])) and
-                    (not set(spec.compiler_flags[flag]) >=
-                     set(compiler.flags[flag]))):
+                if (set(compiler.flags[flag]) -
+                        set(spec.compiler_flags[flag])):
                     ret = True
                     spec.compiler_flags[flag] = list(
                         set(spec.compiler_flags[flag]) |

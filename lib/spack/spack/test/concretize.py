@@ -85,6 +85,36 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpich debug=2')
         self.check_concretize('mpich')
 
+    def test_concretize_with_build_dep(self):
+        # Set the target as the backend. Since the cmake build dependency is
+        # not explicitly configured to target the backend it should target
+        # the frontend (whatever compiler that is, it is different)
+        spec = self.check_concretize('cmake-client platform=test target=be')
+        client_compiler = spack.compilers.compiler_for_spec(
+            spec.compiler, spec.architecture)
+        cmake_spec = spec['cmake']
+        cmake_compiler = spack.compilers.compiler_for_spec(
+            cmake_spec.compiler, cmake_spec.architecture)
+        self.assertTrue(client_compiler.operating_system !=
+                        cmake_compiler.operating_system)
+
+    def test_concretize_link_dep_of_build_dep(self):
+        # The link dep of the build dep should use the same compiler as
+        # the build dep, and both should be different from the root
+        spec = self.check_concretize('dttop platform=test target=be')
+        dttop_compiler = spack.compilers.compiler_for_spec(
+            spec.compiler, spec.architecture)
+        dtlink2_spec = spec['dtlink2']
+        dtlink2_compiler = spack.compilers.compiler_for_spec(
+            dtlink2_spec.compiler, dtlink2_spec.architecture)
+        dtbuild1_spec = spec['dtbuild1']
+        dtbuild1_compiler = spack.compilers.compiler_for_spec(
+            dtbuild1_spec.compiler, dtbuild1_spec.architecture)
+        self.assertTrue(dttop_compiler.operating_system !=
+                        dtlink2_compiler.operating_system)
+        self.assertTrue(dtbuild1_compiler.operating_system ==
+                        dtlink2_compiler.operating_system)
+
     def test_conretize_compiler_flags(self):
         self.check_concretize('mpich cppflags="-O3"')
 
