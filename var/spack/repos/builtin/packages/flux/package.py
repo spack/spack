@@ -48,13 +48,9 @@ class Flux(AutotoolsPackage):
     depends_on("py-cffi")
     depends_on("jansson")
 
-    # TODO: This provides a catalog, hacked with environment below for now
-    # depends_on("docbook-xml", type='build')
-    # depends_on("asciidoc", type='build')
-
-    depends_on("autoconf", type='build')
-    depends_on("automake", type='build')
-    depends_on("libtool", type='build')
+    depends_on("autoconf", type='build', when='@master')
+    depends_on("automake", type='build', when='@master')
+    depends_on("libtool", type='build', when='@master')
 
     def autoreconf(self, spec, prefix):
         if os.path.exists('autogen.sh'):
@@ -64,12 +60,7 @@ class Flux(AutotoolsPackage):
             bash('./autogen.sh')  # yes, twice, intentionally
 
     def configure_args(self):
-        return ['--disable-docs', ]
+        return ['--disable-docs']
 
     def install(self, spec, prefix):
-        # Fix asciidoc dependency on xml style sheets and whatnot
-        # os.environ['XML_CATALOG_FILES'] = os.path.join(
-        #    spec['docbook-xml'].prefix, 'catalog.xml')
-        # Configure, compile & install
-        # configure("--prefix=" + prefix)
         make("install", "V=1")
