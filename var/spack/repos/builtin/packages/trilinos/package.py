@@ -46,6 +46,7 @@ class Trilinos(CMakePackage):
     base_url = "https://github.com/trilinos/Trilinos/archive"
 
     version('develop', git='https://github.com/trilinos/Trilinos.git', tag='master')
+    version('12.11.4', 'blahblahblablah')
     version('12.10.1', '40f28628b63310f9bd17c26d9ebe32b1')
     version('12.8.1', '01c0026f1e2050842857db941060ecd5')
     version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
