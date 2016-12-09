@@ -71,6 +71,8 @@ class Gcc(Compiler):
     def cxx14_flag(self):
         if self.version < ver('4.8'):
             tty.die("Only gcc 4.8 and above support c++14.")
+        elif self.version < ver('4.9'):
+            return "-std=c++1y"
         else:
             return "-std=c++14"
 
