@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Astyle(MakefilePackage):
@@ -43,6 +44,9 @@ class Astyle(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = join_path(self.build_directory(), 'Makefile')
         filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
+        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
+        if sys.platform == 'darwin':
+            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
 
     def install_args(self):
         return ['prefix={0}'.format(prefix)]
