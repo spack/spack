@@ -57,5 +57,10 @@ class Likwid(Package):
                     'PREFIX = ' +
                     prefix,
                     'config.mk')
+
+        # TODO:
+        # set INSTALL_CHOWN in config.mk to your user/group.
+        # Defaults are root.
+
         make()
         make('install')
