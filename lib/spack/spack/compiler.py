@@ -112,11 +112,12 @@ class Compiler(object):
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
 
-    def __init__(self, cspec, operating_system,
+    def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
                  extra_rpaths=None, **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
+        self.target = str(target)
         self.modules = modules
         self.alias = alias
 
