@@ -92,6 +92,8 @@ class Qt(Package):
     # depends_on("flac", when='+multimedia')
     # depends_on("ogg", when='+multimedia')
 
+    compiler_custom_env = True
+
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
         url = self.list_url
