@@ -22,21 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
+from spack import *
 
 
-class Munge(AutotoolsPackage):
-    """ MUNGE Uid 'N' Gid Emporium """
-    homepage = "https://code.google.com/p/munge/"
-    url      = "https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2"
+class DocbookXsl(Package):
+    """Docbook XSL vocabulary."""
+    homepage = "http://docbook.sourceforge.net/"
+    url = "https://downloads.sourceforge.net/project/docbook/docbook-xsl/1.79.1/docbook-xsl-1.79.1.tar.bz2"
 
-    version('0.5.11', 'bd8fca8d5f4c1fcbef1816482d49ee01',
-            url='https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2')
+    version('1.79.1', 'b48cbf929a2ad85e6672f710777ca7bc')
 
-    depends_on('openssl')
-    depends_on('libgcrypt')
+    depends_on('docbook-xml')
 
     def install(self, spec, prefix):
-        os.makedirs(os.path.join(prefix, "lib/systemd/system"))
-        super(Munge, self).install(spec, prefix)
+        for item in os.listdir('.'):
+            src = os.path.abspath(item)
+            dst = os.path.join(prefix, item)
+            if os.path.isdir(item):
+                install_tree(src, dst, symlinks=True)
+            else:
+                install(src, dst)
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        spack_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+
+    def setup_environment(self, spack_env, run_env):
+        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')

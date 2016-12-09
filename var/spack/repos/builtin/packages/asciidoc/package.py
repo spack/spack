@@ -36,6 +36,8 @@ class Asciidoc(Package):
 
     depends_on('libxml2')
     depends_on('libxslt')
+    depends_on('docbook-xml')
+    depends_on('docbook-xsl')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

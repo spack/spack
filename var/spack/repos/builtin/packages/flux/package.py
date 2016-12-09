@@ -36,6 +36,8 @@ class Flux(AutotoolsPackage):
     version('master', branch='master',
             git='https://github.com/flux-framework/flux-core')
 
+    variant('docs', default=True, description='Build flux manpages')
+
     # Also needs autotools, but should use the system version if available
     depends_on("zeromq@4.0.4:")
     depends_on("czmq@2.2:")
@@ -47,6 +49,8 @@ class Flux(AutotoolsPackage):
     depends_on("python")
     depends_on("py-cffi")
     depends_on("jansson")
+
+    depends_on("asciidoc", type='build', when="+docs")
 
     depends_on("autoconf", type='build', when='@master')
     depends_on("automake", type='build', when='@master')
@@ -60,7 +64,4 @@ class Flux(AutotoolsPackage):
             bash('./autogen.sh')  # yes, twice, intentionally
 
     def configure_args(self):
-        return ['--disable-docs']
-
-    def install(self, spec, prefix):
-        make("install", "V=1")
+        return ['--disable-docs'] if '+docs' not in self.spec else []

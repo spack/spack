@@ -33,4 +33,3 @@ class LibjsonC(AutotoolsPackage):
     parallel = False
 
     version('0.11', 'aa02367d2f7a830bf1e3376f77881e98')
-
