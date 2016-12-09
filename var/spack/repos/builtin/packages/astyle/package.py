@@ -34,6 +34,7 @@ class Astyle(MakefilePackage):
     homepage = "http://astyle.sourceforge.net/"
     url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
 
+    version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
     version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
 
     parallel = False
