@@ -70,7 +70,7 @@ class Petsc(Package):
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')
-    
+
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
@@ -130,8 +130,9 @@ class Petsc(Package):
 
     def install(self, spec, prefix):
         options = ['--with-ssl=0',
+                   '--with-x=0',
                    '--download-c2html=0',
-                   '--download-sowing=0',		   
+                   '--download-sowing=0',
                    '--download-hwloc=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
