@@ -301,10 +301,12 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
-        # Pass on concretizing the compiler if the target is not yet determined
+        # Pass on concretizing the compiler if the target or operating system
+        # is not yet determined
         if not (spec.architecture.platform_os and spec.architecture.target):
-            # Although this usually means changed, this means awaiting other
-            # changes
+            # We haven't changed, but other changes need to happen before we
+            # continue. `return True` here to force concretization to keep
+            # running.
             return True
 
         # Only use a matching compiler if it is of the proper style
@@ -368,10 +370,12 @@ class DefaultConcretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
-
+        # Pass on concretizing the compiler flags if the target or operating
+        # system is not set.
         if not (spec.architecture.platform_os and spec.architecture.target):
-            # Although this usually means changed, this means awaiting other
-            # changes
+            # We haven't changed, but other changes need to happen before we
+            # continue. `return True` here to force concretization to keep
+            # running.
             return True
 
         ret = False

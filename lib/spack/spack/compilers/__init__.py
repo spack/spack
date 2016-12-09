@@ -217,10 +217,16 @@ def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
             if items['spec'] != str(cspec):
                 continue
 
+            # If an arch spec is given, confirm that this compiler
+            # is for the given operating system
             os = items.get('operating_system', None)
             if arch_spec and os != arch_spec.platform_os:
                 continue
 
+            # If an arch spec is given, confirm that this compiler
+            # is for the given target. If the target is 'any', match
+            # any given arch spec. If the compiler has no assigned
+            # target this is an old compiler config file, skip this logic.
             target = items.get('target', None)
             if arch_spec and target and (target != arch_spec.target and
                                          target != 'any'):

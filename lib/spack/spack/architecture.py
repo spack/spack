@@ -77,7 +77,7 @@ will be responsible for compiler detection.
 """
 import os
 import inspect
-import platform as pltfrm
+import platform as py_platform
 
 from llnl.util.lang import memoized, list_modules, key_ordering
 from llnl.util.filesystem import join_path
@@ -335,7 +335,7 @@ class OperatingSystem(object):
                 if newcount <= prevcount:
                     continue
 
-            compilers[ver] = cmp_cls(spec, self, pltfrm.machine(), paths)
+            compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
 
         return list(compilers.values())
 
