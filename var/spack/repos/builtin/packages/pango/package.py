@@ -35,8 +35,9 @@ class Pango(Package):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 2
 
-    version('1.36.8', '217a9a753006275215fa9fa127760ece')
+    version('1.40.3', '17c26720f5a862a12f7e1745e2f1d966')
     version('1.40.1', '6fc88c6529890d6c8e03074d57a3eceb')
+    version('1.36.8', '217a9a753006275215fa9fa127760ece')
 
     variant('X', default=False, description="Enable an X toolkit")
 
@@ -46,6 +47,10 @@ class Pango(Package):
     depends_on("cairo~X", when='~X')
     depends_on("cairo+X", when='+X')
     depends_on("glib")
+    
+    def url_for_version(self, version):
+        base_url = "http://ftp.gnome.org/pub/gnome/sources/pango"
+        return "{}/{}/pango-{}.tar.xz".format(base_url , version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
