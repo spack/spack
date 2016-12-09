@@ -225,6 +225,10 @@ def set_compiler_environment_variables(pkg, env):
         load_module(mod)
 
     if pkg.compiler_custom_env:
+        # if we do it unconditionally, we get into big troubles with MPI as
+        # filter_compilers(self) will use mockup XCode compilers on macOS
+        # with Clang. Those point to Spack's compiler wrappers and
+        # consequently render MPI non-functional outside of Spack.
         compiler.setup_custom_environment(env)
 
     return env
