@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxslt(Package):
+class Libxslt(AutotoolsPackage):
     """Libxslt is the XSLT C library developed for the GNOME
        project. XSLT itself is a an XML language to define
        transformation for XML. Libxslt is based on libxml2 the XML C
@@ -43,7 +43,3 @@ class Libxslt(Package):
     depends_on("zlib")
     depends_on("libgcrypt")
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

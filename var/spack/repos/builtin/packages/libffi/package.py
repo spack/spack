@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libffi(Package):
+class Libffi(AutotoolsPackage):
     """The libffi library provides a portable, high level programming
     interface to various calling conventions. This allows a programmer
     to call any function specified by a call interface description at
@@ -38,7 +38,3 @@ class Libffi(Package):
     # "ftp://sourceware.org/pub/libffi/libffi-3.1.tar.gz") # Has a bug
     # $(lib64) instead of ${lib64} in libffi.pc
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

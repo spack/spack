@@ -26,12 +26,13 @@ from spack import *
 import os
 
 
-class Flux(Package):
+class Flux(AutotoolsPackage):
     """ A next-generation resource manager (pre-alpha) """
 
     homepage = "https://github.com/flux-framework/flux-core"
-    url      = "https://github.com/flux-framework/flux-core"
+    url      = "https://github.com/flux-framework/flux-core/releases/download/v0.6.0/flux-core-0.6.0.tar.gz"
 
+    version('0.6.0', md5='d44a0f719744771d168edd205bd8e74e')
     version('master', branch='master',
             git='https://github.com/flux-framework/flux-core')
 
@@ -45,20 +46,30 @@ class Flux(Package):
     depends_on("libxslt")
     depends_on("python")
     depends_on("py-cffi")
+    depends_on("jansson")
 
     # TODO: This provides a catalog, hacked with environment below for now
-    depends_on("docbook-xml", type='build')
-    depends_on("asciidoc", type='build')
+    # depends_on("docbook-xml", type='build')
+    # depends_on("asciidoc", type='build')
+
+    depends_on("autoconf", type='build')
+    depends_on("automake", type='build')
+    depends_on("libtool", type='build')
+
+    def autoreconf(self, spec, prefix):
+        if os.path.exists('autogen.sh'):
+            # Bootstrap with autotools
+            bash = which('bash')
+            bash('./autogen.sh')
+            bash('./autogen.sh')  # yes, twice, intentionally
+
+    def configure_args(self):
+        return ['--disable-docs', ]
 
     def install(self, spec, prefix):
-        # Bootstrap with autotools
-        bash = which('bash')
-        bash('./autogen.sh')
-        bash('./autogen.sh')  # yes, twice, intentionally
-
         # Fix asciidoc dependency on xml style sheets and whatnot
-        os.environ['XML_CATALOG_FILES'] = os.path.join(
-            spec['docbook-xml'].prefix, 'catalog.xml')
+        # os.environ['XML_CATALOG_FILES'] = os.path.join(
+        #    spec['docbook-xml'].prefix, 'catalog.xml')
         # Configure, compile & install
-        configure("--prefix=" + prefix)
+        # configure("--prefix=" + prefix)
         make("install", "V=1")
