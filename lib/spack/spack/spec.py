@@ -1102,7 +1102,7 @@ class Spec(object):
 
             successors = deps
             if direction == 'parents':
-                successors = self.dependents_dict(deptype)
+                successors = self.dependents_dict()  # TODO: deptype?
 
             visited.add(key)
             for name in sorted(successors):
@@ -1323,23 +1323,6 @@ class Spec(object):
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
-    def build_dep(self):
-        # If this spec is the root, it will automatically be included in
-        # traverse
-        return not (self.root in
-                    self.traverse(
-                        deptype=('link', 'run'), direction='parents'))
-
-    def link_root(self):
-        parents = list(self.traverse(deptype=('link',), direction='parents',
-                       order='pre'))
-        return parents[-1]
-
-    def disjoint_build_tree(self):
-        link_root = self.link_root()
-        build_subtree = list(link_root.traverse(direction='children'))
-        return all(x.build_dep() for x in build_subtree)
-
     def _concretize_helper(self, presets=None, visited=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
@@ -1358,8 +1341,8 @@ class Spec(object):
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
-            dep = self._dependencies[name]
-            changed |= dep.spec._concretize_helper(presets, visited)
+            changed |= self._dependencies[
+                name].spec._concretize_helper(presets, visited)
 
         if self.name in presets:
             changed |= self.constrain(presets[self.name])
