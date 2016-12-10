@@ -56,6 +56,7 @@ import sys
 import multiprocessing
 import traceback
 import inspect
+import itertools
 import shutil
 
 import llnl.util.tty as tty
@@ -496,7 +497,9 @@ def setup_package(pkg, dirty=False):
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
+    for dspec in itertools.chain(
+            pkg.spec.traverse(order='post', root=False, deptype='build'),
+            pkg.spec.build_only_deps.itervalues()):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,

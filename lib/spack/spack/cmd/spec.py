@@ -41,6 +41,8 @@ def setup_parser(subparser):
         default='nodes', choices=['nodes', 'edges', 'paths'],
         help='How extensively to traverse the DAG. (default: nodes).')
     subparser.add_argument(
+        '--merge-build', action='store_true', default=False)
+    subparser.add_argument(
         '-I', '--install-status', action='store_true', default=False,
         help='Show install status of packages.  Packages can be: '
              'installed [+], missing and needed by an installed package [-], '
@@ -70,10 +72,11 @@ def spec(parser, args):
 
         print "Normalized"
         print "--------------------------------"
-        spec.normalize()
-        print spec.tree(**kwargs)
+        spec_copy = spec.copy()
+        spec_copy.normalize()
+        print spec_copy.tree(**kwargs)
 
         print "Concretized"
         print "--------------------------------"
-        spec.concretize()
+        spec.concretize(skip_build=not args.merge_build)
         print spec.tree(**kwargs)

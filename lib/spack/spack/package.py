@@ -37,6 +37,7 @@ import contextlib
 import copy
 import functools
 import inspect
+import itertools
 import os
 import re
 import sys
@@ -1189,7 +1190,9 @@ class PackageBase(object):
 
         # First, install dependencies recursively.
         if install_deps:
-            for dep in self.spec.dependencies():
+            for dep in itertools.chain(
+                    self.spec.dependencies(),
+                    self.spec.build_only_deps.itervalues()):
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
