@@ -35,6 +35,7 @@ class Scotch(Package):
     base_url = "http://gforge.inria.fr/frs/download.php/latestfile/298"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
+    version('6.0.4', 'd58b825eb95e1db77efe8c6ff42d329f')
     version('6.0.3', '10b0cc0f184de2de99859eafaca83cfc')
     version('6.0.0', 'c50d6187462ba801f9a82133ee666e8e')
     version('5.1.10b', 'f587201d6cf5cf63527182fbfba70753')
