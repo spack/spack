@@ -286,7 +286,7 @@ class Compiler(object):
         """
         return path
 
-    def setup_custom_environment(self, env):
+    def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
         pass
 

@@ -487,9 +487,9 @@ class PackageBase(object):
     """By default do not run tests within package's install()"""
     run_tests = False
 
-    # FIXME: this is a bad object-oriented design, should be changed ASAP.
-    """By default do not setup custom envrionemnt from Compiler class"""
-    compiler_custom_env = False
+    # FIXME: this is a bad object-oriented design, should be moved to Clang.
+    """By default do not setup mockup XCode on macOS with Clang"""
+    use_xcode = False
 
     """Most packages are NOT extendable. Set to True if you want extensions."""
     extendable = False
