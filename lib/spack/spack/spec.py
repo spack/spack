@@ -1792,7 +1792,7 @@ class Spec(object):
         return changed
 
     def _normalize_helper(self, visited, spec_deps, provider_index,
-            skip_build):
+                          skip_build):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return False
