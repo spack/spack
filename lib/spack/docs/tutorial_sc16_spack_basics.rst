@@ -1034,6 +1034,7 @@ We can uninstall packages by referring only to their hash.
 We can use either ``-f`` (force) or ``-d`` (remove dependents as well) to
 remove packages that are required by another installed package.
 
+.. code-block:: console
 
   $ spack uninstall /4blb
   ==> Error: Will not uninstall libelf@0.8.12%intel@16.0.3-4blbe3q
@@ -1063,6 +1064,7 @@ Spack will not uninstall packages that are not sufficiently
 specified. The ``-a`` (all) flag can be used to uninstall multiple
 packages at once.
 
+.. code-block:: console
 
   $ spack uninstall trilinos
   ==> Error: trilinos matches multiple packages:
