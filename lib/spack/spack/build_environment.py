@@ -224,7 +224,7 @@ def set_compiler_environment_variables(pkg, env):
     for mod in compiler.modules:
         load_module(mod)
 
-    compiler.setup_custom_environment(env)
+    compiler.setup_custom_environment(pkg, env)
 
     return env
 
