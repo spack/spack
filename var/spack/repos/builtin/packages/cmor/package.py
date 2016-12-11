@@ -45,7 +45,8 @@ class Cmor(AutotoolsPackage):
     depends_on('udunits2')
     depends_on('hdf5@:1.8')
 
-    extends('python@:2.7', when='+python')
+    extends('python', when='+python')
+    depends_on('python@:2.7', when='+python')
     depends_on('py-numpy', type=nolink, when='+python')
 
     @AutotoolsPackage.precondition('configure')
