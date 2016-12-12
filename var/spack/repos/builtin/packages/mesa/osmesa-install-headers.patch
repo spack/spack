@@ -1,0 +1,97 @@
+diff --git a/configure.ac b/configure.ac
+index 78f3041..69485f1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2560,6 +2560,8 @@ fi
+ AM_CONDITIONAL(HAVE_LIBDRM, test "x$have_libdrm" = xyes)
+ AM_CONDITIONAL(HAVE_OSMESA, test "x$enable_osmesa" = xyes)
+ AM_CONDITIONAL(HAVE_GALLIUM_OSMESA, test "x$enable_gallium_osmesa" = xyes)
++AM_CONDITIONAL(HAVE_COMMON_OSMESA, test "x$enable_osmesa" = xyes -o \
++                                        "x$enable_gallium_osmesa" = xyes)
+ 
+ AM_CONDITIONAL(HAVE_X86_ASM, test "x$asm_arch" = xx86 -o "x$asm_arch" = xx86_64)
+ AM_CONDITIONAL(HAVE_X86_64_ASM, test "x$asm_arch" = xx86_64)
+diff --git a/src/Makefile.am b/src/Makefile.am
+index b130f5b..846093b 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -47,6 +47,36 @@ CLEANFILES = $(BUILT_SOURCES)
+ 
+ SUBDIRS = . gtest util mapi/glapi/gen mapi
+ 
++if HAVE_OPENGL
++gldir = $(includedir)/GL
++gl_HEADERS = \
++  $(top_srcdir)/include/GL/gl.h \
++  $(top_srcdir)/include/GL/glext.h \
++  $(top_srcdir)/include/GL/glcorearb.h \
++  $(top_srcdir)/include/GL/gl_mangle.h
++endif
++
++if HAVE_GLX
++glxdir = $(includedir)/GL
++glx_HEADERS = \
++  $(top_srcdir)/include/GL/glx.h \
++  $(top_srcdir)/include/GL/glxext.h \
++  $(top_srcdir)/include/GL/glx_mangle.h \
++  $(top_srcdir)/include/GL/mesa_glinterop.h
++pkgconfigdir = $(libdir)/pkgconfig
++pkgconfig_DATA = mesa/gl.pc
++else
++if HAVE_EGL
++eglinteropdir = $(includedir)/GL
++eglinterop_HEADERS = $(top_srcdir)/include/GL/mesa_glinterop.h
++endif
++endif
++
++if HAVE_COMMON_OSMESA
++osmesadir = $(includedir)/GL
++osmesa_HEADERS = $(top_srcdir)/include/GL/osmesa.h
++endif
++
+ # include only conditionally ?
+ SUBDIRS += compiler
+ 
+diff --git a/src/gallium/Makefile.am b/src/gallium/Makefile.am
+index 34671ca..caf5fd8 100644
+--- a/src/gallium/Makefile.am
++++ b/src/gallium/Makefile.am
+@@ -148,6 +148,8 @@ endif
+ 
+ if HAVE_GALLIUM_OSMESA
+ SUBDIRS += state_trackers/osmesa targets/osmesa
++osmesadir = $(includedir)/GL
++osmesa_HEADERS = $(top_srcdir)/include/GL/osmesa.h
+ endif
+ 
+ if HAVE_ST_VA
+diff --git a/src/mesa/Makefile.am b/src/mesa/Makefile.am
+index 037384a..22db400 100644
+--- a/src/mesa/Makefile.am
++++ b/src/mesa/Makefile.am
+@@ -31,11 +31,8 @@ endif
+ 
+ if HAVE_OSMESA
+ SUBDIRS += drivers/osmesa
+-endif
+-
+-if HAVE_GLX
+-gldir = $(includedir)/GL
+-gl_HEADERS = $(top_srcdir)/include/GL/*.h
++osmesadir = $(includedir)/GL
++osmesa_HEADERS = $(top_srcdir)/include/GL/osmesa.h
+ endif
+ 
+ include Makefile.sources
+@@ -161,11 +158,6 @@ libmesa_sse41_la_SOURCES = \
+ 
+ libmesa_sse41_la_CFLAGS = $(AM_CFLAGS) $(SSE41_CFLAGS)
+ 
+-if HAVE_GLX
+-pkgconfigdir = $(libdir)/pkgconfig
+-pkgconfig_DATA = gl.pc
+-endif
+-
+ MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
+ YACC_GEN = $(AM_V_GEN)$(YACC) $(YFLAGS)
+ LEX_GEN = $(AM_V_GEN)$(LEX) $(LFLAGS)

@@ -37,6 +37,7 @@ class Mesa(AutotoolsPackage):
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad', preferred=True)
     version('13.0.2', 'cb828f9f68e0cd6c7ef30b9c67aa7cf2')
     version('13.0.1', '8415d4bb7837e6cfb0c819fdd19a643b')
+    version('13.0.0', '7205edb90d0396dc26d049fa495f6fd1')
    
 
     # General dependencies
@@ -47,6 +48,8 @@ class Mesa(AutotoolsPackage):
 
     variant('gallium', default=False, description="compile with gallium llvm sw rendering")
     variant('drm', default=True, description="compile with drm")
+
+    #patch('osmesa-install-headers.patch')
     
     depends_on("llvm@3.0", when='@8.0.5~gallium')
     depends_on("libxml2+python", when='@8.0.5~gallium') #
