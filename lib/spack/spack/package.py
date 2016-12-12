@@ -1218,6 +1218,19 @@ class PackageBase(object):
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
 
+            # We are in the child process. This means that our sys.stdin is
+            # equal to open(os.devnull). Python did this to prevent our process
+            # and the parent process from possible simultaneous reading from
+            # the original standard input. But we assume that the parent
+            # process is not going to read from it till we are done here,
+            # otherwise it should not have passed us the copy of the stream.
+            # Thus, we are free to work with the the copy (input_stream)
+            # however we want. For example, we might want to call functions
+            # (e.g. raw_input()) that implicitly read from whatever stream is
+            # assigned to sys.stdin. Since we want them to work with the
+            # original input stream, we are making the following assignment:
+            sys.stdin = input_stream
+
             start_time = time.time()
             if not fake:
                 if not skip_patch:
