@@ -55,9 +55,9 @@ or refer to the full manual below.
    configuration
    config_yaml
    build_settings
-   repositories
    mirrors
    module_file_support
+   repositories
    command_index
    package_list
 
