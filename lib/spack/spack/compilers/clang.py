@@ -101,6 +101,20 @@ class Clang(Compiler):
                 return "-std=c++14"
 
     @property
+    def cxx17_flag(self):
+        if self.is_apple:
+            # Adapted from CMake's rules for AppleClang
+            if self.version < ver('6.1.0'):
+                tty.die("Only Apple LLVM 6.1 and above support c++17.")
+            else:
+                return "-std=c++1z"
+        else:
+            if self.version < ver('3.5'):
+                tty.die("Only Clang 3.5 and above support c++17.")
+            else:
+                return "-std=c++1z"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 

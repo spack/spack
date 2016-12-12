@@ -77,6 +77,13 @@ class Gcc(Compiler):
             return "-std=c++14"
 
     @property
+    def cxx17_flag(self):
+        if self.version < ver('5.0'):
+            tty.die("Only gcc 5.0 and above support c++17.")
+        else:
+            return "-std=c++1z"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 
