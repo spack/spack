@@ -41,7 +41,10 @@ def setup_parser(subparser):
         default='nodes', choices=['nodes', 'edges', 'paths'],
         help='How extensively to traverse the DAG. (default: nodes).')
     subparser.add_argument(
-        '--merge-build', action='store_true', default=False)
+        '--merge-build', action='store_true', default=False,
+        help='Disable behavior of concretizing build dependencies separately; '
+             'force a single instance of each package in the installation '
+             'DAG, including children of build dependencies.')
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='Show fully qualified package names.')
