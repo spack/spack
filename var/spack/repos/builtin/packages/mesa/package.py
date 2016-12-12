@@ -118,7 +118,7 @@ class Mesa(AutotoolsPackage):
                     '--with-gallium-drivers=swrast,swr',
                     '--disable-dri', '--with-dri-drivers=',
                     '--disable-egl', '--with-egl-platforms=', '--disable-gb',
-                    '--disable-glx', '--disable-osmesa', '--enable-gallium-osmesa' 
+                    '--disable-osmesa', '--enable-gallium-osmesa' 
             ]
             if '+shared_libs' in self.spec['llvm'] :
                 args.append('--enable-llvm-shared-libs')
