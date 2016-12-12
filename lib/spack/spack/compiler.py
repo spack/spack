@@ -117,7 +117,7 @@ class Compiler(object):
                  extra_rpaths=None, **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
-        self.target = str(target)
+        self.target = target
         self.modules = modules
         self.alias = alias
 
