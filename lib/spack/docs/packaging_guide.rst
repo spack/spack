@@ -93,8 +93,10 @@ always choose to download just one tarball initially, and run
       $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
    If it fails entirely, you can get minimal boilerplate by using
-   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
+   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a
+   directory and ``package.py`` file for the package in
+   ``var/spack/repos/builtin/packages``, or within your own :ref:`package
+   repository <repositories>`.
 
 .. note::
 
