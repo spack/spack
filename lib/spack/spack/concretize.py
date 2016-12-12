@@ -305,10 +305,12 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
-        # Pass on concretizing the compiler if the target is not yet determined
-        if not spec.architecture.platform_os:
-            # Although this usually means changed, this means awaiting other
-            # changes
+        # Pass on concretizing the compiler if the target or operating system
+        # is not yet determined
+        if not (spec.architecture.platform_os and spec.architecture.target):
+            # We haven't changed, but other changes need to happen before we
+            # continue. `return True` here to force concretization to keep
+            # running.
             return True
 
         # Only use a matching compiler if it is of the proper style
@@ -356,7 +358,8 @@ class DefaultConcretizer(object):
         if not matches:
             arch = spec.architecture
             raise UnavailableCompilerVersionError(other_compiler,
-                                                  arch.platform_os)
+                                                  arch.platform_os,
+                                                  arch.target)
 
         # copy concrete version into other_compiler
         try:
@@ -365,7 +368,8 @@ class DefaultConcretizer(object):
                 if _proper_compiler_style(c, spec.architecture)).copy()
         except StopIteration:
             raise UnavailableCompilerVersionError(
-                spec.compiler, spec.architecture.platform_os
+                spec.compiler, spec.architecture.platform_os,
+                spec.architecture.target
             )
 
         assert(spec.compiler.concrete)
@@ -377,10 +381,12 @@ class DefaultConcretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
-
-        if not spec.architecture.platform_os:
-            # Although this usually means changed, this means awaiting other
-            # changes
+        # Pass on concretizing the compiler flags if the target or operating
+        # system is not set.
+        if not (spec.architecture.platform_os and spec.architecture.target):
+            # We haven't changed, but other changes need to happen before we
+            # continue. `return True` here to force concretization to keep
+            # running.
             return True
 
         def compiler_match(spec1, spec2):
@@ -515,10 +521,11 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
     """Raised when there is no available compiler that satisfies a
        compiler spec."""
 
-    def __init__(self, compiler_spec, operating_system):
+    def __init__(self, compiler_spec, operating_system, target):
         super(UnavailableCompilerVersionError, self).__init__(
             "No available compiler version matches '%s' on operating_system %s"
-            % (compiler_spec, operating_system),
+            "for target %s"
+            % (compiler_spec, operating_system, target),
             "Run 'spack compilers' to see available compiler Options.")
 
 

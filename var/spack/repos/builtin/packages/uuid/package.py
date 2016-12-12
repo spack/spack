@@ -23,17 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Numdiff(AutotoolsPackage):
-    """Numdiff is a little program that can be used to compare putatively
-    similar files line by line and field by field, ignoring small numeric
-    differences or/and different numeric formats."""
+class Uuid(AutotoolsPackage):
+    """OSSP uuid is a ISO-C:1999 application programming interface (API) and
+    corresponding command line interface (CLI) for the generation of DCE 1.1,
+    ISO/IEC 11578:1996 and RFC 4122 compliant Universally Unique Identifier
+    (UUID)."""
 
-    homepage  = 'https://www.nongnu.org/numdiff'
-    url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
+    homepage = "http://www.ossp.org/pkg/lib/uuid"
+    url = "http://www.mirrorservice.org/sites/ftp.ossp.org/pkg/lib/uuid/uuid-1.6.2.tar.gz"
 
-    version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
-
-    depends_on('gettext', when=sys.platform == 'darwin')
+    version('1.6.2', '5db0d43a9022a6ebbbc25337ae28942f')

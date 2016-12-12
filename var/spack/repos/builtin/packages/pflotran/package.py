@@ -22,18 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
-import sys
 
 
-class Numdiff(AutotoolsPackage):
-    """Numdiff is a little program that can be used to compare putatively
-    similar files line by line and field by field, ignoring small numeric
-    differences or/and different numeric formats."""
+class Pflotran(AutotoolsPackage):
+    """PFLOTRAN is an open source, state-of-the-art massively parallel
+       subsurface flow and reactive transport code.
+    """
 
-    homepage  = 'https://www.nongnu.org/numdiff'
-    url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
+    homepage = "http://www.pflotran.org"
 
-    version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
+    version('develop', hg='https://bitbucket.org/pflotran/pflotran-xsdk')
+    version('0.1.0', hg='https://bitbucket.org/pflotran/pflotran-xsdk',
+            commmit='4734cf5e606b')    
 
-    depends_on('gettext', when=sys.platform == 'darwin')
+    depends_on('mpi')
+    depends_on('hdf5@1.8.12+mpi+fortran')
+    depends_on('petsc@develop+hdf5+metis',when='@develop')
+    depends_on('petsc@for-pflotran-0.1.0+hdf5+metis',when='@0.1.0')    
+
+    parallel = False

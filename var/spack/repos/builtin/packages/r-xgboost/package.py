@@ -22,18 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
-import sys
 
 
-class Numdiff(AutotoolsPackage):
-    """Numdiff is a little program that can be used to compare putatively
-    similar files line by line and field by field, ignoring small numeric
-    differences or/and different numeric formats."""
+class RXgboost(Package):
+    """Extreme Gradient Boosting, which is an efficient implementation of
+    gradient boosting framework. This package is its R interface. The package
+    includes efficient linear model solver and tree learning algorithms. The
+    package can automatically do parallel computation on a single machine which
+    could be more than 10 times faster than existing gradient boosting
+    packages. It supports various objective functions, including regression,
+    classification and ranking. The package is made to be extensible, so that
+    users are also allowed to define their own objectives easily."""
 
-    homepage  = 'https://www.nongnu.org/numdiff'
-    url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
+    homepage = "https://github.com/dmlc/xgboost"
+    url      = "https://cran.r-project.org/src/contrib/xgboost_0.4-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/xgboost"
 
-    version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
+    version('0.4-4', 'c24d3076058101a71de4b8af8806697c')
 
-    depends_on('gettext', when=sys.platform == 'darwin')
+    extends('R')
+
+    depends_on('r-matrix', type=nolink)
+    depends_on('r-datatable', type=nolink)
+    depends_on('r-magrittr', type=nolink)
+    depends_on('r-stringr', type=nolink)
+
+    def install(self, spec, prefix):
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

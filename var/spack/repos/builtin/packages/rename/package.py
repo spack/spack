@@ -23,17 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Numdiff(AutotoolsPackage):
-    """Numdiff is a little program that can be used to compare putatively
-    similar files line by line and field by field, ignoring small numeric
-    differences or/and different numeric formats."""
+class Rename(Package):
+    """Perl-powered file rename script with many helpful built-ins."""
 
-    homepage  = 'https://www.nongnu.org/numdiff'
-    url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
+    homepage = "http://plasmasturm.org/code/rename"
+    url      = "https://github.com/ap/rename/archive/v1.600.tar.gz"
 
-    version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
+    version('1.600', '91beb555c93d407420b5dad191069bb3')
 
-    depends_on('gettext', when=sys.platform == 'darwin')
+    depends_on('perl', type='nolink')
+
+    def install(self, spec, prefix):
+        Executable('pod2man')('rename', 'rename.1')
+        bdir = join_path(prefix, 'bin')
+        mkdirp(bdir)
+        install('rename', bdir)
+        mdir = join_path(prefix, 'share', 'man', 'man1')
+        mkdirp(mdir)
+        install('rename.1', mdir)

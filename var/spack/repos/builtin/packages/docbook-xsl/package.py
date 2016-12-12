@@ -22,18 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
-import sys
 
 
-class Numdiff(AutotoolsPackage):
-    """Numdiff is a little program that can be used to compare putatively
-    similar files line by line and field by field, ignoring small numeric
-    differences or/and different numeric formats."""
+class DocbookXsl(Package):
+    """Docbook XSL vocabulary."""
+    homepage = "http://docbook.sourceforge.net/"
+    url = "https://downloads.sourceforge.net/project/docbook/docbook-xsl/1.79.1/docbook-xsl-1.79.1.tar.bz2"
 
-    homepage  = 'https://www.nongnu.org/numdiff'
-    url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
+    version('1.79.1', 'b48cbf929a2ad85e6672f710777ca7bc')
 
-    version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
+    depends_on('docbook-xml')
 
-    depends_on('gettext', when=sys.platform == 'darwin')
+    def install(self, spec, prefix):
+        for item in os.listdir('.'):
+            src = os.path.abspath(item)
+            dst = os.path.join(prefix, item)
+            if os.path.isdir(item):
+                install_tree(src, dst, symlinks=True)
+            else:
+                install(src, dst)
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        spack_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+
+    def setup_environment(self, spack_env, run_env):
+        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')

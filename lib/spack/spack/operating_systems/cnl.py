@@ -22,7 +22,7 @@ class Cnl(OperatingSystem):
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
-        return self.name + self.version
+        return self.name
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()
@@ -57,7 +57,8 @@ class Cnl(OperatingSystem):
             for name, version in matches:
                 v = version
                 comp = cmp_cls(
-                    spack.spec.CompilerSpec(name + '@' + v), self,
+                    spack.spec.CompilerSpec(name + '@' + v),
+                    self, any,
                     ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
 
                 compilers.append(comp)
