@@ -51,8 +51,10 @@ class Fastqc(Package):
         chmod = which('chmod')
         chmod('+x', join_path(self.prefix.bin, 'fastqc'))
 
+    # In theory the 'run' dependency on 'jdk' above should take
+    # care of this for me. In practice, it does not.
     def setup_environment(self, spack_env, env):
         """Add <prefix> to the path; the package has a script at the
            top level.
         """
-        # env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))
+        env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))
