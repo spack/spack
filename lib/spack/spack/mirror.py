@@ -44,7 +44,7 @@ from spack.version import *
 from spack.util.compression import allowed_archive
 
 
-def mirror_archive_filename(spec, fetcher):
+def mirror_archive_filename(spec, fetcher, resourceId=None):
     """Get the name of the spec's archive in the mirror."""
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
@@ -67,15 +67,18 @@ def mirror_archive_filename(spec, fetcher):
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    filename = "%s-%s" % (spec.package.name, spec.version)
-    if ext:
-        filename += ".%s" % ext
+    if resourceId:
+        filename = "%s-%s" % (resourceId, spec.version) + ".%s" % ext
+    else:
+        filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
+
     return filename
 
 
-def mirror_archive_path(spec, fetcher):
+def mirror_archive_path(spec, fetcher, resourceId=None):
     """Get the relative path to the spec's archive within a mirror."""
-    return join_path(spec.name, mirror_archive_filename(spec, fetcher))
+    return join_path(
+        spec.name, mirror_archive_filename(spec, fetcher, resourceId))
 
 
 def get_matching_versions(specs, **kwargs):
@@ -204,8 +207,9 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     name = spec.format("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = join_path(
-                        subdir, suggest_archive_basename(resource))
+                    archive_path = os.path.abspath(join_path(
+                        mirror_root,
+                        mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.format("$_$@"))
                 subdir = os.path.dirname(archive_path)

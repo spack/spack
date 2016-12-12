@@ -24,6 +24,8 @@ modules:
       - MANPATH
     share/man:
       - MANPATH
+    share/aclocal:
+      - ACLOCAL_PATH
     lib:
       - LIBRARY_PATH
       - LD_LIBRARY_PATH

@@ -134,6 +134,25 @@ class Python(Package):
 
         self.filter_compilers(spec, prefix)
 
+        # TODO:
+        # On OpenSuse 13, python uses <prefix>/lib64/python2.7/lib-dynload/*.so
+        # instead of <prefix>/lib/python2.7/lib-dynload/*.so. Oddly enough the
+        # result is that Python can not find modules like cPickle. A workaround
+        # for now is to symlink to `lib`:
+        src = os.path.join(prefix,
+                           'lib64',
+                           'python{0}'.format(self.version.up_to(2)),
+                           'lib-dynload')
+        dst = os.path.join(prefix,
+                           'lib',
+                           'python{0}'.format(self.version.up_to(2)),
+                           'lib-dynload')
+        if os.path.isdir(src) and not os.path.isdir(dst):
+            mkdirp(dst)
+            for f in os.listdir(src):
+                os.symlink(os.path.join(src, f),
+                           os.path.join(dst, f))
+
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
     #
@@ -202,8 +221,27 @@ class Python(Package):
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         """Set PYTHONPATH to include site-packages dir for the
         extension and any other python extensions it depends on."""
-        pythonhome = self.prefix
-        spack_env.set('PYTHONHOME', pythonhome)
+        # The python executable for version 3 may be python3 or python
+        # See https://github.com/LLNL/spack/pull/2173#issuecomment-257170199
+        pythonex = 'python{0}'.format('3' if self.spec.satisfies('@3') else '')
+        if os.path.isdir(self.prefix.bin):
+            base = self.prefix.bin
+        else:
+            base = self.prefix
+        if not os.path.isfile(os.path.join(base, pythonex)):
+            if self.spec.satisfies('@3'):
+                python = Executable(os.path.join(base, 'python'))
+                version = python('-c', 'import sys; print(sys.version)',
+                                 output=str)
+                if version.startswith('3'):
+                    pythonex = 'python'
+                else:
+                    raise RuntimeError('Cannot locate python executable')
+            else:
+                raise RuntimeError('Cannot locate python executable')
+        python = Executable(os.path.join(base, pythonex))
+        prefix = python('-c', 'import sys; print(sys.prefix)', output=str)
+        spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
         for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
@@ -327,7 +365,7 @@ sys.__egginsert = p + len(new)
 
         super(Python, self).activate(ext_pkg, **args)
 
-        exts = spack.install_layout.extension_map(self.spec)
+        exts = spack.store.layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
         self.write_easy_install_pth(exts)
 
@@ -335,7 +373,7 @@ sys.__egginsert = p + len(new)
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        exts = spack.install_layout.extension_map(self.spec)
+        exts = spack.store.layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]

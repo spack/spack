@@ -32,8 +32,9 @@ class PyMatplotlib(Package):
     environments across platforms."""
 
     homepage = "https://pypi.python.org/pypi/matplotlib"
-    url      = "https://pypi.python.org/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
 
+    version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')
     version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')

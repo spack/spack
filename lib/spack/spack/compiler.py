@@ -112,10 +112,12 @@ class Compiler(object):
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
 
-    def __init__(self, cspec, operating_system,
-                 paths, modules=[], alias=None, **kwargs):
-        self.operating_system = operating_system
+    def __init__(self, cspec, operating_system, target,
+                 paths, modules=[], alias=None, environment=None,
+                 extra_rpaths=None, **kwargs):
         self.spec = cspec
+        self.operating_system = str(operating_system)
+        self.target = str(target)
         self.modules = modules
         self.alias = alias
 
@@ -134,6 +136,9 @@ class Compiler(object):
                 self.fc = self.f77
             else:
                 self.fc  = check(paths[3])
+
+        self.environment = environment
+        self.extra_rpaths = extra_rpaths or []
 
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
@@ -281,7 +286,7 @@ class Compiler(object):
         """
         return path
 
-    def setup_custom_environment(self, env):
+    def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
         pass
 

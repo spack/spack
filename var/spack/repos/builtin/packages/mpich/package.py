@@ -26,12 +26,12 @@ from spack import *
 import os
 
 
-class Mpich(Package):
+class Mpich(AutotoolsPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
     homepage = "http://www.mpich.org"
-    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
@@ -81,16 +81,19 @@ class Mpich(Package):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-    def install(self, spec, prefix):
+    @AutotoolsPackage.precondition('autoreconf')
+    def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError('Mpich requires both C and Fortran ',
-                               'compilers!')
+            raise InstallError(
+                'Mpich requires both C and Fortran compilers!'
+            )
 
-        config_args = [
-            '--prefix={0}'.format(prefix),
+    def configure_args(self):
+        spec = self.spec
+        return [
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--with-pmi={0}'.format('yes' if '+pmi' in spec else 'no'),
@@ -98,27 +101,8 @@ class Mpich(Package):
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
 
-        # TODO: Spack should make it so that you can't actually find
-        # these compilers if they're "disabled" for the current
-        # compiler configuration.
-        if not self.compiler.f77:
-            config_args.append("--disable-f77")
-
-        if not self.compiler.fc:
-            config_args.append("--disable-fc")
-
-        if not self.compiler.fc and not self.compiler.f77:
-            config_args.append("--disable-fortran")
-
-        configure(*config_args)
-
-        make()
-        make('check')
-        make('install')
-
-        self.filter_compilers(prefix)
-
-    def filter_compilers(self, prefix):
+    @AutotoolsPackage.sanity_check('install')
+    def filter_compilers(self):
         """Run after install to make the MPI compilers use the
         compilers that Spack built the package with.
 
@@ -126,14 +110,18 @@ class Mpich(Package):
         to Spack's generic cc, c++, f77, and f90.  We want them to
         be bound to whatever compiler they were built with."""
 
-        mpicc  = join_path(prefix.bin, 'mpicc')
-        mpicxx = join_path(prefix.bin, 'mpicxx')
-        mpif77 = join_path(prefix.bin, 'mpif77')
-        mpif90 = join_path(prefix.bin, 'mpif90')
+        mpicc = join_path(self.prefix.bin, 'mpicc')
+        mpicxx = join_path(self.prefix.bin, 'mpicxx')
+        mpif77 = join_path(self.prefix.bin, 'mpif77')
+        mpif90 = join_path(self.prefix.bin, 'mpif90')
 
         # Substitute Spack compile wrappers for the real
         # underlying compiler
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        kwargs = {
+            'ignore_absent': True,
+            'backup': False,
+            'string': True
+        }
         filter_file(env['CC'],  self.compiler.cc,  mpicc,  **kwargs)
         filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
         filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)

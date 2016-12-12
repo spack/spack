@@ -140,3 +140,9 @@ class Bunch(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+
+class Args(Bunch):
+    """Subclass of Bunch to write argparse args more naturally."""
+    def __init__(self, *flags, **kwargs):
+        super(Args, self).__init__(flags=tuple(flags), kwargs=kwargs)

@@ -22,24 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for target configuration files."""
+
+from spack import *
 
 
-schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack target configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'patternProperties': {
-        r'targets:?': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {  # target name
-                    'type': 'string',
-                },
-            },
-        },
-    },
-}
+class RDeoptim(Package):
+    """Implements the differential evolution algorithm for global optimization
+    of a real-valued function of a real-valued parameter vector."""
+
+    homepage = "https://cran.r-project.org/package=DEoptim"
+    url      = "https://cran.r-project.org/src/contrib/DEoptim_2.2-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DEoptim"
+    
+    version('2.2-3', 'ed406e6790f8f1568aa9bec159f80326')
+
+    extends('R')
+
+    def install(self, spec, prefix):
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

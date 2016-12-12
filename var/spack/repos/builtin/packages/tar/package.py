@@ -25,11 +25,11 @@
 from spack import *
 
 
-class Tar(Package):
+class Tar(AutotoolsPackage):
     """GNU Tar provides the ability to create tar archives, as well as various
     other kinds of manipulation."""
     homepage = "https://www.gnu.org/software/tar/"
-    url      = "https://ftp.gnu.org/gnu/tar/tar-1.28.tar.gz"
+    url = "https://ftp.gnu.org/gnu/tar/tar-1.28.tar.gz"
 
     version('1.29', 'cae466e6e58c7292355e7080248f244db3a4cf755f33f4fa25ca7f9a7ed09af0')
     version('1.28', '6ea3dbea1f2b0409b234048e021a9fd7')
@@ -38,8 +38,3 @@ class Tar(Package):
     # https://github.com/Homebrew/homebrew-core/commit/aef9a1792de4648d0322b4b04d32287532f046bb
     # TODO: when=sys.platform=='darwin' ?
     patch('gnutar-configure-xattrs.patch', when='@1.28')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make('install')

@@ -35,6 +35,9 @@ Documentation
 [**Full documentation**](http://spack.readthedocs.io/) for Spack is
 the first place to look.
 
+We've also got a [**Spack 101 Tutorial**](http://spack.readthedocs.io/en/latest/tutorial_sc16.html),
+so you can learn Spack yourself, or teach users at your own site.
+
 See also:
   * [Technical paper](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf) and
     [slides](https://tgamblin.github.io/files/Gamblin-Spack-SC15-Talk.pdf) on Spack's design and implementation.

@@ -48,13 +48,15 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 from llnl.util.lock import *
 
-import spack.spec
+import spack.store
+import spack.repository
 from spack.directory_layout import DirectoryLayoutError
 from spack.version import Version
-from spack.spec import *
+import spack.spec
 from spack.error import SpackError
-from spack.repository import UnknownPackageError
 import spack.util.spack_yaml as syaml
+import spack.util.spack_json as sjson
+
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -66,7 +68,7 @@ _db_version = Version('0.9.2')
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
-_tracked_deps = nobuild
+_tracked_deps = 'nobuild'
 
 
 def _autospec(function):
@@ -133,10 +135,12 @@ class Database(object):
         under ``root/.spack-db``, which is created if it does not
         exist.  This is the ``db_dir``.
 
-        The Database will attempt to read an ``index.yaml`` file in
-        ``db_dir``.  If it does not find one, it will be created when
-        needed by scanning the entire Database root for ``spec.yaml``
-        files according to Spack's ``DirectoryLayout``.
+        The Database will attempt to read an ``index.json`` file in
+        ``db_dir``.  If it does not find one, it will fall back to read
+        an ``index.yaml`` if one is present.  If that does not exist, it
+        will create a database when needed by scanning the entire
+        Database root for ``spec.yaml`` files according to Spack's
+        ``DirectoryLayout``.
 
         Caller may optionally provide a custom ``db_dir`` parameter
         where data will be stored.  This is intended to be used for
@@ -153,7 +157,8 @@ class Database(object):
             self._db_dir = db_dir
 
         # Set up layout of database files within the db dir
-        self._index_path = join_path(self._db_dir, 'index.yaml')
+        self._old_yaml_index_path = join_path(self._db_dir, 'index.yaml')
+        self._index_path = join_path(self._db_dir, 'index.json')
         self._lock_path = join_path(self._db_dir, 'lock')
 
         # This is for other classes to use to lock prefix directories.
@@ -178,8 +183,8 @@ class Database(object):
         """Get a read lock context manager for use in a `with` block."""
         return ReadTransaction(self.lock, self._read, timeout=timeout)
 
-    def _write_to_yaml(self, stream):
-        """Write out the databsae to a YAML file.
+    def _write_to_file(self, stream):
+        """Write out the databsae to a JSON file.
 
         This function does not do any locking or transactions.
         """
@@ -200,12 +205,12 @@ class Database(object):
         }
 
         try:
-            return syaml.dump(
-                database, stream=stream, default_flow_style=False)
+            sjson.dump(database, stream)
         except YAMLError as e:
-            raise SpackYAMLError("error writing YAML database:", str(e))
+            raise syaml.SpackYAMLError(
+                "error writing YAML database:", str(e))
 
-    def _read_spec_from_yaml(self, hash_key, installs):
+    def _read_spec_from_dict(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -218,7 +223,7 @@ class Database(object):
             spec_dict[name]['hash'] = hash_key
 
         # Build spec from dict first.
-        spec = Spec.from_node_dict(spec_dict)
+        spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
     def _assign_dependencies(self, hash_key, installs, data):
@@ -229,7 +234,8 @@ class Database(object):
 
         if 'dependencies' in spec_dict[spec.name]:
             yaml_deps = spec_dict[spec.name]['dependencies']
-            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+            for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
+                    yaml_deps):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
@@ -239,24 +245,32 @@ class Database(object):
                 child = data[dhash].spec
                 spec._add_dependency(child, dtypes)
 
-    def _read_from_yaml(self, stream):
+    def _read_from_file(self, stream, format='json'):
         """
-        Fill database from YAML, do not maintain old data
+        Fill database from file, do not maintain old data
         Translate the spec portions from node-dict form to spec form
 
         Does not do any locking.
         """
+        if format.lower() == 'json':
+            load = sjson.load
+        elif format.lower() == 'yaml':
+            load = syaml.load
+        else:
+            raise ValueError("Invalid database format: %s" % format)
+
         try:
             if isinstance(stream, basestring):
                 with open(stream, 'r') as f:
-                    yfile = syaml.load(f)
+                    fdata = load(f)
             else:
-                yfile = syaml.load(stream)
-
+                fdata = load(stream)
         except MarkedYAMLError as e:
-            raise SpackYAMLError("error parsing YAML database:", str(e))
+            raise syaml.SpackYAMLError("error parsing YAML database:", str(e))
+        except Exception as e:
+            raise CorruptDatabaseError("error parsing database:", str(e))
 
-        if yfile is None:
+        if fdata is None:
             return
 
         def check(cond, msg):
@@ -264,10 +278,10 @@ class Database(object):
                 raise CorruptDatabaseError(
                     "Spack database is corrupt: %s" % msg, self._index_path)
 
-        check('database' in yfile, "No 'database' attribute in YAML.")
+        check('database' in fdata, "No 'database' attribute in YAML.")
 
         # High-level file checks
-        db = yfile['database']
+        db = fdata['database']
         check('installs' in db, "No 'installs' in YAML DB.")
         check('version' in db, "No 'version' in YAML DB.")
 
@@ -278,7 +292,7 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.install_layout)
+            self.reindex(spack.store.layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
         def invalid_record(hash_key, error):
@@ -301,7 +315,7 @@ class Database(object):
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
-                spec = self._read_spec_from_yaml(hash_key, installs)
+                spec = self._read_spec_from_dict(hash_key, installs)
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -340,7 +354,7 @@ class Database(object):
         def _read_suppress_error():
             try:
                 if os.path.isfile(self._index_path):
-                    self._read_from_yaml(self._index_path)
+                    self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
@@ -424,7 +438,7 @@ class Database(object):
         # Write a temporary database file them move it into place
         try:
             with open(temp_file, 'w') as f:
-                self._write_to_yaml(f)
+                self._write_to_file(f)
             os.rename(temp_file, self._index_path)
         except:
             # Clean up temp file if something goes wrong.
@@ -435,16 +449,29 @@ class Database(object):
     def _read(self):
         """Re-read Database from the data in the set location.
 
-        This does no locking.
+        This does no locking, with one exception: it will automatically
+        migrate an index.yaml to an index.json if possible. This requires
+        taking a write lock.
+
         """
         if os.path.isfile(self._index_path):
-            # Read from YAML file if a database exists
-            self._read_from_yaml(self._index_path)
+            # Read from JSON file if a JSON database exists
+            self._read_from_file(self._index_path, format='json')
+
+        elif os.path.isfile(self._old_yaml_index_path):
+            if os.access(self._db_dir, os.R_OK | os.W_OK):
+                # if we can write, then read AND write a JSON file.
+                self._read_from_file(self._old_yaml_index_path, format='yaml')
+                with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+                    self._write(None, None, None)
+            else:
+                # Read chck for a YAML file if we can't find JSON.
+                self._read_from_file(self._old_yaml_index_path, format='yaml')
 
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
-            self.reindex(spack.install_layout)
+            self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):
         """Add an install record for this spec to the database.
@@ -468,7 +495,7 @@ class Database(object):
         if key not in self._data:
             installed = False
             path = None
-            if directory_layout:
+            if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
                 try:
                     directory_layout.check_installed(spec)
@@ -587,7 +614,7 @@ class Database(object):
             try:
                 if s.package.extends(extendee_spec):
                     yield s.package
-            except UnknownPackageError:
+            except spack.repository.UnknownPackageError:
                 continue
             # skips unknown packages
             # TODO: conditional way to do this instead of catching exceptions

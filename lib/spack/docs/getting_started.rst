@@ -47,8 +47,7 @@ to your path and you're ready to go:
    $ export PATH=$SPACK_ROOT/bin:$PATH
    $ spack install libelf
 
-For a richer experience, use Spack's `shell support
-<http://software.llnl.gov/spack/basic_usage.html#environment-modules>`_:
+For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
@@ -60,7 +59,9 @@ For a richer experience, use Spack's `shell support
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
-This automatically adds Spack to your ``PATH``.
+This automatically adds Spack to your ``PATH`` and allows the ``spack``
+command to :ref:`load environment modules <shell-support>` and execute
+:ref:`useful packaging commands <packaging-shell-support>`.
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -414,7 +415,17 @@ provides no Fortran compilers.  The user is therefore forced to use a
 mixed toolchain: XCode-provided Clang for C/C++ and GNU ``gfortran`` for
 Fortran.
 
-In the simplest case, you can just edit ``compilers.yaml``:
+#. You need to make sure that command-line tools are installed. To that
+   end run ``$ xcode-select --install``.
+
+#. Run ``$ spack compiler find`` to locate Clang.
+
+#. There are different ways to get ``gfortran`` on macOS. For example, you can
+   install GCC with Spack (``$ spack install gcc``) or with Homebrew
+   (``$ brew install gcc``).
+
+#. The only thing left to do is to edit ``~/.spack/compilers.yaml`` to provide
+   the path to ``gfortran``:
 
    .. code-block:: yaml
 
@@ -426,57 +437,10 @@ In the simplest case, you can just edit ``compilers.yaml``:
             f77: /path/to/bin/gfortran
             fc: /path/to/bin/gfortran
 
-.. note::
-
-   If you are building packages that are sensitive to the compiler's
-   name, you may also need to slightly modify a few more files so that
-   Spack uses compiler names the build system will recognize.
-
-   Following are instructions on how to hack together
-   ``clang`` and ``gfortran`` on Macintosh OS X.  A similar approach
-   should work for other mixed toolchain needs.
-
-   Better support for mixed compiler toolchains is planned in forthcoming
-   Spack versions.
-
-   #. Create a symlink inside ``clang`` environment:
-
-      .. code-block:: console
-
-         $ cd $SPACK_ROOT/lib/spack/env/clang
-         $ ln -s ../cc gfortran
-
-
-   #. Patch ``clang`` compiler file:
-
-      .. code-block:: diff
-
-         $ diff --git a/lib/spack/spack/compilers/clang.py b/lib/spack/spack/compilers/clang.py
-         index e406d86..cf8fd01 100644
-         --- a/lib/spack/spack/compilers/clang.py
-         +++ b/lib/spack/spack/compilers/clang.py
-         @@ -35,17 +35,17 @@ class Clang(Compiler):
-              cxx_names = ['clang++']
-
-              # Subclasses use possible names of Fortran 77 compiler
-         -    f77_names = []
-         +    f77_names = ['gfortran']
-
-              # Subclasses use possible names of Fortran 90 compiler
-         -    fc_names = []
-         +    fc_names = ['gfortran']
-
-              # Named wrapper links within spack.build_env_path
-              link_paths = { 'cc'  : 'clang/clang',
-                             'cxx' : 'clang/clang++',
-                             # Use default wrappers for fortran, in case provided in compilers.yaml
-         -                   'f77' : 'f77',
-         -                   'fc'  : 'f90' }
-         +                   'f77' : 'clang/gfortran',
-         +                   'fc'  : 'clang/gfortran' }
-
-              @classmethod
-              def default_version(self, comp):
+   If you used Spack to install GCC, you can get the installation prefix by
+   ``$ spack location -i gcc`` (this will only work if you have a single version
+   of GCC installed). Whereas for Homebrew, GCC is installed in
+   ``/usr/local/Cellar/gcc/x.y.z``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
@@ -1170,4 +1134,4 @@ if we want to build with intel compilers, use version 16.0.0.109. We add a spec
 for each compiler type for each cray modules. This ensures that for each
 compiler on our system we can use that external module.
 
-For more on external packages check out the section :ref:`sec-external_packages`.
+For more on external packages check out the section :ref:`sec-external-packages`.

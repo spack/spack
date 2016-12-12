@@ -22,7 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for compiler configuration files."""
+"""Schema for compilers.yaml configuration file.
+
+.. literalinclude:: ../spack/schema/compilers.py
+   :lines: 32-
+"""
 
 
 schema = {
@@ -31,7 +35,7 @@ schema = {
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
-        'compilers:?': {  # optional colon for overriding site config.
+        'compilers': {
             'type': 'array',
             'items': {
                 'compiler': {
@@ -75,7 +79,27 @@ schema = {
                                             {'type': 'null'}]},
                         'modules': {'anyOf': [{'type': 'string'},
                                               {'type': 'null'},
-                                              {'type': 'array'}]}
+                                              {'type': 'array'}]},
+                        'environment': {
+                            'type': 'object',
+                            'default': {},
+                            'additionalProperties': False,
+                            'properties': {
+                                'set': {
+                                    'type': 'object',
+                                    'patternProperties': {
+                                        r'\w[\w-]*': {  # variable name
+                                            'type': 'string'
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        'extra_rpaths': {
+                            'type': 'array',
+                            'default': [],
+                            'items': {'type': 'string'}
+                        }
                     },
                 },
             },

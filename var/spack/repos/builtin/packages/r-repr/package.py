@@ -22,14 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.modules
+
+from spack import *
 
 
-def post_install(pkg):
-    dk = spack.modules.Dotkit(pkg.spec)
-    dk.write()
+class RRepr(Package):
+    """String and binary representations of objects for several formats and
+    mime types."""
 
+    homepage = "https://github.com/IRkernel/repr"
+    url      = "https://cran.r-project.org/src/contrib/repr_0.9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/repr"
 
-def post_uninstall(pkg):
-    dk = spack.modules.Dotkit(pkg.spec)
-    dk.remove()
+    version('0.9', 'db5ff74893063b492f684e42283070bd')
+
+    extends('R')
+
+    def install(self, spec, prefix):
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

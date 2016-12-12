@@ -32,10 +32,10 @@ class RLattice(Package):
     handle most nonstandard requirements. See ?Lattice for an introduction."""
 
     homepage = "http://lattice.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/lattice_0.20-33.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/lattice_0.20-34.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/lattice"
 
-    version('0.20-33', 'd487c94db1bfe00a27270f4c71baf53e')
+    version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')
 
     extends('R')
 

@@ -23,67 +23,7 @@ deps=(
 # Check for dependencies
 "$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
 
-# Gather array of changed files
-changed=($("$QA_DIR/changed_files" "*.py"))
+# Add Spack to the PATH.
+export PATH="$SPACK_ROOT/bin:$PATH"
 
-# Exit if no Python files were modified
-if [[ ! "${changed[@]}" ]]; then
-    echo "No Python files were modified."
-    exit 0
-fi
-
-# Move to root directory of Spack
-# Allows script to be run from anywhere
-cd "$SPACK_ROOT"
-
-function cleanup {
-    # Restore original package files after modifying them.
-    for file in "${changed[@]}"; do
-        if [[ -e "${file}.sbak~" ]]; then
-            mv "${file}.sbak~" "${file}"
-        fi
-    done
-}
-
-# Cleanup temporary files upon exit or when script is killed
-trap cleanup EXIT SIGINT SIGTERM
-
-# Add approved style exemptions to the changed packages.
-for file in "${changed[@]}"; do
-    # Make a backup to restore later
-    cp "$file" "$file.sbak~"
-
-    #
-    # Exemptions for package.py files
-    #
-    if [[ $file = *package.py ]]; then
-        # Exempt lines with urls and descriptions from overlong line errors.
-        perl -i -pe 's/^(\s*homepage\s*=.*)$/\1  # NOQA: ignore=E501/' "$file"
-        perl -i -pe 's/^(\s*url\s*=.*)$/\1  # NOQA: ignore=E501/' "$file"
-        perl -i -pe 's/^(\s*version\(.*\).*)$/\1  # NOQA: ignore=E501/' "$file"
-        perl -i -pe 's/^(\s*variant\(.*\).*)$/\1  # NOQA: ignore=E501/' "$file"
-        perl -i -pe 's/^(\s*depends_on\(.*\).*)$/\1  # NOQA: ignore=E501/' "$file"
-        perl -i -pe 's/^(\s*extends\(.*\).*)$/\1  # NOQA: ignore=E501/' "$file"
-
-        # Exempt '@when' decorated functions from redefinition errors.
-        perl -i -pe 's/^(\s*\@when\(.*\).*)$/\1  # NOQA: ignore=F811/' "$file"
-    fi
-
-    #
-    # Exemptions for all files
-    #
-    perl -i -pe 's/^(.*(https?|file)\:.*)$/\1  # NOQA: ignore=E501/' $file
-done
-
-echo =======================================================
-echo  flake8: running flake8 code checks on spack.
-echo
-echo  Modified files:
-echo  "${changed[@]}" | perl -pe 's/^/  /;s/ +/\n  /g'
-echo =======================================================
-if flake8 --format pylint "${changed[@]}"; then
-    echo "Flake8 checks were clean."
-else
-    echo "Flake8 found errors."
-    exit 1
-fi
+exec spack flake8

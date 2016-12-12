@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import os
+import sys
 import spack
 import spack.compiler as cpr
 from spack.compiler import *
@@ -41,18 +42,18 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []
+    f77_names = ['gfortran']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []
+    fc_names = ['gfortran']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'clang/clang',
                   'cxx': 'clang/clang++',
                   # Use default wrappers for fortran, in case provided in
                   # compilers.yaml
-                  'f77': 'f77',
-                  'fc': 'f90'}
+                  'f77': 'clang/gfortran',
+                  'fc': 'clang/gfortran'}
 
     @property
     def is_apple(self):
@@ -76,6 +77,10 @@ class Clang(Compiler):
                 tty.die("Only Clang 3.3 and above support c++11.")
             else:
                 return "-std=c++11"
+
+    @property
+    def pic_flag(self):
+        return "-fPIC"
 
     @classmethod
     def default_version(cls, comp):
@@ -121,7 +126,29 @@ class Clang(Compiler):
         full_path = xcrun('-f', basename, output=str)
         return full_path.strip()
 
-    def setup_custom_environment(self, env):
+    @classmethod
+    def fc_version(cls, fc):
+        version = get_compiler_version(
+            fc, '-dumpversion',
+            # older gfortran versions don't have simple dumpversion output.
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
+        # This is horribly ad hoc, we need to map from gcc/gfortran version
+        # to clang version, but there could be multiple clang
+        # versions that work for a single gcc/gfortran version
+        if sys.platform == 'darwin':
+            clangversionfromgcc = {'6.2.0': '8.0.0-apple'}
+        else:
+            clangversionfromgcc = {}
+        if version in clangversionfromgcc:
+            return clangversionfromgcc[version]
+        else:
+            return 'unknown'
+
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.fc_version(f77)
+
+    def setup_custom_environment(self, pkg, env):
         """Set the DEVELOPER_DIR environment for the Xcode toolchain.
 
         On macOS, not all buildsystems support querying CC and CXX for the
@@ -133,9 +160,13 @@ class Clang(Compiler):
         the 'DEVELOPER_DIR' environment variables to cause the xcrun and
         related tools to use this Xcode.app.
         """
-        super(Clang, self).setup_custom_environment(env)
+        super(Clang, self).setup_custom_environment(pkg, env)
 
-        if not self.is_apple:
+        if not self.is_apple or not pkg.use_xcode:
+            # if we do it for all packages, we get into big troubles with MPI:
+            # filter_compilers(self) will use mockup XCode compilers on macOS
+            # with Clang. Those point to Spack's compiler wrappers and
+            # consequently render MPI non-functional outside of Spack.
             return
 
         xcode_select = Executable('xcode-select')

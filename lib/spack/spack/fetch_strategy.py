@@ -116,6 +116,14 @@ class FetchStrategy(object):
     def archive(self, destination):
         pass  # Used to create tarball for mirror.
 
+    @property
+    def cachable(self):
+        """Return whether the fetcher is capable of caching the
+           resource it retrieves. This generally is determined by
+           whether the resource is identifiably associated with a
+           specific package version."""
+        pass
+
     def __str__(self):  # Should be human readable URL.
         return "FetchStrategy.__str___"
 
@@ -186,7 +194,7 @@ class URLFetchStrategy(FetchStrategy):
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
 
-        tty.msg("Trying to fetch from %s" % self.url)
+        tty.msg("Fetching %s" % self.url)
 
         if partial_file:
             save_args = ['-C',
@@ -272,6 +280,10 @@ class URLFetchStrategy(FetchStrategy):
         """Path to the source archive within this stage directory."""
         return self.stage.archive_file
 
+    @property
+    def cachable(self):
+        return bool(self.digest)
+
     @_needs_stage
     def expand(self):
         if not self.expand_archive:
@@ -283,7 +295,7 @@ class URLFetchStrategy(FetchStrategy):
         self.stage.chdir()
         if not self.archive_file:
             raise NoArchiveFileError(
-                "URLFetchStrategy couldn't find archive file",
+                "Couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
         if not self.extension:
@@ -380,15 +392,33 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        super(CacheURLFetchStrategy, self).fetch()
+        path = re.sub('^file://', '', self.url)
+
+        # check whether the cache file exists.
+        if not os.path.isfile(path):
+            raise NoCacheError('No cache of %s' % path)
+
+        self.stage.chdir()
+
+        # remove old symlink if one is there.
+        filename = self.stage.save_filename
+        if os.path.exists(filename):
+            os.remove(filename)
+
+        # Symlink to local cached archive.
+        os.symlink(path, filename)
+
+        # Remove link if checksum fails, or subsequent fetchers
+        # will assume they don't need to download.
         if self.digest:
             try:
                 self.check()
             except ChecksumError:
-                # Future fetchers will assume they don't need to
-                # download if the file remains
                 os.remove(self.archive_file)
                 raise
+
+        # Notify the user how we fetched.
+        tty.msg('Using cached archive: %s' % path)
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -555,6 +585,10 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         return self._git
 
+    @property
+    def cachable(self):
+        return bool(self.commit or self.tag)
+
     @_needs_stage
     def fetch(self):
         self.stage.chdir()
@@ -671,6 +705,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
             self._svn = which('svn', required=True)
         return self._svn
 
+    @property
+    def cachable(self):
+        return bool(self.revision)
+
     @_needs_stage
     def fetch(self):
         self.stage.chdir()
@@ -753,6 +791,10 @@ class HgFetchStrategy(VCSFetchStrategy):
         if not self._hg:
             self._hg = which('hg', required=True)
         return self._hg
+
+    @property
+    def cachable(self):
+        return bool(self.revision)
 
     @_needs_stage
     def fetch(self):
@@ -860,22 +902,38 @@ def for_package_version(pkg, version):
     raise InvalidArgsError(pkg, version)
 
 
+def from_list_url(pkg):
+    """If a package provides a URL which lists URLs for resources by
+       version, this can can create a fetcher for a URL discovered for
+       the specified package's version."""
+    if pkg.list_url:
+        try:
+            versions = pkg.fetch_remote_versions()
+            try:
+                url_from_list = versions[pkg.version]
+                digest = None
+                if pkg.version in pkg.versions:
+                    digest = pkg.versions[pkg.version].get('md5', None)
+                return URLFetchStrategy(url=url_from_list, digest=digest)
+            except KeyError:
+                tty.msg("Can not find version %s in url_list" %
+                        self.version)
+        except:
+            tty.msg("Could not determine url from list_url.")
+
+
 class FsCache(object):
 
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
     def store(self, fetcher, relativeDst):
-        unique = False
-        uidGroups = [['tag', 'commit'], ['digest'], ['revision']]
-        for grp in uidGroups:
-            try:
-                unique |= any(getattr(fetcher, x) for x in grp)
-            except AttributeError:
-                pass
-            if unique:
-                break
-        if not unique:
+        # skip fetchers that aren't cachable
+        if not fetcher.cachable:
+            return
+
+        # Don't store things that are already cached.
+        if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
         dst = join_path(self.root, relativeDst)
@@ -883,23 +941,23 @@ class FsCache(object):
         fetcher.archive(dst)
 
     def fetcher(self, targetPath, digest, **kwargs):
-        url = "file://" + join_path(self.root, targetPath)
-        return CacheURLFetchStrategy(url, digest, **kwargs)
+        path = join_path(self.root, targetPath)
+        return CacheURLFetchStrategy(path, digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)
 
 
 class FetchError(spack.error.SpackError):
+    """Superclass fo fetcher errors."""
 
-    def __init__(self, msg, long_msg=None):
-        super(FetchError, self).__init__(msg, long_msg)
+
+class NoCacheError(FetchError):
+    """Raised when there is no cached archive for a package."""
 
 
 class FailedDownloadError(FetchError):
-
     """Raised wen a download fails."""
-
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
             "Failed to fetch file from URL: %s" % url, msg)
@@ -907,19 +965,14 @@ class FailedDownloadError(FetchError):
 
 
 class NoArchiveFileError(FetchError):
-
-    def __init__(self, msg, long_msg):
-        super(NoArchiveFileError, self).__init__(msg, long_msg)
+    """"Raised when an archive file is expected but none exists."""
 
 
 class NoDigestError(FetchError):
-
-    def __init__(self, msg, long_msg=None):
-        super(NoDigestError, self).__init__(msg, long_msg)
+    """Raised after attempt to checksum when URL has no digest."""
 
 
 class InvalidArgsError(FetchError):
-
     def __init__(self, pkg, version):
         msg = ("Could not construct a fetch strategy for package %s at "
                "version %s")
@@ -928,17 +981,11 @@ class InvalidArgsError(FetchError):
 
 
 class ChecksumError(FetchError):
-
     """Raised when archive fails to checksum."""
-
-    def __init__(self, message, long_msg=None):
-        super(ChecksumError, self).__init__(message, long_msg)
 
 
 class NoStageError(FetchError):
-
     """Raised when fetch operations are called before set_stage()."""
-
     def __init__(self, method):
         super(NoStageError, self).__init__(
             "Must call FetchStrategy.set_stage() before calling %s" %

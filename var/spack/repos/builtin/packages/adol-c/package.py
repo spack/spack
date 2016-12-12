@@ -32,7 +32,8 @@ class AdolC(Package):
     homepage = "https://projects.coin-or.org/ADOL-C"
     url      = "http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz"
 
-    version('head',  svn='https://projects.coin-or.org/svn/ADOL-C/trunk/')
+    version('develop',  svn='https://projects.coin-or.org/svn/ADOL-C/trunk/')
+    version('2.6.2', '0f9547584c99c0673e4f81cf64e8d865')
     version('2.6.1', '1032b28427d6e399af4610e78c0f087b')
 
     variant('doc',      default=True,  description='Install documentation')
@@ -41,7 +42,7 @@ class AdolC(Package):
     variant('tests',    default=True,
             description='Build all included examples as a test case')
 
-    patch('openmp_exam.patch')
+    patch('openmp_exam_261.patch', when='@2.6.1')
 
     def install(self, spec, prefix):
         make_args = ['--prefix=%s' % prefix]
