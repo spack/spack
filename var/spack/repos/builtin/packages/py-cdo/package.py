@@ -26,7 +26,8 @@ from spack import *
 
 
 class PyCdo(Package):
-    """The cdo package provides an interface to the Climate Data Operators from Python."""
+    """The cdo package provides an interface to the Climate Data
+    Operators from Python."""
 
     homepage = "https://pypi.python.org/pypi/cdo"
     url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
