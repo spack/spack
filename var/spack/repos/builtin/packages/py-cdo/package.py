@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCdo(Package):
     """The cdo package provides an interface to the Climate Data Operators from Python."""
 
