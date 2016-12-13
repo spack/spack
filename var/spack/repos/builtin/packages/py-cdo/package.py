@@ -29,9 +29,10 @@ class PyCdo(Package):
     """The cdo package provides an interface to the Climate Data Operators from Python."""
 
     homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz"
+    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745')
+    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
+            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
 
     extends('python')
 
