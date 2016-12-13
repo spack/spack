@@ -42,6 +42,7 @@ from spack.util.executable import which
     ]
 )
 def url_and_system(request, tmpdir):
+    """Return a url along with the correct build-system guess"""
     tar = which('tar')
     orig_dir = tmpdir.chdir()
     filename, system = request.param

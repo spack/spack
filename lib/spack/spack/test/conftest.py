@@ -104,6 +104,7 @@ def mock_repository():
 
 @pytest.fixture(scope='session')
 def linux_os():
+    """Returns OS name and OS version as a tuple"""
     platform = spack.architecture.platform()
     os_name, os_version = 'debian', '6'
     if platform.name == 'linux':
@@ -113,9 +114,12 @@ def linux_os():
     return os_name, os_version
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def configuration_files(tmpdir_factory, linux_os):
-    tmpdir = tmpdir_factory.getbasetemp()
+    """Copies mock configuration files in a temporary directory
+    and add hooks them to the current spack instance.
+    """
+    tmpdir = tmpdir_factory.mktemp('configurations')
     # Name of the yaml files in the test/data folder
     join_path = llnl.util.filesystem.join_path
     compilers_yaml = join_path(spack.test_path, 'data', 'compilers.yaml')
@@ -146,5 +150,5 @@ def configuration_files(tmpdir_factory, linux_os):
 
 @pytest.fixture()
 def share_path(tmpdir, monkeypatch):
-    # Keep tests from interfering with the actual module path.
+    """Keep tests from interfering with the actual module path."""
     monkeypatch.setattr(spack, 'share_path', str(tmpdir))

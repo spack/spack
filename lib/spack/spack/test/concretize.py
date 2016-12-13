@@ -86,6 +86,7 @@ def check_concretize(abstract_spec):
     ]
 )
 def spec(request):
+    """Spec to be concretized"""
     return request.param
 
 
@@ -95,11 +96,9 @@ def test_concretize(spec, configuration_files, mock_repository):
 
 def test_concretize_mention_build_dep(configuration_files, mock_repository):
     spec = check_concretize('cmake-client ^cmake@3.4.3')
-
     # Check parent's perspective of child
     dependency = spec.dependencies_dict()['cmake']
     assert set(dependency.deptypes) == set(['build'])
-
     # Check child's perspective of parent
     cmake = spec['cmake']
     dependent = cmake.dependents_dict()['cmake-client']
@@ -109,7 +108,6 @@ def test_concretize_mention_build_dep(configuration_files, mock_repository):
 def test_concretize_preferred_version(configuration_files, mock_repository):
     spec = check_concretize('python')
     assert spec.versions == ver('2.7.11')
-
     spec = check_concretize('python@3.5.1')
     assert spec.versions == ver('3.5.1')
 
