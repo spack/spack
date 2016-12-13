@@ -26,7 +26,7 @@ from spack import *
 import os
 import sys
 
-class Xsdktrilinos(Package):
+class Xsdktrilinos(CMakePackage):
     """xSDKTrilinos contains the portions of Trilinos that depend on PETSc
     because they would cause a circular dependency if built as part of Trilinos.
     """
@@ -54,18 +54,19 @@ class Xsdktrilinos(Package):
 
     # MPI related dependencies
     depends_on('mpi')
-    depends_on('hypre', when='+hypre')
+    depends_on('hypre~internal-superlu', when='+hypre')
     depends_on('petsc+mpi~complex', when='+petsc')
     depends_on('trilinos@12.6.4', when='@12.6.4')
     depends_on('trilinos@12.8.1', when='@12.8.1')
     depends_on('trilinos@develop', when='@develop')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
+
+        cxx_flags = []
         options = []
-        options.extend(std_cmake_args)
 
         mpi_bin = spec['mpi'].prefix.bin
-        # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
         options.extend([
             '-DxSDKTrilinos_VERBOSE_CONFIGURE:BOOL=OFF',
             '-DxSDKTrilinos_ENABLE_TESTS:BOOL=ON',
@@ -81,7 +82,8 @@ class Xsdktrilinos(Package):
             '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
                 'ON' if '+hypre' in spec else 'OFF'),
             '-DTPL_ENABLE_PETSC:BOOL=%s' % (
-                'ON' if '+petsc' in spec else 'OFF')
+                'ON' if '+petsc' in spec else 'OFF'),
+            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
         ])
 
         # Fortran lib
@@ -95,12 +97,7 @@ class Xsdktrilinos(Package):
                 '-DxSDKTrilinos_ENABLE_Fortran=ON'
             ])
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()
-            make('install')
-
-            # The shared libraries are not installed correctly on Darwin;
-            # correct this
-            if (sys.platform == 'darwin') and ('+shared' in spec):
-                fix_darwin_install_name(prefix.lib)
+        options.extend([
+            '-DCMAKE_CXX_FLAGS:STRING=%s' % (' '.join(cxx_flags)),
+        ])
+        return options
