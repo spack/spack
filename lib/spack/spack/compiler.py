@@ -183,6 +183,16 @@ class Compiler(object):
             "If you think it should, please edit the compiler subclass and",
             "submit a pull request or issue.")
 
+    # This property should be overridden in the compiler subclass if
+    # C++17 is supported by that compiler
+    @property
+    def cxx17_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die(
+            "The compiler you have chosen does not currently support C++17.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.

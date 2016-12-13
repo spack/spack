@@ -66,6 +66,16 @@ class Intel(Compiler):
             return "-std=c++11"
 
     @property
+    def cxx14_flag(self):
+        # Adapted from CMake's Intel-CXX rules.
+        if self.version < ver('15'):
+            tty.die("Only intel 15.0 and above support c++14.")
+        elif self.version < ver('15.0.2'):
+            return "-std=c++1y"
+        else:
+            return "-std=c++14"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 
