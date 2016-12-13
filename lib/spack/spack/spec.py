@@ -786,7 +786,7 @@ class Spec(object):
         self.namespace = other.namespace
         self._hash = other._hash
         self._cmp_key_cache = other._cmp_key_cache
-        self.build_only_deps = {}
+        self.build_only_deps = other.build_only_deps
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -2213,7 +2213,7 @@ class Spec(object):
         self.external = other.external
         self.external_module = other.external_module
         self.namespace = other.namespace
-        self.build_only_deps = {}
+        self.build_only_deps = other.build_only_deps
 
         self.external = other.external
         self.external_module = other.external_module
