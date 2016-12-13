@@ -340,7 +340,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
     if pkg.architecture.target.module_name:
-        load_module(pkg.spec.architecture.target.module_name)
+        load_module(pkg.architecture.target.module_name)
 
     return env
 
