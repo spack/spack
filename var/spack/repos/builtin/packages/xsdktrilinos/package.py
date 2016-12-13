@@ -65,7 +65,6 @@ class Xsdktrilinos(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cxx_flags = []
         options = []
 
         mpi_bin = spec['mpi'].prefix.bin
@@ -99,7 +98,4 @@ class Xsdktrilinos(CMakePackage):
                 '-DxSDKTrilinos_ENABLE_Fortran=ON'
             ])
 
-        options.extend([
-            '-DCMAKE_CXX_FLAGS:STRING=%s' % (' '.join(cxx_flags)),
-        ])
         return options
