@@ -28,6 +28,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.store
 from spack.spec import *
 from spack.graph import *
 
@@ -73,7 +74,7 @@ def graph(parser, args):
         if args.specs:
             tty.die("Can't specify specs with --installed")
         args.dot = True
-        specs = spack.installed_db.query()
+        specs = spack.store.db.query()
 
     else:
         specs = spack.cmd.parse_specs(
