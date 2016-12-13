@@ -37,6 +37,8 @@ class PyCdo(Package):
 
     extends('python')
 
+    depends_on('cdo')
+
     depends_on('py-setuptools', type='build')
     depends_on('py-scipy', type=nolink)
     depends_on('py-netcdf', type=nolink)   
