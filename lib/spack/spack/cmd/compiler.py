@@ -33,7 +33,6 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec, ArchSpec
-from spack.util.environment import get_path
 
 description = "Manage compilers"
 
@@ -84,8 +83,6 @@ def compiler_find(args):
 
     """
     paths = args.add_paths
-    if not paths:
-        paths = get_path('PATH')
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the
