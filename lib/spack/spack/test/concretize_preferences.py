@@ -22,93 +22,95 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import pytest
+
 import spack
-import spack.architecture
-from spack.test.mock.packages_test import *
-from tempfile import mkdtemp
 from spack.spec import Spec
 
 
-class ConcretizePreferencesTest(MockPackagesTest):
-    """Test concretization preferences are being applied correctly.
+@pytest.fixture()
+def concretize_scope(configuration_files, tmpdir):
+    """Adds a scope for concretization preferences"""
+    tmpdir.ensure_dir('concretize')
+    spack.config.ConfigScope(
+        'concretize', str(tmpdir.join('concretize'))
+    )
+    yield
+    # This is kind of weird, but that's how config scopes are
+    # set in ConfigScope.__init__
+    spack.config.config_scopes.pop('concretize')
+    spack.pkgsort = spack.PreferredPackages()
+
+
+def concretize(abstract_spec):
+    return Spec(abstract_spec).concretized()
+
+
+def update_packages(pkgname, section, value):
+    """Update config and reread package list"""
+    conf = {pkgname: {section: value}}
+    spack.config.update_config('packages', conf, 'concretize')
+    spack.pkgsort = spack.PreferredPackages()
+
+
+def assert_variant_values(spec, **variants):
+    concrete = concretize(spec)
+    for variant, value in variants.items():
+        assert concrete.variants[variant].value == value
+
+
+def test_preferred_variants(concretize_scope, mock_repository):
+    """Test preferred variants are applied correctly
     """
+    update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
+    assert_variant_values(
+        'mpileaks', debug=False, opt=False, shared=True, static=True
+    )
+    update_packages(
+        'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
+    )
+    assert_variant_values(
+        'mpileaks', debug=True, opt=True, shared=False, static=False
+    )
 
-    def setUp(self):
-        """Create config section to store concretization preferences
-        """
-        super(ConcretizePreferencesTest, self).setUp()
-        self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
-        spack.config.ConfigScope('concretize',
-                                 os.path.join(self.tmp_dir, 'concretize'))
 
-    def tearDown(self):
-        super(ConcretizePreferencesTest, self).tearDown()
-        shutil.rmtree(self.tmp_dir, True)
-        spack.pkgsort = spack.PreferredPackages()
+def test_preferred_compilers(concretize_scope, mock_repository):
+    """Test preferred compilers are applied correctly
+    """
+    update_packages('mpileaks', 'compiler', ['clang@3.3'])
+    spec = concretize('mpileaks')
+    assert spec.compiler == spack.spec.CompilerSpec('clang@3.3')
 
-    def concretize(self, abstract_spec):
-        return Spec(abstract_spec).concretized()
+    update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
+    spec = concretize('mpileaks')
+    assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
-    def update_packages(self, pkgname, section, value):
-        """Update config and reread package list"""
-        conf = {pkgname: {section: value}}
-        spack.config.update_config('packages', conf, 'concretize')
-        spack.pkgsort = spack.PreferredPackages()
 
-    def assert_variant_values(self, spec, **variants):
-        concrete = self.concretize(spec)
-        for variant, value in variants.items():
-            self.assertEqual(concrete.variants[variant].value, value)
+def test_preferred_versions(concretize_scope, mock_repository):
+    """Test preferred package versions are applied correctly
+    """
+    update_packages('mpileaks', 'version', ['2.3'])
+    spec = concretize('mpileaks')
+    assert spec.version == spack.spec.Version('2.3')
 
-    def test_preferred_variants(self):
-        """Test preferred variants are applied correctly
-        """
-        self.update_packages('mpileaks', 'variants',
-                             '~debug~opt+shared+static')
-        self.assert_variant_values('mpileaks', debug=False, opt=False,
-                                   shared=True, static=True)
+    update_packages('mpileaks', 'version', ['2.2'])
+    spec = concretize('mpileaks')
+    assert spec.version == spack.spec.Version('2.2')
 
-        self.update_packages('mpileaks', 'variants',
-                             ['+debug', '+opt', '~shared', '-static'])
-        self.assert_variant_values('mpileaks', debug=True, opt=True,
-                                   shared=False, static=False)
 
-    def test_preferred_compilers(self):
-        """Test preferred compilers are applied correctly
-        """
-        self.update_packages('mpileaks', 'compiler', ['clang@3.3'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.compiler, spack.spec.CompilerSpec('clang@3.3'))
+def test_preferred_providers(concretize_scope, mock_repository):
+    """Test preferred providers of virtual packages are applied correctly"""
+    update_packages('all', 'providers', {'mpi': ['mpich']})
+    spec = concretize('mpileaks')
+    assert 'mpich' in spec
 
-        self.update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.compiler, spack.spec.CompilerSpec('gcc@4.5.0'))
+    update_packages('all', 'providers', {'mpi': ['zmpi']})
+    spec = concretize('mpileaks')
+    assert 'zmpi' in spec
 
-    def test_preferred_versions(self):
-        """Test preferred package versions are applied correctly
-        """
-        self.update_packages('mpileaks', 'version', ['2.3'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.version, spack.spec.Version('2.3'))
 
-        self.update_packages('mpileaks', 'version', ['2.2'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.version, spack.spec.Version('2.2'))
-
-    def test_preferred_providers(self):
-        """Test preferred providers of virtual packages are applied correctly
-        """
-        self.update_packages('all', 'providers', {'mpi': ['mpich']})
-        spec = self.concretize('mpileaks')
-        self.assertTrue('mpich' in spec)
-
-        self.update_packages('all', 'providers', {'mpi': ['zmpi']})
-        spec = self.concretize('mpileaks')
-        self.assertTrue('zmpi', spec)
-
-    def test_develop(self):
-        """Test conretization with develop version
-        """
-        spec = Spec('builtin.mock.develop-test')
-        spec.concretize()
-        self.assertEqual(spec.version, spack.spec.Version('0.2.15'))
+def test_develop(concretize_scope, mock_repository):
+    """Test concretization with develop version"""
+    spec = Spec('builtin.mock.develop-test')
+    spec.concretize()
+    assert spec.version == spack.spec.Version('0.2.15')
