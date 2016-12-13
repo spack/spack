@@ -33,6 +33,7 @@ from spack.database import Database
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.test.mock.packages_test import *
 from spack.test.mock.repo import MockArchive
+from spack.spec import Spec
 
 
 class InstallTest(MockPackagesTest):

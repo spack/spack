@@ -38,6 +38,24 @@ from spack.test.mock.packages_test import *
 
 class SpecDagTest(MockPackagesTest):
 
+    def set_pkg_dep(self, pkg_name, spec, deptypes=spack.alldeps):
+        """Alters dependence information for a package.
+
+        Adds a dependency on <spec> to pkg.
+        Use this to mock up constraints.
+        """
+        spec = Spec(spec)
+
+        # Save original dependencies before making any changes.
+        pkg = spack.repo.get(pkg_name)
+        if pkg_name not in self.saved_deps:
+            self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
+
+        # Change dep spec
+        # XXX(deptype): handle deptypes.
+        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
+        pkg._deptypes[spec.name] = set(deptypes)
+
     def test_conflicting_package_constraints(self):
         self.set_pkg_dep('mpileaks', 'mpich@1.0')
         self.set_pkg_dep('callpath', 'mpich@2.0')

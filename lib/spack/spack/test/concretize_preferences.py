@@ -26,6 +26,7 @@ import spack
 import spack.architecture
 from spack.test.mock.packages_test import *
 from tempfile import mkdtemp
+from spack.spec import Spec
 
 
 class ConcretizePreferencesTest(MockPackagesTest):

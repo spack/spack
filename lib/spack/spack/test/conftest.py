@@ -24,13 +24,17 @@
 ##############################################################################
 
 import StringIO
+import shutil
 
+import llnl.util.filesystem
 import llnl.util.lang
+import ordereddict_backport
 import pytest
 import spack
 import spack.architecture
 import spack.fetch_strategy
 import spack.platforms.test
+
 
 ##########
 # Monkey-patching that is applied to all tests
@@ -81,3 +85,66 @@ def mock_fetch_cache(monkeypatch):
 # FIXME: there's some weird interaction with compilers during concretization.
 spack.architecture.real_platform = spack.architecture.platform
 spack.architecture.platform = lambda: spack.platforms.test.Test()
+
+##########
+# Test-specific fixtures
+##########
+
+
+@pytest.fixture()
+def mock_repository():
+    """Substitutes the 'builtin' repository with the 'mock' repository used
+    for tests.
+    """
+    db = RepoPath(spack.mock_packages_path)
+    spack.repo.swap(db)
+    yield
+    spack.repo.swap(db)
+
+
+@pytest.fixture(scope='session')
+def linux_os():
+    platform = spack.architecture.platform()
+    os_name, os_version = 'debian', '6'
+    if platform.name == 'linux':
+        platform = spack.architecture.platform()
+        linux_os = platform.operating_system('default_os')
+        os_name, os_version = linux_os.name, linux_os_version
+    return os_name, os_version
+
+
+@pytest.fixture(scope='session')
+def configuration_files(tmpdir_factory, linux_os):
+    tmpdir = tmpdir_factory.getbasetemp()
+    # Name of the yaml files in the test/data folder
+    join_path = llnl.util.filesystem.join_path
+    compilers_yaml = join_path(spack.test_path, 'data', 'compilers.yaml')
+    packages_yaml = join_path(spack.test_path, 'data', 'packages.yaml')
+    config_yaml = join_path(spack.test_path, 'data', 'config.yaml')
+    # Create temporary 'site' and 'user' folders
+    tmpdir.ensure_dir('site')
+    tmpdir.ensure_dir('user')
+    # Copy the configurations that don't need further work
+    shutil.copy(packages_yaml, str(tmpdir.join('site', 'packages.yaml')))
+    shutil.copy(config_yaml, str(tmpdir.join('site', 'config.yaml')))
+    # Write the one that needs modifications
+    os_name, os_version = linux_os
+    with open(compilers_yaml) as f:
+        content = ''.join(f.readlines()).format(os_name, os_version)
+    t = tmpdir.join('site', 'compilers.yaml')
+    t.write(content)
+    # Set up a mock config scope
+    spack.config.clear_config_caches()
+    real_scope = spack.config.config_scopes
+    spack.config.config_scopes = ordereddict_backport.OrderedDict()
+    spack.config.ConfigScope('site', str(tmpdir.join('site')))
+    spack.config.ConfigScope('user', str(tmpdir.join('user')))
+    yield
+    spack.config.config_scopes = real_scope
+    spack.config.clear_config_caches()
+
+
+@pytest.fixture()
+def share_path(tmpdir, monkeypatch):
+    # Keep tests from interfering with the actual module path.
+    monkeypatch.setattr(spack, 'share_path', str(tmpdir))

@@ -29,10 +29,9 @@ import unittest
 
 import spack
 import spack.config
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, join_path
 from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
-from spack.spec import Spec
 
 platform = spack.architecture.platform()
 
@@ -44,155 +43,19 @@ if platform.name == 'linux':
     linux_os_name = linux_os.name
     linux_os_version = linux_os.version
 
-mock_compiler_config = """\
-compilers:
-- compiler:
-    spec: clang@3.3
-    operating_system: {0}{1}
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: gcc@4.5.0
-    operating_system: {0}{1}
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: clang@3.3
-    operating_system: CNL
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: clang@3.3
-    operating_system: SuSE11
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: clang@3.3
-    operating_system: yosemite
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    operating_system: CNL
-    spec: gcc@4.5.0
-    modules: 'None'
-- compiler:
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    operating_system: SuSE11
-    spec: gcc@4.5.0
-    modules: 'None'
-- compiler:
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    operating_system: yosemite
-    spec: gcc@4.5.0
-    modules: 'None'
-- compiler:
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    operating_system: elcapitan
-    spec: gcc@4.5.0
-    modules: 'None'
-- compiler:
-    spec: clang@3.3
-    operating_system: elcapitan
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: gcc@4.7.2
-    operating_system: redhat6
-    paths:
-      cc: /path/to/gcc472
-      cxx: /path/to/g++472
-      f77: /path/to/gfortran472
-      fc: /path/to/gfortran472
-    flags:
-      cflags: -O0
-      cxxflags: -O0
-      fflags: -O0
-    modules: 'None'
-- compiler:
-    spec: clang@3.5
-    operating_system: redhat6
-    paths:
-      cc: /path/to/clang35
-      cxx: /path/to/clang++35
-      f77: None
-      fc: None
-    flags:
-      cflags: -O3
-      cxxflags: -O3
-    modules: 'None'
-""".format(linux_os_name, linux_os_version)
+cmp_yaml = join_path(spack.test_path, 'data', 'compilers.yaml')
+with open(cmp_yaml) as f:
+    mock_compiler_config = ''.join(f.readlines()).format(
+        linux_os_name, linux_os_version
+    )
 
-mock_packages_config = """\
-packages:
-  externaltool:
-    buildable: False
-    paths:
-      externaltool@1.0%gcc@4.5.0: /path/to/external_tool
-  externalvirtual:
-    buildable: False
-    paths:
-      externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
-      externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
-  externalmodule:
-    buildable: False
-    modules:
-      externalmodule@1.0%gcc@4.5.0: external-module
-"""
+pkg_yaml = join_path(spack.test_path, 'data', 'packages.yaml')
+with open(pkg_yaml) as f:
+    mock_packages_config = ''.join(f.readlines())
 
-mock_config = """\
-config:
-  install_tree: $spack/opt/spack
-  build_stage:
-  - $tempdir
-  - /nfs/tmp2/$user
-  - $spack/var/spack/stage
-  source_cache: $spack/var/spack/cache
-  misc_cache: ~/.spack/cache
-  verify_ssl: true
-  checksum: true
-  dirty: True
-"""
+cfg_yaml = join_path(spack.test_path, 'data', 'config.yaml')
+with open(cfg_yaml) as f:
+    mock_config = ''.join(f.readlines())
 
 # these are written out to mock config files.
 mock_configs = {

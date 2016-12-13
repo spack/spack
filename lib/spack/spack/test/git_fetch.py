@@ -29,6 +29,7 @@ from llnl.util.filesystem import *
 from spack.test.mock.packages_test import *
 from spack.test.mock.repo import MockGitRepo
 from spack.version import ver
+from spack.spec import Spec
 
 
 class GitFetchTest(MockPackagesTest):

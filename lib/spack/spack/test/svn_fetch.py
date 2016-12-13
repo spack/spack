@@ -30,6 +30,7 @@ from spack.test.mock.repo import svn, MockSvnRepo
 from spack.version import ver
 from spack.test.mock.packages_test import *
 from llnl.util.filesystem import *
+from spack.spec import Spec
 
 
 class SvnFetchTest(MockPackagesTest):

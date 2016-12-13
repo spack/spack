@@ -162,8 +162,6 @@ for cmd in spack.cmd.commands:
         subparser = subparsers.add_parser(cmd_name, help=module.description)
         module.setup_parser(subparser)
 
-import spack.yaml_version_check
-
 if __name__ == '__main__':
 
     # Just print help and exit if run with no arguments at all
