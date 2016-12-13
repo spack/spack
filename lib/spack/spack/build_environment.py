@@ -261,11 +261,13 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
 
-    # TODO: build_only_deps are excluded here, perhaps that should not always
-    # be the case
+    build_only_deps_transitive = list(itertools.chain.from_iterable(
+        dep.traverse(deptype=('build', 'link')) for dep in
+        pkg.spec.build_only_deps.itervalues()))
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in
                     pkg.spec.traverse(root=False, deptype=('build', 'link'))]
+    dep_prefixes.extend(d.prefix for d in build_only_deps_transitive)
     dep_prefixes = filter_system_paths(dep_prefixes)
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
 
@@ -339,12 +341,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    build_only_deps_transitive = list(itertools.chain.from_iterable(
-        dep.traverse(deptype=('build', 'link')) for dep in
-        pkg.spec.build_only_deps.itervalues()))
-    build_only_prefixes = [
-        d.prefix for d in build_only_deps_transitive]
-    for pre in itertools.chain(dep_prefixes, build_only_prefixes):
+    for pre in dep_prefixes:
         for directory in ('lib', 'lib64', 'share'):
             pcdir = join_path(pre, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
