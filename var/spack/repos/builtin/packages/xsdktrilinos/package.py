@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import sys
 
 
 class Xsdktrilinos(CMakePackage):
