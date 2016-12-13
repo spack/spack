@@ -156,8 +156,8 @@ def main():
         import spack.util.debug as debug
         debug.register_interrupt_handler()
 
-    from spack.yaml_version_check import check_yaml_versions
-    check_yaml_versions()
+    # Run any available pre-run hooks
+    spack.hooks.pre_run()
 
     spack.spack_working_dir = working_dir
     if args.mock:

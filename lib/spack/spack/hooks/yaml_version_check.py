@@ -31,7 +31,7 @@ import spack.util.spack_yaml as syaml
 import spack.config
 
 
-def check_yaml_versions():
+def pre_run():
     check_compiler_yaml_version()
 
 

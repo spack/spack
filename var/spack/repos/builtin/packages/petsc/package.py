@@ -40,7 +40,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
             commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
-    
+
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
     version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
     version('3.6.4', '7632da2375a3df35b8891c9526dbdde7')
@@ -79,7 +79,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7')
+    depends_on('python @2.6:2.7', type='build')
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
@@ -94,7 +94,7 @@ class Petsc(Package):
     depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
     depends_on('superlu-dist@:4.3', when='@3.4.4:3.6.4+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
-    depends_on('superlu-dist@5.0.0:', when='@for-pflotran-0.1.0+superlu-dist+mpi')    
+    depends_on('superlu-dist@5.0.0:', when='@for-pflotran-0.1.0+superlu-dist+mpi')
     depends_on('mumps+mpi', when='+mumps+mpi')
     depends_on('scalapack', when='+mumps+mpi')
 
