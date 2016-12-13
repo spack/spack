@@ -34,7 +34,7 @@ import spack
 import spack.architecture
 import spack.fetch_strategy
 import spack.platforms.test
-
+import spack.repository
 
 ##########
 # Monkey-patching that is applied to all tests
@@ -96,7 +96,7 @@ def mock_repository():
     """Substitutes the 'builtin' repository with the 'mock' repository used
     for tests.
     """
-    db = RepoPath(spack.mock_packages_path)
+    db = spack.repository.RepoPath(spack.mock_packages_path)
     spack.repo.swap(db)
     yield
     spack.repo.swap(db)
