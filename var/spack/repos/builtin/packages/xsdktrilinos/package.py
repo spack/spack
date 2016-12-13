@@ -26,9 +26,11 @@ from spack import *
 import os
 import sys
 
+
 class Xsdktrilinos(CMakePackage):
     """xSDKTrilinos contains the portions of Trilinos that depend on PETSc
-    because they would cause a circular dependency if built as part of Trilinos.
+    because they would cause a circular dependency if built as part of 
+    Trilinos.
     """
     homepage = "https://trilinos.org/"
     base_url = "https://github.com/trilinos/xSDKTrilinos/archive"
