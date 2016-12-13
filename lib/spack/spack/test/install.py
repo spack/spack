@@ -22,86 +22,74 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import shutil
-import tempfile
-
+import pytest
 import spack
 import spack.store
-from llnl.util.filesystem import *
-from spack.directory_layout import YamlDirectoryLayout
 from spack.database import Database
+from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.test.mock.packages_test import *
-from spack.test.mock.repo import MockArchive
 from spack.spec import Spec
+from spack.test.mock.repo import MockArchive
 
 
-class InstallTest(MockPackagesTest):
-    """Tests install and uninstall on a trivial package."""
+@pytest.fixture()
+def install_mockery(tmpdir, configuration_files, mock_repository):
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
+    spack.store.db = Database(str(tmpdir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    yield
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
 
-    def setUp(self):
-        super(InstallTest, self).setUp()
 
-        # create a simple installable package directory and tarball
-        self.repo = MockArchive()
+@pytest.fixture()
+def repo():
+    return MockArchive()
 
-        # We use a fake package, so skip the checksum.
-        spack.do_checksum = False
 
-        # Use a fake install directory to avoid conflicts bt/w
-        # installed pkgs and mock packages.
-        self.tmpdir = tempfile.mkdtemp()
-        self.orig_layout = spack.store.layout
-        self.orig_db = spack.store.db
+def fake_fetchify(repo, pkg):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(repo.url))
+    pkg.fetcher = fetcher
 
-        spack.store.layout = YamlDirectoryLayout(self.tmpdir)
-        spack.store.db     = Database(self.tmpdir)
 
-    def tearDown(self):
-        super(InstallTest, self).tearDown()
-        self.repo.destroy()
+def test_install_and_uninstall(repo, install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial_install_test_package')
+    spec.concretize()
+    assert spec.concrete
 
-        # Turn checksumming back on
-        spack.do_checksum = True
+    # Get the package
+    pkg = spack.repo.get(spec)
 
-        # restore spack's layout.
-        spack.store.layout = self.orig_layout
-        spack.store.db     = self.orig_db
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+    fake_fetchify(repo, pkg)
 
-    def fake_fetchify(self, pkg):
-        """Fake the URL for a package so it downloads from a file."""
-        fetcher = FetchStrategyComposite()
-        fetcher.append(URLFetchStrategy(self.repo.url))
-        pkg.fetcher = fetcher
+    try:
+        pkg.do_install()
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix()
+        raise
 
-    def test_install_and_uninstall(self):
-        # Get a basic concrete spec for the trivial install package.
-        spec = Spec('trivial_install_test_package')
-        spec.concretize()
-        self.assertTrue(spec.concrete)
 
-        # Get the package
-        pkg = spack.repo.get(spec)
+def test_store(repo, install_mockery):
+    spec = Spec('cmake-client').concretized()
 
-        self.fake_fetchify(pkg)
+    for s in spec.traverse():
+        fake_fetchify(repo, s.package)
 
-        try:
-            pkg.do_install()
-            pkg.do_uninstall()
-        except Exception:
-            pkg.remove_prefix()
-            raise
-
-    def test_store(self):
-        spec = Spec('cmake-client').concretized()
-
-        for s in spec.traverse():
-            self.fake_fetchify(s.package)
-
-        pkg = spec.package
-        try:
-            pkg.do_install()
-        except Exception:
-            pkg.remove_prefix()
-            raise
+    pkg = spec.package
+    try:
+        pkg.do_install()
+    except Exception:
+        pkg.remove_prefix()
+        raise
