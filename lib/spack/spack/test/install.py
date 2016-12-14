@@ -56,7 +56,7 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-def test_install_and_uninstall(mock_archive_url, install_mockery):
+def test_install_and_uninstall(mock_archive, install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial_install_test_package')
     spec.concretize()
@@ -65,7 +65,7 @@ def test_install_and_uninstall(mock_archive_url, install_mockery):
     # Get the package
     pkg = spack.repo.get(spec)
 
-    fake_fetchify(mock_archive_url, pkg)
+    fake_fetchify(mock_archive.url, pkg)
 
     try:
         pkg.do_install()
@@ -75,11 +75,11 @@ def test_install_and_uninstall(mock_archive_url, install_mockery):
         raise
 
 
-def test_store(mock_archive_url, install_mockery):
+def test_store(mock_archive, install_mockery):
     spec = Spec('cmake-client').concretized()
 
     for s in spec.traverse():
-        fake_fetchify(mock_archive_url, s.package)
+        fake_fetchify(mock_archive.url, s.package)
 
     pkg = spec.package
     try:

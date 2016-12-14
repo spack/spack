@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import re
 import shutil
 
 import StringIO
@@ -162,8 +163,9 @@ def share_path(tmpdir, monkeypatch):
 ##########
 # Fake archives and repositories
 ##########
+
 @pytest.fixture(scope='session')
-def mock_archive_url():
+def mock_archive():
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
@@ -172,6 +174,7 @@ def mock_archive_url():
     tmpdir = py.path.local(stage.path)
     repo_name = 'mock-archive-repo'
     tmpdir.ensure(repo_name, dir=True)
+    repodir = tmpdir.join(repo_name)
     # Create the configure script
     configure_path = str(tmpdir.join(repo_name, 'configure'))
     with open(configure_path, 'w') as f:
@@ -192,8 +195,13 @@ def mock_archive_url():
     archive_name = '{0}.tar.gz'.format(repo_name)
     tar('-czf', archive_name, repo_name)
     current.chdir()
+    Bunch = spack.util.pattern.Bunch
+    url = 'file://' + str(tmpdir.join(archive_name))
+    t = Bunch(
+        url=url, path=str(repodir)
+    )
     # Return the url
-    yield 'file://' + str(tmpdir.join(archive_name))
+    yield t
     stage.destroy()
 
 
@@ -209,6 +217,7 @@ def mock_git_repository():
     # Initialize the repository
     current = repodir.chdir()
     git('init')
+    url = 'file://' + str(repodir)
 
     # r0 is just the first commit
     r0_file = 'r0_file'
@@ -266,7 +275,7 @@ def mock_git_repository():
         )
     }
 
-    t = Bunch(checks=checks, hash=rev_hash)
+    t = Bunch(checks=checks, url=url, hash=rev_hash, path=str(repodir))
     yield t
     stage.destroy()
 
@@ -284,6 +293,7 @@ def mock_hg_repository():
 
     # Initialize the repository
     current = repodir.chdir()
+    url = 'file://' + str(repodir)
     hg('init')
     # Commit file r0
     r0_file = 'r0_file'
@@ -311,6 +321,69 @@ def mock_hg_repository():
             }
         )
     }
-    t = Bunch(checks=checks, hash=get_rev)
+    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
     stage.destroy()
+
+
+@pytest.fixture(scope='session')
+def mock_svn_repository():
+    svn = spack.util.executable.which('svn', required=True)
+    svnadmin = spack.util.executable.which('svnadmin', required=True)
+    stage = spack.stage.Stage('mock-svn-stage')
+    tmpdir = py.path.local(stage.path)
+    repo_name = 'mock-svn-repo'
+    tmpdir.ensure(repo_name, dir=True)
+    repodir = tmpdir.join(repo_name)
+    url = 'file://' + str(repodir)
+    # Initialize the repository
+    current = repodir.chdir()
+    svnadmin('create', str(repodir))
+
+    # Import a structure (first commit)
+    r0_file = 'r0_file'
+    tmpdir.ensure('tmp-path', r0_file)
+    svn(
+        'import',
+        str(tmpdir.join('tmp-path')),
+        url,
+        '-m',
+        'Initial import r0'
+    )
+    shutil.rmtree(str(tmpdir.join('tmp-path')))
+    # Second commit
+    r1_file = 'r1_file'
+    svn('checkout', url, str(tmpdir.join('tmp-path')))
+    tmpdir.ensure('tmp-path', r1_file)
+    tmpdir.join('tmp-path').chdir()
+    svn('add', str(tmpdir.ensure('tmp-path', r1_file)))
+    svn('ci', '-m', 'second revision r1')
+    repodir.chdir()
+    shutil.rmtree(str(tmpdir.join('tmp-path')))
+    r0 = '1'
+    r1 = '2'
+
+    Bunch = spack.util.pattern.Bunch
+
+    checks = {
+        'default': Bunch(
+            revision=r1, file=r1_file, args={'svn': url}
+        ),
+        'rev0': Bunch(
+            revision=r0, file=r0_file, args={
+                'svn': url, 'revision': r0
+            }
+        )
+    }
+
+    def get_rev():
+        output = svn('info', output=str)
+        assert "Revision" in output
+        for line in output.split('\n'):
+            match = re.match(r'Revision: (\d+)', line)
+            if match:
+                return match.group(1)
+
+    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
+    yield t
+    current.chdir()
