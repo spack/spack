@@ -99,8 +99,8 @@ spack.architecture.platform = lambda: spack.platforms.test.Test()
 
 @pytest.fixture()
 def mock_repository():
-    """Substitutes the 'builtin' repository with the 'mock' repository used
-    for tests.
+    """Substitutes the 'builtin' Spack repository with the 'mock' repository
+    used for tests.
     """
     db = spack.repository.RepoPath(spack.mock_packages_path)
     spack.repo.swap(db)
