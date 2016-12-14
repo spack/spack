@@ -22,36 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Yaml Version Check is a module for ensuring that config file
-formats are compatible with the current version of Spack."""
-import os.path
-import os
-import llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
-import spack.config
+
+from spack import *
 
 
-def check_yaml_versions():
-    check_compiler_yaml_version()
+class Pflotran(AutotoolsPackage):
+    """PFLOTRAN is an open source, state-of-the-art massively parallel
+       subsurface flow and reactive transport code.
+    """
 
+    homepage = "http://www.pflotran.org"
 
-def check_compiler_yaml_version():
-    config_scopes = spack.config.config_scopes
-    for scope in config_scopes.values():
-        file_name = os.path.join(scope.path, 'compilers.yaml')
-        data = None
-        if os.path.isfile(file_name):
-            with open(file_name) as f:
-                data = syaml.load(f)
+    version('develop', hg='https://bitbucket.org/pflotran/pflotran-xsdk')
+    version('0.1.0', hg='https://bitbucket.org/pflotran/pflotran-xsdk',
+            commmit='4734cf5e606b')    
 
-        if data:
-            compilers = data['compilers']
-            if len(compilers) > 0:
-                if (not isinstance(compilers, list) or
-                    'operating_system' not in compilers[0]['compiler']):
-                    new_file = os.path.join(scope.path, '_old_compilers.yaml')
-                    tty.warn('%s in out of date compilers format. '
-                             'Moved to %s. Spack automatically generate '
-                             'a compilers config file '
-                             % (file_name, new_file))
-                    os.rename(file_name, new_file)
+    depends_on('mpi')
+    depends_on('hdf5@1.8.12+mpi+fortran')
+    depends_on('petsc@develop+hdf5+metis',when='@develop')
+    depends_on('petsc@for-pflotran-0.1.0+hdf5+metis',when='@0.1.0')    
+
+    parallel = False

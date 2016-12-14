@@ -967,7 +967,7 @@ Distribute Your Software
 
 Once you've released your software, other people will want to build
 it; and you will need to tell them how.  In the past, that has meant a
-few paragraphs of pros explaining which dependencies to install.  But
+few paragraphs of prose explaining which dependencies to install.  But
 now you use Spack, and those instructions are written in executable
 Python code.  But your software has many dependencies, and you know
 Spack is the best way to install it:

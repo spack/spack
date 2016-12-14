@@ -22,36 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install uuid
-#
-# You can edit this file again by typing:
-#
-#     spack edit uuid
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
-class Uuid(Package):
-    """OSSP uuid is a ISO-C:1999 application programming interface (API) and corresponding command line interface (CLI) 
-    for the generation of DCE 1.1, ISO/IEC 11578:1996 and RFC 4122 compliant Universally Unique Identifier (UUID)"""
+class Uuid(AutotoolsPackage):
+    """OSSP uuid is a ISO-C:1999 application programming interface (API) and
+    corresponding command line interface (CLI) for the generation of DCE 1.1,
+    ISO/IEC 11578:1996 and RFC 4122 compliant Universally Unique Identifier
+    (UUID)."""
 
-    homepage = "http://www.ossp.org/pkg/lib/uuid/"
-    url = 'http://www.mirrorservice.org/sites/ftp.ossp.org/pkg/lib/uuid/uuid-1.6.2.tar.gz'
+    homepage = "http://www.ossp.org/pkg/lib/uuid"
+    url = "http://www.mirrorservice.org/sites/ftp.ossp.org/pkg/lib/uuid/uuid-1.6.2.tar.gz"
 
     version('1.6.2', '5db0d43a9022a6ebbbc25337ae28942f')
-
-    def install(self, spec, prefix):
-        
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

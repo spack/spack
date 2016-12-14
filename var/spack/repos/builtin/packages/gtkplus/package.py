@@ -34,10 +34,14 @@ class Gtkplus(Package):
         '2.24.25', '612350704dd3aacb95355a4981930c6f',
         url="http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.25.tar.xz")
 
+    variant('X', default=True, description="Enable an X toolkit")
+
     depends_on("atk")
     depends_on("gdk-pixbuf")
-    depends_on("pango")
     depends_on("glib")
+    depends_on("pango")
+    depends_on("pango~X", when='~X')
+    depends_on("pango+X", when='+X')
 
     def patch(self):
         # remove disable deprecated flag.

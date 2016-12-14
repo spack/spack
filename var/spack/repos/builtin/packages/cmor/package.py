@@ -22,63 +22,51 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install cmor
-#
-# You can edit this file again by typing:
-#
-#     spack edit cmor
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
-class Cmor(Package):
+class Cmor(AutotoolsPackage):
+    """Climate Model Output Rewriter is used to produce CF-compliant netCDF
+    files. The structure of the files created by the library and the metadata
+    they contain fulfill the requirements of many of the climate community's
+    standard model experiments."""
 
-    """Climate Model Output Rewriter Version 3"""
+    homepage = "http://cmor.llnl.gov"
+    url = "https://github.com/PCMDI/cmor/archive/3.1.2.tar.gz"
 
-    homepage = "http://cmor.llnl.gov/"
-    url  = "https://github.com/PCMDI/cmor"
+    version('3.2.0', 'b48105105d4261012c19cd65e89ff7a6')
+    version('3.1.2', '72f7227159c901e4bcf80d2c73a8ce77')
 
-    version('3.1.2', git="https://github.com/PCMDI/cmor.git", commit='f599ddcd56fa9037e3900cecad859dfc36d36f31')
-
-    variant('uuid', default=True, description='Enable UUID support')
-    variant('netcdf', default=True, description='Enable NetCDF support')
-    variant('udunits2', default=True, description='Enable UDUNITS2 support')
-    variant('hdf5', default=True, description='Enable HDF5 support')   
+    variant('fortran', default=True, description='Enable Fortran API')
     variant('python', default=False, description='Enable PYTHON support')
-    variant('py-numpy', default=False, description='Enable NUMPY-PYTHON support')
 
     depends_on('uuid')
     depends_on('netcdf')
     depends_on('udunits2')
-    depends_on('hdf5')
-    # depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
+    depends_on('hdf5@:1.8')
 
     extends('python', when='+python')
+    depends_on('python@:2.7', when='+python')
+    depends_on('py-numpy', type=nolink, when='+python')
+
+    @AutotoolsPackage.precondition('configure')
+    def validate(self):
+        if '+fortran' in self.spec and not self.compiler.fc:
+            msg = 'cannot build a fortran variant without a fortran compiler'
+            raise RuntimeError(msg)
+
+    def configure_args(self):
+        extra_args = ['--disable-debug']
+
+        if '+fortran' in self.spec:
+            extra_args.append('--enable-fortran')
+        else:
+            extra_args.append('--disable-fortran')
+
+        return extra_args
 
     def install(self, spec, prefix):
+        make('install')
 
-	config_args = ['--prefix=' + prefix]
-
-
-	if '+python' in spec:
-		config_args.append('--with-python={0}'.format(spec['python'].prefix))
-
-        configure(*config_args)
-
-	if '+python' in spec:
-		make('python')
-	else:
-		make()
-
-	make('install')
-
+        if '+python' in spec:
+            setup_py('install', '--prefix=' + prefix)
