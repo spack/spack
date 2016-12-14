@@ -266,6 +266,51 @@ def mock_git_repository():
         )
     }
 
-    t = spack.util.pattern.Bunch(checks=checks, hash=rev_hash)
+    t = Bunch(checks=checks, hash=rev_hash)
+    yield t
+    stage.destroy()
+
+
+@pytest.fixture(scope='session')
+def mock_hg_repository():
+    hg = spack.util.executable.which('hg', required=True)
+    stage = spack.stage.Stage('mock-hg-stage')
+    tmpdir = py.path.local(stage.path)
+    repo_name = 'mock-hg-repo'
+    tmpdir.ensure(repo_name, dir=True)
+    repodir = tmpdir.join(repo_name)
+
+    get_rev = lambda: hg('id', '-i', output=str).strip()
+
+    # Initialize the repository
+    current = repodir.chdir()
+    hg('init')
+    # Commit file r0
+    r0_file = 'r0_file'
+    repodir.ensure(r0_file)
+    hg('add', r0_file)
+    hg('commit', '-m', 'revision 0', '-u', 'test')
+    r0 = get_rev()
+    # Commit file r1
+    r1_file = 'r1_file'
+    repodir.ensure(r1_file)
+    hg('add', r1_file)
+    hg('commit', '-m' 'revision 1', '-u', 'test')
+    r1 = get_rev()
+    current.chdir()
+
+    Bunch = spack.util.pattern.Bunch
+
+    checks = {
+        'default': Bunch(
+            revision=r1, file=r1_file, args={'hg': str(repodir)}
+        ),
+        'rev0': Bunch(
+            revision=r0, file=r0_file, args={
+                'hg': str(repodir), 'revision': r0
+            }
+        )
+    }
+    t = Bunch(checks=checks, hash=get_rev)
     yield t
     stage.destroy()
