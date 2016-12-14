@@ -45,7 +45,7 @@ class Gmsh(Package):
             description='Enables the build of shared libraries')
     variant('debug',       default=False,
             description='Builds the library in debug mode')
-    variant('mpi',         default=False,
+    variant('mpi',         default=True,
             description='Builds MPI support for parser and solver')
     variant('fltk',        default=False,
             description='Enables the build of the FLTK GUI')
