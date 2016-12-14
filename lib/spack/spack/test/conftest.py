@@ -38,6 +38,7 @@ import spack.platforms.test
 import spack.repository
 import spack.stage
 import spack.util.executable
+import spack.util.pattern
 
 
 ##########
@@ -157,22 +158,21 @@ def share_path(tmpdir, monkeypatch):
     """Keep tests from interfering with the actual module path."""
     monkeypatch.setattr(spack, 'share_path', str(tmpdir))
 
+
 ##########
 # Fake archives and repositories
 ##########
-tar = spack.util.executable.which('tar', required=True)
-
-
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def mock_archive_url():
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
+    tar = spack.util.executable.which('tar', required=True)
     stage = spack.stage.Stage('mock-archive-stage')
     tmpdir = py.path.local(stage.path)
-    # Create the configure script
     repo_name = 'mock-archive-repo'
     tmpdir.ensure(repo_name, dir=True)
+    # Create the configure script
     configure_path = str(tmpdir.join(repo_name, 'configure'))
     with open(configure_path, 'w') as f:
         f.write(
@@ -193,4 +193,79 @@ def mock_archive_url():
     tar('-czf', archive_name, repo_name)
     current.chdir()
     # Return the url
-    return 'file://' + str(tmpdir.join(archive_name))
+    yield 'file://' + str(tmpdir.join(archive_name))
+    stage.destroy()
+
+
+@pytest.fixture(scope='session')
+def mock_git_repository():
+    git = spack.util.executable.which('git', required=True)
+    stage = spack.stage.Stage('mock-git-stage')
+    tmpdir = py.path.local(stage.path)
+    repo_name = 'mock-git-repo'
+    tmpdir.ensure(repo_name, dir=True)
+    repodir = tmpdir.join(repo_name)
+
+    # Initialize the repository
+    current = repodir.chdir()
+    git('init')
+
+    # r0 is just the first commit
+    r0_file = 'r0_file'
+    repodir.ensure(r0_file)
+    git('add', r0_file)
+    git('commit', '-m', 'mock-git-repo r0')
+
+    branch = 'test-branch'
+    branch_file = 'branch_file'
+    git('branch', branch)
+
+    tag_branch = 'tag-branch'
+    tag_file = 'tag_file'
+    git('branch', tag_branch)
+
+    # Check out first branch
+    git('checkout', branch)
+    repodir.ensure(branch_file)
+    git('add', branch_file)
+    git('commit', '-m' 'r1 test branch')
+
+    # Check out a second branch and tag it
+    git('checkout', tag_branch)
+    repodir.ensure(tag_file)
+    git('add', tag_file)
+    git('commit', '-m' 'tag test branch')
+
+    tag = 'test-tag'
+    git('tag', tag)
+
+    git('checkout', 'master')
+
+    # R1 test is the same as test for branch
+    rev_hash = lambda x: git('rev-parse', x, output=str).strip()
+    r1 = rev_hash(branch)
+    r1_file = branch_file
+    current.chdir()
+
+    Bunch = spack.util.pattern.Bunch
+
+    checks = {
+        'master': Bunch(
+            revision='master', file=r0_file, args={'git': str(repodir)}
+        ),
+        'branch': Bunch(
+            revision=branch, file=branch_file, args={
+                'git': str(repodir), 'branch': branch
+            }
+        ),
+        'tag': Bunch(
+            revision=tag, file=tag_file, args={'git': str(repodir), 'tag': tag}
+        ),
+        'commit': Bunch(
+            revision=r1, file=r1_file, args={'git': str(repodir), 'commit': r1}
+        )
+    }
+
+    t = spack.util.pattern.Bunch(checks=checks, hash=rev_hash)
+    yield t
+    stage.destroy()
