@@ -77,6 +77,7 @@ class Clang(Compiler):
                 tty.die("Only Clang 3.3 and above support c++11.")
             else:
                 return "-std=c++11"
+
     @property
     def cxx14_flag(self):
         if self.is_apple:
