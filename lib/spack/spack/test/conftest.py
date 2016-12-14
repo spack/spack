@@ -22,19 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import StringIO
+import os
 import shutil
 
+import StringIO
 import llnl.util.filesystem
 import llnl.util.lang
 import ordereddict_backport
+import py
 import pytest
 import spack
 import spack.architecture
 import spack.fetch_strategy
 import spack.platforms.test
 import spack.repository
+import spack.stage
+import spack.util.executable
+
 
 ##########
 # Monkey-patching that is applied to all tests
@@ -152,3 +156,41 @@ def configuration_files(tmpdir_factory, linux_os):
 def share_path(tmpdir, monkeypatch):
     """Keep tests from interfering with the actual module path."""
     monkeypatch.setattr(spack, 'share_path', str(tmpdir))
+
+##########
+# Fake archives and repositories
+##########
+tar = spack.util.executable.which('tar', required=True)
+
+
+@pytest.fixture()
+def mock_archive_url():
+    """Creates a very simple archive directory with a configure script and a
+    makefile that installs to a prefix. Tars it up into an archive.
+    """
+    stage = spack.stage.Stage('mock-archive-stage')
+    tmpdir = py.path.local(stage.path)
+    # Create the configure script
+    repo_name = 'mock-archive-repo'
+    tmpdir.ensure(repo_name, dir=True)
+    configure_path = str(tmpdir.join(repo_name, 'configure'))
+    with open(configure_path, 'w') as f:
+        f.write(
+            "#!/bin/sh\n"
+            "prefix=$(echo $1 | sed 's/--prefix=//')\n"
+            "cat > Makefile <<EOF\n"
+            "all:\n"
+            "\techo Building...\n\n"
+            "install:\n"
+            "\tmkdir -p $prefix\n"
+            "\ttouch $prefix/dummy_file\n"
+            "EOF\n"
+        )
+    os.chmod(configure_path, 0755)
+    # Archive it
+    current = tmpdir.chdir()
+    archive_name = '{0}.tar.gz'.format(repo_name)
+    tar('-czf', archive_name, repo_name)
+    current.chdir()
+    # Return the url
+    return 'file://' + str(tmpdir.join(archive_name))

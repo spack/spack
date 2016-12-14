@@ -29,7 +29,6 @@ from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
-from spack.test.mock.repo import MockArchive
 
 
 @pytest.fixture()
@@ -50,19 +49,14 @@ def install_mockery(tmpdir, configuration_files, mock_repository):
     spack.store.db = db
 
 
-@pytest.fixture()
-def repo():
-    return MockArchive()
-
-
-def fake_fetchify(repo, pkg):
+def fake_fetchify(url, pkg):
     """Fake the URL for a package so it downloads from a file."""
     fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(repo.url))
+    fetcher.append(URLFetchStrategy(url))
     pkg.fetcher = fetcher
 
 
-def test_install_and_uninstall(repo, install_mockery):
+def test_install_and_uninstall(mock_archive_url, install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial_install_test_package')
     spec.concretize()
@@ -71,7 +65,7 @@ def test_install_and_uninstall(repo, install_mockery):
     # Get the package
     pkg = spack.repo.get(spec)
 
-    fake_fetchify(repo, pkg)
+    fake_fetchify(mock_archive_url, pkg)
 
     try:
         pkg.do_install()
@@ -81,11 +75,11 @@ def test_install_and_uninstall(repo, install_mockery):
         raise
 
 
-def test_store(repo, install_mockery):
+def test_store(mock_archive_url, install_mockery):
     spec = Spec('cmake-client').concretized()
 
     for s in spec.traverse():
-        fake_fetchify(repo, s.package)
+        fake_fetchify(mock_archive_url, s.package)
 
     pkg = spec.package
     try:
