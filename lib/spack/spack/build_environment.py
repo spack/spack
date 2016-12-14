@@ -261,13 +261,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
 
-    build_only_deps_transitive = list(itertools.chain.from_iterable(
-        dep.traverse(deptype=('build', 'link')) for dep in
-        pkg.spec.build_only_deps.itervalues()))
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in
-                    pkg.spec.traverse(root=False, deptype=('build', 'link'))]
-    dep_prefixes.extend(d.prefix for d in build_only_deps_transitive)
+                    pkg.spec.traverse(root=False, deptype=('include', 'link'))]
     dep_prefixes = filter_system_paths(dep_prefixes)
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
 
@@ -340,6 +336,10 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
+    build_only_deps_transitive = list(itertools.chain.from_iterable(
+        dep.traverse(deptype=('run', 'link')) for dep in
+        pkg.spec.build_only_deps.itervalues()))
+    dep_prefixes.extend(d.prefix for d in build_only_deps_transitive)
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     for pre in dep_prefixes:
         for directory in ('lib', 'lib64', 'share'):
@@ -504,9 +504,17 @@ def setup_package(pkg, dirty=False):
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
+    build_only_deps_transitive = list(itertools.chain.from_iterable(
+        dep.traverse(deptype=('run', 'link')) for dep in
+        pkg.spec.build_only_deps.itervalues()))
+    build_deps_transitive = set(itertools.chain.from_iterable(
+        dep.traverse(deptype=('run', 'link')) for dep in
+        pkg.spec.dependencies(deptype=('build'))))
+    ordered_build_deps_transitive = list(
+        s for s in pkg.spec.traverse(order='post')
+        if s in build_deps_transitive)
     for dspec in itertools.chain(
-            pkg.spec.traverse(order='post', root=False, deptype='build'),
-            pkg.spec.build_only_deps.itervalues()):
+            ordered_build_deps_transitive, build_only_deps_transitive):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,

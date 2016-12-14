@@ -187,7 +187,7 @@ _separators = '[%s]' % ''.join(color_formats.keys())
 _any_version = VersionList([':'])
 
 # Special types of dependencies.
-alldeps = ('build', 'link', 'run')
+alldeps = ('build', 'link', 'run', 'include')
 nolink  = ('build', 'run')
 nobuild = ('link', 'run')
 norun   = ('link', 'build')
