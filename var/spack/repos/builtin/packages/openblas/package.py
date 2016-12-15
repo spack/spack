@@ -44,6 +44,8 @@ class Openblas(Package):
             description="Enable OpenMP support.")
     variant('fpic',   default=True,
             description="Build position independent code")
+    variant('avx2',   default=False,
+            description="Build with AVX 2 instructions")
 
     # virtual dependency
     provides('blas')
@@ -53,6 +55,8 @@ class Openblas(Package):
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
+
+    parallel = False
 
     @property
     def blas_libs(self):
@@ -83,6 +87,9 @@ class Openblas(Package):
                      'MAKE_NO_J=1']
 
         make_targets = ['libs', 'netlib']
+
+        if '+avx2' not in spec:
+            make_defs += ['NO_AVX2=1']
 
         # Build shared if variant is set.
         if '+shared' in spec:
