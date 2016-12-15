@@ -66,6 +66,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxext')
     depends_on('libxdamage')
     depends_on('libxfixes')
+    depends_on('expat')
 
     depends_on('glproto@1.4.14:', type='build')
     depends_on('dri2proto@2.6:', type='build')
