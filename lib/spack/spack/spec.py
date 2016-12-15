@@ -1573,6 +1573,10 @@ class Spec(object):
                     if dep_name not in covered:
                         spec.build_only_deps[dep_name] = build_spec
 
+                        for dep in build_spec.traverse():
+                            if dep.name in covered:
+                                spec.build_only_deps[dep.name] = dep
+
         for s in self.traverse(deptype_query=alldeps):
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
