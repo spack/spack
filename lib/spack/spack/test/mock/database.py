@@ -41,7 +41,7 @@ class MockDatabase(MockPackagesTest):
         pkg = spack.repo.get(s)
         pkg.do_install(fake=True)
 
-    def _mock_remove(self, spec):
+    def _mock_remove(self, spec):  # FIXME: used in tests
         specs = spack.store.db.query(spec)
         assert len(specs) == 1
         spec = specs[0]

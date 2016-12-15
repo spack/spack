@@ -25,6 +25,7 @@
 import os
 import re
 import shutil
+import copy
 
 import StringIO
 import llnl.util.filesystem
@@ -34,6 +35,8 @@ import py
 import pytest
 import spack
 import spack.architecture
+import spack.database
+import spack.directory_layout
 import spack.fetch_strategy
 import spack.platforms.test
 import spack.repository
@@ -97,15 +100,21 @@ spack.architecture.platform = lambda: spack.platforms.test.Test()
 ##########
 
 
+@pytest.fixture(scope='session')
+def repo_path():
+    """Session scoped RepoPath object pointing to the mock repository"""
+    return spack.repository.RepoPath(spack.mock_packages_path)
+
+
 @pytest.fixture()
-def mock_repository():
-    """Substitutes the 'builtin' Spack repository with the 'mock' repository
-    used for tests.
+def mock_repository(repo_path):
+    """Substitutes the 'builtin' Spack repository with the 'builtin.mock'
+    repository used for tests.
     """
-    db = spack.repository.RepoPath(spack.mock_packages_path)
-    spack.repo.swap(db)
+    mock_repo = copy.deepcopy(repo_path)
+    spack.repo.swap(mock_repo)
     yield
-    spack.repo.swap(db)
+    spack.repo.swap(mock_repo)
 
 
 @pytest.fixture(scope='session')
@@ -160,9 +169,74 @@ def share_path(tmpdir, monkeypatch):
     monkeypatch.setattr(spack, 'share_path', str(tmpdir))
 
 
+@pytest.fixture()
+def database(tmpdir_factory, mock_repository, configuration_files):
+    # Make a fake install directory
+    install_path = tmpdir_factory.mktemp('install_for_database')
+    spack_install_path = spack.store.root
+    spack.store.root = str(install_path)
+
+    install_layout = spack.directory_layout.YamlDirectoryLayout(
+        str(install_path)
+    )
+    spack_install_layout = spack.store.layout
+    spack.store.layout = install_layout
+
+    # Make fake database and fake install directory.
+    install_db = spack.database.Database(str(install_path))
+    spack_install_db = spack.store.db
+    spack.store.db = install_db
+
+    # make a mock database with some packages installed note that
+    # the ref count for dyninst here will be 3, as it's recycled
+    # across each install.
+    #
+    # Here is what the mock DB looks like:
+    #
+    # o  mpileaks     o  mpileaks'    o  mpileaks''
+    # |\              |\              |\
+    # | o  callpath   | o  callpath'  | o  callpath''
+    # |/|             |/|             |/|
+    # o |  mpich      o |  mpich2     o |  zmpi
+    #   |               |             o |  fake
+    #   |               |               |
+    #   |               |______________/
+    #   | .____________/
+    #   |/
+    #   o  dyninst
+    #   |\
+    #   | o  libdwarf
+    #   |/
+    #   o  libelf
+    #
+
+    def _mock_install(spec):
+        s = spack.spec.Spec(spec)
+        s.concretize()
+        pkg = spack.repo.get(s)
+        pkg.do_install(fake=True)
+
+    # Transaction used to avoid repeated writes.
+    with spack.store.db.write_transaction():
+        _mock_install('mpileaks ^mpich')
+        _mock_install('mpileaks ^mpich2')
+        _mock_install('mpileaks ^zmpi')
+
+    yield
+
+    with spack.store.db.write_transaction():
+        for spec in spack.store.db.query():
+            spec.package.do_uninstall(spec)
+
+    shutil.rmtree(str(install_path))
+    spack.store.root = spack_install_path
+    spack.store.layout = spack_install_layout
+    spack.store.db = spack_install_db
+
 ##########
 # Fake archives and repositories
 ##########
+
 
 @pytest.fixture(scope='session')
 def mock_archive():
