@@ -32,7 +32,6 @@ import os.path
 import pytest
 import spack
 import spack.store
-from llnl.util.filesystem import join_path
 from llnl.util.tty.colify import colify
 
 
@@ -106,11 +105,11 @@ def _mock_remove(spec):
 
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
-    install_path, _ = database
-    index_file = join_path(install_path, '.spack-db', 'index.json')
-    lock_file = join_path(install_path, '.spack-db', 'lock')
-    assert os.path.exists(index_file)
-    assert os.path.exists(lock_file)
+    install_path = database.mock.path
+    index_file = install_path.join('.spack-db', 'index.json')
+    lock_file = install_path.join('.spack-db', 'lock')
+    assert os.path.exists(str(index_file))
+    assert os.path.exists(str(lock_file))
 
 
 def test_010_all_install_sanity(database):
@@ -158,19 +157,19 @@ def test_015_write_and_read(database):
 
 def test_020_db_sanity(database):
     """Make sure query() returns what's actually in the db."""
-    _, install_db = database
+    install_db = database.mock.db
     _check_db_sanity(install_db)
 
 
 def test_025_reindex(database):
     """Make sure reindex works and ref counts are valid."""
-    _, install_db = database
+    install_db = database.mock.db
     spack.store.db.reindex(spack.store.layout)
     _check_db_sanity(install_db)
 
 
-def test_030_db_sanity_from_another_process(database):
-    _, install_db = database
+def test_030_db_sanity_from_another_process(database, refresh_db_on_exit):
+    install_db = database.mock.db
 
     def read_and_modify():
         _check_db_sanity(install_db)  # check that other process can read DB
@@ -188,13 +187,13 @@ def test_030_db_sanity_from_another_process(database):
 
 def test_040_ref_counts(database):
     """Ensure that we got ref counts right when we read the DB."""
-    _, install_db = database
+    install_db = database.mock.db
     install_db._check_ref_counts()
 
 
 def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
-    _, install_db = database
+    install_db = database.mock.db
     # query everything
     assert len(spack.store.db.query()) == 13
 
@@ -217,7 +216,7 @@ def test_050_basic_query(database):
     assert len(libelf_specs) == 1
 
     # Query by dependency
-    assert len(install_db.query('mpileaks ^mpich')) ==  1
+    assert len(install_db.query('mpileaks ^mpich')) == 1
     assert len(install_db.query('mpileaks ^mpich2')) == 1
     assert len(install_db.query('mpileaks ^zmpi')) == 1
 
@@ -253,17 +252,17 @@ def _check_remove_and_add_package(install_db, spec):
 
 
 def test_060_remove_and_add_root_package(database):
-    _, install_db = database
+    install_db = database.mock.db
     _check_remove_and_add_package(install_db, 'mpileaks ^mpich')
 
 
 def test_070_remove_and_add_dependency_package(database):
-    _, install_db = database
+    install_db = database.mock.db
     _check_remove_and_add_package(install_db, 'dyninst')
 
 
 def test_080_root_ref_counts(database):
-    _, install_db = database
+    install_db = database.mock.db
     rec = install_db.get_record('mpileaks ^mpich')
 
     # Remove a top-level spec from the DB
@@ -288,7 +287,7 @@ def test_080_root_ref_counts(database):
 
 
 def test_090_non_root_ref_counts(database):
-    _, install_db = database
+    install_db = database.mock.db
 
     install_db.get_record('mpileaks ^mpich')
     install_db.get_record('callpath ^mpich')
@@ -319,7 +318,7 @@ def test_090_non_root_ref_counts(database):
 
 
 def test_100_no_write_with_exception_on_remove(database):
-    _, install_db = database
+    install_db = database.mock.db
 
     def fail_while_writing():
         with install_db.write_transaction():
@@ -338,7 +337,7 @@ def test_100_no_write_with_exception_on_remove(database):
 
 
 def test_110_no_write_with_exception_on_install(database):
-    _, install_db = database
+    install_db = database.mock.db
 
     def fail_while_writing():
         with install_db.write_transaction():

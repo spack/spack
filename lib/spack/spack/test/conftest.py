@@ -167,43 +167,26 @@ def configuration_dir(tmpdir_factory, linux_os):
     return tmpdir
 
 
-def _set_config_scopes(path):
-    spack.config.config_scopes = ordereddict_backport.OrderedDict()
-    spack.config.ConfigScope('site', str(path.join('site')))
-    spack.config.ConfigScope('user', str(path.join('user')))
-
-
 @pytest.fixture(scope='module')
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
-    _set_config_scopes(configuration_dir)
+    spack.config.config_scopes = ordereddict_backport.OrderedDict()
+    spack.config.ConfigScope('site', str(configuration_dir.join('site')))
+    spack.config.ConfigScope('user', str(configuration_dir.join('user')))
     Config = collections.namedtuple('Config', ['real', 'mock'])
     yield Config(real=real_scope, mock=spack.config.config_scopes)
     spack.config.config_scopes = real_scope
     spack.config.clear_config_caches()
 
-@pytest.fixture(scope='function')
-def fresh_config(config, configuration_dir):
-    """Ensure spack.config is in its initial state"""
-    spack.config.config_scopes = config.real
-    spack.config.clear_config_caches()
-    _set_config_scopes(configuration_dir)
 
-
-@pytest.fixture()
-def share_path(tmpdir, monkeypatch):
-    """Keep tests from interfering with the actual module path."""
-    monkeypatch.setattr(spack, 'share_path', str(tmpdir))
-
-
-@pytest.fixture()
+@pytest.fixture(scope='module')
 def database(tmpdir_factory, builtin_mock, config):
     # Make a fake install directory
     install_path = tmpdir_factory.mktemp('install_for_database')
-    spack_install_path = spack.store.root
+    spack_install_path = py.path.local(spack.store.root)
     spack.store.root = str(install_path)
 
     install_layout = spack.directory_layout.YamlDirectoryLayout(
@@ -240,28 +223,65 @@ def database(tmpdir_factory, builtin_mock, config):
     #   o  libelf
     #
 
-    def _mock_install(spec):
+    Entry = collections.namedtuple('Entry', ['path', 'layout', 'db'])
+    Database = collections.namedtuple(
+        'Database', ['real', 'mock', 'install', 'uninstall', 'refresh']
+    )
+
+    real = Entry(
+        path=spack_install_path,
+        layout=spack_install_layout,
+        db=spack_install_db
+    )
+    mock = Entry(path=install_path, layout=install_layout, db=install_db)
+
+    def _install(spec):
         s = spack.spec.Spec(spec)
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.do_install(fake=True)
 
+    def _uninstall(spec):
+        spec.package.do_uninstall(spec)
+
+    def _refresh():
+        with spack.store.db.write_transaction():
+            for spec in spack.store.db.query():
+                _uninstall(spec)
+            _install('mpileaks ^mpich')
+            _install('mpileaks ^mpich2')
+            _install('mpileaks ^zmpi')
+
+    t = Database(
+        real=real,
+        mock=mock,
+        install=_install,
+        uninstall=_uninstall,
+        refresh=_refresh
+    )
     # Transaction used to avoid repeated writes.
     with spack.store.db.write_transaction():
-        _mock_install('mpileaks ^mpich')
-        _mock_install('mpileaks ^mpich2')
-        _mock_install('mpileaks ^zmpi')
+        t.install('mpileaks ^mpich')
+        t.install('mpileaks ^mpich2')
+        t.install('mpileaks ^zmpi')
 
-    yield install_path, install_db
+    yield t
 
     with spack.store.db.write_transaction():
         for spec in spack.store.db.query():
-            spec.package.do_uninstall(spec)
+            t.uninstall(spec)
 
-    shutil.rmtree(str(install_path))
-    spack.store.root = spack_install_path
+    install_path.remove(rec=1)
+    spack.store.root = str(spack_install_path)
     spack.store.layout = spack_install_layout
     spack.store.db = spack_install_db
+
+
+@pytest.fixture()
+def refresh_db_on_exit(database):
+    """"Restores the state of the database after a test."""
+    yield
+    database.refresh()
 
 ##########
 # Fake archives and repositories
