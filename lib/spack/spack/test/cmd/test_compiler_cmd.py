@@ -63,7 +63,7 @@ done
     return str(tmpdir)
 
 
-def test_compiler_remove(configuration_files, mock_repository):
+def test_compiler_remove(config, builtin_mock):
     args = spack.util.pattern.Bunch(
         all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
     )
@@ -72,7 +72,7 @@ def test_compiler_remove(configuration_files, mock_repository):
     assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
 
-def test_compiler_add(mock_compiler_dir, configuration_files, mock_repository):
+def test_compiler_add(mock_compiler_dir, config, builtin_mock):
     # Compilers available by default.
     old_compilers = set(spack.compilers.all_compilers())
 

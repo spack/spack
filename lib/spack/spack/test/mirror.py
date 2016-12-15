@@ -111,25 +111,25 @@ def check_mirror():
                     spack.do_checksum = saved_checksum_setting
 
 
-def test_git_mirror(mock_git_repository, configuration_files, mock_repository):
+def test_git_mirror(mock_git_repository, config, refresh_builtin_mock):
     set_up_package('git-test', mock_git_repository, 'git')
     check_mirror()
     repos.clear()
 
 
-def test_svn_mirror(mock_svn_repository, configuration_files, mock_repository):
+def test_svn_mirror(mock_svn_repository, config, refresh_builtin_mock):
     set_up_package('svn-test', mock_svn_repository, 'svn')
     check_mirror()
     repos.clear()
 
 
-def test_hg_mirror(mock_hg_repository, configuration_files, mock_repository):
+def test_hg_mirror(mock_hg_repository, config, refresh_builtin_mock):
     set_up_package('hg-test', mock_hg_repository, 'hg')
     check_mirror()
     repos.clear()
 
 
-def test_url_mirror(mock_archive, configuration_files, mock_repository):
+def test_url_mirror(mock_archive, config, refresh_builtin_mock):
     set_up_package('trivial_install_test_package', mock_archive, 'url')
     check_mirror()
     repos.clear()
@@ -140,8 +140,8 @@ def test_all_mirror(
         mock_svn_repository,
         mock_hg_repository,
         mock_archive,
-        configuration_files,
-        mock_repository
+        config,
+        refresh_builtin_mock
 ):
     set_up_package('git-test', mock_git_repository, 'git')
     set_up_package('svn-test', mock_svn_repository, 'svn')

@@ -29,16 +29,16 @@ from spack.util.naming import mod_to_class
 from spack.spec import *
 
 
-def test_load_package(mock_repository):
+def test_load_package(builtin_mock):
     spack.repo.get('mpich')
 
 
-def test_package_name(mock_repository):
+def test_package_name(builtin_mock):
     pkg = spack.repo.get('mpich')
     assert pkg.name == 'mpich'
 
 
-def test_package_filename(mock_repository):
+def test_package_filename(builtin_mock):
     repo = Repo(spack.mock_packages_path)
     filename = repo.filename_for_package_name('mpich')
     assert filename == join_path(
@@ -70,11 +70,11 @@ def test_package_class_names():
 
 # Below tests target direct imports of spack packages from the
 # spack.pkg namespace
-def test_import_package(mock_repository):
+def test_import_package(builtin_mock):
     import spack.pkg.builtin.mock.mpich             # noqa
 
 
-def test_import_package_as(mock_repository):
+def test_import_package_as(builtin_mock):
     import spack.pkg.builtin.mock.mpich as mp       # noqa
 
     import spack.pkg.builtin.mock                   # noqa
@@ -106,15 +106,15 @@ def test_inheritance_of_diretives():
     assert '~openblas' in s
     assert 'mpi' in s
 
-def test_import_class_from_package(mock_repository):
+def test_import_class_from_package(builtin_mock):
     from spack.pkg.builtin.mock.mpich import Mpich  # noqa
 
 
-def test_import_module_from_package(mock_repository):
+def test_import_module_from_package(builtin_mock):
     from spack.pkg.builtin.mock import mpich        # noqa
 
 
-def test_import_namespace_container_modules(mock_repository):
+def test_import_namespace_container_modules(builtin_mock):
     import spack.pkg                                # noqa
     import spack.pkg as p                           # noqa
     from spack import pkg                           # noqa

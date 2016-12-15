@@ -94,7 +94,7 @@ def test_boolness():
     assert arch
 
 
-def test_user_front_end_input(configuration_files):
+def test_user_front_end_input(config):
     """Test when user inputs just frontend that both the frontend target
     and frontend operating system match
     """
@@ -109,7 +109,7 @@ def test_user_front_end_input(configuration_files):
     assert frontend_target == frontend_spec.architecture.target
 
 
-def test_user_back_end_input(configuration_files):
+def test_user_back_end_input(config):
     """Test when user inputs backend that both the backend target and
     backend operating system match
     """
@@ -124,7 +124,7 @@ def test_user_back_end_input(configuration_files):
     assert backend_target == backend_spec.architecture.target
 
 
-def test_user_defaults(configuration_files):
+def test_user_defaults(config):
     platform = spack.architecture.platform()
     default_os = str(platform.operating_system("default_os"))
     default_target = str(platform.target("default_target"))
@@ -136,7 +136,7 @@ def test_user_defaults(configuration_files):
     assert default_target == default_spec.architecture.target
 
 
-def test_user_input_combination(configuration_files):
+def test_user_input_combination(config):
     platform = spack.architecture.platform()
     os_list = platform.operating_sys.keys()
     target_list = platform.targets.keys()

@@ -29,13 +29,13 @@ from spack.multimethod import *
 from spack.version import *
 
 
-def test_no_version_match(mock_repository):
+def test_no_version_match(builtin_mock):
     pkg = spack.repo.get('multimethod@2.0')
     with pytest.raises(NoSuchMethodError):
         pkg.no_version_2()
 
 
-def test_one_version_match(mock_repository):
+def test_one_version_match(builtin_mock):
     pkg = spack.repo.get('multimethod@1.0')
     assert pkg.no_version_2() == 1
 
@@ -46,7 +46,7 @@ def test_one_version_match(mock_repository):
     assert pkg.no_version_2() == 4
 
 
-def test_version_overlap(mock_repository):
+def test_version_overlap(builtin_mock):
     pkg = spack.repo.get('multimethod@2.0')
     assert pkg.version_overlap() == 1
 
@@ -54,7 +54,7 @@ def test_version_overlap(mock_repository):
     assert pkg.version_overlap() == 2
 
 
-def test_mpi_version(mock_repository):
+def test_mpi_version(builtin_mock):
     pkg = spack.repo.get('multimethod^mpich@3.0.4')
     assert pkg.mpi_version() == 3
 
@@ -65,7 +65,7 @@ def test_mpi_version(mock_repository):
     assert pkg.mpi_version() == 1
 
 
-def test_undefined_mpi_version(mock_repository):
+def test_undefined_mpi_version(builtin_mock):
     pkg = spack.repo.get('multimethod^mpich@0.4')
     assert pkg.mpi_version() == 1
 
@@ -73,7 +73,7 @@ def test_undefined_mpi_version(mock_repository):
     assert pkg.mpi_version() == 1
 
 
-def test_default_works(mock_repository):
+def test_default_works(builtin_mock):
     pkg = spack.repo.get('multimethod%gcc')
     assert pkg.has_a_default() == 'gcc'
 
@@ -84,7 +84,7 @@ def test_default_works(mock_repository):
     assert pkg.has_a_default() == 'default'
 
 
-def test_target_match(mock_repository):
+def test_target_match(builtin_mock):
     platform = spack.architecture.platform()
     targets = platform.targets.values()
     for target in targets[:-1]:
@@ -99,7 +99,7 @@ def test_target_match(mock_repository):
             pkg.different_by_target()
 
 
-def test_dependency_match(mock_repository):
+def test_dependency_match(builtin_mock):
     pkg = spack.repo.get('multimethod^zmpi')
     assert pkg.different_by_dep() == 'zmpi'
 
@@ -112,7 +112,7 @@ def test_dependency_match(mock_repository):
     assert pkg.different_by_dep() == 'mpich'
 
 
-def test_virtual_dep_match(mock_repository):
+def test_virtual_dep_match(builtin_mock):
     pkg = spack.repo.get('multimethod^mpich2')
     assert pkg.different_by_virtual_dep() == 2
 

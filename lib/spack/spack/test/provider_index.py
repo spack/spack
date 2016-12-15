@@ -43,7 +43,7 @@ from spack.provider_index import ProviderIndex
 from spack.spec import Spec
 
 
-def test_yaml_round_trip(mock_repository):
+def test_yaml_round_trip(builtin_mock):
     p = ProviderIndex(spack.repo.all_package_names())
 
     ostream = StringIO.StringIO()
@@ -55,7 +55,7 @@ def test_yaml_round_trip(mock_repository):
     assert p == q
 
 
-def test_providers_for_simple(mock_repository):
+def test_providers_for_simple(builtin_mock):
     p = ProviderIndex(spack.repo.all_package_names())
 
     blas_providers = p.providers_for('blas')
@@ -68,7 +68,7 @@ def test_providers_for_simple(mock_repository):
     assert Spec('openblas-with-lapack') in lapack_providers
 
 
-def test_mpi_providers(mock_repository):
+def test_mpi_providers(builtin_mock):
     p = ProviderIndex(spack.repo.all_package_names())
 
     mpi_2_providers = p.providers_for('mpi@2')
@@ -81,13 +81,13 @@ def test_mpi_providers(mock_repository):
     assert Spec('zmpi') in mpi_3_providers
 
 
-def test_equal(mock_repository):
+def test_equal(builtin_mock):
     p = ProviderIndex(spack.repo.all_package_names())
     q = ProviderIndex(spack.repo.all_package_names())
     assert p == q
 
 
-def test_copy(mock_repository):
+def test_copy(builtin_mock):
     p = ProviderIndex(spack.repo.all_package_names())
     q = p.copy()
     assert p == q

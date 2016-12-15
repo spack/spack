@@ -26,6 +26,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import collections
 
 import spack
 import spack.config
@@ -44,9 +45,10 @@ if platform.name == 'linux':
     linux_os_version = linux_os.version
 
 cmp_yaml = join_path(spack.test_path, 'data', 'compilers.yaml')
+LinuxOS = collections.namedtuple('LinuxOS', ['name', 'version'])
 with open(cmp_yaml) as f:
     mock_compiler_config = ''.join(f.readlines()).format(
-        linux_os_name, linux_os_version
+        LinuxOS(name=linux_os_name, version=linux_os_version)
     )
 
 pkg_yaml = join_path(spack.test_path, 'data', 'packages.yaml')

@@ -29,7 +29,7 @@ from spack.spec import Spec
 
 
 @pytest.fixture()
-def concretize_scope(configuration_files, tmpdir):
+def concretize_scope(config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir('concretize')
     spack.config.ConfigScope(
@@ -59,7 +59,7 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
-def test_preferred_variants(concretize_scope, mock_repository):
+def test_preferred_variants(concretize_scope, builtin_mock):
     """Test preferred variants are applied correctly
     """
     update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
@@ -74,7 +74,7 @@ def test_preferred_variants(concretize_scope, mock_repository):
     )
 
 
-def test_preferred_compilers(concretize_scope, mock_repository):
+def test_preferred_compilers(concretize_scope, refresh_builtin_mock):
     """Test preferred compilers are applied correctly
     """
     update_packages('mpileaks', 'compiler', ['clang@3.3'])
@@ -86,7 +86,7 @@ def test_preferred_compilers(concretize_scope, mock_repository):
     assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
 
-def test_preferred_versions(concretize_scope, mock_repository):
+def test_preferred_versions(concretize_scope, builtin_mock):
     """Test preferred package versions are applied correctly
     """
     update_packages('mpileaks', 'version', ['2.3'])
@@ -98,7 +98,7 @@ def test_preferred_versions(concretize_scope, mock_repository):
     assert spec.version == spack.spec.Version('2.2')
 
 
-def test_preferred_providers(concretize_scope, mock_repository):
+def test_preferred_providers(concretize_scope, builtin_mock):
     """Test preferred providers of virtual packages are applied correctly"""
     update_packages('all', 'providers', {'mpi': ['mpich']})
     spec = concretize('mpileaks')
@@ -109,7 +109,7 @@ def test_preferred_providers(concretize_scope, mock_repository):
     assert 'zmpi' in spec
 
 
-def test_develop(concretize_scope, mock_repository):
+def test_develop(concretize_scope, builtin_mock):
     """Test concretization with develop version"""
     spec = Spec('builtin.mock.develop-test')
     spec.concretize()

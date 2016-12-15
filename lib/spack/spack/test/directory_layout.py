@@ -43,7 +43,7 @@ def layout_and_dir(tmpdir):
 
 
 def test_read_and_write_spec(
-        layout_and_dir, configuration_files, mock_repository
+        layout_and_dir, config, builtin_mock
 ):
     """This goes through each package in spack and creates a directory for
     it.  It then ensures that the spec for the directory's
@@ -117,7 +117,7 @@ def test_read_and_write_spec(
 
 
 def test_handle_unknown_package(
-        layout_and_dir, configuration_files, mock_repository
+        layout_and_dir, config, builtin_mock
 ):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
@@ -170,7 +170,7 @@ def test_handle_unknown_package(
     spack.repo.swap(mock_db)
 
 
-def test_find(layout_and_dir, configuration_files, mock_repository):
+def test_find(layout_and_dir, config, builtin_mock):
     """Test that finding specs within an install layout works."""
     layout, _ = layout_and_dir
     packages = list(spack.repo.all_packages())[:max_packages]

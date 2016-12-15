@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import copy
+import collections
 
 import StringIO
 import llnl.util.filesystem
@@ -106,61 +107,90 @@ def repo_path():
     return spack.repository.RepoPath(spack.mock_packages_path)
 
 
-@pytest.fixture()
-def mock_repository(repo_path):
-    """Substitutes the 'builtin' Spack repository with the 'builtin.mock'
-    repository used for tests.
-    """
+@pytest.fixture(scope='module')
+def builtin_mock(repo_path):
+    """Uses the 'builtin.mock' repository instead of 'builtin'"""
     mock_repo = copy.deepcopy(repo_path)
     spack.repo.swap(mock_repo)
-    yield
+    BuiltinMock = collections.namedtuple('BuiltinMock', ['real', 'mock'])
+    # Confusing, but we swapped above
+    yield BuiltinMock(real=mock_repo, mock=spack.repo)
     spack.repo.swap(mock_repo)
+
+
+@pytest.fixture()
+def refresh_builtin_mock(builtin_mock, repo_path):
+    """Refreshes the state of spack.repo"""
+    # Get back the real repository
+    spack.repo.swap(builtin_mock.real)
+    mock_repo = copy.deepcopy(repo_path)
+    spack.repo.swap(mock_repo)
+    return builtin_mock
 
 
 @pytest.fixture(scope='session')
 def linux_os():
-    """Returns OS name and OS version as a tuple"""
+    """Returns a named tuple with attributes 'name' and 'version'
+    representing the OS.
+    """
     platform = spack.architecture.platform()
-    os_name, os_version = 'debian', '6'
+    name, version = 'debian', '6'
     if platform.name == 'linux':
         platform = spack.architecture.platform()
-        linux_os = platform.operating_system('default_os')
-        os_name, os_version = linux_os.name, linux_os_version
-    return os_name, os_version
+        current_os = platform.operating_system('default_os')
+        name, version = current_os.name, current_os.version
+    LinuxOS = collections.namedtuple('LinuxOS', ['name', 'version'])
+    return LinuxOS(name=name, version=version)
 
 
-@pytest.fixture(scope='module')
-def configuration_files(tmpdir_factory, linux_os):
-    """Copies mock configuration files in a temporary directory
-    and add hooks them to the current spack instance.
+@pytest.fixture(scope='session')
+def configuration_dir(tmpdir_factory, linux_os):
+    """Copies mock configuration files in a temporary directory. Returns the
+    directory path.
     """
     tmpdir = tmpdir_factory.mktemp('configurations')
     # Name of the yaml files in the test/data folder
-    join_path = llnl.util.filesystem.join_path
-    compilers_yaml = join_path(spack.test_path, 'data', 'compilers.yaml')
-    packages_yaml = join_path(spack.test_path, 'data', 'packages.yaml')
-    config_yaml = join_path(spack.test_path, 'data', 'config.yaml')
+    test_path = py.path.local(spack.test_path)
+    compilers_yaml = test_path.join('data', 'compilers.yaml')
+    packages_yaml = test_path.join('data', 'packages.yaml')
+    config_yaml = test_path.join('data', 'config.yaml')
     # Create temporary 'site' and 'user' folders
-    tmpdir.ensure_dir('site')
-    tmpdir.ensure_dir('user')
+    tmpdir.ensure('site', dir=True)
+    tmpdir.ensure('user', dir=True)
     # Copy the configurations that don't need further work
-    shutil.copy(packages_yaml, str(tmpdir.join('site', 'packages.yaml')))
-    shutil.copy(config_yaml, str(tmpdir.join('site', 'config.yaml')))
+    packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
+    config_yaml.copy(tmpdir.join('site', 'config.yaml'))
     # Write the one that needs modifications
-    os_name, os_version = linux_os
-    with open(compilers_yaml) as f:
-        content = ''.join(f.readlines()).format(os_name, os_version)
+    content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
     t.write(content)
+    return tmpdir
+
+
+def _set_config_scopes(path):
+    spack.config.config_scopes = ordereddict_backport.OrderedDict()
+    spack.config.ConfigScope('site', str(path.join('site')))
+    spack.config.ConfigScope('user', str(path.join('user')))
+
+
+@pytest.fixture(scope='module')
+def config(configuration_dir):
+    """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
-    spack.config.config_scopes = ordereddict_backport.OrderedDict()
-    spack.config.ConfigScope('site', str(tmpdir.join('site')))
-    spack.config.ConfigScope('user', str(tmpdir.join('user')))
-    yield
+    _set_config_scopes(configuration_dir)
+    Config = collections.namedtuple('Config', ['real', 'mock'])
+    yield Config(real=real_scope, mock=spack.config.config_scopes)
     spack.config.config_scopes = real_scope
     spack.config.clear_config_caches()
+
+@pytest.fixture(scope='function')
+def fresh_config(config, configuration_dir):
+    """Ensure spack.config is in its initial state"""
+    spack.config.config_scopes = config.real
+    spack.config.clear_config_caches()
+    _set_config_scopes(configuration_dir)
 
 
 @pytest.fixture()
@@ -170,7 +200,7 @@ def share_path(tmpdir, monkeypatch):
 
 
 @pytest.fixture()
-def database(tmpdir_factory, mock_repository, configuration_files):
+def database(tmpdir_factory, builtin_mock, config):
     # Make a fake install directory
     install_path = tmpdir_factory.mktemp('install_for_database')
     spack_install_path = spack.store.root
@@ -269,13 +299,10 @@ def mock_archive():
     archive_name = '{0}.tar.gz'.format(repo_name)
     tar('-czf', archive_name, repo_name)
     current.chdir()
-    Bunch = spack.util.pattern.Bunch
+    Archive = collections.namedtuple('Archive', ['url', 'path'])
     url = 'file://' + str(tmpdir.join(archive_name))
-    t = Bunch(
-        url=url, path=str(repodir)
-    )
     # Return the url
-    yield t
+    yield Archive(url=url, path=str(repodir))
     stage.destroy()
 
 

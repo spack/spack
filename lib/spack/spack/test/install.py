@@ -32,7 +32,7 @@ from spack.spec import Spec
 
 
 @pytest.fixture()
-def install_mockery(tmpdir, configuration_files, mock_repository):
+def install_mockery(tmpdir, config, builtin_mock):
     layout = spack.store.layout
     db = spack.store.db
     # Use a fake install directory to avoid conflicts bt/w

@@ -1,7 +1,7 @@
 compilers:
 - compiler:
     spec: clang@3.3
-    operating_system: {0}{1}
+    operating_system: {0.name}{0.version}
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
@@ -10,7 +10,7 @@ compilers:
     modules: 'None'
 - compiler:
     spec: gcc@4.5.0
-    operating_system: {0}{1}
+    operating_system: {0.name}{0.version}
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++

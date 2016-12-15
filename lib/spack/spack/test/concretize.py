@@ -90,11 +90,11 @@ def spec(request):
     return request.param
 
 
-def test_concretize(spec, configuration_files, mock_repository):
+def test_concretize(spec, config, builtin_mock):
     check_concretize(spec)
 
 
-def test_concretize_mention_build_dep(configuration_files, mock_repository):
+def test_concretize_mention_build_dep(config, builtin_mock):
     spec = check_concretize('cmake-client ^cmake@3.4.3')
     # Check parent's perspective of child
     dependency = spec.dependencies_dict()['cmake']
@@ -105,16 +105,14 @@ def test_concretize_mention_build_dep(configuration_files, mock_repository):
     assert set(dependent.deptypes) == set(['build'])
 
 
-def test_concretize_preferred_version(configuration_files, mock_repository):
+def test_concretize_preferred_version(config, builtin_mock):
     spec = check_concretize('python')
     assert spec.versions == ver('2.7.11')
     spec = check_concretize('python@3.5.1')
     assert spec.versions == ver('3.5.1')
 
 
-def test_concretize_with_restricted_virtual(
-        configuration_files, mock_repository
-):
+def test_concretize_with_restricted_virtual(config, builtin_mock):
     check_concretize('mpileaks ^mpich2')
 
     concrete = check_concretize('mpileaks   ^mpich2@1.1')
@@ -145,7 +143,7 @@ def test_concretize_with_restricted_virtual(
     assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
 
-def test_concretize_with_provides_when(configuration_files, mock_repository):
+def test_concretize_with_provides_when(config, builtin_mock):
     """Make sure insufficient versions of MPI are not in providers list when
     we ask for some advanced version.
     """
@@ -167,28 +165,22 @@ def test_concretize_with_provides_when(configuration_files, mock_repository):
     )
 
 
-def test_concretize_two_virtuals(configuration_files, mock_repository):
+def test_concretize_two_virtuals(config, builtin_mock):
     """Test a package with multiple virtual dependencies."""
     Spec('hypre').concretize()
 
 
-def test_concretize_two_virtuals_with_one_bound(
-        configuration_files, mock_repository
-):
+def test_concretize_two_virtuals_with_one_bound(config, refresh_builtin_mock):
     """Test a package with multiple virtual dependencies and one preset."""
     Spec('hypre ^openblas').concretize()
 
 
-def test_concretize_two_virtuals_with_two_bound(
-        configuration_files, mock_repository
-):
+def test_concretize_two_virtuals_with_two_bound(config, builtin_mock):
     """Test a package with multiple virtual deps and two of them preset."""
     Spec('hypre ^openblas ^netlib-lapack').concretize()
 
 
-def test_concretize_two_virtuals_with_dual_provider(
-        configuration_files, mock_repository
-):
+def test_concretize_two_virtuals_with_dual_provider(config, builtin_mock):
     """Test a package with multiple virtual dependencies and force a provider
     that provides both.
     """
@@ -196,7 +188,7 @@ def test_concretize_two_virtuals_with_dual_provider(
 
 
 def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(
-        configuration_files, mock_repository
+        config, builtin_mock
 ):
     """Test a package with multiple virtual dependencies and force a
     provider that provides both, and another conflicting package that
@@ -207,9 +199,7 @@ def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(
         s.concretize()
 
 
-def test_virtual_is_fully_expanded_for_callpath(
-        configuration_files, mock_repository
-):
+def test_virtual_is_fully_expanded_for_callpath(config, builtin_mock):
     # force dependence on fake "zmpi" by asking for MPI 10.0
     spec = Spec('callpath ^mpi@10.0')
     assert 'mpi' in spec._dependencies
@@ -223,7 +213,7 @@ def test_virtual_is_fully_expanded_for_callpath(
 
 
 def test_virtual_is_fully_expanded_for_mpileaks(
-        configuration_files, mock_repository
+        config, builtin_mock
 ):
     spec = Spec('mpileaks ^mpi@10.0')
     assert 'mpi' in spec._dependencies
@@ -238,15 +228,13 @@ def test_virtual_is_fully_expanded_for_mpileaks(
     assert 'mpi' in spec
 
 
-def test_my_dep_depends_on_provider_of_my_virtual_dep(
-        configuration_files, mock_repository
-):
+def test_my_dep_depends_on_provider_of_my_virtual_dep(config, builtin_mock):
     spec = Spec('indirect_mpich')
     spec.normalize()
     spec.concretize()
 
 
-def test_compiler_inheritance(configuration_files, mock_repository):
+def test_compiler_inheritance(config, builtin_mock):
     spec = Spec('mpileaks')
     spec.normalize()
     spec['dyninst'].compiler = CompilerSpec('clang')
@@ -256,7 +244,7 @@ def test_compiler_inheritance(configuration_files, mock_repository):
     assert spec['libelf'].compiler.satisfies('clang')
 
 
-def test_external_package(configuration_files, mock_repository):
+def test_external_package(config, builtin_mock):
     spec = Spec('externaltool%gcc')
     spec.concretize()
     assert spec['externaltool'].external == '/path/to/external_tool'
@@ -264,7 +252,7 @@ def test_external_package(configuration_files, mock_repository):
     assert spec['externaltool'].compiler.satisfies('gcc')
 
 
-def test_external_package_module(configuration_files, mock_repository):
+def test_external_package_module(config, builtin_mock):
     # No tcl modules on darwin/linux machines
     # TODO: improved way to check for this.
     platform = spack.architecture.real_platform().name
@@ -278,7 +266,7 @@ def test_external_package_module(configuration_files, mock_repository):
     assert spec['externalmodule'].compiler.satisfies('gcc')
 
 
-def test_nobuild_package(configuration_files, mock_repository):
+def test_nobuild_package(config, builtin_mock):
     got_error = False
     spec = Spec('externaltool%clang')
     try:
@@ -288,7 +276,7 @@ def test_nobuild_package(configuration_files, mock_repository):
     assert got_error
 
 
-def test_external_and_virtual(configuration_files, mock_repository):
+def test_external_and_virtual(config, builtin_mock):
     spec = Spec('externaltest')
     spec.concretize()
     assert spec['externaltool'].external == '/path/to/external_tool'
@@ -297,7 +285,7 @@ def test_external_and_virtual(configuration_files, mock_repository):
     assert spec['stuff'].compiler.satisfies('gcc')
 
 
-def test_find_spec_parents(configuration_files, mock_repository):
+def test_find_spec_parents(config, builtin_mock):
     """Tests the spec finding logic used by concretization. """
     s = Spec('a +foo',
              Spec('b +foo',
@@ -308,7 +296,7 @@ def test_find_spec_parents(configuration_files, mock_repository):
     assert 'a' == find_spec(s['b'], lambda s: '+foo' in s).name
 
 
-def test_find_spec_children(configuration_files, mock_repository):
+def test_find_spec_children(config, builtin_mock):
     s = Spec('a',
              Spec('b +foo',
                   Spec('c'),
@@ -323,7 +311,7 @@ def test_find_spec_children(configuration_files, mock_repository):
     assert 'c' == find_spec(s['b'], lambda s: '+foo' in s).name
 
 
-def test_find_spec_sibling(configuration_files, mock_repository):
+def test_find_spec_sibling(config, builtin_mock):
     s = Spec('a',
              Spec('b +foo',
                   Spec('c'),
@@ -341,7 +329,7 @@ def test_find_spec_sibling(configuration_files, mock_repository):
     assert 'f' == find_spec(s['b'], lambda s: '+foo' in s).name
 
 
-def test_find_spec_self(configuration_files, mock_repository):
+def test_find_spec_self(config, builtin_mock):
     s = Spec('a',
              Spec('b +foo',
                   Spec('c'),
@@ -350,7 +338,7 @@ def test_find_spec_self(configuration_files, mock_repository):
     assert 'b' == find_spec(s['b'], lambda s: '+foo' in s).name
 
 
-def test_find_spec_none(configuration_files, mock_repository):
+def test_find_spec_none(config, builtin_mock):
     s = Spec('a',
              Spec('b',
                   Spec('c'),
@@ -359,7 +347,7 @@ def test_find_spec_none(configuration_files, mock_repository):
     assert find_spec(s['b'], lambda s: '+foo' in s) is None
 
 
-def test_compiler_child(configuration_files, mock_repository):
+def test_compiler_child(config, builtin_mock):
     s = Spec('mpileaks%clang ^dyninst%gcc')
     s.concretize()
     assert s['mpileaks'].satisfies('%clang')

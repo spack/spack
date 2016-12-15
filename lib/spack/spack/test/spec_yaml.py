@@ -44,25 +44,25 @@ def test_simple_spec():
     check_yaml_round_trip(spec)
 
 
-def test_normal_spec(mock_repository):
+def test_normal_spec(builtin_mock):
     spec = Spec('mpileaks+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
 
 
-def test_ambiguous_version_spec(mock_repository):
+def test_ambiguous_version_spec(builtin_mock):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
 
 
-def test_concrete_spec(configuration_files, mock_repository):
+def test_concrete_spec(config, builtin_mock):
     spec = Spec('mpileaks+debug~opt')
     spec.concretize()
     check_yaml_round_trip(spec)
 
 
-def test_yaml_subdag(configuration_files, mock_repository):
+def test_yaml_subdag(config, builtin_mock):
     spec = Spec('mpileaks^mpich+debug')
     spec.concretize()
     yaml_spec = Spec.from_yaml(spec.to_yaml())
@@ -71,7 +71,7 @@ def test_yaml_subdag(configuration_files, mock_repository):
         assert spec[dep].eq_dag(yaml_spec[dep])
 
 
-def test_using_ordered_dict(mock_repository):
+def test_using_ordered_dict(builtin_mock):
     """ Checks that dicts are ordered
 
     Necessary to make sure that dag_hash is stable across python
@@ -101,7 +101,7 @@ def test_using_ordered_dict(mock_repository):
 
 
 def test_ordered_read_not_required_for_consistent_dag_hash(
-        configuration_files, mock_repository
+        config, builtin_mock
 ):
     """Make sure ordered serialization isn't required to preserve hashes.
 

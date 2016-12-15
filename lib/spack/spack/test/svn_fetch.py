@@ -40,8 +40,8 @@ def type_of_test(request):
 def test_fetch(
         type_of_test,
         mock_svn_repository,
-        configuration_files,
-        mock_repository
+        config,
+        refresh_builtin_mock
 ):
     """Tries to:
 

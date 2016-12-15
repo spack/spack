@@ -89,7 +89,7 @@ def spec_and_expected(request):
     return request.param
 
 
-def test_normalize(spec_and_expected, configuration_files, mock_repository):
+def test_normalize(spec_and_expected, config, builtin_mock):
     spec, expected = spec_and_expected
     spec = Spec(spec)
     spec.normalize()
@@ -97,7 +97,7 @@ def test_normalize(spec_and_expected, configuration_files, mock_repository):
     assert spec.eq_dag(expected)
 
 
-def test_default_variant(configuration_files, mock_repository):
+def test_default_variant(config, builtin_mock):
     spec = Spec('optional-dep-test-3')
     spec.concretize()
     assert 'a' in spec
