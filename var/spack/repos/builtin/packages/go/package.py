@@ -91,6 +91,8 @@ class Go(Package):
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('src'):
+            env['GOROOT_FINAL'] = self.spec.prefix
+            env['GOROOT_BOOTSTRAP'] = self.spec['go-bootstrap'].prefix
             bash('{0}.bash'.format('all' if '+test' in spec else 'make'))
 
         try:
@@ -102,10 +104,6 @@ class Go(Package):
                 shutil.copytree(f, os.path.join(prefix, f))
             else:
                 shutil.copy2(f, os.path.join(prefix, f))
-
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GOROOT_FINAL', self.spec.prefix)
-        spack_env.set('GOROOT_BOOTSTRAP', self.spec['go-bootstrap'].prefix)
 
     def setup_dependent_package(self, module, ext_spec):
         """Called before go modules' install() methods.

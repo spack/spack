@@ -75,6 +75,7 @@ class GoBootstrap(Package):
         env['CGO_ENABLED'] = '0'
         bash = which('bash')
         with working_dir('src'):
+            env['GOROOT_FINAL'] = self.spec.prefix
             bash('{0}.bash'.format('all' if '+test' in spec else 'make'))
 
         try:
@@ -86,6 +87,3 @@ class GoBootstrap(Package):
                 shutil.copytree(f, os.path.join(prefix, f))
             else:
                 shutil.copy2(f, os.path.join(prefix, f))
-
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GOROOT_FINAL', self.spec.prefix)
