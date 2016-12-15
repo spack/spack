@@ -49,5 +49,6 @@ class Astyle(MakefilePackage):
         if sys.platform == 'darwin':
             filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
 
-    def install_args(self):
-        return ['prefix={0}'.format(prefix)]
+    @property
+    def install_targets(self):
+        return ['install', 'prefix={0}'.format(self.prefix)]
