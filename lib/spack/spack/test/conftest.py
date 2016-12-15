@@ -222,7 +222,7 @@ def database(tmpdir_factory, mock_repository, configuration_files):
         _mock_install('mpileaks ^mpich2')
         _mock_install('mpileaks ^zmpi')
 
-    yield
+    yield install_path, install_db
 
     with spack.store.db.write_transaction():
         for spec in spack.store.db.query():
