@@ -26,8 +26,7 @@ from spack import *
 
 
 class Caliper(Package):
-    """
-    Caliper is a generic context annotation system. It gives programmers the
+    """Caliper is a generic context annotation system. It gives programmers the
     ability to provide arbitrary program context information to (performance)
     tools at runtime.
     """
@@ -37,7 +36,7 @@ class Caliper(Package):
 
     version('master', git='https://github.com/LLNL/Caliper.git')
 
-    variant('mpi', default=False, description='Enable MPI function wrappers.')
+    variant('mpi', default=True, description='Enable MPI function wrappers.')
 
     depends_on('libunwind')
     depends_on('papi')

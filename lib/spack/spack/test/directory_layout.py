@@ -91,22 +91,33 @@ class DirectoryLayoutTest(MockPackagesTest):
 
             # Make sure spec file can be read back in to get the original spec
             spec_from_file = self.layout.read_spec(spec_path)
-            self.assertEqual(spec, spec_from_file)
-            self.assertTrue(spec.eq_dag, spec_from_file)
+
+            # currently we don't store build dependency information when
+            # we write out specs to the filesystem.
+
+            # TODO: fix this when we can concretize more loosely based on
+            # TODO: what is installed. We currently omit these to
+            # TODO: increase reuse of build dependencies.
+            stored_deptypes = ('link', 'run')
+            expected = spec.copy(deps=stored_deptypes)
+            self.assertEqual(expected, spec_from_file)
+            self.assertTrue(expected.eq_dag, spec_from_file)
             self.assertTrue(spec_from_file.concrete)
 
             # Ensure that specs that come out "normal" are really normal.
             with open(spec_path) as spec_file:
                 read_separately = Spec.from_yaml(spec_file.read())
 
-                read_separately.normalize()
-                self.assertEqual(read_separately, spec_from_file)
+                # TODO: revise this when build deps are in dag_hash
+                norm = read_separately.normalized().copy(deps=stored_deptypes)
+                self.assertEqual(norm, spec_from_file)
 
-                read_separately.concretize()
-                self.assertEqual(read_separately, spec_from_file)
+                # TODO: revise this when build deps are in dag_hash
+                conc = read_separately.concretized().copy(deps=stored_deptypes)
+                self.assertEqual(conc, spec_from_file)
 
             # Make sure the hash of the read-in spec is the same
-            self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
+            self.assertEqual(expected.dag_hash(), spec_from_file.dag_hash())
 
             # Ensure directories are properly removed
             self.layout.remove_install_directory(spec)

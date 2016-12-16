@@ -28,15 +28,16 @@ from spack import *
 class Expat(Package):
     """<eXpat/> is an XML parser library written in C"""
     homepage = "http://expat.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz"
 
-    version('2.1.0', 'dd7dab7a5fea97d2a6a43f511449b7cd')
-
-    depends_on('cmake', type='build')
+    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2',
+            url="http://downloads.sourceforge.net/project/expat/expat/2.2.0/expat-2.2.0.tar.bz2")
+    version('2.1.0', 'dd7dab7a5fea97d2a6a43f511449b7cd',
+            url="http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz")
 
     def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make('install')
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')

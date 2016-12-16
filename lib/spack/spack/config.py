@@ -24,99 +24,30 @@
 ##############################################################################
 """This module implements Spack's configuration file handling.
 
-Configuration file scopes
-===============================
+This implements Spack's configuration system, which handles merging
+multiple scopes with different levels of precedence.  See the
+documentation on :ref:`configuration-scopes` for details on how Spack's
+configuration system behaves.  The scopes are:
 
-When Spack runs, it pulls configuration data from several config
-directories, each of which contains configuration files.  In Spack,
-there are two configuration scopes:
+  #. ``default``
+  #. ``site``
+  #. ``user``
 
- 1. ``site``: Spack loads site-wide configuration options from
-   ``$(prefix)/etc/spack/``.
+And corresponding :ref:`per-platform scopes <platform-scopes>`. Important
+functions in this module are:
 
- 2. ``user``: Spack next loads per-user configuration options from
-    ~/.spack/.
+* :py:func:`get_config`
+* :py:func:`update_config`
 
-Spack may read configuration files from both of these locations.  When
-configurations conflict, the user config options take precedence over
-the site configurations.  Each configuration directory may contain
-several configuration files, such as compilers.yaml or mirrors.yaml.
+``get_config`` reads in YAML data for a particular scope and returns
+it. Callers can then modify the data and write it back with
+``update_config``.
 
-Configuration file format
-===============================
-
-Configuration files are formatted using YAML syntax.  This format is
-implemented by libyaml (included with Spack as an external module),
-and it's easy to read and versatile.
-
-Config files are structured as trees, like this ``compiler`` section::
-
-     compilers:
-       chaos_5_x86_64_ib:
-          gcc@4.4.7:
-            cc: /usr/bin/gcc
-            cxx: /usr/bin/g++
-            f77: /usr/bin/gfortran
-            fc: /usr/bin/gfortran
-       bgqos_0:
-          xlc@12.1:
-            cc: /usr/local/bin/mpixlc
-            ...
-
-In this example, entries like ''compilers'' and ''xlc@12.1'' are used to
-categorize entries beneath them in the tree.  At the root of the tree,
-entries like ''cc'' and ''cxx'' are specified as name/value pairs.
-
-``config.get_config()`` returns these trees as nested dicts, but it
-strips the first level off.  So, ``config.get_config('compilers')``
-would return something like this for the above example:
-
-   { 'chaos_5_x86_64_ib' :
-       { 'gcc@4.4.7' :
-           { 'cc' : '/usr/bin/gcc',
-             'cxx' : '/usr/bin/g++'
-             'f77' : '/usr/bin/gfortran'
-             'fc' : '/usr/bin/gfortran' }
-           }
-       { 'bgqos_0' :
-          { 'cc' : '/usr/local/bin/mpixlc' } }
-
-Likewise, the ``mirrors.yaml`` file's first line must be ``mirrors:``,
-but ``get_config()`` strips that off too.
-
-Precedence
-===============================
-
-``config.py`` routines attempt to recursively merge configuration
-across scopes.  So if there are ``compilers.py`` files in both the
-site scope and the user scope, ``get_config('compilers')`` will return
-merged dictionaries of *all* the compilers available.  If a user
-compiler conflicts with a site compiler, Spack will overwrite the site
-configuration wtih the user configuration.  If both the user and site
-``mirrors.yaml`` files contain lists of mirrors, then ``get_config()``
-will return a concatenated list of mirrors, with the user config items
-first.
-
-Sometimes, it is useful to *completely* override a site setting with a
-user one.  To accomplish this, you can use *two* colons at the end of
-a key in a configuration file.  For example, this:
-
-     compilers::
-       chaos_5_x86_64_ib:
-          gcc@4.4.7:
-            cc: /usr/bin/gcc
-            cxx: /usr/bin/g++
-            f77: /usr/bin/gfortran
-            fc: /usr/bin/gfortran
-       bgqos_0:
-          xlc@12.1:
-            cc: /usr/local/bin/mpixlc
-            ...
-
-Will make Spack take compilers *only* from the user configuration, and
-the site configuration will be ignored.
+When read in, Spack validates configurations with jsonschemas.  The
+schemas are in submodules of :py:mod:`spack.schema`.
 
 """
+
 import copy
 import os
 import re
@@ -132,12 +63,13 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack
+import spack.architecture
 from spack.error import SpackError
 import spack.schema
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-from spack.build_environment import get_path_from_module
+
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
@@ -145,8 +77,8 @@ section_schemas = {
     'mirrors': spack.schema.mirrors.schema,
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
-    'targets': spack.schema.targets.schema,
     'modules': spack.schema.modules.schema,
+    'config': spack.schema.config.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -264,16 +196,33 @@ class ConfigScope(object):
         """Empty cached config information."""
         self.sections = {}
 
+    def __repr__(self):
+        return '<ConfigScope: %s: %s>' % (self.name, self.path)
+
+#
+# Below are configuration scopes.
+#
+# Each scope can have per-platfom overrides in subdirectories of the
+# configuration directory.
+#
+_platform = spack.architecture.platform().name
+
 """Default configuration scope is the lowest-level scope. These are
    versioned with Spack and can be overridden by sites or users."""
-ConfigScope('defaults', os.path.join(spack.etc_path, 'spack', 'defaults'))
+_defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
+ConfigScope('defaults', _defaults_path)
+ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
 
 """Site configuration is per spack instance, for sites or projects.
    No site-level configs should be checked into spack by default."""
-ConfigScope('site', os.path.join(spack.etc_path, 'spack'))
+_site_path = os.path.join(spack.etc_path, 'spack')
+ConfigScope('site', _site_path)
+ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 
 """User configuration can override both spack defaults and site config."""
-ConfigScope('user', spack.user_config_path)
+_user_path = spack.user_config_path
+ConfigScope('user', _user_path)
+ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
 
 def highest_precedence_scope():
@@ -317,7 +266,7 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            data = syaml.load(f)
+            data = _mark_overrides(syaml.load(f))
 
         if data:
             validate_section(data, schema)
@@ -337,6 +286,34 @@ def clear_config_caches():
        to be re-read upon the next request"""
     for scope in config_scopes.values():
         scope.clear()
+
+
+def override(string):
+    """Test if a spack YAML string is an override.
+
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `::`,
+    and if they do, their values completely replace lower-precedence
+    configs instead of merging into them.
+
+    """
+    return hasattr(string, 'override') and string.override
+
+
+def _mark_overrides(data):
+    if isinstance(data, list):
+        return [_mark_overrides(elt) for elt in data]
+
+    elif isinstance(data, dict):
+        marked = {}
+        for key, val in data.iteritems():
+            if isinstance(key, basestring) and key.endswith(':'):
+                key = syaml.syaml_str(key[:-1])
+                key.override = True
+            marked[key] = _mark_overrides(val)
+        return marked
+
+    else:
+        return data
 
 
 def _merge_yaml(dest, source):
@@ -371,9 +348,11 @@ def _merge_yaml(dest, source):
     # Source dict is merged into dest.
     elif they_are(dict):
         for sk, sv in source.iteritems():
-            if sk not in dest:
+            if override(sk) or sk not in dest:
+                # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.copy(sv)
             else:
+                # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
         return dest
 
@@ -385,7 +364,26 @@ def _merge_yaml(dest, source):
 def get_config(section, scope=None):
     """Get configuration settings for a section.
 
-       Strips off the top-level section name from the YAML dict.
+    If ``scope`` is ``None`` or not provided, return the merged contents
+    of all of Spack's configuration scopes.  If ``scope`` is provided,
+    return only the confiugration as specified in that scope.
+
+    This off the top-level name from the YAML section.  That is, for a
+    YAML config file that looks like this::
+
+       config:
+         install_tree: $spack/opt/spack
+         module_roots:
+           lmod:   $spack/share/spack/lmod
+
+    ``get_config('config')`` will return::
+
+       { 'install_tree': '$spack/opt/spack',
+         'module_roots: {
+             'lmod': '$spack/share/spack/lmod'
+         }
+       }
+
     """
     validate_section_name(section)
     merged_section = syaml.syaml_dict()
@@ -403,18 +401,18 @@ def get_config(section, scope=None):
         if not data or not isinstance(data, dict):
             continue
 
-        # Allow complete override of site config with '<section>::'
-        override_key = section + ':'
-        if not (section in data or override_key in data):
+        if section not in data:
             tty.warn("Skipping bad configuration file: '%s'" % scope.path)
             continue
 
-        if override_key in data:
-            merged_section = data[override_key]
-        else:
-            merged_section = _merge_yaml(merged_section, data[section])
+        merged_section = _merge_yaml(merged_section, data)
 
-    return merged_section
+    # no config files -- empty config.
+    if section not in merged_section:
+        return {}
+
+    # take the top key off before returning.
+    return merged_section[section]
 
 
 def get_config_filename(scope, section):
@@ -463,6 +461,9 @@ def print_section(section):
 def spec_externals(spec):
     """Return a list of external specs (with external directory path filled in),
        one for each known external installation."""
+    # break circular import.
+    from spack.build_environment import get_path_from_module
+
     allpkgs = get_config('packages')
     name = spec.name
 

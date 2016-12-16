@@ -33,13 +33,13 @@ class Nauty(Package):
     homepage = "http://pallini.di.uniroma1.it/index.html"
     url      = "http://pallini.di.uniroma1.it/nauty26r7.tar.gz"
 
-    def url_for_version(self, version):
-        return ("http://pallini.di.uniroma1.it/nauty%s.tar.gz" %
-                str(version).replace('.', ''))
-
     version('2.6r7', 'b2b18e03ea7698db3fbe06c5d76ad8fe')
     version('2.6r5', '91b03a7b069962e94fc9aac8831ce8d2')
     version('2.5r9', 'e8ecd08b0892a1fb13329c147f08de6d')
+
+    def url_for_version(self, version):
+        url = "http://pallini.di.uniroma1.it/nauty{0}.tar.gz"
+        return url.format(version.joined)
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

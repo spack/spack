@@ -40,11 +40,16 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
-def decompressor_for(path):
+def decompressor_for(path, extension=None):
     """Get the appropriate decompressor for a path."""
-    if path.endswith(".zip"):
+    if ((extension and re.match(r'\.?zip$', extension)) or
+            path.endswith('.zip')):
         unzip = which('unzip', required=True)
+        unzip.add_default_arg('-q')
         return unzip
+    if extension and re.match(r'gz', extension):
+        gunzip = which('gunzip', required=True)
+        return gunzip
     tar = which('tar', required=True)
     tar.add_default_arg('-xf')
     return tar

@@ -49,4 +49,4 @@ class PyCffi(Package):
         # building the shared library.
         os.environ['LDSHARED'] = "{0} -shared -pthread".format(spack_cc)
 
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

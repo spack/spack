@@ -212,7 +212,10 @@ def _depends_on(pkg, spec, when=None, type=None):
 
 @directive(('dependencies', '_deptypes'))
 def depends_on(pkg, spec, when=None, type=None):
-    """Creates a dict of deps with specs defining when they apply."""
+    """Creates a dict of deps with specs defining when they apply.
+    This directive is to be used inside a Package definition to declare
+    that the package requires other packages to be built first.
+    @see The section "Dependency specs" in the Spack Packaging Guide."""
     _depends_on(pkg, spec, when=when, type=type)
 
 
@@ -256,7 +259,7 @@ def provides(pkg, *specs, **kwargs):
 
 
 @directive('patches')
-def patch(pkg, url_or_filename, level=1, when=None):
+def patch(pkg, url_or_filename, level=1, when=None, **kwargs):
     """Packages can declare patches to apply to source.  You can
        optionally provide a when spec to indicate that a particular
        patch should only be applied when the package's spec meets
@@ -268,7 +271,7 @@ def patch(pkg, url_or_filename, level=1, when=None):
     cur_patches = pkg.patches.setdefault(when_spec, [])
     # if this spec is identical to some other, then append this
     # patch to the existing list.
-    cur_patches.append(Patch(pkg, url_or_filename, level))
+    cur_patches.append(Patch.create(pkg, url_or_filename, level, **kwargs))
 
 
 @directive('variants')
@@ -288,8 +291,7 @@ def variant(pkg, name, default=False, description=""):
 
 @directive('resources')
 def resource(pkg, **kwargs):
-    """
-    Define an external resource to be fetched and staged when building the
+    """Define an external resource to be fetched and staged when building the
     package. Based on the keywords present in the dictionary the appropriate
     FetchStrategy will be used for the resource. Resources are fetched and
     staged in their own folder inside spack stage area, and then moved into
@@ -298,11 +300,11 @@ def resource(pkg, **kwargs):
     List of recognized keywords:
 
     * 'when' : (optional) represents the condition upon which the resource is
-    needed
+      needed
     * 'destination' : (optional) path where to move the resource. This path
-    must be relative to the main package stage area.
+      must be relative to the main package stage area.
     * 'placement' : (optional) gives the possibility to fine tune how the
-    resource is moved into the main package stage area.
+      resource is moved into the main package stage area.
     """
     when = kwargs.get('when', pkg.name)
     destination = kwargs.get('destination', "")

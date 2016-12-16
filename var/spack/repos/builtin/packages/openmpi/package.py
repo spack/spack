@@ -22,18 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
-import llnl.util.tty as tty
-
 from spack import *
+import os
 
 
 def _verbs_dir():
-    """
-    Try to find the directory where the OpenFabrics verbs package is
-    installed. Return None if not found.
-    """
+    """Try to find the directory where the OpenFabrics verbs package is
+    installed. Return None if not found."""
     try:
         # Try to locate Verbs by looking for a utility in the path
         ibv_devices = which("ibv_devices")
@@ -49,13 +44,15 @@ def _verbs_dir():
         return None
 
 
-class Openmpi(Package):
-    """Open MPI is a project combining technologies and resources from
-       several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI)
-       in order to build the best MPI library available. A completely
-       new MPI-2 compliant implementation, Open MPI offers advantages
-       for system and software vendors, application developers and
-       computer science researchers.
+class Openmpi(AutotoolsPackage):
+    """The Open MPI Project is an open source Message Passing Interface
+       implementation that is developed and maintained by a consortium
+       of academic, research, and industry partners. Open MPI is
+       therefore able to combine the expertise, technologies, and
+       resources from all across the High Performance Computing
+       community in order to build the best MPI library available.
+       Open MPI offers advantages for system and software vendors,
+       application developers and computer science researchers.
     """
 
     homepage = "http://www.open-mpi.org"
@@ -63,6 +60,7 @@ class Openmpi(Package):
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('2.0.1', '6f78155bd7203039d2448390f3b51c96')
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')
     version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
@@ -75,36 +73,38 @@ class Openmpi(Package):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.0:1.10.1")
 
-    variant('psm', default=False, description='Build support for the PSM library.')
+    # Fabrics
+    variant('psm', default=False, description='Build support for the PSM library')
     variant('psm2', default=False,
-            description='Build support for the Intel PSM2 library.')
+            description='Build support for the Intel PSM2 library')
     variant('pmi', default=False,
             description='Build support for PMI-based launchers')
     variant('verbs', default=_verbs_dir() is not None,
-            description='Build support for OpenFabrics verbs.')
+            description='Build support for OpenFabrics verbs')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
-    variant('thread_multiple', default=False,
-            description='Enable MPI_THREAD_MULTIPLE support')
-
-    # TODO : variant support for alps, loadleveler  is missing
+    # Schedulers
+    # TODO: support for alps and loadleveler is missing
     variant('tm', default=False,
             description='Build TM (Torque, PBSPro, and compatible) support')
     variant('slurm', default=False,
             description='Build SLURM scheduler component')
 
-    variant('sqlite3', default=False, description='Build sqlite3 support')
+    # Additional support options
+    variant('java', default=False, description='Build Java support')
+    variant('sqlite3', default=False, description='Build SQLite3 support')
+    variant('vt', default=True, description='Build VampirTrace support')
+    variant('thread_multiple', default=False,
+            description='Enable MPI_THREAD_MULTIPLE support')
 
-    variant('vt', default=True,
-            description='Build support for contributed package vt')
-
-    # TODO : support for CUDA is missing
+    # TODO: support for CUDA is missing
 
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
+    depends_on('jdk', when='+java')
     depends_on('sqlite', when='+sqlite3')
 
     def url_for_version(self, version):
@@ -127,21 +127,10 @@ class Openmpi(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
-
-    def setup_environment(self, spack_env, run_env):
-        # As of 06/2016 there is no mechanism to specify that packages which
-        # depends on MPI need C or/and Fortran implementation. For now
-        # require both.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            tty.warn('OpenMPI : FORTRAN compiler not found')
-            tty.warn('OpenMPI : FORTRAN bindings will be disabled')
-            spack_env.unset('FC')
-            spack_env.unset('F77')
-            # Setting an attribute here and using it in the 'install'
-            # method is needed to ensure tty.warn is actually displayed
-            # to user and not redirected to spack-build.out
-            self.config_extra = ['--enable-mpi-fortran=none',
-                                 '--disable-oshmem-fortran']
+        self.spec.mpicxx_shared_libs = [
+            join_path(self.prefix.lib, 'libmpi_cxx.{0}'.format(dso_suffix)),
+            join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
+        ]
 
     @property
     def verbs(self):
@@ -153,52 +142,101 @@ class Openmpi(Package):
         elif self.spec.satisfies('@1.7:'):
             return 'verbs'
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix=%s" % prefix,
-                       "--with-hwloc=%s" % spec['hwloc'].prefix,
-                       "--enable-shared",
-                       "--enable-static"]
+    @AutotoolsPackage.precondition('autoreconf')
+    def die_without_fortran(self):
+        # Until we can pass variants such as +fortran through virtual
+        # dependencies depends_on('mpi'), require Fortran compiler to
+        # avoid delayed build errors in dependents.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError(
+                'OpenMPI requires both C and Fortran compilers!'
+            )
 
-        if getattr(self, 'config_extra', None) is not None:
-            config_args.extend(self.config_extra)
+    def configure_args(self):
+        spec = self.spec
 
-        # Variant based arguments
-        config_args.extend([
+        config_args = [
+            '--enable-shared',
+            '--enable-static',
+            '--enable-mpi-cxx',
             # Schedulers
             '--with-tm' if '+tm' in spec else '--without-tm',
             '--with-slurm' if '+slurm' in spec else '--without-slurm',
             # Fabrics
             '--with-psm' if '+psm' in spec else '--without-psm',
-            '--with-psm2' if '+psm2' in spec else '--without-psm2',
-            '--with-mxm' if '+mxm' in spec else '--without-mxm',
-            # Other options
-            ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
-                else '--disable-mpi-thread-multiple'),
-            '--with-pmi' if '+pmi' in spec else '--without-pmi',
-            '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
-            '--enable-vt' if '+vt' in spec else '--disable-vt'
-        ])
+        ]
+
+        # Intel PSM2 support
+        if spec.satisfies('@1.10:'):
+            if '+psm2' in spec:
+                config_args.append('--with-psm2')
+            else:
+                config_args.append('--without-psm2')
+
+        # PMI support
+        if spec.satisfies('@1.5.5:'):
+            if '+pmi' in spec:
+                config_args.append('--with-pmi')
+            else:
+                config_args.append('--without-pmi')
+
+        # Mellanox Messaging support
+        if spec.satisfies('@1.5.4:'):
+            if '+mxm' in spec:
+                config_args.append('--with-mxm')
+            else:
+                config_args.append('--without-mxm')
+
+        # OpenFabrics verbs support
         if '+verbs' in spec:
             path = _verbs_dir()
             if path is not None and path not in ('/usr', '/usr/local'):
-                config_args.append('--with-%s=%s' % (self.verbs, path))
+                config_args.append('--with-{0}={1}'.format(self.verbs, path))
             else:
-                config_args.append('--with-%s' % self.verbs)
+                config_args.append('--with-{0}'.format(self.verbs))
         else:
-            config_args.append('--without-%s' % self.verbs)
+            config_args.append('--without-{0}'.format(self.verbs))
 
-        # TODO: use variants for this, e.g. +lanl, +llnl, etc.
-        # use this for LANL builds, but for LLNL builds, we need:
-        #     "--with-platform=contrib/platform/llnl/optimized"
-        if self.version == ver("1.6.5") and '+lanl' in spec:
-            config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")  # NOQA: ignore=E501
+        # Hwloc support
+        if spec.satisfies('@1.5.2:'):
+            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
 
-        configure(*config_args)
-        make()
-        make("install")
+        # Java support
+        if spec.satisfies('@1.7.4:'):
+            if '+java' in spec:
+                config_args.extend([
+                    '--enable-java',
+                    '--enable-mpi-java',
+                    '--with-jdk-dir={0}'.format(spec['jdk'].prefix)
+                ])
+            else:
+                config_args.extend([
+                    '--disable-java',
+                    '--disable-mpi-java'
+                ])
 
-        self.filter_compilers()
+        # SQLite3 support
+        if spec.satisfies('@1.7.3:1.999'):
+            if '+sqlite3' in spec:
+                config_args.append('--with-sqlite3')
+            else:
+                config_args.append('--without-sqlite3')
 
+        # VampirTrace support
+        if spec.satisfies('@1.3:1.999'):
+            if '+vt' not in spec:
+                config_args.append('--enable-contrib-no-build=vt')
+
+        # Multithreading support
+        if spec.satisfies('@1.5.4:'):
+            if '+thread_multiple' in spec:
+                config_args.append('--enable-mpi-thread-multiple')
+            else:
+                config_args.append('--disable-mpi-thread-multiple')
+
+        return config_args
+
+    @AutotoolsPackage.sanity_check('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.

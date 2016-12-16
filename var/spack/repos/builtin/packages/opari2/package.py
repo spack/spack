@@ -22,13 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Opari2(Package):
-    """
-    OPARI2 is a source-to-source instrumentation tool for OpenMP and hybrid
+    """OPARI2 is a source-to-source instrumentation tool for OpenMP and hybrid
     codes. It surrounds OpenMP directives and runtime library calls with calls
     to the POMP2 measurement interface. OPARI2 will provide you with a new
     initialization method that allows for multi-directory and parallel builds

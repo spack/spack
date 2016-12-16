@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import sys
 
 
 class Qt(Package):
@@ -47,35 +48,51 @@ class Qt(Package):
     variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
     variant('mesa',       default=False, description="Depend on mesa.")
     variant('gtk',        default=False, description="Build with gtkplus.")
+    variant('webkit',     default=False, description="Build the Webkit extension")
+    variant('examples',   default=False, description="Build examples.")
+    variant('dbus',       default=False, description="Build with D-Bus support.")
+    variant('phonon',     default=False, description="Build with phonon support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
 
-    # Use system openssl for security.
-    # depends_on("openssl")
+    patch('qt4-corewlan-new-osx.patch', when='@4')
+    patch('qt4-pcre-include-conflict.patch', when='@4')
+    patch('qt4-el-capitan.patch', when='@4')
 
+    # Use system openssl for security.
+    depends_on("openssl")
+    depends_on("glib")
     depends_on("gtkplus", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
-    depends_on("dbus", when='@4:')
+    depends_on("dbus", when='@4:+dbus')
     depends_on("libtiff")
     depends_on("libpng@1.2.56", when='@3')
     depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
-
-    # Webkit
-    # depends_on("gperf")
-    # depends_on("flex", type='build')
-    # depends_on("bison", type='build')
-    # depends_on("ruby", type='build')
-    # depends_on("icu4c")
+    depends_on("icu4c")
 
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+mesa')
-    depends_on("libxcb")
+    depends_on("libxcb", when=sys.platform != 'darwin')
+
+    # Webkit
+    depends_on("flex", when='+webkit', type='build')
+    depends_on("bison", when='+webkit', type='build')
+    depends_on("gperf", when='+webkit')
+    depends_on("fontconfig", when='+webkit')
+
+    # Multimedia
+    # depends_on("gstreamer", when='+multimedia')
+    # depends_on("pulse", when='+multimedia')
+    # depends_on("flac", when='+multimedia')
+    # depends_on("ogg", when='+multimedia')
+
+    use_xcode = True
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -108,11 +125,14 @@ class Qt(Package):
 
         return url
 
-    def setup_environment(self, spack_env, env):
-        env.set('QTDIR', self.prefix)
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('QTDIR', self.prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_env.set('QTDIR', self.prefix)
+
+    def setup_dependent_package(self, module, ext_spec):
+        module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
 
     def patch(self):
         if self.spec.satisfies('@4'):
@@ -143,7 +163,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
-        return [
+        config_args = [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -152,13 +172,54 @@ class Qt(Package):
             '-shared',
             '-confirm-license',
             '-openssl-linked',
-            '-dbus-linked',
             '-optimized-qmake',
             '-no-openvg',
             '-no-pch',
             # NIS is deprecated in more recent glibc
             '-no-nis'
         ]
+
+        if '~examples' in self.spec:
+            config_args.extend(['-nomake', 'examples'])
+
+        if '@4' in self.spec and '~phonon' in self.spec:
+            config_args.append('-no-phonon')
+
+        if '+dbus' in self.spec:
+            config_args.append('-dbus-linked')
+        else:
+            config_args.append('-no-dbus')
+
+        if '@5:' in self.spec and sys.platform == 'darwin':
+            config_args.extend([
+                '-no-xinput2',
+                '-no-xcb-xlib',
+                '-no-pulseaudio',
+                '-no-alsa',
+            ])
+
+        if '@4' in self.spec and sys.platform == 'darwin':
+            sdkpath = which('xcrun')('--show-sdk-path',
+                                     # XXX(macos): 10.11 SDK fails to configure
+                                     '--sdk', 'macosx10.9',
+                                     output=str)
+            config_args.extend([
+                '-sdk', sdkpath.strip(),
+            ])
+            use_clang_platform = False
+            if self.spec.compiler.name == 'clang' and \
+               str(self.spec.compiler.version).endwith('-apple'):
+                use_clang_platform = True
+            # No one uses gcc-4.2.1 anymore; this is clang.
+            if self.spec.compiler.name == 'gcc' and \
+               str(self.spec.compiler.version) == '4.2.1':
+                use_clang_platform = True
+            if use_clang_platform:
+                config_args.extend([
+                    '-platform', 'unsupported/macx-clang',
+                ])
+
+        return config_args
 
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
@@ -177,27 +238,37 @@ class Qt(Package):
     @when('@4')
     def configure(self):
         configure('-fast',
-                  '-no-webkit',
-                  '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
+                  '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
+                  '-{0}webkit'.format('' if '+webkit' in self.spec else 'no-'),
+                  '-arch', str(self.spec.architecture.target),
                   *self.common_config_args)
 
     @when('@5.0:5.6')
     def configure(self):
+        webkit_args = [] if '+webkit' in self.spec else ['-skip', 'qtwebkit']
         configure('-no-eglfs',
                   '-no-directfb',
-                  '-qt-xcb',
-                  '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
-                  '-skip', 'qtwebkit',
-                  *self.common_config_args)
+                  '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
+                  *(webkit_args + self.common_config_args))
 
     @when('@5.7:')
     def configure(self):
+        config_args = self.common_config_args
+
+        if not sys.platform == 'darwin':
+            config_args.extend([
+                '-qt-xcb',
+            ])
+
+        if '~webkit' in self.spec:
+            config_args.extend([
+                '-skip', 'webengine',
+            ])
+
         configure('-no-eglfs',
                   '-no-directfb',
-                  '-qt-xcb',
-                  '{0}-gtk'.format('' if '+gtk' in self.spec else '-no'),
-                  '-skip', 'webengine',
-                  *self.common_config_args)
+                  '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-'),
+                  *config_args)
 
     def install(self, spec, prefix):
         self.configure()

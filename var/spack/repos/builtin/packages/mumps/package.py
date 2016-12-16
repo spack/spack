@@ -34,6 +34,9 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
+    # Alternate location if main server is down.
+    # version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
     version('5.0.1', 'b477573fdcc87babe861f62316833db0')
 
     variant('mpi', default=True,
@@ -61,6 +64,7 @@ class Mumps(Package):
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
+    depends_on('lapack')
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
@@ -75,9 +79,9 @@ class Mumps(Package):
             raise RuntimeError(
                 'You cannot use the variants parmetis or ptscotch without mpi')
 
-        makefile_conf = ["LIBBLAS = %s" % to_link_flags(
-            self.spec['blas'].blas_shared_lib)
-        ]
+        lapack_blas = (self.spec['lapack'].lapack_libs +
+                       self.spec['blas'].blas_libs)
+        makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
 
         orderings = ['-Dpord']
 
@@ -136,11 +140,12 @@ class Mumps(Package):
                  'OPTC    = %s -O ' % fpic])
 
         if '+mpi' in self.spec:
+            scalapack = self.spec['scalapack'].scalapack_libs
             makefile_conf.extend(
                 ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
                  "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
                  "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "SCALAP = %s" % self.spec['scalapack'].fc_link,
+                 "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
@@ -151,7 +156,13 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        makefile_conf.append("CDEFS   = -DAdd_")
+        if self.compiler.name == 'intel':
+            # Intel Fortran compiler provides the main() function so
+            # C examples linked with the Fortran compiler require a
+            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+            makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
+        else:
+            makefile_conf.append("CDEFS   = -DAdd_")
 
         if '+shared' in self.spec:
             if sys.platform == 'darwin':

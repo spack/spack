@@ -2,12 +2,13 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXOPTS    = -E
+JOBS          ?= $(shell python -c 'import multiprocessing; print multiprocessing.cpu_count()')
+SPHINXBUILD   = sphinx-build -j $(JOBS)
 PAPER         =
 BUILDDIR      = _build
 
-export PYTHONPATH = ../../spack
+export PYTHONPATH := ../../spack:$(PYTHONPATH)
 APIDOC_FILES  = spack*.rst
 
 # Internal variables.
@@ -40,9 +41,20 @@ gh-pages: _build/html
 	git push -f $$root master:gh-pages && \
 	rm -rf .git
 
+# This version makes gh-pages into a single page that redirects
+# to spack.readthedocs.io
+gh-pages-redirect:
+	root="$$(git rev-parse --show-toplevel)" && \
+	cd _gh_pages_redirect && \
+	rm -rf .git && \
+	git init && \
+	git add . && \
+	git commit -m "Spack Documentation" && \
+	git push -f $$root master:gh-pages && \
+	rm -rf .git
+
 upload:
 	rsync -avz --rsh=ssh --delete _build/html/ cab:/usr/global/web-pages/lc/www/adept/docs/spack
-	git push -f origin gh-pages
 	git push -f github gh-pages
 
 apidoc:
@@ -71,10 +83,10 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -f package_list.rst command_index.rst
+	-rm -f package_list.rst command_index.rst modules.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
-html: apidoc
+html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

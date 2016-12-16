@@ -22,7 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Schema for mirror configuration files."""
+"""Schema for modules.yaml configuration file.
+
+.. literalinclude:: ../spack/schema/modules.py
+   :lines: 32-
+"""
 
 
 schema = {
@@ -123,7 +127,7 @@ schema = {
         }
     },
     'patternProperties': {
-        r'modules:?': {
+        r'modules': {
             'type': 'object',
             'default': {},
             'additionalProperties': False,
@@ -139,7 +143,20 @@ schema = {
                     'default': [],
                     'items': {
                         'type': 'string',
-                        'enum': ['tcl', 'dotkit']}},
+                        'enum': ['tcl', 'dotkit', 'lmod']}},
+                'lmod': {
+                    'allOf': [
+                        # Base configuration
+                        {'$ref': '#/definitions/module_type_configuration'},
+                        {
+                            'core_compilers': {
+                                '$ref': '#/definitions/array_of_strings'
+                            },
+                            'hierarchical_scheme': {
+                                '$ref': '#/definitions/array_of_strings'
+                            }
+                        }  # Specific lmod extensions
+                    ]},
                 'tcl': {
                     'allOf': [
                         # Base configuration

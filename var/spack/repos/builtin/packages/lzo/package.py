@@ -25,11 +25,11 @@
 from spack import *
 
 
-class Lzo(Package):
+class Lzo(AutotoolsPackage):
     """Real-time data compression library"""
 
     homepage = 'https://www.oberhumer.com/opensource/lzo/'
-    url = 'https://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
+    url = 'http://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
 
     version('2.09', 'c7ffc9a103afe2d1bba0b015e7aa887f')
     version('2.08', 'fcec64c26a0f4f4901468f360029678f')
@@ -37,13 +37,8 @@ class Lzo(Package):
     version('2.06', '95380bd4081f85ef08c5209f4107e9f8')
     version('2.05', 'c67cda5fa191bab761c7cb06fe091e36')
 
-    def install(self, spec, prefix):
-        configure_args = [
-            '--prefix={0}'.format(prefix),
+    def configure_args(self):
+        return [
             '--disable-dependency-tracking',
             '--enable-shared'
         ]
-        configure(*configure_args)
-        make()
-        make('check')
-        make('install')

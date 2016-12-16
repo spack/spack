@@ -56,24 +56,28 @@ class Nag(Compiler):
         # However, it can be mixed with a compiler that does support it
         return "-std=c++11"
 
+    @property
+    def pic_flag(self):
+        return "-PIC"
+
     # Unlike other compilers, the NAG compiler passes options to GCC, which
     # then passes them to the linker. Therefore, we need to doubly wrap the
     # options with '-Wl,-Wl,,'
     @property
     def f77_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,'
+        return '-Wl,-Wl,,-rpath,,'
 
     @property
     def fc_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,'
+        return '-Wl,-Wl,,-rpath,,'
 
     @classmethod
     def default_version(self, comp):
         """The '-V' option works for nag compilers.
-           Output looks like this::
+        Output looks like this::
 
-           NAG Fortran Compiler Release 6.0(Hibiya) Build 1037
-           Product NPL6A60NA for x86-64 Linux
+            NAG Fortran Compiler Release 6.0(Hibiya) Build 1037
+            Product NPL6A60NA for x86-64 Linux
         """
         return get_compiler_version(
             comp, '-V', r'NAG Fortran Compiler Release ([0-9.]+)')

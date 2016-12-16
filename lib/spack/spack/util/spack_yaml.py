@@ -32,19 +32,21 @@
 
 """
 import yaml
+from yaml import Loader, Dumper
 from yaml.nodes import *
 from yaml.constructor import ConstructorError
 from ordereddict_backport import OrderedDict
 
+import spack.error
+
 # Only export load and dump
-__all__ = ['load', 'dump']
+__all__ = ['load', 'dump', 'SpackYAMLError']
 
 # Make new classes so we can add custom attributes.
 # Also, use OrderedDict instead of just dict.
 
 
 class syaml_dict(OrderedDict):
-
     def __repr__(self):
         mappings = ('%r: %r' % (k, v) for k, v in self.items())
         return '{%s}' % ', '.join(mappings)
@@ -64,7 +66,7 @@ def mark(obj, node):
     obj._end_mark = node.end_mark
 
 
-class OrderedLineLoader(yaml.Loader):
+class OrderedLineLoader(Loader):
     """YAML loader that preserves order and line numbers.
 
        Mappings read in by this loader behave like an ordered dict.
@@ -87,7 +89,9 @@ class OrderedLineLoader(yaml.Loader):
             value = value.encode('ascii')
         except UnicodeEncodeError:
             pass
+
         value = syaml_str(value)
+
         mark(value, node)
         return value
 
@@ -147,6 +151,7 @@ class OrderedLineLoader(yaml.Loader):
         mark(mapping, node)
         return mapping
 
+
 # register above new constructors
 OrderedLineLoader.add_constructor(
     u'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
@@ -156,7 +161,7 @@ OrderedLineLoader.add_constructor(
     u'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
 
 
-class OrderedLineDumper(yaml.Dumper):
+class OrderedLineDumper(Dumper):
     """Dumper that preserves ordering and formats ``syaml_*`` objects.
 
       This dumper preserves insertion ordering ``syaml_dict`` objects
@@ -196,6 +201,11 @@ class OrderedLineDumper(yaml.Dumper):
                 node.flow_style = best_style
         return node
 
+    def ignore_aliases(self, _data):
+        """Make the dumper NEVER print YAML aliases."""
+        return True
+
+
 # Make our special objects look like normal YAML ones.
 OrderedLineDumper.add_representer(syaml_dict, OrderedLineDumper.represent_dict)
 OrderedLineDumper.add_representer(syaml_list, OrderedLineDumper.represent_list)
@@ -212,3 +222,9 @@ def load(*args, **kwargs):
 def dump(*args, **kwargs):
     kwargs['Dumper'] = OrderedLineDumper
     return yaml.dump(*args, **kwargs)
+
+
+class SpackYAMLError(spack.error.SpackError):
+    """Raised when there are issues with YAML parsing."""
+    def __init__(self, msg, yaml_error):
+        super(SpackYAMLError, self).__init__(msg, str(yaml_error))

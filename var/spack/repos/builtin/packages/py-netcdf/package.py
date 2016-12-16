@@ -35,7 +35,8 @@ class PyNetcdf(Package):
     extends('python')
     depends_on('py-numpy', type=nolink)
     depends_on('py-cython', type=nolink)
+    depends_on('py-setuptools', type=nolink)
     depends_on('netcdf')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

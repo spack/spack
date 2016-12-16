@@ -26,19 +26,22 @@ from spack import *
 
 
 class Pngwriter(Package):
-    """
-    PNGwriter is a very easy to use open source graphics library that uses PNG
-    as its output format. The interface has been designed to be as simple and
-    intuitive as possible. It supports plotting and reading pixels in the RGB
-    (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK (cyan,
-    magenta, yellow, black) colour spaces, basic shapes, scaling, bilinear
-    interpolation, full TrueType antialiased and rotated text support, bezier
-    curves, opening existing PNG images and more.
+    """PNGwriter is a very easy to use open source graphics library that uses
+    PNG as its output format. The interface has been designed to be as simple
+    and intuitive as possible. It supports plotting and reading pixels in the
+    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
+    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
+    bilinear interpolation, full TrueType antialiased and rotated text support,
+    bezier curves, opening existing PNG images and more.
     """
 
     homepage = "http://pngwriter.sourceforge.net/"
     url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
 
+    version('dev', branch='dev',
+            git='https://github.com/pngwriter/pngwriter.git')
+    version('master', branch='master',
+            git='https://github.com/pngwriter/pngwriter.git')
     version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
 
     depends_on('cmake', type='build')

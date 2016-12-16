@@ -22,21 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-
 import os
-import os.path
-
+import glob
 from llnl.util.filesystem import join_path
 
 
 class Tau(Package):
-    """
-    A portable profiling and tracing toolkit for performance
+    """A portable profiling and tracing toolkit for performance
     analysis of parallel programs written in Fortran, C, C++, UPC,
     Java, Python.
     """
+
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.25.tar.gz"
 
@@ -149,3 +146,15 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
+
+    def setup_environment(self, spack_env, run_env):
+        pattern = join_path(self.prefix.lib, 'Makefile.*')
+        files = glob.glob(pattern)
+
+        # This function is called both at install time to set up
+        # the build environment and after install to generate the associated
+        # module file. In the former case there is no `self.prefix.lib`
+        # directory to inspect. The conditional below will set `TAU_MAKEFILE`
+        # in the latter case.
+        if files:
+            run_env.set('TAU_MAKEFILE', files[0])

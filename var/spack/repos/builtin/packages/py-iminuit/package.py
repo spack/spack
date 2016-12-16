@@ -43,4 +43,4 @@ class PyIminuit(Package):
     depends_on('py-cython', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

@@ -35,6 +35,7 @@ class Mbedtls(Package):
     homepage = "https://tls.mbed.org"
     url      = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
 
+    version('2.3.0', '98158e1160a0825a3e8db38881a177a0')
     version('2.2.1', '73a38f96898d6d03e32f55dd9f9a67be')
     version('2.2.0', 'eaf4586c1ef93ae872e606b6c1203942')
     version('2.1.4', '40cdf67b6c6d92c9cbcfd552d39ea3ae')

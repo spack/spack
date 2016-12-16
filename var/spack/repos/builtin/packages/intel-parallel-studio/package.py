@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import os
 import re
@@ -11,25 +35,21 @@ class IntelParallelStudio(IntelInstaller):
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://software.llnl.gov/spack/mirrors.html"""
+    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    # TODO: can also try the online installer (will download files on demand)
-    version('composer.2016.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
-        % os.getcwd())
-    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
-    version('cluster.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
-    version('composer.2016.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
-        % os.getcwd())
-    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
-    version('cluster.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
+    version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542')
+    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542')
+    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85')
+    version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01')
+    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01')
+    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9')
+    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3')
+    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3')
+    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa')
+    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832')
+    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
@@ -45,6 +65,10 @@ class IntelParallelStudio(IntelInstaller):
     variant('tools', default=True, description="Install the Intel Advisor, "
             "VTune Amplifier, and Inspector tools")
 
+    variant('shared', default=True, description='Builds shared library')
+    variant('ilp64', default=False, description='64 bit integers')
+    variant('openmp', default=False, description='OpenMP multithreading layer')
+
     provides('mpi', when='@cluster:+mpi')
     provides('mkl', when='+mkl')
     provides('daal', when='+daal')
@@ -54,6 +78,54 @@ class IntelParallelStudio(IntelInstaller):
     provides('blas', when='+mkl')
     provides('lapack', when='+mkl')
     # TODO: MKL also provides implementation of Scalapack.
+
+    @property
+    def blas_libs(self):
+        shared = True if '+shared' in self.spec else False
+        suffix = dso_suffix if '+shared' in self.spec else 'a'
+        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        mkl_threading = ['libmkl_sequential']
+        if '+openmp' in self.spec:
+            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+        mkl_libs = find_libraries(
+            mkl_integer + ['libmkl_core'] + mkl_threading,
+            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
+            shared=shared
+        )
+        system_libs = [
+            'libpthread.{0}'.format(suffix),
+            'libm.{0}'.format(suffix),
+            'libdl.{0}'.format(suffix)
+        ]
+        return mkl_libs + system_libs
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
+
+    def url_for_version(self, version):
+        """Assume the tarball is in the current directory."""
+
+        version_tuple = str(version).split('.')
+        year = int(version_tuple[1])
+
+        url = "file://{0}/parallel_studio_xe_{1}".format(
+            os.getcwd(), version_tuple[1])
+
+        update_string = ""
+        if version_tuple[2] != '0':
+            update_string = "_update{0}".format(version_tuple[2])
+
+        if version_tuple[0] == 'composer':
+            if year == 2016:
+                url += "_composer_edition{0}".format(update_string)
+            else:
+                url += "{0}_composer_edition".format(update_string)
+        else:
+            url += update_string
+
+        return url + ".tgz"
 
     def check_variants(self, spec):
         error_message = '\t{variant} can not be turned off if "+all" is set'
@@ -77,7 +149,7 @@ class IntelParallelStudio(IntelInstaller):
 
         if not spec.satisfies('+all'):
             all_components = get_all_components()
-            regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
+            regex = '(comp|openmp|intel-tbb|icc|ifort|psxe)'
             base_components = \
                 filter_pick(all_components, re.compile(regex).search)
             regex = '(icsxe|imb|mpi|itac|intel-ta|intel-tc|clck)'
@@ -123,15 +195,24 @@ class IntelParallelStudio(IntelInstaller):
                                                           "license.lic"))
         if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
                                          spec.satisfies('@professional')):
-            os.mkdir(os.path.join(self.prefix, "inspector_xe/licenses"))
+            inspector_dir = "inspector_xe/licenses"
+            advisor_dir = "advisor_xe/licenses"
+            vtune_amplifier_dir = "vtune_amplifier_xe/licenses"
+
+            year = int(str(self.version).split('.')[1])
+            if year >= 2017:
+                inspector_dir = "inspector/licenses"
+                advisor_dir = "advisor/licenses"
+
+            os.mkdir(os.path.join(self.prefix, inspector_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "inspector_xe/licenses", "license.lic"))
-            os.mkdir(os.path.join(self.prefix, "advisor_xe/licenses"))
+                self.prefix, inspector_dir, "license.lic"))
+            os.mkdir(os.path.join(self.prefix, advisor_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "advisor_xe/licenses", "license.lic"))
-            os.mkdir(os.path.join(self.prefix, "vtune_amplifier_xe/licenses"))
+                self.prefix, advisor_dir, "license.lic"))
+            os.mkdir(os.path.join(self.prefix, vtune_amplifier_dir))
             os.symlink(self.global_license_file, os.path.join(
-                self.prefix, "vtune_amplifier_xe/licenses", "license.lic"))
+                self.prefix, vtune_amplifier_dir, "license.lic"))
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
                 spec.satisfies('@cluster'):
@@ -170,24 +251,6 @@ class IntelParallelStudio(IntelInstaller):
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
                    os.path.join(self.prefix.man, "man1"))
-
-    def setup_dependent_package(self, module, dspec):
-        # For now use Single Dynamic Library:
-        # To set the threading layer at run time, use the
-        # mkl_set_threading_layer function or set MKL_THREADING_LAYER
-        # variable to one of the following values: INTEL, SEQUENTIAL, PGI.
-        # To set interface layer at run time, use the mkl_set_interface_layer
-        # function or set the MKL_INTERFACE_LAYER variable to LP64 or ILP64.
-
-        # Otherwise one would need to specify several libraries
-        # (e.g. mkl_intel_lp64;mkl_sequential;mkl_core), which reflect
-        # different interface and threading layers.
-
-        name = 'libmkl_rt.%s' % dso_suffix
-        libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib)
-
-        self.spec.blas_shared_lib   = join_path(libdir, name)
-        self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def setup_environment(self, spack_env, run_env):
         # TODO: Determine variables needed for the professional edition.
@@ -257,7 +320,7 @@ class IntelParallelStudio(IntelInstaller):
             run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
-            spack_env.set('MKLROOT', self.prefix)
+            spack_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
 
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'mkl', 'lib',

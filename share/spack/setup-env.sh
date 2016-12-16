@@ -58,7 +58,7 @@
 
 function spack {
     # Zsh does not do word splitting by default, this enables it for this function only
-    if [ -n "$ZSH_VERSION" ]; then
+    if [ -n "${ZSH_VERSION:-}" ]; then
         emulate -L sh
     fi
 
@@ -189,5 +189,7 @@ _sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
 _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 
 _sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
-_spack_pathadd DK_NODE    "${_sp_share_dir%/}/dotkit/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_share_dir%/}/modules/$_sp_sys_type"
+_sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")
+_sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
+_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
+_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"

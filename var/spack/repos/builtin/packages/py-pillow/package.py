@@ -32,7 +32,7 @@ class PyPillow(Package):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url      = "https://pypi.python.org/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
+    url = "https://pypi.python.org/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
 
     # TODO: This version should be deleted once the next release comes out.
     # TODO: It fixes a bug that prevented us from linking to Tk/Tcl.
@@ -129,5 +129,5 @@ class PyPillow(Package):
         variants = ['jpeg', 'zlib', 'tiff', 'freetype', 'lcms', 'jpeg2000']
         build_args = list(map(variant_to_flag, variants))
 
-        python('setup.py', 'build_ext', *build_args)
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('build_ext', *build_args)
+        setup_py('install', '--prefix={0}'.format(prefix))

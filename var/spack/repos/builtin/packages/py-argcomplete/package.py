@@ -33,7 +33,8 @@ class PyArgcomplete(Package):
 
     version('1.1.1', '89a3839096c9f991ad33828e72d21abf')
 
+    depends_on('py-setuptools', type='build')
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

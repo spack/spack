@@ -50,6 +50,8 @@ class R(Package):
 
     variant('external-lapack', default=False,
             description='Links to externally installed BLAS/LAPACK')
+    variant('X', default=False,
+            description='Enable X11 support (call configure --with-x)')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -58,17 +60,23 @@ class R(Package):
     # Concrete dependencies
     depends_on('readline')
     depends_on('ncurses')
-    depends_on('icu')
+    depends_on('icu4c')
     depends_on('glib')
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
     depends_on('cairo')
+    depends_on('cairo+X', when='+X')
+    depends_on('cairo~X', when='~X')
     depends_on('pango')
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')
+    depends_on('tk+X', when='+X')
+    depends_on('tk~X', when='~X')
+    depends_on('libx11', when='+X')
+    depends_on('libxt', when='+X')
     depends_on('curl')
     depends_on('pcre')
     depends_on('jdk')

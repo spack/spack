@@ -26,6 +26,7 @@
 import os
 import spack
 import spack.spec
+from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 from llnl.util.lang import memoized
@@ -54,10 +55,10 @@ class ABI(object):
         output = None
         if compiler.cxx:
             rungcc = Executable(compiler.cxx)
-            libname = "libstdc++.so"
+            libname = "libstdc++." + dso_suffix
         elif compiler.cc:
             rungcc = Executable(compiler.cc)
-            libname = "libgcc_s.so"
+            libname = "libgcc_s." + dso_suffix
         else:
             return None
         try:

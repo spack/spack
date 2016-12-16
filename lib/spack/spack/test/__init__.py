@@ -28,9 +28,11 @@ import os
 import llnl.util.tty as tty
 import nose
 import spack
+import spack.architecture
 from llnl.util.filesystem import join_path
 from llnl.util.tty.colify import colify
 from spack.test.tally_plugin import Tally
+from spack.platforms.test import Test as TestPlatform
 """Names of tests to be included in Spack's test suite"""
 
 # All the tests Spack knows about.
@@ -41,7 +43,7 @@ test_names = [
     'cc',
     'cmd.find',
     'cmd.module',
-    'cmd.test_install',
+    'cmd.install',
     'cmd.uninstall',
     'concretize',
     'concretize_preferences',
@@ -53,6 +55,7 @@ test_names = [
     'git_fetch',
     'hg_fetch',
     'install',
+    'library_list',
     'link_tree',
     'lock',
     'make_executable',
@@ -77,10 +80,17 @@ test_names = [
     'url_substitution',
     'versions',
     'provider_index',
-    'yaml',
+    'spack_yaml',
     # This test needs to be last until global compiler cache is fixed.
     'cmd.test_compiler_cmd',
 ]
+
+
+def setup_tests():
+    """Prepare the environment for the Spack tests to be run."""
+    test_platform = TestPlatform()
+    spack.architecture.real_platform = spack.architecture.platform
+    spack.architecture.platform = lambda: test_platform
 
 
 def list_tests():
@@ -106,25 +116,35 @@ def run(names, outputDir, verbose=False):
                 sys.exit(1)
 
     tally = Tally()
-    for test in names:
-        module = 'spack.test.' + test
-        print(module)
 
-        tty.msg("Running test: %s" % test)
+    modules = ['spack.test.' + test for test in names]
+    runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name]
 
-        runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name]
+    if outputDir:
+        xmlOutputFname = "unittests-{0}.xml".format(test)
+        xmlOutputPath = join_path(outputDir, xmlOutputFname)
+        runOpts += ["--with-xunit",
+                    "--xunit-file={0}".format(xmlOutputPath)]
+    argv = [""] + runOpts + modules
 
-        if outputDir:
-            xmlOutputFname = "unittests-{0}.xml".format(test)
-            xmlOutputPath = join_path(outputDir, xmlOutputFname)
-            runOpts += ["--with-xunit",
-                        "--xunit-file={0}".format(xmlOutputPath)]
-        argv = [""] + runOpts + [module]
-        nose.run(argv=argv, addplugins=[tally])
+    setup_tests()
+    nose.run(argv=argv, addplugins=[tally])
 
     succeeded = not tally.failCount and not tally.errorCount
-    tty.msg("Tests Complete.", "%5d tests run" % tally.numberOfTestsRun,
-            "%5d failures" % tally.failCount, "%5d errors" % tally.errorCount)
+    tty.msg(
+        "Tests Complete.",
+        "%5d tests run" % tally.numberOfTestsRun,
+        "%5d failures" % tally.failCount,
+        "%5d errors" % tally.errorCount
+    )
+
+    if tally.fail_list:
+        items = [x for x in tally.fail_list]
+        tty.msg('List of failing tests:', *items)
+
+    if tally.error_list:
+        items = [x for x in tally.error_list]
+        tty.msg('List of tests with errors:', *items)
 
     if succeeded:
         tty.info("OK", format='g')

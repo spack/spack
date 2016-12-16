@@ -36,6 +36,8 @@ class GdkPixbuf(Package):
 
     version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
 
+    depends_on("pkg-config", type="build")
+    depends_on("gettext")
     depends_on("glib")
     depends_on("jpeg")
     depends_on("libpng")

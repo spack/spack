@@ -34,12 +34,15 @@ class Slepc(Package):
     homepage = "http://www.grycap.upv.es/slepc"
     url = "http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz"
 
+    version('3.7.3', '3ef9bcc645a10c1779d56b3500472ceb66df692e389d635087d30e7c46424df9')
     version('3.7.1', '670216f263e3074b21e0623c01bc0f562fdc0bffcd7bd42dd5d8edbe73a532c2')
     version('3.6.3', '384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876')
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
 
+    # NOTE: make sure PETSc and SLEPc use the same python.
+    depends_on('python@2.6:2.7', type='build')
     depends_on('petsc@3.7:', when='@3.7.1:')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi')

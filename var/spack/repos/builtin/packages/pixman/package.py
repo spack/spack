@@ -23,22 +23,32 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Pixman(Package):
     """The Pixman package contains a library that provides low-level
-       pixel manipulation features such as image compositing and
-       trapezoid rasterization."""
+    pixel manipulation features such as image compositing and
+    trapezoid rasterization."""
+
     homepage = "http://www.pixman.org"
     url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
 
+    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
     version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
 
-    depends_on("pkg-config", type="build")
-    depends_on("libpng")
+    depends_on('pkg-config', type='build')
+    depends_on('libpng')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--disable-gtk")
+        config_args = ["--prefix=" + prefix,
+                       "--disable-gtk"]
+
+        if sys.platform == "darwin":
+            config_args.append("--disable-mmx")
+
+        configure(*config_args)
+
         make()
-        make("install")
+        make('check')
+        make('install')

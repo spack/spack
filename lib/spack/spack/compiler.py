@@ -112,11 +112,19 @@ class Compiler(object):
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
 
-    def __init__(self, cspec, operating_system,
-                 paths, modules=[], alias=None, **kwargs):
+    def __init__(self, cspec, operating_system, target,
+                 paths, modules=[], alias=None, environment=None,
+                 extra_rpaths=None, **kwargs):
+        self.spec = cspec
+        self.operating_system = str(operating_system)
+        self.target = target
+        self.modules = modules
+        self.alias = alias
+
         def check(exe):
             if exe is None:
                 return None
+            exe = self._find_full_path(exe)
             _verify_executables(exe)
             return exe
 
@@ -129,6 +137,9 @@ class Compiler(object):
             else:
                 self.fc  = check(paths[3])
 
+        self.environment = environment
+        self.extra_rpaths = extra_rpaths or []
+
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
@@ -137,11 +148,6 @@ class Compiler(object):
             value = kwargs.get(flag, None)
             if value is not None:
                 self.flags[flag] = value.split()
-
-        self.operating_system = operating_system
-        self.spec = cspec
-        self.modules = modules
-        self.alias = alias
 
     @property
     def version(self):
@@ -174,6 +180,16 @@ class Compiler(object):
         # If it is not overridden, assume it is not supported and warn the user
         tty.die(
             "The compiler you have chosen does not currently support C++14.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
+
+    # This property should be overridden in the compiler subclass if
+    # C++17 is supported by that compiler
+    @property
+    def cxx17_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die(
+            "The compiler you have chosen does not currently support C++17.",
             "If you think it should, please edit the compiler subclass and",
             "submit a pull request or issue.")
 
@@ -268,6 +284,21 @@ class Compiler(object):
         # does not spoil the intented precedence.
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
+
+    def _find_full_path(self, path):
+        """Return the actual path for a tool.
+
+        Some toolchains use forwarding executables (particularly Xcode-based
+        toolchains) which can be manipulated by external environment variables.
+        This method should be used to extract the actual path used for a tool
+        by finding out the end executable the forwarding executables end up
+        running.
+        """
+        return path
+
+    def setup_custom_environment(self, pkg, env):
+        """Set any environment variables necessary to use the compiler."""
+        pass
 
     def __repr__(self):
         """Return a string representation of the compiler toolchain."""

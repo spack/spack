@@ -35,6 +35,8 @@ class Hypre(Package):
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
+    version('develop', git='https://github.com/LLNL/hypre', tag='master')
+    version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
@@ -54,20 +56,16 @@ class Hypre(Package):
         os.environ['CXX'] = spec['mpi'].mpicxx
         os.environ['F77'] = spec['mpi'].mpif77
 
-        # Since +shared does not build on macOS and also Atlas does not have
-        # a single static lib to build against, link against shared libs with
-        # a hope that --whole-archive linker option (or alike) was used
-        # to command the linker to include whole static libs' content into the
-        # shared lib
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
+        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].blas_libs
+
         configure_args = [
             '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % to_lib_name(
-                spec['lapack'].lapack_shared_lib),
-            '--with-lapack-lib-dirs=%s' % spec['lapack'].prefix.lib,
-            '--with-blas-libs=%s' % to_lib_name(
-                spec['blas'].blas_shared_lib),
-            '--with-blas-lib-dirs=%s' % spec['blas'].prefix.lib
+            '--with-lapack-libs=%s' % ' '.join(lapack.names),
+            '--with-lapack-lib-dirs=%s' % ' '.join(lapack.directories),
+            '--with-blas-libs=%s' % ' '.join(blas.names),
+            '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
 
         if '+shared' in self.spec:

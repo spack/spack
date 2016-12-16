@@ -24,34 +24,34 @@
 ##############################################################################
 import unittest
 
-import spack.spec
+import spack.spec as sp
 from spack.parse import Token
 from spack.spec import *
 
 # Sample output for a complex lexing.
-complex_lex = [Token(ID, 'mvapich_foo'),
-               Token(DEP),
-               Token(ID, '_openmpi'),
-               Token(AT),
-               Token(ID, '1.2'),
-               Token(COLON),
-               Token(ID, '1.4'),
-               Token(COMMA),
-               Token(ID, '1.6'),
-               Token(PCT),
-               Token(ID, 'intel'),
-               Token(AT),
-               Token(ID, '12.1'),
-               Token(COLON),
-               Token(ID, '12.6'),
-               Token(ON),
-               Token(ID, 'debug'),
-               Token(OFF),
-               Token(ID, 'qt_4'),
-               Token(DEP),
-               Token(ID, 'stackwalker'),
-               Token(AT),
-               Token(ID, '8.1_1e')]
+complex_lex = [Token(sp.ID, 'mvapich_foo'),
+               Token(sp.DEP),
+               Token(sp.ID, '_openmpi'),
+               Token(sp.AT),
+               Token(sp.ID, '1.2'),
+               Token(sp.COLON),
+               Token(sp.ID, '1.4'),
+               Token(sp.COMMA),
+               Token(sp.ID, '1.6'),
+               Token(sp.PCT),
+               Token(sp.ID, 'intel'),
+               Token(sp.AT),
+               Token(sp.ID, '12.1'),
+               Token(sp.COLON),
+               Token(sp.ID, '12.6'),
+               Token(sp.ON),
+               Token(sp.ID, 'debug'),
+               Token(sp.OFF),
+               Token(sp.ID, 'qt_4'),
+               Token(sp.DEP),
+               Token(sp.ID, 'stackwalker'),
+               Token(sp.AT),
+               Token(sp.ID, '8.1_1e')]
 
 
 class SpecSyntaxTest(unittest.TestCase):
@@ -74,16 +74,16 @@ class SpecSyntaxTest(unittest.TestCase):
         """
         if spec is None:
             spec = expected
-        output = spack.spec.parse(spec)
+        output = sp.parse(spec)
 
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
-        lex_output = SpecLexer().lex(spec)
+        lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == ID:
+            if tok.type == sp.ID:
                 self.assertEqual(tok, spec_tok)
             else:
                 # Only check the type for non-identifiers.
@@ -120,6 +120,10 @@ class SpecSyntaxTest(unittest.TestCase):
             'mvapich_foo'
             '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4'
             '^stackwalker@8.1_1e')
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
         self.check_parse(
@@ -143,6 +147,22 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse(
             "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
+
+        self.check_parse(
+            "x arch=test-redhat6-None"
+            "^y arch=test-None-x86_64"
+            "^z arch=linux-None-None",
+
+            "x os=fe"
+            "^y target=be"
+            "^z platform=linux")
+
+        self.check_parse(
+            "x arch=test-debian6-x86_64"
+            "^y arch=test-debian6-x86_64",
+
+            "x os=default_os target=default_target"
+            "^y os=default_os target=default_target")
 
         self.check_parse("x^y", "x@: ^y@:")
 
@@ -169,16 +189,66 @@ class SpecSyntaxTest(unittest.TestCase):
     def test_duplicate_compiler(self):
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x%intel%intel")
+
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x%intel%gcc")
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x%gcc%intel")
+
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x ^y%intel%intel")
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x ^y%intel%gcc")
         self.assertRaises(DuplicateCompilerSpecError,
                           self.check_parse, "x ^y%gcc%intel")
+
+    def test_duplicate_architecture(self):
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x arch=linux-rhel7-ppc64le arch=linux-rhel7-x86_64")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le")
+
+    def test_duplicate_architecture_component(self):
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x os=fe os=fe")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x os=fe os=be")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x target=fe target=fe")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x target=fe target=be")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x platform=test platform=test")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x platform=test platform=test")
+
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x os=fe platform=test target=fe os=fe")
+        self.assertRaises(
+            DuplicateArchitectureError, self.check_parse,
+            "x target=be platform=test os=be os=fe")
 
     # ========================================================================
     # Lex checks

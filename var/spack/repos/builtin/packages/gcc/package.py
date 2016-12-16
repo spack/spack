@@ -3,6 +3,7 @@ from spack import *
 from contextlib import closing
 from glob import glob
 import sys
+from os.path import isfile
 
 
 class Gcc(Package):
@@ -57,6 +58,7 @@ class Gcc(Package):
         provides('golang', when='@4.7.1:')
 
     patch('piclibs.patch', when='+piclibs')
+    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
@@ -69,8 +71,22 @@ class Gcc(Package):
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
-        if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
+        if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
+           not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
             enabled_languages.add('go')
+
+        # Fix a standard header file for OS X Yosemite that
+        # is GCC incompatible by replacing non-GCC compliant macros
+        if 'yosemite' in spec.architecture:
+            if isfile(r'/usr/include/dispatch/object.h'):
+                new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
+                mkdirp(new_dispatch_dir)
+                cp = which('cp')
+                new_header = join_path(new_dispatch_dir, 'object.h')
+                cp(r'/usr/include/dispatch/object.h', new_header)
+                filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
+                            'typedef void* dispatch_block_t',
+                            new_header)
 
         # Generic options to compile GCC
         options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,

@@ -32,7 +32,7 @@ import yaml
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack
-from spack.spec import Spec
+import spack.spec
 from spack.error import SpackError
 
 
@@ -210,7 +210,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Read the contents of a file and parse them as a spec"""
         try:
             with open(path) as f:
-                spec = Spec.from_yaml(f)
+                spec = spack.spec.Spec.from_yaml(f)
         except Exception as e:
             if spack.debug:
                 raise
@@ -266,6 +266,13 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         installed_spec = self.read_spec(spec_file_path)
         if installed_spec == spec:
+            return path
+
+        # DAG hashes currently do not include build dependencies.
+        #
+        # TODO: remove this when we do better concretization and don't
+        # ignore build-only deps in hashes.
+        elif installed_spec == spec.copy(deps=('link', 'run')):
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():
@@ -416,7 +423,7 @@ class RemoveFailedError(DirectoryLayoutError):
     def __init__(self, installed_spec, prefix, error):
         super(RemoveFailedError, self).__init__(
             'Could not remove prefix %s for %s : %s'
-            % prefix, installed_spec.short_spec, error)
+            % (prefix, installed_spec.short_spec, error))
         self.cause = error
 
 

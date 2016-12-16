@@ -87,12 +87,12 @@ class Elk(Package):
         # BLAS/LAPACK support
         # Note: BLAS/LAPACK must be compiled with OpenMP support
         # if the +openmp variant is chosen
-        blas   = 'blas.a'
+        blas = 'blas.a'
         lapack = 'lapack.a'
         if '+blas' in spec:
-            blas   = spec['blas'].blas_shared_lib
+            blas = spec['blas'].blas_libs.joined()
         if '+lapack' in spec:
-            lapack = spec['lapack'].lapack_shared_lib
+            lapack = spec['lapack'].lapack_libs.joined()
         # lapack must come before blas
         config['LIB_LPK'] = ' '.join([lapack, blas])
 

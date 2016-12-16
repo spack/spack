@@ -32,8 +32,17 @@ class Texlive(Package):
 
     homepage = "http://www.tug.org/texlive"
 
-    version('live', 'e671eea7f142c438959493cc42a2a59b',
-            url="http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz")
+    # Pull from specific site because the texlive mirrors do not all
+    # update in synchrony.
+    #
+    # BEWARE: TexLive updates their installs frequently (probably why
+    # they call it *Live*...).  There is no good way to provide a 
+    # repeatable install of the package.  We try to keep up with the 
+    # digest values, but don't be surprised if this package is
+    # briefly unbuildable.
+    #
+    version('live', '1962b756794827467b50ed4da94d8ee8',
+            url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
 
     # There does not seem to be a complete list of schemes.
     # Examples include:

@@ -55,14 +55,18 @@ class Pgi(Compiler):
     def cxx11_flag(self):
         return "-std=c++11"
 
+    @property
+    def pic_flag(self):
+        return "-fpic"
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.
-           Output looks like this::
+        Output looks like this::
 
-               pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
-               The Portland Group - PGI Compilers and Tools
-               Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
+            pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
+            The Portland Group - PGI Compilers and Tools
+            Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
         """
         return get_compiler_version(
             comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')

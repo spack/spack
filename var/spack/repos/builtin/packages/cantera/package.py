@@ -85,8 +85,9 @@ class Cantera(Package):
 
         # BLAS/LAPACK support
         if '+lapack' in spec:
+            lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
             options.extend([
-                'blas_lapack_libs=lapack,blas',
+                'blas_lapack_libs={0}'.format(','.join(lapack_blas.names)),
                 'blas_lapack_dir={0}'.format(spec['lapack'].prefix.lib)
             ])
 
@@ -95,8 +96,7 @@ class Cantera(Package):
             options.extend([
                 'build_thread_safe=yes',
                 'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
-                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib),
-                'boost_thread_lib=boost_thread-mt,boost_system-mt'
+                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib)
             ])
         else:
             options.append('build_thread_safe=no')

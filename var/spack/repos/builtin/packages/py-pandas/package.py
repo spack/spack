@@ -51,4 +51,4 @@ class PyPandas(Package):
     depends_on('py-bottleneck', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

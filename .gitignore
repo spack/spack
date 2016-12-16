@@ -1,3 +1,4 @@
+/db
 /var/spack/stage
 /var/spack/cache
 /var/spack/repos/*/index.yaml
@@ -12,6 +13,10 @@
 /etc/spackconfig
 /share/spack/dotkit
 /share/spack/modules
+/share/spack/lmod
 /TAGS
+*.swp
 /htmlcov
 .coverage
+#*
+.#*

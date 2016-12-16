@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 from spack import *
 
 
@@ -32,6 +33,7 @@ class Git(Package):
     homepage = "http://git-scm.com"
     url      = "https://github.com/git/git/tarball/v2.7.1"
 
+    version('2.11.0', 'c63fb83b86431af96f8e9722ebb3ca01')
     version('2.9.3', 'b0edfc0f3cb046aec7ed68a4b7282a75')
     version('2.9.2', '3ff8a9b30fd5c99a02e6d6585ab543fc')
     version('2.9.1', 'a5d806743a992300b45f734d1667ddd2')
@@ -54,28 +56,33 @@ class Git(Package):
     # version('2.5.4', '3eca2390cf1fa698b48e2a233563a76b')
     # version('2.2.1', 'ff41fdb094eed1ec430aed8ee9b9849c')
 
-    depends_on("openssl")
     depends_on("autoconf", type='build')
     depends_on("curl")
     depends_on("expat")
     depends_on("gettext")
-    depends_on("zlib")
+    depends_on("libiconv")
+    depends_on("openssl")
     depends_on("pcre")
     depends_on("perl")
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         env['LDFLAGS'] = "-L%s" % spec['gettext'].prefix.lib + " -lintl"
         configure_args = [
             "--prefix=%s" % prefix,
-            "--with-libpcre=%s" % spec['pcre'].prefix,
-            "--with-openssl=%s" % spec['openssl'].prefix,
-            "--with-zlib=%s" % spec['zlib'].prefix,
             "--with-curl=%s" % spec['curl'].prefix,
             "--with-expat=%s" % spec['expat'].prefix,
+            "--with-iconv=%s" % spec['libiconv'].prefix,
+            "--with-libpcre=%s" % spec['pcre'].prefix,
+            "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-perl=%s" % join_path(spec['perl'].prefix.bin, 'perl'),
+            "--with-zlib=%s" % spec['zlib'].prefix,
         ]
 
         which('autoreconf')('-i')
         configure(*configure_args)
+        if sys.platform == "darwin":
+            # Don't link with -lrt; the system has no (and needs no) librt
+            filter_file(r' -lrt$', '', 'Makefile')
         make()
         make("install")

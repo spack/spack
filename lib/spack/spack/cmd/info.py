@@ -48,8 +48,11 @@ def setup_parser(subparser):
 
 def print_text_info(pkg):
     """Print out a plain text description of a package."""
-    print "Package:   ", pkg.name
-    print "Homepage:  ", pkg.homepage
+    header = "{0}:   ".format(pkg.build_system_class)
+
+    print header, pkg.name
+    whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
+    print "Homepage:", whitespaces, pkg.homepage
 
     print
     print "Safe versions:  "
@@ -84,6 +87,13 @@ def print_text_info(pkg):
 
             print "    " + fmt % (name, default, desc)
 
+    print
+    print "Installation Phases:"
+    phase_str = ''
+    for phase in pkg.phases:
+        phase_str += "    {0}".format(phase)
+    print phase_str
+
     for deptype in ('build', 'link', 'run'):
         print
         print "%s Dependencies:" % deptype.capitalize()
@@ -94,7 +104,7 @@ def print_text_info(pkg):
             print "    None"
 
     print
-    print "Virtual packages: "
+    print "Virtual Packages: "
     if pkg.provided:
         for spec, when in pkg.provided.items():
             print "    %s provides %s" % (when, spec)

@@ -20,7 +20,7 @@ written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
-[Feature Overview](http://software.llnl.gov/spack/features.html)
+[Feature Overview](http://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
 To install spack and install your first package:
@@ -32,8 +32,11 @@ To install spack and install your first package:
 Documentation
 ----------------
 
-[**Full documentation**](http://software.llnl.gov/spack) for Spack is
+[**Full documentation**](http://spack.readthedocs.io/) for Spack is
 the first place to look.
+
+We've also got a [**Spack 101 Tutorial**](http://spack.readthedocs.io/en/latest/tutorial_sc16.html),
+so you can learn Spack yourself, or teach users at your own site.
 
 See also:
   * [Technical paper](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf) and
@@ -63,17 +66,11 @@ Contributing to Spack is relatively easy.  Just send us a
 When you send your request, make ``develop`` the destination branch on the
 [Spack repository](https://github.com/LLNL/spack).
 
-Before you send a PR, your code should pass the following checks:
-
-* Your contribution will need to pass the `spack test` command.
-  Run this before submitting your PR.
-
-* Also run the `share/spack/qa/run-flake8` script to check for PEP8 compliance.
-  To encourage contributions and readability by a broad audience,
-  Spack uses the [PEP8](https://www.python.org/dev/peps/pep-0008/) coding
-  standard with [a few exceptions](https://github.com/LLNL/spack/blob/develop/.flake8).
-
+Your PR must pass Spack's unit tests and documentation tests, and must be
+[PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.
 We enforce these guidelines with [Travis CI](https://travis-ci.org/LLNL/spack).
+To run these tests locally, and for helpful tips on git, see our
+[Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
 
 Spack uses a rough approximation of the [Git
 Flow](http://nvie.com/posts/a-successful-git-branching-model/)

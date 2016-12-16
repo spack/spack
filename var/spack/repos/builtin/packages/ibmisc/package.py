@@ -43,7 +43,7 @@ class Ibmisc(CMakePackage):
     depends_on('cmake', type='build')
     depends_on('doxygen', type='build')
 
-    def configure_args(self):
+    def cmake_args(self):
         spec = self.spec
         return [
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),

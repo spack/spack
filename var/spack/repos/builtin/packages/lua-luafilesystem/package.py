@@ -26,8 +26,7 @@ from spack import *
 
 
 class LuaLuafilesystem(Package):
-    """
-    LuaFileSystem is a Lua library developed to complement the set of
+    """LuaFileSystem is a Lua library developed to complement the set of
     functions related to file systems offered by the standard Lua distribution.
 
     LuaFileSystem offers a portable way to access the underlying directory
@@ -35,11 +34,13 @@ class LuaLuafilesystem(Package):
 
     LuaFileSystem is free software and uses the same license as Lua 5.1
     """
+
     homepage = 'http://keplerproject.github.io/luafilesystem'
     url = 'https://github.com/keplerproject/luafilesystem/archive/v_1_6_3.tar.gz'
 
     version('1_6_3', 'd0552c7e5a082f5bb2865af63fb9dc95')
 
+    depends_on('git@2.9.3:', type='build')
     extends('lua')
 
     def install(self, spec, prefix):

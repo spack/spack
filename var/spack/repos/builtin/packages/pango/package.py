@@ -38,8 +38,14 @@ class Pango(Package):
     version('1.36.8', '217a9a753006275215fa9fa127760ece')
     version('1.40.1', '6fc88c6529890d6c8e03074d57a3eceb')
 
+    variant('X', default=False, description="Enable an X toolkit")
+
+    depends_on("pkg-config", type="build")
     depends_on("harfbuzz")
     depends_on("cairo")
+    depends_on("cairo~X", when='~X')
+    depends_on("cairo+X", when='+X')
+    depends_on("glib")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

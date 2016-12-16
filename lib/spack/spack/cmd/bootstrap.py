@@ -28,7 +28,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack
-from spack.util.executable import which
+from spack.util.executable import ProcessError, which
 
 _SPACK_UPSTREAM = 'https://github.com/llnl/spack'
 

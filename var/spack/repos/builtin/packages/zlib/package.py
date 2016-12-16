@@ -23,19 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from os import environ
 
 
-class Zlib(Package):
+class Zlib(AutotoolsPackage):
     """A free, general-purpose, legally unencumbered lossless
        data-compression library."""
 
     homepage = "http://zlib.net"
-    url      = "http://zlib.net/zlib-1.2.8.tar.gz"
+    url = "http://zlib.net/zlib-1.2.8.tar.gz"
 
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
-        make()
-        make("install")
+    def configure(self, spec, prefix):
+
+        if '+pic' in spec:
+            environ['CFLAGS'] = self.compiler.pic_flag
+
+        config_args = ['--prefix', prefix]
+        configure(*config_args)

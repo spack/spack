@@ -44,7 +44,7 @@ from spack.version import *
 from spack.util.compression import allowed_archive
 
 
-def mirror_archive_filename(spec, fetcher):
+def mirror_archive_filename(spec, fetcher, resourceId=None):
     """Get the name of the spec's archive in the mirror."""
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
@@ -52,7 +52,14 @@ def mirror_archive_filename(spec, fetcher):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = url.downloaded_file_extension(fetcher.url)
+            ext = url.determine_url_file_extension(fetcher.url)
+            ext = ext or spec.package.versions[spec.package.version].get(
+                'extension', None)
+            ext = ext.lstrip('.')
+            if not ext:
+                raise MirrorError(
+                    "%s version does not specify an extension" % spec.name +
+                    " and could not parse extension from %s" % fetcher.url)
         else:
             # If the archive shouldn't be expanded, don't check extension.
             ext = None
@@ -60,15 +67,18 @@ def mirror_archive_filename(spec, fetcher):
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    filename = "%s-%s" % (spec.package.name, spec.version)
-    if ext:
-        filename += ".%s" % ext
+    if resourceId:
+        filename = "%s-%s" % (resourceId, spec.version) + ".%s" % ext
+    else:
+        filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
+
     return filename
 
 
-def mirror_archive_path(spec, fetcher):
+def mirror_archive_path(spec, fetcher, resourceId=None):
     """Get the relative path to the spec's archive within a mirror."""
-    return join_path(spec.name, mirror_archive_filename(spec, fetcher))
+    return join_path(
+        spec.name, mirror_archive_filename(spec, fetcher, resourceId))
 
 
 def get_matching_versions(specs, **kwargs):
@@ -120,27 +130,28 @@ def suggest_archive_basename(resource):
 
 def create(path, specs, **kwargs):
     """Create a directory to be used as a spack mirror, and fill it with
-       package archives.
+    package archives.
 
-       Arguments:
-         path    Path to create a mirror directory hierarchy in.
-         specs   Any package versions matching these specs will be added
-                 to the mirror.
+    Arguments:
+        path: Path to create a mirror directory hierarchy in.
+        specs: Any package versions matching these specs will be added \
+            to the mirror.
 
-       Keyword args:
-         no_checksum:  If True, do not checkpoint when fetching (default False)
-         num_versions: Max number of versions to fetch per spec,
-                       if spec is ambiguous (default is 0 for all of them)
+    Keyword args:
+        no_checksum: If True, do not checkpoint when fetching (default False)
+        num_versions: Max number of versions to fetch per spec, \
+            if spec is ambiguous (default is 0 for all of them)
 
-       Return Value:
-         Returns a tuple of lists: (present, mirrored, error)
-         * present:  Package specs that were already present.
-         * mirrored: Package specs that were successfully mirrored.
-         * error:    Package specs that failed to mirror due to some error.
+    Return Value:
+        Returns a tuple of lists: (present, mirrored, error)
 
-       This routine iterates through all known package versions, and
-       it creates specs for those versions.  If the version satisfies any spec
-       in the specs list, it is downloaded and added to the mirror.
+        * present:  Package specs that were already present.
+        * mirrored: Package specs that were successfully mirrored.
+        * error:    Package specs that failed to mirror due to some error.
+
+    This routine iterates through all known package versions, and
+    it creates specs for those versions.  If the version satisfies any spec
+    in the specs list, it is downloaded and added to the mirror.
     """
     # Make sure nothing is in the way.
     if os.path.isfile(path):
@@ -196,8 +207,9 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     name = spec.format("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = join_path(
-                        subdir, suggest_archive_basename(resource))
+                    archive_path = os.path.abspath(join_path(
+                        mirror_root,
+                        mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
                         resource=resource.name, pkg=spec.format("$_$@"))
                 subdir = os.path.dirname(archive_path)

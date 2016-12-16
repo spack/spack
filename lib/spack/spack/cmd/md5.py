@@ -25,6 +25,7 @@
 import argparse
 import hashlib
 import os
+from urlparse import urlparse
 
 import llnl.util.tty as tty
 import spack.util.crypto
@@ -49,13 +50,23 @@ def compute_md5_checksum(url):
     return value
 
 
+def normalized(files):
+    for p in files:
+        result = urlparse(p)
+        value = p
+        if not result.scheme:
+            value = os.path.abspath(p)
+        yield value
+
+
 def md5(parser, args):
     if not args.files:
         setup_parser.parser.print_help()
         return 1
 
+    urls = [x for x in normalized(args.files)]
     results = []
-    for url in args.files:
+    for url in urls:
         try:
             checksum = compute_md5_checksum(url)
             results.append((checksum, url))
@@ -70,4 +81,4 @@ def md5(parser, args):
     checksum = 'checksum' if len(results) == 1 else 'checksums'
     tty.msg("%d MD5 %s:" % (len(results), checksum))
     for checksum, url in results:
-        print "%s  %s" % (checksum, url)
+        print("{0}  {1}".format(checksum, url))
