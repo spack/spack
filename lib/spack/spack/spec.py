@@ -1559,7 +1559,8 @@ class Spec(object):
                     build_parent = Spec(spec.name)
                     build_parent.versions = spec.versions
                     build_parent.concretize(
-                        skip_build=False, constrain_deps=build_only_deps)
+                        skip_build=False,
+                        constrain_deps={spec.name: build_only_deps})
                     for dep_spec in build_parent.dependencies():
                         spec.build_only_deps[dep_spec.name] = dep_spec
 
@@ -1818,7 +1819,8 @@ class Spec(object):
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
-                if constrain_deps and dep_name not in constrain_deps:
+                if (constrain_deps and self.name in constrain_deps and
+                    dep_name not in constrain_deps[self.name]):
                     continue
 
                 deptypes = pkg._deptypes[dep_name]
