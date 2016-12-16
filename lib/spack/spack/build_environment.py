@@ -84,9 +84,9 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
-SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
-SPACK_RPATH_DEPS = 'SPACK_RPATH_DEPS'
-SPACK_LINK_DEPS = 'SPACK_LINK_DEPS'
+SPACK_INCLUDE_PATHS = 'SPACK_INCLUDE_PATHS'
+SPACK_RPATHS = 'SPACK_RPATHS'
+SPACK_LIB_PATHS = 'SPACK_LIB_PATHS'
 SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
@@ -122,6 +122,10 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
+def filter_nonexistant_paths(paths):
+    return [p for p in paths if os.path.isdir(p)]
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -210,12 +214,32 @@ def set_build_environment_variables(pkg, env, dirty):
     build_link_prefixes = filter_system_paths(build_link_prefixes)
     rpath_prefixes      = filter_system_paths(rpath_prefixes)
 
-    # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    env.set_path(SPACK_DEPENDENCIES, build_link_prefixes)
-
     # These variables control compiler wrapper behavior
-    env.set_path(SPACK_RPATH_DEPS, rpath_prefixes)
-    env.set_path(SPACK_LINK_DEPS, link_prefixes)
+    # Include directories go into SPACK_INCLUDE_PATHS
+    dep_include_paths = [os.path.join(p, "include")
+                         for p in build_link_prefixes]
+    dep_include_paths = filter_nonexistant_paths(dep_include_paths)
+    env.set_path(SPACK_INCLUDE_PATHS, dep_include_paths)
+
+    # rpath directories go into SPACK_RPATHS.
+    # These come from dependencies, compilers and the package prefix.
+    lib_suffixes = ['lib', 'lib64']
+    rpaths = [os.path.join(p, s) for p in rpath_prefixes
+              for s in lib_suffixes]
+    if pkg.compiler.extra_rpaths:
+        rpaths.extend(pkg.compiler.extra_rpaths)
+    rpaths = filter_nonexistant_paths(rpaths)
+
+    # root is not installed yet, so do this AFTER filtering
+    rpaths.extend([os.path.join(pkg.prefix, s) for s in lib_suffixes])
+    env.set_path(SPACK_RPATHS, rpaths)
+
+    # Link-time library directories go into SPACK_LIB_PATHS
+    # These are always transitive, but RPATHs may not be.
+    dep_lib_paths = [os.path.join(p, s) for p in link_prefixes
+                     for s in lib_suffixes]
+    dep_lib_paths = filter_nonexistant_paths(dep_lib_paths)
+    env.set_path(SPACK_LIB_PATHS, dep_lib_paths)
 
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
@@ -259,10 +283,6 @@ def set_build_environment_variables(pkg, env, dirty):
         # Let shell know which variables to set
         env_variables = ":".join(env_to_set.keys())
         env.set('SPACK_ENV_TO_SET', env_variables)
-
-    if compiler.extra_rpaths:
-        extra_rpaths = ':'.join(compiler.extra_rpaths)
-        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:

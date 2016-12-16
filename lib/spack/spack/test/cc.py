@@ -95,8 +95,12 @@ class CompilerWrapperTest(unittest.TestCase):
 
         mkdirp(join_path(self.dep4, 'include'))
 
-        if 'SPACK_DEPENDENCIES' in os.environ:
-            del os.environ['SPACK_DEPENDENCIES']
+        if 'SPACK_LIB_PATHS' in os.environ:
+            del os.environ['SPACK_LIB_PATHS']
+        if 'SPACK_RPATHS' in os.environ:
+            del os.environ['SPACK_RPATHS']
+        if 'SPACK_INCLUDE_PATHS' in os.environ:
+            del os.environ['SPACK_INCLUDE_PATHS']
 
     def tearDown(self):
         shutil.rmtree(self.tmp_deps, True)
@@ -155,6 +159,8 @@ class CompilerWrapperTest(unittest.TestCase):
             "ld")
 
     def test_flags(self):
+        os.environ['SPACK_RPATHS'] = (self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
         os.environ['SPACK_LDFLAGS'] = '-L foo'
         os.environ['SPACK_LDLIBS'] = '-lfoo'
         os.environ['SPACK_CPPFLAGS'] = '-g -O1'
@@ -214,6 +220,8 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def test_dep_rpath(self):
         """Ensure RPATHs for root package are added."""
+        os.environ['SPACK_RPATHS'] = (self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
@@ -222,9 +230,9 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def test_dep_include(self):
         """Ensure a single dependency include directory is added."""
-        os.environ['SPACK_DEPENDENCIES'] = self.dep4
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_INCLUDE_PATHS'] = self.dep4 + '/include'
+        os.environ['SPACK_RPATHS'] = (self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
@@ -234,21 +242,23 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def test_dep_lib(self):
         """Ensure a single dependency RPATH is added."""
-        os.environ['SPACK_DEPENDENCIES'] = self.dep2
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_RPATHS'] = (self.dep2 + '/lib64:' +
+                                      self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
+        os.environ['SPACK_LIB_PATHS'] = self.dep2 + '/lib64'
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
                       '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      '-L' + self.dep2 + '/lib64 ' +
                       '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
+                      '-L' + self.dep2 + '/lib64 ' +
                       ' '.join(test_command))
 
     def test_dep_lib_no_rpath(self):
         """Ensure a single dependency link flag is added with no dep RPATH."""
-        os.environ['SPACK_DEPENDENCIES'] = self.dep2
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_RPATHS'] = (self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
+        os.environ['SPACK_LIB_PATHS'] = self.dep2 + '/lib64'
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
@@ -258,8 +268,9 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def test_dep_lib_no_lib(self):
         """Ensure a single dependency RPATH is added with no -L."""
-        os.environ['SPACK_DEPENDENCIES'] = self.dep2
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_RPATHS'] = (self.dep2 + '/lib64:' +
+                                      self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
@@ -269,10 +280,17 @@ class CompilerWrapperTest(unittest.TestCase):
 
     def test_all_deps(self):
         """Ensure includes and RPATHs for all deps are added. """
-        os.environ['SPACK_DEPENDENCIES'] = ':'.join([
-            self.dep1, self.dep2, self.dep3, self.dep4])
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_RPATHS'] = (self.dep1 + '/lib:' +
+                                      self.dep2 + '/lib64:' +
+                                      self.dep3 + '/lib64:' +
+                                      self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
+        os.environ['SPACK_INCLUDE_PATHS'] = (self.dep1 + '/include:' +
+                                             self.dep4 + '/include:' +
+                                             self.dep3 + '/include')
+        os.environ['SPACK_LIB_PATHS'] = (self.dep1 + '/lib:' +
+                                         self.dep2 + '/lib64:' +
+                                         self.dep3 + '/lib64')
 
         # This is probably more constrained than it needs to be; it
         # checks order within prepended args and doesn't strictly have
@@ -281,55 +299,40 @@ class CompilerWrapperTest(unittest.TestCase):
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
                       '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-
-                      '-I' + self.dep4 + '/include ' +
-
-                      '-L' + self.dep3 + '/lib64 ' +
                       '-Wl,-rpath,' + self.dep3 + '/lib64 ' +
-                      '-I' + self.dep3 + '/include ' +
-
-                      '-L' + self.dep2 + '/lib64 ' +
                       '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
-
-                      '-L' + self.dep1 + '/lib ' +
                       '-Wl,-rpath,' + self.dep1 + '/lib ' +
+
+                      '-I' + self.dep3 + '/include ' +
+                      '-I' + self.dep4 + '/include ' +
                       '-I' + self.dep1 + '/include ' +
 
+                      '-L' + self.dep3 + '/lib64 ' +
+                      '-L' + self.dep2 + '/lib64 ' +
+                      '-L' + self.dep1 + '/lib ' +
                       ' '.join(test_command))
 
     def test_ld_deps(self):
         """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
-        os.environ['SPACK_DEPENDENCIES'] = ':'.join([
-            self.dep1, self.dep2, self.dep3, self.dep4])
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_RPATHS'] = (self.dep1 + '/lib:' +
+                                      self.dep2 + '/lib64:' +
+                                      self.dep3 + '/lib64:' +
+                                      self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
+        os.environ['SPACK_INCLUDE_PATHS'] = (self.dep1 + '/include:' +
+                                             self.dep4 + '/include:' +
+                                             self.dep3 + '/include')
+        os.environ['SPACK_LIB_PATHS'] = (self.dep1 + '/lib:' +
+                                         self.dep2 + '/lib64:' +
+                                         self.dep3 + '/lib64')
 
         self.check_ld('dump-args', test_command,
                       'ld ' +
                       '-rpath ' + self.prefix + '/lib ' +
                       '-rpath ' + self.prefix + '/lib64 ' +
-
-                      '-L' + self.dep3 + '/lib64 ' +
                       '-rpath ' + self.dep3 + '/lib64 ' +
-
-                      '-L' + self.dep2 + '/lib64 ' +
                       '-rpath ' + self.dep2 + '/lib64 ' +
-
-                      '-L' + self.dep1 + '/lib ' +
                       '-rpath ' + self.dep1 + '/lib ' +
-
-                      ' '.join(test_command))
-
-    def test_ld_deps_no_rpath(self):
-        """Ensure SPACK_RPATH_DEPS controls RPATHs for ld."""
-        os.environ['SPACK_DEPENDENCIES'] = ':'.join([
-            self.dep1, self.dep2, self.dep3, self.dep4])
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-
-        self.check_ld('dump-args', test_command,
-                      'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
 
                       '-L' + self.dep3 + '/lib64 ' +
                       '-L' + self.dep2 + '/lib64 ' +
@@ -337,45 +340,29 @@ class CompilerWrapperTest(unittest.TestCase):
 
                       ' '.join(test_command))
 
-    def test_ld_deps_no_link(self):
-        """Ensure SPACK_LINK_DEPS controls -L for ld."""
-        os.environ['SPACK_DEPENDENCIES'] = ':'.join([
-            self.dep1, self.dep2, self.dep3, self.dep4])
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-
-        self.check_ld('dump-args', test_command,
-                      'ld ' +
-                      '-rpath ' + self.prefix + '/lib ' +
-                      '-rpath ' + self.prefix + '/lib64 ' +
-
-                      '-rpath ' + self.dep3 + '/lib64 ' +
-                      '-rpath ' + self.dep2 + '/lib64 ' +
-                      '-rpath ' + self.dep1 + '/lib ' +
-
-                      ' '.join(test_command))
-
-    def test_ld_deps_reentrant(self):
+    def test_ld_deps_relocatable(self):
         """Make sure ld -r is handled correctly on OS's where it doesn't
            support rpaths."""
-        os.environ['SPACK_DEPENDENCIES'] = ':'.join([self.dep1])
-        os.environ['SPACK_RPATH_DEPS'] = os.environ['SPACK_DEPENDENCIES']
-        os.environ['SPACK_LINK_DEPS'] = os.environ['SPACK_DEPENDENCIES']
+        os.environ['SPACK_RPATHS'] = (self.dep1 + '/lib:' +
+                                      self.prefix + '/lib64:' +
+                                      self.prefix + '/lib')
+        os.environ['SPACK_LIB_PATHS'] = self.dep1 + '/lib'
 
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
-        reentrant_test_command = ['-r'] + test_command
-        self.check_ld('dump-args', reentrant_test_command,
+        relocatable_test_command = ['-r'] + test_command
+        self.check_ld('dump-args', relocatable_test_command,
                       'ld ' +
                       '-rpath ' + self.prefix + '/lib ' +
                       '-rpath ' + self.prefix + '/lib64 ' +
 
-                      '-L' + self.dep1 + '/lib ' +
                       '-rpath ' + self.dep1 + '/lib ' +
+                      '-L' + self.dep1 + '/lib ' +
 
                       '-r ' +
                       ' '.join(test_command))
 
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
-        self.check_ld('dump-args', reentrant_test_command,
+        self.check_ld('dump-args', relocatable_test_command,
                       'ld ' +
                       '-L' + self.dep1 + '/lib ' +
                       '-r ' +
