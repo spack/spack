@@ -34,8 +34,7 @@ class PyMarkdown(Package):
     """
 
     homepage = "https://pythonhosted.org/Markdown/"
-    url      = "https://github.com/waylan/Python-Markdown/archive/"\
-               "2.6.7-final.tar.gz"
+    url      = "https://github.com/waylan/Python-Markdown/archive/2.6.7-final.tar.gz"
 
     version('2.6.7', 'fd27044042e197ad99249b3d60215d97')
     version('2.6.6', '2b47a0ff7eb19ef34453fe198a0cccc4')
@@ -52,7 +51,7 @@ class PyMarkdown(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.7:2.8,3.2:')
+    depends_on('python@2.7:2.8,3.2:3.4')
 
     def url_for_version(self, version):
         base_url = "https://github.com/waylan/Python-Markdown/archive"
