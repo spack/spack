@@ -320,15 +320,15 @@ class TestSpecSematics(object):
         s1 = Spec('mpileaks').concretized()
         s2 = s1.copy()
 
-        self.assertTrue(s1.satisfies(s2))
-        self.assertTrue(s2.satisfies(s1))
+        assert s1.satisfies(s2)
+        assert s2.satisfies(s1)
 
         # Simulate specs that were installed before and after a change to
         # Spack's hashing algorithm.  This just reverses s2's hash.
         s2._hash = s1.dag_hash()[-1::-1]
 
-        self.assertFalse(s1.satisfies(s2))
-        self.assertFalse(s2.satisfies(s1))
+        assert not s1.satisfies(s2)
+        assert not s2.satisfies(s1)
 
     # ========================================================================
     # Indexing specs
