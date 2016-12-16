@@ -504,14 +504,9 @@ def setup_package(pkg, dirty=False):
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    ordered_build_only_deps_transitive = list()
-    build_only_roots = {}
-    for dep in pkg.spec.build_only_deps.itervalues():
-        collected = set(dep.traverse(deptype=('run', 'link')))
-        build_only_roots.update((x, dep) for x in collected)
-        ordered_build_only_deps_transitive.extend(
-            x for x in dep.traverse(order='post') if x in collected)
-
+    build_only_deps_transitive = list(itertools.chain.from_iterable(
+        dep.traverse(deptype=('run', 'link')) for dep in
+        pkg.spec.build_only_deps.itervalues()))
     build_deps_transitive = set(itertools.chain.from_iterable(
         dep.traverse(deptype=('run', 'link')) for dep in
         pkg.spec.dependencies(deptype=('build'))))
@@ -519,7 +514,7 @@ def setup_package(pkg, dirty=False):
         s for s in pkg.spec.traverse(order='post')
         if s in build_deps_transitive)
     for dspec in itertools.chain(
-            ordered_build_deps_transitive, ordered_build_only_deps_transitive):
+            ordered_build_deps_transitive, build_only_deps_transitive):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,
@@ -534,11 +529,7 @@ def setup_package(pkg, dirty=False):
         # Allow dependencies to modify the module
         dpkg = dspec.package
         dpkg.setup_dependent_package(pkg.module, spec)
-        if dspec in build_only_roots:
-            dpkg.setup_dependent_environment(
-                spack_env, run_env, build_only_roots[dspec])
-        else:
-            dpkg.setup_dependent_environment(spack_env, run_env, spec)
+        dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
     set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
