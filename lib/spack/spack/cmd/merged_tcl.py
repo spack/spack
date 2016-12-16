@@ -20,6 +20,9 @@ merged into one tcl module""")
     subparser.add_argument(
         '--output-file', dest='output_file',
         help="""Write module contents to the specified file""")
+    subparser.add_argument(
+        '--output-terminal', dest='output_terminal', action='store_true',
+        help="""Write module contents to terminal""")
 
 
 def merged_tcl(parser, args):
@@ -36,10 +39,12 @@ def merged_tcl(parser, args):
     query_spec = spack.spec.Spec(args.merge_spec)
     merged_module = MergedTclModule(query_spec, specs, env_var, spec_to_val)
 
-    if args.output_file:
-        with open(args.output_file, 'w') as F:
-            merged_module.write(output=F)
-    else:
+    if args.output_terminal:
         collect_output = StringIO.StringIO()
         merged_module.write(output=collect_output)
         print(collect_output.getvalue())
+    elif args.output_file:
+        with open(args.output_file, 'w') as F:
+            merged_module.write(output=F)
+    else:
+        merged_module.write(overwrite=True)

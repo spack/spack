@@ -653,7 +653,8 @@ class MergedTclModule(TclModule):
     name = 'merged_tcl'
 
     def __init__(self, query_spec, specs, env_var, spec_to_val):
-        super(MergedTclModule, self).__init__(query_spec)
+        super(MergedTclModule, self).__init__(
+            MergedTclModule.common_spec(specs))
         self.specs = list(specs)
         self.env_var = env_var
         self.spec_to_val = spec_to_val
@@ -689,6 +690,17 @@ class MergedTclModule(TclModule):
                 yield x
 
             first_item = False
+
+    @staticmethod
+    def common_spec(specs):
+        versions = set(spec.versions for spec in specs)
+        archs = set(spec.architecture for spec in specs)
+        common = spack.spec.Spec(next(iter(specs)).name)
+        if len(versions) == 1:
+            common.versions = next(iter(versions))
+        if len(archs) == 1:
+            common.architecture = next(iter(archs))
+        return common
 
     @property
     def extra_path_elements(self):

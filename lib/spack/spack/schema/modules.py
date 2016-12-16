@@ -117,9 +117,6 @@ schema = {
                     'naming_scheme': {
                         'type': 'string'  # Can we be more specific here?
                     },
-                    'dep_naming_schemes': {
-                        '$ref': '#/definitions/dictionary_of_strings'
-                    }
                 }},
                 {'patternProperties': {
                     r'\w[\w-]*': {
@@ -178,6 +175,16 @@ schema = {
                                 }
                             }
                         }  # Specific tcl extensions
+                    ]},
+                'merged_tcl': {
+                    'allOf': [
+                        # Base configuration
+                        {'$ref': '#/definitions/module_type_configuration'},
+                        {
+                            'dep_naming_schemes': {
+                                '$ref': '#/definitions/dictionary_of_strings'
+                            }
+                        }
                     ]},
                 'dotkit': {
                     'allOf': [
