@@ -47,12 +47,15 @@ def check_links(spec_to_check):
 
 @pytest.fixture()
 def saved_deps():
+    """Returns a dictionary to save the dependencies."""
     return {}
 
 
 @pytest.fixture()
 def set_dependency(saved_deps):
-
+    """Returns a function that alters the dependency information
+    for a package.
+    """
     def _mock(pkg_name, spec, deptypes=spack.alldeps):
         """Alters dependence information for a package.
 

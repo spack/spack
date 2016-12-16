@@ -86,6 +86,7 @@ from spack.spec import Spec
     ]
 )
 def spec_and_expected(request):
+    """Parameters for te normalization test."""
     return request.param
 
 

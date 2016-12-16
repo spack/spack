@@ -37,6 +37,7 @@ def _get_module_files(args):
 
 @pytest.fixture(scope='module')
 def parser():
+    """Returns the parser for the module command"""
     parser = argparse.ArgumentParser()
     module.setup_parser(parser)
     return parser
@@ -50,6 +51,7 @@ def parser():
     ]
 )
 def failure_args(request):
+    """A list of arguments that will cause a failure"""
     return request.param
 
 

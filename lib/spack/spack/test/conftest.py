@@ -22,13 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import collections
+import copy
 import os
 import re
 import shutil
-import copy
-import collections
 
-import StringIO
+import cStringIO
 import llnl.util.filesystem
 import llnl.util.lang
 import ordereddict_backport
@@ -54,12 +54,12 @@ import spack.util.pattern
 @pytest.fixture(autouse=True)
 def no_stdin_duplication(monkeypatch):
     """Duplicating stdin (or any other stream) returns an empty
-    StringIO object.
+    cStringIO object.
     """
     monkeypatch.setattr(
         llnl.util.lang,
         'duplicate_stream',
-        lambda x: StringIO.StringIO()
+        lambda x: cStringIO.StringIO()
     )
 
 
@@ -184,26 +184,11 @@ def config(configuration_dir):
 
 @pytest.fixture(scope='module')
 def database(tmpdir_factory, builtin_mock, config):
-    # Make a fake install directory
-    install_path = tmpdir_factory.mktemp('install_for_database')
-    spack_install_path = py.path.local(spack.store.root)
-    spack.store.root = str(install_path)
+    """Creates a mock database with some packages installed note that
+    the ref count for dyninst here will be 3, as it's recycled
+    across each install.
+    """
 
-    install_layout = spack.directory_layout.YamlDirectoryLayout(
-        str(install_path)
-    )
-    spack_install_layout = spack.store.layout
-    spack.store.layout = install_layout
-
-    # Make fake database and fake install directory.
-    install_db = spack.database.Database(str(install_path))
-    spack_install_db = spack.store.db
-    spack.store.db = install_db
-
-    # make a mock database with some packages installed note that
-    # the ref count for dyninst here will be 3, as it's recycled
-    # across each install.
-    #
     # Here is what the mock DB looks like:
     #
     # o  mpileaks     o  mpileaks'    o  mpileaks''
@@ -221,7 +206,22 @@ def database(tmpdir_factory, builtin_mock, config):
     #   | o  libdwarf
     #   |/
     #   o  libelf
-    #
+
+    # Make a fake install directory
+    install_path = tmpdir_factory.mktemp('install_for_database')
+    spack_install_path = py.path.local(spack.store.root)
+    spack.store.root = str(install_path)
+
+    install_layout = spack.directory_layout.YamlDirectoryLayout(
+        str(install_path)
+    )
+    spack_install_layout = spack.store.layout
+    spack.store.layout = install_layout
+
+    # Make fake database and fake install directory.
+    install_db = spack.database.Database(str(install_path))
+    spack_install_db = spack.store.db
+    spack.store.db = install_db
 
     Entry = collections.namedtuple('Entry', ['path', 'layout', 'db'])
     Database = collections.namedtuple(
@@ -328,6 +328,9 @@ def mock_archive():
 
 @pytest.fixture(scope='session')
 def mock_git_repository():
+    """Creates a very simple git repository with two branches and
+    two commits.
+    """
     git = spack.util.executable.which('git', required=True)
     stage = spack.stage.Stage('mock-git-stage')
     tmpdir = py.path.local(stage.path)
@@ -403,6 +406,7 @@ def mock_git_repository():
 
 @pytest.fixture(scope='session')
 def mock_hg_repository():
+    """Creates a very simple hg repository with two commits."""
     hg = spack.util.executable.which('hg', required=True)
     stage = spack.stage.Stage('mock-hg-stage')
     tmpdir = py.path.local(stage.path)
@@ -449,6 +453,7 @@ def mock_hg_repository():
 
 @pytest.fixture(scope='session')
 def mock_svn_repository():
+    """Creates a very simple svn repository with two commits."""
     svn = spack.util.executable.which('svn', required=True)
     svnadmin = spack.util.executable.which('svnadmin', required=True)
     stage = spack.stage.Stage('mock-svn-stage')

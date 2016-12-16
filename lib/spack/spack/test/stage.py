@@ -23,17 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Test that the Stage class works correctly."""
-import os
-import shutil
-import tempfile
 import collections
-import pytest
+import os
 
+import pytest
 import spack
 import spack.stage
-from llnl.util.filesystem import *
+import spack.util.executable
+from llnl.util.filesystem import join_path
 from spack.stage import Stage
-from spack.util.executable import which
 
 
 def check_chdir_to_source(stage, stage_name):
@@ -110,8 +108,8 @@ def check_setup(stage, stage_name, archive):
 
 
 def get_stage_path(stage, stage_name):
-    """Figure out where a stage should be living.  This depends on
-       whether it's named.
+    """Figure out where a stage should be living. This depends on
+    whether it's named.
     """
     if stage_name is not None:
         # If it is a named stage, we know where the stage should be
@@ -125,6 +123,7 @@ def get_stage_path(stage, stage_name):
 
 @pytest.fixture()
 def tmpdir_for_stage(mock_archive):
+    """Uses a temporary directory for staging"""
     current = spack.stage_path
     spack.config.update_config(
         'config',
@@ -139,7 +138,7 @@ def tmpdir_for_stage(mock_archive):
 
 @pytest.fixture()
 def mock_archive(tmpdir, monkeypatch):
-    #
+    """Creates a mock archive with the structure expected by the tests"""
     # Mock up a stage area that looks like this:
     #
     # TMPDIR/                    test_files_dir
@@ -164,7 +163,7 @@ def mock_archive(tmpdir, monkeypatch):
     test_readme.write('hello world!\n')
 
     current = tmpdir.chdir()
-    tar = which('tar', required=True)
+    tar = spack.util.executable.which('tar', required=True)
     tar('czf', str(archive_name), 'test-files')
     current.chdir()
 
@@ -188,6 +187,7 @@ def mock_archive(tmpdir, monkeypatch):
 
 @pytest.fixture()
 def failing_search_fn():
+    """Returns a search function that fails! Always!"""
     def _mock():
         raise Exception("This should not have been called")
     return _mock
@@ -195,6 +195,7 @@ def failing_search_fn():
 
 @pytest.fixture()
 def failing_fetch_strategy():
+    """Returns a fetch strategy that fails."""
     class FailingFetchStrategy(spack.fetch_strategy.FetchStrategy):
         def fetch(self):
             raise spack.fetch_strategy.FailedDownloadError(
@@ -206,6 +207,7 @@ def failing_fetch_strategy():
 
 @pytest.fixture()
 def search_fn():
+    """Returns a search function that always succeeds."""
     class _Mock(object):
         performed_search = False
 
@@ -220,75 +222,6 @@ def search_fn():
 class TestStage(object):
 
     stage_name = 'spack-test-stage'
-
-    def setUp(self):
-        """This sets up a mock archive to fetch, and a mock temp space for use
-           by the Stage class.  It doesn't actually create the Stage -- that
-           is done by individual tests.
-        """
-        super(StageTest, self).setUp()
-
-        global _test_tmp_path
-
-        #
-        # Mock up a stage area that looks like this:
-        #
-        # TMPDIR/                    test_files_dir
-        #     tmp/                   test_tmp_path (where stage should be)
-        #     test-files/            archive_dir_path
-        #         README.txt         test_readme (contains "hello world!\n")
-        #     test-files.tar.gz      archive_url = file:///path/to/this
-        #
-        self.test_files_dir = tempfile.mkdtemp()
-        self.test_tmp_path  = os.path.realpath(
-            os.path.join(self.test_files_dir, 'tmp'))
-        _test_tmp_path = self.test_tmp_path
-
-        # set _test_tmp_path as the default test directory to use for stages.
-        spack.config.update_config(
-            'config', {'build_stage': [_test_tmp_path]}, scope='user')
-
-        self.archive_dir = 'test-files'
-        self.archive_name = self.archive_dir + '.tar.gz'
-        archive_dir_path = os.path.join(self.test_files_dir,
-                                        self.archive_dir)
-        self.archive_url = 'file://' + os.path.join(self.test_files_dir,
-                                                    self.archive_name)
-        test_readme = join_path(archive_dir_path, 'README.txt')
-        self.readme_text = "hello world!\n"
-
-        mkdirp(archive_dir_path)
-        mkdirp(self.test_tmp_path)
-
-        with open(test_readme, 'w') as readme:
-            readme.write(self.readme_text)
-
-        with working_dir(self.test_files_dir):
-            tar = which('tar', required=True)
-            tar('czf', self.archive_name, self.archive_dir)
-
-        # Make spack use the test environment for tmp stuff.
-        self._old_tmp_root = spack.stage._tmp_root
-        self._old_use_tmp_stage = spack.stage._use_tmp_stage
-        spack.stage._tmp_root = None
-        spack.stage._use_tmp_stage = True
-
-        # record this since this test changes to directories that will
-        # be removed.
-        self.working_dir = os.getcwd()
-
-    def tearDown(self):
-        """Blows away the test environment directory."""
-        super(StageTest, self).tearDown()
-
-        shutil.rmtree(self.test_files_dir, ignore_errors=True)
-
-        # chdir back to original working dir
-        os.chdir(self.working_dir)
-
-        # restore spack's original tmp environment
-        spack.stage._tmp_root = self._old_tmp_root
-        spack.stage._use_tmp_stage = self._old_use_tmp_stage
 
     @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_setup_and_destroy_name_with_tmp(self, mock_archive):

@@ -33,6 +33,7 @@ from spack.spec import Spec
 
 @pytest.fixture()
 def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
     layout = spack.store.layout
     db = spack.store.db
     # Use a fake install directory to avoid conflicts bt/w
@@ -56,7 +57,8 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-def test_install_and_uninstall(mock_archive, install_mockery):
+@pytest.mark.usefixtures('install_mockery')
+def test_install_and_uninstall(mock_archive):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial_install_test_package')
     spec.concretize()
@@ -75,7 +77,8 @@ def test_install_and_uninstall(mock_archive, install_mockery):
         raise
 
 
-def test_store(mock_archive, install_mockery):
+@pytest.mark.usefixtures('install_mockery')
+def test_store(mock_archive):
     spec = Spec('cmake-client').concretized()
 
     for s in spec.traverse():

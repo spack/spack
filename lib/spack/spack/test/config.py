@@ -194,7 +194,8 @@ def check_compiler_config(comps, *compiler_names):
 
 
 @pytest.fixture()
-def config_extension(tmpdir):
+def config(tmpdir):
+    """Mocks the configuration scope."""
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
     spack.config.config_scopes = ordereddict_backport.OrderedDict()
@@ -208,6 +209,7 @@ def config_extension(tmpdir):
 
 @pytest.fixture()
 def write_config_file(tmpdir):
+    """Returns a function that writes a config file."""
     def _write(config, data, scope):
         config_yaml = tmpdir.join(scope, config + '.yaml')
         config_yaml.ensure()
@@ -218,13 +220,14 @@ def write_config_file(tmpdir):
 
 @pytest.fixture()
 def compiler_specs():
+    """Returns a couple of compiler specs needed for the tests"""
     a = [ac['compiler']['spec'] for ac in a_comps['compilers']]
     b = [bc['compiler']['spec'] for bc in b_comps['compilers']]
     CompilerSpecs = collections.namedtuple('CompilerSpecs', ['a', 'b'])
     return CompilerSpecs(a=a, b=b)
 
 
-@pytest.mark.usefixtures('config_extension')
+@pytest.mark.usefixtures('config')
 class TestConfig(object):
 
     def test_write_list_in_memory(self):
