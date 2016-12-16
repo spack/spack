@@ -50,7 +50,7 @@ class R(Package):
 
     variant('external-lapack', default=False,
             description='Links to externally installed BLAS/LAPACK')
-    variant('X', default=True,
+    variant('X', default=False,
             description='Enable X11 support (call configure --with-x)')
 
     # Virtual dependencies

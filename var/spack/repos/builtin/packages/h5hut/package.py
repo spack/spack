@@ -37,7 +37,7 @@ class H5hut(Package):
     version("1.99.13", "2a07a449afe50534de006ac6954a421a")
 
     variant("fortran", default=True, description="Enable Fortran support")
-    variant("mpi", default=False, description="Enable MPI support")
+    variant("mpi", default=True, description="Enable MPI support")
 
     depends_on("autoconf @2.60:", type="build")
     depends_on("automake", type="build")

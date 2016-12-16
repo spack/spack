@@ -53,7 +53,7 @@ class Charm(Package):
 
     # Communication mechanisms (choose exactly one)
     # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
-    variant("mpi", default=False,
+    variant("mpi", default=True,
             description="Use MPI as communication mechanism")
     variant("multicore", default=False,
             description="Disable inter-node communication")
