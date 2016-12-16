@@ -62,7 +62,6 @@ class Graphviz(AutotoolsPackage):
         #       include <X11/Xlib.h>
         if sys.platform == 'darwin':
             options.append('CFLAGS=-I/opt/X11/include')
-        options.append('--with-ltdl-lib=%s/lib' % self.spec['libtool'].prefix)
 
         # A hack to patch config.guess in the libltdl sub directory
         shutil.copyfile('./config/config.guess', 'libltdl/config/config.guess')
