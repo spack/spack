@@ -24,10 +24,9 @@
 ##############################################################################
 
 import pytest
-
-from spack.cmd.create import BuildSystemGuesser
-from spack.stage import Stage
-from spack.util.executable import which
+import spack.cmd.create
+import spack.util.executable
+import spack.stage
 
 
 @pytest.fixture(
@@ -43,7 +42,7 @@ from spack.util.executable import which
 )
 def url_and_system(request, tmpdir):
     """Return a url along with the correct build-system guess"""
-    tar = which('tar')
+    tar = spack.util.executable.which('tar')
     orig_dir = tmpdir.chdir()
     filename, system = request.param
     tmpdir.ensure('archive', filename)
@@ -55,8 +54,8 @@ def url_and_system(request, tmpdir):
 
 def test_build_systems(url_and_system):
     url, system = url_and_system
-    with Stage(url) as stage:
+    with spack.stage.Stage(url) as stage:
         stage.fetch()
-        guesser = BuildSystemGuesser()
+        guesser = spack.cmd.create.BuildSystemGuesser()
         guesser(stage, url)
         assert system == guesser.build_system

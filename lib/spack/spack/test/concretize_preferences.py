@@ -59,58 +59,58 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
-def test_preferred_variants(concretize_scope, builtin_mock):
-    """Test preferred variants are applied correctly
-    """
-    update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
-    assert_variant_values(
-        'mpileaks', debug=False, opt=False, shared=True, static=True
-    )
-    update_packages(
-        'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
-    )
-    assert_variant_values(
-        'mpileaks', debug=True, opt=True, shared=False, static=False
-    )
+@pytest.mark.usefixtures('concretize_scope', 'builtin_mock')
+class TestConcretizePreferences(object):
+    def test_preferred_variants(self):
+        """Test preferred variants are applied correctly
+        """
+        update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
+        assert_variant_values(
+            'mpileaks', debug=False, opt=False, shared=True, static=True
+        )
+        update_packages(
+            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
+        )
+        assert_variant_values(
+            'mpileaks', debug=True, opt=True, shared=False, static=False
+        )
 
+    def test_preferred_compilers(self, refresh_builtin_mock):
+        """Test preferred compilers are applied correctly
+        """
+        update_packages('mpileaks', 'compiler', ['clang@3.3'])
+        spec = concretize('mpileaks')
+        assert spec.compiler == spack.spec.CompilerSpec('clang@3.3')
 
-def test_preferred_compilers(concretize_scope, refresh_builtin_mock):
-    """Test preferred compilers are applied correctly
-    """
-    update_packages('mpileaks', 'compiler', ['clang@3.3'])
-    spec = concretize('mpileaks')
-    assert spec.compiler == spack.spec.CompilerSpec('clang@3.3')
+        update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
+        spec = concretize('mpileaks')
+        assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
-    update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
-    spec = concretize('mpileaks')
-    assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
+    def test_preferred_versions(self):
+        """Test preferred package versions are applied correctly
+        """
+        update_packages('mpileaks', 'version', ['2.3'])
+        spec = concretize('mpileaks')
+        assert spec.version == spack.spec.Version('2.3')
 
+        update_packages('mpileaks', 'version', ['2.2'])
+        spec = concretize('mpileaks')
+        assert spec.version == spack.spec.Version('2.2')
 
-def test_preferred_versions(concretize_scope, builtin_mock):
-    """Test preferred package versions are applied correctly
-    """
-    update_packages('mpileaks', 'version', ['2.3'])
-    spec = concretize('mpileaks')
-    assert spec.version == spack.spec.Version('2.3')
+    def test_preferred_providers(self):
+        """Test preferred providers of virtual packages are
+        applied correctly
+        """
+        update_packages('all', 'providers', {'mpi': ['mpich']})
+        spec = concretize('mpileaks')
+        assert 'mpich' in spec
 
-    update_packages('mpileaks', 'version', ['2.2'])
-    spec = concretize('mpileaks')
-    assert spec.version == spack.spec.Version('2.2')
+        update_packages('all', 'providers', {'mpi': ['zmpi']})
+        spec = concretize('mpileaks')
+        assert 'zmpi' in spec
 
-
-def test_preferred_providers(concretize_scope, builtin_mock):
-    """Test preferred providers of virtual packages are applied correctly"""
-    update_packages('all', 'providers', {'mpi': ['mpich']})
-    spec = concretize('mpileaks')
-    assert 'mpich' in spec
-
-    update_packages('all', 'providers', {'mpi': ['zmpi']})
-    spec = concretize('mpileaks')
-    assert 'zmpi' in spec
-
-
-def test_develop(concretize_scope, builtin_mock):
-    """Test concretization with develop version"""
-    spec = Spec('builtin.mock.develop-test')
-    spec.concretize()
-    assert spec.version == spack.spec.Version('0.2.15')
+    def test_develop(self):
+        """Test concretization with develop version"""
+        spec = Spec('builtin.mock.develop-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15')

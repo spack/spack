@@ -24,6 +24,7 @@
 ##############################################################################
 import filecmp
 import os
+import pytest
 
 import spack
 import spack.mirror
@@ -34,7 +35,6 @@ from spack.stage import Stage
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
-
 
 repos = {}
 svn = spack.util.executable.which('svn', required=True)
@@ -111,41 +111,38 @@ def check_mirror():
                     spack.do_checksum = saved_checksum_setting
 
 
-def test_git_mirror(mock_git_repository, config, refresh_builtin_mock):
-    set_up_package('git-test', mock_git_repository, 'git')
-    check_mirror()
-    repos.clear()
+@pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+class TestMirror(object):
+    def test_git_mirror(self, mock_git_repository):
+        set_up_package('git-test', mock_git_repository, 'git')
+        check_mirror()
+        repos.clear()
 
+    def test_svn_mirror(self, mock_svn_repository):
+        set_up_package('svn-test', mock_svn_repository, 'svn')
+        check_mirror()
+        repos.clear()
 
-def test_svn_mirror(mock_svn_repository, config, refresh_builtin_mock):
-    set_up_package('svn-test', mock_svn_repository, 'svn')
-    check_mirror()
-    repos.clear()
+    def test_hg_mirror(self, mock_hg_repository):
+        set_up_package('hg-test', mock_hg_repository, 'hg')
+        check_mirror()
+        repos.clear()
 
+    def test_url_mirror(self, mock_archive):
+        set_up_package('trivial_install_test_package', mock_archive, 'url')
+        check_mirror()
+        repos.clear()
 
-def test_hg_mirror(mock_hg_repository, config, refresh_builtin_mock):
-    set_up_package('hg-test', mock_hg_repository, 'hg')
-    check_mirror()
-    repos.clear()
-
-
-def test_url_mirror(mock_archive, config, refresh_builtin_mock):
-    set_up_package('trivial_install_test_package', mock_archive, 'url')
-    check_mirror()
-    repos.clear()
-
-
-def test_all_mirror(
-        mock_git_repository,
-        mock_svn_repository,
-        mock_hg_repository,
-        mock_archive,
-        config,
-        refresh_builtin_mock
-):
-    set_up_package('git-test', mock_git_repository, 'git')
-    set_up_package('svn-test', mock_svn_repository, 'svn')
-    set_up_package('hg-test',  mock_hg_repository,  'hg')
-    set_up_package('trivial_install_test_package', mock_archive, 'url')
-    check_mirror()
-    repos.clear()
+    def test_all_mirror(
+            self,
+            mock_git_repository,
+            mock_svn_repository,
+            mock_hg_repository,
+            mock_archive,
+    ):
+        set_up_package('git-test', mock_git_repository, 'git')
+        set_up_package('svn-test', mock_svn_repository, 'svn')
+        set_up_package('hg-test', mock_hg_repository, 'hg')
+        set_up_package('trivial_install_test_package', mock_archive, 'url')
+        check_mirror()
+        repos.clear()

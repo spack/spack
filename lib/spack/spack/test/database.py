@@ -223,9 +223,9 @@ def test_050_basic_query(database):
 
 def _check_remove_and_add_package(install_db, spec):
     """Remove a spec from the DB, then add it and make sure everything's
-       still ok once it is added.  This checks that it was
-       removed, that it's back when added again, and that ref
-       counts are consistent.
+    still ok once it is added.  This checks that it was
+    removed, that it's back when added again, and that ref
+    counts are consistent.
     """
     original = install_db.query()
     install_db._check_ref_counts()

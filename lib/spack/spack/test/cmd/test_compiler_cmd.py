@@ -63,27 +63,32 @@ done
     return str(tmpdir)
 
 
-def test_compiler_remove(config, builtin_mock):
-    args = spack.util.pattern.Bunch(
-        all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
-    )
-    spack.cmd.compiler.compiler_remove(args)
-    compilers = spack.compilers.all_compilers()
-    assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
+@pytest.mark.usefixtures('config', 'builtin_mock')
+class TestCompilerCommand(object):
 
+    def test_compiler_remove(self):
+        args = spack.util.pattern.Bunch(
+            all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
+        )
+        spack.cmd.compiler.compiler_remove(args)
+        compilers = spack.compilers.all_compilers()
+        assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
-def test_compiler_add(mock_compiler_dir, config, builtin_mock):
-    # Compilers available by default.
-    old_compilers = set(spack.compilers.all_compilers())
+    def test_compiler_add(self, mock_compiler_dir):
+        # Compilers available by default.
+        old_compilers = set(spack.compilers.all_compilers())
 
-    args = spack.util.pattern.Bunch(
-        all=None, compiler_spec=None, add_paths=[mock_compiler_dir], scope=None
-    )
-    spack.cmd.compiler.compiler_find(args)
+        args = spack.util.pattern.Bunch(
+            all=None,
+            compiler_spec=None,
+            add_paths=[mock_compiler_dir],
+            scope=None
+        )
+        spack.cmd.compiler.compiler_find(args)
 
-    # Ensure new compiler is in there
-    new_compilers = set(spack.compilers.all_compilers())
-    new_compiler = new_compilers - old_compilers
-    assert new_compiler
-    c = new_compiler.pop()
-    assert c.version == Version(test_version)
+        # Ensure new compiler is in there
+        new_compilers = set(spack.compilers.all_compilers())
+        new_compiler = new_compilers - old_compilers
+        assert new_compiler
+        c = new_compiler.pop()
+        assert c.version == Version(test_version)
