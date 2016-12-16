@@ -496,34 +496,6 @@ class SpecDagTest(MockPackagesTest):
         traversal = dag.traverse(deptype='run')
         self.assertEqual([x.name for x in traversal], names)
 
-    def test_using_ordered_dict(self):
-        """ Checks that dicts are ordered
-
-            Necessary to make sure that dag_hash is stable across python
-            versions and processes.
-        """
-        def descend_and_check(iterable, level=0):
-            from spack.util.spack_yaml import syaml_dict
-            from collections import Iterable, Mapping
-            if isinstance(iterable, Mapping):
-                self.assertTrue(isinstance(iterable, syaml_dict))
-                return descend_and_check(iterable.values(), level=level + 1)
-            max_level = level
-            for value in iterable:
-                if isinstance(value, Iterable) and not isinstance(value, str):
-                    nlevel = descend_and_check(value, level=level + 1)
-                    if nlevel > max_level:
-                        max_level = nlevel
-            return max_level
-
-        specs = ['mpileaks ^zmpi', 'dttop', 'dtuse']
-        for spec in specs:
-            dag = Spec(spec)
-            dag.normalize()
-            level = descend_and_check(dag.to_node_dict())
-            # level just makes sure we are doing something here
-            self.assertTrue(level >= 5)
-
     def test_hash_bits(self):
         """Ensure getting first n bits of a base32-encoded DAG hash works."""
 

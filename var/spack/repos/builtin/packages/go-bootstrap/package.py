@@ -41,14 +41,17 @@ class GoBootstrap(Package):
 
     extendable = True
 
-    # NOTE: Go@1.4.2 is the only supported bootstrapping compiler because all
+    # NOTE: Go@1.4.x is the only supported bootstrapping compiler because all
     # later versions require a Go compiler to build.
-    # See: https://golang.org/doc/install/source
-    version('1.4.2', git='https://go.googlesource.com/go', tag='go1.4.2')
+    # See: https://golang.org/doc/install/source#go14 and
+    # https://github.com/golang/go/issues/17545 and
+    # https://github.com/golang/go/issues/16352
+    version('1.4-bootstrap-20161024', '76e42c8152e8560ded880a6d1d1f53cb',
+            url='https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz')
 
     variant('test', default=True, description='Build and run tests as part of the build.')
 
-    provides('golang@:1.4.2')
+    provides('golang@:1.4-bootstrap-20161024')
 
     depends_on('git', type='alldeps')
 
@@ -69,6 +72,7 @@ class GoBootstrap(Package):
         pass
 
     def install(self, spec, prefix):
+        env['CGO_ENABLED'] = '0'
         bash = which('bash')
         with working_dir('src'):
             bash('{0}.bash'.format('all' if '+test' in spec else 'make'))

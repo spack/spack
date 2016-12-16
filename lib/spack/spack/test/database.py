@@ -75,7 +75,7 @@ class DatabaseTest(MockDatabase):
 
     def test_005_db_exists(self):
         """Make sure db cache file exists after creating."""
-        index_file = join_path(self.install_path, '.spack-db', 'index.yaml')
+        index_file = join_path(self.install_path, '.spack-db', 'index.json')
         lock_file = join_path(self.install_path, '.spack-db', 'lock')
 
         self.assertTrue(os.path.exists(index_file))

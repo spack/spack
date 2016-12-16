@@ -22,7 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import glob
 
 
 class Tetgen(Package):
@@ -33,13 +35,35 @@ class Tetgen(Package):
     """
 
     homepage = "http://www.tetgen.org"
-    url      = "http://www.tetgen.org/files/tetgen1.4.3.tar.gz"
 
-    version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18')
-    version('1.5.0', '3b9fd9cdec121e52527b0308f7aad5c1',
-            url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
+    version('1.5.0', '3b9fd9cdec121e52527b0308f7aad5c1', url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
+    version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18', url='http://www.tetgen.org/files/tetgen1.4.3.tar.gz')
 
-    depends_on('cmake@2.8.7:', when='@1.5.0:', type='build')
+    variant('debug', default=False, description='Builds the library in debug mode.')
+    variant('except', default=False, description='Replaces asserts with exceptions for better C++ compatibility.')
+
+    patch('tetgen-1.5.0-free.patch', when='@1.5.0')
+
+    def patch(self):
+        cflags = '-g -O0' if '+debug' in self.spec else '-g0 -O3'
+
+        mff = FileFilter('makefile')
+        mff.filter(r'^(C(XX)?FLAGS\s*=)(.*)$', r'\1 {0}'.format(cflags))
+
+        if '+except' in self.spec:
+            hff = FileFilter('tetgen.h')
+            hff.filter(r'(\b)(throw)(\b)(.*);', r'\1assert_throw(false);')
+            hff.filter(r'^(#define\s*tetgenH\s*)$', r'\1{0}'.format("""\n
+#include <stdexcept>
+
+inline void assert_throw(bool assertion)
+{
+  if(!assertion)
+    throw std::runtime_error("Tetgen encountered a problem (assert failed)!");
+}\n"""))
+
+            sff = FileFilter(*(glob.glob('*.cxx')))
+            sff.filter(r'(\b)(assert)(\b)', r'\1assert_throw\3')
 
     def install(self, spec, prefix):
         make('tetgen', 'tetlib')

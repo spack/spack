@@ -1,7 +1,7 @@
 .. _spack-101:
 
 =============================
-Spack 101
+Tutorial: Spack 101
 =============================
 
 This is a 3-hour introduction to Spack with lectures and live demos.  It
@@ -15,12 +15,12 @@ the live demo scripts to see how Spack is used in practice.
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: _downloads/Spack-SC16-Tutorial.pdf
+   :target: http://llnl.github.io/spack/files/Spack-SC16-Tutorial.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
 
-:download:`Download Slides <tutorial/Spack-SC16-Tutorial.pdf>`.
+`Download Slides <http://llnl.github.io/spack/files/Spack-SC16-Tutorial.pdf>`_.
 
 **Full citation:** Todd Gamblin, Massimiliano Culpo, Gregory Becker, Matt
 Legendre, Greg Lee, Elizabeth Fischer, and Benedikt Hegner.

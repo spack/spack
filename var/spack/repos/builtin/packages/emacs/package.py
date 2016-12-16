@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
 
 
 class Emacs(Package):
@@ -32,34 +31,35 @@ class Emacs(Package):
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
-    variant('X', default=True, description="Enable a X toolkit (GTK+)")
-    variant('gtkplus', default=False,
-            description="Enable a GTK+ as X toolkit (ignored if ~X)")
+    variant('X', default=False, description="Enable an X toolkit")
+    variant('toolkit', default='gtk',
+            description="Select an X toolkit (gtk, athena)")
 
     depends_on('ncurses')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')
     depends_on('giflib', when='+X')
-    depends_on('gtkplus', when='+X+gtkplus')
+    depends_on('libx11', when='+X')
+    depends_on('libxaw', when='+X toolkit=athena')
+    depends_on('gtkplus+X', when='+X toolkit=gtk')
 
     def install(self, spec, prefix):
         args = []
+        toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            if '+gtkplus' in spec:
-                toolkit = 'gtk{0}'.format(spec['gtkplus'].version.up_to(1))
-            else:
-                toolkit = 'no'
+            if toolkit not in ('gtk', 'athena'):
+                raise InstallError("toolkit must be in (gtk, athena), not %s" %
+                                   toolkit)
             args = [
                 '--with-x',
                 '--with-x-toolkit={0}'.format(toolkit)
             ]
         else:
             args = ['--without-x']
-            if '+gtkplus' in spec:
-                tty.warn('The variant +gtkplus is ignored if ~X is selected.')
 
         configure('--prefix={0}'.format(prefix), *args)
 

@@ -113,10 +113,6 @@ class Dealii(CMakePackage):
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("trilinos",         when='+trilinos+mpi')
 
-    # developer dependnecies
-    depends_on("numdiff",     when='@develop')
-    depends_on("astyle@2.04", when='@develop')
-
     def build_type(self):
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         return 'DebugRelease'

@@ -59,6 +59,26 @@ def use_tmp(use_tmp):
     yield
 
 
+def fail_search_fn():
+    raise Exception("This should not have been called")
+
+
+class FailingFetchStrategy(spack.fetch_strategy.FetchStrategy):
+    def fetch(self):
+        raise spack.fetch_strategy.FailedDownloadError(
+            "<non-existent URL>",
+            "This implementation of FetchStrategy always fails")
+
+
+class MockSearchFunction(object):
+    def __init__(self):
+        self.performed_search = False
+
+    def __call__(self):
+        self.performed_search = True
+        return []
+
+
 class StageTest(MockPackagesTest):
 
     def setUp(self):
@@ -250,6 +270,32 @@ class StageTest(MockPackagesTest):
             self.check_chdir(stage, self.stage_name)
             self.check_fetch(stage, self.stage_name)
         self.check_destroy(stage, self.stage_name)
+
+    def test_no_search_if_default_succeeds(self):
+        with Stage(self.archive_url, name=self.stage_name,
+                   search_fn=fail_search_fn) as stage:
+            stage.fetch()
+        self.check_destroy(stage, self.stage_name)
+
+    def test_no_search_mirror_only(self):
+        with Stage(FailingFetchStrategy(), name=self.stage_name,
+                   search_fn=fail_search_fn) as stage:
+            try:
+                stage.fetch(mirror_only=True)
+            except spack.fetch_strategy.FetchError:
+                pass
+        self.check_destroy(stage, self.stage_name)
+
+    def test_search_if_default_fails(self):
+        test_search = MockSearchFunction()
+        with Stage(FailingFetchStrategy(), name=self.stage_name,
+                   search_fn=test_search) as stage:
+            try:
+                stage.fetch(mirror_only=False)
+            except spack.fetch_strategy.FetchError:
+                pass
+        self.check_destroy(stage, self.stage_name)
+        self.assertTrue(test_search.performed_search)
 
     def test_expand_archive(self):
         with Stage(self.archive_url, name=self.stage_name) as stage:

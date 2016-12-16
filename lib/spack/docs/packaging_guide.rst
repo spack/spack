@@ -93,8 +93,10 @@ always choose to download just one tarball initially, and run
       $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
    If it fails entirely, you can get minimal boilerplate by using
-   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
+   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a
+   directory and ``package.py`` file for the package in
+   ``var/spack/repos/builtin/packages``, or within your own :ref:`package
+   repository <repositories>`.
 
 .. note::
 
@@ -2026,8 +2028,8 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libpng/package.py
-   :pyobject: Libpng.install
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/mpfr/package.py
+   :pyobject: Mpfr.install
    :linenos:
 
 ``install`` takes a ``spec``: a description of how the package should
@@ -3119,6 +3121,8 @@ example:
 
 This graph can be provided as input to other graphing tools, such as
 those in `Graphviz <http://www.graphviz.org>`_.
+
+.. _packaging-shell-support:
 
 -------------------------
 Interactive shell support

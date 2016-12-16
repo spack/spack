@@ -41,6 +41,9 @@ def setup_parser(subparser):
         default='nodes', choices=['nodes', 'edges', 'paths'],
         help='How extensively to traverse the DAG. (default: nodes).')
     subparser.add_argument(
+        '-N', '--namespaces', action='store_true', default=False,
+        help='Show fully qualified package names.')
+    subparser.add_argument(
         '-I', '--install-status', action='store_true', default=False,
         help='Show install status of packages.  Packages can be: '
              'installed [+], missing and needed by an installed package [-], '
@@ -50,11 +53,13 @@ def setup_parser(subparser):
 
 
 def spec(parser, args):
+    name_fmt = '$.' if args.namespaces else '$_'
     kwargs = {'color': True,
               'cover': args.cover,
-              'install_status': args.install_status,
+              'format': name_fmt + '$@$%@+$+$=',
               'hashes': args.long or args.very_long,
-              'hashlen': None if args.very_long else 7}
+              'hashlen': None if args.very_long else 7,
+              'install_status': args.install_status}
 
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.

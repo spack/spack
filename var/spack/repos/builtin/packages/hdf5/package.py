@@ -40,6 +40,12 @@ class Hdf5(AutotoolsPackage):
 
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
+    version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c',
+            # The link for the latest version differs from the links for
+            # the previous releases. Do not forget to remove this once
+            # the version 1.8.18 is not the latest one for the 1.8.* branch.
+            url='http://hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.gz')
+    version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
     version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
@@ -57,6 +63,8 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on('mpi', when='+mpi')
     depends_on('szip', when='+szip')
@@ -114,6 +122,11 @@ class Hdf5(AutotoolsPackage):
             # '--enable-fortran2003' no longer exists as of version 1.10.0
             if spec.satisfies('@:1.8.16'):
                 extra_args.append('--enable-fortran2003')
+
+        if '+pic' in spec:
+            extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -175,7 +188,9 @@ HDF5 version {version} {version}
             # TODO: Automate these path and library settings
             cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
             cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"), "-lhdf5",
+               "-L%s" % join_path(spec.prefix, "lib"),
+               "-L%s" % join_path(spec.prefix, "lib64"),
+               "-lhdf5",
                "-lz")
             try:
                 check = Executable('./check')
@@ -197,6 +212,11 @@ HDF5 version {version} {version}
         shutil.rmtree(checkdir)
 
     def url_for_version(self, version):
+        # If we have a specific URL for this version, return it.
+        version_urls = self.version_urls()
+        if version in version_urls:
+            return version_urls[version]
+
         base_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
 
         if version == Version("1.2.2"):
