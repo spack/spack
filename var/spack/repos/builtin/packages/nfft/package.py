@@ -27,10 +27,11 @@ from spack import *
 
 class Nfft(AutotoolsPackage):
     """NFFT is a C subroutine library for computing the nonequispaced discrete
-    Fourier transform (NDFT) in one or more dimensions, of arbitrary input size, and of complex data."""
+    Fourier transform (NDFT) in one or more dimensions, of arbitrary input
+    size, and of complex data."""
 
     homepage = "https://www-user.tu-chemnitz.de/~potts/nfft"
-    url      = "https://www-user.tu-chemnitz.de/~potts/nfft/download/nfft-3.3.2.tar.gz"
+    url = "https://www-user.tu-chemnitz.de/~potts/nfft/download/nfft-3.3.2.tar.gz"
 
     version('3.3.2', '550737c06f4d6ea6c156800169d8f0d9')
 
