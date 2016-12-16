@@ -25,23 +25,30 @@
 import collections
 import contextlib
 
-import StringIO
+import cStringIO
 import pytest
 import spack.modules
 import spack.spec
 
-FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
+# Our "filesystem" for the tests below
+FILE_REGISTRY = collections.defaultdict(cStringIO.StringIO)
+# Spec strings that will be used throughout the tests
+mpich_spec_string = 'mpich@3.0.4'
+mpileaks_spec_string = 'mpileaks'
+libdwarf_spec_string = 'libdwarf arch=x64-linux'
 
 
-# Monkey-patch open to write module files to a StringIO instance
 @pytest.fixture()
 def stringio_open(monkeypatch):
+    """Overrides the `open` builtin in spack.modules with an implementation
+    that writes on a StringIO instance.
+    """
     @contextlib.contextmanager
     def _mock(filename, mode):
         if not mode == 'w':
             raise RuntimeError('unexpected opening mode for stringio_open')
 
-        FILE_REGISTRY[filename] = StringIO.StringIO()
+        FILE_REGISTRY[filename] = cStringIO.StringIO()
 
         try:
             yield FILE_REGISTRY[filename]
@@ -53,13 +60,14 @@ def stringio_open(monkeypatch):
     monkeypatch.setattr(spack.modules, 'open', _mock, raising=False)
 
 
-# Spec strings that will be used throughout the tests
-mpich_spec_string = 'mpich@3.0.4'
-mpileaks_spec_string = 'mpileaks'
-libdwarf_spec_string = 'libdwarf arch=x64-linux'
-
-
 def get_modulefile_content(factory, spec):
+    """Writes the module file and returns the content as a string.
+
+    :param factory: module file factory
+    :param spec: spec of the module file to be written
+    :return: content of the module file
+    :rtype: str
+    """
     spec.concretize()
     generator = factory(spec)
     generator.write()
@@ -106,6 +114,7 @@ def test_inspect_path():
 
 @pytest.fixture()
 def tcl_factory(tmpdir, monkeypatch):
+    """Returns a factory that writes non-hierarchical TCL module files."""
     factory = spack.modules.TclModule
     monkeypatch.setattr(factory, 'path', str(tmpdir))
     monkeypatch.setattr(spack.modules, 'module_types', {factory.name: factory})
@@ -114,6 +123,7 @@ def tcl_factory(tmpdir, monkeypatch):
 
 @pytest.fixture()
 def lmod_factory(tmpdir, monkeypatch):
+    """Returns a factory that writes hierarchical LUA module files."""
     factory = spack.modules.LmodModule
     monkeypatch.setattr(factory, 'path', str(tmpdir))
     monkeypatch.setattr(spack.modules, 'module_types', {factory.name: factory})
@@ -122,6 +132,7 @@ def lmod_factory(tmpdir, monkeypatch):
 
 @pytest.fixture()
 def dotkit_factory(tmpdir, monkeypatch):
+    """Returns a factory that writes DotKit module files."""
     factory = spack.modules.Dotkit
     monkeypatch.setattr(factory, 'path', str(tmpdir))
     monkeypatch.setattr(spack.modules, 'module_types', {factory.name: factory})
