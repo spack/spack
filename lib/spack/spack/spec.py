@@ -1517,7 +1517,7 @@ class Spec(object):
 
         return changed
 
-    def concretize(self, skip_build=True):
+    def concretize(self, skip_build=True, constrain_deps=None):
         """A spec is concrete if it describes one build of a package uniquely.
            This will ensure that this spec is concrete.
 
@@ -1539,7 +1539,8 @@ class Spec(object):
         force = False
 
         while changed:
-            changes = (self.normalize(force, skip_build=skip_build),
+            changes = (self.normalize(force, skip_build=skip_build,
+                                      constrain_deps=constrain_deps),
                        self._expand_virtual_packages(skip_build=skip_build),
                        self._concretize_helper())
             changed = any(changes)
@@ -1548,15 +1549,19 @@ class Spec(object):
         if skip_build:
             for spec in self.traverse():
                 pkg = spack.repo.get(spec.fullname)
+                build_only_deps = set()
                 for dep_name in pkg.dependencies:
                     deptypes = pkg._deptypes[dep_name]
                     if set(deptypes) != set(['build']):
                         continue
-                    build_dep_spec = spec._evaluate_dependency_conditions(
-                        dep_name)
-                    if build_dep_spec:
-                        build_dep_spec.concretize(skip_build=False)
-                        spec.build_only_deps[dep_name] = build_dep_spec
+                    build_only_deps.add(dep_name)
+                if build_only_deps:
+                    build_parent = Spec(spec.name)
+                    build_parent.versions = spec.versions
+                    build_parent.concretize(
+                        skip_build=False, constrain_deps=build_only_deps)
+                    for dep_spec in build_parent.dependencies():
+                        spec.build_only_deps[dep_spec.name] = dep_spec
 
         for s in self.traverse(deptype_query=alldeps):
             # After concretizing, assign namespaces to anything left.
@@ -1720,7 +1725,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(self, dep, deptypes, visited, spec_deps,
-                          provider_index, skip_build):
+                          provider_index, skip_build, constrain_deps=None):
         """Merge the dependency into this spec.
 
         This is the core of normalize().  There are some basic steps:
@@ -1788,11 +1793,12 @@ class Spec(object):
                 dependency.default_deptypes)
 
         changed |= dependency.spec._normalize_helper(
-            visited, spec_deps, provider_index, skip_build=skip_build)
+            visited, spec_deps, provider_index, skip_build=skip_build,
+            constrain_deps=constrain_deps)
         return changed
 
     def _normalize_helper(self, visited, spec_deps, provider_index,
-                          skip_build):
+                          skip_build, constrain_deps=None):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return False
@@ -1812,7 +1818,9 @@ class Spec(object):
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
-                # Do we depend on dep_name?  If so pkg_dep is not None.
+                if constrain_deps and dep_name not in constrain_deps:
+                    continue
+
                 deptypes = pkg._deptypes[dep_name]
                 if set(deptypes) == set(['build']) and skip_build:
                     continue
@@ -1821,12 +1829,12 @@ class Spec(object):
                 if pkg_dep:
                     changed |= self._merge_dependency(
                         pkg_dep, deptypes, visited, spec_deps, provider_index,
-                        skip_build=skip_build)
+                        skip_build=skip_build, constrain_deps=constrain_deps)
             any_change |= changed
 
         return any_change
 
-    def normalize(self, force=False, skip_build=True):
+    def normalize(self, force=False, skip_build=True, constrain_deps=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -1868,7 +1876,8 @@ class Spec(object):
         # to package files & their 'when' specs
         visited = set()
         any_change = self._normalize_helper(
-            visited, spec_deps, provider_index, skip_build=skip_build)
+            visited, spec_deps, provider_index, skip_build=skip_build,
+            constrain_deps=constrain_deps)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
