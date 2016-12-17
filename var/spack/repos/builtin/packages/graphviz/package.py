@@ -48,7 +48,8 @@ class Graphviz(AutotoolsPackage):
     depends_on("python")
     depends_on("ghostscript")
     depends_on("freetype")
-    depends_on("libtool", type='build')
+    depends_on("expat")
+    depends_on("libtool")
     depends_on("pkg-config", type='build')
 
     def configure_args(self):
