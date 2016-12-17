@@ -98,7 +98,7 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
-        if spec.satisfies('%gcc@:4.8.4'):
+        if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
         if '~shared' in self.spec:
             if '+pic' in self.spec:
