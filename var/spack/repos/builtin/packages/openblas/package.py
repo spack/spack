@@ -44,8 +44,6 @@ class Openblas(Package):
             description="Enable OpenMP support.")
     variant('fpic',   default=True,
             description="Build position independent code")
-    variant('avx2',   default=False,
-            description="Build with AVX 2 instructions")
 
     # virtual dependency
     provides('blas')
@@ -88,7 +86,7 @@ class Openblas(Package):
 
         make_targets = ['libs', 'netlib']
 
-        if '+avx2' not in spec:
+        if spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
 
         # Build shared if variant is set.
