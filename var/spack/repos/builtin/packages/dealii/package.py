@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Dealii(CMakePackage):
@@ -203,12 +204,22 @@ class Dealii(CMakePackage):
 
         # since Netcdf is spread among two, need to do it by hand:
         if '+netcdf' in spec:
+            # take care of lib64 vs lib installed lib locations:
+            if os.path.isdir(spec['netcdf-cxx'].prefix.lib):
+                netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib
+            else:
+                netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib64
+            if os.path.isdir(spec['netcdf'].prefix.lib):
+                netcdf_lib_dir = spec['netcdf'].prefix.lib
+            else:
+                netcdf_lib_dir = spec['netcdf'].prefix.lib64
+
             options.extend([
                 '-DNETCDF_FOUND=true',
                 '-DNETCDF_LIBRARIES=%s;%s' % (
-                    join_path(spec['netcdf-cxx'].prefix.lib,
+                    join_path(netcdfcxx_lib_dir,
                               'libnetcdf_c++.%s' % dso_suffix),
-                    join_path(spec['netcdf'].prefix.lib,
+                    join_path(netcdf_lib_dir,
                               'libnetcdf.%s' % dso_suffix)),
                 '-DNETCDF_INCLUDE_DIRS=%s;%s' % (
                     spec['netcdf-cxx'].prefix.include,
