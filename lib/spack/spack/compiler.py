@@ -117,7 +117,7 @@ class Compiler(object):
                  extra_rpaths=None, **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
-        self.target = str(target)
+        self.target = target
         self.modules = modules
         self.alias = alias
 
@@ -180,6 +180,16 @@ class Compiler(object):
         # If it is not overridden, assume it is not supported and warn the user
         tty.die(
             "The compiler you have chosen does not currently support C++14.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
+
+    # This property should be overridden in the compiler subclass if
+    # C++17 is supported by that compiler
+    @property
+    def cxx17_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die(
+            "The compiler you have chosen does not currently support C++17.",
             "If you think it should, please edit the compiler subclass and",
             "submit a pull request or issue.")
 

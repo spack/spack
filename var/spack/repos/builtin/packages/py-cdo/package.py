@@ -23,32 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Astyle(MakefilePackage):
-    """A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
-    Objective-C, C#, and Java Source Code.
-    """
+class PyCdo(Package):
+    """The cdo package provides an interface to the Climate Data
+    Operators from Python."""
 
-    homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    homepage = "https://pypi.python.org/pypi/cdo"
+    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
 
-    version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
-    version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
+    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
+            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
 
-    parallel = False
+    extends('python')
 
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'build', self.compiler.name)
+    depends_on('cdo')
 
-    def edit(self, spec, prefix):
-        makefile = join_path(self.build_directory(), 'Makefile')
-        filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
-        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
-        if sys.platform == 'darwin':
-            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-scipy', type=nolink)
+    depends_on('py-netcdf', type=nolink)   
 
-    @property
-    def install_targets(self):
-        return ['install', 'prefix={0}'.format(self.prefix)]
+    def install(self, spec, prefix):
+        setup_py('install', '--prefix={0}'.format(prefix))

@@ -314,7 +314,7 @@ class BuildSystemGuesser(object):
         if stage.archive_file.endswith('.zip'):
             try:
                 unzip  = which('unzip')
-                output = unzip('-l', stage.archive_file, output=str)
+                output = unzip('-lq', stage.archive_file, output=str)
             except:
                 output = ''
         else:

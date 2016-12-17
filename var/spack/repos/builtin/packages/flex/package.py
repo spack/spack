@@ -29,9 +29,11 @@ class Flex(AutotoolsPackage):
     """Flex is a tool for generating scanners."""
 
     homepage = "https://github.com/westes/flex"
-    url = "https://github.com/westes/flex/releases/download/v2.6.2/flex-2.6.2.tar.gz"
+    url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
-    version('2.6.2', 'cc6d76c333db7653d5caf423a3335239')
+    # Problematic version:
+    # See issue #2554; https://github.com/westes/flex/issues/113
+    # version('2.6.2', 'cc6d76c333db7653d5caf423a3335239')
     version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
     version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
     version('2.5.39', '5865e76ac69c05699f476515592750d7')

@@ -48,7 +48,7 @@ class Julia(Package):
     # TODO: Split these out into jl-hdf5, jl-mpi packages etc.
     variant("cxx", default=False, description="Prepare for Julia Cxx package")
     variant("hdf5", default=False, description="Install Julia HDF5 package")
-    variant("mpi", default=False, description="Install Julia MPI package")
+    variant("mpi", default=True, description="Install Julia MPI package")
     variant("plot", default=False,
             description="Install Julia plotting packages")
     variant("python", default=False,
