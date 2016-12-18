@@ -29,6 +29,7 @@ import platform
 
 import llnl.util.tty as tty
 import spack.build_environment
+import spack.directives
 from llnl.util.filesystem import working_dir, join_path
 from spack.package import PackageBase
 
@@ -48,6 +49,8 @@ class CMakePackage(PackageBase):
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'CMakePackage'
+
+    spack.directives.depends_on('cmake', type='build')
 
     def build_type(self):
         """Override to provide the correct build_type in case a complex

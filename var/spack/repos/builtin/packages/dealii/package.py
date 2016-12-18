@@ -90,7 +90,6 @@ class Dealii(CMakePackage):
         "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
         when='@8.5.0:+mpi+python')
     depends_on("bzip2")
-    depends_on("cmake", type='build')
     depends_on("lapack")
     depends_on("muparser")
     depends_on("suite-sparse")

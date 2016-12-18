@@ -1762,7 +1762,7 @@ class Spec(object):
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
-                deptypes = pkg._deptypes[dep_name]
+                deptypes = pkg.dependency_types[dep_name]
                 # If pkg_dep is a dependency, merge it.
                 if pkg_dep:
                     changed |= self._merge_dependency(

@@ -255,7 +255,7 @@ class MockPackagesTest(unittest.TestCase):
         # Change dep spec
         # XXX(deptype): handle deptypes.
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
-        pkg._deptypes[spec.name] = set(deptypes)
+        pkg.dependency_types[spec.name] = set(deptypes)
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
