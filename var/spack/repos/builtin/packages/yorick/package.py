@@ -46,19 +46,25 @@ class Yorick(AutotoolsPackage):
     version('f90-plugin', branch='f90-plugin',
             git='https://github.com/trmwzm/yorick.git')
 
-    # Also needs autotools, but should use the system version if available
-    depends_on('libx11')
+    variant('X', default=True, description='Enable X11 support')
+    # TODO: set env NO_XLIB=yes for ~X
+    depends_on('libx11', when='+X')
 
     def install(self, spec, prefix):
         os.environ['FORTRAN_LINKAGE'] = '-Df_linkage'
-        os.environ['CFLAGS'] = '-funroll-loops -march=native -mfpmath=sse -fomit-frame-pointer -Wall'
-        os.environ['CC'] = 'gcc'
-        os.environ['FC'] = 'gfortran'
 
         make("config")
+
+        filter_file(r'^CC.+',
+                    'CC={0}'.format(self.compiler.cc),
+                    'Make.cfg')
+        filter_file(r'^FC.+',
+                    'FC={0}'.format(self.compiler.fc),
+                    'Make.cfg')
         filter_file(r'^COPT_DEFAULT.+',
                     'COPT_DEFAULT=-O3',
                     'Make.cfg')
+
         make()
         make("install")
 
