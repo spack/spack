@@ -2620,9 +2620,9 @@ class Spec(object):
            with indentation."""
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
-        hashes = kwargs.pop('hashes', True)
+        hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', True)
+        install_status = kwargs.pop('install_status', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
