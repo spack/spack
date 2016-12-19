@@ -188,6 +188,10 @@ def parse_version_offset(path, debug=False):
         # e.g. https://github.com/petdance/ack/tarball/1.93_02
         (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
 
+        # Yorick is very special.
+        # e.g. https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz
+        (r'github.com/[^/]+/yorick/archive/y_(\d+(?:_\d+)*)$', path),
+
         # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
         (r'github.com/[^/]+/[^/]+/archive/v?(\w+(?:[.-]\w+)*)$', path),
 
