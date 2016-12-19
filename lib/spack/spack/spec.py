@@ -1395,26 +1395,6 @@ class Spec(object):
                 dependent._add_dependency(concrete, deptypes,
                                           dep_spec.default_deptypes)
 
-    def _replace_node(self, replacement):
-        """Replace this spec with another.
-
-        Connects all dependents of this spec to its replacement, and
-        disconnects this spec from any dependencies it has. New spec
-        will have any dependencies the replacement had, and may need
-        to be normalized.
-
-        """
-        for name, dep_spec in self._dependents.items():
-            dependent = dep_spec.spec
-            deptypes = dep_spec.deptypes
-            del dependent._dependencies[self.name]
-            dependent._add_dependency(
-                replacement, deptypes, dep_spec.default_deptypes)
-
-        for name, dep_spec in self._dependencies.items():
-            del dep_spec.spec.dependents[self.name]
-            del self._dependencies[dep.name]
-
     def _expand_virtual_packages(self):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)

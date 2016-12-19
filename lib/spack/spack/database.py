@@ -605,6 +605,15 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
+    def installed_dependents(self, spec):
+        """List the installed specs that depend on this one."""
+        dependents = set()
+        for spec in self.query(spec):
+            for dependent in spec.traverse(direction='parents', root=False):
+                dependents.add(dependent)
+        return dependents
+
+    @_autospec
     def installed_extensions_for(self, extendee_spec):
         """
         Return the specs of all packages that extend

@@ -856,24 +856,6 @@ class PackageBase(object):
         return os.path.isdir(self.prefix)
 
     @property
-    def installed_dependents(self):
-        """Return a list of the specs of all installed packages that depend
-           on this one.
-
-        TODO: move this method to database.py?
-        """
-        dependents = []
-        for spec in spack.store.db.query():
-            if self.name == spec.name:
-                continue
-            # XXX(deptype): Should build dependencies not count here?
-            # for dep in spec.traverse(deptype=('run')):
-            for dep in spec.traverse(deptype=spack.alldeps):
-                if self.spec == dep:
-                    dependents.append(spec)
-        return dependents
-
-    @property
     def prefix_lock(self):
         """Prefix lock is a byte range lock on the nth byte of a file.
 
@@ -1528,7 +1510,7 @@ class PackageBase(object):
                 raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
-            dependents = self.installed_dependents
+            dependents = spack.store.db.installed_dependents(self.spec)
             if dependents:
                 raise PackageStillNeededError(self.spec, dependents)
 
