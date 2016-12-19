@@ -61,13 +61,14 @@ from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.lang import dedupe
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
-from spack.util.environment import env_flag, filter_system_paths, get_path
+from spack.util.environment import env_flag, is_system_path, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
 from spack.util.log_parse import parse_log_events, make_log_context
@@ -96,6 +97,14 @@ SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+
+
+def listify(str_or_seq):
+    """Ensure str_or_seq is a list if it's not iterable."""
+    if isinstance(str_or_seq, (list, tuple)):
+        return str_or_seq
+    else:
+        return [str_or_seq]
 
 
 class MakeExecutable(Executable):
@@ -189,60 +198,60 @@ def set_build_environment_variables(pkg, env, dirty):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
-    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
-    build_link_deps = build_deps | link_deps
+    build_deps      = pkg.spec.dependencies(deptype=('build', 'test'))
+    link_deps       = list(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = dedupe(build_deps + link_deps)
     rpath_deps      = get_rpath_deps(pkg)
 
-    build_prefixes      = [dep.prefix for dep in build_deps]
-    link_prefixes       = [dep.prefix for dep in link_deps]
-    build_link_prefixes = [dep.prefix for dep in build_link_deps]
-    rpath_prefixes      = [dep.prefix for dep in rpath_deps]
-
     # add run-time dependencies of direct build-time dependencies:
-    for build_dep in build_deps:
+    for build_dep in list(build_deps):
         for run_dep in build_dep.traverse(deptype='run'):
-            build_prefixes.append(run_dep.prefix)
+            build_deps.append(run_dep)
+    build_deps = dedupe(build_deps)
 
     # Filter out system paths: ['/', '/usr', '/usr/local']
     # These paths can be introduced into the build when an external package
     # is added as a dependency. The problem with these paths is that they often
     # contain hundreds of other packages installed in the same directory.
     # If these paths come first, they can overshadow Spack installations.
-    build_prefixes      = filter_system_paths(build_prefixes)
-    link_prefixes       = filter_system_paths(link_prefixes)
-    build_link_prefixes = filter_system_paths(build_link_prefixes)
-    rpath_prefixes      = filter_system_paths(rpath_prefixes)
+    def filter_system_deps(deps):
+        return [d for d in deps if not is_system_path(d.prefix)]
+    build_deps      = filter_system_deps(build_deps)
+    link_deps       = filter_system_deps(link_deps)
+    build_link_deps = filter_system_deps(build_link_deps)
+    rpath_deps      = filter_system_deps(rpath_deps)
 
     # These variables control compiler wrapper behavior
     # Include directories go into SPACK_INCLUDE_PATHS
-    dep_include_paths = [os.path.join(p, "include")
-                         for p in build_link_prefixes]
+    dep_include_paths = [os.path.join(d.prefix, s) for d in build_deps
+                         for s in listify(d.package.include_paths)]
     dep_include_paths = filter_nonexistant_paths(dep_include_paths)
     env.set_path(SPACK_INCLUDE_PATHS, dep_include_paths)
 
     # rpath directories go into SPACK_RPATHS.
     # These come from dependencies, compilers and the package prefix.
-    lib_suffixes = ['lib', 'lib64']
-    rpaths = [os.path.join(p, s) for p in rpath_prefixes
-              for s in lib_suffixes]
+    rpaths = [os.path.join(d.prefix, s) for d in rpath_deps
+              for s in listify(d.package.lib_paths)]
     if pkg.compiler.extra_rpaths:
         rpaths.extend(pkg.compiler.extra_rpaths)
     rpaths = filter_nonexistant_paths(rpaths)
 
     # root is not installed yet, so do this AFTER filtering
-    rpaths.extend([os.path.join(pkg.prefix, s) for s in lib_suffixes])
+    rpaths.extend([os.path.join(pkg.prefix, s)
+                   for s in listify(pkg.lib_paths)])
     env.set_path(SPACK_RPATHS, rpaths)
 
     # Link-time library directories go into SPACK_LIB_PATHS
     # These are always transitive, but RPATHs may not be.
-    dep_lib_paths = [os.path.join(p, s) for p in link_prefixes
-                     for s in lib_suffixes]
+    dep_lib_paths = [os.path.join(d.prefix, s) for d in link_deps
+                     for s in listify(d.package.lib_paths)]
     dep_lib_paths = filter_nonexistant_paths(dep_lib_paths)
     env.set_path(SPACK_LIB_PATHS, dep_lib_paths)
 
     # Add dependencies to CMAKE_PREFIX_PATH
-    env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
+    def prefixes(dep_list):
+        return [d.prefix for d in dep_list]
+    env.set_path('CMAKE_PREFIX_PATH', prefixes(build_link_deps))
 
     # Install prefix
     env.set(SPACK_PREFIX, pkg.prefix)
@@ -285,7 +294,7 @@ def set_build_environment_variables(pkg, env, dirty):
         env.set('SPACK_ENV_TO_SET', env_variables)
 
     # Add bin directories from dependencies to the PATH for the build.
-    for prefix in build_prefixes:
+    for prefix in prefixes(build_deps):
         for dirname in ['bin', 'bin64']:
             bin_dir = os.path.join(prefix, dirname)
             if os.path.isdir(bin_dir):
@@ -320,7 +329,7 @@ def set_build_environment_variables(pkg, env, dirty):
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for prefix in build_link_prefixes:
+    for prefix in prefixes(build_link_deps):
         for directory in ('lib', 'lib64', 'share'):
             pcdir = join_path(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):

@@ -555,6 +555,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
+    #: Prefix-relative paths where this package installs include files
+    include_paths = ['include']
+
+    #: Prefix-relative paths where this package installs library files
+    lib_paths = ['lib', 'lib64']
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
