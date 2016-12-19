@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Gawk(AutotoolsPackage):
     """If you are like many computer users, you would frequently like to make
        changes in various text files wherever certain patterns appear, or
