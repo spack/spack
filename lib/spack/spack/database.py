@@ -664,6 +664,18 @@ class Database(object):
 
         """
         with self.read_transaction():
+            # Just look up concrete specs with hashes; no fancy search.
+            if (isinstance(query_spec, spack.spec.Spec) and
+                query_spec._concrete):
+
+                hash_key = query_spec.dag_hash()
+                if hash_key in self._data:
+                    return [self._data[hash_key].spec]
+                else:
+                    return []
+
+            # Abstract specs require more work -- currently we test
+            # against everything.
             results = []
             for key, rec in self._data.items():
                 if installed is not any and rec.installed != installed:
