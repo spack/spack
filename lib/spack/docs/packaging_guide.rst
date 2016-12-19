@@ -1769,6 +1769,56 @@ Python's ``setup_dependent_environment`` method also sets up some
 other variables, creates a directory, and sets up the ``PYTHONPATH``
 so that dependent packages can find their dependencies at build time.
 
+.. _dependency-searchpaths:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Custom ``include_paths`` and ``lib_paths``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Many packages install library and include files into subdirectories under
+Spack's installation prefix.  For example, the libelf package installs
+its include files into the ``include/libelf`` directory instead of the
+more common ``include``.  This can break dependent packages that make
+assumptions about how their dependency's files are laid out.
+
+Spack allows packages to describe installation subdirectories using the
+``include_paths`` and ``lib_paths`` properties.  Set ``include_paths`` to
+a string or a list strings representing prefix-relative paths where
+include files are installed.  Similarly, the ``lib_paths`` property is a
+list of prefix-relative paths where library files are installed.
+
+``include_paths`` and ``lib_paths`` are only needed for non-standard
+install locations.  Spack defaults ``include_paths`` to ``'include'``,
+and ``lib_paths`` to ``['lib', 'lib64']``.  These should be correct for
+most packages.
+
+For example, this example package uses ``include_paths`` to specify that
+it installs include files to the ``h`` subdirectory, and libraries to the
+``modules`` and ``lib64`` subdirectories:
+
+.. code-block:: python
+
+   class Example(Package):
+       ...
+       include_paths = ['h']
+       lib_paths = ['modules', 'lib64']
+
+
+When you set ``include_paths`` and ``lib_paths`` this way, it changes the
+behavior of Spack's compiler wrappers.  The compiler wrappers include
+``-I$prefix/$path`` arguemnts for each path in ``include_paths``.
+Similarly, they add ``-L$prefix/$path``, and ``-Wl,-rpath=$prefix/$path``
+arguments for each path in ``lib_paths``.  The example package above
+would instead have ``-I$prefix/h'', ''-L$prefix/modules'',
+''-L$prefix/lib64'', ''-Wl,-rpath=$prefix/modules``, and
+``-Wl,-rpath=$prefix/lib64`` arguments added to its compile line.
+
+Note that for CMake packages, ``RPATHs`` are handled slightly differently
+in that they are added to ``std_cmake_args`` using CMake's ``RPATH``
+arguments.  This is because CMake completely rewrites the ``RPATH``
+fields of binaries before they are installed, so we have to use its
+arguments to handle this.
+
 .. _packaging_conflicts:
 
 ---------
