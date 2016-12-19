@@ -331,3 +331,12 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'xml', '3.98-1.4',
             'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz')
+
+    def test_nco_version(self):
+        self.check(
+            'nco', '4.6.2-beta03',
+            'https://github.com/nco/nco/archive/4.6.2-beta03.tar.gz')
+
+        self.check(
+            'nco', '4.6.3-alpha04',
+            'https://github.com/nco/nco/archive/4.6.3-alpha04.tar.gz')
