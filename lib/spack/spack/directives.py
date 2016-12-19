@@ -55,6 +55,7 @@ import spack
 import spack.error
 import spack.spec
 import spack.url
+import llnl.util.lang
 from llnl.util.filesystem import join_path
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
@@ -78,19 +79,27 @@ class DirectiveMetaMixin(type):
         global _directives_to_be_executed
 
         # Initialize the attribute containing the list of directives
-        # to be executed
+        # to be executed. Here we go reversed because we want to execute
+        # commands:
+        # 1. in the order they were defined
+        # 2. following the MRO
         attr_dict['_directives_to_be_executed'] = []
-        for base in bases:
+        for base in reversed(bases):
             try:
                 directive_from_base = base._directives_to_be_executed
                 attr_dict['_directives_to_be_executed'].extend(
                     directive_from_base
                 )
-                break
             except AttributeError:
                 # The base class didn't have the required attribute.
                 # Continue searching
                 pass
+        # De-duplicates directives from base classes
+        attr_dict['_directives_to_be_executed'] = [
+            x for x in llnl.util.lang.dedupe(
+                attr_dict['_directives_to_be_executed']
+            )
+        ]
 
         # Move things to be executed from module scope (where they
         # are collected first) to class scope
@@ -343,22 +352,26 @@ def resource(**kwargs):
         when = kwargs.get('when', pkg.name)
         destination = kwargs.get('destination', "")
         placement = kwargs.get('placement', None)
+
         # Check if the path is relative
         if os.path.isabs(destination):
             message = 'The destination keyword of a resource directive '
             'can\'t be an absolute path.\n'
             message += "\tdestination : '{dest}\n'".format(dest=destination)
             raise RuntimeError(message)
+
         # Check if the path falls within the main package stage area
         test_path = 'stage_folder_root'
         normalized_destination = os.path.normpath(
             join_path(test_path, destination)
         )  # Normalized absolute path
+
         if test_path not in normalized_destination:
             message = "The destination folder of a resource must fall "
             "within the main package stage directory.\n"
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
+
         when_spec = parse_anonymous_spec(when, pkg.name)
         resources = pkg.resources.setdefault(when_spec, [])
         name = kwargs.get('name')
