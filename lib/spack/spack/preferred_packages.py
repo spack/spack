@@ -154,10 +154,17 @@ class PreferredPackages(object):
 
     def spec_preferred_variants(self, pkgname):
         """Return a VariantMap of preferred variants and their values"""
-        variants = self.preferred.get(pkgname, {}).get('variants', '')
+        for pkg in (pkgname, 'all'):
+            variants = self.preferred.get(pkg, {}).get('variants', '')
+            if variants:
+                break
         if not isinstance(variants, basestring):
             variants = " ".join(variants)
-        return spack.spec.Spec("%s %s" % (pkgname, variants)).variants
+        pkg = spack.repo.get(pkgname)
+        spec = spack.spec.Spec("%s %s" % (pkgname, variants))
+        # Only return variants that are actually supported by the package
+        return dict((name, variant) for name, variant in spec.variants.items()
+                    if name in pkg.variants)
 
     def version_compare(self, pkgname, a, b):
         """Return less-than-0, 0, or greater than 0 if version a of pkgname is
