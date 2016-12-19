@@ -340,3 +340,8 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'nco', '4.6.3-alpha04',
             'https://github.com/nco/nco/archive/4.6.3-alpha04.tar.gz')
+
+    def test_yorick_version(self):
+        self.check(
+            'yorick', '2_2_04',
+            'https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz')
