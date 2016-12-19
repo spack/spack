@@ -40,8 +40,11 @@ import spack.stage
         ('foobar', 'unknown')
     ]
 )
-def url_and_system(request, tmpdir):
-    """Return a url along with the correct build-system guess"""
+def url_and_build_system(request, tmpdir):
+    """Sets up the resources to be pulled by the stage with
+    the appropriate file name and returns their url along with
+    the correct build-system guess
+    """
     tar = spack.util.executable.which('tar')
     orig_dir = tmpdir.chdir()
     filename, system = request.param
@@ -52,10 +55,10 @@ def url_and_system(request, tmpdir):
     orig_dir.chdir()
 
 
-def test_build_systems(url_and_system):
-    url, system = url_and_system
+def test_build_systems(url_and_build_system):
+    url, build_system = url_and_build_system
     with spack.stage.Stage(url) as stage:
         stage.fetch()
         guesser = spack.cmd.create.BuildSystemGuesser()
         guesser(stage, url)
-        assert system == guesser.build_system
+        assert build_system == guesser.build_system
