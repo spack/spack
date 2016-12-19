@@ -39,6 +39,8 @@ class Libelf(AutotoolsPackage):
 
     provides('elf@0')
 
+    include_paths = ['include/libelf', 'include']
+
     def configure_args(self):
         args = ["--enable-shared",
                 "--disable-dependency-tracking",
