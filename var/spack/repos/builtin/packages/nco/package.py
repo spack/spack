@@ -25,13 +25,14 @@
 from spack import *
 
 
-class Nco(Package):
+class Nco(AutotoolsPackage):
     """The NCO toolkit manipulates and analyzes data stored in
     netCDF-accessible formats"""
 
     homepage = "https://sourceforge.net/projects/nco"
-    url      = "https://github.com/nco/nco/archive/4.5.5.tar.gz"
+    url      = "https://github.com/nco/nco/archive/4.6.2.tar.gz"
 
+    version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
 
@@ -45,17 +46,18 @@ class Nco(Package):
     depends_on('udunits2')         # allows dimensional unit transformations
     # depends_on('opendap')        # enables network transparency
 
-    def install(self, spec, prefix):
+    @AutotoolsPackage.precondition('configure')
+    def validate(self):
+        """Ensures that dependents were built with the right variants."""
         # Workaround until variant forwarding works properly
+        spec = self.spec
         if '+mpi' in spec and spec.satisfies('^netcdf~mpi'):
             raise RuntimeError('Invalid spec. Package netcdf requires '
                                'netcdf+mpi, but spec asked for netcdf~mpi.')
 
-        opts = [
-            '--prefix=%s' % prefix,
+    def configure_args(self):
+        return [
             '--disable-openmp',  # TODO: Make this a variant
             '--disable-dap',     # TODO: Make this a variant
-            '--disable-esmf']
-        configure(*opts)
-        make()
-        make("install")
+            '--disable-esmf'
+        ]
