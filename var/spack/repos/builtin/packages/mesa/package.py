@@ -128,6 +128,18 @@ class Mesa(AutotoolsPackage):
             args.append('--with-llvm-prefix='+self.spec['llvm'].prefix)
         return args
 
+    def setup_environment(self, spack_env, run_env):
+        if '+gallium' in self.spec:
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'lib'))
+            run_env.set('GALLIUM_DRIVER', 'swr')
+
+    def setup_dependent_environment(self, spack_env, run_env, dspec):
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'lib'))
+            run_env.set('GALLIUM_DRIVER', 'swr')
+
+
       
 #        options = ['-prefix=%s' % prefix]
 
