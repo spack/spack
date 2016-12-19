@@ -818,7 +818,7 @@ class Spec(object):
         dep = self._dependencies.get(name)
         if dep is not None:
             return dep
-        raise InvalidDependencyException(
+        raise InvalidDependencyError(
             self.name + " does not depend on " + comma_or(name))
 
     def _find_deps(self, where, deptype):
