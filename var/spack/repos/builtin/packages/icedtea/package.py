@@ -1,5 +1,6 @@
 from spack import *
 
+
 class Icedtea(Package):
     """The IcedTea project provides a harness to build the source code from
        http://openjdk.java.net using Free Software build tools and adds a number
