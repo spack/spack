@@ -2043,6 +2043,10 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        # The only way to satisfy a concrete spec is to match its hash exactly.
+        if other._concrete and other._hash:
+            return self._hash == other._hash
+
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
             pkg = spack.repo.get(self.fullname)
@@ -2113,8 +2117,9 @@ class Spec(object):
             if other._dependencies and not self._dependencies:
                 return False
 
-            if not all(dep in self._dependencies
-                       for dep in other._dependencies):
+            alldeps = set(d.name for d in self.traverse(root=False))
+            if not all(dep.name in alldeps
+                       for dep in other.traverse(root=False)):
                 return False
 
         elif not self._dependencies or not other._dependencies:
