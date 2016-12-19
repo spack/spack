@@ -38,22 +38,11 @@ class Nco(AutotoolsPackage):
 
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
-    variant('mpi', default=True)
-
     depends_on('netcdf')
     depends_on('antlr@2.7.7+cxx')  # required for ncap2
     depends_on('gsl')              # desirable for ncap2
     depends_on('udunits2')         # allows dimensional unit transformations
     # depends_on('opendap')        # enables network transparency
-
-    @AutotoolsPackage.precondition('configure')
-    def validate(self):
-        """Ensures that dependents were built with the right variants."""
-        # Workaround until variant forwarding works properly
-        spec = self.spec
-        if '+mpi' in spec and spec.satisfies('^netcdf~mpi'):
-            raise RuntimeError('Invalid spec. Package netcdf requires '
-                               'netcdf+mpi, but spec asked for netcdf~mpi.')
 
     def configure_args(self):
         return [
