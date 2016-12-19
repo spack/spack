@@ -1,15 +1,42 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
-class Gbenchmark(Package):
+
+class Gbenchmark(CMakePackage):
     """A microbenchmark support library"""
 
     homepage = "https://github.com/google/benchmark"
-    url      = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
 
     version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae',
             url='https://github.com/google/benchmark/archive/v1.1.0.tar.gz')
     version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
-    variant("debug", default=False, description="Installs with debug options")
+
+    def build_type(self):
+        return "Release"
 
     def patch(self):
         filter_file(
@@ -23,21 +50,11 @@ class Gbenchmark(Package):
             'CMakeLists.txt'
         )
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
+    def cmake_args(self, spec, prefix):
         if self.compiler.name == 'intel':
-            options.append("-DCMAKE_CXX_FLAGS='-no-ansi-alias -fno-strict-aliasing'")
-            options.append("-DCMAKE_C_FLAGS='-no-ansi-alias -fno-strict-aliasing'")
-            options.append("-DBENCHMARK_ENABLE_TESTING=OFF")
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-        else:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
-
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
-            make()
-            make("install")
+            return [
+                "-DCMAKE_CXX_FLAGS='-no-ansi-alias -fno-strict-aliasing'",
+                "-DCMAKE_C_FLAGS='-no-ansi-alias -fno-strict-aliasing'",
+                "-DBENCHMARK_ENABLE_TESTING=OFF"
+            ]
+        return []
