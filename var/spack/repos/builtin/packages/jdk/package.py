@@ -41,7 +41,6 @@ class Jdk(Package):
     """
     homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
-
     version('8u66', '88f31f3d642c3287134297b8c10e61bf',
             url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz",
             curl_options=curl_options)
