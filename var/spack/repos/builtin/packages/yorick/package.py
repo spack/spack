@@ -28,18 +28,18 @@ import shutil
 import glob
 
 
-class Yorick(AutotoolsPackage):
-    """ Yorick is an interpreted programming language for scientific simulations
-        or calculations, postprocessing or steering large simulation codes,
-        interactive scientific graphics, and reading, writing, or translating 
-        files of numbers. Yorick includes an interactive graphics package, and a
-        binary file package capable of translating to and from the raw numeric
-        formats of all modern computers. Yorick is written in ANSI C and runs on
-        most operating systems (*nix systems, MacOS X, Windows).
+class Yorick(Package):
+    """Yorick is an interpreted programming language for scientific simulations
+       or calculations, postprocessing or steering large simulation codes,
+       interactive scientific graphics, and reading, writing, or translating 
+       files of numbers. Yorick includes an interactive graphics package, and a
+       binary file package capable of translating to and from the raw numeric
+       formats of all modern computers. Yorick is written in ANSI C and runs on
+       most operating systems (*nix systems, MacOS X, Windows).
     """
 
     homepage = "http://dhmunro.github.io/yorick-doc/"
-    url = "http://github.com/dhmunro/yorick/tarball/2679aa117fcd4895dd32c8071523ffd5bd4cf3af"
+    url =  "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
 
     version('2.2.04', md5='1b5b0da6ad81b2d9dba64d991ec17939')
     version('master', branch='master',
@@ -47,9 +47,8 @@ class Yorick(AutotoolsPackage):
     version('f90-plugin', branch='f90-plugin',
             git='https://github.com/trmwzm/yorick.git')
 
-    variant('X', default=True, description='Enable X11 support')
+    variant('X', default=False, description='Enable X11 support')
 
-    # TODO: set env NO_XLIB=yes for ~X
     depends_on('libx11', when='+X')
 
     def install(self, spec, prefix):
