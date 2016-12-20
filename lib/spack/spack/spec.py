@@ -2595,17 +2595,22 @@ class Spec(object):
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
         prefix = kwargs.pop('prefix', None)
+        show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', ('build', 'link'))
         check_kwargs(kwargs, self.tree)
 
         out = ""
-        for d, node in self.traverse(
+        for d, dep_spec in self.traverse_with_deptype(
                 order='pre', cover=cover, depth=True, deptypes=deptypes):
+            node = dep_spec.spec
+
             if prefix is not None:
                 out += prefix(node)
             out += " " * indent
+
             if depth:
                 out += "%-4d" % d
+
             if install_status:
                 status = node._install_status()
                 if status is None:
@@ -2617,6 +2622,16 @@ class Spec(object):
 
             if hashes:
                 out += colorize('@K{%s}  ', color=color) % node.dag_hash(hlen)
+
+            if show_types:
+                out += '['
+                if dep_spec.deptypes:
+                    for t in alldeps:
+                        out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
+                else:
+                    out += ' ' * len(alldeps)
+                out += ']  '
+
             out += ("    " * d)
             if d > 0:
                 out += "^"
