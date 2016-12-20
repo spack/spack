@@ -32,7 +32,7 @@ class Tinyxml(Package):
     homepage = "http://grinninglizard.com/tinyxml/"
     url = "https://sourceforge.net/projects/tinyxml/files/tinyxml/2.6.2/tinyxml_2_6_2.tar.gz"
 
-    version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764', url=url)
+    version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764')
 
     def patch(self):
         copyfile(join_path(os.path.dirname(__file__),
