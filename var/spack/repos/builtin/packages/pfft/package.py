@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Pfft(AutotoolsPackage):
+class Pfft(Package):
     """PFFT is a software library for computing massively parallel,
        fast Fourier transformations on distributed memory architectures.
        PFFT can be understood as a generalization of FFTW-MPI to
