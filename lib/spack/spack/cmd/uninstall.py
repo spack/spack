@@ -124,7 +124,8 @@ def installed_dependents(specs):
     """
     dependents = {}
     for item in specs:
-        lst = [x for x in item.package.installed_dependents if x not in specs]
+        lst = [x for x in spack.store.db.installed_dependents(item)
+               if x not in specs]
         if lst:
             lst = list(set(lst))
             dependents[item] = lst
@@ -152,7 +153,7 @@ def do_uninstall(specs, force):
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order
     def num_installed_deps(pkg):
-        return len(pkg.installed_dependents)
+        return len(spack.store.db.installed_dependents(pkg.spec))
 
     packages.sort(key=num_installed_deps)
     for item in packages:
@@ -163,11 +164,14 @@ def get_uninstall_list(args):
     specs = [any]
     if args.packages:
         specs = spack.cmd.parse_specs(args.packages)
+
     # Gets the list of installed specs that match the ones give via cli
     # takes care of '-a' is given in the cli
     uninstall_list = concretize_specs(specs, args.all, args.force)
+
     # Takes care of '-d'
     dependent_list = installed_dependents(uninstall_list)
+
     # Process dependent_list and update uninstall_list
     has_error = False
     if dependent_list and not args.dependents and not args.force:

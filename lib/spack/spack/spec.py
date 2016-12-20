@@ -819,7 +819,7 @@ class Spec(object):
         dep = self._dependencies.get(name)
         if dep is not None:
             return dep
-        raise InvalidDependencyException(
+        raise InvalidDependencyError(
             self.name + " does not depend on " + comma_or(name))
 
     def _find_deps(self, where, deptype):
@@ -1395,26 +1395,6 @@ class Spec(object):
             if concrete.name not in dependent._dependencies:
                 dependent._add_dependency(concrete, deptypes,
                                           dep_spec.default_deptypes)
-
-    def _replace_node(self, replacement):
-        """Replace this spec with another.
-
-        Connects all dependents of this spec to its replacement, and
-        disconnects this spec from any dependencies it has. New spec
-        will have any dependencies the replacement had, and may need
-        to be normalized.
-
-        """
-        for name, dep_spec in self._dependents.items():
-            dependent = dep_spec.spec
-            deptypes = dep_spec.deptypes
-            del dependent._dependencies[self.name]
-            dependent._add_dependency(
-                replacement, deptypes, dep_spec.default_deptypes)
-
-        for name, dep_spec in self._dependencies.items():
-            del dep_spec.spec.dependents[self.name]
-            del self._dependencies[dep.name]
 
     def _expand_virtual_packages(self, skip_build):
         """Find virtual packages in this spec, replace them with providers,
@@ -2073,6 +2053,10 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        # The only way to satisfy a concrete spec is to match its hash exactly.
+        if other._concrete:
+            return self._concrete and self.dag_hash() == other.dag_hash()
+
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
             pkg = spack.repo.get(self.fullname)
@@ -2143,8 +2127,9 @@ class Spec(object):
             if other._dependencies and not self._dependencies:
                 return False
 
-            if not all(dep in self._dependencies
-                       for dep in other._dependencies):
+            alldeps = set(d.name for d in self.traverse(root=False))
+            if not all(dep.name in alldeps
+                       for dep in other.traverse(root=False)):
                 return False
 
         elif not self._dependencies or not other._dependencies:
@@ -2651,9 +2636,9 @@ class Spec(object):
            with indentation."""
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
-        hashes = kwargs.pop('hashes', True)
+        hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', True)
+        install_status = kwargs.pop('install_status', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')

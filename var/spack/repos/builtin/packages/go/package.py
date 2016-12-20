@@ -104,8 +104,14 @@ class Go(Package):
                 shutil.copy2(f, os.path.join(prefix, f))
 
     def setup_environment(self, spack_env, run_env):
-        spack_env.set('GOROOT_FINAL', self.spec.prefix)
-        spack_env.set('GOROOT_BOOTSTRAP', self.spec['go-bootstrap'].prefix)
+        try:
+            spack_env.set('GOROOT_FINAL', self.spec.prefix)
+            spack_env.set('GOROOT_BOOTSTRAP', self.spec['go-bootstrap'].prefix)
+        except KeyError:
+            # Needed because we try to get a build-only
+            # dependency, and this may fail during module 
+            # file creation
+            pass
 
     def setup_dependent_package(self, module, ext_spec):
         """Called before go modules' install() methods.

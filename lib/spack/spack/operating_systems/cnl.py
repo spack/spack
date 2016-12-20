@@ -58,7 +58,7 @@ class Cnl(OperatingSystem):
                 v = version
                 comp = cmp_cls(
                     spack.spec.CompilerSpec(name + '@' + v),
-                    self, any,
+                    self, "any",
                     ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
 
                 compilers.append(comp)
