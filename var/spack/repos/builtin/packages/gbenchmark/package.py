@@ -31,8 +31,7 @@ class Gbenchmark(CMakePackage):
     homepage = "https://github.com/google/benchmark"
     url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae',
-            url='https://github.com/google/benchmark/archive/v1.1.0.tar.gz')
+    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
     version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
 
     def build_type(self):
