@@ -460,8 +460,7 @@ class SpecDagTest(MockPackagesTest):
         dag = Spec('dtuse')
         dag.normalize()
 
-        names = ['dtuse', 'dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
-                 'dtlink1', 'dtlink3', 'dtlink4']
+        names = ['dtuse', 'dttop', 'dtlink1', 'dtlink3', 'dtlink4']
 
         traversal = dag.traverse(deptype=('build', 'link'))
         self.assertEqual([x.name for x in traversal], names)
@@ -470,8 +469,7 @@ class SpecDagTest(MockPackagesTest):
         dag = Spec('dttop')
         dag.normalize()
 
-        names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
-                 'dtlink1', 'dtlink3', 'dtlink4']
+        names = ['dttop', 'dtlink1', 'dtlink3', 'dtlink4']
 
         traversal = dag.traverse(deptype=('build', 'link'))
         self.assertEqual([x.name for x in traversal], names)
@@ -480,9 +478,8 @@ class SpecDagTest(MockPackagesTest):
         dag = Spec('dttop')
         dag.normalize()
 
-        names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2', 'dtrun2',
-                 'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
-                 'dtrun3', 'dtbuild3']
+        names = ['dttop', 'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
+                 'dtrun3']
 
         traversal = dag.traverse(deptype=spack.alldeps)
         self.assertEqual([x.name for x in traversal], names)

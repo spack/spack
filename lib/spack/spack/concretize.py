@@ -256,7 +256,7 @@ class DefaultConcretizer(object):
         spec_changed = False
 
         if spec.architecture is None:
-            spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec.architecture = root_arch.copy() if root_arch else sys_arch
             spec_changed = True
 
         default_archs = [root_arch, sys_arch]
@@ -325,11 +325,13 @@ class DefaultConcretizer(object):
 
         # Find the another spec that has a compiler, or the root if none do
         other_spec = spec if spec.compiler else find_spec(
-            spec, lambda x: x.compiler)
+            spec, lambda x: x.compiler and x.architecture == spec.architecture)
 
         if not other_spec:
             other_spec = spec.root
-        other_compiler = other_spec.compiler
+            other_compiler = None
+        else:
+            other_compiler = other_spec.compiler
         assert(other_spec)
 
         # Check if the compiler is already fully specified

@@ -1520,7 +1520,20 @@ class Spec(object):
                     build_only_deps.add(dep_name)
                 if build_only_deps:
                     build_parent = Spec(spec.name)
-                    build_parent.versions = spec.versions
+                    build_parent.versions = spec.versions.copy()
+                    build_parent.variants = spec.variants.copy()
+                    build_parent.variants.spec = build_parent
+                    frontend_arch = ArchSpec(
+                        spack.architecture.frontend_sys_type())
+                    if (not frontend_arch.concrete or
+                            spec.architecture == frontend_arch):
+                        build_parent.architecture = spec.architecture.copy()
+                        build_parent.compiler = spec.compiler.copy()
+                        build_parent.compiler_flags = (
+                            spec.compiler_flags.copy())
+                    else:
+                        build_parent.architecture = frontend_arch
+
                     build_parent.concretize(
                         skip_build=False,
                         constrain_deps={spec.name: build_only_deps})
