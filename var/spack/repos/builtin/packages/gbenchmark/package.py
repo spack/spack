@@ -52,8 +52,8 @@ class Gbenchmark(CMakePackage):
     def cmake_args(self, spec, prefix):
         if self.compiler.name == 'intel':
             return [
-                "-DCMAKE_CXX_FLAGS='-no-ansi-alias -fno-strict-aliasing'",
-                "-DCMAKE_C_FLAGS='-no-ansi-alias -fno-strict-aliasing'",
+                "-DCMAKE_CXX_FLAGS=-no-ansi-alias -fno-strict-aliasing",
+                "-DCMAKE_C_FLAGS=-no-ansi-alias -fno-strict-aliasing",
                 "-DBENCHMARK_ENABLE_TESTING=OFF"
             ]
         return []
