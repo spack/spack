@@ -28,8 +28,10 @@ from spack import *
 class PyCython(Package):
     """The Cython compiler for writing C extensions for the Python language."""
     homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
+    url      = "https://pypi.io/packages/source/c/cython/Cython-0.25.2.tar.gz"
 
+    version('0.25.2', '642c81285e1bb833b14ab3f439964086')
+    
     version('0.23.5', '66b62989a67c55af016c916da36e7514')
     version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
 
