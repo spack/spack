@@ -40,6 +40,7 @@ class Jdk(Package):
         3. Run `spack install`.
     """
     homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
+    url = "file://%s/jdk-8u66-linux-x64.tar.gz" % os.getcwd()
 
     version('8u66', '88f31f3d642c3287134297b8c10e61bf',
             url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz")
