@@ -29,8 +29,8 @@ class Pnfft(Package):
     """PNFFT is a parallel software library for the calculation of
        three-dimensional nonequispaced FFTs."""
 
-    homepage = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en#pnfft"
-    url      = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software/pnfft-1.0.7-alpha.tar.gz"
+    homepage = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en"
+    url = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software/pnfft-1.0.7-alpha.tar.gz"
 
     version('1.0.7-alpha', '5caa7f214eed99de2281043ca2367e9e')
 
