@@ -23,32 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Astyle(MakefilePackage):
-    """A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
-    Objective-C, C#, and Java Source Code.
+class Patch(AutotoolsPackage):
+    """Patch takes a patch file containing a difference listing produced by
+    the diff program and applies those differences to one or more
+    original files, producing patched versions.
     """
 
-    homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    homepage = "http://savannah.gnu.org/projects/patch/"
+    url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.5.tar.xz"
 
-    version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
-    version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
-
-    parallel = False
-
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'build', self.compiler.name)
-
-    def edit(self, spec, prefix):
-        makefile = join_path(self.build_directory(), 'Makefile')
-        filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
-        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
-        if sys.platform == 'darwin':
-            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
-
-    @property
-    def install_targets(self):
-        return ['install', 'prefix={0}'.format(self.prefix)]
+    version('2.7.5', 'e3da7940431633fb65a01b91d3b7a27a')

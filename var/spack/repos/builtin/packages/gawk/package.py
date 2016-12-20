@@ -23,32 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Astyle(MakefilePackage):
-    """A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
-    Objective-C, C#, and Java Source Code.
+class Gawk(AutotoolsPackage):
+    """If you are like many computer users, you would frequently like to make
+       changes in various text files wherever certain patterns appear, or
+       extract data from parts of certain lines while discarding the
+       rest. To write a program to do this in a language such as C or
+       Pascal is a time-consuming inconvenience that may take many lines
+       of code. The job is easy with awk, especially the GNU
+       implementation: gawk.
+
+       The awk utility interprets a special-purpose programming language
+       that makes it possible to handle simple data-reformatting jobs
+       with just a few lines of code.
     """
 
-    homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    homepage = "https://www.gnu.org/software/gawk/"
+    url      = "http://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz"
 
-    version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
-    version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
-
-    parallel = False
-
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'build', self.compiler.name)
-
-    def edit(self, spec, prefix):
-        makefile = join_path(self.build_directory(), 'Makefile')
-        filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
-        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
-        if sys.platform == 'darwin':
-            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
-
-    @property
-    def install_targets(self):
-        return ['install', 'prefix={0}'.format(self.prefix)]
+    version('4.1.4', '4e7dbc81163e60fd4f0b52496e7542c9')

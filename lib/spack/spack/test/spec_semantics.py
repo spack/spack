@@ -312,6 +312,21 @@ class SpecSematicsTest(MockPackagesTest):
             Spec('netlib-lapack ^netlib-blas').satisfies(
                 'netlib-lapack ^netlib-blas'))
 
+    def test_satisfies_same_spec_with_different_hash(self):
+        """Ensure that concrete specs are matched *exactly* by hash."""
+        s1 = Spec('mpileaks').concretized()
+        s2 = s1.copy()
+
+        self.assertTrue(s1.satisfies(s2))
+        self.assertTrue(s2.satisfies(s1))
+
+        # Simulate specs that were installed before and after a change to
+        # Spack's hashing algorithm.  This just reverses s2's hash.
+        s2._hash = s1.dag_hash()[-1::-1]
+
+        self.assertFalse(s1.satisfies(s2))
+        self.assertFalse(s2.satisfies(s1))
+
     # ========================================================================
     # Indexing specs
     # ========================================================================

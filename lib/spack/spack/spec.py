@@ -818,7 +818,7 @@ class Spec(object):
         dep = self._dependencies.get(name)
         if dep is not None:
             return dep
-        raise InvalidDependencyException(
+        raise InvalidDependencyError(
             self.name + " does not depend on " + comma_or(name))
 
     def _find_deps(self, where, deptype):
@@ -1102,7 +1102,7 @@ class Spec(object):
 
             successors = deps
             if direction == 'parents':
-                successors = self.dependents_dict(deptype)
+                successors = self.dependents_dict()  # TODO: deptype?
 
             visited.add(key)
             for name in sorted(successors):
@@ -1323,23 +1323,6 @@ class Spec(object):
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
-    def build_dep(self):
-        # If this spec is the root, it will automatically be included in
-        # traverse
-        return not (self.root in
-                    self.traverse(
-                        deptype=('link', 'run'), direction='parents'))
-
-    def link_root(self):
-        parents = list(self.traverse(deptype=('link',), direction='parents',
-                       order='pre'))
-        return parents[-1]
-
-    def disjoint_build_tree(self):
-        link_root = self.link_root()
-        build_subtree = list(link_root.traverse(direction='children'))
-        return all(x.build_dep() for x in build_subtree)
-
     def _concretize_helper(self, presets=None, visited=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
@@ -1358,8 +1341,8 @@ class Spec(object):
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
-            dep = self._dependencies[name]
-            changed |= dep.spec._concretize_helper(presets, visited)
+            changed |= self._dependencies[
+                name].spec._concretize_helper(presets, visited)
 
         if self.name in presets:
             changed |= self.constrain(presets[self.name])
@@ -1394,26 +1377,6 @@ class Spec(object):
             if concrete.name not in dependent._dependencies:
                 dependent._add_dependency(concrete, deptypes,
                                           dep_spec.default_deptypes)
-
-    def _replace_node(self, replacement):
-        """Replace this spec with another.
-
-        Connects all dependents of this spec to its replacement, and
-        disconnects this spec from any dependencies it has. New spec
-        will have any dependencies the replacement had, and may need
-        to be normalized.
-
-        """
-        for name, dep_spec in self._dependents.items():
-            dependent = dep_spec.spec
-            deptypes = dep_spec.deptypes
-            del dependent._dependencies[self.name]
-            dependent._add_dependency(
-                replacement, deptypes, dep_spec.default_deptypes)
-
-        for name, dep_spec in self._dependencies.items():
-            del dep_spec.spec.dependents[self.name]
-            del self._dependencies[dep.name]
 
     def _expand_virtual_packages(self):
         """Find virtual packages in this spec, replace them with providers,
@@ -2043,6 +2006,10 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        # The only way to satisfy a concrete spec is to match its hash exactly.
+        if other._concrete:
+            return self._concrete and self.dag_hash() == other.dag_hash()
+
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
             pkg = spack.repo.get(self.fullname)
@@ -2113,8 +2080,9 @@ class Spec(object):
             if other._dependencies and not self._dependencies:
                 return False
 
-            if not all(dep in self._dependencies
-                       for dep in other._dependencies):
+            alldeps = set(d.name for d in self.traverse(root=False))
+            if not all(dep.name in alldeps
+                       for dep in other.traverse(root=False)):
                 return False
 
         elif not self._dependencies or not other._dependencies:
@@ -2620,9 +2588,9 @@ class Spec(object):
            with indentation."""
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
-        hashes = kwargs.pop('hashes', True)
+        hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', True)
+        install_status = kwargs.pop('install_status', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')

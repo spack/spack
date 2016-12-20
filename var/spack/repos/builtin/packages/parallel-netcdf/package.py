@@ -25,7 +25,7 @@
 from spack import *
 
 
-class ParallelNetcdf(Package):
+class ParallelNetcdf(AutotoolsPackage):
     """Parallel netCDF (PnetCDF) is a library providing high-performance
     parallel I/O while still maintaining file-format compatibility with
     Unidata's NetCDF."""
@@ -41,13 +41,17 @@ class ParallelNetcdf(Package):
     variant('fpic', default=True,
             description='Produce position-independent code (for shared libs)')
 
-    depends_on("m4", type='build')
-    depends_on("mpi")
+    depends_on('mpi')
+
+    depends_on('m4', type='build')
 
     # See:
     # https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL
-    def install(self, spec, prefix):
-        args = list()
+    def configure_args(self):
+        spec = self.spec
+
+        args = ['--with-mpi={0}'.format(spec['mpi'].prefix)]
+
         if '+fpic' in spec:
             args.extend(['CFLAGS=-fPIC', 'CXXFLAGS=-fPIC', 'FFLAGS=-fPIC'])
         if '~cxx' in spec:
@@ -55,8 +59,4 @@ class ParallelNetcdf(Package):
         if '~fortran' in spec:
             args.append('--disable-fortran')
 
-        args.extend(["--prefix=%s" % prefix,
-                     "--with-mpi=%s" % spec['mpi'].prefix])
-        configure(*args)
-        make()
-        make("install")
+        return args

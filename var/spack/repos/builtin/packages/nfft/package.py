@@ -23,32 +23,38 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Astyle(MakefilePackage):
-    """A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
-    Objective-C, C#, and Java Source Code.
-    """
+class Nfft(AutotoolsPackage):
+    """NFFT is a C subroutine library for computing the nonequispaced discrete
+    Fourier transform (NDFT) in one or more dimensions, of arbitrary input
+    size, and of complex data."""
 
-    homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    homepage = "https://www-user.tu-chemnitz.de/~potts/nfft"
+    url = "https://www-user.tu-chemnitz.de/~potts/nfft/download/nfft-3.3.2.tar.gz"
 
-    version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
-    version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
+    version('3.3.2', '550737c06f4d6ea6c156800169d8f0d9')
 
-    parallel = False
+    depends_on('fftw')
 
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'build', self.compiler.name)
+    def install(self, spec, prefix):
+        options = ['--prefix={0}'.format(prefix)]
 
-    def edit(self, spec, prefix):
-        makefile = join_path(self.build_directory(), 'Makefile')
-        filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
-        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
-        if sys.platform == 'darwin':
-            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
+        configure(*options)
+        make()
+        if self.run_tests:
+            make("check")
+        make("install")
 
-    @property
-    def install_targets(self):
-        return ['install', 'prefix={0}'.format(self.prefix)]
+        if '+float' in spec['fftw']:
+            configure('--enable-float', *options)
+            make()
+            if self.run_tests:
+                make("check")
+            make("install")
+        if '+long_double' in spec['fftw']:
+            configure('--enable-long-double', *options)
+            make()
+            if self.run_tests:
+                make("check")
+            make("install")

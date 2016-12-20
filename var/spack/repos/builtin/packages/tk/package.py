@@ -37,7 +37,7 @@ class Tk(Package):
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
-    variant('X', default=True, description='Enable X11 support')
+    variant('X', default=False, description='Enable X11 support')
 
     depends_on("tcl")
     depends_on("libx11", when='+X')
