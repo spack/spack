@@ -26,7 +26,7 @@ from spack import *
 import os.path
 
 
-class Tinyxml(Package):
+class Tinyxml(CMakePackage):
     """Simple, small, efficient, C++ XML parser"""
 
     homepage = "http://grinninglizard.com/tinyxml/"
