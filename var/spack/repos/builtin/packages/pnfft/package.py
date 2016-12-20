@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Pnfft(Package):
+class Pnfft(AutotoolsPackage):
     """PNFFT is a parallel software library for the calculation of
        three-dimensional nonequispaced FFTs."""
 

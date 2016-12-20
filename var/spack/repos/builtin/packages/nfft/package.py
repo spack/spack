@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Nfft(Package):
+class Nfft(AutotoolsPackage):
     """NFFT is a C subroutine library for computing the nonequispaced discrete
     Fourier transform (NDFT) in one or more dimensions, of arbitrary input
     size, and of complex data."""
