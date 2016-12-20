@@ -25,6 +25,7 @@
 #
 # Author: Justin Too <too1@llnl.gov>
 #
+import os
 import distutils.dir_util
 from spack import *
 
