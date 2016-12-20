@@ -28,6 +28,9 @@ from spack import *
 class Spdlog(CMakePackage):
     """Very fast, header only, C++ logging library"""
 
-    homepage = "https://github.comg/abime/spdlog"
+    homepage = "https://github.com/gabime/spdlog"
+    url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
-    version('dev', git='https://github.com/gabime/spdlog.git')
+    version('0.11.0', '08232203f18a6f9ff47e083cc7a141a050805d3b')
+    version('0.10.0', '57b471ef97a23cc29c38b62e00e89a411a87ea7f')
+    version('0.9.0', 'dda741ef8e12d57d91f778d85e95a27d84a82ac4')
