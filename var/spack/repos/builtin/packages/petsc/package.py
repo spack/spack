@@ -66,9 +66,12 @@ class Petsc(Package):
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     variant('mumps',   default=True,
-            description='Activates support for MUMPS (only parallel)')
+            description='Activates support for MUMPS (only parallel'
+            ' and 32bit indices)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
+    variant('int64', default=False,
+            description='Compile with 64bit indices')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -95,8 +98,8 @@ class Petsc(Package):
     depends_on('superlu-dist@:4.3', when='@3.4.4:3.6.4+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@for-pflotran-0.1.0+superlu-dist+mpi')
-    depends_on('mumps+mpi', when='+mumps+mpi')
-    depends_on('scalapack', when='+mumps+mpi')
+    depends_on('mumps+mpi', when='+mumps+mpi~int64')
+    depends_on('scalapack', when='+mumps+mpi~int64')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -145,7 +148,8 @@ class Petsc(Package):
             '--with-scalar-type=%s' % (
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
-            '--with-debugging=%s' % ('1' if '+debug' in spec else '0')
+            '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
