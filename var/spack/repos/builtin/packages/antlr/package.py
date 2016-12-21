@@ -54,13 +54,12 @@ class Antlr(AutotoolsPackage):
     variant('python', default=False, description='Enable ANTLR for Python')
 
     extends('python', when='+python')
-    depends_on('jdk', when='+java')
+    depends_on('jdk', type='nolink', when='+java')
 
     def configure_args(self):
         spec = self.spec
 
         return [
-            '--disable-csharp',
             '--{0}-cxx'.format('enable' if '+cxx' in spec else 'disable'),
             '--{0}-java'.format('enable' if '+java' in spec else 'disable'),
             '--{0}-python'.format('enable' if '+python' in spec else 'disable')
