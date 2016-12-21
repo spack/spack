@@ -216,7 +216,7 @@ def display_specs(specs, **kwargs):
 
             for abbrv, spec in zip(abbreviated, specs):
                 prefix = gray_hash(spec, hlen) if hashes else ''
-                print prefix + (format % (abbrv, spec.prefix))
+                print(prefix + (format % (abbrv, spec.prefix)))
 
         elif mode == 'deps':
             for spec in specs:
@@ -225,6 +225,58 @@ def display_specs(specs, **kwargs):
                     color=True,
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
+
+        elif mode == 'table':
+            packages = []
+            for spec in specs:
+                for s in spec.traverse():
+                    if s.name not in packages:
+                        packages.append(s.name)
+
+            def make_row(specs, package, formatter, header='', **kwargs):
+                row = [header]
+                if isinstance(formatter, basestring):
+                    func = lambda x: x.format(formatter)
+                else:
+                    func = formatter
+                for spec in specs:
+                    if package in spec:
+                        row += [spack.spec.colorize_spec(func(spec[package],
+                                                              **kwargs))]
+                    else:
+                        row += ['']
+                return row
+
+            table = []
+            roots = [s.name for s in specs]
+            # Useful for queries that produce multiple roots
+            if len(set(roots)) > 1:
+                table.append(["Spec root:"] + roots)
+            for package in packages:
+                table.append(make_row(specs, package, '$@',
+                                      header=package))
+                if hashes:
+                    table.append(make_row(specs, package, gray_hash,
+                                          length=hlen))
+                if namespace:
+                    table.append(make_row(specs, package, '${NAMESPACE}'))
+                if flags:
+                    table.append(make_row(specs, package, ffmt))
+                if variants:
+                    variants_set = set()
+                    for spec in specs:
+                        if package in spec:
+                            variants_set.update(spec[package].variants.keys())
+
+                    def get_variant(spec, variant):
+                        return spec.variants.get(variant, '')
+
+                    for variant in sorted(variants_set):
+                        table.append(make_row(specs, package, get_variant,
+                                              variant=variant))
+
+            #  tty=True required to preserve column output when piping
+            colify_table(table, tty=True)
 
         elif mode == 'short':
             # Print columns of output if not printing flags
@@ -249,4 +301,4 @@ def display_specs(specs, **kwargs):
         else:
             raise ValueError(
                 "Invalid mode for display_specs: %s. Must be one of (paths,"
-                "deps, short)." % mode)
+                "deps, short, table)." % mode)
