@@ -36,9 +36,6 @@ class NetcdfCxx4(Package):
     depends_on('netcdf')
     depends_on("autoconf", type='build')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         # Rebuild to prevent problems of inconsistency in git repo
         which('autoreconf')('-ivf')
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
