@@ -39,7 +39,6 @@ class P4est(Package):
     depends_on('libtool@2.4.2:', type='build')
 
     # other dependencies
-    depends_on('lua')  # Needed for the submodule sc
     depends_on('mpi')
     depends_on('zlib')
 

@@ -101,7 +101,8 @@ class ProviderIndex(object):
         for provided_spec, provider_spec in pkg.provided.iteritems():
             # We want satisfaction other than flags
             provider_spec.compiler_flags = spec.compiler_flags.copy()
-            if provider_spec.satisfies(spec, deps=False):
+
+            if spec.satisfies(provider_spec, deps=False):
                 provided_name = provided_spec.name
 
                 provider_map = self.providers.setdefault(provided_name, {})

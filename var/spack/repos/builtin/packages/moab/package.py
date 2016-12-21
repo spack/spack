@@ -45,6 +45,7 @@ class Moab(Package):
             description='Required to enable the ExodusII reader/writer.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('fortran', default=True, description='Enable Fortran support')
 
     # There are many possible variants for MOAB. Here are examples for
     # two of them:
@@ -58,7 +59,8 @@ class Moab(Package):
     depends_on('hdf5+mpi')
     depends_on('netcdf+mpi', when='+netcdf')
     depends_on('parmetis')
-    depends_on('trilinos')  # looking for zoltan.
+    depends_on('zoltan')
+    depends_on('zoltan~fortran', when='~fortran')
 
     def install(self, spec, prefix):
 
@@ -70,13 +72,15 @@ class Moab(Package):
             '--with-mpi=%s' % spec['mpi'].prefix,
             '--with-hdf5=%s' % spec['hdf5'].prefix,
             '--with-parmetis=%s' % spec['parmetis'].prefix,
-            '--with-zoltan=%s' % spec['trilinos'].prefix,
+            '--with-zoltan=%s' % spec['zoltan'].prefix,
             '--disable-vtkMOABReader',
             '--without-vtk',
             'CXX=%s' % spec['mpi'].mpicxx,
             'CC=%s' % spec['mpi'].mpicc,
             'FC=%s' % spec['mpi'].mpifc]
 
+        if '~fortran' in spec:
+            options.append('--disable-fortran')
         if '+shared' in spec:
             options.append('--enable-shared')
         if '+netcdf' in spec:

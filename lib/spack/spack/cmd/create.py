@@ -145,10 +145,10 @@ class AutotoolsGuess(DefaultGuess):
 
     body = """\
     def configure_args(self):
-       # FIXME: Add arguments other than --prefix
-       # FIXME: If not needed delete the function
-       args = []
-       return args"""
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete the function
+        args = []
+        return args"""
 
 
 class CMakeGuess(DefaultGuess):
@@ -161,11 +161,11 @@ class CMakeGuess(DefaultGuess):
 
     body = """\
     def cmake_args(self):
-       # FIXME: Add arguments other than
-       # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-       # FIXME: If not needed delete the function
-       args = []
-       return args"""
+        # FIXME: Add arguments other than
+        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+        # FIXME: If not needed delete the function
+        args = []
+        return args"""
 
 
 class SconsGuess(DefaultGuess):
@@ -314,7 +314,7 @@ class BuildSystemGuesser(object):
         if stage.archive_file.endswith('.zip'):
             try:
                 unzip  = which('unzip')
-                output = unzip('-l', stage.archive_file, output=str)
+                output = unzip('-lq', stage.archive_file, output=str)
             except:
                 output = ''
         else:
@@ -434,7 +434,6 @@ def create(parser, args):
     # Figure out a name and repo for the package.
     name, version = guess_name_and_version(url, args)
     spec = Spec(name)
-    name = spec.name.lower()  # factors out namespace, if any
     repo = find_repository(spec, args)
 
     tty.msg("This looks like a URL for %s version %s" % (name, version))

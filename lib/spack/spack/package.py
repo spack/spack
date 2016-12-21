@@ -487,6 +487,10 @@ class PackageBase(object):
     """By default do not run tests within package's install()"""
     run_tests = False
 
+    # FIXME: this is a bad object-oriented design, should be moved to Clang.
+    """By default do not setup mockup XCode on macOS with Clang"""
+    use_xcode = False
+
     """Most packages are NOT extendable. Set to True if you want extensions."""
     extendable = False
 
@@ -703,7 +707,13 @@ class PackageBase(object):
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
+
+        def download_search():
+            dynamic_fetcher = fs.from_list_url(self)
+            return [dynamic_fetcher] if dynamic_fetcher else []
+
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
+                      search_fn=download_search)
         return stage
 
     def _make_stage(self):
@@ -846,24 +856,6 @@ class PackageBase(object):
         return os.path.isdir(self.prefix)
 
     @property
-    def installed_dependents(self):
-        """Return a list of the specs of all installed packages that depend
-           on this one.
-
-        TODO: move this method to database.py?
-        """
-        dependents = []
-        for spec in spack.store.db.query():
-            if self.name == spec.name:
-                continue
-            # XXX(deptype): Should build dependencies not count here?
-            # for dep in spec.traverse(deptype=('run')):
-            for dep in spec.traverse(deptype=spack.alldeps):
-                if self.spec == dep:
-                    dependents.append(spec)
-        return dependents
-
-    @property
     def prefix_lock(self):
         """Prefix lock is a byte range lock on the nth byte of a file.
 
@@ -892,7 +884,14 @@ class PackageBase(object):
         return self.spec.prefix
 
     @property
-    # TODO: Change this to architecture
+    def architecture(self):
+        """Get the spack.architecture.Arch object that represents the
+        environment in which this package will be built."""
+        if not self.spec.concrete:
+            raise ValueError("Can only get the arch for concrete package.")
+        return spack.architecture.arch_for_spec(self.spec.architecture)
+
+    @property
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
@@ -1051,6 +1050,7 @@ class PackageBase(object):
         # FIXME : Make this part of the 'install' behavior ?
         mkdirp(self.prefix.bin)
         touch(join_path(self.prefix.bin, 'fake'))
+        mkdirp(self.prefix.include)
         mkdirp(self.prefix.lib)
         mkdirp(self.prefix.man1)
 
@@ -1199,6 +1199,19 @@ class PackageBase(object):
         def build_process(input_stream):
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
+
+            # We are in the child process. This means that our sys.stdin is
+            # equal to open(os.devnull). Python did this to prevent our process
+            # and the parent process from possible simultaneous reading from
+            # the original standard input. But we assume that the parent
+            # process is not going to read from it till we are done here,
+            # otherwise it should not have passed us the copy of the stream.
+            # Thus, we are free to work with the the copy (input_stream)
+            # however we want. For example, we might want to call functions
+            # (e.g. raw_input()) that implicitly read from whatever stream is
+            # assigned to sys.stdin. Since we want them to work with the
+            # original input stream, we are making the following assignment:
+            sys.stdin = input_stream
 
             start_time = time.time()
             if not fake:
@@ -1497,7 +1510,7 @@ class PackageBase(object):
                 raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
-            dependents = self.installed_dependents
+            dependents = spack.store.db.installed_dependents(self.spec)
             if dependents:
                 raise PackageStillNeededError(self.spec, dependents)
 

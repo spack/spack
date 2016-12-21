@@ -61,6 +61,7 @@ def _to_dict(compiler):
                       for attr in _path_instance_vars)
     d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
     d['operating_system'] = str(compiler.operating_system)
+    d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
     d['environment'] = compiler.environment if compiler.environment else {}
     d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
@@ -202,20 +203,34 @@ def find(compiler_spec, scope=None):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, scope=None, **kwargs):
+def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    platform = kwargs.get('platform', None)
     config = all_compilers_config(scope)
 
     def get_compilers(cspec):
         compilers = []
 
         for items in config:
-            if items['compiler']['spec'] != str(cspec):
-                continue
             items = items['compiler']
+            if items['spec'] != str(cspec):
+                continue
+
+            # If an arch spec is given, confirm that this compiler
+            # is for the given operating system
+            os = items.get('operating_system', None)
+            if arch_spec and os != arch_spec.platform_os:
+                continue
+
+            # If an arch spec is given, confirm that this compiler
+            # is for the given target. If the target is 'any', match
+            # any given arch spec. If the compiler has no assigned
+            # target this is an old compiler config file, skip this logic.
+            target = items.get('target', None)
+            if arch_spec and target and (target != arch_spec.target and
+                                         target != 'any'):
+                continue
 
             if not ('paths' in items and
                     all(n in items['paths'] for n in _path_instance_vars)):
@@ -235,19 +250,14 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
             if mods == 'None':
                 mods = []
 
-            os = None
-            if 'operating_system' in items:
-                os = spack.architecture._operating_system_from_dict(
-                    items['operating_system'], platform)
-
             alias = items.get('alias', None)
             compiler_flags = items.get('flags', {})
             environment = items.get('environment', {})
             extra_rpaths = items.get('extra_rpaths', [])
 
             compilers.append(
-                cls(cspec, os, compiler_paths, mods, alias, environment,
-                    extra_rpaths, **compiler_flags))
+                cls(cspec, os, target, compiler_paths, mods, alias,
+                    environment, extra_rpaths, **compiler_flags))
 
         return compilers
 
@@ -259,17 +269,15 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec, arch):
+def compiler_for_spec(compiler_spec, arch_spec):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
-    operating_system = arch.platform_os
     assert(compiler_spec.concrete)
+    assert(arch_spec.concrete)
 
-    compilers = [
-        c for c in compilers_for_spec(compiler_spec, platform=arch.platform)
-        if c.operating_system == operating_system]
+    compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec)
     if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, operating_system)
+        raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
     if len(compilers) > 1:
         raise CompilerSpecInsufficientlySpecificError(compiler_spec)
     return compilers[0]

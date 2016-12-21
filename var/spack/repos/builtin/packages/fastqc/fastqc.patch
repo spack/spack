@@ -1,0 +1,30 @@
+--- fastqc.orig	2015-11-20 09:25:00.000000000 +0000
++++ fastqc	2016-10-24 19:06:16.734000000 +0000
+@@ -38,12 +38,21 @@
+ 	$delimiter = ';';
+ }
+ 
+-if ($ENV{CLASSPATH}) {
+-	$ENV{CLASSPATH} .= "$delimiter$RealBin$delimiter$RealBin/sam-1.103.jar$delimiter$RealBin/jbzip2-0.9.jar$delimiter$RealBin/cisd-jhdf5.jar";
+-}
+-else {
+-	$ENV{CLASSPATH} = "$RealBin$delimiter$RealBin/sam-1.103.jar$delimiter$RealBin/jbzip2-0.9.jar$delimiter$RealBin/cisd-jhdf5.jar";
+-}
++# The lib dir is $RealBin/../lib
++# start with list of jars we need and prefix them with the lib dir
++# then stick CLASSPATH onto the front (empty or otherwise...)
++# then filter out anything that's empty (perhaps CLASSPATH...)
++# then join all the remainings bits with the delimiter.
++use File::Basename;
++use File::Spec::Functions;
++my $_lib = catfile(dirname($RealBin), 'lib');
++$ENV{CLASSPATH} =
++    join($delimiter,
++         grep {$_}
++             ($ENV{CLASSPATH},
++              $_lib,
++              map {"$_lib/$_"}
++                  qw(sam-1.103.jar jbzip2-0.9.jar cisd-jhdf5.jar)));
+ 
+ my @java_args;
+ my @files;

@@ -31,16 +31,21 @@ class Pango(Package):
        that text layout is needed, though most of the work on Pango so
        far has been done in the context of the GTK+ widget toolkit."""
     homepage = "http://www.pango.org"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/pango/1.36/pango-1.36.8.tar.xz"
+    url      = "http://ftp.gnome.org/pub/GNOME/sources/pango/1.40/pango-1.40.3.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 2
 
-    version('1.36.8', '217a9a753006275215fa9fa127760ece')
-    version('1.40.1', '6fc88c6529890d6c8e03074d57a3eceb')
+    version('1.40.3', 'abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3')
+    version('1.40.1', 'e27af54172c72b3ac6be53c9a4c67053e16c905e02addcf3a603ceb2005c1a40')
+    version('1.36.8', '18dbb51b8ae12bae0ab7a958e7cf3317c9acfc8a1e1103ec2f147164a0fc2d07')
+
+    variant('X', default=False, description="Enable an X toolkit")
 
     depends_on("pkg-config", type="build")
     depends_on("harfbuzz")
     depends_on("cairo")
+    depends_on("cairo~X", when='~X')
+    depends_on("cairo+X", when='+X')
     depends_on("glib")
 
     def install(self, spec, prefix):

@@ -66,7 +66,7 @@ compilers:
     modules: 'None'
 - compiler:
     spec: clang@3.3
-    operating_system: CNL10
+    operating_system: CNL
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
@@ -97,7 +97,7 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    operating_system: CNL10
+    operating_system: CNL
     spec: gcc@4.5.0
     modules: 'None'
 - compiler:

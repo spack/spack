@@ -133,14 +133,59 @@ class SpecSematicsTest(MockPackagesTest):
 
     def test_satisfies_architecture(self):
         self.check_satisfies(
+            'foo platform=test',
+            'platform=test')
+        self.check_satisfies(
+            'foo platform=linux',
+            'platform=linux')
+        self.check_satisfies(
+            'foo platform=test',
+            'platform=test target=frontend')
+        self.check_satisfies(
+            'foo platform=test',
+            'platform=test os=frontend target=frontend')
+        self.check_satisfies(
+            'foo platform=test os=frontend target=frontend',
+            'platform=test')
+
+        self.check_unsatisfiable(
+            'foo platform=linux',
+            'platform=test os=redhat6 target=x86_32')
+        self.check_unsatisfiable(
+            'foo os=redhat6',
+            'platform=test os=debian6 target=x86_64')
+        self.check_unsatisfiable(
+            'foo target=x86_64',
+            'platform=test os=redhat6 target=x86_32')
+
+        self.check_satisfies(
+            'foo arch=test-None-None',
+            'platform=test')
+        self.check_satisfies(
+            'foo arch=test-None-frontend',
+            'platform=test target=frontend')
+        self.check_satisfies(
+            'foo arch=test-frontend-frontend',
+            'platform=test os=frontend target=frontend')
+        self.check_satisfies(
+            'foo arch=test-frontend-frontend',
+            'platform=test')
+        self.check_unsatisfiable(
+            'foo arch=test-frontend-frontend',
+            'platform=test os=frontend target=backend')
+
+        self.check_satisfies(
             'foo platform=test target=frontend os=frontend',
             'platform=test target=frontend os=frontend')
         self.check_satisfies(
             'foo platform=test target=backend os=backend',
-            'platform=test target=backend', 'platform=test os=backend')
+            'platform=test target=backend os=backend')
         self.check_satisfies(
             'foo platform=test target=default_target os=default_os',
-            'platform=test target=default_target os=default_os')
+            'platform=test os=default_os')
+        self.check_unsatisfiable(
+            'foo platform=test target=x86_32 os=redhat6',
+            'platform=linux target=x86_32 os=redhat6')
 
     def test_satisfies_dependencies(self):
         self.check_satisfies('mpileaks^mpich', '^mpich')
@@ -266,6 +311,21 @@ class SpecSematicsTest(MockPackagesTest):
         self.assertTrue(
             Spec('netlib-lapack ^netlib-blas').satisfies(
                 'netlib-lapack ^netlib-blas'))
+
+    def test_satisfies_same_spec_with_different_hash(self):
+        """Ensure that concrete specs are matched *exactly* by hash."""
+        s1 = Spec('mpileaks').concretized()
+        s2 = s1.copy()
+
+        self.assertTrue(s1.satisfies(s2))
+        self.assertTrue(s2.satisfies(s1))
+
+        # Simulate specs that were installed before and after a change to
+        # Spack's hashing algorithm.  This just reverses s2's hash.
+        s2._hash = s1.dag_hash()[-1::-1]
+
+        self.assertFalse(s1.satisfies(s2))
+        self.assertFalse(s2.satisfies(s1))
 
     # ========================================================================
     # Indexing specs

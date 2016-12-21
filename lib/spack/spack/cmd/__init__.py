@@ -144,7 +144,9 @@ def disambiguate_spec(spec):
     elif len(matching_specs) > 1:
         args = ["%s matches multiple packages." % spec,
                 "Matching packages:"]
-        args += ["  " + str(s) for s in matching_specs]
+        color = sys.stdout.isatty()
+        args += [colorize("  @K{%s} " % s.dag_hash(7), color=color) +
+                 s.format('$_$@$%@$=', color=color) for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)
 

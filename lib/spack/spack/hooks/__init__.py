@@ -64,16 +64,19 @@ class HookRunner(object):
     def __init__(self, hook_name):
         self.hook_name = hook_name
 
-    def __call__(self, pkg):
+    def __call__(self, *args, **kwargs):
         for module in all_hook_modules():
             if hasattr(module, self.hook_name):
                 hook = getattr(module, self.hook_name)
                 if hasattr(hook, '__call__'):
-                    hook(pkg)
+                    hook(*args, **kwargs)
+
 
 #
 # Define some functions that can be called to fire off hooks.
 #
+pre_run = HookRunner('pre_run')
+
 pre_install = HookRunner('pre_install')
 post_install = HookRunner('post_install')
 

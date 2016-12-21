@@ -838,8 +838,6 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
-.. _shell-support:
-
 ---------------------------
 Extensions & Python support
 ---------------------------

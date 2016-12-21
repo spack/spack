@@ -58,6 +58,10 @@ class Xl(Compiler):
         else:
             return "-qlanglvl=extended0x"
 
+    @property
+    def pic_flag(self):
+        return "-qpic"
+
     @classmethod
     def default_version(cls, comp):
         """The '-qversion' is the standard option fo XL compilers.

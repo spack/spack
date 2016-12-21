@@ -26,14 +26,17 @@ from spack import *
 import os
 
 
-class Flux(Package):
+class Flux(AutotoolsPackage):
     """ A next-generation resource manager (pre-alpha) """
 
     homepage = "https://github.com/flux-framework/flux-core"
-    url      = "https://github.com/flux-framework/flux-core"
+    url      = "https://github.com/flux-framework/flux-core/releases/download/v0.6.0/flux-core-0.6.0.tar.gz"
 
+    version('0.6.0', md5='d44a0f719744771d168edd205bd8e74e')
     version('master', branch='master',
             git='https://github.com/flux-framework/flux-core')
+
+    variant('docs', default=True, description='Build flux manpages')
 
     # Also needs autotools, but should use the system version if available
     depends_on("zeromq@4.0.4:")
@@ -45,20 +48,20 @@ class Flux(Package):
     depends_on("libxslt")
     depends_on("python")
     depends_on("py-cffi")
+    depends_on("jansson")
 
-    # TODO: This provides a catalog, hacked with environment below for now
-    depends_on("docbook-xml", type='build')
-    depends_on("asciidoc", type='build')
+    depends_on("asciidoc", type='build', when="+docs")
 
-    def install(self, spec, prefix):
-        # Bootstrap with autotools
-        bash = which('bash')
-        bash('./autogen.sh')
-        bash('./autogen.sh')  # yes, twice, intentionally
+    depends_on("autoconf", type='build', when='@master')
+    depends_on("automake", type='build', when='@master')
+    depends_on("libtool", type='build', when='@master')
 
-        # Fix asciidoc dependency on xml style sheets and whatnot
-        os.environ['XML_CATALOG_FILES'] = os.path.join(
-            spec['docbook-xml'].prefix, 'catalog.xml')
-        # Configure, compile & install
-        configure("--prefix=" + prefix)
-        make("install", "V=1")
+    def autoreconf(self, spec, prefix):
+        if os.path.exists('autogen.sh'):
+            # Bootstrap with autotools
+            bash = which('bash')
+            bash('./autogen.sh')
+            bash('./autogen.sh')  # yes, twice, intentionally
+
+    def configure_args(self):
+        return ['--disable-docs'] if '+docs' not in self.spec else []

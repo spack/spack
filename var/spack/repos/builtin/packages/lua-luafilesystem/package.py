@@ -40,6 +40,7 @@ class LuaLuafilesystem(Package):
 
     version('1_6_3', 'd0552c7e5a082f5bb2865af63fb9dc95')
 
+    depends_on('git@2.9.3:', type='build')
     extends('lua')
 
     def install(self, spec, prefix):

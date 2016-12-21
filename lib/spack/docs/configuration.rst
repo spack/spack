@@ -12,6 +12,7 @@ case you want to skip directly to specific docs:
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <build-settings>`
+* :ref:`repos.yaml <repositories>`
 
 -------------------------
 YAML Format

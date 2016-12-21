@@ -47,8 +47,7 @@ to your path and you're ready to go:
    $ export PATH=$SPACK_ROOT/bin:$PATH
    $ spack install libelf
 
-For a richer experience, use Spack's `shell support
-<http://software.llnl.gov/spack/basic_usage.html#environment-modules>`_:
+For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
@@ -60,7 +59,9 @@ For a richer experience, use Spack's `shell support
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
-This automatically adds Spack to your ``PATH``.
+This automatically adds Spack to your ``PATH`` and allows the ``spack``
+command to :ref:`load environment modules <shell-support>` and execute
+:ref:`useful packaging commands <packaging-shell-support>`.
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment

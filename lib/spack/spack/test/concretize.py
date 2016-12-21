@@ -79,6 +79,18 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpileaks')
         self.check_concretize('libelf')
 
+    def test_concretize_mention_build_dep(self):
+        spec = self.check_concretize('cmake-client ^cmake@3.4.3')
+
+        # Check parent's perspective of child
+        dependency = spec.dependencies_dict()['cmake']
+        self.assertEqual(set(dependency.deptypes), set(['build']))
+
+        # Check child's perspective of parent
+        cmake = spec['cmake']
+        dependent = cmake.dependents_dict()['cmake-client']
+        self.assertEqual(set(dependent.deptypes), set(['build']))
+
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
@@ -250,7 +262,7 @@ class ConcretizeTest(MockPackagesTest):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.platform().name
+        platform = spack.architecture.real_platform().name
         if (platform == 'darwin' or platform == 'linux'):
             return
 

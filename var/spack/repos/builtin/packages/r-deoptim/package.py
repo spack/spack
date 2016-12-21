@@ -22,36 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Yaml Version Check is a module for ensuring that config file
-formats are compatible with the current version of Spack."""
-import os.path
-import os
-import llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
-import spack.config
+
+from spack import *
 
 
-def check_yaml_versions():
-    check_compiler_yaml_version()
+class RDeoptim(Package):
+    """Implements the differential evolution algorithm for global optimization
+    of a real-valued function of a real-valued parameter vector."""
 
+    homepage = "https://cran.r-project.org/package=DEoptim"
+    url      = "https://cran.r-project.org/src/contrib/DEoptim_2.2-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DEoptim"
+    
+    version('2.2-3', 'ed406e6790f8f1568aa9bec159f80326')
 
-def check_compiler_yaml_version():
-    config_scopes = spack.config.config_scopes
-    for scope in config_scopes.values():
-        file_name = os.path.join(scope.path, 'compilers.yaml')
-        data = None
-        if os.path.isfile(file_name):
-            with open(file_name) as f:
-                data = syaml.load(f)
+    extends('R')
 
-        if data:
-            compilers = data['compilers']
-            if len(compilers) > 0:
-                if (not isinstance(compilers, list) or
-                    'operating_system' not in compilers[0]['compiler']):
-                    new_file = os.path.join(scope.path, '_old_compilers.yaml')
-                    tty.warn('%s in out of date compilers format. '
-                             'Moved to %s. Spack automatically generate '
-                             'a compilers config file '
-                             % (file_name, new_file))
-                    os.rename(file_name, new_file)
+    def install(self, spec, prefix):
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

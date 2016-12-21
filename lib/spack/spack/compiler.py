@@ -112,11 +112,12 @@ class Compiler(object):
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
 
-    def __init__(self, cspec, operating_system,
+    def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
                  extra_rpaths=None, **kwargs):
-        self.operating_system = operating_system
         self.spec = cspec
+        self.operating_system = str(operating_system)
+        self.target = target
         self.modules = modules
         self.alias = alias
 
@@ -179,6 +180,16 @@ class Compiler(object):
         # If it is not overridden, assume it is not supported and warn the user
         tty.die(
             "The compiler you have chosen does not currently support C++14.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
+
+    # This property should be overridden in the compiler subclass if
+    # C++17 is supported by that compiler
+    @property
+    def cxx17_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die(
+            "The compiler you have chosen does not currently support C++17.",
             "If you think it should, please edit the compiler subclass and",
             "submit a pull request or issue.")
 
@@ -285,7 +296,7 @@ class Compiler(object):
         """
         return path
 
-    def setup_custom_environment(self, env):
+    def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
         pass
 

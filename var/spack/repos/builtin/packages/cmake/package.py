@@ -31,6 +31,7 @@ class Cmake(Package):
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
+    version('3.7.1',    'd031d5a06e9f1c5367cdfc56fbd2a1c8')
     version('3.6.1',    'd6dd661380adacdb12f41b926ec99545')
     version('3.6.0',    'aa40fbecf49d99c083415c2411d12db9')
     version('3.5.2',    '701386a1b5ec95f8d1075ecf96383e02')
@@ -39,10 +40,11 @@ class Cmake(Package):
     version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63')
     version('3.4.0',    'cd3034e0a44256a0917e254167217fc8')
     version('3.3.1',    '52638576f4e1e621fed6c3410d3a1b12')
+    version('3.1.0',    '188eb7dc9b1b82b363bc51c0d3f1d461')
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ownlibs', default=False, description='Use CMake-provided third-party libraries')
+    variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
@@ -89,7 +91,7 @@ class Cmake(Package):
         options = [
             '--prefix={0}'.format(prefix),
             '--parallel={0}'.format(make_jobs)]
-        if spec.satisfies("@3:"):
+        if spec.satisfies("@3.2:"):
             options.append(
                 # jsoncpp requires CMake to build
                 # use CMake-provided library to avoid circular dependency

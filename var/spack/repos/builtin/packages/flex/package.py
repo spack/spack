@@ -25,20 +25,46 @@
 from spack import *
 
 
-class Flex(Package):
+class Flex(AutotoolsPackage):
     """Flex is a tool for generating scanners."""
 
-    homepage = "http://flex.sourceforge.net/"
-    url = "http://download.sourceforge.net/flex/flex-2.5.39.tar.gz"
+    homepage = "https://github.com/westes/flex"
+    url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
-    version('2.6.0', '5724bcffed4ebe39e9b55a9be80859ec')
-    version('2.5.39', 'e133e9ead8ec0a58d81166b461244fde')
+    # Problematic version:
+    # See issue #2554; https://github.com/westes/flex/issues/113
+    # version('2.6.2', 'cc6d76c333db7653d5caf423a3335239')
+    version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
+    version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
+    version('2.5.39', '5865e76ac69c05699f476515592750d7')
 
-    depends_on("bison", type='build')
-    depends_on("m4", type='build')
+    depends_on('bison',         type='build')
+    depends_on('gettext@0.19:', type='build')
+    depends_on('help2man',      type='build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    # Older tarballs don't come with a configure script
+    depends_on('m4',       type='build', when='@:2.6.0')
+    depends_on('autoconf', type='build', when='@:2.6.0')
+    depends_on('automake', type='build', when='@:2.6.0')
+    depends_on('libtool',  type='build', when='@:2.6.0')
 
-        make()
-        make("install")
+    def url_for_version(self, version):
+        url = "https://github.com/westes/flex"
+        if version >= Version('2.6.1'):
+            url += "/releases/download/v{0}/flex-{0}.tar.gz".format(version)
+        elif version == Version('2.6.0'):
+            url += "/archive/v{0}.tar.gz".format(version)
+        elif version >= Version('2.5.37'):
+            url += "/archive/flex-{0}.tar.gz".format(version)
+        else:
+            url += "/archive/flex-{0}.tar.gz".format(version.dashed)
+
+        return url
+
+    def autoreconf(self, spec, prefix):
+        pass
+
+    @when('@:2.6.0')
+    def autoreconf(self, spec, prefix):
+        libtoolize('--install', '--force')
+        autoreconf('--install', '--force')

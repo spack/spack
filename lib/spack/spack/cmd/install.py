@@ -26,6 +26,7 @@ import argparse
 import codecs
 import functools
 import os
+import platform
 import time
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
@@ -47,7 +48,7 @@ def setup_parser(subparser):
         '--only',
         default='package,dependencies',
         dest='things_to_install',
-        choices=['package', 'dependencies', 'package,dependencies'],
+        choices=['package', 'dependencies'],
         help="""Select the mode of installation.
 The default is to install the package along with all its dependencies.
 Alternatively one can decide to install only the package or only
@@ -106,9 +107,10 @@ class TestResult(object):
 
 
 class TestSuite(object):
-    def __init__(self):
+    def __init__(self, spec):
         self.root = ET.Element('testsuite')
         self.tests = []
+        self.spec = spec
 
     def append(self, item):
         if not isinstance(item, TestCase):
@@ -128,6 +130,8 @@ class TestSuite(object):
         )
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
+        self.root.set('name', self.spec.short_spec)
+        self.root.set('hostname', platform.node())
 
         for item in self.tests:
             self.root.append(item.element)
@@ -243,7 +247,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.ERRORED,
+                    TestResult.FAILED,
                     message='Unable to fetch package',
                     text=text
                 )
@@ -253,7 +257,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.ERRORED,
+                    TestResult.FAILED,
                     message='Unexpected exception thrown during install',
                     text=text
                 )
@@ -263,7 +267,7 @@ def junit_output(spec, test_suite):
                 test_case.set_duration(duration)
                 text = fetch_text(self.build_log_path)
                 test_case.set_result(
-                    TestResult.ERRORED,
+                    TestResult.FAILED,
                     message='Unknown error',
                     text=text
                 )
@@ -322,7 +326,7 @@ def install(parser, args, **kwargs):
         if not log_filename:
             log_filename = default_log_file(spec)
         # Create the test suite in which to log results
-        test_suite = TestSuite()
+        test_suite = TestSuite(spec)
         # Decorate PackageBase.do_install to get installation status
         PackageBase.do_install = junit_output(
             spec, test_suite
