@@ -54,7 +54,9 @@ def write_spconfig(package):
     # Set-up the environment
     spack.build_environment.setup_package(package)
 
-    cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
+    _cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
+    # No verbose makefile for interactive builds
+    cmd = [x for x in _cmd if not x.startswith('-DCMAKE_VERBOSE_MAKEFILE')]
 
     env = dict()
 
