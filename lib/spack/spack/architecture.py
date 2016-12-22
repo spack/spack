@@ -519,4 +519,3 @@ def sys_type():
 @memoized
 def frontend_sys_type():
     return str(Arch(platform(), 'frontend', 'frontend'))
-
