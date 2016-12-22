@@ -1111,7 +1111,7 @@ class PackageBase(object):
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
-                   install_deps=True,
+                   install_dependencies=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1130,7 +1130,7 @@ class PackageBase(object):
         :param keep_stage: By default, stage is destroyed only if there are \
             no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param install_deps: Install dependencies before installing this \
+        :param install_dependencies: Install dependencies before installing this \
             package
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
@@ -1174,12 +1174,12 @@ class PackageBase(object):
         tty.msg("Installing %s" % self.name)
 
         # First, install dependencies recursively.
-        if install_deps:
+        if install_dependencies:
             for dep in self.spec.dependencies():
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
-                    install_deps=install_deps,
+                    install_dependencies=install_dependencies,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
