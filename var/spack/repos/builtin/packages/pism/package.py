@@ -98,7 +98,7 @@ class Pism(CMakePackage):
     depends_on('udunits2')
     depends_on('proj')
 
-    extends('python')
+    extends('python', when='+python')
     depends_on('python@2.7', when='+python')
     depends_on('py-matplotlib', when='+python')  # Implies py-numpy too
 

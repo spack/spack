@@ -39,15 +39,17 @@ class Pfunit(Package):
     # Standard release version
     version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
 
-    depends_on('mpi', when='+mpi')
-
-    depends_on('cmake', type='build')
-    depends_on('doxygen', type='build')
-
     variant('shared', default=True,
             description='Build shared library in addition to static')
     variant('mpi', default=True,
             description='Test MPI-based programs')
+    variant('docs', default=False, description='Build docs')
+
+    depends_on('mpi', when='+mpi')
+
+    depends_on('cmake', type='build')
+    depends_on('doxygen', type='build', when='+docs')
+
 
     # pfUnit supports OpenMP, but this capability has not
     # yet been tested with Spack.
@@ -61,7 +63,9 @@ class Pfunit(Package):
                 '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
                 '-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
                 # '-OPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
-                '-DINSTALL_PATH=%s' % prefix]
+                '-DINSTALL_PATH=%s' % prefix,
+                '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO')]
+
             cmake(self.stage.source_path, *options)
             # make('tests')   # Upstream tests do not work
             make()
