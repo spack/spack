@@ -31,6 +31,7 @@ class Mfem(Package):
     homepage = 'http://www.mfem.org'
     url      = 'https://github.com/mfem/mfem'
 
+    version('develop', git='https://github.com/mfem/mfem.git', tag='master')
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
             url='http://goo.gl/Y9T75B', preferred=True, extension='.tar.gz')
@@ -61,12 +62,15 @@ class Mfem(Package):
 
     depends_on('hypre', when='+hypre')
 
+    # TODO: All other packages use metis5. can this be updated?
     depends_on('metis@4:', when='+metis')
 
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('blas', when='+suite-sparse')
     depends_on('lapack', when='+suite-sparse')
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
+    # TODO: does this line belong here? It is metis/package.py that needs to
+    #       put in the dependency, why here?
     depends_on('cmake', when='^metis@5:', type='build')
 
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
@@ -76,6 +80,7 @@ class Mfem(Package):
     depends_on('hdf5', when='@3.2: +netcdf')
 
     def check_variants(self, spec):
+        print spec
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
                                'and +metis!')
@@ -83,11 +88,12 @@ class Mfem(Package):
                                         '+lapack' not in spec):
             raise InstallError('mfem+suite-sparse must be built with ' +
                                '+metis and +lapack!')
-        if 'metis@5:' in spec and '%clang' in spec and (
-                '^cmake %gcc' not in spec):
-            raise InstallError('To work around CMake bug with clang, must ' +
-                               'build mfem with mfem[+variants] %clang ' +
-                               '^cmake %gcc to force CMake to build with gcc')
+# TODO: remove this hack, and fix elsewhere if needed			       
+#        if 'metis@5:' in spec and '%clang' in spec and (
+#                '^cmake %gcc' not in spec):
+#            raise InstallError('To work around CMake bug with clang, must ' +
+#                               'build mfem with mfem[+variants] %clang ' +
+#                               '^cmake %gcc to force CMake to build with gcc')
         if '@:3.1' in spec and '+superlu-dist' in spec:
             raise InstallError('MFEM does not support SuperLU_DIST for ' +
                                'versions 3.1 and earlier')
@@ -113,7 +119,7 @@ class Mfem(Package):
                 'HYPRE_DIR=%s' % spec['hypre'].prefix,
                 'HYPRE_OPT=-I%s' % spec['hypre'].prefix.include,
                 'HYPRE_LIB=-L%s' % spec['hypre'].prefix.lib +
-                ' -lHYPRE'])
+                ' -lHYPRE %s' % lapack_lib])
 
         if 'parmetis' in spec:
             metis_lib = '-L%s -lparmetis -lmetis' % spec['parmetis'].prefix.lib
