@@ -1,7 +1,31 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 
-class Icedtea(Package):
+class Icedtea(AutotoolsPackage):
     """The IcedTea project provides a harness to build the source code from
        http://openjdk.java.net using Free Software build tools and adds a number
        of key features to the upstream OpenJDK codebase."""
@@ -35,33 +59,36 @@ class Icedtea(Package):
     resource(name='openjdk', placement='spack-resource/openjdk',
              md5='c7a7681fff0afda6a897b135820a1440',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.2.0/openjdk.tar.xz')
-    resource(name='shenandoah', placement='spack-resource/shenandoah',
-             md5='1c42ff1802a6f10645a3e76b7d6fe9da',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.2.0/shenandoah.tar.xz')
 
-    depends_on('wget')
-    depends_on('gawk')
+    depends_on('libx11')
+    depends_on('freetype')
+    depends_on('libxp')
+    depends_on('libxtst')
+    depends_on('libxinerama')
+    depends_on('jpeg')
+    depends_on('libpng')
+    depends_on('zlib')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  '--with-corba-src-zip=%s'      % self.stage[1].archive_file,
-                  '--with-corba-checksum=no',
-                  '--with-hotspot-src-zip=%s'    % self.stage[2].archive_file,
-                  '--with-hotspot-checksum=no',
-                  '--with-jaxp-src-zip=%s'       % self.stage[3].archive_file,
-                  '--with-jaxp-checksum=no',
-                  '--with-jaxws-src-zip=%s'      % self.stage[4].archive_file,
-                  '--with-jaxws-checksum=no',
-                  '--with-jdk-src-zip=%s'        % self.stage[5].archive_file,
-                  '--with-jdk-checksum=no',
-                  '--with-langtools-src-zip=%s'  % self.stage[6].archive_file,
-                  '--with-langtools-checksum=no',
-                  '--with-nashorn-src-zip=%s'    % self.stage[7].archive_file,
-                  '--with-nashorn-checksum=no',
-                  '--with-openjdk-src-zip=%s'    % self.stage[8].archive_file,
-                  '--with-openjdk-checksum=no',
-                  '--with-shenandoah-src-zip=%s' % self.stage[9].archive_file,
-                  '--with-shenandoah-checksum=no')
+    depends_on('wget', type='build')
+    depends_on('gawk', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
 
-        make()
-        make("install")
+    def configure_args(self):
+        return [
+            '--with-corba-src-zip=%s'      % self.stage[1].archive_file,
+            '--with-corba-checksum=no',
+            '--with-hotspot-src-zip=%s'    % self.stage[2].archive_file,
+            '--with-hotspot-checksum=no',
+            '--with-jaxp-src-zip=%s'       % self.stage[3].archive_file,
+            '--with-jaxp-checksum=no',
+            '--with-jaxws-src-zip=%s'      % self.stage[4].archive_file,
+            '--with-jaxws-checksum=no',
+            '--with-jdk-src-zip=%s'        % self.stage[5].archive_file,
+            '--with-jdk-checksum=no',
+            '--with-langtools-src-zip=%s'  % self.stage[6].archive_file,
+            '--with-langtools-checksum=no',
+            '--with-nashorn-src-zip=%s'    % self.stage[7].archive_file,
+            '--with-nashorn-checksum=no',
+            '--with-openjdk-src-zip=%s'    % self.stage[8].archive_file,
+            '--with-openjdk-checksum=no'
+        ]
