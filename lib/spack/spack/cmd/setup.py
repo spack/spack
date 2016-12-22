@@ -74,6 +74,7 @@ def write_spconfig(package):
         fout.write(
             r"""#!%s
 #
+# %s
 
 import sys
 import os
@@ -82,7 +83,7 @@ import subprocess
 def cmdlist(str):
     return list(x.strip().replace("'",'') for x in str.split('\n') if x)
 env = dict(os.environ)
-""" % sys.executable)
+""" % (sys.executable, ' '.join(sys.argv)))
 
         env_vars = sorted(list(env.keys()))
         for name in env_vars:
