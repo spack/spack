@@ -248,6 +248,8 @@ def visitor_symlink(specs, args):
     assuredir(path)
     for spec in specs:
         link_one(spec, path, verbose=args.verbose)
+
+
 visitor_add = visitor_symlink
 visitor_soft = visitor_symlink
 
@@ -258,6 +260,8 @@ def visitor_hardlink(specs, args):
     assuredir(path)
     for spec in specs:
         link_one(spec, path, os.link, verbose=args.verbose)
+
+
 visitor_hard = visitor_hardlink
 
 
@@ -267,6 +271,8 @@ def visitor_remove(specs, args):
     for spec in specs:
         remove_one(spec, path, verbose=args.verbose)
     purge_empty_directories(path)
+
+
 visitor_rm = visitor_remove
 
 
@@ -275,6 +281,8 @@ def visitor_statlink(specs, args):
     path = args.path[0]
     for spec in specs:
         check_one(spec, path, verbose=args.verbose)
+
+
 visitor_status = visitor_statlink
 visitor_check = visitor_statlink
 
