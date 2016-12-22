@@ -29,7 +29,7 @@ class Nco(AutotoolsPackage):
     """The NCO toolkit manipulates and analyzes data stored in
     netCDF-accessible formats"""
 
-    homepage = "https://sourceforge.net/projects/nco"
+    homepage = "http://nco.sourceforge.net/"
     url      = "https://github.com/nco/nco/archive/4.6.2.tar.gz"
 
     version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
@@ -44,9 +44,5 @@ class Nco(AutotoolsPackage):
     depends_on('udunits2')         # allows dimensional unit transformations
     # depends_on('opendap')        # enables network transparency
 
-    def configure_args(self):
-        return [
-            '--disable-openmp',  # TODO: Make this a variant
-            '--disable-dap',     # TODO: Make this a variant
-            '--disable-esmf'
-        ]
+    depends_on('flex',  type='build')
+    depends_on('bison', type='build')
