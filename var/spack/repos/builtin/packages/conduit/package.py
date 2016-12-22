@@ -40,14 +40,10 @@ def cmake_cache_entry(name, value):
 
 
 class Conduit(Package):
-    """
-    Conduit: Simplified Data Exchange for HPC Simulations
-
-    Conduit is an open source project from Lawrence Livermore National
+    """Conduit is an open source project from Lawrence Livermore National
     Laboratory that provides an intuitive model for describing hierarchical
     scientific data in C++, C, Fortran, and Python. It is used for data
-    coupling between packages in-core, serialization, and I/O tasks.
-    """
+    coupling between packages in-core, serialization, and I/O tasks."""
 
     homepage = "http://software.llnl.gov/conduit"
     url = "https://github.com/LLNL/conduit/archive/v0.2.0.tar.gz"
