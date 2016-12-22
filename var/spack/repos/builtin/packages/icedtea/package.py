@@ -69,6 +69,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('libpng')
     depends_on('zlib')
 
+    depends_on('fastjar', type='build')
     depends_on('wget', type='build')
     depends_on('gawk', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
