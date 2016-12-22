@@ -15,6 +15,7 @@ class Gcc(Package):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 2
 
+    version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
     version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
