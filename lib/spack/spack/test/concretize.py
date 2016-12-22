@@ -86,17 +86,17 @@ class ConcretizeTest(MockPackagesTest):
                         '^separate-build-link~X'))
         self.assertTrue(spec.satisfies('^separate-build-link+X'))
 
-    def test_concretize_mention_build_dep(self):
-        spec = self.check_concretize('cmake-client ^cmake@3.4.3')
+    def test_concretize_mention_run_dep(self):
+        spec = self.check_concretize('dtbuild1 ^dtrun2@1.0')
 
         # Check parent's perspective of child
-        dependency = spec.dependencies_dict()['cmake']
-        self.assertEqual(set(dependency.deptypes), set(['build']))
+        dependency = spec.dependencies_dict()['dtrun2']
+        self.assertEqual(set(dependency.deptypes), set(['run']))
 
         # Check child's perspective of parent
-        cmake = spec['cmake']
-        dependent = cmake.dependents_dict()['cmake-client']
-        self.assertEqual(set(dependent.deptypes), set(['build']))
+        dtrun2 = spec['dtrun2']
+        dependent = dtrun2.dependents_dict()['dtbuild1']
+        self.assertEqual(set(dependent.deptypes), set(['run']))
 
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
