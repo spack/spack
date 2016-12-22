@@ -90,6 +90,10 @@ def setup_parser(subparser):
         '-p', '--prefix', dest='prefix', default='',
         help='Prepend to module names when issuing module load commands'
     )
+    loads_parser.add_argument(
+        '-x', '--exclude', dest='exclude', action='append', default=[],
+        help="Exclude package from output; may be specified multiple times"
+    )
     arguments.add_common_arguments(
         loads_parser, ['constraint', 'module_type', 'recurse_dependencies']
     )
@@ -136,8 +140,12 @@ def loads(mtype, specs, args):
         'prefix': args.prefix
     }
 
+    exclude_set = set(args.exclude)
     prompt_template = '{comment}{command}{prefix}{name}'
     for spec, mod in modules:
+        if spec.name in exclude_set:
+            continue
+
         d['comment'] = '' if not args.shell else '# {0}\n'.format(
             spec.format())
         d['name'] = mod
