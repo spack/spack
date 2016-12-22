@@ -26,7 +26,6 @@ from spack import *
 
 import socket
 import os
-from os.path import join as pjoin
 
 import llnl.util.tty as tty
 
@@ -161,7 +160,7 @@ class Conduit(Package):
         ##############################################
 
         if "+cmake" in spec:
-            cmake_exe = pjoin(spec['cmake'].prefix.bin, "cmake")
+            cmake_exe = join_path(spec['cmake'].prefix.bin, "cmake")
         else:
             cmake_exe = which("cmake")
             if cmake_exe is None:
@@ -211,7 +210,7 @@ class Conduit(Package):
         cfg.write("# Python Support\n")
 
         if "+python" in spec:
-            python_exe = pjoin(spec['python'].prefix.bin, "python")
+            python_exe = join_path(spec['python'].prefix.bin, "python")
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
@@ -223,12 +222,12 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
             cfg.write("# sphinx from spack \n")
-            sphinx_build_exe = pjoin(spec['py-sphinx'].prefix.bin,
-                                     "sphinx-build")
+            sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
+                                         "sphinx-build")
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
 
             cfg.write("# doxygen from uberenv\n")
-            doxygen_exe = pjoin(spec['doxygen'].prefix.bin, "doxygen")
+            doxygen_exe = join_path(spec['doxygen'].prefix.bin, "doxygen")
             cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
