@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import subprocess
 
 
 class Matlab(Package):
@@ -45,14 +46,14 @@ class Matlab(Package):
     version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
 
     variant('mode', default='interactive', description='Installation mode (interactive, silent, or automated)')
-    variant('key', default='', description='The file installation key to use')
+    variant('key',  default='',            description='The file installation key to use')
 
     # Licensing
     license_required = True
-    license_comment = '#'
-    license_files = ['licenses/license.dat']
-    license_vars = ['LM_LICENSE_FILE']
-    license_url = 'https://www.mathworks.com/help/install/index.html'
+    license_comment  = '#'
+    license_files    = ['licenses/license.dat']
+    license_vars     = ['LM_LICENSE_FILE']
+    license_url      = 'https://www.mathworks.com/help/install/index.html'
 
     def url_for_version(self, version):
         return "file://{0}/matlab_{1}_glnxa64.zip".format(os.getcwd(), version)
@@ -60,7 +61,6 @@ class Matlab(Package):
     def configure(self, spec, prefix):
         config = {
             'destinationFolder':   prefix,
-            'agreeToLicense':      'yes',
             'mode':                spec.variants['mode'].value,
             'fileInstallationKey': spec.variants['key'].value,
             'licensePath':         self.global_license_file
@@ -78,4 +78,4 @@ class Matlab(Package):
         # Full path required
         inputFile = join_path(self.stage.source_path,
                               'spack_installer_input.txt')
-        os.system('./install -inputFile {0}'.format(inputFile))
+        subprocess.call(['./install', '-inputFile', inputFile])
