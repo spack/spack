@@ -79,6 +79,13 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpileaks')
         self.check_concretize('libelf')
 
+    def test_concretize_separate_build(self):
+        spec = self.check_concretize('separate-build-top')
+        self.assertTrue('separate-build-build' in spec.build_only_deps)
+        self.assertTrue(spec.build_only_deps['separate-build-build'].satisfies(
+                        '^separate-build-link~X'))
+        self.assertTrue(spec.satisfies('^separate-build-link+X'))
+
     def test_concretize_mention_build_dep(self):
         spec = self.check_concretize('cmake-client ^cmake@3.4.3')
 
