@@ -141,11 +141,9 @@ def loads(mtype, specs, args):
     }
 
     exclude_set = set(args.exclude)
-    prompt_template = '{comment}{command}{prefix}{name}'
+    prompt_template = '{comment}{exclude}{command}{prefix}{name}'
     for spec, mod in modules:
-        if spec.name in exclude_set:
-            continue
-
+        d['exclude'] = '## ' if spec.name in exclude_set else ''
         d['comment'] = '' if not args.shell else '# {0}\n'.format(
             spec.format())
         d['name'] = mod
