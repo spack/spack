@@ -114,23 +114,24 @@ class ConcretizeTest(MockPackagesTest):
         spec = self.check_concretize('python@3.5.1')
         self.assertEqual(spec.versions, ver('3.5.1'))
 
-    def test_concretize_with_build_dep(self):
+    def test_concretize_with_build_only_dep(self):
         # Set the target as the backend. Since the cmake build dependency is
         # not explicitly configured to target the backend it should target
         # the frontend (whatever compiler that is, it is different)
-        spec = self.check_concretize('cmake-client platform=test target=be')
+        spec = self.check_concretize(
+            'cmake-client platform=test os=be target=be')
         client_compiler = spack.compilers.compiler_for_spec(
             spec.compiler, spec.architecture)
         cmake_spec = spec.build_only_deps['cmake']
         cmake_compiler = spack.compilers.compiler_for_spec(
             cmake_spec.compiler, cmake_spec.architecture)
-        self.assertTrue(client_compiler.operating_system !=
-                        cmake_compiler.operating_system)
+        self.assertNotEqual(client_compiler.operating_system,
+                            cmake_compiler.operating_system)
 
-    def test_concretize_link_dep_of_build_dep(self):
+    def test_concretize_link_dep_of_build_only_dep(self):
         # The link dep of the build dep should use the same compiler as
         # the build dep, and both should be different from the root
-        spec = self.check_concretize('dttop platform=test target=be')
+        spec = self.check_concretize('dttop platform=test os=be target=be')
         dttop_compiler = spack.compilers.compiler_for_spec(
             spec.compiler, spec.architecture)
         dtbuild1_spec = spec.build_only_deps['dtbuild1']
@@ -139,10 +140,28 @@ class ConcretizeTest(MockPackagesTest):
         dtlink2_spec = dtbuild1_spec['dtlink2']
         dtlink2_compiler = spack.compilers.compiler_for_spec(
             dtlink2_spec.compiler, dtlink2_spec.architecture)
-        self.assertTrue(dttop_compiler.operating_system !=
-                        dtlink2_compiler.operating_system)
-        self.assertTrue(dtbuild1_compiler.operating_system ==
-                        dtlink2_compiler.operating_system)
+        self.assertNotEqual(dttop_compiler.operating_system,
+                            dtlink2_compiler.operating_system)
+        self.assertEqual(dtbuild1_compiler.operating_system,
+                         dtlink2_compiler.operating_system)
+
+    def test_concretize_frontend_with_build_only_dep(self):
+        # The link dep of the build dep, the build dep, and the root should
+        # all use the same compiler if the root is built for the frontend
+        spec = self.check_concretize('dttop platform=test os=fe target=fe')
+        dttop_compiler = spack.compilers.compiler_for_spec(
+            spec.compiler, spec.architecture)
+        dtbuild1_spec = spec.build_only_deps['dtbuild1']
+        self.assertEqual(spec.architecture, dtbuild1_spec.architecture)
+        dtbuild1_compiler = spack.compilers.compiler_for_spec(
+            dtbuild1_spec.compiler, dtbuild1_spec.architecture)
+        dtlink2_spec = dtbuild1_spec['dtlink2']
+        dtlink2_compiler = spack.compilers.compiler_for_spec(
+            dtlink2_spec.compiler, dtlink2_spec.architecture)
+        self.assertEqual(dttop_compiler.operating_system,
+                         dtlink2_compiler.operating_system)
+        self.assertEqual(dtbuild1_compiler.operating_system,
+                         dtlink2_compiler.operating_system)
 
     def test_concretize_with_virtual(self):
         self.check_concretize('mpileaks ^mpi')
