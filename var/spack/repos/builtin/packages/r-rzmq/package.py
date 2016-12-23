@@ -37,7 +37,7 @@ class RRzmq(Package):
 
     depends_on('zeromq')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

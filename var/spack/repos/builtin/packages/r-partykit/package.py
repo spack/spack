@@ -42,7 +42,7 @@ class RPartykit(Package):
 
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-survival', type=nolink)
     depends_on('r-formula', type=nolink)

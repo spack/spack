@@ -50,7 +50,7 @@ class RGdata(Package):
 
     version('2.17.0', 'c716b663b9dc16ad8cafe6acc781a75f')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-gtools', type=nolink)
 

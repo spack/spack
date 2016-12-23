@@ -345,3 +345,8 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'yorick', '2_2_04',
             'https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz')
+
+    def test_luaposix_version(self):
+        self.check(
+            'luaposix', '33.4.0',
+            'https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz')

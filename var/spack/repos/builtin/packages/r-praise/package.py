@@ -34,7 +34,7 @@ class RPraise(Package):
 
     version('1.0.0', '9318724cec0454884b5f762bee2da6a1')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

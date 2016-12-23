@@ -222,7 +222,7 @@ class Julia(Package):
         if "+plot" in spec:
             julia("-e", 'Pkg.add("PyPlot"); using PyPlot')
             julia("-e", 'Pkg.add("Colors"); using Colors')
-            # These require maybe Gtk and ImageMagick
+            # These require maybe gtk and image-magick
             julia("-e", 'Pkg.add("Plots"); using Plots')
             julia("-e", 'Pkg.add("PlotRecipes"); using PlotRecipes')
             julia("-e", 'Pkg.add("UnicodePlots"); using UnicodePlots')

@@ -38,7 +38,7 @@ class RMarkdown(Package):
 
     version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-mime', type=nolink)
 

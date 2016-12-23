@@ -38,7 +38,7 @@ class RCatools(Package):
 
     version('1.17.1', '5c872bbc78b177b306f36709deb44498')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-bitops', type=nolink)
 

@@ -70,7 +70,7 @@ class Qt(Package):
     depends_on("zlib")
     depends_on("dbus", when='@4:+dbus')
     depends_on("libtiff")
-    depends_on("libpng@1.2.56", when='@3')
+    depends_on("libpng@1.2.57", when='@3')
     depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")

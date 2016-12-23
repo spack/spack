@@ -35,7 +35,7 @@ class RScales(Package):
 
     version('0.4.0', '7b5602d9c55595901192248bca25c099')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-rcolorbrewer', type=nolink)
     depends_on('r-dichromat', type=nolink)

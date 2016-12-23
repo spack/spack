@@ -39,7 +39,7 @@ class RQuantreg(Package):
 
     version('5.26', '1d89ed932fb4d67ae2d5da0eb8c2989f')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-sparsem', type=nolink)
     depends_on('r-matrix', type=nolink)

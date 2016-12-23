@@ -47,7 +47,7 @@ class RBh(Package):
 
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

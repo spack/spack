@@ -36,7 +36,7 @@ class RDt(Package):
 
     version('0.1', '5c8df984921fa484784ec4b8a4fb6f3c')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-htmltools', type=nolink)
     depends_on('r-htmlwidgets', type=nolink)

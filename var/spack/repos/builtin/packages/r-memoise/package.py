@@ -35,7 +35,7 @@ class RMemoise(Package):
 
     version('1.0.0', 'd31145292e2a88ae9a504cab1602e4ac')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-digest', type=nolink)
 

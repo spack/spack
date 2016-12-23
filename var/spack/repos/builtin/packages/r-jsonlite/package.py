@@ -44,7 +44,7 @@ class RJsonlite(Package):
     version('1.0', 'c8524e086de22ab39b8ac8000220cc87')
     version('0.9.21', '4fc382747f88a79ff0718a0d06bed45d')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

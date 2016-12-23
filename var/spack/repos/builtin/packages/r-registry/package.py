@@ -34,7 +34,7 @@ class RRegistry(Package):
 
     version('0.3', '85345b334ec81eb3da6edcbb27c5f421')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

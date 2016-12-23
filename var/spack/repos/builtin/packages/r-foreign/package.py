@@ -36,7 +36,7 @@ class RForeign(Package):
 
     version('0.8-66', 'ff12190f4631dca31e30ca786c2c8f62')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -193,7 +193,7 @@ def parse_version_offset(path, debug=False):
         (r'github.com/[^/]+/yorick/archive/y_(\d+(?:_\d+)*)$', path),
 
         # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
-        (r'github.com/[^/]+/[^/]+/archive/v?(\w+(?:[.-]\w+)*)$', path),
+        (r'github.com/[^/]+/[^/]+/archive/(?:release-)?v?(\w+(?:[.-]\w+)*)$', path),  # noqa
 
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
@@ -266,11 +266,11 @@ def parse_version_offset(path, debug=False):
     raise UndetectableVersionError(original_path)
 
 
-def parse_version(path):
+def parse_version(path, debug=False):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, l = parse_version_offset(path)
+    ver, start, l = parse_version_offset(path, debug=debug)
     return Version(ver)
 
 

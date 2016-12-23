@@ -35,7 +35,7 @@ class RRcolorbrewer(Package):
 
     version('1.1-2', '66054d83eade4dff8a43ad4732691182')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -39,7 +39,7 @@ class RGlmnet(Package):
 
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
     depends_on('r-foreach', type=nolink)

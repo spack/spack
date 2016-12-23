@@ -34,7 +34,7 @@ class RDiagrammer(Package):
 
     version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-htmlwidgets', type=nolink)
     depends_on('r-igraph', type=nolink)

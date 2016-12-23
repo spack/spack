@@ -36,7 +36,7 @@ class RBrew(Package):
 
     version('1.0-6', '4aaca5e6ec145e0fc0fe6375ce1f3806')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

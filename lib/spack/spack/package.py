@@ -135,7 +135,7 @@ class InstallPhase(object):
             return other
 
 
-class PackageMeta(type):
+class PackageMeta(spack.directives.DirectiveMetaMixin):
     """Conveniently transforms attributes to permit extensible phases
 
     Iterates over the attribute 'phases' and creates / updates private
@@ -232,10 +232,6 @@ class PackageMeta(type):
         # Sanity checks
         _append_checks('sanity_checks')
         return super(PackageMeta, meta).__new__(meta, name, bases, attr_dict)
-
-    def __init__(cls, name, bases, dict):
-        type.__init__(cls, name, bases, dict)
-        spack.directives.ensure_dicts(cls)
 
 
 class PackageBase(object):
@@ -782,7 +778,7 @@ class PackageBase(object):
     def dependencies_of_type(self, *deptypes):
         """Get subset of the dependencies with certain types."""
         return dict((name, conds) for name, conds in self.dependencies.items()
-                    if any(d in self._deptypes[name] for d in deptypes))
+                    if any(d in self.dependency_types[name] for d in deptypes))
 
     @property
     def extendee_spec(self):

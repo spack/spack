@@ -46,7 +46,7 @@ class RRcppeigen(Package):
 
     version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
     depends_on('r-rcpp', type=nolink)

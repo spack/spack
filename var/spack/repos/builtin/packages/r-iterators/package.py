@@ -35,7 +35,7 @@ class RIterators(Package):
 
     version('1.0.8', '2ded7f82cddd8174f1ec98607946c6ee')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

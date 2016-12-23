@@ -40,7 +40,7 @@ class RPkgmaker(Package):
 
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-registry', type=nolink)
     depends_on('r-codetools', type=nolink)

@@ -34,7 +34,7 @@ class RHtmltools(Package):
 
     version('0.3.5', '5f001aff4a39e329f7342dcec5139724')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-digest', type=nolink)
     depends_on('r-rcpp', type=nolink)

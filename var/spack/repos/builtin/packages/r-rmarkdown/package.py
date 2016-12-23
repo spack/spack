@@ -35,7 +35,7 @@ class RRmarkdown(Package):
 
     version('1.0', '264aa6a59e9680109e38df8270e14c58')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-knitr', type=nolink)
     depends_on('r-yaml', type=nolink)

@@ -37,7 +37,7 @@ class RGgmap(Package):
 
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-ggplot2', type=nolink)
     depends_on('r-proto', type=nolink)

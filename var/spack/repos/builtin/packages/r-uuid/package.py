@@ -36,7 +36,7 @@ class RUuid(Package):
 
     version('0.1-2', 'f97d000c0b16bca455fb5bf2cd668ddf')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
