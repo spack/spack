@@ -39,7 +39,7 @@ Then add Spack to your path.
 
 .. code-block:: console
 
-  $ export PATH=~/spack/bin/spack:$PATH
+  $ export PATH=~/spack/bin:$PATH
 
 You're good to go!
 
