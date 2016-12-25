@@ -373,11 +373,12 @@ class TestSpecDag(object):
         assert spec != expected_flat
         assert not spec.eq_dag(expected_flat)
 
-        assert spec == expected_normalized
-        assert spec.eq_dag(expected_normalized)
+        # verify DAG structure without deptypes.
+        assert spec.eq_dag(expected_normalized, deptypes=False)
+        assert not spec.eq_dag(non_unique_nodes, deptypes=False)
 
-        assert spec == non_unique_nodes
-        assert not spec.eq_dag(non_unique_nodes)
+        assert not spec.eq_dag(expected_normalized, deptypes=True)
+        assert not spec.eq_dag(non_unique_nodes, deptypes=True)
 
     def test_normalize_with_virtual_package(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
@@ -552,3 +553,60 @@ class TestSpecDag(object):
 
             with pytest.raises(ValueError):
                 spack.spec.base32_prefix_bits(test_hash, 256)
+
+    def test_traversal_directions(self):
+        """Make sure child and parent traversals of specs work."""
+        # We'll use d for a diamond dependency
+        d = Spec('d')
+
+        # Mock spec.
+        spec = Spec('a',
+                    Spec('b',
+                         Spec('c', d),
+                         Spec('e')),
+                    Spec('f',
+                         Spec('g', d)))
+
+        assert (
+            ['a', 'b', 'c', 'd', 'e', 'f', 'g'] ==
+            [s.name for s in spec.traverse(direction='children')])
+
+        assert (
+            ['g', 'f', 'a'] ==
+            [s.name for s in spec['g'].traverse(direction='parents')])
+
+        assert (
+            ['d', 'c', 'b', 'a', 'g', 'f'] ==
+            [s.name for s in spec['d'].traverse(direction='parents')])
+
+    def test_edge_traversals(self):
+        """Make sure child and parent traversals of specs work."""
+        # We'll use d for a diamond dependency
+        d = Spec('d')
+
+        # Mock spec.
+        spec = Spec('a',
+                    Spec('b',
+                         Spec('c', d),
+                         Spec('e')),
+                    Spec('f',
+                         Spec('g', d)))
+
+        assert (
+            ['a', 'b', 'c', 'd', 'e', 'f', 'g'] ==
+            [s.name for s in spec.traverse(direction='children')])
+
+        assert (
+            ['g', 'f', 'a'] ==
+            [s.name for s in spec['g'].traverse(direction='parents')])
+
+        assert (
+            ['d', 'c', 'b', 'a', 'g', 'f'] ==
+            [s.name for s in spec['d'].traverse(direction='parents')])
+
+    def test_copy_dependencies(self):
+        s1 = Spec('mpileaks ^mpich2@1.1')
+        s2 = s1.copy()
+
+        assert '^mpich2@1.1' in s2
+        assert '^mpich2' in s2
