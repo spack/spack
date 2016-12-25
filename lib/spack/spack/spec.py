@@ -840,9 +840,8 @@ class Spec(object):
         deptype = canonical_deptype(deptype)
 
         return [dep for dep in where.values()
-                if deptype and (
-                        not dep.deptypes or
-                        any(d in deptype for d in dep.deptypes))]
+                if deptype and (not dep.deptypes or
+                                any(d in deptype for d in dep.deptypes))]
 
     def dependencies(self, deptype=None):
         return [d.spec
@@ -1028,7 +1027,7 @@ class Spec(object):
                 yield get_spec(dspec)
 
     def traverse_edges(self, visited=None, d=0, deptype=None,
-                              deptype_query=None, dep_spec=None, **kwargs):
+                       deptype_query=None, dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -2202,7 +2201,7 @@ class Spec(object):
         return changed
 
     def _dup_deps(self, other, deptypes):
-        new_specs = {self.name : self}
+        new_specs = {self.name: self}
         for dspec in other.traverse_edges(cover='edges', root=False):
             if (dspec.deptypes and
                 not any(d in deptypes for d in dspec.deptypes)):
