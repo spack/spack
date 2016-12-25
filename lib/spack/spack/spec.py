@@ -577,9 +577,10 @@ class DependencySpec(object):
     def __init__(self, parent, spec, deptypes):
         self.parent = parent
         self.spec = spec
-        self.deptypes = deptypes
+        self.deptypes = tuple(sorted(set(deptypes)))
 
     def update_deptypes(self, deptypes):
+        deptypes = tuple(sorted(set(deptypes)))
         changed = self.deptypes != deptypes
         self.deptypes = deptypes
         return changed
@@ -808,16 +809,16 @@ class Spec(object):
         for dep in dep_like:
             if isinstance(dep, Spec):
                 spec = dep
-            elif isinstance(dep, tuple):
+            elif isinstance(dep, (list, tuple)):
                 # Literals can be deptypes -- if there are tuples in the
                 # list, they will be used as deptypes for the following Spec.
-                deptypes = dep
+                deptypes = tuple(dep)
                 continue
             else:
                 spec = Spec(dep)
 
             spec = dep if isinstance(dep, Spec) else Spec(dep)
-            self._add_dependency(spec, ())
+            self._add_dependency(spec, deptypes)
             deptypes = ()
 
     def __getattr__(self, item):
@@ -1318,7 +1319,7 @@ class Spec(object):
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
                 # Fill in dependencies by looking them up by name in deps dict
                 deps[name]._dependencies[dname] = DependencySpec(
-                    deps[name], deps[dname], set(dtypes))
+                    deps[name], deps[dname], dtypes)
 
         return spec
 
