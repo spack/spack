@@ -1079,9 +1079,7 @@ class Spec(object):
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
 
-        if deptype is None:
-            deptype = alldeps
-
+        deptype = canonical_deptype(deptype)
         if deptype_query is None:
             deptype_query = ('link', 'run')
 
