@@ -45,8 +45,6 @@ from spack.package import PackageBase
 description = "Build and install packages"
 
 
-
-
 def setup_parser(subparser):
     subparser.add_argument(
         '--only',
@@ -76,11 +74,9 @@ the dependencies."""
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="Fake install. Just remove prefix and create a fake file.")
-
     subparser.add_argument(
         '--install-status', '-I', action='store_true', dest='install_status',
         help="Show spec before installing.")
-
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -348,19 +344,30 @@ def setup_logging(spec, args):
     if args.log_format is not None:
         test_suite.dump(log_filename)
 
-def top_install(spec, install_package=True, install_dependencies=True, **kwargs):
+def top_install(
+    spec, install_package=True,
+    install_dependencies=True, **kwargs):
+
     """Top-level install method."""
-    if install_dependencies:
-        # Install dependencies as-if they were installed
-        # for root (explicit=False in the DB)
-        for s in spec.dependencies():
-            package = spack.repo.get(s)
-            package.do_install(install_dependencies=True, explicit=False, **kwargs)
-
-    if install_package:
+    if not install_package:
+        if install_dependencies:
+            # Install dependencies as-if they were installed
+            # for root (explicit=False in the DB)
+            for s in spec.dependencies():
+                p = spack.repo.get(s)
+                p.do_install(
+                    install_dependencies=True,
+                    explicit=False,
+                    **kwargs)
+        else:
+            # Nothing to install!
+            tty.die("Nothing to install, due to the --only flag")
+    else:    // install_package = True, install_dependencies=?
         package = spack.repo.get(spec)
-        package.do_install(install_dependencies=False, explicit=True, **kwargs)
-
+        package.do_install(
+            install_dependencies=install_dependencies,
+            explicit=True,
+            **kwargs)
 
 def show_spec(spec, args):
     """Print the concretized spec for the user before installing."""
@@ -377,7 +384,8 @@ def install(parser, args):
     kwargs = validate_args(args)
 
     # Spec from cli
-    spec = spack.cmd.parse_specs(args.package, concretize=True, allow_multi=False)
+    spec = spack.cmd.parse_specs(
+        args.package, concretize=True, allow_multi=False)
     show_spec(spec, args)
 
     with setup_logging(spec, args):
