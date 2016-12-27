@@ -35,17 +35,18 @@ import spack
 from spack.util.executable import *
 
 description = "Runs source code style checks on Spack. Requires flake8."
-
-changed_files_path = os.path.join(spack.share_path, 'qa', 'changed_files')
-changed_files = Executable(changed_files_path)
 flake8 = None
+include_untracked = True
 
-#
-# This is a dict that maps:
-# filename pattern ->
-#    a flake8 exemption code ->
-#       list of patterns, for which matching lines should have codes applied.
-#
+"""List of directories to exclude from checks."""
+exclude_directories = [spack.external_path]
+
+"""
+This is a dict that maps:
+ filename pattern ->
+    a flake8 exemption code ->
+       list of patterns, for which matching lines should have codes applied.
+"""
 exemptions = {
     # exemptions applied only to package.py files.
     r'package.py$': {
@@ -75,6 +76,37 @@ exemptions = dict((re.compile(file_pattern),
                    dict((code, [re.compile(p) for p in patterns])
                         for code, patterns in error_dict.items()))
                   for file_pattern, error_dict in exemptions.items())
+
+
+def changed_files():
+    """Get list of changed files in the Spack repository."""
+
+    git = which('git', required=True)
+
+    git_args = [
+        # Add changed files committed since branching off of develop
+        ['diff', '--name-only', '--diff-filter=ACMR', 'develop'],
+        # Add changed files that have been staged but not yet committed
+        ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
+        # Add changed files that are unstaged
+        ['diff', '--name-only', '--diff-filter=ACMR']]
+
+    # Add new files that are untracked
+    if include_untracked:
+        git_args.append(['ls-files', '--exclude-standard', '--other'])
+
+    excludes = [os.path.realpath(f) for f in exclude_directories]
+    changed = set()
+    for git_arg_list in git_args:
+        arg_list = git_arg_list + ['--', '*.py']
+
+        files = [f for f in git(*arg_list, output=str).split('\n') if f]
+        for f in files:
+            # don't look at files that are in the exclude locations
+            if any(os.path.realpath(f).startswith(e) for e in excludes):
+                continue
+            changed.add(f)
+    return sorted(changed)
 
 
 def filter_file(source, dest, output=False):
@@ -115,13 +147,17 @@ def setup_parser(subparser):
         '-r', '--root-relative', action='store_true', default=False,
         help="print root-relative paths (default is cwd-relative)")
     subparser.add_argument(
+        '-U', '--no-untracked', dest='untracked', action='store_false',
+        default=True, help="Exclude untracked files from checks.")
+    subparser.add_argument(
         'files', nargs=argparse.REMAINDER, help="specific files to check")
 
 
 def flake8(parser, args):
     # Just use this to check for flake8 -- we actually execute it with Popen.
-    global flake8
+    global flake8, include_untracked
     flake8 = which('flake8', required=True)
+    include_untracked = args.untracked
 
     temp = tempfile.mkdtemp()
     try:
@@ -135,9 +171,7 @@ def flake8(parser, args):
 
         with working_dir(spack.prefix):
             if not file_list:
-                file_list = changed_files('*.py', output=str)
-                file_list = [x for x in file_list.split('\n') if x]
-
+                file_list = changed_files()
             shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
         print '======================================================='

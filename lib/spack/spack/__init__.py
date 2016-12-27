@@ -41,6 +41,7 @@ spack_file = join_path(spack_root, "bin", "spack")
 
 # spack directory hierarchy
 lib_path       = join_path(spack_root, "lib", "spack")
+external_path  = join_path(lib_path, "external")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 platform_path  = join_path(module_path, 'platforms')
