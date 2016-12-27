@@ -22,25 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import pytest
 
-import imp
-import os.path
+from llnl.util.filesystem import *
 
+import spack
+from spack.cmd import remove_options
 
-##########
-# Source bin file as if bin/spack was invoked directly
-##########
-
-
-def spack_bin_path_form_this_file():
-    t = __file__
-    t = os.path.realpath(os.path.expanduser(t))
-    t = os.path.dirname(os.path.dirname(t))
-    t = os.path.join(t, 'bin', 'spack')
-    return t
+description = "A thin wrapper around the pytest command."
 
 
-# Compute the absolute path of the directory where the script resides
-SPACK_BIN_PATH = spack_bin_path_form_this_file()
-with open(SPACK_BIN_PATH) as f:
-    imp.load_source('__spack_bin', SPACK_BIN_PATH, f)
+def setup_parser(subparser):
+    remove_options(subparser, '-h', '--help')
+
+
+def test(parser, args, unknown_args):
+    # pytest.ini lives in the root of the sapck repository.
+    with working_dir(spack.prefix):
+        return pytest.main(unknown_args)
