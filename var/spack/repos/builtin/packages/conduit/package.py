@@ -49,7 +49,7 @@ class Conduit(Package):
 
     version('0.2.0', 'd595573dedf55514c11d7391092fd760')
 
-    version('github-master', git='https://github.com/LLNL/conduit.git')
+    version('master', git='https://github.com/LLNL/conduit.git')
 
     ###########################################################################
     # package variants
@@ -63,13 +63,13 @@ class Conduit(Package):
     # variants for python support
     variant("python", default=True, description="Build Conduit Python support")
 
-    # variants for i/o
+    # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
     variant("silo", default=True, description="Build Conduit Silo support")
 
     # variants for dev-tools (docs, etc)
-    variant("docs", default=True,   description="Build Conduit's docs")
+    variant("doc", default=False, description="Build Conduit's documentation")
 
     ###########################################################################
     # package dependencies
@@ -85,22 +85,26 @@ class Conduit(Package):
     #######################
     depends_on("python", when="+python")
     depends_on("py-numpy~blas~lapack", when="+python")
-    depends_on("py-sphinx", when="+python+docs")
-    depends_on("doxygen", when="+docs")
 
     #######################
     # I/O Packages
     #######################
-    depends_on("hdf5+shared~cxx~mpi~fortran", when="+shared")
+    depends_on("hdf5~cxx~mpi~fortran", when="+shared")
     depends_on("hdf5~shared~cxx~mpi~fortran", when="~shared")
 
-    depends_on("silo+shared~fortran", when="+shared")
+    depends_on("silo~fortran", when="+shared")
     depends_on("silo~shared~fortran", when="~shared")
 
     #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
+
+    #######################
+    # Documentation related
+    #######################
+    depends_on("py-sphinx", when="+python+doc")
+    depends_on("doxygen", when="+doc")
 
     def install(self, spec, prefix):
         """
@@ -109,9 +113,9 @@ class Conduit(Package):
         with working_dir('spack-build', create=True):
             host_cfg_fname = self.create_host_config(spec, prefix)
             cmake_args = []
-            # if we have a static build, we need to avoid
-            # any of spack's default cmake settings related to
-            # rpath
+            # if we have a static build, we need to avoid any of
+            # spack's default cmake settings related to rpaths
+            # (see: https://github.com/LLNL/spack/issues/2658)
             if "+shared" in spec:
                 cmake_args.extend(std_cmake_args)
             else:
@@ -140,7 +144,7 @@ class Conduit(Package):
         f_compiler = None
 
         if self.compiler.fc:
-            # even if this is set, it may not exist do one more sanity check
+            # even if this is set, it may not exist so do one more sanity check
             if os.path.isfile(env["SPACK_FC"]):
                 f_compiler = env["SPACK_FC"]
 
@@ -218,7 +222,7 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
-        if "+docs" in spec:
+        if "+doc" in spec:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
             cfg.write("# sphinx from spack \n")
