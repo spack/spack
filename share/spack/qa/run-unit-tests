@@ -44,9 +44,7 @@ spack install -v libdwarf
 
 # Run unit tests with code coverage
 if [[ "$TRAVIS_PYTHON_VERSION" == 2.7 ]]; then
-    pytest --cov "$@"
+    spack test --cov "$@"
 else
-    pytest "$@"
+    spack test "$@"
 fi
-
-# FIXME: also requires pytest and pytest-cov
