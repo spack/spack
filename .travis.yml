@@ -37,8 +37,6 @@ addons:
 
 # Install various dependencies
 install:
-  - pip install --upgrade pytest
-  - pip install --upgrade pytest-cov
   - pip install --upgrade coveralls
   - pip install --upgrade flake8
   - pip install --upgrade sphinx

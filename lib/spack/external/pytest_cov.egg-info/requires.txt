@@ -1,0 +1,2 @@
+pytest>=2.6.0
+coverage>=3.7.1
