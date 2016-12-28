@@ -29,8 +29,8 @@ import platform
 
 import llnl.util.tty as tty
 import spack.build_environment
-import spack.directives
 from llnl.util.filesystem import working_dir, join_path
+from spack.directives import depends_on
 from spack.package import PackageBase
 
 
@@ -50,7 +50,7 @@ class CMakePackage(PackageBase):
     # build-system class we are using
     build_system_class = 'CMakePackage'
 
-    spack.directives.depends_on('cmake', type='build')
+    depends_on('cmake', type='build')
 
     def build_type(self):
         """Override to provide the correct build_type in case a complex

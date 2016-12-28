@@ -109,7 +109,9 @@ class DirectiveMetaMixin(type):
             )
             _directives_to_be_executed = []
 
-        return super(DirectiveMetaMixin, meta).__new__(meta, name, bases, attr_dict)  # NOQA: ignore=E501
+        return super(DirectiveMetaMixin, meta).__new__(
+            meta, name, bases, attr_dict
+        )
 
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure
