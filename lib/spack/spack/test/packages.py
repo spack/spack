@@ -27,6 +27,7 @@ from llnl.util.filesystem import join_path
 from spack.repository import Repo
 from spack.test.mock_packages_test import *
 from spack.util.naming import mod_to_class
+from spack.spec import *
 
 
 class PackagesTest(MockPackagesTest):
@@ -89,3 +90,28 @@ class PackagesTest(MockPackagesTest):
         import spack.pkg.builtin.mock                   # noqa
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa
+
+    def test_inheritance_of_diretives(self):
+        p = spack.repo.get('simple_inheritance')
+
+        # Check dictionaries that should have been filled by directives
+        self.assertEqual(len(p.dependencies), 3)
+        self.assertTrue('cmake' in p.dependencies)
+        self.assertTrue('openblas' in p.dependencies)
+        self.assertTrue('mpi' in p.dependencies)
+        self.assertEqual(len(p.provided), 2)
+
+        # Check that Spec instantiation behaves as we expect
+        s = Spec('simple_inheritance')
+        s.concretize()
+        self.assertTrue('^cmake' in s)
+        self.assertTrue('^openblas' in s)
+        self.assertTrue('+openblas' in s)
+        self.assertTrue('mpi' in s)
+
+        s = Spec('simple_inheritance~openblas')
+        s.concretize()
+        self.assertTrue('^cmake' in s)
+        self.assertTrue('^openblas' not in s)
+        self.assertTrue('~openblas' in s)
+        self.assertTrue('mpi' in s)

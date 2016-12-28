@@ -43,5 +43,3 @@ class Openjpeg(CMakePackage):
     version('2.0',   'cdf266530fee8af87454f15feb619609')
     version('1.5.2', '545f98923430369a6b046ef3632ef95c')
     version('1.5.1', 'd774e4b5a0db5f0f171c4fc0aabfa14e')
-
-    depends_on('cmake', type='build')
