@@ -47,15 +47,16 @@ The available directives are:
 """
 
 import collections
+import functools
 import inspect
 import os.path
 import re
 
+import llnl.util.lang
 import spack
 import spack.error
 import spack.spec
 import spack.url
-import llnl.util.lang
 from llnl.util.filesystem import join_path
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
@@ -66,18 +67,17 @@ from spack.version import Version
 
 __all__ = []
 
-_directive_names = set()
-_directives_to_be_executed = []
-
 
 class DirectiveMetaMixin(type):
     """Flushes the directives that were temporarily stored in the staging
     area into the package.
     """
-    def __new__(meta, name, bases, attr_dict):
 
-        global _directives_to_be_executed
+    # Set of all known directives
+    _directive_names = set()
+    _directives_to_be_executed = []
 
+    def __new__(mcs, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
         # to be executed. Here we go reversed because we want to execute
         # commands:
@@ -103,14 +103,14 @@ class DirectiveMetaMixin(type):
 
         # Move things to be executed from module scope (where they
         # are collected first) to class scope
-        if _directives_to_be_executed:
+        if DirectiveMetaMixin._directives_to_be_executed:
             attr_dict['_directives_to_be_executed'].extend(
-                _directives_to_be_executed
+                DirectiveMetaMixin._directives_to_be_executed
             )
-            _directives_to_be_executed = []
+            DirectiveMetaMixin._directives_to_be_executed = []
 
-        return super(DirectiveMetaMixin, meta).__new__(
-            meta, name, bases, attr_dict
+        return super(DirectiveMetaMixin, mcs).__new__(
+            mcs, name, bases, attr_dict
         )
 
     def __init__(cls, name, bases, attr_dict):
@@ -124,7 +124,7 @@ class DirectiveMetaMixin(type):
             setattr(cls, 'name', pkg_name)
             # Ensure the presence of the dictionaries associated
             # with the directives
-            for d in _directive_names:
+            for d in DirectiveMetaMixin._directive_names:
                 setattr(cls, d, {})
             # Lazy execution of directives
             for command in cls._directives_to_be_executed:
@@ -132,61 +132,77 @@ class DirectiveMetaMixin(type):
 
         super(DirectiveMetaMixin, cls).__init__(name, bases, attr_dict)
 
+    @staticmethod
+    def directive(dicts=None):
+        """Decorator for Spack directives.
 
-def directive(dicts=None):
-    """Decorator for Spack directives.
+        Spack directives allow you to modify a package while it is being
+        defined, e.g. to add version or dependency information.  Directives
+        are one of the key pieces of Spack's package "language", which is
+        embedded in python.
 
-    Spack directives allow you to modify a package while it is being
-    defined, e.g. to add version or dependency information.  Directives
-    are one of the key pieces of Spack's package "language", which is
-    embedded in python.
+        Here's an example directive:
 
-    Here's an example directive:
+            @directive(dicts='versions')
+            version(pkg, ...):
+                ...
 
-        @directive(dicts='versions')
-        version(pkg, ...):
-            ...
+        This directive allows you write:
 
-    This directive allows you write:
+            class Foo(Package):
+                version(...)
 
-        class Foo(Package):
-            version(...)
+        The ``@directive`` decorator handles a couple things for you:
 
-    The ``@directive`` decorator handles a couple things for you:
+          1. Adds the class scope (pkg) as an initial parameter when
+             called, like a class method would.  This allows you to modify
+             a package from within a directive, while the package is still
+             being defined.
 
-      1. Adds the class scope (pkg) as an initial parameter when
-         called, like a class method would.  This allows you to modify
-         a package from within a directive, while the package is still
-         being defined.
+          2. It automatically adds a dictionary called "versions" to the
+             package so that you can refer to pkg.versions.
 
-      2. It automatically adds a dictionary called "versions" to the
-         package so that you can refer to pkg.versions.
+        The ``(dicts='versions')`` part ensures that ALL packages in Spack
+        will have a ``versions`` attribute after they're constructed, and
+        that if no directive actually modified it, it will just be an
+        empty dict.
 
-    The ``(dicts='versions')`` part ensures that ALL packages in Spack
-    will have a ``versions`` attribute after they're constructed, and
-    that if no directive actually modified it, it will just be an
-    empty dict.
+        This is just a modular way to add storage attributes to the
+        Package class, and it's how Spack gets information from the
+        packages to the core.
 
-    This is just a modular way to add storage attributes to the
-    Package class, and it's how Spack gets information from the
-    packages to the core.
+        """
+        global __all__
 
-    """
-    global _directive_names, __all__
+        if isinstance(dicts, basestring):
+            dicts = (dicts, )
+        if not isinstance(dicts, collections.Sequence):
+            message = "dicts arg must be list, tuple, or string. Found {0}"
+            raise TypeError(message.format(type(dicts)))
+        # Add the dictionary names if not already there
+        DirectiveMetaMixin._directive_names |= set(dicts)
 
-    if isinstance(dicts, basestring):
-        dicts = (dicts, )
-    if not isinstance(dicts, collections.Sequence):
-        message = "dicts arg must be list, tuple, or string. Found {0}"
-        raise TypeError(message.format(type(dicts)))
-    # Add the dictionary names if not already there
-    _directive_names |= set(dicts)
+        # This decorator just returns the directive functions
+        def _decorator(decorated_function):
+            __all__.append(decorated_function.__name__)
 
-    # This decorator just returns the directive functions
-    def _decorator(decorated_function):
-        __all__.append(decorated_function.__name__)
-        return decorated_function
-    return _decorator
+            @functools.wraps(decorated_function)
+            def _wrapper(*args, **kwargs):
+                # A directive returns either something that is callable on a
+                # package or a sequence of them
+                values = decorated_function(*args, **kwargs)
+
+                # ...so if it is not a sequence make it so
+                if not isinstance(values, collections.Sequence):
+                    values = (values, )
+
+                DirectiveMetaMixin._directives_to_be_executed.extend(values)
+            return _wrapper
+
+        return _decorator
+
+
+directive = DirectiveMetaMixin.directive
 
 
 @directive('versions')
@@ -204,7 +220,7 @@ def version(ver, checksum=None, **kwargs):
 
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[Version(ver)] = kwargs
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 def _depends_on(pkg, spec, when=None, type=None):
@@ -254,7 +270,7 @@ def depends_on(spec, when=None, type=None):
     @see The section "Dependency specs" in the Spack Packaging Guide."""
     def _execute(pkg):
         _depends_on(pkg, spec, when=when, type=type)
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 @directive(('extendees', 'dependencies', 'dependency_types'))
@@ -280,7 +296,7 @@ def extends(spec, **kwargs):
         when = kwargs.pop('when', pkg.name)
         _depends_on(pkg, spec, when=when)
         pkg.extendees[spec] = (Spec(spec), kwargs)
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 @directive('provided')
@@ -298,7 +314,7 @@ def provides(*specs, **kwargs):
                 if pkg.name == provided_spec.name:
                     raise CircularReferenceError('depends_on', pkg.name)
                 pkg.provided[provided_spec] = provider_spec
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 @directive('patches')
@@ -315,7 +331,7 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
         # if this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches.append(Patch.create(pkg, url_or_filename, level, **kwargs))
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 @directive('variants')
@@ -330,7 +346,7 @@ def variant(name, default=False, description=""):
             raise DirectiveError(msg.format(pkg.name, name))
 
         pkg.variants[name] = Variant(default, description)
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 @directive('resources')
@@ -379,7 +395,7 @@ def resource(**kwargs):
         name = kwargs.get('name')
         fetcher = from_kwargs(**kwargs)
         resources.append(Resource(name, fetcher, destination, placement))
-    _directives_to_be_executed.append(_execute)
+    return _execute
 
 
 class DirectiveError(spack.error.SpackError):
