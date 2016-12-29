@@ -35,12 +35,15 @@ So far:
 
     jsonschema:  An implementation of JSON Schema for Python.
 
-    pytest:      Testing framework used by Spack.
-
     ordereddict: We include our own version to be Python 2.6 compatible.
+
+    py:          Needed by pytest.  Library with cross-python path,
+                 ini-parsing, io, code, and log facilities.
 
     pyqver2:     External script to query required python version of
                  python source code. Used for ensuring 2.6 compatibility.
+
+    pytest:      Testing framework used by Spack.
 
     yaml:        Used for config files.
 """
