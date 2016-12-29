@@ -81,6 +81,7 @@ def test_import_package_as(builtin_mock):
     import spack.pkg.builtin.mock as m              # noqa
     from spack.pkg.builtin import mock              # noqa
 
+
 def test_inheritance_of_diretives():
     p = spack.repo.get('simple_inheritance')
 
@@ -105,6 +106,7 @@ def test_inheritance_of_diretives():
     assert '^openblas' not in s
     assert '~openblas' in s
     assert 'mpi' in s
+
 
 def test_import_class_from_package(builtin_mock):
     from spack.pkg.builtin.mock.mpich import Mpich  # noqa
