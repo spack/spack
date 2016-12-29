@@ -25,10 +25,9 @@
 from spack import *
 
 
-class Automake(Package):
-    """
-    Automake -- make file builder part of autotools
-    """
+class Automake(AutotoolsPackage):
+    """Automake -- make file builder part of autotools"""
+
     homepage = 'http://www.gnu.org/software/automake/'
     url      = 'http://ftp.gnu.org/gnu/automake/automake-1.14.tar.gz'
 
@@ -36,7 +35,7 @@ class Automake(Package):
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
 
-    depends_on('autoconf')
+    depends_on('autoconf', type='build')
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
@@ -47,8 +46,3 @@ class Automake(Package):
         executables = ['aclocal', 'automake']
         for name in executables:
             setattr(module, name, self._make_executable(name))
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

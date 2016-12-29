@@ -133,7 +133,7 @@ class RepoPath(object):
                          "    spack repo rm %s" % root)
 
     def swap(self, other):
-        """Convenience function to make swapping repostiories easier.
+        """Convenience function to make swapping repositories easier.
 
         This is currently used by mock tests.
         TODO: Maybe there is a cleaner way.

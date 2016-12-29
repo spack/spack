@@ -22,175 +22,173 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""\
+"""
 This test verifies that the Spack directory layout works properly.
 """
 import os
-import shutil
-import tempfile
 
+import pytest
 import spack
-from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
 from spack.repository import RepoPath
 from spack.spec import Spec
-from spack.test.mock_packages_test import *
 
 # number of packages to test (to reduce test time)
 max_packages = 10
 
 
-class DirectoryLayoutTest(MockPackagesTest):
-    """Tests that a directory layout works correctly and produces a
-       consistent install path."""
+@pytest.fixture()
+def layout_and_dir(tmpdir):
+    """Returns a directory layout and the corresponding directory."""
+    yield YamlDirectoryLayout(str(tmpdir)), str(tmpdir)
 
-    def setUp(self):
-        super(DirectoryLayoutTest, self).setUp()
-        self.tmpdir = tempfile.mkdtemp()
-        self.layout = YamlDirectoryLayout(self.tmpdir)
 
-    def tearDown(self):
-        super(DirectoryLayoutTest, self).tearDown()
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-        self.layout = None
+def test_read_and_write_spec(
+        layout_and_dir, config, builtin_mock
+):
+    """This goes through each package in spack and creates a directory for
+    it.  It then ensures that the spec for the directory's
+    installed package can be read back in consistently, and
+    finally that the directory can be removed by the directory
+    layout.
+    """
+    layout, tmpdir = layout_and_dir
+    packages = list(spack.repo.all_packages())[:max_packages]
 
-    def test_read_and_write_spec(self):
-        """This goes through each package in spack and creates a directory for
-           it.  It then ensures that the spec for the directory's
-           installed package can be read back in consistently, and
-           finally that the directory can be removed by the directory
-           layout.
-        """
-        packages = list(spack.repo.all_packages())[:max_packages]
+    for pkg in packages:
+        if pkg.name.startswith('external'):
+            # External package tests cannot be installed
+            continue
+        spec = pkg.spec
 
-        for pkg in packages:
-            if pkg.name.startswith('external'):
-                # External package tests cannot be installed
-                continue
-            spec = pkg.spec
+        # If a spec fails to concretize, just skip it.  If it is a
+        # real error, it will be caught by concretization tests.
+        try:
+            spec.concretize()
+        except Exception:
+            continue
 
-            # If a spec fails to concretize, just skip it.  If it is a
-            # real error, it will be caught by concretization tests.
-            try:
-                spec.concretize()
-            except:
-                continue
+        layout.create_install_directory(spec)
 
-            self.layout.create_install_directory(spec)
+        install_dir = layout.path_for_spec(spec)
+        spec_path = layout.spec_file_path(spec)
 
-            install_dir = self.layout.path_for_spec(spec)
-            spec_path = self.layout.spec_file_path(spec)
+        # Ensure directory has been created in right place.
+        assert os.path.isdir(install_dir)
+        assert install_dir.startswith(str(tmpdir))
 
-            # Ensure directory has been created in right place.
-            self.assertTrue(os.path.isdir(install_dir))
-            self.assertTrue(install_dir.startswith(self.tmpdir))
+        # Ensure spec file exists when directory is created
+        assert os.path.isfile(spec_path)
+        assert spec_path.startswith(install_dir)
 
-            # Ensure spec file exists when directory is created
-            self.assertTrue(os.path.isfile(spec_path))
-            self.assertTrue(spec_path.startswith(install_dir))
+        # Make sure spec file can be read back in to get the original spec
+        spec_from_file = layout.read_spec(spec_path)
 
-            # Make sure spec file can be read back in to get the original spec
-            spec_from_file = self.layout.read_spec(spec_path)
+        # currently we don't store build dependency information when
+        # we write out specs to the filesystem.
 
-            # currently we don't store build dependency information when
-            # we write out specs to the filesystem.
+        # TODO: fix this when we can concretize more loosely based on
+        # TODO: what is installed. We currently omit these to
+        # TODO: increase reuse of build dependencies.
+        stored_deptypes = ('link', 'run')
+        expected = spec.copy(deps=stored_deptypes)
+        assert expected == spec_from_file
+        assert expected.eq_dag  # msg , spec_from_file
+        assert spec_from_file.concrete
 
-            # TODO: fix this when we can concretize more loosely based on
-            # TODO: what is installed. We currently omit these to
-            # TODO: increase reuse of build dependencies.
-            stored_deptypes = ('link', 'run')
-            expected = spec.copy(deps=stored_deptypes)
-            self.assertEqual(expected, spec_from_file)
-            self.assertTrue(expected.eq_dag, spec_from_file)
-            self.assertTrue(spec_from_file.concrete)
+        # Ensure that specs that come out "normal" are really normal.
+        with open(spec_path) as spec_file:
+            read_separately = Spec.from_yaml(spec_file.read())
 
-            # Ensure that specs that come out "normal" are really normal.
-            with open(spec_path) as spec_file:
-                read_separately = Spec.from_yaml(spec_file.read())
+            # TODO: revise this when build deps are in dag_hash
+            norm = read_separately.normalized().copy(deps=stored_deptypes)
+            assert norm == spec_from_file
 
-                # TODO: revise this when build deps are in dag_hash
-                norm = read_separately.normalized().copy(deps=stored_deptypes)
-                self.assertEqual(norm, spec_from_file)
+            # TODO: revise this when build deps are in dag_hash
+            conc = read_separately.concretized().copy(deps=stored_deptypes)
+            assert conc == spec_from_file
 
-                # TODO: revise this when build deps are in dag_hash
-                conc = read_separately.concretized().copy(deps=stored_deptypes)
-                self.assertEqual(conc, spec_from_file)
+        # Make sure the hash of the read-in spec is the same
+        assert expected.dag_hash() == spec_from_file.dag_hash()
 
-            # Make sure the hash of the read-in spec is the same
-            self.assertEqual(expected.dag_hash(), spec_from_file.dag_hash())
+        # Ensure directories are properly removed
+        layout.remove_install_directory(spec)
+        assert not os.path.isdir(install_dir)
+        assert not os.path.exists(install_dir)
 
-            # Ensure directories are properly removed
-            self.layout.remove_install_directory(spec)
-            self.assertFalse(os.path.isdir(install_dir))
-            self.assertFalse(os.path.exists(install_dir))
 
-    def test_handle_unknown_package(self):
-        """This test ensures that spack can at least do *some*
-           operations with packages that are installed but that it
-           does not know about.  This is actually not such an uncommon
-           scenario with spack; it can happen when you switch from a
-           git branch where you're working on a new package.
+def test_handle_unknown_package(
+        layout_and_dir, config, builtin_mock
+):
+    """This test ensures that spack can at least do *some*
+    operations with packages that are installed but that it
+    does not know about.  This is actually not such an uncommon
+    scenario with spack; it can happen when you switch from a
+    git branch where you're working on a new package.
 
-           This test ensures that the directory layout stores enough
-           information about installed packages' specs to uninstall
-           or query them again if the package goes away.
-        """
-        mock_db = RepoPath(spack.mock_packages_path)
+    This test ensures that the directory layout stores enough
+    information about installed packages' specs to uninstall
+    or query them again if the package goes away.
+    """
+    layout, _ = layout_and_dir
+    mock_db = RepoPath(spack.mock_packages_path)
 
-        not_in_mock = set.difference(
-            set(spack.repo.all_package_names()),
-            set(mock_db.all_package_names()))
-        packages = list(not_in_mock)[:max_packages]
+    not_in_mock = set.difference(
+        set(spack.repo.all_package_names()),
+        set(mock_db.all_package_names()))
+    packages = list(not_in_mock)[:max_packages]
 
-        # Create all the packages that are not in mock.
-        installed_specs = {}
-        for pkg_name in packages:
-            spec = spack.repo.get(pkg_name).spec
+    # Create all the packages that are not in mock.
+    installed_specs = {}
+    for pkg_name in packages:
+        spec = spack.repo.get(pkg_name).spec
 
-            # If a spec fails to concretize, just skip it.  If it is a
-            # real error, it will be caught by concretization tests.
-            try:
-                spec.concretize()
-            except:
-                continue
+        # If a spec fails to concretize, just skip it.  If it is a
+        # real error, it will be caught by concretization tests.
+        try:
+            spec.concretize()
+        except Exception:
+            continue
 
-            self.layout.create_install_directory(spec)
-            installed_specs[spec] = self.layout.path_for_spec(spec)
+        layout.create_install_directory(spec)
+        installed_specs[spec] = layout.path_for_spec(spec)
 
-        spack.repo.swap(mock_db)
+    spack.repo.swap(mock_db)
 
-        # Now check that even without the package files, we know
-        # enough to read a spec from the spec file.
-        for spec, path in installed_specs.items():
-            spec_from_file = self.layout.read_spec(
-                join_path(path, '.spack', 'spec.yaml'))
+    # Now check that even without the package files, we know
+    # enough to read a spec from the spec file.
+    for spec, path in installed_specs.items():
+        spec_from_file = layout.read_spec(
+            join_path(path, '.spack', 'spec.yaml')
+        )
+        # To satisfy these conditions, directory layouts need to
+        # read in concrete specs from their install dirs somehow.
+        assert path == layout.path_for_spec(spec_from_file)
+        assert spec == spec_from_file
+        assert spec.eq_dag(spec_from_file)
+        assert spec.dag_hash() == spec_from_file.dag_hash()
 
-            # To satisfy these conditions, directory layouts need to
-            # read in concrete specs from their install dirs somehow.
-            self.assertEqual(path, self.layout.path_for_spec(spec_from_file))
-            self.assertEqual(spec, spec_from_file)
-            self.assertTrue(spec.eq_dag(spec_from_file))
-            self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
+    spack.repo.swap(mock_db)
 
-        spack.repo.swap(mock_db)
 
-    def test_find(self):
-        """Test that finding specs within an install layout works."""
-        packages = list(spack.repo.all_packages())[:max_packages]
+def test_find(layout_and_dir, config, builtin_mock):
+    """Test that finding specs within an install layout works."""
+    layout, _ = layout_and_dir
+    packages = list(spack.repo.all_packages())[:max_packages]
 
-        # Create install prefixes for all packages in the list
-        installed_specs = {}
-        for pkg in packages:
-            if pkg.name.startswith('external'):
-                # External package tests cannot be installed
-                continue
-            spec = pkg.spec.concretized()
-            installed_specs[spec.name] = spec
-            self.layout.create_install_directory(spec)
+    # Create install prefixes for all packages in the list
+    installed_specs = {}
+    for pkg in packages:
+        if pkg.name.startswith('external'):
+            # External package tests cannot be installed
+            continue
+        spec = pkg.spec.concretized()
+        installed_specs[spec.name] = spec
+        layout.create_install_directory(spec)
 
-        # Make sure all the installed specs appear in
-        # DirectoryLayout.all_specs()
-        found_specs = dict((s.name, s) for s in self.layout.all_specs())
-        for name, spec in found_specs.items():
-            self.assertTrue(name in found_specs)
-            self.assertTrue(found_specs[name].eq_dag(spec))
+    # Make sure all the installed specs appear in
+    # DirectoryLayout.all_specs()
+    found_specs = dict((s.name, s) for s in layout.all_specs())
+    for name, spec in found_specs.items():
+        assert name in found_specs
+        assert found_specs[name].eq_dag(spec)

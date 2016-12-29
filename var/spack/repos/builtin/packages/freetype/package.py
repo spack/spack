@@ -25,17 +25,21 @@
 from spack import *
 
 
-class Freetype(Package):
-    """Font package"""
-    homepage = "http://http://www.freetype.org"
-    url      = "http://download.savannah.gnu.org/releases/freetype/freetype-2.5.3.tar.gz"
+class Freetype(AutotoolsPackage):
+    """FreeType is a freely available software library to render fonts.
+    It is written in C, designed to be small, efficient, highly customizable,
+    and portable while capable of producing high-quality output (glyph images)
+    of most vector and bitmap font formats."""
 
+    homepage = "https://www.freetype.org/index.html"
+    url      = "http://download.savannah.gnu.org/releases/freetype/freetype-2.7.tar.gz"
+
+    version('2.7',   '337139e5c7c5bd645fe130608e0fa8b5')
     version('2.5.3', 'cafe9f210e45360279c730d27bf071e9')
 
     depends_on('libpng')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--with-harfbuzz=no")
-
-        make()
-        make("install")
+    depends_on('bzip2')
+    depends_on('pkg-config@0.9.0:', type='build')
+  
+    def configure_args(self):
+        return ['--with-harfbuzz=no']

@@ -33,6 +33,7 @@ class Eigen(Package):
     homepage = 'http://eigen.tuxfamily.org/'
     url = 'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2'
 
+    version('3.3.1', 'edb6799ef413b0868aace20d2403864c')
     version('3.2.10', 'a85bb68c82988648c3d53ba9768d7dcbcfe105f8')
     version('3.2.9', '59ab81212f8eb2534b1545a9b42c38bf618a0d71')
     version('3.2.8', '64f4aef8012a424c7e079eaf0be71793ab9bc6e0')

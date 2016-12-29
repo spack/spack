@@ -36,15 +36,16 @@ class LuaLuafilesystem(Package):
     """
 
     homepage = 'http://keplerproject.github.io/luafilesystem'
-    url = 'https://github.com/keplerproject/luafilesystem/archive/v_1_6_3.tar.gz'
+    url = 'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz'
 
-    version('1_6_3', 'd0552c7e5a082f5bb2865af63fb9dc95')
+    version('1_6_3', 'bed11874cfded8b4beed7dd054127b24')
 
+    depends_on('git@2.9.3:', type='build')
     extends('lua')
 
     def install(self, spec, prefix):
         rockspec_fmt = join_path(self.stage.path,
-                                 'luafilesystem-v_{version.underscored}',
+                                 'luafilesystem-{version.underscored}',
                                  'rockspecs',
                                  'luafilesystem-{version.dotted}-1.rockspec')
         luarocks('--tree=' + prefix, 'install',

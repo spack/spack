@@ -93,9 +93,13 @@ def checksum(parser, args):
 
     sorted_versions = sorted(versions, reverse=True)
 
+    # Find length of longest string in the list for padding
+    maxlen = max(len(str(v)) for v in versions)
+
     tty.msg("Found %s versions of %s" % (len(versions), pkg.name),
             *spack.cmd.elide_list(
-                ["%-10s%s" % (v, versions[v]) for v in sorted_versions]))
+                ["{0:{1}}  {2}".format(v, maxlen, versions[v])
+                 for v in sorted_versions]))
     print
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=5, abort='q')

@@ -38,5 +38,4 @@ cd "$DOC_DIR"
 
 # Treat warnings as fatal errors
 make clean --silent
-make SPHINXOPTS=-W
-
+make SPHINXOPTS=-W JOBS=1

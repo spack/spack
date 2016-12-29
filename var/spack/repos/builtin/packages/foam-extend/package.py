@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 from spack.environment import *
 
@@ -39,7 +63,7 @@ class FoamExtend(Package):
 
     depends_on('mpi')
     depends_on('python')
-    depends_on('flex@:2.5.99')
+    depends_on('flex')
     depends_on('zlib')
     depends_on('cmake', type='build')
 
@@ -92,7 +116,7 @@ class FoamExtend(Package):
             filter_file(
                 r'-lMGridGen',
                 r'-lmgrid',
-                'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # noqa
+                'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # noqa: E501
 
         # Get the wmake arch and compiler
         (arch, foam_compiler) = self.set_arch()
@@ -155,11 +179,11 @@ class FoamExtend(Package):
 
         if '+paraview' in self.spec:
             prefs_dict['PARAVIEW_SYSTEM'] = 1
-            prefs_dict['PARAVIEW_DIR'] = self.spec['paraview'].prefix,
-            prefs_dict['PARAVIEW_BIN_DIR'] = self.spec['paraview'].prefix.bin,
+            prefs_dict['PARAVIEW_DIR'] = self.spec['paraview'].prefix
+            prefs_dict['PARAVIEW_BIN_DIR'] = self.spec['paraview'].prefix.bin
             prefs_dict['QT_SYSTEM'] = 1
-            prefs_dict['QT_DIR'] = self.spec['qt'].prefix,
-            prefs_dict['QT_BIN_DIR'] = self.spec['qt'].prefix.bin,
+            prefs_dict['QT_DIR'] = self.spec['qt'].prefix
+            prefs_dict['QT_BIN_DIR'] = self.spec['qt'].prefix.bin
 
         # write the prefs files to define the configuration needed,
         # only the prefs.sh is used by this script but both are
@@ -215,6 +239,22 @@ class FoamExtend(Package):
                     for key, val in compiler_flags.iteritems():
                         fh.write('{0}{1} = {2}\n'.format(comp, key, val))
 
+        _files_to_patch = [
+            'src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L',  # noqa: E501
+            'src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L',  # noqa: E501
+            'src/meshTools/triSurface/triSurface/interfaces/STL/readSTLASCII.L',  # noqa: E501
+            'applications/utilities/preProcessing/fluentDataToFoam/fluentDataToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L',  # noqa: E501
+            'applications/utilities/mesh/conversion/fluent3DMeshToElmer/fluent3DMeshToElmer.L'  # noqa: E501
+        ]
+        for _file in _files_to_patch:
+            filter_file(r'#if YY_FLEX_SUBMINOR_VERSION < 34',
+                        r'#if YY_FLEX_MAJOR_VERSION <= 2 && YY_FLEX_MINOR_VERSION <= 5 && YY_FLEX_SUBMINOR_VERSION < 34',   # noqa: E501
+                        _file)
+
     def setup_environment(self, spack_env, run_env):
         with working_dir(self.stage.path):
             spack_env.set('FOAM_INST_DIR', os.path.abspath('.'))
@@ -240,6 +280,7 @@ class FoamExtend(Package):
 
         if '+source' in spec:
             install_tree('src', join_path(install_path, 'src'))
+            install_tree('tutorials', join_path(install_path, 'tutorials'))
 
         install_tree('lib', join_path(install_path, 'lib'))
         install_tree('bin', join_path(install_path, 'bin'))

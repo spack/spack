@@ -32,7 +32,7 @@ import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from spack.spec import CompilerSpec
+from spack.spec import CompilerSpec, ArchSpec
 from spack.util.environment import get_path
 
 description = "Manage compilers"
@@ -91,17 +91,26 @@ def compiler_find(args):
     # Just let compiler_find do the
     # entire process and return an empty config from all_compilers
     # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(*paths)
-                 if c.spec not in spack.compilers.all_compilers(
-                     scope=args.scope, init_config=False)]
-    if compilers:
-        spack.compilers.add_compilers_to_config(compilers, scope=args.scope,
+    compilers = [c for c in spack.compilers.find_compilers(*paths)]
+    new_compilers = []
+    for c in compilers:
+        arch_spec = ArchSpec(None, c.operating_system, c.target)
+        same_specs = spack.compilers.compilers_for_spec(c.spec,
+                                                        arch_spec,
+                                                        args.scope)
+
+        if not same_specs:
+            new_compilers.append(c)
+
+    if new_compilers:
+        spack.compilers.add_compilers_to_config(new_compilers,
+                                                scope=args.scope,
                                                 init_config=False)
-        n = len(compilers)
+        n = len(new_compilers)
         s = 's' if n > 1 else ''
         filename = spack.config.get_config_filename(args.scope, 'compilers')
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
-        colify(reversed(sorted(c.spec for c in compilers)), indent=4)
+        colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
 
@@ -140,6 +149,16 @@ def compiler_info(args):
                 print "\tflags:"
                 for flag, flag_value in c.flags.iteritems():
                     print "\t\t%s = %s" % (flag, flag_value)
+            if len(c.environment) != 0:
+                if len(c.environment['set']) != 0:
+                    print "\tenvironment:"
+                    print "\t    set:"
+                    for key, value in c.environment['set'].iteritems():
+                        print "\t        %s = %s" % (key, value)
+            if c.extra_rpaths:
+                print "\tExtra rpaths:"
+                for extra_rpath in c.extra_rpaths:
+                    print "\t\t%s" % extra_rpath
             print "\tmodules  = %s" % c.modules
             print "\toperating system  = %s" % c.operating_system
 

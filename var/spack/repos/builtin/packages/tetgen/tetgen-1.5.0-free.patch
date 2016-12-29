@@ -1,0 +1,49 @@
+diff --git a/tetgen.h b/tetgen.h
+index 3196e03..2ff3138 100644
+--- a/tetgen.h
++++ b/tetgen.h
+@@ -2206,6 +2206,44 @@ public:
+     if (highordertable != NULL) {
+       delete [] highordertable;
+     }
++
++    bgm = NULL;
++
++    points = NULL;
++    dummypoint = NULL;
++
++    tetrahedrons = NULL;
++
++    subfaces = NULL;
++    subsegs = NULL;
++
++    tet2segpool = NULL;
++    tet2subpool = NULL;
++
++    flippool = NULL;
++    unflipqueue = NULL;
++
++    cavetetlist = NULL;
++    cavebdrylist = NULL;
++    caveoldtetlist = NULL;
++    cavetetvertlist = NULL;
++
++    caveshlist = NULL;
++    caveshbdlist = NULL;
++    cavesegshlist = NULL;
++    cavetetshlist = NULL;
++    cavetetseglist = NULL;
++    caveencshlist = NULL;
++    caveencseglist = NULL;
++
++    subsegstack = NULL;
++    subfacstack = NULL;
++    subvertstack = NULL;
++
++    idx2facetlist = NULL;
++    facetverticeslist = NULL;
++    segmentendpointslist = NULL;
++    highordertable = NULL;
+   }
+ 
+   ~tetgenmesh()

@@ -123,13 +123,13 @@ that the packages is installed:
 
    $ spack install mpileaks
    ==> Installing mpileaks
-   ==> mpich is already installed in /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4.
-   ==> callpath is already installed in /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318.
-   ==> adept-utils is already installed in /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da.
+   ==> mpich is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4.
+   ==> callpath is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318.
+   ==> adept-utils is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da.
    ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23.
+   ==> Staging archive: ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23/mpileaks-1.0.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23.
    ==> No patches needed for mpileaks.
    ==> Building mpileaks.
 
@@ -137,7 +137,7 @@ that the packages is installed:
 
    ==> Successfully installed mpileaks.
      Fetch: 2.16s.  Build: 9.82s.  Total: 11.98s.
-   [+] /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpileaks@1.0-59f6ad23
+   [+] ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpileaks@1.0-59f6ad23
 
 The last line, with the ``[+]``, indicates where the package is
 installed.
@@ -252,7 +252,7 @@ the tarballs in question to it (see :ref:`mirrors`):
    .. code-block:: yaml
 
        mirrors:
-         manual: file:///home/me/.spack/manual_mirror
+         manual: file://~/.spack/manual_mirror
 
 #. Put your tarballs in it.  Tarballs should be named
    ``<package>/<package>-<version>.tar.gz``.  For example:
@@ -374,13 +374,13 @@ use ``spack find --paths``:
    $ spack find --paths
    ==> 74 installed packages.
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-       ImageMagick@6.8.9-10  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/ImageMagick@6.8.9-10-4df950dd
-       adept-utils@1.0       /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da
-       atk@2.14.0            /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/atk@2.14.0-3d09ac09
-       boost@1.55.0          /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/boost@1.55.0
-       bzip2@1.0.6           /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/bzip2@1.0.6
-       cairo@1.14.0          /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/cairo@1.14.0-fcc2ab44
-       callpath@1.0.2        /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318
+       ImageMagick@6.8.9-10  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/ImageMagick@6.8.9-10-4df950dd
+       adept-utils@1.0       ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da
+       atk@2.14.0            ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/atk@2.14.0-3d09ac09
+       boost@1.55.0          ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/boost@1.55.0
+       bzip2@1.0.6           ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/bzip2@1.0.6
+       cairo@1.14.0          ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/cairo@1.14.0-fcc2ab44
+       callpath@1.0.2        ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318
    ...
 
 And, finally, you can restrict your search to a particular package
@@ -390,9 +390,9 @@ by supplying its name:
 
    $ spack find --paths libelf
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-       libelf@0.8.11  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.11
-       libelf@0.8.12  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
-       libelf@0.8.13  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
+       libelf@0.8.11  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.11
+       libelf@0.8.12  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
+       libelf@0.8.13  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
 
 ``spack find`` actually does a lot more than this.  You can use
 *specs* to query for specific configurations and builds of each
@@ -672,6 +672,35 @@ in GNU Autotools. If all flags are set, the order is
 ``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++ and
 ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compiler environment variables and additional RPATHs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the exceptional case a compiler requires setting special environment
+variables, like an explicit library load path. These can bet set in an
+extra section in the compiler configuration.  The user can also specify
+additional ``RPATHs`` that the compiler will add to all executables
+generated by that compiler.  This is useful for forcing certain compilers
+to RPATH their own runtime libraries, so that executables will run
+without the need to set ``LD_LIBRARY_PATH``.
+
+.. code-block:: yaml
+
+  compilers:
+    - compiler:
+        spec: gcc@4.9.3
+        paths:
+          cc: /opt/gcc/bin/gcc
+          c++: /opt/gcc/bin/g++
+          f77: /opt/gcc/bin/gfortran
+          fc: /opt/gcc/bin/gfortran
+        environment:
+          set:
+            LD_LIBRARY_PATH : /opt/gcc/lib
+        extra_rpaths:
+        - /path/to/some/compiler/runtime/directory
+        - /path/to/some/other/compiler/runtime/directory
+
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -809,8 +838,6 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
-.. _shell-support:
-
 ---------------------------
 Extensions & Python support
 ---------------------------
@@ -873,7 +900,7 @@ prefixes, and you can see this with ``spack find --paths``:
    $ spack find --paths py-numpy
    ==> 1 installed packages.
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-       py-numpy@1.9.1  /g/g21/gamblin2/src/spack/opt/linux-debian7-x86_64/gcc@4.4.7/py-numpy@1.9.1-66733244
+       py-numpy@1.9.1  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/py-numpy@1.9.1-66733244
 
 However, even though this package is installed, you cannot use it
 directly when you run ``python``:

@@ -79,7 +79,27 @@ schema = {
                                             {'type': 'null'}]},
                         'modules': {'anyOf': [{'type': 'string'},
                                               {'type': 'null'},
-                                              {'type': 'array'}]}
+                                              {'type': 'array'}]},
+                        'environment': {
+                            'type': 'object',
+                            'default': {},
+                            'additionalProperties': False,
+                            'properties': {
+                                'set': {
+                                    'type': 'object',
+                                    'patternProperties': {
+                                        r'\w[\w-]*': {  # variable name
+                                            'type': 'string'
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        'extra_rpaths': {
+                            'type': 'array',
+                            'default': [],
+                            'items': {'type': 'string'}
+                        }
                     },
                 },
             },
