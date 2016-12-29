@@ -64,7 +64,6 @@ class Ibmisc(CMakePackage):
     depends_on('boost', when='+boost')
 
     # Build dependencies
-    depends_on('cmake', type='build')
     depends_on('doxygen', type='build')
 
     def cmake_args(self):

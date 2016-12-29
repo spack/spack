@@ -155,10 +155,6 @@ class CMakeGuess(DefaultGuess):
     """Provides appropriate overrides for cmake-based packages"""
     base_class_name = 'CMakePackage'
 
-    dependencies = """\
-    # FIXME: Add additional dependencies if required.
-    depends_on('cmake', type='build')"""
-
     body = """\
     def cmake_args(self):
         # FIXME: Add arguments other than
