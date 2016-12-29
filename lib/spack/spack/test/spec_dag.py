@@ -373,11 +373,12 @@ class TestSpecDag(object):
         assert spec != expected_flat
         assert not spec.eq_dag(expected_flat)
 
-        assert spec == expected_normalized
-        assert spec.eq_dag(expected_normalized)
+        # verify DAG structure without deptypes.
+        assert spec.eq_dag(expected_normalized, deptypes=False)
+        assert not spec.eq_dag(non_unique_nodes, deptypes=False)
 
-        assert spec == non_unique_nodes
-        assert not spec.eq_dag(non_unique_nodes)
+        assert not spec.eq_dag(expected_normalized, deptypes=True)
+        assert not spec.eq_dag(non_unique_nodes, deptypes=True)
 
     def test_normalize_with_virtual_package(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
@@ -552,3 +553,140 @@ class TestSpecDag(object):
 
             with pytest.raises(ValueError):
                 spack.spec.base32_prefix_bits(test_hash, 256)
+
+    def test_traversal_directions(self):
+        """Make sure child and parent traversals of specs work."""
+        # We'll use d for a diamond dependency
+        d = Spec('d')
+
+        # Mock spec.
+        spec = Spec('a',
+                    Spec('b',
+                         Spec('c', d),
+                         Spec('e')),
+                    Spec('f',
+                         Spec('g', d)))
+
+        assert (
+            ['a', 'b', 'c', 'd', 'e', 'f', 'g'] ==
+            [s.name for s in spec.traverse(direction='children')])
+
+        assert (
+            ['g', 'f', 'a'] ==
+            [s.name for s in spec['g'].traverse(direction='parents')])
+
+        assert (
+            ['d', 'c', 'b', 'a', 'g', 'f'] ==
+            [s.name for s in spec['d'].traverse(direction='parents')])
+
+    def test_edge_traversals(self):
+        """Make sure child and parent traversals of specs work."""
+        # We'll use d for a diamond dependency
+        d = Spec('d')
+
+        # Mock spec.
+        spec = Spec('a',
+                    Spec('b',
+                         Spec('c', d),
+                         Spec('e')),
+                    Spec('f',
+                         Spec('g', d)))
+
+        assert (
+            ['a', 'b', 'c', 'd', 'e', 'f', 'g'] ==
+            [s.name for s in spec.traverse(direction='children')])
+
+        assert (
+            ['g', 'f', 'a'] ==
+            [s.name for s in spec['g'].traverse(direction='parents')])
+
+        assert (
+            ['d', 'c', 'b', 'a', 'g', 'f'] ==
+            [s.name for s in spec['d'].traverse(direction='parents')])
+
+    def test_copy_dependencies(self):
+        s1 = Spec('mpileaks ^mpich2@1.1')
+        s2 = s1.copy()
+
+        assert '^mpich2@1.1' in s2
+        assert '^mpich2' in s2
+
+    def test_construct_spec_with_deptypes(self):
+        s = Spec('a',
+                 Spec('b',
+                      ['build'], Spec('c')),
+                 Spec('d',
+                      ['build', 'link'], Spec('e',
+                                              ['run'], Spec('f'))))
+
+        assert s['b']._dependencies['c'].deptypes == ('build',)
+        assert s['d']._dependencies['e'].deptypes == ('build', 'link')
+        assert s['e']._dependencies['f'].deptypes == ('run',)
+
+        assert s['b']._dependencies['c'].deptypes == ('build',)
+        assert s['d']._dependencies['e'].deptypes == ('build', 'link')
+        assert s['e']._dependencies['f'].deptypes == ('run',)
+
+        assert s['c']._dependents['b'].deptypes == ('build',)
+        assert s['e']._dependents['d'].deptypes == ('build', 'link')
+        assert s['f']._dependents['e'].deptypes == ('run',)
+
+        assert s['c']._dependents['b'].deptypes == ('build',)
+        assert s['e']._dependents['d'].deptypes == ('build', 'link')
+        assert s['f']._dependents['e'].deptypes == ('run',)
+
+    def check_diamond_deptypes(self, spec):
+        """Validate deptypes in dt-diamond spec."""
+        assert spec['dt-diamond']._dependencies[
+            'dt-diamond-left'].deptypes == ('build', 'link')
+
+        assert spec['dt-diamond']._dependencies[
+            'dt-diamond-right'].deptypes == ('build', 'link')
+
+        assert spec['dt-diamond-left']._dependencies[
+            'dt-diamond-bottom'].deptypes == ('build',)
+
+        assert spec['dt-diamond-right'] ._dependencies[
+            'dt-diamond-bottom'].deptypes == ('build', 'link', 'run')
+
+    def check_diamond_normalized_dag(self, spec):
+        bottom = Spec('dt-diamond-bottom')
+        dag = Spec('dt-diamond',
+                   ['build', 'link'], Spec('dt-diamond-left',
+                                           ['build'], bottom),
+                   ['build', 'link'], Spec('dt-diamond-right',
+                                           ['build', 'link', 'run'], bottom))
+        assert spec.eq_dag(dag)
+
+    def test_normalize_diamond_deptypes(self):
+        """Ensure that dependency types are preserved even if the same thing is
+           depended on in two different ways."""
+        s = Spec('dt-diamond')
+        s.normalize()
+
+        self.check_diamond_deptypes(s)
+        self.check_diamond_normalized_dag(s)
+
+    def test_concretize_deptypes(self):
+        """Ensure that dependency types are preserved after concretization."""
+        s = Spec('dt-diamond')
+        s.concretize()
+        self.check_diamond_deptypes(s)
+
+    def test_copy_deptypes(self):
+        """Ensure that dependency types are preserved by spec copy."""
+        s1 = Spec('dt-diamond')
+        s1.normalize()
+        self.check_diamond_deptypes(s1)
+        self.check_diamond_normalized_dag(s1)
+
+        s2 = s1.copy()
+        self.check_diamond_normalized_dag(s2)
+        self.check_diamond_deptypes(s2)
+
+        s3 = Spec('dt-diamond')
+        s3.concretize()
+        self.check_diamond_deptypes(s3)
+
+        s4 = s3.copy()
+        self.check_diamond_deptypes(s4)

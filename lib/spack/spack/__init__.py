@@ -158,23 +158,22 @@ dirty = _config.get('dirty', False)
 #       for packages.
 #
 #-----------------------------------------------------------------------------
-__all__ = ['PackageBase',
-           'Package',
-           'CMakePackage',
-           'AutotoolsPackage',
-           'MakefilePackage',
-           'Version',
-           'when',
-           'ver',
-           'alldeps',
-           'nolink']
-from spack.package import Package, PackageBase, ExtensionConflictError
+__all__ = []
+
+from spack.package import Package
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage']
+
 from spack.version import Version, ver
-from spack.spec import DependencySpec, alldeps, nolink
+__all__ += ['Version', 'ver']
+
+from spack.spec import Spec, alldeps, nolink
+__all__ += ['Spec', 'alldeps', 'nolink']
+
 from spack.multimethod import when
+__all__ += ['when']
 
 import llnl.util.filesystem
 from llnl.util.filesystem import *
