@@ -35,7 +35,7 @@ So far:
 
     jsonschema:  An implementation of JSON Schema for Python.
 
-    nose:        The nose testing framework.
+    pytest:      Testing framework used by Spack.
 
     ordereddict: We include our own version to be Python 2.6 compatible.
 
