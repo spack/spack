@@ -97,6 +97,10 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse("mvapich_foo")
         self.check_parse("_mvapich_foo")
 
+    @unittest.expectedFailure
+    def test_multiple_specs(self):
+        self.check_parse("mvapich emacs")
+
     def test_simple_dependence(self):
         self.check_parse("openmpi^hwloc")
         self.check_parse("openmpi^hwloc^libunwind")
