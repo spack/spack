@@ -362,3 +362,15 @@ class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
+
+
+def duplicate_stream(original):
+    """Duplicates a stream  at the os level.
+
+    :param stream original: original stream to be duplicated. Must have a
+        `fileno` callable attribute.
+
+    :return: duplicate of the original stream
+    :rtype: file like object
+    """
+    return os.fdopen(os.dup(original.fileno()))

@@ -20,3 +20,5 @@
 .coverage
 #*
 .#*
+/.cache
+/bin/spackc

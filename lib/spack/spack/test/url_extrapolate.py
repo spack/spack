@@ -22,11 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""\
-Tests ability of spack to extrapolate URL versions from existing versions.
+"""Tests ability of spack to extrapolate URL versions from
+existing versions.
 """
+import unittest
+
 import spack.url as url
-from spack.test.mock_packages_test import *
 
 
 class UrlExtrapolateTest(unittest.TestCase):
