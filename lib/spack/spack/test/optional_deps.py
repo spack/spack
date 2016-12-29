@@ -94,8 +94,7 @@ def test_normalize(spec_and_expected, config, builtin_mock):
     spec, expected = spec_and_expected
     spec = Spec(spec)
     spec.normalize()
-    assert spec == expected
-    assert spec.eq_dag(expected)
+    assert spec.eq_dag(expected, deptypes=False)
 
 
 def test_default_variant(config, builtin_mock):

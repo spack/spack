@@ -22,28 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This module contains external, potentially separately licensed,
-packages that are included in spack.
+from spack import *
 
-So far:
-    argparse:    We include our own version to be Python 2.6 compatible.
 
-    distro:      Provides a more stable linux distribution detection.
+class DtDiamond(Package):
+    """This package has an indirect diamond dependency on dt-diamond-bottom"""
+    homepage = "http://www.example.com"
+    url = "http://www.example.com/dt-diamond-1.0.tar.gz"
 
-    functools:   Used for implementation of total_ordering.
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
-    jsonschema:  An implementation of JSON Schema for Python.
+    depends_on('dt-diamond-left')
+    depends_on('dt-diamond-right')
 
-    ordereddict: We include our own version to be Python 2.6 compatible.
-
-    py:          Needed by pytest.  Library with cross-python path,
-                 ini-parsing, io, code, and log facilities.
-
-    pyqver2:     External script to query required python version of
-                 python source code. Used for ensuring 2.6 compatibility.
-
-    pytest:      Testing framework used by Spack.
-
-    yaml:        Used for config files.
-"""
+    def install(self, spec, prefix):
+        pass
