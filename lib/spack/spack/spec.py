@@ -2546,6 +2546,8 @@ class Spec(object):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
 
     def __cmp__(self, other):
+        from package_prefs import pkgsort
+
         # Package name sort order is not configurable, always goes alphabetical
         if self.name != other.name:
             return cmp(self.name, other.name)
@@ -2553,22 +2555,22 @@ class Spec(object):
         # Package version is second in compare order
         pkgname = self.name
         if self.versions != other.versions:
-            return spack.pkgsort.version_compare(
+            return pkgsort().version_compare(
                 pkgname, self.versions, other.versions)
 
         # Compiler is third
         if self.compiler != other.compiler:
-            return spack.pkgsort.compiler_compare(
+            return pkgsort().compiler_compare(
                 pkgname, self.compiler, other.compiler)
 
         # Variants
         if self.variants != other.variants:
-            return spack.pkgsort.variant_compare(
+            return pkgsort().variant_compare(
                 pkgname, self.variants, other.variants)
 
         # Target
         if self.architecture != other.architecture:
-            return spack.pkgsort.architecture_compare(
+            return pkgsort().architecture_compare(
                 pkgname, self.architecture, other.architecture)
 
         # Dependency is not configurable

@@ -337,6 +337,10 @@ class RepoPath(object):
         return self.repo_for_pkg(pkg_name).filename_for_package_name(pkg_name)
 
     def exists(self, pkg_name):
+        """Whether package with the give name exists in the path's repos.
+
+        Note that virtual packages do not "exist".
+        """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
     def __contains__(self, pkg_name):

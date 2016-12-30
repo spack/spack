@@ -77,7 +77,7 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.preferred_packages import PreferredPackages
+from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
@@ -97,11 +97,6 @@ try:
     sys.meta_path.append(repo)
 except spack.error.SpackError, e:
     tty.die('while initializing Spack RepoPath:', e.message)
-
-
-# PreferredPackages controls preference sort order during concretization.
-# More preferred packages are sorted first.
-pkgsort = PreferredPackages()
 
 
 # Tests ABI compatibility between packages

@@ -26,6 +26,7 @@ import pytest
 
 import spack
 from spack.spec import Spec
+from spack.package_prefs import PreferredPackages
 
 
 @pytest.fixture()
@@ -39,7 +40,7 @@ def concretize_scope(config, tmpdir):
     # This is kind of weird, but that's how config scopes are
     # set in ConfigScope.__init__
     spack.config.config_scopes.pop('concretize')
-    spack.pkgsort = spack.PreferredPackages()
+    spack.package_prefs._pkgsort = PreferredPackages()
 
 
 def concretize(abstract_spec):
@@ -50,7 +51,7 @@ def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
     spack.config.update_config('packages', conf, 'concretize')
-    spack.pkgsort = spack.PreferredPackages()
+    spack.package_prefs._pkgsort = PreferredPackages()
 
 
 def assert_variant_values(spec, **variants):

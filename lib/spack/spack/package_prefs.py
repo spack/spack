@@ -27,9 +27,14 @@ import spack
 from spack.version import *
 
 
+def get_packages_config():
+    """Wrapper around get_packages_config() to validate semantics."""
+    return spack.config.get_config('packages')
+
+
 class PreferredPackages(object):
     def __init__(self):
-        self.preferred = spack.config.get_config('packages')
+        self.preferred = get_packages_config()
         self._spec_for_pkgname_cache = {}
 
     # Given a package name, sort component (e.g, version, compiler, ...), and
@@ -194,3 +199,94 @@ class PreferredPackages(object):
            pkgname. One compiler is less-than another if it is preferred over
            the other."""
         return self._spec_compare(pkgname, 'compiler', a, b, False, None)
+
+
+def spec_externals(spec):
+    """Return a list of external specs (with external directory path filled in),
+       one for each known external installation."""
+    # break circular import.
+    from spack.build_environment import get_path_from_module
+
+    allpkgs = get_packages_config()
+    name = spec.name
+
+    external_specs = []
+    pkg_paths = allpkgs.get(name, {}).get('paths', None)
+    pkg_modules = allpkgs.get(name, {}).get('modules', None)
+    if (not pkg_paths) and (not pkg_modules):
+        return []
+
+    for external_spec, path in pkg_paths.iteritems():
+        if not path:
+            # skip entries without paths (avoid creating extra Specs)
+            continue
+
+        external_spec = spack.spec.Spec(external_spec, external=path)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+
+    for external_spec, module in pkg_modules.iteritems():
+        if not module:
+            continue
+
+        path = get_path_from_module(module)
+
+        external_spec = spack.spec.Spec(
+            external_spec, external=path, external_module=module)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+
+    return external_specs
+
+
+def is_spec_buildable(spec):
+    """Return true if the spec pkgspec is configured as buildable"""
+    allpkgs = get_packages_config()
+    if spec.name not in allpkgs:
+        return True
+    if 'buildable' not in allpkgs[spec.name]:
+        return True
+    return allpkgs[spec.name]['buildable']
+
+
+def cmp_specs(lhs, rhs):
+    # Package name sort order is not configurable, always goes alphabetical
+    if lhs.name != rhs.name:
+        return cmp(lhs.name, rhs.name)
+
+    # Package version is second in compare order
+    pkgname = lhs.name
+    if lhs.versions != rhs.versions:
+        return pkgsort().version_compare(
+            pkgname, lhs.versions, rhs.versions)
+
+    # Compiler is third
+    if lhs.compiler != rhs.compiler:
+        return pkgsort().compiler_compare(
+            pkgname, lhs.compiler, rhs.compiler)
+
+    # Variants
+    if lhs.variants != rhs.variants:
+        return pkgsort().variant_compare(
+            pkgname, lhs.variants, rhs.variants)
+
+    # Architecture
+    if lhs.architecture != rhs.architecture:
+        return pkgsort().architecture_compare(
+            pkgname, lhs.architecture, rhs.architecture)
+
+    # Dependency is not configurable
+    lhash, rhash = hash(lhs), hash(rhs)
+    if lhash != rhash:
+        return -1 if lhash < rhash else 1
+
+    # Equal specs
+    return 0
+
+
+def pkgsort():
+    global _pkgsort
+    if _pkgsort is None:
+        _pkgsort = PreferredPackages()
+    return _pkgsort
+_pkgsort = None
