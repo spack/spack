@@ -90,3 +90,15 @@ def test_store(mock_archive):
     except Exception:
         pkg.remove_prefix()
         raise
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_failing_build(mock_archive):
+    spec = Spec('failing-build').concretized()
+
+    for s in spec.traverse():
+        fake_fetchify(mock_archive.url, s.package)
+
+    pkg = spec.package
+    with pytest.raises(spack.build_environment.ChildError):
+        pkg.do_install()

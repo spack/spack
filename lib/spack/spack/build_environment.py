@@ -60,9 +60,10 @@ import traceback
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import *
+
 import spack
 import spack.store
-from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -450,7 +451,8 @@ def parent_class_modules(cls):
     """
     Get list of super class modules that are all descend from spack.Package
     """
-    if not issubclass(cls, spack.Package) or issubclass(spack.Package, cls):
+    if (not issubclass(cls, spack.package.Package) or
+        issubclass(spack.package.Package, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -622,9 +624,9 @@ def get_package_context(traceback):
     for tb in stack:
         frame = tb.tb_frame
         if 'self' in frame.f_locals:
-            # Find the first proper subclass of spack.PackageBase.
+            # Find the first proper subclass of PackageBase.
             obj = frame.f_locals['self']
-            if isinstance(obj, spack.PackageBase):
+            if isinstance(obj, spack.package.PackageBase):
                 break
 
     # we found obj, the Package implementation we care about.
