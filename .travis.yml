@@ -1,3 +1,6 @@
+#=============================================================================
+# Project settings
+#=============================================================================
 language: python
 
 # Only build master and develop on push; do not build every branch.
@@ -6,7 +9,13 @@ branches:
     - master
     - develop
 
-# Construct build matrix
+#=============================================================================
+# Build matrix
+#=============================================================================
+os:
+  - linux
+  - osx
+
 python:
   - 2.6
   - 2.7
@@ -25,6 +34,9 @@ matrix:
     # Sphinx no longer supports Python 2.6
     env: TEST_SUITE=doc
 
+#=============================================================================
+# Environment
+#=============================================================================
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 
@@ -50,11 +62,17 @@ before_script:
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
+#=============================================================================
+# Building
+#=============================================================================
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
   - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
 
+#=============================================================================
+# Notifications
+#=============================================================================
 notifications:
   email:
     recipients: tgamblin@llnl.gov
