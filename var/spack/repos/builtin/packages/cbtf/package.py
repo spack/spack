@@ -57,7 +57,7 @@ class Cbtf(Package):
     # version('1.6', 'c1ef4e5aa4e470dffb042abdba0b9987')
 
     # Use when the git repository is available
-    version('1.6', branch='master',
+    version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf.git')
 
     variant('runtime', default=False,
