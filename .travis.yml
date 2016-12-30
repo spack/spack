@@ -53,7 +53,7 @@ addons:
 # Work around Travis's lack of support for Python on OSX
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" && ! brew ls --versions python > /dev/null ]]; then brew install python; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions python > /dev/null || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
 
