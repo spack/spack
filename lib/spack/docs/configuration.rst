@@ -65,8 +65,14 @@ are four configuration scopes.  From lowest to highest:
    project) or for site-wide settings on a multi-user machine (e.g., for
    a common spack instance).
 
-#. **user**: Stored in the home directory: ``~/.spack/``. These settings
-   affect all instances of Spack and take the highest precedence.
+3. **user**: Stored in the home directory: ``~/.spack/``. These settings
+   affect all instances of Spack and take higher precedence than site or
+   default scopes.
+
+3. **command line**: Optionally specified by the user on the command
+   line.  These settings take the highest precedence.  If multiple
+   scopes are listed on the command line, they are ordered from lowest
+   to highest precedence.
 
 Each configuration directory may contain several configuration files,
 such as ``config.yaml``, ``compilers.yaml``, or ``mirrors.yaml``.  When
@@ -77,6 +83,106 @@ Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``,
 etc.) take a ``--scope=<name>`` parameter that you can use to control
 which scope is modified.  By default they modify the highest-precedence
 scope.
+
+.. _command-line-scopes:
+
+^^^^^^^^^^^^^^^^^^^
+Command-line Scopes
+^^^^^^^^^^^^^^^^^^^
+
+In addition to the ``system``, ``site``, and ``user`` scopes, you may add
+configuration scopes directly on the command line with the
+``--config-scope`` argument, or ``-C`` for short.
+
+For example, the following adds two configuration scopes, named `scopea`
+and `scopeb`, to a `spack spec` command:
+
+.. code-block:: console
+
+   $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
+
+Command-line scopes come *after* the ``spack`` command and *before* the
+subcommand, and they specify a single path to a directory full of
+configuration files. You can add the same configuration files to that
+directory that you can add to any other sope (``config.yaml``,
+``packages.yaml``, etc.).
+
+If multiple scopes are provided:
+
+1. each must be preceded with the ``--config-scope`` or ``-C`` flag.
+2. they must be ordered from lowest to highest precedence.
+
+"""""""""""""""""""""""""""""""""""""""""""
+Example: scopes for release and development
+"""""""""""""""""""""""""""""""""""""""""""
+
+suppose that you need to support simultaneous building of release and
+development versions of a `mypackage`, where `mypackage` -> `A` -> `B`.
+You could create The following files:
+
+.. code-block:: yaml
+
+   ~/myscopes/release/packages.yaml
+   --------------------------------
+   packages:
+       mypackage:
+           version: [1.7]
+       A:
+           version: [2.3]
+       B:
+           version: [0.8]
+
+.. code-block:: yaml
+
+   ~/myscopes/develop/packages.yaml
+   --------------------------------
+   packages:
+       mypackage:
+           version: [develop]
+       A:
+           version: [develop]
+       B:
+           version: [develop]
+
+You can switch between ``release`` and ``develop`` configurations using
+configuration arguments.  You would type ``spack -C ~/myscopes/release``
+when you want to build the designated release versions of ``mypackage``,
+``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when
+you want to build all of these packages at the ``develop`` version.
+
+"""""""""""""""""""""""""""""""
+Example: swapping MPI providers
+"""""""""""""""""""""""""""""""
+
+Suppose that you need to build two software packages, `packagea` and
+`packageb`.  PackageA is Python2-based and PackageB is Python3-based.
+PackageA only builds with OpenMPI and PackageB only builds with MPICH.
+You can create different configuration scopes for use with Package A and
+B:
+
+.. code-block:: yaml
+
+   ~/myscopes/packgea/packages.yaml
+   --------------------------------
+   packages:
+       python:
+           version: [2.7.11]
+       all:
+           providers:
+               mpi: [openmpi]
+
+.. code-block:: yaml
+
+   ~/myscopes/packageb/packages.yaml
+   --------------------------------
+   packages:
+       python:
+           version: [3.5.2]
+       all:
+           providers:
+               mpi: [mpich]
+
+
 
 .. _platform-scopes:
 
@@ -100,6 +206,8 @@ by settings in ``system``, ``system/bgq``, ``site``, ``site/bgq``,
 6. ``site/<platform>``
 7. ``user``
 8. ``user/<platform>``
+9. ``command-line``
+10. ``command-line/<platform>``
 
 You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``. The system config scope has a ``<platform>`` section for
@@ -269,7 +377,7 @@ Config file variables
 ------------------------------
 
 Spack understands several variables which can be used in config file paths
-where ever they appear. There are three sets of these variables, Spack specific 
+where ever they appear. There are three sets of these variables, Spack specific
 variables, environment variables, and user path variables. Spack specific
 variables and environment variables both are indicated by prefixing the variable
 name with ``$``. User path variables are indicated at the start of the path with
