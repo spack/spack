@@ -61,8 +61,8 @@ class Modele(CMakePackage):
             description='Build parallel version with MPI')
     variant('pnetcdf', default=False, description=''
             'Link with the PNetCDF library; required for some rundecks.')
-    variant('glint2', default=False,
-            description='Link with the Glint2 Ice Model Coupler')
+    variant('icebin', default=False,
+            description='Link with the Icebin Ice Model Coupler')
     variant('everytrace', default=True,
             description='Link to enhanced staktrace capabilities')
     variant('mods', default=False,
@@ -81,7 +81,7 @@ class Modele(CMakePackage):
     depends_on('fexception', when='+fexception')
     depends_on('everytrace+fortran+mpi', when='+everytrace')
     depends_on('parallel-netcdf+fortran~cxx', when='+pnetcdf')
-    depends_on('glint2+coupler', when='+glint2')
+    depends_on('icebin+coupler', when='+icebin')
 
     # depends_on('netcdf-cxx', when='+pnetcdf')
 
@@ -101,7 +101,7 @@ class Modele(CMakePackage):
             '-DUSE_PNETCDF=%s' % ('YES' if '+pnetcdf' in spec else 'NO'),
             '-DUSE_FEXCEPTION=%s' % ('YES' if '+fexception' in spec else 'NO'),
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-            '-DUSE_GLINT2=%s' % ('YES' if '+glint2' in spec else 'NO'),
+            '-DUSE_ICEBIN=%s' % ('YES' if '+glint2' in spec else 'NO'),
             '-DINSTALL_MODS=%s' % ('YES' if '+mods' in spec else 'NO')]
 #            '-DWITH_PFUNIT=%s' % ('YES' if '+tests' in spec else 'NO')]
 

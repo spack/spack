@@ -43,8 +43,6 @@ class Pism(CMakePackage):
     version('dev', git='https://github.com/pism/pism.git',
         branch='dev')
 
-    variant('cxx11', default=True,
-            description='Set CMake to C++11 standard')
     variant('extra', default=False,
             description='Build extra executables (testing/verification)')
     variant('shared', default=True,
@@ -104,15 +102,10 @@ class Pism(CMakePackage):
 
     depends_on('cmake', type='build')
 
-    def configure_args(self):
+    def cmake_args(self):
         spec = self.spec
 
-        if ('+icebin' in spec) and ('+cxx11' not in spec):
-            raise RuntimeError('+icebin requires +cxx11 too')
-
         return [
-            '-DPism_CXX11=%s' %
-            ('YES' if '+cxx11' in spec else 'NO'),
             '-DPism_BUILD_EXTRA_EXECS=%s' %
             ('YES' if '+extra' in spec else 'NO'),
             '-DBUILD_SHARED_LIBS=%s' %
