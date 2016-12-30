@@ -36,7 +36,7 @@ import spack.stage
         ('CMakeLists.txt', 'cmake'),
         ('SConstruct', 'scons'),
         ('setup.py', 'python'),
-        ('NAMESPACE', 'R'),
+        ('NAMESPACE', 'r'),
         ('foobar', 'unknown')
     ]
 )
