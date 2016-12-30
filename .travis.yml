@@ -46,7 +46,7 @@ sudo: false
 addons:
   apt:
     packages:
-      - python
+      - gfortran
       - graphviz
       - libyaml-dev
 
@@ -79,7 +79,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 && $TRAVIS_OS_NAME == "linux" ]]; then coveralls; fi
 
 #=============================================================================
 # Notifications
