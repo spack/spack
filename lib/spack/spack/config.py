@@ -74,7 +74,6 @@ import spack.schema
 import spack.util.spack_yaml as syaml
 
 
-
 """Dict from section names -> schema for that section."""
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
