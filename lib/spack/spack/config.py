@@ -54,6 +54,7 @@ import copy
 import os
 import re
 import sys
+import argparse
 
 import yaml
 import jsonschema
@@ -71,6 +72,7 @@ import spack.schema
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
+
 
 
 """Dict from section names -> schema for that section."""
@@ -201,6 +203,7 @@ class ConfigScope(object):
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
 
+
 #
 # Below are configuration scopes.
 #
@@ -231,20 +234,19 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 # This cannot raise an error; if there are real errors in the command
 # line arguments, they will be caught later when the full parse is done.
 # But we need the --config flags NOW.
-import argparse
-from llnl.util.tty.color import *
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--config', dest='configs', action='append', default=[],
-                    help="Add project config scopes (highest precedence last)")
+parser.add_argument(
+    '-c', '--config', dest='configs', action='append', default=[],
+    help="Add project config scopes (highest precedence last)")
 
 # Parse args initially
 args0, _ = parser.parse_known_args()
 
-import spack.config
 for config_path in args0.configs:
-    _,config_name = os.path.split(config_path)
+    _, config_name = os.path.split(config_path)
     ConfigScope(config_name, config_path)
 # ----------------------------------------------------------------
+
 
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
@@ -580,5 +582,3 @@ class ConfigFormatError(ConfigError):
 
 class ConfigSanityError(ConfigFormatError):
     """Same as ConfigFormatError, raised when config is written by Spack."""
-
-
