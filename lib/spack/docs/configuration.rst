@@ -369,3 +369,19 @@ The merged configuration would look like this:
        - /lustre-scratch/$user
        - ~/mystage
    $ _
+
+
+-----------------------
+Resulting Configuration
+-----------------------
+
+With so many scopes overriding each other, Spack provides a way to
+view the final "merged" version of any configuration file, with the
+``spack config get`` command.  For example, the following shows the
+resulting ``packages.yaml`` file, taking into account one command-line
+scope:
+
+.. code-block:: console
+
+   $ spack --config ~/myscopes/develop config get packages
+
