@@ -56,6 +56,10 @@ class Nag(Compiler):
         # However, it can be mixed with a compiler that does support it
         return "-std=c++11"
 
+    @property
+    def pic_flag(self):
+        return "-PIC"
+
     # Unlike other compilers, the NAG compiler passes options to GCC, which
     # then passes them to the linker. Therefore, we need to doubly wrap the
     # options with '-Wl,-Wl,,'

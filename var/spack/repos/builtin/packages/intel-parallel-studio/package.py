@@ -39,7 +39,11 @@ class IntelParallelStudio(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542')
+    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542')
+    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85')
     version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01')
+    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01')
     version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9')
     version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3')
     version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3')
@@ -86,7 +90,7 @@ class IntelParallelStudio(IntelInstaller):
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(self.prefix.lib, 'intel64'),
+            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
             shared=shared
         )
         system_libs = [
@@ -104,15 +108,22 @@ class IntelParallelStudio(IntelInstaller):
         """Assume the tarball is in the current directory."""
 
         version_tuple = str(version).split('.')
+        year = int(version_tuple[1])
 
         url = "file://{0}/parallel_studio_xe_{1}".format(
             os.getcwd(), version_tuple[1])
 
-        if version_tuple[0] == 'composer':
-            url += "_composer_edition"
-
+        update_string = ""
         if version_tuple[2] != '0':
-            url += "_update{0}".format(version_tuple[2])
+            update_string = "_update{0}".format(version_tuple[2])
+
+        if version_tuple[0] == 'composer':
+            if year == 2016:
+                url += "_composer_edition{0}".format(update_string)
+            else:
+                url += "{0}_composer_edition".format(update_string)
+        else:
+            url += update_string
 
         return url + ".tgz"
 
@@ -138,7 +149,7 @@ class IntelParallelStudio(IntelInstaller):
 
         if not spec.satisfies('+all'):
             all_components = get_all_components()
-            regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
+            regex = '(comp|openmp|intel-tbb|icc|ifort|psxe)'
             base_components = \
                 filter_pick(all_components, re.compile(regex).search)
             regex = '(icsxe|imb|mpi|itac|intel-ta|intel-tc|clck)'
@@ -309,7 +320,7 @@ class IntelParallelStudio(IntelInstaller):
             run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
-            spack_env.set('MKLROOT', self.prefix)
+            spack_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
 
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'mkl', 'lib',

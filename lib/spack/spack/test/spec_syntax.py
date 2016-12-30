@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import unittest
+import pytest
 
 import spack.spec as sp
 from spack.parse import Token
@@ -54,7 +54,7 @@ complex_lex = [Token(sp.ID, 'mvapich_foo'),
                Token(sp.ID, '8.1_1e')]
 
 
-class SpecSyntaxTest(unittest.TestCase):
+class TestSpecSyntax(object):
     # ========================================================================
     # Parse checks
     # ========================================================================
@@ -77,17 +77,22 @@ class SpecSyntaxTest(unittest.TestCase):
         output = sp.parse(spec)
 
         parsed = (" ".join(str(spec) for spec in output))
-        self.assertEqual(expected, parsed)
+        assert expected == parsed
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
         lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == sp.ID:
-                self.assertEqual(tok, spec_tok)
+                assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
-                self.assertEqual(tok.type, spec_tok.type)
+                assert tok.type == spec_tok.type
+
+    def _check_raises(self, exc_type, items):
+        for item in items:
+            with pytest.raises(exc_type):
+                self.check_parse(item)
 
     # ========================================================================
     # Parse checks
@@ -107,6 +112,10 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse("openmpi^hwloc@:1.4b7-rc3")
         self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
 
+    @pytest.mark.xfail
+    def test_multiple_specs(self):
+        self.check_parse("mvapich emacs")
+
     def test_full_specs(self):
         self.check_parse(
             "mvapich_foo"
@@ -120,6 +129,10 @@ class SpecSyntaxTest(unittest.TestCase):
             'mvapich_foo'
             '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4'
             '^stackwalker@8.1_1e')
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
         self.check_parse(
@@ -144,41 +157,72 @@ class SpecSyntaxTest(unittest.TestCase):
             "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
+        self.check_parse(
+            "x arch=test-redhat6-None"
+            "^y arch=test-None-x86_64"
+            "^z arch=linux-None-None",
+
+            "x os=fe"
+            "^y target=be"
+            "^z platform=linux")
+
+        self.check_parse(
+            "x arch=test-debian6-x86_64"
+            "^y arch=test-debian6-x86_64",
+
+            "x os=default_os target=default_target"
+            "^y os=default_os target=default_target")
+
         self.check_parse("x^y", "x@: ^y@:")
 
     def test_parse_errors(self):
-        self.assertRaises(SpecParseError, self.check_parse, "x@@1.2")
-        self.assertRaises(SpecParseError, self.check_parse, "x ^y@@1.2")
-        self.assertRaises(SpecParseError, self.check_parse, "x@1.2::")
-        self.assertRaises(SpecParseError, self.check_parse, "x::")
+        errors = ['x@@1.2', 'x ^y@@1.2', 'x@1.2::', 'x::']
+        self._check_raises(SpecParseError, errors)
 
     def test_duplicate_variant(self):
-        self.assertRaises(DuplicateVariantError,
-                          self.check_parse, "x@1.2+debug+debug")
-        self.assertRaises(DuplicateVariantError,
-                          self.check_parse, "x ^y@1.2+debug debug=true")
-        self.assertRaises(DuplicateVariantError, self.check_parse,
-                          "x ^y@1.2 debug=false debug=true")
-        self.assertRaises(DuplicateVariantError,
-                          self.check_parse, "x ^y@1.2 debug=false~debug")
+        duplicates = [
+            'x@1.2+debug+debug',
+            'x ^y@1.2+debug debug=true',
+            'x ^y@1.2 debug=false debug=true',
+            'x ^y@1.2 debug=false~debug'
+        ]
+        self._check_raises(DuplicateVariantError, duplicates)
 
-    def test_duplicate_depdendence(self):
-        self.assertRaises(DuplicateDependencyError,
-                          self.check_parse, "x ^y ^y")
+    def test_duplicate_dependency(self):
+        self._check_raises(DuplicateDependencyError, ["x ^y ^y"])
 
     def test_duplicate_compiler(self):
-        self.assertRaises(DuplicateCompilerSpecError,
-                          self.check_parse, "x%intel%intel")
-        self.assertRaises(DuplicateCompilerSpecError,
-                          self.check_parse, "x%intel%gcc")
-        self.assertRaises(DuplicateCompilerSpecError,
-                          self.check_parse, "x%gcc%intel")
-        self.assertRaises(DuplicateCompilerSpecError,
-                          self.check_parse, "x ^y%intel%intel")
-        self.assertRaises(DuplicateCompilerSpecError,
-                          self.check_parse, "x ^y%intel%gcc")
-        self.assertRaises(DuplicateCompilerSpecError,
-                          self.check_parse, "x ^y%gcc%intel")
+        duplicates = [
+            "x%intel%intel",
+            "x%intel%gcc",
+            "x%gcc%intel",
+            "x ^y%intel%intel",
+            "x ^y%intel%gcc",
+            "x ^y%gcc%intel"
+        ]
+        self._check_raises(DuplicateCompilerSpecError, duplicates)
+
+    def test_duplicate_architecture(self):
+        duplicates = [
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64",
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le",
+            "x arch=linux-rhel7-ppc64le arch=linux-rhel7-x86_64",
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64",
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le"
+        ]
+        self._check_raises(DuplicateArchitectureError, duplicates)
+
+    def test_duplicate_architecture_component(self):
+        duplicates = [
+            "x os=fe os=fe",
+            "x os=fe os=be",
+            "x target=fe target=fe",
+            "x target=fe target=be",
+            "x platform=test platform=test",
+            "x os=fe platform=test target=fe os=fe",
+            "x target=be platform=test os=be os=fe"
+        ]
+        self._check_raises(DuplicateArchitectureError, duplicates)
 
     # ========================================================================
     # Lex checks
@@ -186,11 +230,13 @@ class SpecSyntaxTest(unittest.TestCase):
     def test_ambiguous(self):
         # This first one is ambiguous because - can be in an identifier AND
         # indicate disabling an option.
-        self.assertRaises(
-            AssertionError, self.check_lex, complex_lex,
-            "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug-qt_4"
-            "^stackwalker@8.1_1e")
+        with pytest.raises(AssertionError):
+            self.check_lex(
+                complex_lex,
+                "mvapich_foo"
+                "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug-qt_4"
+                "^stackwalker@8.1_1e"
+            )
 
     # The following lexes are non-ambiguous (add a space before -qt_4)
     # and should all result in the tokens in complex_lex

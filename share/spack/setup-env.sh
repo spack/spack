@@ -58,7 +58,7 @@
 
 function spack {
     # Zsh does not do word splitting by default, this enables it for this function only
-    if [ -n "$ZSH_VERSION" ]; then
+    if [ -n "${ZSH_VERSION:-}" ]; then
         emulate -L sh
     fi
 

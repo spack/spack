@@ -237,7 +237,7 @@ location --install-dir`` commands.  For example:
 .. code-block:: console
 
    $ spack location --install-dir cmake
-   /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
+   ~/spack/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
 
 This gives the root of the Spack package; relevant binaries may be
 found within it.  For example:
@@ -251,8 +251,8 @@ Standard UNIX tools can find binaries as well.  For example:
 
 .. code-block:: console
 
-   $ find ~/spack2/opt -name cmake | grep bin
-   /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
+   $ find ~/spack/opt -name cmake | grep bin
+   ~/spack/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
 
 These methods are suitable, for example, for setting up build
 processes or GUIs that need to know the location of particular tools.
@@ -967,7 +967,7 @@ Distribute Your Software
 
 Once you've released your software, other people will want to build
 it; and you will need to tell them how.  In the past, that has meant a
-few paragraphs of pros explaining which dependencies to install.  But
+few paragraphs of prose explaining which dependencies to install.  But
 now you use Spack, and those instructions are written in executable
 Python code.  But your software has many dependencies, and you know
 Spack is the best way to install it:

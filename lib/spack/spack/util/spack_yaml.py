@@ -32,23 +32,21 @@
 
 """
 import yaml
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError as e:
-    from yaml import Loader, Dumper
+from yaml import Loader, Dumper
 from yaml.nodes import *
 from yaml.constructor import ConstructorError
 from ordereddict_backport import OrderedDict
 
+import spack.error
+
 # Only export load and dump
-__all__ = ['load', 'dump']
+__all__ = ['load', 'dump', 'SpackYAMLError']
 
 # Make new classes so we can add custom attributes.
 # Also, use OrderedDict instead of just dict.
 
 
 class syaml_dict(OrderedDict):
-
     def __repr__(self):
         mappings = ('%r: %r' % (k, v) for k, v in self.items())
         return '{%s}' % ', '.join(mappings)
@@ -153,6 +151,7 @@ class OrderedLineLoader(Loader):
         mark(mapping, node)
         return mapping
 
+
 # register above new constructors
 OrderedLineLoader.add_constructor(
     u'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
@@ -223,3 +222,9 @@ def load(*args, **kwargs):
 def dump(*args, **kwargs):
     kwargs['Dumper'] = OrderedLineDumper
     return yaml.dump(*args, **kwargs)
+
+
+class SpackYAMLError(spack.error.SpackError):
+    """Raised when there are issues with YAML parsing."""
+    def __init__(self, msg, yaml_error):
+        super(SpackYAMLError, self).__init__(msg, str(yaml_error))
