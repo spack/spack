@@ -26,7 +26,6 @@ from __future__ import print_function
 
 import os
 import re
-import sys
 
 import llnl.util.tty as tty
 import spack
@@ -41,44 +40,10 @@ from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.naming import *
 
+
 description = "Create a new package file"
 
-
-class PackageTemplate(object):
-    """Provides the default values to be used for the package file template"""
-    base_class_name = 'Package'
-
-    dependencies = """\
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')"""
-
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')"""
-
-    def __init__(self, name, url, version_hash_tuples):
-        self.name = name
-        self.class_name = mod_to_class(name)
-        self.url = url
-        self.version_hash_tuples = version_hash_tuples
-
-    @property
-    def versions(self):
-        """Adds a version() call to the package for each version found."""
-        max_len = max(len(str(v)) for v, h in self.version_hash_tuples)
-        format = "    version(%%-%ds, '%%s')" % (max_len + 2)
-        return '\n'.join(
-            format % ("'%s'" % v, h) for v, h in self.version_hash_tuples
-        )
-
-    def write(self, pkg_path):
-        """Writes the new package file."""
-
-        # Write out a template for the file
-        with open(pkg_path, "w") as pkg_file:
-            pkg_file.write("""\
+package_template = '''\
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -122,7 +87,7 @@ from spack import *
 
 
 class {class_name}({base_class_name}):
-    ""\"FIXME: Put a proper description of your package here.""\"
+    """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
@@ -133,13 +98,51 @@ class {class_name}({base_class_name}):
 {dependencies}
 
 {body}
-""".format(name=self.name,
-           class_name=self.class_name,
-           base_class_name=self.base_class_name,
-           url=self.url,
-           versions=self.versions,
-           dependencies=self.dependencies,
-           body=self.body))
+'''
+
+
+class PackageTemplate(object):
+    """Provides the default values to be used for the package file template"""
+    base_class_name = 'Package'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')"""
+
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
+
+    def __init__(self, name, url, version_hash_tuples):
+        self.name = name
+        self.class_name = mod_to_class(name)
+        self.url = url
+        self.version_hash_tuples = version_hash_tuples
+
+    @property
+    def versions(self):
+        """Adds a version() call to the package for each version found."""
+        max_len = max(len(str(v)) for v, h in self.version_hash_tuples)
+        format = "    version(%%-%ds, '%%s')" % (max_len + 2)
+        return '\n'.join(
+            format % ("'%s'" % v, h) for v, h in self.version_hash_tuples
+        )
+
+    def write(self, pkg_path):
+        """Writes the new package file."""
+
+        # Write out a template for the file
+        with open(pkg_path, "w") as pkg_file:
+            pkg_file.write(package_template.format(
+                name=self.name,
+                class_name=self.class_name,
+                base_class_name=self.base_class_name,
+                url=self.url,
+                versions=self.versions,
+                dependencies=self.dependencies,
+                body=self.body))
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -386,19 +389,25 @@ def get_name(args):
     """Get the name of the package based on the supplied arguments.
 
     If a name was provided, always use that. Otherwise, if a URL was
-    provided, extract the name from that.
+    provided, extract the name from that. Otherwise, use a default.
 
     Returns package name."""
 
+    # Default package name
     name = 'example'
+
     if args.name:
+        # Use a user-supplied name if one is present
         name = args.name
+        tty.msg("Using specified package name: '{0}'".format(name))
     elif args.url:
+        # Try to guess the package name based on the URL
         try:
             name = spack.url.parse_name(args.url)
+            tty.msg("This looks like a URL for {0}".format(name))
         except spack.url.UndetectableNameError:
-            # Use a user-supplied name if one is present
-            tty.die("Couldn't guess a name for this package. Try running:",
+            tty.die("Couldn't guess a name for this package."
+                    "  Please report this bug. In the meantime, try running:",
                     "  `spack create --name <name> <url>`")
 
     if not valid_fully_qualified_module_name(name):
@@ -412,8 +421,11 @@ def get_url(args):
 
     Returns a default URL if none is provided."""
 
+    # Default URL
     url = 'http://www.example.com/example-1.2.3.tar.gz'
+
     if args.url:
+        # Use a user-supplied URL if one is present
         url = args.url
 
     return url
@@ -426,6 +438,7 @@ def get_versions(args, name):
 
     Returns default values if no URL is provided."""
 
+    # Default version, hash, and guesser
     ver_hash_tuples = [('1.2.3', '0123456789abcdef0123456789abcdef')]
     guesser = BuildSystemGuesser()
 
@@ -437,8 +450,8 @@ def get_versions(args, name):
             first_stage_function=guesser,
             keep_stage=args.keep_stage)
 
-    if not ver_hash_tuples:
-        tty.die('Could not fetch any tarballs for {0}.'.format(name))
+        if not ver_hash_tuples:
+            tty.die('Could not fetch any tarballs for {0}.'.format(name))
 
     return ver_hash_tuples, guesser
 
@@ -448,14 +461,20 @@ def get_build_system(args, guesser):
 
     If a template is specified, always use that. Otherwise, if a URL
     is provided, download the tarball and peek inside to guess what
-    build system it uses."""
+    build system it uses. Otherwise, use a default."""
 
+    # Default template
     template = 'default'
 
     if args.template:
+        # Use a user-supplied template if one is present
         template = args.template
+        tty.msg("Using specified package template: '{0}'".format(template))
     elif args.url:
+        # Use whatever build system the guesser detected
         template = guesser.build_system
+        tty.msg("This package looks like it uses a(n) {0} build system".format(
+            template))
 
     return template
 
@@ -464,8 +483,8 @@ def get_repository(name, args):
     spec = Spec(name)
     # figure out namespace for spec
     if spec.namespace and args.namespace and spec.namespace != args.namespace:
-        tty.die("Namespaces '%s' and '%s' do not match." % (spec.namespace,
-                                                            args.namespace))
+        tty.die("Namespaces '{0}' and '{1}' do not match.".format(
+            spec.namespace, args.namespace))
 
     if not spec.namespace and args.namespace:
         spec.namespace = args.namespace
@@ -476,15 +495,15 @@ def get_repository(name, args):
         try:
             repo = Repo(repo_path)
             if spec.namespace and spec.namespace != repo.namespace:
-                tty.die("Can't create package with namespace %s in repo with "
-                        "namespace %s" % (spec.namespace, repo.namespace))
+                tty.die("Can't create package with namespace {0} in repo with "
+                        "namespace {0}".format(spec.namespace, repo.namespace))
         except RepoError as e:
             tty.die(str(e))
     else:
         if spec.namespace:
             repo = spack.repo.get_repo(spec.namespace, None)
             if not repo:
-                tty.die("Unknown namespace: %s" % spec.namespace)
+                tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
             repo = spack.repo.first_repo()
 
