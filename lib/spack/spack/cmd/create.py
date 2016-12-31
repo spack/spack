@@ -41,7 +41,7 @@ from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.naming import *
 
-description = "Create a new package file from an archive URL"
+description = "Create a new package file"
 
 
 class PackageTemplate(object):
@@ -302,7 +302,7 @@ def setup_parser(subparser):
     setup_parser.subparser = subparser
 
 
-class BuildSystemGuesser(object):
+class BuildSystemGuesser:
 
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
@@ -345,16 +345,44 @@ class BuildSystemGuesser(object):
 
         # Determine the build system based on the files contained
         # in the archive.
-        build_system = 'unknown'
+        build_system = 'default'
         for pattern, bs in clues:
             if any(re.search(pattern, l) for l in lines):
                 build_system = bs
 
         self.build_system = build_system
 
-    def make_guess(self, name, url, ver_hash_tuples):
-        cls = templates.get(self.build_system, PackageTemplate)
-        return cls(name, url, ver_hash_tuples)
+    def get_build_system(self):
+        return self.build_system
+
+
+def fetch_tarballs(url, name):
+    """Try to find versions of the supplied archive by scraping the web.
+    Prompts the user to select how many to download if many are found."""
+    versions = spack.util.web.find_versions_of_archive(url)
+    rkeys = sorted(versions.keys(), reverse=True)
+    versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
+
+    archives_to_fetch = 1
+    if not versions:
+        # If the fetch failed for some reason, revert to what the user provided
+        version = spack.url.parse_version(url)
+        versions = {version: url}
+    elif len(versions) > 1:
+        tty.msg("Found %s versions of %s:" % (len(versions), name),
+                *spack.cmd.elide_list(
+                    ["%-10s%s" % (v, u) for v, u in versions.iteritems()]))
+        print('')
+        archives_to_fetch = tty.get_number(
+            "Include how many checksums in the package file?",
+            default=5, abort='q')
+
+        if not archives_to_fetch:
+            tty.die("Aborted.")
+
+    sorted_versions = sorted(versions.keys(), reverse=True)
+    sorted_urls = [versions[v] for v in sorted_versions]
+    return sorted_versions[:archives_to_fetch], sorted_urls[:archives_to_fetch]
 
 
 def get_name(args):
@@ -373,8 +401,8 @@ def get_name(args):
             name = spack.url.parse_name(args.url)
         except spack.url.UndetectableNameError:
             # Use a user-supplied name if one is present
-            tty.die("Couldn't guess a name for this package. Try running:", "",
-                    "spack create --name <name> <url>")
+            tty.die("Couldn't guess a name for this package. Try running:",
+                    "  `spack create --name <name> <url>`")
 
     if not valid_fully_qualified_module_name(name):
         tty.die("Package name can only contain a-z, 0-9, and '-'")
@@ -394,7 +422,31 @@ def get_url(args):
     return url
 
 
-def get_build_system(args):
+def get_versions(args, name):
+    """Returns a tuple of versions and hashes for a package.
+
+    Also returns a BuildSystemGuesser object.
+
+    Returns default values if no URL is provided."""
+
+    ver_hash_tuples = [('1.2.3', '0123456789abcdef0123456789abcdef')]
+    guesser = BuildSystemGuesser()
+
+    if args.url:
+        versions, urls = fetch_tarballs(args.url, name)
+
+        ver_hash_tuples = spack.cmd.checksum.get_checksums(
+            versions, urls,
+            first_stage_function=guesser,
+            keep_stage=args.keep_stage)
+
+    if not ver_hash_tuples:
+        tty.die('Could not fetch any tarballs for {0}.'.format(name))
+
+    return ver_hash_tuples, guesser
+
+
+def get_build_system(args, guesser):
     """Determine the build system template.
 
     If a template is specified, always use that. Otherwise, if a URL
@@ -402,10 +454,11 @@ def get_build_system(args):
     build system it uses."""
 
     template = 'default'
+
     if args.template:
         template = args.template
     elif args.url:
-        pass
+        template = guesser.get_build_system()
 
     return template
 
@@ -445,41 +498,12 @@ def get_repository(name, args):
     return repo
 
 
-def fetch_tarballs(url, name):
-    """Try to find versions of the supplied archive by scraping the web.
-    Prompts the user to select how many to download if many are found."""
-    versions = spack.util.web.find_versions_of_archive(url)
-    rkeys = sorted(versions.keys(), reverse=True)
-    versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
-
-    archives_to_fetch = 1
-    if not versions:
-        # If the fetch failed for some reason, revert to what the user provided
-        version = spack.url.parse_version(url)
-        versions = {version: url}
-    elif len(versions) > 1:
-        tty.msg("Found %s versions of %s:" % (len(versions), name),
-                *spack.cmd.elide_list(
-                    ["%-10s%s" % (v, u) for v, u in versions.iteritems()]))
-        print('')
-        archives_to_fetch = tty.get_number(
-            "Include how many checksums in the package file?",
-            default=5, abort='q')
-
-        if not archives_to_fetch:
-            tty.die("Aborted.")
-
-    sorted_versions = sorted(versions.keys(), reverse=True)
-    sorted_urls = [versions[v] for v in sorted_versions]
-    return sorted_versions[:archives_to_fetch], sorted_urls[:archives_to_fetch]
-
-
 def create(parser, args):
     # Gather information about the package to be created
     name = get_name(args)
     url = get_url(args)
-    build_system = get_build_system(args)
-    version_hash_tuples = [('1.2.3', '0123456789abcdef0123456789abcdef')]
+    version_hash_tuples, guesser = get_versions(args, name)
+    build_system = get_build_system(args, guesser)
 
     PackageClass = templates[build_system]
 
@@ -487,46 +511,17 @@ def create(parser, args):
 
     repo = get_repository(name, args)
 
-
-    ## Fetch tarballs (prompting user if necessary)
-    #url = args.url
-    #versions, urls = fetch_tarballs(url, name)
-
-    ## Try to guess what build system is used.
-    #guesser = BuildSystemGuesser()
-    #ver_hash_tuples = spack.cmd.checksum.get_checksums(
-    #    versions, urls,
-    #    first_stage_function=guesser,
-    #    keep_stage=args.keep_stage)
-
-    #if not ver_hash_tuples:
-    #    tty.die("Could not fetch any tarballs for %s" % name)
-
-    #package = guesser.make_guess(name, url, ver_hash_tuples)
-
     # Create a directory for the new package.
     pkg_path = repo.filename_for_package_name(package.name)
     if os.path.exists(pkg_path) and not args.force:
-        tty.die("%s already exists." % pkg_path)
+        tty.die('{0} already exists.'.format(pkg_path),
+                '  Try running `spack create --force` to overwrite it.')
     else:
         mkdirp(os.path.dirname(pkg_path))
 
     tty.msg("Creating template for package %s" % package.name)
 
     package.write(pkg_path)
-    ## Write out a template for the file
-    #with open(pkg_path, "w") as pkg_file:
-    #    pkg_file.write(
-    #        package_template.substitute(
-    #            name=guess.name,
-    #            class_name=guess.class_name,
-    #            base_class_name=guess.base_class_name,
-    #            url=guess.url,
-    #            versions=guess.versions,
-    #            dependencies=guess.dependencies,
-    #            body=guess.body
-    #        )
-    #    )
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)
