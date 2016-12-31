@@ -99,9 +99,10 @@ def test(parser, args, unknown_args):
             do_list(args, unknown_args)
             return
 
-        if args.tests and not any(arg.startswith('-') for arg in args.tests):
-            # Allow keyword search without -k if no options are specified
+        # Allow keyword search without -k if no options are specified
+        if (args.tests and not unknown_args and
+            not any(arg.startswith('-') for arg in args.tests)):
             return pytest.main(['-k'] + args.tests)
-        else:
-            # Just run the pytest command.
-            return pytest.main(unknown_args + args.tests)
+
+        # Just run the pytest command
+        return pytest.main(unknown_args + args.tests)
