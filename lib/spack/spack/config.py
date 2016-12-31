@@ -233,7 +233,7 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 # But we need the --config flags NOW.
 import argparse
 from llnl.util.tty.color import *
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument('-c', '--config', dest='configs', action='append', default=[],
                     help="Add project config scopes (highest precedence last)")
 
