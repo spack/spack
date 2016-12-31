@@ -368,7 +368,7 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
 
 
 @directive('variants')
-def variant(pkg, name, default=False, description='', values=(True, False), exclusive=True, validator=None):  # NOQA: ignore=E501
+def variant(name, default=False, description='', values=(True, False), exclusive=True, validator=None):  # NOQA: ignore=E501
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
