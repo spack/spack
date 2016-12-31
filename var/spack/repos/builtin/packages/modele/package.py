@@ -92,7 +92,7 @@ class Modele(CMakePackage):
         return [
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
             '-DUSE_PNETCDF=%s' % ('YES' if '+pnetcdf' in spec else 'NO'),
-            '-DUSE_ICEBIN=%s' % ('YES' if '+glint2' in spec else 'NO'),
+            '-DUSE_ICEBIN=%s' % ('YES' if '+icebin' in spec else 'NO'),
             '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
             '-DUSE_FEXCEPTION=%s' % ('YES' if '+fexception' in spec else 'NO'),
 

@@ -47,7 +47,7 @@ class Icebin(CMakePackage):
     variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
     variant('coupler', default=False, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
-    variant('docs', default=False, description='Build docs')
+    variant('doc', default=False, description='Build documentation')
 
     extends('python', when='+python')
 
@@ -73,7 +73,7 @@ class Icebin(CMakePackage):
     depends_on('eigen')
 
     depends_on('cmake', type='build')
-    depends_on('doxygen', type='build', when='+docs')
+    depends_on('doxygen', type='build', when='+doc')
 
     def cmake_args(self):
         spec = self.spec
@@ -83,7 +83,7 @@ class Icebin(CMakePackage):
             '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
             '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO'),
-            '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO')]
+            '-DBUILD_DOCS=%s' % ('YES' if '+doc' in spec else 'NO')]
 
     def setup_environment(self, spack_env, env):
         """Add <prefix>/bin to the module; this is not the default if we

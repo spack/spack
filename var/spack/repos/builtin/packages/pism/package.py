@@ -62,7 +62,7 @@ class Pism(CMakePackage):
             description='Enables parallel HDF5 I/O.')
     # variant('tao', default=False,
     #         description='Use TAO in inverse solvers.')
-    variant('docs', default=False, description=''
+    variant('doc', default=False, description=
             'Build PISM documentation (requires LaTeX and Doxygen)')
 
     # CMake build options not transferred to Spack variants

@@ -10,8 +10,8 @@ class ModeleControl(Package):
 
     extends('python')
     depends_on('python@3:')
-    depends_on('py-giss', type=nolink)
-    depends_on('netcdf', type='run')
+    depends_on('py-giss', type=('build','run'))
+    depends_on('netcdf', type='run')        # ncdump executable
 
     # depends_on('binutils', type='run')    # ldd; assume already installed on system
 #    depends_on('netcdf', type='run')    # ncdump
