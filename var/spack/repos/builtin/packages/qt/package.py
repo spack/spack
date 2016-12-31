@@ -164,7 +164,6 @@ class Qt(Package):
     @property
     def common_config_args(self):
         config_args = [
-            '-prefix', self.prefix,
             '-v',
             '-opensource',
             '-opengl',
@@ -225,52 +224,40 @@ class Qt(Package):
     # really get them into spack at some point.
 
     @when('@3')
-    def configure(self):
+    def configure_args(self):
         # A user reported that this was necessary to link Qt3 on ubuntu
         os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
-        configure('-prefix', self.prefix,
-                  '-v',
-                  '-thread',
-                  '-shared',
-                  '-release',
-                  '-fast')
+        return [
+            '-v',
+            '-thread',
+            '-shared',
+            '-release',
+            '-fast']
 
     @when('@4')
-    def configure(self):
-        configure('-fast',
-                  '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
-                  '-{0}webkit'.format('' if '+webkit' in self.spec else 'no-'),
-                  '-arch', str(self.spec.architecture.target),
-                  *self.common_config_args)
+    def configure_args(self):
+        return [
+            '-fast',
+            '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
+            '-{0}webkit'.format('' if '+webkit' in self.spec else 'no-'),
+            '-arch', str(self.spec.architecture.target)] +
+            self.common_config_args
 
     @when('@5.0:5.6')
-    def configure(self):
+    def configure_args(self):
         webkit_args = [] if '+webkit' in self.spec else ['-skip', 'qtwebkit']
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
-                  *(webkit_args + self.common_config_args))
+        return [
+            '-no-eglfs',
+            '-no-directfb',
+            '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-')] +
+            webkit_args + self.common_config_args
 
     @when('@5.7:')
-    def configure(self):
-        config_args = self.common_config_args
-
-        if not sys.platform == 'darwin':
-            config_args.extend([
-                '-qt-xcb',
-            ])
-
-        if '~webkit' in self.spec:
-            config_args.extend([
-                '-skip', 'webengine',
-            ])
-
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-'),
-                  *config_args)
-
-    def install(self, spec, prefix):
-        self.configure()
-        make()
-        make("install")
+    def configure_args(self):
+        return [
+            '-no-eglfs',
+            '-no-directfb',
+            '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-')] +
+            self.common_config_args +
+            (['-qt-xcb'] if (not sys.platform == 'darwin') else []) +
+            (['-skip', 'webengine'] if '~webkit' in self.spec else [])
