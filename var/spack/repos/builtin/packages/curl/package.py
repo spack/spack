@@ -50,6 +50,5 @@ class Curl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         return [
-            '--prefix=%s' % prefix,
             '--with-zlib=%s' % spec['zlib'].prefix,
             '--with-ssl=%s' % spec['openssl'].prefix]
