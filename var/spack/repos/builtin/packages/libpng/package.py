@@ -46,5 +46,7 @@ class Libpng(AutotoolsPackage):
 
     # Required for qt@3
     version('1.2.57', 'dfcda3603e29dcc11870c48f838ef75b')
+    # CentOS7
+    version('1.5.13', '9c5a584d4eb5fe40d0f1bc2090112c65')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended

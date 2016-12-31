@@ -44,14 +44,14 @@ class Curl(Package):
     version('7.44.0', '6b952ca00e5473b16a11f05f06aa8dae')
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
+    version('7.29.0', 'fa5f37f38a8042020e292ce7ec5341ce') # CentOS7
 
     depends_on("openssl")
     depends_on("zlib")
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix,
-                  '--with-ssl=%s' % spec['openssl'].prefix)
-
-        make()
-        make("install")
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--prefix=%s' % prefix,
+            '--with-zlib=%s' % spec['zlib'].prefix,
+            '--with-ssl=%s' % spec['openssl'].prefix]
