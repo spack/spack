@@ -1,0 +1,165 @@
+#!/usr/bin/env python
+#
+##############################################################################
+# Copyright (c) 2013-2016, Elizabeth Fischer
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
+
+from __future__ import print_function
+
+import argparse
+import sys
+import os
+import subprocess
+import tempfile
+
+class SpackError(Exception):
+    pass
+
+def read_env(env_path):
+    # Read the env
+    spack_cmd = ['spack']
+    installs = []    # List of command lines for `spack install`
+    with open(env_path) as fin:
+        for line in fin:
+            line = line.strip()
+            if line[:8] == '# spack=':
+                spack_cmd = line[8:].split()
+                continue
+
+            sharp = line.find('#')
+            if sharp >= 0:
+                line = line[:sharp]
+            if len(line) > 0:
+                sections = line.split(':') + ['']    # Second section is optional
+                parsed = tuple([x.split() for x in sections[0:2]])
+                installs.append(parsed)
+    return spack_cmd,installs
+
+def read_log(log_path):
+    ret = []
+
+    cur_spec = None
+    with open(log_path, 'r') as fin:
+        for line in fin:
+            if line[:9] != 'SPACKENV ':
+                continue
+            line = line[9:].split()
+            if line[0] == 'BEGIN':
+                if cur_spec != None:
+                    ret.append((cur_spec, cur_installed))
+                cur_spec = line[1]
+                cur_installed = list()
+            elif line[0] == 'INSTALLED':
+                cur_installed.append(line[1])
+            elif line[0] == 'COMPLETE':
+                ret.append((cur_spec, cur_installed))
+                return ret
+    raise SpackError('Incomplete logfile; did Spack finish?')
+
+
+def install_env(env_name, src_dir=None, env_dir=None):
+    spack_cmd,installs = read_env(os.path.join(src_dir, env_name + '.env'))
+
+    # Do the `spack installs`
+    with open(os.path.join(os.path.join(env_dir, env_name + '.log')), 'w') as fout:
+        for install,load in installs:
+            with tempfile.TemporaryFile('w+') as ferr:
+                cmd = spack_cmd + ['install', '-I', '--report'] + install
+                fout.write('\n==============> spackenv\n' + ' '.join(cmd) + '\n')
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=ferr)
+                for line in iter(proc.stdout.readline,''):
+                    sys.stdout.write(line)
+                    fout.write(line)
+                proc.wait()
+
+                ferr.seek(0)
+                for line in ferr:
+                    sys.stdout.write(line)
+                    fout.write(line)
+
+
+            if proc.returncode != 0:
+                raise SpackError('Spack failed with return code=%d' % proc.returncode)
+
+        fout.write('SPACKENV COMPLETE\n')
+
+def loads_env(env_name, src_dir=None, env_dir=None):
+    spack_cmd,installs = read_env(os.path.join(src_dir, env_name + '.env'))
+    log = read_log(os.path.join(env_dir, env_name + '.log'))
+
+    with open(os.path.join(env_dir, env_name), 'w') as fout:
+        for (install_args,loads_args),(spec,installed) in zip(installs,log):
+            for hash in installed:
+                cmd = spack_cmd + ['module', 'loads'] + loads_args + [hash]
+                print(' '.join(cmd))
+
+                proc = subprocess.Popen(cmd, stdout=fout)
+                proc.wait()
+
+                if proc.returncode != 0:
+                    raise SpackError('Spack failed with return code=%d' % proc.returncode)
+
+
+def install_envs(env_names, *args, **kwargs):
+    for env in env_names:
+        install_env(env, *args, **kwargs)
+
+def loads_envs(env_names, *args, **kwargs):
+    for env in env_names:
+        loads_env(env, *args, **kwargs)
+
+
+_action = {
+    'install' : install_envs,
+    'loads' : loads_envs
+}
+
+def validate_args(args):
+    kwargs = {
+        'src_dir' : args.src,
+        'env_dir' : args.env
+    }
+    return kwargs
+
+def main():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Manage entire environments built by Spack")
+    parser.add_argument('--env',
+        help="Directory that holds the environments")
+    parser.add_argument('--src',
+        help="Directory that holds the source (.env) files")
+
+    parser.add_argument(dest='command', choices=['install', 'loads'])
+    parser.add_argument(dest='envs', nargs='+')
+
+    # Print help if no commands
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+    args = parser.parse_args()
+
+    try:
+        _action[args.command](args.envs, **validate_args(args))
+    except SpackError as e:
+        print(e)
+
+main()
+
