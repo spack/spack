@@ -375,7 +375,7 @@ def _merge_yaml(dest, source):
                 ret[sk] = copy.copy(sv)
             else:
                 # otherwise, merge the YAML
-                ret[sk] = _merge_yaml(dest[sk], source[sk],debug+1 if debug>0 else 0)
+                ret[sk] = _merge_yaml(dest[sk], source[sk])
         return ret
 
     # In any other case, overwrite with a copy of the source value.
