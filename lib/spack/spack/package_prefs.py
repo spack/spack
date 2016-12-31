@@ -300,12 +300,14 @@ def cmp_specs(lhs, rhs):
     return 0
 
 
+_pkgsort = None
+
+
 def pkgsort():
     global _pkgsort
     if _pkgsort is None:
         _pkgsort = PreferredPackages()
     return _pkgsort
-_pkgsort = None
 
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):
