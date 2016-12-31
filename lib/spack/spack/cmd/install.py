@@ -352,7 +352,11 @@ def setup_logging(spec, args):
 
 def top_install(
     spec, install_package=True,
-    install_dependencies=True, **kwargs):
+    install_dependencies=True,
+    report=False, **kwargs):
+
+    if report:
+        print 'SPACKENV BEGIN %s' % spec.name
 
     """Top-level install method."""
     if not install_package:
@@ -365,17 +369,19 @@ def top_install(
                     install_dependencies=True,
                     explicit=False,
                     **kwargs)
+                if report:
+                    print 'SPACKENV INSTALLED %s/%s' % (s.name, s.dag_hash())
         else:
             # Nothing to install!
             tty.die("Nothing to install, due to the --only flag")
-    else:    // install_package = True, install_dependencies=?
+    else:    # install_package = True, install_dependencies=?
         package = spack.repo.get(spec)
         package.do_install(
             install_dependencies=install_dependencies,
             explicit=True,
             **kwargs)
         if report:
-            print 'SPACK INSTALLED: %s/%s' % (spec.name, spec.dag_hash())
+            print 'SPACKENV INSTALLED %s/%s' % (spec.name, spec.dag_hash())
 
 def show_spec(spec, args):
     """Print the concretized spec for the user before installing."""
