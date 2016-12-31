@@ -199,6 +199,7 @@ class ConfigScope(object):
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
 
+
 #
 # Below are configuration scopes.
 #
