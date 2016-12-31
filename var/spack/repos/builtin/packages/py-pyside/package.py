@@ -48,7 +48,7 @@ class PyPyside(Package):
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('qt@4.5:4.9')
+#    depends_on('qt@4.5:4.9')    # Temporarily comment out until Spack can handle build dependencies properly.
     depends_on('libxml2@2.6.32:')
     depends_on('libxslt@1.1.19:')
 
