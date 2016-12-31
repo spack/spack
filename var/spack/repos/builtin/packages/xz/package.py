@@ -34,7 +34,7 @@ class Xz(Package):
     url      = "http://tukaani.org/xz/xz-5.2.0.tar.bz2"
 
     version('5.2.0', '867cc8611760240ebf3440bd6e170bb9')
-    version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af')
+    version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af') # CentOS7
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
