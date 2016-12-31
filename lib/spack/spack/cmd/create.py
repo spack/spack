@@ -34,7 +34,7 @@ import spack.cmd.checksum
 import spack.url
 import spack.util.web
 from llnl.util.filesystem import mkdirp
-from spack.repository import Repo, RepoError
+from spack.repository import Repo
 from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.naming import *
