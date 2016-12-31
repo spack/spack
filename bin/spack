@@ -24,6 +24,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import sys
 if (sys.version_info[0] > 2) or (sys.version_info[:2] < (2, 6)):
     v_info = sys.version_info[:3]
@@ -188,14 +190,37 @@ def _main(args, unknown_args):
                 % (args.command, return_val))
 
 
-def main(args):
+def parse_args_with_defaults():
+    # ---- Parse args, applying defaults based on the Spack subcommand
+
+    # 1. Parse raw command line once to determine the subcommand
+    # (TODO: This could be done with a simpler parser)
+    args0, unknown = parser.parse_known_args()
+
+    # 2. Fetch the default args based on the subcommand; and parse them
+    # to come up with defaults
+    aliases = spack.config.get_config('aliases')
+    cmd_defaults = aliases.get(args0.command, '').split()
+    all_defaults = aliases.get('all', '').split()
+    default_cmdline = all_defaults + [args0.command] + cmd_defaults
+    defaults = parser.parse_args(default_cmdline)
+
+    # 3. Parse the main args again, with respect to those defaults
+    parser.set_defaults(**vars(defaults))
+    args, unknown = parser.parse_known_args()
+
+    return args, unknown
+
+
+def main():
     # Just print help and exit if run with no arguments at all
-    if len(args) == 1:
+    if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
+
     # actually parse the args.
-    args, unknown = parser.parse_known_args()
+    args, unknown = parse_args_with_defaults()
 
     if args.profile:
         import cProfile
@@ -209,4 +234,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
