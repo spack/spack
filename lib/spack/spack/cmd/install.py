@@ -35,7 +35,9 @@ import xml.etree.ElementTree as ET
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import *
 import spack
+import spack.spec
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 from spack.build_environment import InstallError
@@ -80,6 +82,9 @@ the dependencies."""
     subparser.add_argument(
         '--install-status', '-I', action='store_true', dest='install_status',
         help="Show spec before installing.")
+    subparser.add_argument(
+        '--report', action='store_true', dest='report',
+        help="Report on installation when finished, for consumption by spackenv")
 
 
     cd_group = subparser.add_mutually_exclusive_group()
@@ -323,7 +328,8 @@ def validate_args(args):
         'run_tests': args.run_tests,
         'install_status': args.install_status,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'report' : args.report
     }
 
 
@@ -348,7 +354,7 @@ def setup_logging(spec, args):
     if args.log_format is not None:
         test_suite.dump(log_filename)
 
-def top_install(spec, install_package=True, install_dependencies=True, **kwargs):
+def top_install(spec, install_package=True, install_dependencies=True, report=False, **kwargs):
     """Top-level install method."""
     if install_dependencies:
         # Install dependencies as-if they were installed
@@ -357,9 +363,15 @@ def top_install(spec, install_package=True, install_dependencies=True, **kwargs)
             package = spack.repo.get(s)
             package.do_install(install_dependencies=True, explicit=False, **kwargs)
 
+            if report:
+                print 'SPACK INSTALLED: %s/%s' % (spec.name, spec.dag_hash())
+
     if install_package:
         package = spack.repo.get(spec)
         package.do_install(install_dependencies=False, explicit=True, **kwargs)
+
+        if report:
+            print 'SPACK INSTALLED: %s/%s' % (spec.name, spec.dag_hash())
 
 
 def show_spec(spec, args):
