@@ -35,7 +35,9 @@ import xml.etree.ElementTree as ET
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import *
 import spack
+import spack.spec
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 from spack.build_environment import InstallError
@@ -77,6 +79,9 @@ the dependencies."""
     subparser.add_argument(
         '--install-status', '-I', action='store_true', dest='install_status',
         help="Show spec before installing.")
+    subparser.add_argument(
+        '--report', action='store_true', dest='report',
+        help="Report on installation when finished, for consumption by spackenv")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -319,7 +324,8 @@ def validate_args(args):
         'run_tests': args.run_tests,
         'install_status': args.install_status,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'report' : args.report
     }
 
 
@@ -346,7 +352,11 @@ def setup_logging(spec, args):
 
 def top_install(
     spec, install_package=True,
-    install_dependencies=True, **kwargs):
+    install_dependencies=True,
+    report=False, **kwargs):
+
+    if report:
+        print 'SPACKENV BEGIN %s' % spec.name
 
     """Top-level install method."""
     if not install_package:
@@ -359,15 +369,18 @@ def top_install(
                     install_dependencies=True,
                     explicit=False,
                     **kwargs)
+                if report:
+                    print 'SPACKENV INSTALLED %s/%s' % (s.name, s.dag_hash())
         else:
             # Nothing to install!
             tty.die("Nothing to install, due to the --only flag")
-    else:    // install_package = True, install_dependencies=?
+    else:    # install_package = True, install_dependencies=?
         package = spack.repo.get(spec)
-        package.do_install(
-            install_dependencies=install_dependencies,
-            explicit=True,
-            **kwargs)
+        package.do_install(install_dependencies=False, explicit=True, **kwargs)
+
+        if report:
+            print 'SPACKENV INSTALLED %s/%s' % (spec.name, spec.dag_hash())
+
 
 def show_spec(spec, args):
     """Print the concretized spec for the user before installing."""
