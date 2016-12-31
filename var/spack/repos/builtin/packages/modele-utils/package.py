@@ -44,8 +44,8 @@ class ModeleUtils(CMakePackage):
             description='Build aux directory')
 
     # Build dependencies
-    depends_on('m4')
-    depends_on('cmake')
+    depends_on('m4', type='build')
+    depends_on('cmake@3.2:', type='build')
 
     # Link dependencies
     depends_on('netcdf-fortran')
