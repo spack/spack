@@ -36,7 +36,7 @@ from spack.util.environment import *
 import spack.util.spack_json as sjson
 
 
-class Python(Package):
+class Python(AutotoolsPackage):
     """The Python programming language."""
 
     homepage = "http://www.python.org"
