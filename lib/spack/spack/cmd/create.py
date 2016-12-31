@@ -352,9 +352,6 @@ class BuildSystemGuesser:
 
         self.build_system = build_system
 
-    def get_build_system(self):
-        return self.build_system
-
 
 def fetch_tarballs(url, name):
     """Try to find versions of the supplied archive by scraping the web.
@@ -458,7 +455,7 @@ def get_build_system(args, guesser):
     if args.template:
         template = args.template
     elif args.url:
-        template = guesser.get_build_system()
+        template = guesser.build_system
 
     return template
 
