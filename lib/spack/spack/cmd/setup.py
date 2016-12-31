@@ -22,6 +22,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import argparse
 import copy
 import os
@@ -42,7 +44,11 @@ from spack.stage import DIYStage
 description = "Create a configuration script and module, but don't build."
 
 # Same cmd line arguments as `spack install`
-setup_parser = install.setup_parser
+def setup_parser(subparser):
+    install.setup_parser(subparser)
+    subparser.add_argument(
+        '-d', '--default', action='store_true', dest='default',
+        help="Allow default version if user did not specify a single concrete version")
 
 def spack_transitive_include_path():
     return ';'.join(
@@ -152,7 +158,7 @@ def setup(self, args):
             if not spack.repo.exists(spec.name):
                 tty.die("No such package: %s" % spec.name)
 
-            if not spec.versions.concrete:
+            if not (args.default or spec.versions.concrete):
                 tty.die(
                     "spack setup spec must have a single, concrete version. "
                     "Did you forget a package version number?")
