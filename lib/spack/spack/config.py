@@ -233,7 +233,7 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 # This cannot raise an error; if there are real errors in the command
 # line arguments, they will be caught later when the full parse is done.
 # But we need the --config flags NOW.
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument(
     '-c', '--config', dest='configs', action='append', default=[],
     help="Add project config scopes (highest precedence last)")
