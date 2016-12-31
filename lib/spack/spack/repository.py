@@ -343,6 +343,10 @@ class RepoPath(object):
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
+    def is_virtual(self, pkg_name):
+        """True if the package with this name is virtual, False otherwise."""
+        return pkg_name in self.provider_index
+
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
 
@@ -775,6 +779,10 @@ class Repo(object):
         # Just check whether the file exists.
         filename = self.filename_for_package_name(pkg_name)
         return os.path.exists(filename)
+
+    def is_virtual(self, pkg_name):
+        """True if the package with this name is virtual, False otherwise."""
+        return self.provider_index.contains(pkg_name)
 
     def _get_pkg_module(self, pkg_name):
         """Create a module for a particular package.

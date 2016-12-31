@@ -24,12 +24,28 @@
 ##############################################################################
 
 import spack
+import spack.error
 from spack.version import *
 
 
 def get_packages_config():
     """Wrapper around get_packages_config() to validate semantics."""
-    return spack.config.get_config('packages')
+    config = spack.config.get_config('packages')
+
+    # Get a list of virtuals from packages.yaml.  Note that because we
+    # check spack.repo, this collects virtuals that are actually provided
+    # by sometihng, not just packages/names that don't exist.
+    # So, this won't include, e.g., 'all'.
+    virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
+                if spack.repo.is_virtual(pkg_name)]
+
+    # die if there are virtuals in `packages.py`
+    if virtuals:
+        errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
+        raise VirtualInPackagesYAMLError(
+            "packages.yaml entries cannot be virtual packages:", *errors)
+
+    return config
 
 
 class PreferredPackages(object):
@@ -290,3 +306,7 @@ def pkgsort():
         _pkgsort = PreferredPackages()
     return _pkgsort
 _pkgsort = None
+
+
+class VirtualInPackagesYAMLError(spack.error.SpackError):
+    """Raised when a disallowed virtual is found in packages.yaml"""
