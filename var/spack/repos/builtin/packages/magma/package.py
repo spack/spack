@@ -30,7 +30,7 @@ from spack import *
 
 class Magma(Package):
     """The MAGMA project aims to develop a dense linear algebra library
-       similar to LAPACK but for heterogeneous/hybrid architectures, 
+       similar to LAPACK but for heterogeneous/hybrid architectures,
        starting with current "Multicore+GPU" systems.
     """
 
@@ -43,7 +43,7 @@ class Magma(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
 
-    depends_on('cuda')
+    # depends_on('cuda') # Install CUDA manually from nvidia.developer.com
     depends_on('blas')
     depends_on('lapack')
 
@@ -55,6 +55,7 @@ class Magma(Package):
 	# TODO support debug version that turns off -DNDEBUG
 	# TODO supported make shared when shared property is on
         fd = open('make.inc','w')
+        fd.write('DESTDIR = \n')
         fd.write('prefix = '+prefix+'\n')
 	fd.write('CC = '+self.compiler.cc+'\n')
 	fd.write('CXX = '+self.compiler.cxx+'\n')
@@ -74,7 +75,10 @@ class Magma(Package):
         fd.write('LIB       = '+lapack_blas.joined()+'\n')
 
         # Magma seems to require CUDA?
-        fd.write('CUDADIR = '+spec['cuda'].prefix+'\n')
+        if (sys.platform == 'darwin'):
+            fd.write('CUDADIR = /usr/local/cuda\n')
+        else:
+            fd.write('CUDADIR = '+spec['cuda'].prefix+'\n')
 	fd.write('NVCC = $(CUDADIR)/bin/nvcc'+'\n')
         fd.write('NVCCFLAGS = -O3 -DNDEBUG -DADD_  -Xcompiler "$(FPIC)"'+'\n')	
         fd.write('LIBDIR    = -L$(CUDADIR)/lib'+'\n')

@@ -24,13 +24,14 @@
 ##############################################################################
 from spack import *
 import os
+import sys
 import shutil
 
 class Occa(Package):
-    """OCCA is an open-source (MIT license) library used to program current 
+    """OCCA is an open-source (MIT license) library used to program current
        multi-core/many-core architectures. Devices (such as CPUs, GPUs,
        Intel's Xeon Phi, FPGAs, etc) are abstracted using an offload-model
-       for application development and programming for the devices is done 
+       for application development and programming for the devices is done
        through a C-based (OKL) or Fortran-based kernel language (OFL).
        OCCA gives developers the ability to target devices at run-time by
        using run-time compilation for device kernels.
@@ -40,7 +41,7 @@ class Occa(Package):
 
     version('develop', git='https://github.com/libocca/occa.git')
     version('0.0.0', git='https://github.com/libocca/occa.git',
-            commmit='381e886886dc87823769c5f20d0ecb29dd117afa')    
+            commmit='381e886886dc87823769c5f20d0ecb29dd117afa')
 
     variant('cuda',   default=True,
             description='Activates support for CUDA')
@@ -50,13 +51,16 @@ class Occa(Package):
             description='Activates support for OpenCL')
     variant('coi',   default=False,
             description='Activates support for COI')
-    depends_on('cuda', when='+cuda')
-    
+    # depends_on('cuda', when='+cuda')
+
     def install(self, spec, prefix):
         os.environ['OCCA_CXX'] = self.compiler.cxx
 	# TODO: How can I get all the Cxx flags that Spack is using?
 	#os.environ['OCCA_CXXFLAGS'] =
-        os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix,'bin','nvcc')
+        if (sys.platform == 'darwin'):
+            os.environ['OCCA_CUDA_COMPILER'] = '/usr/local/cuda/bin/nvcc'
+        else:
+            os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix,'bin','nvcc')
         # TODO: Set variables for the other variants
         make()
         shutil.copytree('lib', os.path.join(prefix,'lib'))

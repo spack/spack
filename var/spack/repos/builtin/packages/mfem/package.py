@@ -35,35 +35,33 @@ class Mfem(Package):
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
             url='http://goo.gl/Y9T75B', preferred=True, extension='.tar.gz')
-
     version('3.1',
             '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
             url='http://goo.gl/xrScXn', extension='.tar.gz')
-#    version('3.1', git='https://github.com/mfem/mfem.git',
-#            commit='dbae60fe32e071989b52efaaf59d7d0eb2a3b574')
 
+    variant('debug', default=False, description='Build debug version')
+    variant('mpi', default=True, description='Activate support for MPI')
     variant('metis', default=False, description='Activate support for metis')
     variant('hypre', default=False, description='Activate support for hypre')
+    variant('lapack', default=False, description='Activate support for LAPACK')
     variant('suite-sparse', default=False,
             description='Activate support for SuiteSparse')
-    variant('mpi', default=True, description='Activate support for MPI')
     variant('superlu-dist', default=False,
             description='Activate support for SuperLU_Dist')
-    variant('lapack', default=False, description='Activate support for LAPACK')
-    variant('debug', default=False, description='Build debug version')
     variant('netcdf', default=False, description='Activate NetCDF support')
-
-    depends_on('blas', when='+lapack')
-    depends_on('lapack', when='+lapack')
 
     depends_on('mpi', when='+mpi')
     depends_on('metis', when='+mpi')
     depends_on('hypre', when='+mpi')
+    depends_on('blas', when='+mpi')
+    depends_on('lapack', when='+mpi')
 
+    depends_on('metis', when='+metis')
+    depends_on('lapack', when='+hypre')
     depends_on('hypre', when='+hypre')
 
-    # TODO: All other packages use metis5. can this be updated?
-    depends_on('metis@4:', when='+metis')
+    depends_on('blas', when='+lapack')
+    depends_on('lapack', when='+lapack')
 
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('blas', when='+suite-sparse')
@@ -81,14 +79,14 @@ class Mfem(Package):
 
     def check_variants(self, spec):
         print spec
-        if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
+        if '+mpi' in spec and ('hypre' not in spec or 'metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
                                'and +metis!')
         if '+suite-sparse' in spec and ('+metis' not in spec or
                                         '+lapack' not in spec):
             raise InstallError('mfem+suite-sparse must be built with ' +
                                '+metis and +lapack!')
-# TODO: remove this hack, and fix elsewhere if needed			       
+# TODO: remove this hack, and fix elsewhere if needed
 #        if 'metis@5:' in spec and '%clang' in spec and (
 #                '^cmake %gcc' not in spec):
 #            raise InstallError('To work around CMake bug with clang, must ' +
@@ -107,14 +105,14 @@ class Mfem(Package):
 
         options = ['PREFIX=%s' % prefix]
 
-        if '+lapack' in spec:
+        if 'lapack' in spec:
             lapack_lib = (spec['lapack'].lapack_libs + spec['blas'].blas_libs).ld_flags  # NOQA: ignore=E501
             options.extend([
                 'MFEM_USE_LAPACK=YES',
                 'LAPACK_OPT=-I%s' % spec['lapack'].prefix.include,
                 'LAPACK_LIB=%s' % lapack_lib])
 
-        if '+hypre' in spec:
+        if 'hypre' in spec:
             options.extend([
                 'HYPRE_DIR=%s' % spec['hypre'].prefix,
                 'HYPRE_OPT=-I%s' % spec['hypre'].prefix.include,

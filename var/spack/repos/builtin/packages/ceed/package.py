@@ -51,7 +51,7 @@ class Ceed(Package):
     depends_on('hypre~internal-superlu')
 
     # TODO: determine what variants of each package we want
-    depends_on('occa@develop')    
+    depends_on('occa@develop')
 
     depends_on('magma@2.2.0')
 
@@ -59,7 +59,8 @@ class Ceed(Package):
 
     depends_on('nek5000@develop')
 
-    depends_on('mfem@develop+mpi+lapack+hypre+superlu-dist+metis+netcdf')
+    # depends_on('mfem@develop+mpi+lapack+hypre+superlu-dist+metis+netcdf')
+    depends_on('mfem@develop+mpi+superlu-dist+netcdf')
 
     # How do we propagate debug flag to all depends on packages ?
 
