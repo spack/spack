@@ -75,7 +75,7 @@ def get_checksums(url_dict, name, **kwargs):
     num_ver = len(sorted_versions)
 
     tty.msg("Found {0} version{1} of {2}:".format(
-            num_ver, '' if num_ver == 1 else '', name),
+            num_ver, '' if num_ver == 1 else 's', name),
             "",
             *spack.cmd.elide_list(
                 ["{0:{1}}  {2}".format(v, max_len, url_dict[v])
