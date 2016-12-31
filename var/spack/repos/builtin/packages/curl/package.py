@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Curl(Package):
+class Curl(AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
