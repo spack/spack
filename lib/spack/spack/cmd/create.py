@@ -101,6 +101,7 @@ class {class_name}({base_class_name}):
 
 class PackageTemplate(object):
     """Provides the default values to be used for the package file template"""
+
     base_class_name = 'Package'
 
     dependencies = """\
@@ -135,7 +136,8 @@ class PackageTemplate(object):
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for autotools-based packages"""
+    """Provides appropriate overrides for Autotools-based packages"""
+
     base_class_name = 'AutotoolsPackage'
 
     dependencies = """\
@@ -155,7 +157,8 @@ class AutotoolsPackageTemplate(PackageTemplate):
 
 
 class CMakePackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for cmake-based packages"""
+    """Provides appropriate overrides for CMake-based packages"""
+
     base_class_name = 'CMakePackage'
 
     dependencies = """\
@@ -172,7 +175,8 @@ class CMakePackageTemplate(PackageTemplate):
 
 
 class SconsPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for scons-based packages"""
+    """Provides appropriate overrides for SCons-based packages"""
+
     dependencies = """\
     # FIXME: Add additional dependencies if required.
     depends_on('scons', type='build')"""
@@ -185,7 +189,8 @@ class SconsPackageTemplate(PackageTemplate):
 
 
 class BazelPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for bazel-based packages"""
+    """Provides appropriate overrides for Bazel-based packages"""
+
     dependencies = """\
     # FIXME: Add additional dependencies if required.
     depends_on('bazel', type='build')"""
@@ -197,7 +202,8 @@ class BazelPackageTemplate(PackageTemplate):
 
 
 class PythonPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for python extensions"""
+    """Provides appropriate overrides for Python extensions"""
+
     dependencies = """\
     extends('python')
 
@@ -211,12 +217,15 @@ class PythonPackageTemplate(PackageTemplate):
         setup_py('install', '--prefix={0}'.format(prefix))"""
 
     def __init__(self, name, *args):
-        name = 'py-{0}'.format(name)
+        if not name.startswith('py-'):
+            name = 'py-{0}'.format(name)
+
         super(PythonPackageTemplate, self).__init__(name, *args)
 
 
 class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
+
     dependencies = """\
     extends('r')
 
@@ -230,12 +239,15 @@ class RPackageTemplate(PackageTemplate):
           self.stage.source_path)"""
 
     def __init__(self, name, *args):
-        name = 'r-{0}'.format(name)
+        if not name.startswith('r-'):
+            name = 'r-{0}'.format(name)
+
         super(RPackageTemplate, self).__init__(name, *args)
 
 
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
+
     dependencies = """\
     extends('octave')
 
@@ -252,7 +264,9 @@ class OctavePackageTemplate(PackageTemplate):
                    prefix, self.stage.archive_file))"""
 
     def __init__(self, name, *args):
-        name = 'octave-{0}'.format(name)
+        if not name.startswith('octave-'):
+            name = 'octave-{0}'.format(name)
+
         super(OctavePackageTemplate, self).__init__(name, *args)
 
 
@@ -293,6 +307,10 @@ def setup_parser(subparser):
 
 
 class BuildSystemGuesser:
+    """An instance of BuildSystemGuesser provides a callable object to be used
+    during ``spack create``. By passing this object to ``spack checksum``, we
+    can take a peek at the fetched tarball and discern the build system it uses
+    """
 
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
@@ -349,7 +367,11 @@ def get_name(args):
     If a name was provided, always use that. Otherwise, if a URL was
     provided, extract the name from that. Otherwise, use a default.
 
-    Returns package name."""
+    :param argparse.Namespace args: The arguments given to ``spack create``
+
+    :returns: The name of the package
+    :rtype: str
+    """
 
     # Default package name
     name = 'example'
@@ -364,7 +386,7 @@ def get_name(args):
             name = spack.url.parse_name(args.url)
             tty.msg("This looks like a URL for {0}".format(name))
         except spack.url.UndetectableNameError:
-            tty.die("Couldn't guess a name for this package."
+            tty.die("Couldn't guess a name for this package.",
                     "  Please report this bug. In the meantime, try running:",
                     "  `spack create --name <name> <url>`")
 
@@ -377,7 +399,13 @@ def get_name(args):
 def get_url(args):
     """Get the URL to use.
 
-    Returns a default URL if none is provided."""
+    Use a default URL if none is provided.
+
+    :param argparse.Namespace args: The arguments given to ``spack create``
+
+    :returns: The URL of the package
+    :rtype: str
+    """
 
     # Default URL
     url = 'http://www.example.com/example-1.2.3.tar.gz'
@@ -394,7 +422,14 @@ def get_versions(args, name):
 
     Also returns a BuildSystemGuesser object.
 
-    Returns default values if no URL is provided."""
+    Returns default values if no URL is provided.
+
+    :param argparse.Namespace args: The arguments given to ``spack create``
+    :param str name: The name of the package
+
+    :returns: Versions and hashes, and a BuildSystemGuesser object
+    :rtype: str and BuildSystemGuesser
+    """
 
     # Default version, hash, and guesser
     versions = """\
@@ -424,7 +459,15 @@ def get_build_system(args, guesser):
 
     If a template is specified, always use that. Otherwise, if a URL
     is provided, download the tarball and peek inside to guess what
-    build system it uses. Otherwise, use a default."""
+    build system it uses. Otherwise, use a default.
+
+    :param argparse.Namespace args: The arguments given to ``spack create``
+    :param BuildSystemGuesser guesser: The first_stage_function given to \
+        ``spack checksum`` which records the build system it detects
+
+    :returns: The name of the build system template to use
+    :rtype: str
+    """
 
     # Default template
     template = 'default'
@@ -442,9 +485,18 @@ def get_build_system(args, guesser):
     return template
 
 
-def get_repository(name, args):
+def get_repository(args, name):
+    """Returns a Repo object that will allow us to determine the path where
+    the new package file should be created.
+
+    :param argparse.Namespace args: The arguments given to ``spack create``
+    :param str name: The name of the package to create
+
+    :returns: A Repo object capable of determining the path to the package file
+    :rtype: Repo
+    """
     spec = Spec(name)
-    # figure out namespace for spec
+    # Figure out namespace for spec
     if spec.namespace and args.namespace and spec.namespace != args.namespace:
         tty.die("Namespaces '{0}' and '{1}' do not match.".format(
             spec.namespace, args.namespace))
@@ -452,16 +504,13 @@ def get_repository(name, args):
     if not spec.namespace and args.namespace:
         spec.namespace = args.namespace
 
-    # Figure out where the new package should live.
+    # Figure out where the new package should live
     repo_path = args.repo
     if repo_path is not None:
-        try:
-            repo = Repo(repo_path)
-            if spec.namespace and spec.namespace != repo.namespace:
-                tty.die("Can't create package with namespace {0} in repo with "
-                        "namespace {0}".format(spec.namespace, repo.namespace))
-        except RepoError as e:
-            tty.die(str(e))
+        repo = Repo(repo_path)
+        if spec.namespace and spec.namespace != repo.namespace:
+            tty.die("Can't create package with namespace {0} in repo with "
+                    "namespace {0}".format(spec.namespace, repo.namespace))
     else:
         if spec.namespace:
             repo = spack.repo.get_repo(spec.namespace, None)
@@ -484,13 +533,13 @@ def create(parser, args):
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
 
+    # Create the package template object
     PackageClass = templates[build_system]
-
     package = PackageClass(name, url, versions)
+    tty.msg("Created template for {0} package".format(package.name))
 
-    repo = get_repository(name, args)
-
-    # Create a directory for the new package.
+    # Create a directory for the new package
+    repo = get_repository(args, name)
     pkg_path = repo.filename_for_package_name(package.name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die('{0} already exists.'.format(pkg_path),
@@ -498,10 +547,9 @@ def create(parser, args):
     else:
         mkdirp(os.path.dirname(pkg_path))
 
-    tty.msg("Creating template for package %s" % package.name)
-
+    # Write the new package file
     package.write(pkg_path)
+    tty.msg("Created package file: {0}".format(pkg_path))
 
-    # If everything checks out, go ahead and edit.
+    # Open up the new package file in your $EDITOR
     spack.editor(pkg_path)
-    tty.msg("Created package %s" % pkg_path)
