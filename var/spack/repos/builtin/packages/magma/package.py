@@ -43,51 +43,46 @@ class Magma(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
 
-    # depends_on('cuda') # Install CUDA manually from nvidia.developer.com
+    depends_on('cuda')
     depends_on('blas')
     depends_on('lapack')
 
     def install(self, spec, prefix):
 
         # TODO fix the handling for -DADD_
-	# TODO add -std=c++11 only when supported
-	# TODO add -DMAGMA_NOAFFINITY only when needed
-	# TODO support debug version that turns off -DNDEBUG
-	# TODO supported make shared when shared property is on
+        # TODO add -std=c++11 only when supported
+        # TODO add -DMAGMA_NOAFFINITY only when needed
+        # TODO support debug version that turns off -DNDEBUG
+        # TODO supported make shared when shared property is on
         fd = open('make.inc','w')
         fd.write('DESTDIR = \n')
         fd.write('prefix = '+prefix+'\n')
-	fd.write('CC = '+self.compiler.cc+'\n')
-	fd.write('CXX = '+self.compiler.cxx+'\n')
-	fd.write('FORT = '+self.compiler.fc+'\n')
+        fd.write('CC = '+self.compiler.cc+'\n')
+        fd.write('CXX = '+self.compiler.cxx+'\n')
+        fd.write('FORT = '+self.compiler.fc+'\n')
         fd.write('CFLAGS    = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c99 -DMAGMA_NOAFFINITY'+'\n')
-        fd.write('CXXFLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c++11  -DMAGMA_NOAFFINITY'+'\n')	
+        fd.write('CXXFLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c++11  -DMAGMA_NOAFFINITY'+'\n')
         fd.write('FFLAGS    = -O3 $(FPIC) -DNDEBUG -DADD_ '+'\n')
         fd.write('F90FLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ '+'\n')
 
         fd.write('ARCH = ar'+'\n')
         fd.write('ARCHFLAGS = cr'+'\n')
-        fd.write('RANLIB = ranlib'+'\n')		
+        fd.write('RANLIB = ranlib'+'\n')
         fd.write('FPIC      = -fPIC'+'\n')
 
         # BLAS/LAPACK libraries
-	lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
         fd.write('LIB       = '+lapack_blas.joined()+'\n')
 
         # Magma seems to require CUDA?
-        if (sys.platform == 'darwin'):
-            fd.write('CUDADIR = /usr/local/cuda\n')
-        else:
-            fd.write('CUDADIR = '+spec['cuda'].prefix+'\n')
-	fd.write('NVCC = $(CUDADIR)/bin/nvcc'+'\n')
-        fd.write('NVCCFLAGS = -O3 -DNDEBUG -DADD_  -Xcompiler "$(FPIC)"'+'\n')	
+        fd.write('CUDADIR = '+spec['cuda'].prefix+'\n')
+        fd.write('NVCC = $(CUDADIR)/bin/nvcc'+'\n')
+        fd.write('NVCCFLAGS = -O3 -DNDEBUG -DADD_  -Xcompiler "$(FPIC)"'+'\n')
         fd.write('LIBDIR    = -L$(CUDADIR)/lib'+'\n')
         fd.write('INC       = -I$(CUDADIR)/include'+'\n')
         fd.write('LIB      += -lcublas -lcusparse -lcudart -lcudadevrt'+'\n')
-	fd.close()
+        fd.close()
 
         make('lib', parallel=False)
-        # make('shared', parallel=False)	
+        # make('shared', parallel=False)
         make('install', parallel=False)
-
-   

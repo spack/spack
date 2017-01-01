@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import sys
 import shutil
 
 class Occa(Package):
@@ -51,16 +50,13 @@ class Occa(Package):
             description='Activates support for OpenCL')
     variant('coi',   default=False,
             description='Activates support for COI')
-    # depends_on('cuda', when='+cuda')
+    depends_on('cuda', when='+cuda')
 
     def install(self, spec, prefix):
         os.environ['OCCA_CXX'] = self.compiler.cxx
 	# TODO: How can I get all the Cxx flags that Spack is using?
 	#os.environ['OCCA_CXXFLAGS'] =
-        if (sys.platform == 'darwin'):
-            os.environ['OCCA_CUDA_COMPILER'] = '/usr/local/cuda/bin/nvcc'
-        else:
-            os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix,'bin','nvcc')
+        os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix,'bin','nvcc')
         # TODO: Set variables for the other variants
         make()
         shutil.copytree('lib', os.path.join(prefix,'lib'))
