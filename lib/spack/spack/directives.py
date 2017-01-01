@@ -289,10 +289,10 @@ def extends(spec, **kwargs):
 
     """
     def _execute(pkg):
-        #if pkg.extendees:
-        #    directive = 'extends'
-        #    msg = 'Packages can extend at most one other package.'
-        #    raise DirectiveError(directive, msg)
+        # if pkg.extendees:
+        #     directive = 'extends'
+        #     msg = 'Packages can extend at most one other package.'
+        #     raise DirectiveError(directive, msg)
 
         when = kwargs.pop('when', pkg.name)
         _depends_on(pkg, spec, when=when)

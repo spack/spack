@@ -65,7 +65,7 @@ class PyNumpy(Package):
                 self.spec.version, python_version, arch),
             'numpy/core/include')
 
-    def install(self, spec, prefix):
+    def patch(self, spec, prefix):
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
         lapackblas = LibraryList('')
         if '+lapack' in spec:
@@ -82,5 +82,3 @@ class PyNumpy(Package):
                 if not ((platform.system() == "Darwin") and
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
-
-        setup_py('install', '--prefix={0}'.format(prefix))
