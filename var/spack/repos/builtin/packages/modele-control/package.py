@@ -14,7 +14,6 @@ class ModeleControl(Package):
     depends_on('netcdf', type='run')        # ncdump executable
 
     # depends_on('binutils', type='run')    # ldd; assume already installed on system
-#    depends_on('netcdf', type='run')    # ncdump
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

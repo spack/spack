@@ -31,21 +31,26 @@ class EnvIcebin(Package):
 
     version('1.0')
 
-    # Running ModelE
-    depends_on('env-modele')
-
     # Regridding...
-    depends_on('icebin')
+#    depends_on('icebin')
 
-    # Python environment
+    # -------- Python post-processing environment
+    depends_on('python@3:', when='+python')
+    depends_on('py-cython', when='+python')
+    depends_on('py-scipy', when='+python')
+    depends_on('py-netcdf', when='+python')
+    depends_on('py-matplotlib', when='+python')
+    depends_on('py-basemap', when='+python')
+#    depends_on('py-git2', when='+python')
+    depends_on('py-xarray', when='+python')
+    depends_on('py-proj', when='+python')
+#    depends_on('py-bsddb3', when='+python')
+    depends_on('py-udunits', when='+python')
+    depends_on('py-more-itertools', when='+python')
     depends_on('py-rtree')
     depends_on('py-giss')
-    depends_on('py-proj')
     depends_on('py-pyside')
 
-    # Utilities
-    depends_on('emacs')
-    depends_on('git')
 
     def url_for_version(self, version):
         return 'https://github.com/citibeth/dummy/tarball/v1.0'

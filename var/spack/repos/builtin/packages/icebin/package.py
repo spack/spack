@@ -65,7 +65,7 @@ class Icebin(CMakePackage):
     depends_on('pism~python', when='+coupler+pism')
     depends_on('petsc', when='+coupler+pism')
 
-    depends_on('boost+filesystem+date_time')
+    depends_on('boost+filesystem+date_time+mpi')
     depends_on('blitz')
     depends_on('netcdf-cxx4')
     depends_on('ibmisc+proj+blitz+netcdf+boost+udunits2+python')

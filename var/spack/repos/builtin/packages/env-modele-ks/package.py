@@ -36,10 +36,14 @@ class EnvModeleKs(Package):
     variant('python', default=True,
             description='Include basic scientific Python environment')
 
+    # Utilities
+    depends_on('emacs')
+    depends_on('git')
+
     # --------- ModelE dependencies (taken from modele/package.py)
     # Build dependencies
     depends_on('m4')
-    depends_on('cmake')
+    depends_on('cmake@3.2:')
     # Link dependencies
     depends_on('mpi')
     depends_on('netcdf-fortran')
@@ -49,24 +53,17 @@ class EnvModeleKs(Package):
 
     # -------- Other things we need
     depends_on('modele-utils')
-    depends_on('modele-control')
     depends_on('ncview')
     depends_on('nco')
-    depends_on('icebin~coupler')    # No coupling for now, just EC jujitsu
 
-    # -------- Python post-processing environment
-    depends_on('python@3:', when='+python')
-    depends_on('py-cython', when='+python')
-    depends_on('py-scipy', when='+python')
-    depends_on('py-netcdf', when='+python')
-    depends_on('py-matplotlib', when='+python')
-    depends_on('py-basemap', when='+python')
-    depends_on('py-git2', when='+python')
-    depends_on('py-xarray', when='+python')
-    depends_on('py-proj', when='+python')
-#    depends_on('py-bsddb3', when='+python')
-    depends_on('py-udunits', when='+python')
-    depends_on('py-more-itertools', when='+python')
+    # Running ModelE
+#    depends_on('modele-control')
+
+
+
+# These cause invalid spec...
+
+
 
     def url_for_version(self, version):
         return 'https://github.com/citibeth/dummy/tarball/v1.0'
