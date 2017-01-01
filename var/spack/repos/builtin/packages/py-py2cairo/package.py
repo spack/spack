@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPy2cairo(Package):
+class PyPy2cairo(PythonPackage):
     """bindings for the Cairo for Python 2,
        to be used in Python."""
 
@@ -34,11 +34,19 @@ class PyPy2cairo(Package):
 
     version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
 
-    extends('python')
-    depends_on("cairo")
-    depends_on("pixman")
+    depends_on('cairo+X')
+    depends_on('pixman')
 
-    def install(self, spec, prefix):
-        python('waf', 'configure', '--prefix=%s' % prefix)
-        python('waf', 'build')
-        python('waf', 'install')
+    phases = ['configure', 'build', 'install']
+
+    # The setup file does not accept a '--no-user-cfg' option
+    no_user_cfg = False
+
+    def setup_file(self, spec, prefix):
+        return 'waf'
+
+    def configure(self, spec, prefix):
+        self.setup_py('configure', '--prefix={0}'.format(prefix))
+
+    def install_args(self, spec, prefix):
+        return []

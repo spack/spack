@@ -49,10 +49,12 @@ class PyMeep(PythonPackage):
     # or else it can't handle newer C++ compilers and flags.
     depends_on('swig@1.3.39:3.0.2')
 
+    phases = ['clean', 'build_ext', 'install', 'bdist']
+
     def setup_file(self, spec, prefix):
         return 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
 
-    def install(self, spec, prefix):
+    def common_args(self, spec, prefix):
         include_dirs = [
             spec['meep'].prefix.include,
             spec['py-numpy'].include
@@ -69,7 +71,13 @@ class PyMeep(PythonPackage):
         include_flags = '-I{0}'.format(','.join(include_dirs))
         library_flags = '-L{0}'.format(','.join(library_dirs))
 
-        self.setup_py('clean', '--all')
-        self.setup_py('build_ext', include_flags, library_flags)
-        self.setup_py('install', '--prefix={0}'.format(prefix))
-        self.setup_py('bdist', include_flags, library_flags)
+        return [include_flags, library_flags]
+
+    def clean_args(self, spec, prefix):
+        return ['--all']
+
+    def build_ext_args(self, spec, prefix):
+        return self.common_args(spec, prefix)
+
+    def bdist_args(self, spec, prefix):
+        return self.common_args(spec, prefix)
