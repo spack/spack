@@ -129,7 +129,7 @@ class TestMirror(object):
         repos.clear()
 
     def test_url_mirror(self, mock_archive):
-        set_up_package('trivial_install_test_package', mock_archive, 'url')
+        set_up_package('trivial-install-test-package', mock_archive, 'url')
         check_mirror()
         repos.clear()
 
@@ -143,6 +143,6 @@ class TestMirror(object):
         set_up_package('git-test', mock_git_repository, 'git')
         set_up_package('svn-test', mock_svn_repository, 'svn')
         set_up_package('hg-test', mock_hg_repository, 'hg')
-        set_up_package('trivial_install_test_package', mock_archive, 'url')
+        set_up_package('trivial-install-test-package', mock_archive, 'url')
         check_mirror()
         repos.clear()

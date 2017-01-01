@@ -36,7 +36,7 @@ class IndirectMpich(Package):
     version(1.0, 'foobarbaz')
 
     depends_on('mpi')
-    depends_on('direct_mpich')
+    depends_on('direct-mpich')
 
     def install(self, spec, prefix):
         pass

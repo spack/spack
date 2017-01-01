@@ -240,7 +240,7 @@ class TestConcretize(object):
         assert 'mpi' in spec
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
-        spec = Spec('indirect_mpich')
+        spec = Spec('indirect-mpich')
         spec.normalize()
         spec.concretize()
 
