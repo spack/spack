@@ -317,8 +317,8 @@ files, use ``spack repo list``.
 
   $ spack repo list
   ==> 2 package repositories.
-  myrepo     /Users/gamblin2/myrepo
-  builtin    /Users/gamblin2/src/spack/var/spack/repos/builtin
+  myrepo     ~/myrepo
+  builtin    ~/spack/var/spack/repos/builtin
 
 Each repository is listed with its associated namespace.  To get the raw,
 merged YAML from all configuration files, use ``spack config get repos``:
@@ -327,7 +327,7 @@ merged YAML from all configuration files, use ``spack config get repos``:
 
    $ spack config get repos
    repos:srepos:
-   - /Users/gamblin2/myrepo
+   - ~/myrepo
    - $spack/var/spack/repos/builtin
 
 mNote that, unlike ``spack repo list``, this does not include the
@@ -345,7 +345,7 @@ yourself; you can use the ``spack repo create`` command.
   $ spack repo create myrepo
   ==> Created repo with namespace 'myrepo'.
   ==> To register it with spack, run this command:
-    spack repo add /Users/gamblin2/myrepo
+    spack repo add ~/myrepo
 
   $ ls myrepo
   packages/  repo.yaml
@@ -362,7 +362,7 @@ You can supply a custom namespace with a second argument, e.g.:
   $ spack repo create myrepo llnl.comp
   ==> Created repo with namespace 'llnl.comp'.
   ==> To register it with spack, run this command:
-    spack repo add /Users/gamblin2/myrepo
+    spack repo add ~/myrepo
 
   $ cat myrepo/repo.yaml
   repo:
@@ -382,8 +382,8 @@ Once your repository is created, you can register it with Spack with
 
    $ spack repo list
    ==> 2 package repositories.
-   llnl.comp    /Users/gamblin2/myrepo
-   builtin      /Users/gamblin2/src/spack/var/spack/repos/builtin
+   llnl.comp    ~/myrepo
+   builtin      ~/spack/var/spack/repos/builtin
 
 This simply adds the repo to your ``repos.yaml`` file.
 
@@ -405,22 +405,22 @@ By namespace:
 .. code-block:: console
 
   $ spack repo rm llnl.comp
-  ==> Removed repository /Users/gamblin2/myrepo with namespace 'llnl.comp'.
+  ==> Removed repository ~/myrepo with namespace 'llnl.comp'.
 
   $ spack repo list
   ==> 1 package repository.
-  builtin    /Users/gamblin2/src/spack/var/spack/repos/builtin
+  builtin    ~/spack/var/spack/repos/builtin
 
 By path:
 
 .. code-block:: console
 
   $ spack repo rm ~/myrepo
-  ==> Removed repository /Users/gamblin2/myrepo
+  ==> Removed repository ~/myrepo
 
   $ spack repo list
   ==> 1 package repository.
-  builtin    /Users/gamblin2/src/spack/var/spack/repos/builtin
+  builtin    ~/spack/var/spack/repos/builtin
 
 --------------------------------
 Repo namespaces and Python

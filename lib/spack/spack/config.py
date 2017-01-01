@@ -54,6 +54,7 @@ import copy
 import os
 import re
 import sys
+import argparse
 
 import yaml
 import jsonschema
@@ -81,6 +82,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
+    'aliases': spack.schema.aliases.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -201,6 +203,7 @@ class ConfigScope(object):
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
 
+
 #
 # Below are configuration scopes.
 #
@@ -231,20 +234,19 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 # This cannot raise an error; if there are real errors in the command
 # line arguments, they will be caught later when the full parse is done.
 # But we need the --config flags NOW.
-import argparse
-from llnl.util.tty.color import *
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument('-c', '--config', dest='configs', action='append', default=[],
-                    help="Add project config scopes (highest precedence last)")
+parser.add_argument(
+    '-c', '--config', dest='configs', action='append', default=[],
+    help="Add project config scopes (highest precedence last)")
 
 # Parse args initially
 args0, _ = parser.parse_known_args()
 
-import spack.config
 for config_path in args0.configs:
-    _,config_name = os.path.split(config_path)
+    _, config_name = os.path.split(config_path)
     ConfigScope(config_name, config_path)
 # ----------------------------------------------------------------
+
 
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
@@ -478,56 +480,6 @@ def print_section(section):
         syaml.dump(data, stream=sys.stdout, default_flow_style=False)
     except (yaml.YAMLError, IOError):
         raise ConfigError("Error reading configuration: %s" % section)
-
-
-def spec_externals(spec):
-    """Return a list of external specs (with external directory path filled in),
-       one for each known external installation."""
-    # break circular import.
-    from spack.build_environment import get_path_from_module
-
-    allpkgs = get_config('packages')
-    name = spec.name
-
-    external_specs = []
-    pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    pkg_modules = allpkgs.get(name, {}).get('modules', None)
-    if (not pkg_paths) and (not pkg_modules):
-        return []
-
-    for external_spec, path in pkg_paths.iteritems():
-        if not path:
-            # skip entries without paths (avoid creating extra Specs)
-            continue
-
-        external_spec = spack.spec.Spec(external_spec, external=path)
-        external_spec.namespace = 'builtin'
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
-
-    for external_spec, module in pkg_modules.iteritems():
-        if not module:
-            continue
-
-        path = get_path_from_module(module)
-
-        external_spec = spack.spec.Spec(
-            external_spec, external=path, external_module=module)
-        external_spec.namespace = 'builtin'
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
-
-    return external_specs
-
-
-def is_spec_buildable(spec):
-    """Return true if the spec pkgspec is configured as buildable"""
-    allpkgs = get_config('packages')
-    if spec.name not in allpkgs:
-        return True
-    if 'buildable' not in allpkgs[spec.name]:
-        return True
-    return allpkgs[spec.name]['buildable']
 
 
 class ConfigError(SpackError):

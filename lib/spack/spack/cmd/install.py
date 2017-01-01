@@ -35,6 +35,7 @@ import xml.etree.ElementTree as ET
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import *
 import spack
 import spack.spec
 import spack.cmd
@@ -81,7 +82,6 @@ the dependencies."""
     subparser.add_argument(
         '--report', action='store_true', dest='report',
         help="Report on installation when finished, for consumption by spackenv")
-
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])

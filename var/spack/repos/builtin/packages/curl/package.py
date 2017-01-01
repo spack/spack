@@ -60,12 +60,10 @@ class Curl(AutotoolsPackage):
 
     # This will be redundant if we can depend on libssh2
     depends_on('openssl')
-
     depends_on("zlib")
 
     def configure_args(self):
         spec = self.spec
         return [
-            '--prefix=%s' % prefix,
             '--with-zlib=%s' % spec['zlib'].prefix,
             '--with-ssl=%s' % spec['openssl'].prefix]

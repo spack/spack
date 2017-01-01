@@ -63,7 +63,7 @@ of installed packages.
 
    $ module avail
 
-   ------- /home/gamblin2/spack/share/spack/modules/linux-debian7-x86_64 --------
+   ------- ~/spack/share/spack/modules/linux-debian7-x86_64 --------
    adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
    automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
    boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
@@ -140,7 +140,7 @@ Spack.  For example, this will add the ``mpich`` package built with
    $ spack use mpich %gcc@4.4.7
    Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
    $ which mpicc
-   ~/src/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+   ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
 Or, similarly with modules, you could type:
 

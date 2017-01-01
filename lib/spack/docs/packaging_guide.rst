@@ -3161,11 +3161,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
+   ==> Staging archive: ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
+   ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
 
 ``spack cd`` here changed the current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a

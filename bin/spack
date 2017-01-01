@@ -24,6 +24,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import sys
 if (sys.version_info[0] > 2) or (sys.version_info[:2] < (2, 6)):
     v_info = sys.version_info[:3]
@@ -31,6 +33,7 @@ if (sys.version_info[0] > 2) or (sys.version_info[:2] < (2, 6)):
              "This is Python %d.%d.%d." % v_info)
 
 import os
+import inspect
 
 # Find spack's location and its prefix.
 SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
@@ -44,14 +47,6 @@ sys.path.insert(0, SPACK_LIB_PATH)
 # Add external libs
 SPACK_EXTERNAL_LIBS = os.path.join(SPACK_LIB_PATH, "external")
 sys.path.insert(0, SPACK_EXTERNAL_LIBS)
-
-import warnings
-# Avoid warnings when nose is installed with the python exe being used to run
-# spack. Note this must be done after Spack's external libs directory is added
-# to sys.path.
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", ".*nose was already imported")
-    import nose
 
 # Quick and dirty check to clean orphaned .pyc files left over from
 # previous revisions.  These files were present in earlier versions of
@@ -93,43 +88,46 @@ from spack.error import SpackError
 import argparse
 
 # Command parsing
-parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawTextHelpFormatter,
-    description="Spack: the Supercomputing PACKage Manager." + colorize("""
+def _make_main_parser():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Spack: the Supercomputing PACKage Manager." + colorize("""
 
-spec expressions:
-  PACKAGE [CONSTRAINTS]
+    spec expressions:
+      PACKAGE [CONSTRAINTS]
 
-    CONSTRAINTS:
-      @c{@version}
-      @g{%compiler  @compiler_version}
-      @B{+variant}
-      @r{-variant} or @r{~variant}
-      @m{=architecture}
-      [^DEPENDENCY [CONSTRAINTS] ...]"""))
+        CONSTRAINTS:
+          @c{@version}
+          @g{%compiler  @compiler_version}
+          @B{+variant}
+          @r{-variant} or @r{~variant}
+          @m{=architecture}
+          [^DEPENDENCY [CONSTRAINTS] ...]"""))
 
-parser.add_argument('-d', '--debug', action='store_true',
-                    help="Write out debug logs during compile")
-parser.add_argument('-D', '--pdb', action='store_true',
-                    help="Run spack under the pdb debugger")
-parser.add_argument('-k', '--insecure', action='store_true',
-                    help="Do not check ssl certificates when downloading.")
-parser.add_argument('-m', '--mock', action='store_true',
-                    help="Use mock packages instead of real ones.")
-parser.add_argument('-p', '--profile', action='store_true',
-                    help="Profile execution using cProfile.")
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help="Print additional output during builds")
-parser.add_argument('-s', '--stacktrace', action='store_true',
-                    help="Add stacktrace information to all printed statements")
-parser.add_argument('-V', '--version', action='version',
-                    version="%s" % spack.spack_version)
-parser.add_argument('-c', '--config', dest='configs', action='append', default=[],
-                    help="Add project config scopes (highest precedence last)")
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help="Write out debug logs during compile")
+    parser.add_argument('-D', '--pdb', action='store_true',
+                        help="Run spack under the pdb debugger")
+    parser.add_argument('-k', '--insecure', action='store_true',
+                        help="Do not check ssl certificates when downloading.")
+    parser.add_argument('-m', '--mock', action='store_true',
+                        help="Use mock packages instead of real ones.")
+    parser.add_argument('-p', '--profile', action='store_true',
+                        help="Profile execution using cProfile.")
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="Print additional output during builds")
+    parser.add_argument('-s', '--stacktrace', action='store_true',
+                        help="Add stacktrace information to all printed statements")
+    parser.add_argument('-V', '--version', action='version',
+                        version="%s" % spack.spack_version)
+
+    return parser
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
+parser = _make_main_parser()
 subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
+
 
 import spack.cmd
 for cmd in spack.cmd.commands:
@@ -138,16 +136,42 @@ for cmd in spack.cmd.commands:
     subparser = subparsers.add_parser(cmd_name, help=module.description)
     module.setup_parser(subparser)
 
-# Just print help and exit if run with no arguments at all
-if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
 
-# actually parse the args.
-args = parser.parse_args()
+def parse_args_with_defaults():
+    # ---- Parse args, applying defaults based on the Spack subcommand
+
+    # 1. Split the raw command line into (raw_args0, command, raw_args1)
+    #    The Spack subcommand is raw_args1[0]
+    raw_args = sys.argv[1:]
+    main_parser = _make_main_parser()
+    main_parser.add_argument('command', nargs=argparse.REMAINDER)
+    args0 = main_parser.parse_args(raw_args)
+    defaults0 = vars(args0)
+
+    # Get the command-line starting with the Spack command
+    _tail = defaults0['command']
+    if len(_tail) == 0:
+        parser.print_help()
+        sys.exit(1)
+
+    # Get the command line up to the Spack command
+    raw_args0 = raw_args[:len(raw_args) - len(_tail)]
+
+    # Separate _tail
+    command = _tail[0]
+    raw_args1 = _tail[1:]
+
+    # 2. Fetch the default args based on the subcommand
+    aliases = spack.config.get_config('aliases')
+    all_defaults = aliases.get('all', '').split()
+    cmd_defaults = aliases.get(command, '').split()
 
 
-def main():
+    # 3. Assemble and parse the final command line
+    final_args = all_defaults + raw_args0 + [command] + cmd_defaults + raw_args1
+    return parser.parse_known_args(final_args)
+
+def _main(args, unknown_args):
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -173,8 +197,21 @@ def main():
 
     # Try to load the particular command asked for and run it
     command = spack.cmd.get_command(args.command.replace('-', '_'))
+
+    # Allow commands to inject an optional argument and get unknown args
+    # if they want to handle them.
+    info = dict(inspect.getmembers(command))
+    varnames = info['__code__'].co_varnames
+    argcount = info['__code__'].co_argcount
+
+    # Actually execute the command
     try:
-        return_val = command(parser, args)
+        if argcount == 3 and varnames[2] == 'unknown_args':
+            return_val = command(parser, args, unknown_args)
+        else:
+            if unknown_args:
+                tty.die('unrecognized arguments: %s' % ' '.join(unknown_args))
+            return_val = command(parser, args)
     except SpackError as e:
         e.die()
     except KeyboardInterrupt:
@@ -190,11 +227,27 @@ def main():
         tty.die("Bad return value from command %s: %s"
                 % (args.command, return_val))
 
-if args.profile:
-    import cProfile
-    cProfile.run('main()', sort='time')
-elif args.pdb:
-    import pdb
-    pdb.run('main()')
-else:
+
+def main():
+    # Just print help and exit if run with no arguments at all
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+
+    # actually parse the args.
+    args, unknown = parse_args_with_defaults()
+
+    if args.profile:
+        import cProfile
+        cProfile.runctx('_main(args, unknown)', globals(), locals(),
+                        sort='time')
+    elif args.pdb:
+        import pdb
+        pdb.runctx('_main(args, unknown)', globals(), locals())
+    else:
+        _main(args, unknown)
+
+
+if __name__ == '__main__':
     main()

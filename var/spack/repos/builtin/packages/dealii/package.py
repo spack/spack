@@ -30,7 +30,7 @@ class Dealii(CMakePackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
-    url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
@@ -66,6 +66,8 @@ class Dealii(CMakePackage):
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=True,
             description='Compile with Python bindings')
+    variant('64bit',    default=False,
+            description='Compile with 64 bit indices support')
 
     # required dependencies, light version
     depends_on("blas")
@@ -88,7 +90,6 @@ class Dealii(CMakePackage):
         "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
         when='@8.5.0:+mpi+python')
     depends_on("bzip2")
-    depends_on("cmake", type='build')
     depends_on("lapack")
     depends_on("muparser")
     depends_on("suite-sparse")
@@ -107,11 +108,11 @@ class Dealii(CMakePackage):
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi')
+    depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi~64bit')
     depends_on('python',           when='@8.5.0:+python')
-    depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi')
-    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi')
-    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
+    depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi~64bit')
+    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi~64bit')
+    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi~64bit')
     depends_on("trilinos",         when='+trilinos+mpi')
 
     def build_type(self):
@@ -161,8 +162,8 @@ class Dealii(CMakePackage):
         if '+mpi' in spec:
             options.extend([
                 '-DDEAL_II_WITH_MPI:BOOL=ON',
-                '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+                '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             ])
         else:
@@ -170,7 +171,7 @@ class Dealii(CMakePackage):
                 '-DDEAL_II_WITH_MPI:BOOL=OFF',
             ])
 
-        # Optional dependencies for which librariy names are the same as CMake
+        # Optional dependencies for which library names are the same as CMake
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):
@@ -240,6 +241,11 @@ class Dealii(CMakePackage):
             options.extend([
                 '-DDEAL_II_WITH_OPENCASCADE=OFF'
             ])
+
+        # 64 bit indices
+        options.extend([
+            '-DDEAL_II_WITH_64BIT_INDICES=%s' % ('+64bit' in spec)
+        ])
 
         return options
 
