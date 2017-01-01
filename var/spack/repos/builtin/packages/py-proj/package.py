@@ -44,4 +44,3 @@ class PyProj(PythonPackage):
     # The py-proj git repo actually includes the correct version of PROJ.4,
     # which is built internally as part of the py-proj build.
     # Adding depends_on('proj') will cause mysterious build errors.
-        setup_py('install', '--prefix=%s' % prefix)
