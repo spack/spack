@@ -25,23 +25,24 @@
 from spack import *
 
 
-class Libxaw(AutotoolsPackage):
-    """Xaw is the X Athena Widget Set.
-    Xaw is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
+class Libssh2(CMakePackage):
+    """libssh2 is a client-side C library implementing the SSH2 protocol"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXaw"
-    url      = "https://www.x.org/archive/individual/lib/libXaw-1.0.13.tar.gz"
+    homepage = "https://www.libssh2.org/"
+    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
 
-    version('1.0.13', '6c522476024df5872cddc5f1562fb656')
-    version('1.0.12', 'a1dd3ced7cefe99b2db8a5d390cf5fe9') # CentOS7
+    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
+    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b') # CentOS7
 
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxt')
-    depends_on('libxmu')
-    depends_on('libxpm')
+    variant('shared', default=True,
+            description="Build shared libraries")
 
-    depends_on('xproto', type='build')
-    depends_on('xextproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('util-macros', type='build')
+    depends_on('cmake@2.8.11:', type='build')
+    depends_on('openssl')
+    depends_on('zlib')
+    depends_on('xz')
+
+    def cmake_args(self):
+        spec = self.spec
+        return [
+            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]

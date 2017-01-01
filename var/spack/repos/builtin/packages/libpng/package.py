@@ -33,10 +33,8 @@ class Libpng(AutotoolsPackage):
 
     version('1.6.26', '236cd975520fc1f34cc0b8f0e615f7a0')
     version('1.6.24', '65213080dd30a9b16193d9b83adc1ee9')
-
-    # Security vulnerabilities have been discovered in 1.6.19 an older
-
-    # Required for qt@3
-    version('1.2.56', '9508fc59d10a1ffadd9aae35116c19ee')
+    # -- Security vulnerabilities have been found in 1.6.19 an older
+    version('1.5.13', '9c5a584d4eb5fe40d0f1bc2090112c65') # CentOS7
+    version('1.2.56', '9508fc59d10a1ffadd9aae35116c19ee') # Required for qt@3
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
