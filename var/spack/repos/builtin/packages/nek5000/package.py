@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
-import sys
 from spack import *
 import distutils.dir_util
 
@@ -52,12 +50,9 @@ class Nek5000(Package):
     depends_on('mpi')
 
     def install(self, spec, prefix):
-       distutils.dir_util.copy_tree('.', prefix)
+        distutils.dir_util.copy_tree('.', prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         #  users can locate makenek with thus; for example
-	# ${NEK_ROOT}/core/makenek eddy_uv ${NEK_ROOT
+        # ${NEK_ROOT}/core/makenek eddy_uv ${NEK_ROOT
         spack_env.set('NEK_ROOT', self.prefix)
-
-
-   

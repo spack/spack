@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
-import sys
 from spack import *
 
 
@@ -54,33 +52,33 @@ class Magma(Package):
         # TODO add -DMAGMA_NOAFFINITY only when needed
         # TODO support debug version that turns off -DNDEBUG
         # TODO supported make shared when shared property is on
-        fd = open('make.inc','w')
+        fd = open('make.inc', 'w')
         fd.write('DESTDIR = \n')
-        fd.write('prefix = '+prefix+'\n')
-        fd.write('CC = '+self.compiler.cc+'\n')
-        fd.write('CXX = '+self.compiler.cxx+'\n')
-        fd.write('FORT = '+self.compiler.fc+'\n')
-        fd.write('CFLAGS    = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c99 -DMAGMA_NOAFFINITY'+'\n')
-        fd.write('CXXFLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c++11  -DMAGMA_NOAFFINITY'+'\n')
-        fd.write('FFLAGS    = -O3 $(FPIC) -DNDEBUG -DADD_ '+'\n')
-        fd.write('F90FLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ '+'\n')
+        fd.write('prefix = ' + prefix + '\n')
+        fd.write('CC = ' + self.compiler.cc + '\n')
+        fd.write('CXX = ' + self.compiler.cxx + '\n')
+        fd.write('FORT = ' + self.compiler.fc + '\n')
+        fd.write('CFLAGS    = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c99 -DMAGMA_NOAFFINITY' + '\n')
+        fd.write('CXXFLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ -std=c++11  -DMAGMA_NOAFFINITY' + '\n')
+        fd.write('FFLAGS    = -O3 $(FPIC) -DNDEBUG -DADD_ ' + '\n')
+        fd.write('F90FLAGS  = -O3 $(FPIC) -DNDEBUG -DADD_ ' + '\n')
 
-        fd.write('ARCH = ar'+'\n')
-        fd.write('ARCHFLAGS = cr'+'\n')
-        fd.write('RANLIB = ranlib'+'\n')
-        fd.write('FPIC      = -fPIC'+'\n')
+        fd.write('ARCH = ar' + '\n')
+        fd.write('ARCHFLAGS = cr' + '\n')
+        fd.write('RANLIB = ranlib' + '\n')
+        fd.write('FPIC      = -fPIC' + '\n')
 
         # BLAS/LAPACK libraries
         lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
-        fd.write('LIB       = '+lapack_blas.joined()+'\n')
+        fd.write('LIB       = ' + lapack_blas.joined() + '\n')
 
         # Magma seems to require CUDA?
-        fd.write('CUDADIR = '+spec['cuda'].prefix+'\n')
-        fd.write('NVCC = $(CUDADIR)/bin/nvcc'+'\n')
-        fd.write('NVCCFLAGS = -O3 -DNDEBUG -DADD_  -Xcompiler "$(FPIC)"'+'\n')
-        fd.write('LIBDIR    = -L$(CUDADIR)/lib'+'\n')
-        fd.write('INC       = -I$(CUDADIR)/include'+'\n')
-        fd.write('LIB      += -lcublas -lcusparse -lcudart -lcudadevrt'+'\n')
+        fd.write('CUDADIR = ' + spec['cuda'].prefix + '\n')
+        fd.write('NVCC = $(CUDADIR)/bin/nvcc' + '\n')
+        fd.write('NVCCFLAGS = -O3 -DNDEBUG -DADD_  -Xcompiler "$(FPIC)"' + '\n')
+        fd.write('LIBDIR    = -L$(CUDADIR)/lib' + '\n')
+        fd.write('INC       = -I$(CUDADIR)/include' + '\n')
+        fd.write('LIB      += -lcublas -lcusparse -lcudart -lcudadevrt' + '\n')
         fd.close()
 
         make('lib', parallel=False)

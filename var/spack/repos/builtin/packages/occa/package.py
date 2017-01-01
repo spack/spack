@@ -26,6 +26,7 @@ from spack import *
 import os
 import shutil
 
+
 class Occa(Package):
     """OCCA is an open-source (MIT license) library used to program current
        multi-core/many-core architectures. Devices (such as CPUs, GPUs,
@@ -54,9 +55,9 @@ class Occa(Package):
 
     def install(self, spec, prefix):
         os.environ['OCCA_CXX'] = self.compiler.cxx
-	# TODO: How can I get all the Cxx flags that Spack is using?
-	#os.environ['OCCA_CXXFLAGS'] =
-        os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix,'bin','nvcc')
+        # TODO: How can I get all the Cxx flags that Spack is using?
+        # os.environ['OCCA_CXXFLAGS'] =
+        os.environ['OCCA_CUDA_COMPILER'] = os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')
         # TODO: Set variables for the other variants
         make()
-        shutil.copytree('lib', os.path.join(prefix,'lib'))
+        shutil.copytree('lib', os.path.join(prefix, 'lib'))
