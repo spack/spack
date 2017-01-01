@@ -2020,8 +2020,9 @@ class Spec(object):
         if not self.virtual and other.virtual:
             pkg = spack.repo.get(self.fullname)
             if pkg.provides(other.name):
-                for provided, when_spec in pkg.provided.items():
-                    if self.satisfies(when_spec, deps=False, strict=strict):
+                for provided, when_specs in pkg.provided.items():
+                    if any(self.satisfies(when_spec, deps=False, strict=strict)
+                           for when_spec in when_specs):
                         if provided.satisfies(other):
                             return True
             return False
