@@ -120,6 +120,8 @@ def _make_main_parser():
                         help="Add stacktrace information to all printed statements")
     parser.add_argument('-V', '--version', action='version',
                         version="%s" % spack.spack_version)
+    parser.add_argument('-c', '--config', dest='configs', action='append', default=[],
+                        help="Add project config scopes (highest precedence last)")
 
     return parser
 
