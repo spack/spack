@@ -50,6 +50,7 @@ class Turbovnc(Package):
     depends_on("openssl")
     depends_on("pam")
     depends_on("libx11")
+    depends_on("libxext")
 
     def url_for_version(self, version):
         """Handle TurboVNC's version-based custom URLs."""
