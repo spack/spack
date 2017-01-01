@@ -243,7 +243,8 @@ parser.add_argument(
 args0, _ = parser.parse_known_args()
 
 for config_path in args0.configs:
-    _, config_name = os.path.split(config_path)
+    config_path = os.path.expandvars(os.path.expanduser(config_path))
+    _,config_name = os.path.split(config_path)
     ConfigScope(config_name, config_path)
 # ----------------------------------------------------------------
 
