@@ -376,7 +376,10 @@ def top_install(
             tty.die("Nothing to install, due to the --only flag")
     else:    # install_package = True, install_dependencies=?
         package = spack.repo.get(spec)
-        package.do_install(install_dependencies=False, explicit=True, **kwargs)
+        package.do_install(
+            install_dependencies=install_dependencies,
+            explicit=True,
+            **kwargs)
 
         if report:
             print 'SPACKENV INSTALLED %s/%s' % (spec.name, spec.dag_hash())
