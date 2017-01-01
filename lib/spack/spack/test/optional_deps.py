@@ -22,93 +22,90 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import pytest
 from spack.spec import Spec
-from spack.test.mock_packages_test import *
 
 
-class ConcretizeTest(MockPackagesTest):
-
-    def check_normalize(self, spec_string, expected):
-        spec = Spec(spec_string)
-        spec.normalize()
-        self.assertEqual(spec, expected)
-        self.assertTrue(spec.eq_dag(expected))
-
-    def test_normalize_simple_conditionals(self):
-        self.check_normalize('optional-dep-test', Spec('optional-dep-test'))
-        self.check_normalize('optional-dep-test~a',
-                             Spec('optional-dep-test~a'))
-
-        self.check_normalize('optional-dep-test+a',
-                             Spec('optional-dep-test+a', Spec('a')))
-
-        self.check_normalize('optional-dep-test a=true',
-                             Spec('optional-dep-test a=true', Spec('a')))
-
-        self.check_normalize('optional-dep-test a=true',
-                             Spec('optional-dep-test+a', Spec('a')))
-
-        self.check_normalize('optional-dep-test@1.1',
-                             Spec('optional-dep-test@1.1', Spec('b')))
-
-        self.check_normalize('optional-dep-test%intel',
-                             Spec('optional-dep-test%intel', Spec('c')))
-
-        self.check_normalize(
-            'optional-dep-test%intel@64.1',
-            Spec('optional-dep-test%intel@64.1', Spec('c'), Spec('d')))
-
-        self.check_normalize(
-            'optional-dep-test%intel@64.1.2',
-            Spec('optional-dep-test%intel@64.1.2', Spec('c'), Spec('d')))
-
-        self.check_normalize('optional-dep-test%clang@35',
-                             Spec('optional-dep-test%clang@35', Spec('e')))
-
-    def test_multiple_conditionals(self):
-        self.check_normalize(
-            'optional-dep-test+a@1.1',
-            Spec('optional-dep-test+a@1.1', Spec('a'), Spec('b')))
-
-        self.check_normalize(
-            'optional-dep-test+a%intel',
-            Spec('optional-dep-test+a%intel', Spec('a'), Spec('c')))
-
-        self.check_normalize(
-            'optional-dep-test@1.1%intel',
-            Spec('optional-dep-test@1.1%intel', Spec('b'), Spec('c')))
-
-        self.check_normalize('optional-dep-test@1.1%intel@64.1.2+a',
-                             Spec('optional-dep-test@1.1%intel@64.1.2+a',
-                                  Spec('b'), Spec('a'), Spec('c'), Spec('d')))
-
-        self.check_normalize('optional-dep-test@1.1%clang@36.5+a',
-                             Spec('optional-dep-test@1.1%clang@36.5+a',
-                                  Spec('b'), Spec('a'), Spec('e')))
-
-    def test_chained_mpi(self):
-        self.check_normalize('optional-dep-test-2+mpi',
-                             Spec('optional-dep-test-2+mpi',
-                                  Spec('optional-dep-test+mpi',
-                                       Spec('mpi'))))
-
-    def test_default_variant(self):
-        spec = Spec('optional-dep-test-3')
-        spec.concretize()
-        self.assertTrue('a' in spec)
-
-        spec = Spec('optional-dep-test-3~var')
-        spec.concretize()
-        self.assertTrue('a' in spec)
-
-        spec = Spec('optional-dep-test-3+var')
-        spec.concretize()
-        self.assertTrue('b' in spec)
-
-    def test_transitive_chain(self):
+@pytest.fixture(
+    params=[
+        # Normalize simple conditionals
+        ('optional-dep-test', Spec('optional-dep-test')),
+        ('optional-dep-test~a', Spec('optional-dep-test~a')),
+        ('optional-dep-test+a', Spec('optional-dep-test+a', Spec('a'))),
+        ('optional-dep-test a=true', Spec(
+            'optional-dep-test a=true', Spec('a')
+        )),
+        ('optional-dep-test a=true', Spec('optional-dep-test+a', Spec('a'))),
+        ('optional-dep-test@1.1', Spec('optional-dep-test@1.1', Spec('b'))),
+        ('optional-dep-test%intel', Spec(
+            'optional-dep-test%intel', Spec('c')
+        )),
+        ('optional-dep-test%intel@64.1', Spec(
+            'optional-dep-test%intel@64.1', Spec('c'), Spec('d')
+        )),
+        ('optional-dep-test%intel@64.1.2', Spec(
+            'optional-dep-test%intel@64.1.2', Spec('c'), Spec('d')
+        )),
+        ('optional-dep-test%clang@35', Spec(
+            'optional-dep-test%clang@35', Spec('e')
+        )),
+        # Normalize multiple conditionals
+        ('optional-dep-test+a@1.1',  Spec(
+            'optional-dep-test+a@1.1', Spec('a'), Spec('b')
+        )),
+        ('optional-dep-test+a%intel', Spec(
+            'optional-dep-test+a%intel', Spec('a'), Spec('c')
+        )),
+        ('optional-dep-test@1.1%intel', Spec(
+            'optional-dep-test@1.1%intel', Spec('b'), Spec('c')
+        )),
+        ('optional-dep-test@1.1%intel@64.1.2+a', Spec(
+            'optional-dep-test@1.1%intel@64.1.2+a',
+            Spec('b'),
+            Spec('a'),
+            Spec('c'),
+            Spec('d')
+        )),
+        ('optional-dep-test@1.1%clang@36.5+a', Spec(
+            'optional-dep-test@1.1%clang@36.5+a',
+            Spec('b'),
+            Spec('a'),
+            Spec('e')
+        )),
+        # Chained MPI
+        ('optional-dep-test-2+mpi', Spec(
+            'optional-dep-test-2+mpi',
+            Spec('optional-dep-test+mpi', Spec('mpi'))
+        )),
         # Each of these dependencies comes from a conditional
         # dependency on another.  This requires iterating to evaluate
         # the whole chain.
-        self.check_normalize(
-            'optional-dep-test+f',
-            Spec('optional-dep-test+f', Spec('f'), Spec('g'), Spec('mpi')))
+        ('optional-dep-test+f', Spec(
+            'optional-dep-test+f', Spec('f'), Spec('g'), Spec('mpi')
+        ))
+    ]
+)
+def spec_and_expected(request):
+    """Parameters for te normalization test."""
+    return request.param
+
+
+def test_normalize(spec_and_expected, config, builtin_mock):
+    spec, expected = spec_and_expected
+    spec = Spec(spec)
+    spec.normalize()
+    assert spec.eq_dag(expected, deptypes=False)
+
+
+def test_default_variant(config, builtin_mock):
+    spec = Spec('optional-dep-test-3')
+    spec.concretize()
+    assert 'a' in spec
+
+    spec = Spec('optional-dep-test-3~var')
+    spec.concretize()
+    assert 'a' in spec
+
+    spec = Spec('optional-dep-test-3+var')
+    spec.concretize()
+    assert 'b' in spec

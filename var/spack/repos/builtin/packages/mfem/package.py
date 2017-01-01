@@ -62,7 +62,6 @@ class Mfem(Package):
 
     depends_on('blas', when='+lapack')
     depends_on('lapack', when='+lapack')
-
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('blas', when='+suite-sparse')
     depends_on('lapack', when='+suite-sparse')
@@ -85,7 +84,7 @@ class Mfem(Package):
         if '+suite-sparse' in spec and ('+metis' not in spec or
                                         '+lapack' not in spec):
             raise InstallError('mfem+suite-sparse must be built with ' +
-                               '+metis and +lapack!')
+                               '+metis and +lapack!'
 # TODO: remove this hack, and fix elsewhere if needed
 #        if 'metis@5:' in spec and '%clang' in spec and (
 #                '^cmake %gcc' not in spec):
