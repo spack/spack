@@ -34,6 +34,8 @@ class Intltool(AutotoolsPackage):
     list_url = 'https://launchpad.net/intltool/+download'
 
     version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    depends_on('perl-xml-parser',type='build')
+    depends_on('perl')
 
     # requires XML::Parser perl module
     # depends_on('perl@5.8.1:', type='build')
