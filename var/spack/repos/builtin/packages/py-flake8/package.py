@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyFlake8(Package):
+class PyFlake8(PythonPackage):
     """Flake8 is a wrapper around PyFlakes, pep8 and Ned Batchelder's
     McCabe script."""
 
@@ -62,6 +62,3 @@ class PyFlake8(Package):
 
     # TODO: Add test dependencies
     # depends_on('py-nose', type='test')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

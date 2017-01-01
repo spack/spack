@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyCclib(Package):
+class PyCclib(PythonPackage):
     """Open source library for parsing and interpreting the results of
     computational chemistry packages"""
 
@@ -34,9 +34,4 @@ class PyCclib(Package):
 
     version('1.5', 'c06940101c4796bce82036b13fecb73c')
 
-    extends('python')
-
     depends_on('py-numpy@1.5:', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

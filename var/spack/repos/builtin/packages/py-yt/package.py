@@ -26,7 +26,7 @@
 from spack import *
 
 
-class PyYt(Package):
+class PyYt(PythonPackage):
     """Volumetric Data Analysis
 
        yt is a python package for analyzing and visualizing
@@ -54,8 +54,6 @@ class PyYt(Package):
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
 
-    extends("python")
-
     depends_on("py-astropy", type="nolink", when="+astropy")
     depends_on("py-cython", type="nolink")
     depends_on("py-h5py", type="nolink", when="+h5py")
@@ -67,10 +65,7 @@ class PyYt(Package):
     depends_on("py-sympy", type="nolink")
     depends_on("python @2.7:2.999,3.4:")
 
-    def install(self, spec, prefix):
-        setup_py("install", "--prefix=%s" % prefix)
-        self.check_install(spec, prefix)
-
+    @PythonPackage.sanity_check('install')
     def check_install(self, spec, prefix):
         # The Python interpreter path can be too long for this
         # yt = Executable(join_path(prefix.bin, "yt"))

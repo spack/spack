@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyDocutils(Package):
+class PyDocutils(PythonPackage):
     """Docutils is an open-source text processing system for processing
     plaintext documentation into useful formats, such as HTML, LaTeX,
     man-pages, open-document or XML. It includes reStructuredText, the
@@ -36,8 +36,3 @@ class PyDocutils(Package):
     url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
 
     version('0.12', '4622263b62c5c771c03502afa3157768')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

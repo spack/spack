@@ -26,7 +26,7 @@ from spack import depends_on, extends, version, nolink
 from spack import Package
 
 
-class PyAstroid(Package):
+class PyAstroid(PythonPackage):
     homepage = "https://www.astroid.org/"
     url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
 
@@ -36,10 +36,6 @@ class PyAstroid(Package):
     version('1.4.2', '677f7965840f375af51b0e86403bee6a')
     version('1.4.1', 'ed70bfed5e4b25be4292e7fe72da2c02')
 
-    extends('python')
     depends_on('py-logilab-common', type=nolink)
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
