@@ -159,7 +159,9 @@ from spack.package import Package
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
-__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage']
+from spack.build_systems.python import PythonPackage
+__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
+            'PythonPackage']
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
