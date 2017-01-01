@@ -52,7 +52,7 @@ class PythonPackage(PackageBase):
     def setup_py(self, *args):
         self.python(self.setup_file(), '--no-user-cfg', *args)
 
-    def setup_file(self):
+    def setup_file(self, spec, prefix):
         """Returns the name of the setup file to use."""
         return 'setup.py'
 
