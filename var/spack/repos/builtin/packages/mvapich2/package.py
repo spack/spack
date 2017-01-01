@@ -74,7 +74,6 @@ class Mvapich2(AutotoolsPackage):
 
     variant(
         'process_managers',
-        default='',
         description='List of the process managers to activate',
         values=('slurm', 'hydra', 'gforker', 'remshell'),
         exclusive=False,
@@ -83,7 +82,6 @@ class Mvapich2(AutotoolsPackage):
 
     variant(
         'fabrics',
-        default='',
         description='The fabric enabled for this build',
         values=(
             'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp'

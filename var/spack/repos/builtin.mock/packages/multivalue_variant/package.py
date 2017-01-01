@@ -37,7 +37,6 @@ class MultivalueVariant(Package):
     variant('debug', default=False, description='Debug variant')
     variant(
         'foo',
-        default='',
         description='Muti-value non-exclusive variant',
         values=('bar', 'baz', 'barbaz'),
         exclusive=False

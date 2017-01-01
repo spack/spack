@@ -368,12 +368,14 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
 
 
 @directive('variants')
-def variant(name, default=False, description='', values=(True, False), exclusive=True, validator=None):  # NOQA: ignore=E501
+def variant(name, default=None, description='', values=(True, False), exclusive=True, validator=None):  # NOQA: ignore=E501
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
     :param str name: name of the variant
     :param default: default value for the variant, if not specified otherwise
+        the default will be False for a boolean variant and 'nothing' for a
+        multi-valued variant
     :type default: bool or str
     :param str description: description of the purpose of the variant
     :param values: either a tuple of strings containing the allowed values,
@@ -385,6 +387,9 @@ def variant(name, default=False, description='', values=(True, False), exclusive
         logic. It receives a tuple of values and should raise an instance of
         SpackError if the group doesn't meet the additional constraints
     """
+
+    if default is None:
+        default = False if values == (True, False) else ''
 
     default = default
     description = str(description).strip()
