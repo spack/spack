@@ -88,40 +88,44 @@ from spack.error import SpackError
 import argparse
 
 # Command parsing
-parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawTextHelpFormatter,
-    description="Spack: the Supercomputing PACKage Manager." + colorize("""
+def _make_main_parser():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Spack: the Supercomputing PACKage Manager." + colorize("""
 
-spec expressions:
-  PACKAGE [CONSTRAINTS]
+    spec expressions:
+      PACKAGE [CONSTRAINTS]
 
-    CONSTRAINTS:
-      @c{@version}
-      @g{%compiler  @compiler_version}
-      @B{+variant}
-      @r{-variant} or @r{~variant}
-      @m{=architecture}
-      [^DEPENDENCY [CONSTRAINTS] ...]"""))
+        CONSTRAINTS:
+          @c{@version}
+          @g{%compiler  @compiler_version}
+          @B{+variant}
+          @r{-variant} or @r{~variant}
+          @m{=architecture}
+          [^DEPENDENCY [CONSTRAINTS] ...]"""))
 
-parser.add_argument('-d', '--debug', action='store_true',
-                    help="Write out debug logs during compile")
-parser.add_argument('-D', '--pdb', action='store_true',
-                    help="Run spack under the pdb debugger")
-parser.add_argument('-k', '--insecure', action='store_true',
-                    help="Do not check ssl certificates when downloading.")
-parser.add_argument('-m', '--mock', action='store_true',
-                    help="Use mock packages instead of real ones.")
-parser.add_argument('-p', '--profile', action='store_true',
-                    help="Profile execution using cProfile.")
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help="Print additional output during builds")
-parser.add_argument('-s', '--stacktrace', action='store_true',
-                    help="Add stacktrace information to all printed statements")
-parser.add_argument('-V', '--version', action='version',
-                    version="%s" % spack.spack_version)
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help="Write out debug logs during compile")
+    parser.add_argument('-D', '--pdb', action='store_true',
+                        help="Run spack under the pdb debugger")
+    parser.add_argument('-k', '--insecure', action='store_true',
+                        help="Do not check ssl certificates when downloading.")
+    parser.add_argument('-m', '--mock', action='store_true',
+                        help="Use mock packages instead of real ones.")
+    parser.add_argument('-p', '--profile', action='store_true',
+                        help="Profile execution using cProfile.")
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="Print additional output during builds")
+    parser.add_argument('-s', '--stacktrace', action='store_true',
+                        help="Add stacktrace information to all printed statements")
+    parser.add_argument('-V', '--version', action='version',
+                        version="%s" % spack.spack_version)
+
+    return parser
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
+parser = _make_main_parser()
 subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
 
 
@@ -132,6 +136,40 @@ for cmd in spack.cmd.commands:
     subparser = subparsers.add_parser(cmd_name, help=module.description)
     module.setup_parser(subparser)
 
+
+def parse_args_with_defaults():
+    # ---- Parse args, applying defaults based on the Spack subcommand
+
+    # 1. Split the raw command line into (raw_args0, command, raw_args1)
+    #    The Spack subcommand is raw_args1[0]
+    raw_args = sys.argv[1:]
+    main_parser = _make_main_parser()
+    main_parser.add_argument('command', nargs=argparse.REMAINDER)
+    args0 = main_parser.parse_args(raw_args)
+    defaults0 = vars(args0)
+
+    # Get the command-line starting with the Spack command
+    _tail = defaults0['command']
+    if len(_tail) == 0:
+        parser.print_help()
+        sys.exit(1)
+
+    # Get the command line up to the Spack command
+    raw_args0 = raw_args[:len(raw_args) - len(_tail)]
+
+    # Separate _tail
+    command = _tail[0]
+    raw_args1 = _tail[1:]
+
+    # 2. Fetch the default args based on the subcommand
+    aliases = spack.config.get_config('aliases')
+    all_defaults = aliases.get('all', '').split()
+    cmd_defaults = aliases.get(command, '').split()
+
+
+    # 3. Assemble and parse the final command line
+    final_args = all_defaults + raw_args0 + [command] + cmd_defaults + raw_args1
+    return parser.parse_known_args(final_args)
 
 def _main(args, unknown_args):
     # Set up environment based on args.
@@ -188,28 +226,6 @@ def _main(args, unknown_args):
     else:
         tty.die("Bad return value from command %s: %s"
                 % (args.command, return_val))
-
-
-def parse_args_with_defaults():
-    # ---- Parse args, applying defaults based on the Spack subcommand
-
-    # 1. Parse raw command line once to determine the subcommand
-    # (TODO: This could be done with a simpler parser)
-    args0, unknown = parser.parse_known_args()
-
-    # 2. Fetch the default args based on the subcommand; and parse them
-    # to come up with defaults
-    aliases = spack.config.get_config('aliases')
-    cmd_defaults = aliases.get(args0.command, '').split()
-    all_defaults = aliases.get('all', '').split()
-    default_cmdline = all_defaults + [args0.command] + cmd_defaults
-    defaults = parser.parse_args(default_cmdline)
-
-    # 3. Parse the main args again, with respect to those defaults
-    parser.set_defaults(**vars(defaults))
-    args, unknown = parser.parse_known_args()
-
-    return args, unknown
 
 
 def main():
