@@ -59,7 +59,6 @@ class Ceed(Package):
 
     depends_on('nek5000@develop')
 
-    # depends_on('mfem@develop+mpi+lapack+hypre+superlu-dist+metis+netcdf')
     depends_on('mfem@develop+mpi+superlu-dist+netcdf')
 
     # How do we propagate debug flag to all depends on packages ?
