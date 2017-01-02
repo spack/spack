@@ -57,6 +57,15 @@ from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
 import spack.util.pattern as pattern
+
+# The xmlrpclib module has been renamed to xmlrpc.client in Python 3
+# Spack does not yet support Python 3, but there's no reason not to be
+# future-proof
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
+
 """List of all fetch strategies, created by FetchStrategy metaclass."""
 all_strategies = []
 
@@ -419,6 +428,79 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
         # Notify the user how we fetched.
         tty.msg('Using cached archive: %s' % path)
+
+
+class PyPiFetchStrategy(URLFetchStrategy):
+    """Fetches packages directly from PyPi using XML-RPC to query the API."""
+
+    enabled = True
+    required_attributes = ['pypi']
+
+    def __init__(self, pypi=None, digest=None, **kwargs):
+        # If pypi or digest are provided in the kwargs, then prefer
+        # those values.
+        self.pypi = kwargs.get('pypi', None)
+        if not self.pypi:
+            self.pypi = pypi
+
+        self.version = kwargs.get('version', None)
+
+        self.digest = kwargs.get('md5', None)
+        if not self.digest:
+            self.digest = digest
+
+        self.expand_archive = kwargs.get('expand', True)
+        self.extra_curl_options = kwargs.get('curl_options', [])
+        self._curl = None
+
+        self.extension = kwargs.get('extension', None)
+
+        if not self.pypi:
+            raise ValueError("PyPiFetchStrategy requires the name of the "
+                             "package on PyPi for fetching.")
+
+        self.url = self.query_for_url()
+
+        super(PyPiFetchStrategy, self).__init__(
+            url=self.url, digest=self.digest, **kwargs)
+
+    def query_for_url(self):
+        """Queries PyPi's download API with XML-RPC.
+        See https://wiki.python.org/moin/PyPIXmlRpc for details."""
+
+        client = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+        releases = client.release_urls(self.pypi, self.version)
+
+        # Each release may contain dozens of different download URLs
+        # for wheels, tarballs, or zipballs. We don't really have a good
+        # way to tell which version the package needs to download. If a
+        # particular download matches the digest we are expecting, use it.
+        for release in releases:
+            if release['md5_digest'] == self.digest:
+                return release['url']
+
+        # If none of the available downloads match the digest we are expecting,
+        # the digest may have changed. The user should still be able to
+        # download something with --no-checksum if they really want to.
+
+        # Tarballs have the highest preference
+        for release in releases:
+            if release['filename'].endswith('.tar.gz'):
+                return release['url']
+
+        # Zipballs have a lower preference
+        for release in releases:
+            if release['filename'].endswith('.zip'):
+                return release['url']
+
+        # Are there any source distributions at all?
+        for release in releases:
+            if release['packagetype']    == 'sdist' or \
+               release['python_version'] == 'source':
+                return release['url']
+
+        # No source distributions were found
+        raise PyPiFetchError(self.name)
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -990,3 +1072,11 @@ class NoStageError(FetchError):
         super(NoStageError, self).__init__(
             "Must call FetchStrategy.set_stage() before calling %s" %
             method.__name__)
+
+
+class PyPiFetchError(FetchError):
+    """Raised when we are unable to find a download for a Python
+    package hosted on PyPi."""
+    def __init__(self, name):
+        super(PyPiFetchError, self).__init__(
+            "Unable to find a download URL for {0} on PyPi.".format(name))
