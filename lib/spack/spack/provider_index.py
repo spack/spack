@@ -123,7 +123,7 @@ class ProviderIndex(object):
                         # Now add the new version.
                         provider_set.add(spec)
 
-                    else :
+                    else:
                         # Before putting the spec in the map, constrain
                         # it so that it provides what was asked for.
                         constrained = spec.copy()

@@ -109,7 +109,7 @@ def print_text_info(pkg):
         inverse_map = {}
         for spec, whens in pkg.provided.items():
             for when in whens:
-                if not when in inverse_map:
+                if when not in inverse_map:
                     inverse_map[when] = set()
                 inverse_map[when].add(spec)
         for when, specs in reversed(sorted(inverse_map.items())):
