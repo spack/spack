@@ -55,7 +55,7 @@ class Ceed(Package):
 
     depends_on('magma@2.2.0')
 
-    depends_on('petsc@develop+mpi+hypre+superlu-dist+metis+hdf5')
+    depends_on('petsc@develop+mpi+hypre+superlu-dist+metis+hdf5~mumps')
 
     depends_on('nek5000@develop')
 

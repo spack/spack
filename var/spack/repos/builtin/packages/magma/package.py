@@ -81,6 +81,6 @@ class Magma(Package):
         fd.write('LIB      += -lcublas -lcusparse -lcudart -lcudadevrt' + '\n')
         fd.close()
 
-        make('lib', parallel=False)
+        make('lib', parallel=True)
         # make('shared', parallel=False)
         make('install', parallel=False)
