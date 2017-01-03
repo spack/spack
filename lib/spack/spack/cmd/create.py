@@ -217,7 +217,10 @@ class PythonPackageTemplate(PackageTemplate):
         setup_py('install', '--prefix={0}'.format(prefix))"""
 
     def __init__(self, name, *args):
+        # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
         super(PythonPackageTemplate, self).__init__(name, *args)
@@ -239,7 +242,10 @@ class RPackageTemplate(PackageTemplate):
           self.stage.source_path)"""
 
     def __init__(self, name, *args):
+        # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
         if not name.startswith('r-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to r-{0}".format(name))
             name = 'r-{0}'.format(name)
 
         super(RPackageTemplate, self).__init__(name, *args)
@@ -264,7 +270,11 @@ class OctavePackageTemplate(PackageTemplate):
                    prefix, self.stage.archive_file))"""
 
     def __init__(self, name, *args):
+        # If the user provided `--name octave-splines`, don't rename it
+        # octave-octave-splines
         if not name.startswith('octave-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to octave-{0}".format(name))  # noqa
             name = 'octave-{0}'.format(name)
 
         super(OctavePackageTemplate, self).__init__(name, *args)
