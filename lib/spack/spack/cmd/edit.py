@@ -170,6 +170,11 @@ def setup_parser(subparser):
 
 
 def edit(parser, args):
+    # Deprecate `--force`
+    if args.force:
+        tty.warn("`spack edit --force` is deprecated, please use "
+                 "`spack create` instead!")
+
     name = args.name
 
     # By default, edit package files
