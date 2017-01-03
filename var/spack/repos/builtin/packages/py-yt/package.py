@@ -53,6 +53,7 @@ class PyYt(Package):
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
+    variant("rockstar", default=False, description="enable rockstar support")
 
     extends("python")
 
@@ -65,9 +66,15 @@ class PyYt(Package):
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type="build")
     depends_on("py-sympy", type=('build', 'run'))
+    depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
     depends_on("python @2.7:2.999,3.4:")
 
     def install(self, spec, prefix):
+        if '+rockstar' in spec:
+            if os.path.exists('rockstar.cfg'):
+                rm('rockstar.cfg')
+            rockstar_cfg = open('rockstar.cfg', 'w')
+            rockstar_cfg.write(os.environ['ROCKSTAR_DIR']+"/lib\n")
         setup_py("install", "--prefix=%s" % prefix)
         self.check_install(spec, prefix)
 
