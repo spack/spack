@@ -170,6 +170,9 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        if 'trilinos' in spec:
+	    options.append('--with-cxx-dialect=C++11')
+	    
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'scalapack', 'trilinos'):
