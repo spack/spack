@@ -313,7 +313,9 @@ def provides(*specs, **kwargs):
             for provided_spec in spack.spec.parse(string):
                 if pkg.name == provided_spec.name:
                     raise CircularReferenceError('depends_on', pkg.name)
-                pkg.provided[provided_spec] = provider_spec
+                if provided_spec not in pkg.provided:
+                    pkg.provided[provided_spec] = set()
+                pkg.provided[provided_spec].add(provider_spec)
     return _execute
 
 
