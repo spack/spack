@@ -34,12 +34,15 @@ class Zlib(AutotoolsPackage):
     url = "http://zlib.net/zlib-1.2.10.tar.gz"
 
     version('1.2.10', 'd9794246f853d15ce0fcbf79b9a3cf13')
-    version('1.2.8', '44d667c142d7cda120332623eab69f40',
-            url='http://pkgs.fedoraproject.org/repo/pkgs/mingw-zlib/zlib-1.2.8.tar.gz/44d667c142d7cda120332623eab69f40/zlib-1.2.8.tar.gz'
-           )
+    version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+
+    def url_for_version(self, version):
+        if version == Version('1.2.8'):
+            return 'http://pkgs.fedoraproject.org/repo/pkgs/mingw-zlib/zlib-1.2.8.tar.gz/44d667c142d7cda120332623eab69f40/zlib-1.2.8.tar.gz'
+        return 'http://zlib.net/zlib-%s.tar.gz' % version
 
     def configure(self, spec, prefix):
 
