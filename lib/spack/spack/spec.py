@@ -1411,8 +1411,9 @@ class Spec(object):
                 if name in _valid_compiler_flags:
                     spec.compiler_flags[name] = value
                 else:
-                    spec.variants[name] = VariantSpec(name, value)
-
+                    spec.variants[name] = VariantSpec.from_node_dict(
+                        name, value
+                    )
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = VariantSpec(name, value)

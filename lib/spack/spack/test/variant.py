@@ -60,7 +60,7 @@ class VariantSpecTest(unittest.TestCase):
         # transformed in a tuple containing
         # an empty string
         a = VariantSpec('foo', '')
-        self.assertEqual(a._value, ('',))
+        self.assertEqual(a._value, tuple())
 
     def test_repr_and_str(self):
         a = VariantSpec('foo', 'bar,baz')

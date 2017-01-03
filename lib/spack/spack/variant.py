@@ -139,6 +139,12 @@ class VariantSpec(object):
     different (and possibly multiple) values.
     """
 
+    @staticmethod
+    def from_node_dict(name, value):
+        if isinstance(value, list):
+            value = ','.join(value)
+        return VariantSpec(name, value)
+
     def __init__(self, name, value):
         self.name = name
         # Stores the original value passed to initialize this instance
@@ -176,7 +182,7 @@ class VariantSpec(object):
             try:
                 t = next(csv.reader(f, skipinitialspace=True))
             except StopIteration:
-                t = ['']
+                t = []
             # With multi-value variants it is necessary
             # to remove duplicates and give an order
             # to a set
@@ -253,7 +259,7 @@ class VariantSpec(object):
         """
         v = self.value
         if isinstance(self.value, tuple):
-            v = ','.join(self.value)
+            v = list(self.value)
         return self.name, v
 
     def __contains__(self, item):
