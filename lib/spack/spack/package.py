@@ -63,72 +63,13 @@ from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
+from spack.stage import DIYStage
 from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.version import *
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
-
-def write_spconfig(package):
-    # Set-up the environment
-    spack.build_environment.setup_package(package)
-
-    _cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
-    # No verbose makefile for interactive builds
-    cmd = [x for x in _cmd if not x.startswith('-DCMAKE_VERBOSE_MAKEFILE')]
-
-    env = dict()
-
-    paths = os.environ['PATH'].split(':')
-    paths = [item for item in paths if 'spack/env' not in item]
-    env['PATH'] = ':'.join(paths)
-    env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
-    env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
-    env['CC'] = os.environ['SPACK_CC']
-    env['CXX'] = os.environ['SPACK_CXX']
-    env['FC'] = os.environ['SPACK_FC']
-
-    setup_fname = 'spconfig.py'
-    with open(setup_fname, 'w') as fout:
-        fout.write(
-            r"""#!%s
-#
-# %s
-
-import sys
-import os
-import subprocess
-
-def cmdlist(str):
-    return list(x.strip().replace("'",'') for x in str.split('\n') if x)
-env = dict(os.environ)
-""" % (sys.executable, ' '.join(sys.argv)))
-
-        env_vars = sorted(list(env.keys()))
-        for name in env_vars:
-            val = env[name]
-            if string.find(name, 'PATH') < 0:
-                fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
-            else:
-                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
-                    sep = ';'
-                else:
-                    sep = ':'
-
-                fout.write(
-                    'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
-                for part in string.split(val, sep):
-                    fout.write('    %s\n' % part)
-                fout.write('"""))\n')
-
-        fout.write('\ncmd = cmdlist("""\n')
-        fout.write('%s\n' % cmd[0])
-        for arg in cmd[1:]:
-            fout.write('    %s\n' % arg)
-        fout.write('""") + sys.argv[1:]\n')
-        fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
-        set_executable(setup_fname)
 
 
 class InstallPhase(object):
@@ -1164,6 +1105,9 @@ class PackageBase(object):
         finally:
             self.prefix_lock.release_write()
 
+    def write_spconfig(self):
+        tty.die('`spack install --setup` is not supported for packages of type {0}'.format(self.build_system_class))
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1209,30 +1153,19 @@ class PackageBase(object):
                     (self.name, self.spec.external))
             return
 
-        this_fake = fake
-        if self.name in setup:
-            this_fake = True
-            explicit=True
-            sefl.stage = DIYStage(os.getcwd())    # Force build in cwd
-            # --- Generate spconfig.py
-            tty.msg(
-                'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
-            )
-            write_spconfig(package)
-
-
-        # Ensure package is not already installed
-        layout = spack.store.layout
-        with self._prefix_read_lock():
-            if layout.check_installed(self.spec):
-                tty.msg(
-                    "%s is already installed in %s" % (self.name, self.prefix))
-                rec = spack.store.db.get_record(self.spec)
-                if (not rec.explicit) and explicit:
-                    with spack.store.db.write_transaction():
-                        rec = spack.store.db.get_record(self.spec)
-                        rec.explicit = True
-                return
+        if self.name not in setup:
+            # Ensure package is not already installed
+            layout = spack.store.layout
+            with self._prefix_read_lock():
+                if layout.check_installed(self.spec):
+                    tty.msg(
+                        "%s is already installed in %s" % (self.name, self.prefix))
+                    rec = spack.store.db.get_record(self.spec)
+                    if (not rec.explicit) and explicit:
+                        with spack.store.db.write_transaction():
+                            rec = spack.store.db.get_record(self.spec)
+                            rec.explicit = True
+                    return
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
@@ -1255,8 +1188,21 @@ class PackageBase(object):
                     make_jobs=make_jobs,
                     run_tests=run_tests,
                     dirty=dirty,
+                    setup=setup,
                     **kwargs
                 )
+
+        this_fake = fake
+        if self.name in setup:
+            this_fake = True
+            explicit = True
+            self.stage = DIYStage(os.getcwd())    # Force build in cwd
+
+            # --- Generate spconfig.py
+            tty.msg(
+                'Generating spconfig.py [{0}]'.format(self.spec.cshort_spec)
+            )
+            spconfig_fname = self.write_spconfig()
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1343,14 +1289,19 @@ class PackageBase(object):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
-            tty.msg("Successfully installed %s" % self.name,
+            if self.name in setup:
+                tty.msg("Successfully setup %s" % self.name,
+                    "Config file is %s" % spconfig_fname)
+            else:
+                tty.msg("Successfully installed %s" % self.name,
                     "Fetch: %s.  Build: %s.  Total: %s." %
                     (_hms(self._fetch_time), _hms(build_time),
                      _hms(self._total_time)))
+    
             print_pkg(self.prefix)
+        # --------------------- end of def build_process
 
         try:
-            # Create the install prefix and fork the build process.
             spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
@@ -1365,7 +1316,8 @@ class PackageBase(object):
             # Abort install if install directory exists.
             # But do NOT remove it (you'd be overwriting someone else's stuff)
             tty.warn("Keeping existing install prefix in place.")
-            raise
+            if self.name not in setup:
+                raise
         except StopIteration as e:
             # A StopIteration exception means that do_install
             # was asked to stop early from clients

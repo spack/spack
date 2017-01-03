@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#from __future__ import print_function
 import contextlib
 import collections
 import argparse
@@ -110,7 +111,7 @@ the dependencies."""
 def setup_parser(subparser):
     setup_common_parser(subparser)
     subparser.add_argument(
-        '-s', '--setup', dest='setups', action='append', default=[],
+        '-s', '--setup', dest='setup', action='append', default=[],
         help="Generate <projectname>-setup.py for the given projects, instead of building and installing them for real")
 
 

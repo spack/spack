@@ -245,7 +245,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         prefix = self.check_installed(spec)
-        if prefix:
+        if prefix is not None:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
         mkdirp(self.metadata_path(spec))
@@ -441,7 +441,7 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
 
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
-            "Install path %s already exists!")
+            "Install path %s already exists!" % path)
 
 
 class SpecReadError(DirectoryLayoutError):

@@ -48,14 +48,8 @@ description = "Create a configuration script and module, but don't build."
 def setup_parser(subparser):
     install.setup_common_parser(subparser)
     subparser.add_argument(
-        '-d', '--default', action='store_true', dest='default',
+        '-d', '--default-version', action='store_true', dest='default',
         help="Allow default version if user did not specify a single concrete version")
-
-def spack_transitive_include_path():
-    return ';'.join(
-        os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-    )
 
 
 def top_install(spec, install_package=True, install_dependencies=True, **kwargs):
