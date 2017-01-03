@@ -47,7 +47,7 @@ from spack.package import PackageBase
 description = "Build and install packages"
 
 
-def setup_parser(subparser):
+def setup_common_parser(subparser):
     subparser.add_argument(
         '--only',
         default='package,dependencies',
@@ -106,6 +106,12 @@ the dependencies."""
         default=None,
         help="Filename for the log file. If not passed a default will be used."
     )
+
+def setup_parser(subparser):
+    setup_common_parser(subparser)
+    subparser.add_argument(
+        '-s', '--setup', dest='setups', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, instead of building and installing them for real")
 
 
 # Needed for test cases
@@ -325,7 +331,8 @@ def validate_args(args):
         'install_status': args.install_status,
         'fake': args.fake,
         'dirty': args.dirty,
-        'report' : args.report
+        'report' : args.report,
+        'setup' : set(args.setup)
     }
 
 
