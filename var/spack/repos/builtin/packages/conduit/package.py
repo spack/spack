@@ -35,7 +35,7 @@ def cmake_cache_entry(name, value):
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
-    return 'set("%s" "%s" CACHE PATH "")\n\n' % (name, value)
+    return 'set("{0}" "{1}" CACHE PATH "")\n\n'.format(name, value)
 
 
 class Conduit(Package):
@@ -78,20 +78,29 @@ class Conduit(Package):
     #######################
     # CMake
     #######################
+    # cmake 3.3.1 is the version we tested
     depends_on("cmake@3.3.1", when="+cmake")
 
     #######################
     # Python
     #######################
-    depends_on("python", when="+python")
+    extends("python", when="+python")
+    # TODO: blas and lapack are disabled due to build
+    # issues Cyrus experienced on OSX 10.11.6
     depends_on("py-numpy~blas~lapack", when="+python")
 
     #######################
     # I/O Packages
     #######################
+    # TODO: cxx variant is disabled due to build issue Cyrus
+    # experienced on BGQ. When on, the static build tries
+    # to link agains shared libs.
+    #
+    # we are not using hdf5's mpi or fortran features.
     depends_on("hdf5~cxx~mpi~fortran", when="+shared")
     depends_on("hdf5~shared~cxx~mpi~fortran", when="~shared")
 
+    # we are not using silo's fortran features
     depends_on("silo~fortran", when="+shared")
     depends_on("silo~shared~fortran", when="~shared")
 
@@ -180,7 +189,7 @@ class Conduit(Package):
         cfg.write("##################################\n")
         cfg.write("# spack generated host-config\n")
         cfg.write("##################################\n")
-        cfg.write("# %s-%s\n" % (sys_type, spec.compiler))
+        cfg.write("# {0}-{1}\n".format(sys_type, spec.compiler))
         cfg.write("##################################\n\n")
 
         # Include path to cmake for reference
@@ -219,6 +228,16 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python_exe))
+            # install module to standard style site packages dir
+            # so we can support spack activate
+            py_ver_short = "python{0}".format(spec["python"].version.up_to(2))
+            pym_prefix = join_path("${CMAKE_INSTALL_PREFIX}",
+                                   "lib",
+                                   py_ver_short,
+                                   "site-packages")
+            # use pym_prefix as the install path
+            cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
+                                        pym_prefix))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
@@ -247,7 +266,8 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
             # we use `mpicc` as `MPI_CXX_COMPILER` b/c we don't want to
             # introduce linking deps to the MPI C++ libs (we aren't using
-            # C++ features of MPI)
+            # C++ features of MPI) -- this happens with some versions of
+            # OpenMPI
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", spec['mpi'].mpicc))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                         spec['mpi'].mpifc))
