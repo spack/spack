@@ -95,23 +95,16 @@ class PythonPackage(PackageBase):
 
     extends('python')
 
-    # If True, `--no-user-cfg` is passed to setup.py
-    # ignore pydistutils.cfg in your home directory
-    no_user_cfg = True
+    def setup_file(self, spec, prefix):
+        """Returns the name of the setup file to use."""
+        return 'setup.py'
 
     def python(self, *args):
         inspect.getmodule(self).python(*args)
 
     def setup_py(self, *args):
         setup = self.setup_file(self.spec, self.prefix)
-        if self.no_user_cfg:
-            self.python(setup, '--no-user-cfg', *args)
-        else:
-            self.python(setup, *args)
-
-    def setup_file(self, spec, prefix):
-        """Returns the name of the setup file to use."""
-        return 'setup.py'
+        self.python(setup, '--no-user-cfg', *args)
 
     # The following phases and their descriptions come from:
     #   $ python setup.py --help-commands
