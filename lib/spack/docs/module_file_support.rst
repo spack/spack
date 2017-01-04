@@ -368,7 +368,7 @@ and has similar effects on module file of dependees. Even in this case
   with the following snippet:
 
   .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
-     :pyobject: r.setup_environment
+     :pyobject: R.setup_environment
 
   The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
