@@ -31,13 +31,60 @@ from spack.package import PackageBase
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using Python
+    setup.py files
 
-    This class provides two phases that can be overridden:
-    - build
-    - install
+    This class provides the following phases that can be overridden:
 
-    They both have sensible defaults and for many packages the only thing
-    necessary will be to add dependencies
+    * build
+    * build_py
+    * build_ext
+    * build_clib
+    * build_scripts
+    * clean
+    * install
+    * install_lib
+    * install_headers
+    * install_scripts
+    * install_data
+    * sdist
+    * register
+    * bdist
+    * bdist_dumb
+    * bdist_rpm
+    * bdist_wininst
+    * upload
+    * check
+
+    These are all standard setup.py commands and can be found by running:
+
+    .. code-block:: console
+
+       $ python setup.py --help-commands
+
+    By default, only the 'build' and 'install' phases are run, but if you
+    need to run more phases, simply modify your ``phases`` list like so:
+
+    .. code-block:: python
+
+       phases = ['build_ext', 'install', 'bdist']
+
+    Each phase provides a function <phase> that runs:
+
+    .. code-block:: console
+
+       $ python --no-user-cfg setup.py <phase>
+
+    Each phase also has a <phase_args> function that can pass arguments to
+    this call. All of these functions are empty except for the ``install_args``
+    function, which passes ``--prefix=/path/to/installation/directory``.
+
+    If you need to run a phase which is not a standard setup.py command,
+    you'll need to define a function for it like so:
+
+    .. code-block:: python
+
+       def configure(self, spec, prefix):
+           self.setup_py('configure')
     """
     # Default phases
     phases = ['build', 'install']
