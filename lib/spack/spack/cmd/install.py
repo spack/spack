@@ -322,7 +322,7 @@ def validate_args(args):
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
-    return {
+    ret = {
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'install_dependencies' : ('dependencies' in only),
@@ -332,10 +332,11 @@ def validate_args(args):
         'install_status': args.install_status,
         'fake': args.fake,
         'dirty': args.dirty,
-        'report' : args.report,
-        'setup' : set(args.setup)
+        'report' : args.report
     }
-
+    if hasattr(args, 'setup'):
+        ret['setup'] = set(args.setup)
+    return ret
 
 @contextlib.contextmanager
 def setup_logging(spec, args):
@@ -358,10 +359,15 @@ def setup_logging(spec, args):
     if args.log_format is not None:
         test_suite.dump(log_filename)
 
+def get_spconfig_fname(package):
+    return package.name + '-config.py'
+
 def top_install(
     spec, install_package=True,
     install_dependencies=True,
-    report=False, **kwargs):
+    report=False,
+    spconfig_fname_fn=get_spconfig_fname,
+    **kwargs):
 
     if report:
         print 'SPACKENV BEGIN %s' % spec.name
@@ -387,6 +393,7 @@ def top_install(
         package.do_install(
             install_dependencies=install_dependencies,
             explicit=True,
+            spconfig_fname_fn=spconfig_fname_fn,
             **kwargs)
         if report:
             print 'SPACKENV INSTALLED %s/%s' % (spec.name, spec.dag_hash())

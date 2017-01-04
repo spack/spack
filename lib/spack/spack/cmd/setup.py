@@ -44,69 +44,21 @@ from spack.stage import DIYStage
 
 description = "Create a configuration script and module, but don't build."
 
-# Same cmd line arguments as `spack install`
-def setup_parser(subparser):
-    install.setup_common_parser(subparser)
-    subparser.add_argument(
-        '-d', '--default-version', action='store_true', dest='default',
-        help="Allow default version if user did not specify a single concrete version")
+setup_parser = install.setup_common_parser
 
-
-def top_install(spec, install_package=True, install_dependencies=True, **kwargs):
-    """Top-level install method for spack setup."""
-    if install_dependencies:
-        # Install dependencies as-if they were installed
-        # for root (explicit=False in the DB)
-        for s in spec.dependencies():
-            package = spack.repo.get(s)
-            package.do_install(install_dependencies=True, explicit=False, **kwargs)
-
-    if install_package:
-        package = spack.repo.get(spec)
-        package.stage = DIYStage(os.getcwd())    # Force build in cwd
-
-        # --- Generate spconfig.py
-        tty.msg(
-            'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
-        )
-        package.write_spconfig()
-
-        # --- Install this package to register it in the DB
-        # --- and permit module file regeneration
-        del kwargs['fake']
-        package.do_install(
-            install_dependencies=False, explicit=True, fake=True,
-            **kwargs)
-
+def get_spconfig_fname(package):
+    return 'spconfig.py'
 
 def setup(self, args):
-    # Further parsing of arguments
     kwargs = install.validate_args(args)
-    spec = spack.cmd.parse_specs(args.package, concretize=False, allow_multi=False)
 
-    # Log if command line args call for it
+    # Spec from cli
+    spec = spack.cmd.parse_specs(
+        args.package, concretize=True, allow_multi=False)
+    install.show_spec(spec, args)
+
     with install.setup_logging(spec, args):
-        # Take a write lock before checking for existence.
-        with spack.store.db.write_transaction():
-
-            if not spack.repo.exists(spec.name):
-                tty.die("No such package: %s" % spec.name)
-
-            if not (args.default or spec.versions.concrete):
-                tty.die(
-                    "spack setup spec must have a single, concrete version. "
-                    "Did you forget a package version number?")
-
-            spec.concretize()
-            install.show_spec(spec, args)
-
-            package = spack.repo.get(spec)
-            if not isinstance(package, spack.CMakePackage):
-                tty.die(
-                    'Support for packages derived from {0} '
-                    'is not yet implemented'.format(
-                        package.build_system_class
-                    )
-                )
-
-            top_install(spec, **kwargs)
+        install.top_install(
+            spec, setup=set([spec.name]),
+            spconfig_fname_fn=get_spconfig_fname,
+            **kwargs)

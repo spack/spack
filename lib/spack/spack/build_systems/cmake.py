@@ -155,7 +155,7 @@ class CMakePackage(PackageBase):
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
 
-    def write_spconfig(self):
+    def write_spconfig(self, spconfig_fname):
         # Set-up the environment
         spack.build_environment.setup_package(self)
 
@@ -176,7 +176,6 @@ class CMakePackage(PackageBase):
         env['CXX'] = os.environ['SPACK_CXX']
         env['FC'] = os.environ['SPACK_FC']
 
-        spconfig_fname = self.name + '_config.py'
         with open(spconfig_fname, 'w') as fout:
             fout.write(
                 r"""#!%s

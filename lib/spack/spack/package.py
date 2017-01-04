@@ -1120,6 +1120,7 @@ class PackageBase(object):
                    explicit=False,
                    dirty=None,
                    setup=set(),
+                   spconfig_fname_fn=None,    # Must be set
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1189,6 +1190,7 @@ class PackageBase(object):
                     run_tests=run_tests,
                     dirty=dirty,
                     setup=setup,
+                    spconfig_fname_fn=spconfig_fname_fn,
                     **kwargs
                 )
 
@@ -1199,10 +1201,13 @@ class PackageBase(object):
             self.stage = DIYStage(os.getcwd())    # Force build in cwd
 
             # --- Generate spconfig.py
+            spconfig_fname = spconfig_fname_fn(self)
             tty.msg(
-                'Generating spconfig.py [{0}]'.format(self.spec.cshort_spec)
+                'Generating config file {0} [{1}]'.format(
+                spconfig_fname, self.spec.cshort_spec)
             )
-            spconfig_fname = self.write_spconfig()
+
+            self.write_spconfig(spconfig_fname)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1245,7 +1250,9 @@ class PackageBase(object):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
-                if this_fake:
+                if self.name in setup:
+                    pass    # Don't write any files in the install...
+                elif this_fake:
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.
@@ -1303,6 +1310,15 @@ class PackageBase(object):
 
         try:
             spack.store.layout.create_install_directory(self.spec)
+        except directory_layout.InstallDirectoryAlreadyExistsError:
+            # Abort install if install directory exists.
+            # But do NOT remove it (you'd be overwriting someone else's stuff)
+            tty.warn("Keeping existing install prefix in place.")
+            if self.name in setup:
+                keep_prefix = True
+            else:
+                raise
+        try:
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
             # If we installed then we should keep the prefix
@@ -1312,12 +1328,6 @@ class PackageBase(object):
             spack.store.db.add(
                 self.spec, spack.store.layout, explicit=explicit
             )
-        except directory_layout.InstallDirectoryAlreadyExistsError:
-            # Abort install if install directory exists.
-            # But do NOT remove it (you'd be overwriting someone else's stuff)
-            tty.warn("Keeping existing install prefix in place.")
-            if self.name not in setup:
-                raise
         except StopIteration as e:
             # A StopIteration exception means that do_install
             # was asked to stop early from clients
