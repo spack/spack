@@ -44,11 +44,17 @@ class CMakePackage(PackageBase):
 
     They all have sensible defaults and for many packages the only thing
     necessary will be to override `cmake_args`
+
+    Additionally, you may specify make targets for build and install
+    phases by overriding `build_targets` and `install_targets`
     """
     phases = ['cmake', 'build', 'install']
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'CMakePackage'
+
+    build_targets = []
+    install_targets = ['install']
 
     depends_on('cmake', type='build')
 
@@ -111,14 +117,14 @@ class CMakePackage(PackageBase):
             inspect.getmodule(self).cmake(*options)
 
     def build(self, spec, prefix):
-        """The usual `make` after cmake"""
+        """Make the build targets"""
         with working_dir(self.build_directory()):
-            inspect.getmodule(self).make()
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """...and the final `make install` after cmake"""
+        """Make the install targets"""
         with working_dir(self.build_directory()):
-            inspect.getmodule(self).make('install')
+            inspect.getmodule(self).make(*self.install_targets)
 
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)
