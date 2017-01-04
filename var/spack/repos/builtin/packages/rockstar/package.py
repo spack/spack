@@ -33,9 +33,10 @@ class Rockstar(Package):
         make('lib')
 
         # Install all files and directories
-        for filename in os.listdir('.'):
-            if filename != "." and filename != "..":
-                if os.path.isdir(filename):
-                    shutil.copytree(join_path(".",filename), join_path(prefix, filename))
-                else:
-                    install(filename, join_path(prefix, filename))
+        shutil.copytree(".", prefix)
+
+        mkdir(join_path(prefix.bin))
+        mkdir(join_path(prefix.lib))
+
+        install('rockstar', join_path(prefix.bin, 'rockstar'))
+        install('librockstar.so', join_path(prefix.lib, 'librockstar.so'))
