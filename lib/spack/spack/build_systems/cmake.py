@@ -112,8 +112,7 @@ class CMakePackage(PackageBase):
         """Run cmake in the build directory"""
         options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
             self.cmake_args()
-        create = not os.path.exists(self.build_directory())
-        with working_dir(self.build_directory(), create=create):
+        with working_dir(self.build_directory(), create=True):
             inspect.getmodule(self).cmake(*options)
 
     def build(self, spec, prefix):

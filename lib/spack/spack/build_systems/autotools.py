@@ -124,6 +124,10 @@ class AutotoolsPackage(PackageBase):
 
         return False
 
+    def build_directory(self):
+        """Override to provide another place to build the package"""
+        return self.stage.source_path
+
     def patch(self):
         """Perform any required patches."""
 
@@ -155,15 +159,18 @@ class AutotoolsPackage(PackageBase):
         and an appropriately set prefix
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-        inspect.getmodule(self).configure(*options)
+        with working_dir(self.build_directory(), create=True):
+            inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
         """Make the build targets"""
-        inspect.getmodule(self).make(*self.build_targets)
+        with working_dir(self.build_directory()):
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
         """Make the install targets"""
-        inspect.getmodule(self).make(*self.install_targets)
+        with working_dir(self.build_directory()):
+            inspect.getmodule(self).make(*self.install_targets)
 
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)
@@ -184,8 +191,9 @@ class AutotoolsPackage(PackageBase):
         """Default test: search the Makefile for targets ``test`` and ``check``
         and run them if found.
         """
-        self._if_make_target_execute('test')
-        self._if_make_target_execute('check')
+        with working_dir(self.build_directory()):
+            self._if_make_target_execute('test')
+            self._if_make_target_execute('check')
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
