@@ -31,6 +31,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir
 from spack.package import PackageBase
 
 
