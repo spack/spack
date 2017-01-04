@@ -35,18 +35,18 @@ from spack.package import PackageBase
 
 
 class CMakePackage(PackageBase):
-    """Specialized class for packages that are built using cmake
+    """Specialized class for packages that are built using CMake
 
     This class provides three phases that can be overridden:
-    - cmake
-    - build
-    - install
+    * cmake
+    * build
+    * install
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override `cmake_args`
+    necessary will be to override ``cmake_args``
 
     Additionally, you may specify make targets for build and install
-    phases by overriding `build_targets` and `install_targets`
+    phases by overriding ``build_targets`` and ``install_targets``
     """
     phases = ['cmake', 'build', 'install']
     # To be used in UI queries that require to know which
@@ -103,8 +103,8 @@ class CMakePackage(PackageBase):
     def cmake_args(self):
         """Method to be overridden. Should return an iterable containing
         all the arguments that must be passed to configure, except:
-        - CMAKE_INSTALL_PREFIX
-        - CMAKE_BUILD_TYPE
+        * CMAKE_INSTALL_PREFIX
+        * CMAKE_BUILD_TYPE
         """
         return []
 
@@ -129,9 +129,9 @@ class CMakePackage(PackageBase):
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)
     def _run_default_function(self):
-        """This function is run after build if self.run_tests == True
+        """This function is run after build if ``self.run_tests == True``
 
-        It will search for a method named `check` and run it. A sensible
+        It will search for a method named ``check`` and run it. A sensible
         default is provided in the base class.
         """
         try:
@@ -142,7 +142,7 @@ class CMakePackage(PackageBase):
             tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     def check(self):
-        """Default test : search the Makefile for the target `test`
+        """Default test: search the Makefile for the target ``test``
         and run them if found.
         """
         with working_dir(self.build_directory()):

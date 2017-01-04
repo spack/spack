@@ -38,16 +38,16 @@ class AutotoolsPackage(PackageBase):
     """Specialized class for packages that are built using GNU Autotools
 
     This class provides four phases that can be overridden:
-    - autoreconf
-    - configure
-    - build
-    - install
+    * autoreconf
+    * configure
+    * build
+    * install
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override `configure_args`
+    necessary will be to override ``configure_args``
 
     Additionally, you may specify make targets for build and install
-    phases by overriding `build_targets` and `install_targets`
+    phases by overriding ``build_targets`` and ``install_targets``
     """
     phases = ['autoreconf', 'configure', 'build', 'install']
     # To be used in UI queries that require to know which
@@ -138,7 +138,7 @@ class AutotoolsPackage(PackageBase):
 
     @PackageBase.sanity_check('autoreconf')
     def is_configure_or_die(self):
-        """Checks the presence of a `configure` file after the
+        """Checks the presence of a ``configure`` file after the
         autoreconf phase"""
         if not os.path.exists('configure'):
             raise RuntimeError(
@@ -146,12 +146,12 @@ class AutotoolsPackage(PackageBase):
 
     def configure_args(self):
         """Method to be overridden. Should return an iterable containing
-        all the arguments that must be passed to configure, except --prefix
+        all the arguments that must be passed to configure, except ``--prefix``
         """
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in `configure_args`
+        """Runs configure with the arguments specified in ``configure_args``
         and an appropriately set prefix
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
@@ -168,9 +168,9 @@ class AutotoolsPackage(PackageBase):
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)
     def _run_default_function(self):
-        """This function is run after build if self.run_tests == True
+        """This function is run after build if ``self.run_tests == True``
 
-        It will search for a method named `check` and run it. A sensible
+        It will search for a method named ``check`` and run it. A sensible
         default is provided in the base class.
         """
         try:
@@ -181,7 +181,7 @@ class AutotoolsPackage(PackageBase):
             tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     def check(self):
-        """Default test : search the Makefile for targets `test` and `check`
+        """Default test: search the Makefile for targets ``test`` and ``check``
         and run them if found.
         """
         self._if_make_target_execute('test')
