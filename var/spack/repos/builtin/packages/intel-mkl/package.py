@@ -28,7 +28,7 @@ import os
 from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Mkl(IntelInstaller):
+class IntelMkl(IntelInstaller):
     """Intel Math Kernel Library.
 
     Note: You will have to add the download file to a
