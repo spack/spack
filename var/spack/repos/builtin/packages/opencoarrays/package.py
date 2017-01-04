@@ -42,8 +42,6 @@ class Opencoarrays(CMakePackage):
 
     depends_on('mpi')
 
-    provides('coarrays')
-
     def cmake_args(self):
         args = []
         args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
