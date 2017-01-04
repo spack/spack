@@ -31,12 +31,13 @@ class Zlib(AutotoolsPackage):
        data-compression library."""
 
     homepage = "http://zlib.net"
-    url = "http://zlib.net/zlib-1.2.8.tar.gz"
+    url = "http://zlib.net/fossils/zlib-1.2.10.tar.gz"
 
     version('1.2.10', 'd9794246f853d15ce0fcbf79b9a3cf13')
-    version('1.2.8', '44d667c142d7cda120332623eab69f40',
-            url='http://pkgs.fedoraproject.org/repo/pkgs/mingw-zlib/zlib-1.2.8.tar.gz/44d667c142d7cda120332623eab69f40/zlib-1.2.8.tar.gz'
-           )
+    # author had this to say about 1.2.9....
+    # Due to the bug fixes, any installations of 1.2.9 should be immediately 
+    # replaced with 1.2.10.
+    version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
