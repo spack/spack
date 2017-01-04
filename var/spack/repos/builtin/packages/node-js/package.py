@@ -32,9 +32,10 @@ class NodeJs(Package):
     engine."""
 
     homepage = "https://nodejs.org/"
-    url      = "https://nodejs.org/download/release/v6.3.0/node-v6.3.0.tar.gz"
+    url      = "https://nodejs.org/dist/v6.3.0/node-v6.3.0.tar.gz"
 
     version('7.3.0', '16f516a8433cd1d87ea8898b090432e7')
+    version('6.9.3', '5054239f6357c7650beb6e591f205741')
 
     # variant('bash-completion', default=False, description='Build with bash-completion support for npm')  # NOQA: ignore=E501
     variant('debug',           default=False, description='Include debugger support')
@@ -51,7 +52,7 @@ class NodeJs(Package):
     depends_on('openssl',         when='+openssl')
 
     def url_for_version(self, version):
-        _url_str = 'https://nodejs.org/download/release/v{version}/node-v{version}.tar.gz'
+        _url_str = 'https://nodejs.org/dist/v{version}/node-v{version}.tar.gz'
         return _url_str.format(version=version)
 
     def install(self, spec, prefix):
