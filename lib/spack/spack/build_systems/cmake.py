@@ -24,7 +24,6 @@
 ##############################################################################
 
 import inspect
-import os
 import platform
 
 import llnl.util.tty as tty
