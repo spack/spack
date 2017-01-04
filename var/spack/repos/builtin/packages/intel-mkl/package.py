@@ -55,6 +55,7 @@ class IntelMkl(IntelInstaller):
     # virtual dependency
     provides('blas')
     provides('lapack')
+    provides('mkl')
     # TODO: MKL also provides implementation of Scalapack.
 
     @property
