@@ -72,9 +72,10 @@ class PyYt(Package):
     def install(self, spec, prefix):
         if '+rockstar' in spec:
             if os.path.exists('rockstar.cfg'):
-                rm('rockstar.cfg')
+                os.remove('rockstar.cfg')
             rockstar_cfg = open('rockstar.cfg', 'w')
-            rockstar_cfg.write(os.environ['ROCKSTAR_DIR']+"/lib\n")
+            rockstar_cfg.write(spec.get_dependency('rockstar').spec.prefix)
+            rockstar_cfg.close()
         setup_py("install", "--prefix=%s" % prefix)
         self.check_install(spec, prefix)
 
