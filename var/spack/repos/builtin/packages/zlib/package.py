@@ -31,12 +31,18 @@ class Zlib(AutotoolsPackage):
        data-compression library."""
 
     homepage = "http://zlib.net"
-    url = "http://zlib.net/zlib-1.2.8.tar.gz"
+    url = "https://github.com/madler/zlib/archive/v1.2.10.tar.gz"
 
-    version('1.2.10', 'd9794246f853d15ce0fcbf79b9a3cf13')
-    version('1.2.8', '44d667c142d7cda120332623eab69f40',
-            url='http://pkgs.fedoraproject.org/repo/pkgs/mingw-zlib/zlib-1.2.8.tar.gz/44d667c142d7cda120332623eab69f40/zlib-1.2.8.tar.gz'
-           )
+    version('1.2.10', 'ee405a38e77b3ffb5c7ff72aa074df1a')
+    version('1.2.9', 'e727f2484bf2a4eff2fc6b5f2e138ae2')
+    version('1.2.8', '1eabf2698dc49f925ce0ffb81397098f')
+    version('1.2.7.3', '202e813c183f91578f0b35787ab4cf5a')
+    version('1.2.7.2', 'afd13ef1255c1042c388a1ef8cb314d6')
+    version('1.2.7.1', '0a05b3a3955fea5b477c04093ea00fc0')
+    version('1.2.7', 'cbcc3eddd76da39170e4bf9ab93d02fd')
+    version('1.2.6.1', 'f64045cd2f229a558f060367cc197c60')
+    version('1.2.6', 'b778e8a8add5281b52900a9a1c3ffa63')
+    version('1.2.5.3', '554651e0f60e2bc9f40b03e3b18e41f3')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
