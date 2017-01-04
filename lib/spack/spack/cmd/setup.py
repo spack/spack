@@ -33,6 +33,7 @@ import sys
 import llnl.util.tty as tty
 import spack
 import spack.store
+import spack.package
 import spack.cmd
 import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
@@ -44,77 +45,10 @@ description = "Create a configuration script and module, but don't build."
 
 # Same cmd line arguments as `spack install`
 def setup_parser(subparser):
-    install.setup_parser(subparser)
+    install.setup_common_parser(subparser)
     subparser.add_argument(
-        '-d', '--default', action='store_true', dest='default',
+        '-d', '--default-version', action='store_true', dest='default',
         help="Allow default version if user did not specify a single concrete version")
-
-def spack_transitive_include_path():
-    return ';'.join(
-        os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-    )
-
-
-def write_spconfig(package):
-    # Set-up the environment
-    spack.build_environment.setup_package(package)
-
-    _cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
-    # No verbose makefile for interactive builds
-    cmd = [x for x in _cmd if not x.startswith('-DCMAKE_VERBOSE_MAKEFILE')]
-
-    env = dict()
-
-    paths = os.environ['PATH'].split(':')
-    paths = [item for item in paths if 'spack/env' not in item]
-    env['PATH'] = ':'.join(paths)
-    env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
-    env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
-    env['CC'] = os.environ['SPACK_CC']
-    env['CXX'] = os.environ['SPACK_CXX']
-    env['FC'] = os.environ['SPACK_FC']
-
-    setup_fname = 'spconfig.py'
-    with open(setup_fname, 'w') as fout:
-        fout.write(
-            r"""#!%s
-#
-# %s
-
-import sys
-import os
-import subprocess
-
-def cmdlist(str):
-    return list(x.strip().replace("'",'') for x in str.split('\n') if x)
-env = dict(os.environ)
-""" % (sys.executable, ' '.join(sys.argv)))
-
-        env_vars = sorted(list(env.keys()))
-        for name in env_vars:
-            val = env[name]
-            if string.find(name, 'PATH') < 0:
-                fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
-            else:
-                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
-                    sep = ';'
-                else:
-                    sep = ':'
-
-                fout.write(
-                    'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
-                for part in string.split(val, sep):
-                    fout.write('    %s\n' % part)
-                fout.write('"""))\n')
-
-        fout.write('\ncmd = cmdlist("""\n')
-        fout.write('%s\n' % cmd[0])
-        for arg in cmd[1:]:
-            fout.write('    %s\n' % arg)
-        fout.write('""") + sys.argv[1:]\n')
-        fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
-        set_executable(setup_fname)
 
 
 def top_install(spec, install_package=True, install_dependencies=True, **kwargs):
@@ -134,7 +68,7 @@ def top_install(spec, install_package=True, install_dependencies=True, **kwargs)
         tty.msg(
             'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
         )
-        write_spconfig(package)
+        package.write_spconfig()
 
         # --- Install this package to register it in the DB
         # --- and permit module file regeneration

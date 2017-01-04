@@ -25,12 +25,22 @@
 
 import inspect
 import platform
+import sys
+import string
 
 import llnl.util.tty as tty
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
+from llnl.util.filesystem import set_executable
 from spack.directives import depends_on
 from spack.package import PackageBase
+
+
+def spack_transitive_include_path():
+    return ';'.join(
+        os.path.join(dep, 'include')
+        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
+    )
 
 
 class CMakePackage(PackageBase):
@@ -150,3 +160,67 @@ class CMakePackage(PackageBase):
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+
+    def write_spconfig(self):
+        # Set-up the environment
+        spack.build_environment.setup_package(self)
+
+        _cmd = [str(spack.which('cmake'))] + \
+            self.std_cmake_args + self.cmake_args()
+
+        # No verbose makefile for interactive builds
+        cmd = [x for x in _cmd if not x.startswith('-DCMAKE_VERBOSE_MAKEFILE')]
+
+        env = dict()
+
+        paths = os.environ['PATH'].split(':')
+        paths = [item for item in paths if 'spack/env' not in item]
+        env['PATH'] = ':'.join(paths)
+        env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
+        env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+        env['CC'] = os.environ['SPACK_CC']
+        env['CXX'] = os.environ['SPACK_CXX']
+        env['FC'] = os.environ['SPACK_FC']
+
+        spconfig_fname = self.name + '_config.py'
+        with open(spconfig_fname, 'w') as fout:
+            fout.write(
+                r"""#!%s
+#
+# %s
+
+import sys
+import os
+import subprocess
+
+def cmdlist(str):
+    return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+env = dict(os.environ)
+""" % (sys.executable, ' '.join(sys.argv)))
+
+            env_vars = sorted(list(env.keys()))
+            for name in env_vars:
+                val = env[name]
+                if string.find(name, 'PATH') < 0:
+                    fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
+                else:
+                    if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+                        sep = ';'
+                    else:
+                        sep = ':'
+
+                    fout.write(
+                        'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
+                    for part in string.split(val, sep):
+                        fout.write('    %s\n' % part)
+                    fout.write('"""))\n')
+
+            fout.write('\ncmd = cmdlist("""\n')
+            fout.write('%s\n' % cmd[0])
+            for arg in cmd[1:]:
+                fout.write('    %s\n' % arg)
+            fout.write('""") + sys.argv[1:]\n')
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+            set_executable(spconfig_fname)
+            return spconfig_fname
+
