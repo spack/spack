@@ -23,52 +23,54 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-
 from spack import *
 
 
-class Espressopp(Package):
+class Espressopp(CMakePackage):
     """ESPResSo++ is an extensible, flexible, fast and parallel simulation
        software for soft matter research. It is a highly versatile software
        package for the scientific simulation and analysis of coarse-grained
        atomistic or bead-spring models as they are used in soft matter research
     """
     homepage = "https://espressopp.github.io"
-    url      = "https://github.com/espressopp/espressopp/archive/v1.9.4.zip"
+    url      = "https://github.com/espressopp/espressopp/tarball/v1.9.4"
 
     version('develop', git='https://github.com/espressopp/espressopp.git', branch='master')
-    version('1.9.4', git='https://github.com/espressopp/espressopp.git', tag='v1.9.4')
+    version('1.9.4', 'f2a27993a83547ad014335006eea74ea')
 
     variant('debug', default=False, description='Build debug version')
     variant('ug', default=False, description='Build user guide')
     variant('pdf', default=False, description='Build user guide in pdf format')
     variant('dg', default=False, description='Build developer guide')
-    variant('tests', default=False, description='Run the tests')
 
-    depends_on("cmake@3.7.1:", type='build')
+    depends_on("cmake@2.8:", type='build')
     depends_on("mpi", type=('build', 'link', 'run'))
     depends_on("boost+serialization+filesystem+system+python+mpi", when='@1.9.4:', type=('build', 'link', 'run'))
     extends("python")
-    depends_on("python@2:")
+    depends_on("python@2:2.7.13")
     depends_on("py-mpi4py@2.0.0", when='@1.9.4:', type=('build', 'link', 'run'))
+    depends_on("py-mpi4py@1.3.1:", when='@develop', type=('build', 'link', 'run'))
     depends_on("fftw", type=('build', 'link', 'run'))
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')
     depends_on("doxygen", when="+dg", type='build')
 
-    def install(self, spec, prefix):
+    run_tests = True
+
+    def cmake_args(self):
+        spec = self.spec
         options = []
-        options.append('-DEXTERNAL_MPI4PY=ON')
-        options.append('-DEXTERNAL_BOOST=ON')
+        options.extend(['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON'])
         if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
+            options.extend(['-DCMAKE_BUILD_TYPE:STRING=Debug'])
         else:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
-        options.extend(std_cmake_args)
-        with working_dir('build', create=True):
-            cmake('..', *options)
-            make("clean")
+            options.extend(['-DCMAKE_BUILD_TYPE:STRING=Release'])
+        
+        return options 
+   
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory()):
             make()
             if '+ug' in spec:
                 make("ug", parallel=False)
@@ -76,6 +78,3 @@ class Espressopp(Package):
                 make("ug-pdf", parallel=False)
             if '+dg' in spec:
                 make("doc", parallel=False)
-            if '+tests' in spec:
-                make("test", parallel=False)
-            make("install")
