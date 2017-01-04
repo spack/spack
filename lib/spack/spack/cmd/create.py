@@ -195,17 +195,19 @@ class BazelGuess(DefaultGuess):
 
 class PythonGuess(DefaultGuess):
     """Provides appropriate overrides for python extensions"""
-    dependencies = """\
-    extends('python')
+    base_class_name = 'PythonPackage'
 
-    # FIXME: Add additional dependencies if required.
+    dependencies = """\
+    # FIXME: Add dependencies if required.
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=nolink)"""
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        setup_py('install', '--prefix={0}'.format(prefix))"""
+    def build_args(self):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete the function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         name = 'py-{0}'.format(name)

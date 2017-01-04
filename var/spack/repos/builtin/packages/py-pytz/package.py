@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPytz(Package):
+class PyPytz(PythonPackage):
     """World timezone definitions, modern and historical."""
 
     homepage = "https://pypi.python.org/pypi/pytz"
@@ -37,9 +37,4 @@ class PyPytz(Package):
     version('2015.4', '417a47b1c432d90333e42084a605d3d8')
     version('2016.3', 'abae92c3301b27bd8a9f56b14f52cb29')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

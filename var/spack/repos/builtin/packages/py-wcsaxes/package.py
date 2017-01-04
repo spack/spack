@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyWcsaxes(Package):
+class PyWcsaxes(PythonPackage):
     """WCSAxes is a framework for making plots of Astronomical data
     in Matplotlib."""
 
@@ -38,6 +38,3 @@ class PyWcsaxes(Package):
     depends_on('py-numpy', type=nolink)
     depends_on('py-matplotlib', type=nolink)
     depends_on('py-astropy', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

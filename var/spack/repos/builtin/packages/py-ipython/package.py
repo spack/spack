@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyIpython(Package):
+class PyIpython(PythonPackage):
     """IPython provides a rich toolkit to help you make the most out of using
        Python interactively."""
     homepage = "https://pypi.python.org/pypi/ipython"
@@ -34,9 +34,5 @@ class PyIpython(Package):
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
     version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
 
-    extends('python')
     depends_on('py-pygments', type=nolink)
     depends_on('py-setuptools', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

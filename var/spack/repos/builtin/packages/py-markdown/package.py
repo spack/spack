@@ -26,7 +26,7 @@
 from spack import *
 
 
-class PyMarkdown(Package):
+class PyMarkdown(PythonPackage):
     """This is a Python implementation of John Gruber's Markdown. It is
     almost completely compliant with the reference implementation, though
     there are a few very minor differences. See John's Syntax
@@ -48,14 +48,9 @@ class PyMarkdown(Package):
     version('2.5.1', 'be6f6ba65a8fb843d2aaf1fcdd68c755')
     version('2.5', '8393ceab9c6e33357fb8a7be063a4849')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.2:3.4')
 
     def url_for_version(self, version):
         base_url = "https://github.com/waylan/Python-Markdown/archive"
         return "{0}/{1}-final.tar.gz".format(base_url, version)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
