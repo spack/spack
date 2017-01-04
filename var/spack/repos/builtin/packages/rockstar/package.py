@@ -1,3 +1,5 @@
+import os
+import shutil
 from spack import *
 
 class Rockstar(Package):
@@ -18,8 +20,8 @@ class Rockstar(Package):
     def install(self, spec, prefix):
         # Set environment appropriately for HDF5
     	if '+hdf5' in spec:
-	    os.environ['HDF5_INC_DIR'] = os.environ['HDF5_DIR']+"/include"
-	    os.environ['HDF5_LIB_DIR'] = os.environ['HDF5_DIR']+"/lib"
+	    os.environ['HDF5_INC_DIR'] = spec.get_dependency('hdf5').spec.prefix+"/include"
+	    os.environ['HDF5_LIB_DIR'] = spec.get_dependency('hdf5').spec.prefix+"/lib"
 	
 	# Build depending on whether hdf5 is to be used
 	if '+hdf5' in spec:
@@ -30,8 +32,10 @@ class Rockstar(Package):
 	# Build rockstar library
 	make('lib')
 
-	mkdir(join_path(prefix.bin))
-	mkdir(join_path(prefix.lib))
-
-	install('rockstar', join_path(prefix.bin, 'rockstar'))
-	install('librockstar.so', join_path(prefix.lib, 'librockstar.so'))
+        # Install all files and directories
+        for filename in os.listdir('.'):
+            if filename != "." and filename != "..":
+                if os.path.isdir(filename):
+                    shutil.copytree(join_path(".",filename), join_path(prefix, filename))
+                else:
+                    install(filename, join_path(prefix, filename))
