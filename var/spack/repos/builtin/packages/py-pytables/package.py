@@ -32,6 +32,7 @@ class PyPytables(Package):
     url      = "https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz"
 
     version('3.2.2', '7cbb0972e4d6580f629996a5bed92441')
+    version('3.3.0', '056c161ae0fd2d6e585b766adacf3b0b', url='https://github.com/PyTables/PyTables/archive/v3.3.0.tar.gz')
 
     extends('python')
     depends_on('hdf5')
