@@ -35,7 +35,7 @@ class RNetworkd3(Package):
 
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-htmlwidgets', type=nolink)
     depends_on('r-igraph', type=nolink)

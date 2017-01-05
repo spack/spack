@@ -35,7 +35,7 @@ class RQuantmod(Package):
 
     version('0.4-5', 'cab3c409e4de3df98a20f1ded60f3631')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-xts', type=nolink)
     depends_on('r-zoo', type=nolink)

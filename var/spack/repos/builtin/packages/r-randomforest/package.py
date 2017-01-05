@@ -35,7 +35,7 @@ class RRandomforest(Package):
 
     version('4.6-12', '071c03af974198e861f1475c5bab9e7a')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

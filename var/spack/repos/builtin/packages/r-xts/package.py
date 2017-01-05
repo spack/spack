@@ -37,7 +37,7 @@ class RXts(Package):
 
     version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-zoo', type=nolink)
 

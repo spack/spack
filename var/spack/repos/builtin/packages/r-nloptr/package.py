@@ -40,7 +40,7 @@ class RNloptr(Package):
 
     version('1.0.4', '9af69a613349b236fd377d0a107f484c')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -37,7 +37,7 @@ class RXml(Package):
     version('3.98-1.5', 'd1cfcd56f7aec96a84ffca91aea507ee')
     version('3.98-1.4', '1a7f3ce6f264eeb109bfa57bedb26c14')
 
-    extends('R')
+    extends('r')
 
     depends_on('libxml2')
 

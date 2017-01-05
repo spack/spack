@@ -25,18 +25,32 @@
 from spack import *
 
 
-class IndirectMpich(Package):
-    """Test case for a package that depends on MPI and one of its
-       dependencies requires a *particular version* of MPI.
-    """
+class RBiocgenerics(Package):
+    """S4 generic functions needed by many Bioconductor packages."""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/indirect_mpich-1.0.tar.gz"
+    homepage = 'https://bioconductor.org/packages/BiocGenerics/'
+    version('bioc-3.3',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.3')
+    version('bioc-3.2',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.2')
 
-    version(1.0, 'foobarbaz')
+    extends('r')
 
-    depends_on('mpi')
-    depends_on('direct_mpich')
+    def validate(self, spec):
+        """
+        Checks that the version of R is appropriate for the Bioconductor
+        version.
+        """
+        if spec.satisfies('@bioc-3.3'):
+            if not spec.satisfies('^R@3.3.0:3.3.9'):
+                raise InstallError('Must use R-3.3 for Bioconductor-3.3')
+        elif spec.satisfies('@bioc-3.2'):
+            if not spec.satisfies('^R@3.2.0:3.2.9'):
+                raise InstallError('Must use R-3.2 for Bioconductor-3.2')
 
     def install(self, spec, prefix):
-        pass
+        self.validate(spec)
+        R('CMD', 'INSTALL', '--library=%s' %
+          self.module.r_lib_dir, '%s' % self.stage.source_path)

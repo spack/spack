@@ -40,7 +40,7 @@ class RGistr(Package):
 
     version('0.3.6', '49d548cb3eca0e66711aece37757a2c0')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-jsonlite', type=nolink)
     depends_on('r-httr', type=nolink)

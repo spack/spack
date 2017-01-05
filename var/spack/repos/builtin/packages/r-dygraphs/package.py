@@ -38,7 +38,7 @@ class RDygraphs(Package):
 
     version('0.9', '7f0ce4312bcd3f0a58b8c03b2772f833')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-magrittr', type=nolink)
     depends_on('r-htmlwidgets', type=nolink)

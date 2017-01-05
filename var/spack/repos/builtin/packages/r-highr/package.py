@@ -37,7 +37,7 @@ class RHighr(Package):
 
     version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

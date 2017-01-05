@@ -34,7 +34,7 @@ class RNlme(Package):
 
     version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-lattice', type=nolink)
 

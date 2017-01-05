@@ -36,7 +36,7 @@ class RRbokeh(Package):
 
     version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-htmlwidgets', type=nolink)
     depends_on('r-maps', type=nolink)

@@ -35,7 +35,7 @@ class RMatrix(Package):
 
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-lattice', type=nolink)
 

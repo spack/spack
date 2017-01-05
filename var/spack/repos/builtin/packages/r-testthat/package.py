@@ -35,13 +35,13 @@ class RTestthat(Package):
 
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-digest', type=nolink)
     depends_on('r-crayon', type=nolink)
     depends_on('r-praise', type=nolink)
     depends_on('r-magrittr', type=nolink)
-    depends_on('r-R6', type=nolink)
+    depends_on('r-r6', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

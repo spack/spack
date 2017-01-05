@@ -36,7 +36,7 @@ class RCluster(Package):
 
     version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -37,7 +37,7 @@ class RDatatable(Package):
 
     version('1.9.6', 'b1c0c7cce490bdf42ab288541cc55372')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-chron', type='nolink')
 

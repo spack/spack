@@ -35,7 +35,7 @@ class RMaps(Package):
 
     version('3.1.1', 'ff045eccb6d5a658db5a539116ddf764')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

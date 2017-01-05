@@ -35,7 +35,7 @@ class RPackrat(Package):
 
     version('0.4.7-1', '80c2413269b292ade163a70ba5053e84')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

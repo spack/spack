@@ -38,7 +38,7 @@ class RMaptools(Package):
 
     version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-sp', type=nolink)
     depends_on('r-foreign', type=nolink)

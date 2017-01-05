@@ -39,7 +39,7 @@ class RVcd(Package):
 
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-mass', type=nolink)
     depends_on('r-colorspace', type=nolink)

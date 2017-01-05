@@ -25,32 +25,22 @@
 from spack import *
 
 
-class RBiocgenerics(Package):
-    """S4 generic functions needed by many Bioconductor packages."""
+class RR6(Package):
+    """The R6 package allows the creation of classes with reference semantics,
+    similar to R's built-in reference classes. Compared to reference classes,
+    R6 classes are simpler and lighter-weight, and they are not built on S4
+    classes so they do not require the methods package. These classes allow
+    public and private members, and they support inheritance, even when the
+    classes are defined in different packages."""
 
-    homepage = 'https://bioconductor.org/packages/BiocGenerics/'
-    version('bioc-3.3',
-            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
-            branch='release-3.3')
-    version('bioc-3.2',
-            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
-            branch='release-3.2')
+    homepage = "https://github.com/wch/R6/"
+    url      = "https://cran.r-project.org/src/contrib/R6_2.1.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/R6"
 
-    extends('R')
+    version('2.1.2', 'b6afb9430e48707be87638675390e457')
 
-    def validate(self, spec):
-        """
-        Checks that the version of R is appropriate for the Bioconductor
-        version.
-        """
-        if spec.satisfies('@bioc-3.3'):
-            if not spec.satisfies('^R@3.3.0:3.3.9'):
-                raise InstallError('Must use R-3.3 for Bioconductor-3.3')
-        elif spec.satisfies('@bioc-3.2'):
-            if not spec.satisfies('^R@3.2.0:3.2.9'):
-                raise InstallError('Must use R-3.2 for Bioconductor-3.2')
+    extends('r')
 
     def install(self, spec, prefix):
-        self.validate(spec)
-        R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.source_path)
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

@@ -34,7 +34,7 @@ class RGtable(Package):
 
     version('0.2.0', '124090ae40b2dd3170ae11180e0d4cab')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
