@@ -25,32 +25,16 @@
 from spack import *
 
 
-class RBiocgenerics(Package):
+class RBiocgenerics(RPackage):
     """S4 generic functions needed by many Bioconductor packages."""
 
     homepage = 'https://bioconductor.org/packages/BiocGenerics/'
-    version('bioc-3.3',
+    version('3.3',
             git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
             branch='release-3.3')
-    version('bioc-3.2',
+    version('3.2',
             git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
             branch='release-3.2')
 
-    extends('r')
-
-    def validate(self, spec):
-        """
-        Checks that the version of R is appropriate for the Bioconductor
-        version.
-        """
-        if spec.satisfies('@bioc-3.3'):
-            if not spec.satisfies('^R@3.3.0:3.3.9'):
-                raise InstallError('Must use R-3.3 for Bioconductor-3.3')
-        elif spec.satisfies('@bioc-3.2'):
-            if not spec.satisfies('^R@3.2.0:3.2.9'):
-                raise InstallError('Must use R-3.2 for Bioconductor-3.2')
-
-    def install(self, spec, prefix):
-        self.validate(spec)
-        R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.source_path)
+    depends_on('r@3.3.0:3.3.9', when='@3.3')
+    depends_on('r@3.2.0:3.2.9', when='@3.2')

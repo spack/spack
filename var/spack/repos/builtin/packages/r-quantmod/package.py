@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RQuantmod(Package):
+class RQuantmod(RPackage):
     """Specify, build, trade, and analyse quantitative financial trading
     strategies."""
 
@@ -35,12 +35,6 @@ class RQuantmod(Package):
 
     version('0.4-5', 'cab3c409e4de3df98a20f1ded60f3631')
 
-    extends('r')
-
     depends_on('r-xts', type=nolink)
     depends_on('r-zoo', type=nolink)
     depends_on('r-ttr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

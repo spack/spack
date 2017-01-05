@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RIrkernel(Package):
+class RIrkernel(RPackage):
     """R kernel for Jupyter"""
 
     homepage = "https://irkernel.github.io/"
@@ -34,8 +34,6 @@ class RIrkernel(Package):
     # Git repository
     version('master', git='https://github.com/IRkernel/IRkernel.git',
         tag='0.7')
-
-    extends('r')
 
     depends_on('r-repr', type=nolink)
     depends_on('r-irdisplay', type=nolink)
@@ -45,7 +43,3 @@ class RIrkernel(Package):
     depends_on('r-devtools', type=nolink)
     depends_on('r-uuid', type=nolink)
     depends_on('r-digest', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

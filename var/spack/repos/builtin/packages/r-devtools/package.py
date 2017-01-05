@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDevtools(Package):
+class RDevtools(RPackage):
     """Collection of package development tools."""
 
     homepage = "https://github.com/hadley/devtools"
@@ -33,8 +33,6 @@ class RDevtools(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/devtools"
 
     version('1.11.1', '242672ee27d24dddcbdaac88c586b6c2')
-
-    extends('r')
 
     depends_on('r-httr', type=nolink)
     depends_on('r-memoise', type=nolink)
@@ -44,7 +42,3 @@ class RDevtools(Package):
     depends_on('r-jsonlite', type=nolink)
     depends_on('r-git2r', type=nolink)
     depends_on('r-withr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

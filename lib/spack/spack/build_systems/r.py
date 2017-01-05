@@ -22,15 +22,36 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+
+import inspect
+
+from spack.directives import extends
+from spack.package import PackageBase
 
 
-class RMvtnorm(RPackage):
-    """Computes multivariate normal and t probabilities, quantiles, random
-    deviates and densities."""
+class RPackage(PackageBase):
+    """Specialized class for packages that are built using R
 
-    homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mvtnorm"
+    This class provides a single phase that can be overridden:
+    * install
 
-    version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
+    It has sensible defaults and for many packages the only thing
+    necessary will be to add dependencies
+    """
+    phases = ['install']
+
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'RPackage'
+
+    extends('r')
+
+    def install(self, spec, prefix):
+        """Install the R package"""
+        inspect.getmodule(self).R(
+            'CMD', 'INSTALL',
+            '--library={0}'.format(self.module.r_lib_dir),
+            self.stage.source_path)
+
+    # Check that self.prefix is there after installation
+    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
