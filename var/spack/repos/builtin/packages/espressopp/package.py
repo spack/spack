@@ -44,19 +44,17 @@ class Espressopp(CMakePackage):
     variant('dg', default=False, description='Build developer guide')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("mpi", type=('build', 'link', 'run'))
-    depends_on("boost+serialization+filesystem+system+python+mpi", when='@1.9.4:', type=('build', 'link', 'run'))
+    depends_on("mpi")
+    depends_on("boost+serialization+filesystem+system+python+mpi", when='@1.9.4:')
     extends("python")
     depends_on("python@2:2.7.13")
-    depends_on("py-mpi4py@2.0.0", when='@1.9.4:', type=('build', 'link', 'run'))
-    depends_on("py-mpi4py@1.3.1:", when='@develop', type=('build', 'link', 'run'))
-    depends_on("fftw", type=('build', 'link', 'run'))
+    depends_on("py-mpi4py@2.0.0", when='@1.9.4:', type='nolink')
+    depends_on("py-mpi4py@1.3.1:", when='@develop', type='nolink')
+    depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')
     depends_on("doxygen", when="+dg", type='build')
-
-    run_tests = True
 
     def cmake_args(self):
         spec = self.spec
