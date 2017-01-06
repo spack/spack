@@ -68,7 +68,7 @@ _db_version = Version('0.9.2')
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
-_tracked_deps = ('link','run')
+_tracked_deps = ('link', 'run')
 
 
 def _autospec(function):

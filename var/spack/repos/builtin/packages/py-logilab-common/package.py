@@ -35,7 +35,7 @@ class PyLogilabCommon(Package):
 
     extends('python', ignore=r'bin/pytest')
     depends_on("py-setuptools", type='build')
-    depends_on("py-six", type=('build','run'))
+    depends_on("py-six", type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

@@ -43,7 +43,7 @@ class PyTraitlets(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-decorator', type=('build','run'))
+    depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-ipython-genutils')
     depends_on('py-enum34', when='^python@:3.3')
 
