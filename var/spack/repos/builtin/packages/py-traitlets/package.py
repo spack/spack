@@ -38,7 +38,7 @@ class PyTraitlets(Package):
     version('4.2.0', '53553a10d124e264fd2e234d0571b7d0')
     version('4.1.0', 'd5bc75c7bd529afb40afce86c2facc3a')
     version('4.0.0', 'b5b95ea5941fd9619b4704dfd8201568')
-    version('4.0'  , '14544e25ccf8e920ed1cbf833852481f')
+    version('4.0',   '14544e25ccf8e920ed1cbf833852481f')
 
     extends('python')
 
