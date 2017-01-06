@@ -33,9 +33,10 @@ class Espressopp(CMakePackage):
        atomistic or bead-spring models as they are used in soft matter research
     """
     homepage = "https://espressopp.github.io"
-    url      = "https://github.com/espressopp/espressopp/tarball/v1.9.4"
+    url      = "https://github.com/espressopp/espressopp/tarball/v1.9.4.1"
 
     version('develop', git='https://github.com/espressopp/espressopp.git', branch='master')
+    version('1.9.4.1', '0da74a6d4e1bfa6a2a24fca354245a4f') 
     version('1.9.4', 'f2a27993a83547ad014335006eea74ea')
 
     variant('debug', default=False, description='Build debug version')
@@ -48,8 +49,8 @@ class Espressopp(CMakePackage):
     depends_on("boost+serialization+filesystem+system+python+mpi", when='@1.9.4:')
     extends("python")
     depends_on("python@2:2.7.13")
-    depends_on("py-mpi4py@2.0.0", when='@1.9.4:', type='nolink')
-    depends_on("py-mpi4py@1.3.1:", when='@develop', type='nolink')
+    depends_on("py-mpi4py@2.0.0", when='@1.9.4', type='nolink')
+    depends_on("py-mpi4py@1.3.1:", when='@1.9.4.1:', type='nolink')
     depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
