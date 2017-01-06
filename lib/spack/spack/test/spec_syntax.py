@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
+import shlex
 
 import spack.spec as sp
 from spack.parse import Token
@@ -185,7 +186,7 @@ class TestSpecSyntax(object):
             'x@1.2+debug+debug',
             'x ^y@1.2+debug debug=true',
             'x ^y@1.2 debug=false debug=true',
-            'x ^y@1.2 debug=false~debug'
+            'x ^y@1.2 debug=false ~debug'
         ]
         self._check_raises(DuplicateVariantError, duplicates)
 

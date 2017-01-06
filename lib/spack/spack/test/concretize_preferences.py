@@ -71,7 +71,7 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=False, opt=False, shared=True, static=True
         )
         update_packages(
-            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
+            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '~static']
         )
         assert_variant_values(
             'mpileaks', debug=True, opt=True, shared=False, static=False
