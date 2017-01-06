@@ -200,7 +200,7 @@ class PythonGuess(DefaultGuess):
 
     # FIXME: Add additional dependencies if required.
     # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=nolink)"""
+    # depends_on('py-foo',        type=('build','run'))"""
 
     body = """\
     def install(self, spec, prefix):
@@ -216,7 +216,7 @@ class RGuess(DefaultGuess):
     """Provides appropriate overrides for R extensions"""
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on('r-foo', type=nolink)"""
+    # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
     # FIXME: Override install() if necessary."""
@@ -232,7 +232,7 @@ class OctaveGuess(DefaultGuess):
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('octave-foo', type=nolink)"""
+    # depends_on('octave-foo', type=('build','run'))"""
 
     body = """\
     def install(self, spec, prefix):

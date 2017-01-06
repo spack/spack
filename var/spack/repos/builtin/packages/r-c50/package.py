@@ -35,4 +35,4 @@ class RC50(RPackage):
 
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 
-    depends_on('r-partykit', type=nolink)
+    depends_on('r-partykit', type=('build','run'))

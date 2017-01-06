@@ -166,8 +166,8 @@ __all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps, nolink
-__all__ += ['Spec', 'alldeps', 'nolink']
+from spack.spec import Spec, alldeps, ('build','run')
+__all__ += ['Spec', 'alldeps']
 
 from spack.multimethod import when
 __all__ += ['when']

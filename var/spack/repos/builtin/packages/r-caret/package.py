@@ -35,10 +35,10 @@ class RCaret(RPackage):
 
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
 
-    depends_on('r-lattice', type=nolink)
-    depends_on('r-ggplot2', type=nolink)
-    depends_on('r-car', type=nolink)
-    depends_on('r-foreach', type=nolink)
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-nlme', type=nolink)
-    depends_on('r-reshape2', type=nolink)
+    depends_on('r-lattice', type=('build','run'))
+    depends_on('r-ggplot2', type=('build','run'))
+    depends_on('r-car', type=('build','run'))
+    depends_on('r-foreach', type=('build','run'))
+    depends_on('r-plyr', type=('build','run'))
+    depends_on('r-nlme', type=('build','run'))
+    depends_on('r-reshape2', type=('build','run'))

@@ -37,9 +37,9 @@ class PyPytables(Package):
 
     extends('python')
     depends_on('hdf5')
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-numexpr', type=nolink)
-    depends_on('py-cython', type=nolink)
+    depends_on('py-numpy', type=('build','run'))
+    depends_on('py-numexpr', type=('build','run'))
+    depends_on('py-cython', type=('build','run'))
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):

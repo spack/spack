@@ -347,7 +347,7 @@ class Python(Package):
         spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
-        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
+        for d in extension_spec.traverse(deptype=('build','run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))

@@ -40,8 +40,8 @@ class PyCdo(Package):
     depends_on('cdo')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-scipy', type=nolink)
-    depends_on('py-netcdf', type=nolink)   
+    depends_on('py-scipy', type=('build','run'))
+    depends_on('py-netcdf', type=('build','run'))   
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))
