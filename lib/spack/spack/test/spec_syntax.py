@@ -81,6 +81,7 @@ class TestSpecSyntax(object):
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
+        spec = shlex.split(spec)
         lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == sp.ID:

@@ -87,15 +87,13 @@ class Lexer(object):
                 tokens = tokens[:i + 1] + self.lex_word(
                     ''.join(t.value for t in tokens[i + 1:])+remainder)
 
-        if remainder and remainder_used == 0:
+        if remainder and not remainder_used:
             raise LexError("Invalid character", word, word.index(remainder))
 
         return tokens
 
     def lex(self, text):
         lexed = []
-        if isinstance(text, basestring):
-            text = shlex.split(text)
         for word in text:
             tokens = self.lex_word(word)
             lexed.extend(tokens)
