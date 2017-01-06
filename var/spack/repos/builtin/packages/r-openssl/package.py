@@ -43,7 +43,7 @@ class ROpenssl(Package):
 
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
-    extends('R')
+    extends('r')
 
     depends_on('openssl')
 

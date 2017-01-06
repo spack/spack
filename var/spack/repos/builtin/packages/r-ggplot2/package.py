@@ -40,7 +40,7 @@ class RGgplot2(Package):
 
     version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-digest', type=nolink)
     depends_on('r-gtable', type=nolink)

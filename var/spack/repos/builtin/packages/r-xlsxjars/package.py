@@ -35,7 +35,7 @@ class RXlsxjars(Package):
 
     version('0.6.1', '5a1721d5733cb42f3a29e3f353e39166')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-rjava', type=nolink)
 

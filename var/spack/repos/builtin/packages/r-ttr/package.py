@@ -34,7 +34,7 @@ class RTtr(Package):
 
     version('0.23-1', '35f693ac0d97e8ec742ebea2da222986')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-xts', type=nolink)
     depends_on('r-zoo', type=nolink)

@@ -48,7 +48,7 @@ class RRjsonio(Package):
 
     version('1.3-0', '72c395622ba8d1435ec43849fd32c830')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

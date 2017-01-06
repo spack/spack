@@ -36,7 +36,7 @@ class RPng(Package):
 
     version('0.1-7', '1ebc8b8aa5979b12c5ec2384b30d649f')
 
-    extends('R')
+    extends('r')
 
     depends_on('libpng')
 

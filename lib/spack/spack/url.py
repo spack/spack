@@ -266,11 +266,11 @@ def parse_version_offset(path, debug=False):
     raise UndetectableVersionError(original_path)
 
 
-def parse_version(path):
+def parse_version(path, debug=False):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, l = parse_version_offset(path)
+    ver, start, l = parse_version_offset(path, debug=debug)
     return Version(ver)
 
 

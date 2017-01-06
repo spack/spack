@@ -39,7 +39,7 @@ class RFormatr(Package):
 
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-codetools', type=nolink)
     depends_on('r-shiny', type=nolink)

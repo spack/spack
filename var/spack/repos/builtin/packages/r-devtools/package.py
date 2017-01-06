@@ -34,7 +34,7 @@ class RDevtools(Package):
 
     version('1.11.1', '242672ee27d24dddcbdaac88c586b6c2')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-httr', type=nolink)
     depends_on('r-memoise', type=nolink)

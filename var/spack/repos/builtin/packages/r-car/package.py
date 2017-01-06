@@ -35,7 +35,7 @@ class RCar(Package):
 
     version('2.1-2', '0f78ad74ef7130126d319acec23951a0')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-mass', type=nolink)
     depends_on('r-mgcv', type=nolink)

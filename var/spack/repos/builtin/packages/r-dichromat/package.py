@@ -35,7 +35,7 @@ class RDichromat(Package):
 
     version('2.0-0', '84e194ac95a69763d740947a7ee346a6')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

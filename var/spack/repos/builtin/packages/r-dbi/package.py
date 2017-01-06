@@ -36,7 +36,7 @@ class RDbi(Package):
 
     version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

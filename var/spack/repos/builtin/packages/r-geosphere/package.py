@@ -36,7 +36,7 @@ class RGeosphere(Package):
 
     version('1.5-5', '28efb7a8e266c7f076cdbcf642455f3e')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-sp', type=nolink)
 

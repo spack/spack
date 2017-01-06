@@ -37,7 +37,7 @@ class RLattice(Package):
 
     version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

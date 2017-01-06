@@ -37,7 +37,7 @@ class RAbind(Package):
 
     version('1.4-3', '10fcf80c677b991bf263d38be35a1fc5')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

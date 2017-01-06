@@ -36,7 +36,7 @@ class RGit2r(Package):
 
     version('0.15.0', '57658b3298f9b9aadc0dd77b4ef6a1e1')
 
-    extends('R')
+    extends('r')
 
     depends_on('zlib')
     depends_on('openssl')

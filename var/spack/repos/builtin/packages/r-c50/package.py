@@ -35,7 +35,7 @@ class RC50(Package):
 
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-partykit', type=nolink)
 

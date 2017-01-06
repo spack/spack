@@ -161,6 +161,25 @@ class TestConcretize(object):
             s.satisfies('mpich2') for s in repo.providers_for('mpi@3')
         )
 
+    def test_provides_handles_multiple_providers_of_same_vesrion(self):
+        """
+        """
+        providers = spack.repo.providers_for('mpi@3.0')
+
+        # Note that providers are repo-specific, so we don't misinterpret
+        # providers, but vdeps are not namespace-specific, so we can
+        # associate vdeps across repos.
+        assert Spec('builtin.mock.multi-provider-mpi@1.10.3') in providers
+        assert Spec('builtin.mock.multi-provider-mpi@1.10.2') in providers
+        assert Spec('builtin.mock.multi-provider-mpi@1.10.1') in providers
+        assert Spec('builtin.mock.multi-provider-mpi@1.10.0') in providers
+        assert Spec('builtin.mock.multi-provider-mpi@1.8.8') in providers
+
+    def concretize_multi_provider(self):
+        s = Spec('mpileaks ^multi-provider-mpi@3.0')
+        s.concretize()
+        assert s['mpi'].version == ver('1.10.3')
+
     def test_concretize_two_virtuals(self):
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
@@ -221,7 +240,7 @@ class TestConcretize(object):
         assert 'mpi' in spec
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
-        spec = Spec('indirect_mpich')
+        spec = Spec('indirect-mpich')
         spec.normalize()
         spec.concretize()
 

@@ -34,7 +34,7 @@ class RPlotrix(Package):
 
     version('3.6-3', '23e3e022a13a596e9b77b40afcb4a2ef')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

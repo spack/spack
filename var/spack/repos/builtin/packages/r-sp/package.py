@@ -37,7 +37,7 @@ class RSp(Package):
 
     version('1.2-3', 'f0e24d993dec128642ee66b6b47b10c1')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-lattice', type=nolink)
 

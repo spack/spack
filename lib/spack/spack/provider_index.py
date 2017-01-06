@@ -97,35 +97,38 @@ class ProviderIndex(object):
         assert(not spec.virtual)
 
         pkg = spec.package
-        for provided_spec, provider_spec in pkg.provided.iteritems():
-            # We want satisfaction other than flags
-            provider_spec.compiler_flags = spec.compiler_flags.copy()
+        for provided_spec, provider_specs in pkg.provided.iteritems():
+            for provider_spec in provider_specs:
+                # TODO: fix this comment.
+                # We want satisfaction other than flags
+                provider_spec.compiler_flags = spec.compiler_flags.copy()
 
-            if spec.satisfies(provider_spec, deps=False):
-                provided_name = provided_spec.name
+                if spec.satisfies(provider_spec, deps=False):
+                    provided_name = provided_spec.name
 
-                provider_map = self.providers.setdefault(provided_name, {})
-                if provided_spec not in provider_map:
-                    provider_map[provided_spec] = set()
+                    provider_map = self.providers.setdefault(provided_name, {})
+                    if provided_spec not in provider_map:
+                        provider_map[provided_spec] = set()
 
-                if self.restrict:
-                    provider_set = provider_map[provided_spec]
+                    if self.restrict:
+                        provider_set = provider_map[provided_spec]
 
-                    # If this package existed in the index before,
-                    # need to take the old versions out, as they're
-                    # now more constrained.
-                    old = set([s for s in provider_set if s.name == spec.name])
-                    provider_set.difference_update(old)
+                        # If this package existed in the index before,
+                        # need to take the old versions out, as they're
+                        # now more constrained.
+                        old = set(
+                            [s for s in provider_set if s.name == spec.name])
+                        provider_set.difference_update(old)
 
-                    # Now add the new version.
-                    provider_set.add(spec)
+                        # Now add the new version.
+                        provider_set.add(spec)
 
-                else:
-                    # Before putting the spec in the map, constrain it so that
-                    # it provides what was asked for.
-                    constrained = spec.copy()
-                    constrained.constrain(provider_spec)
-                    provider_map[provided_spec].add(constrained)
+                    else:
+                        # Before putting the spec in the map, constrain
+                        # it so that it provides what was asked for.
+                        constrained = spec.copy()
+                        constrained.constrain(provider_spec)
+                        provider_map[provided_spec].add(constrained)
 
     def providers_for(self, *vpkg_specs):
         """Gives specs of all packages that provide virtual packages

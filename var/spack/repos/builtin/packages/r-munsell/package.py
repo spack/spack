@@ -38,7 +38,7 @@ class RMunsell(Package):
 
     version('0.4.3', 'ebd205323dc37c948f499ee08be9c476')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-colorspace', type=nolink)
 

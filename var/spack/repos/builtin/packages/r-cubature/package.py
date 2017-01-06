@@ -34,7 +34,7 @@ class RCubature(Package):
 
     version('1.1-2', '5617e1d82baa803a3814d92461da45c9')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

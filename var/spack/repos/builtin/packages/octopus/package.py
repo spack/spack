@@ -42,8 +42,8 @@ class Octopus(Package):
     depends_on('fftw+mpi')
 
     # optional dependencies:
-    # TODO: scalapack, metis, parmetis, netcdf, etsf_io, SPARSKIT, ARPACK,
-    # FEAST, Libfm, PFFT, ISF, PNFFT
+    # TODO: scalapack, metis, parmetis, netcdf, etsf-io, sparskit, arpack,
+    # feast, libfm, pfft, isf, pnfft
 
     def install(self, spec, prefix):
         lapack = spec['lapack'].lapack_libs

@@ -34,7 +34,7 @@ class RChron(Package):
 
     version('2.3-47', 'b8890cdc5f2337f8fd775b0becdcdd1f')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

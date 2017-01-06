@@ -36,7 +36,7 @@ class RTestit(Package):
 
     version('0.5', 'f206d3cbdc5174e353d2d05ba6a12e59')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

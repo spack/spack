@@ -36,7 +36,7 @@ class RLeaflet(Package):
 
     version('1.0.1', '7f3d8b17092604d87d4eeb579f73d5df')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-base64enc', type=nolink)
     depends_on('r-htmlwidgets', type=nolink)

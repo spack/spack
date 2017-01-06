@@ -35,7 +35,7 @@ class RYaml(Package):
 
     version('2.1.13', 'f2203ea395adaff6bd09134666191d9a')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

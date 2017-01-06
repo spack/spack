@@ -35,7 +35,7 @@ class RGridextra(Package):
 
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-gtable', type=nolink)
 

@@ -34,7 +34,7 @@ class RTarifx(Package):
 
     version('1.0.6', '7e782e04bd69d929b29f91553382e6a2')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-reshape2', type=nolink)
     depends_on('r-plyr', type=nolink)

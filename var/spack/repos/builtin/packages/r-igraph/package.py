@@ -36,7 +36,7 @@ class RIgraph(Package):
 
     version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
     depends_on('r-magrittr', type=nolink)
