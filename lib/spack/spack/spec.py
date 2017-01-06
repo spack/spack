@@ -620,7 +620,7 @@ class VariantSpec(object):
         if type(self.value) == bool:
             return '{0}{1}'.format('+' if self.value else '~', self.name)
         else:
-            return ' {0}={1}'.format(self.name, self.value)
+            return ' {0}={1} '.format(self.name, self.value)
 
 
 class VariantMap(HashableMap):
@@ -737,7 +737,7 @@ class FlagMap(HashableMap):
         cond_symbol = ' ' if len(sorted_keys) > 0 else ''
         return cond_symbol + ' '.join(
             str(key) + '=\"' + ' '.join(
-                str(f) for f in self[key]) + '\"' for key in sorted_keys)
+                str(f) for f in self[key]) + '\"' for key in sorted_keys) + cond_symbol
 
 
 class DependencyMap(HashableMap):
@@ -2453,7 +2453,7 @@ class Spec(object):
                         write(fmt % str(self.variants), c)
                 elif c == '=':
                     if self.architecture and str(self.architecture):
-                        write(fmt % (' arch' + c + str(self.architecture)), c)
+                        write(fmt % (' arch' + c + str(self.architecture) + ' '), c)
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
@@ -2512,7 +2512,7 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture), ' arch=')
+                        write(fmt % str(self.architecture) + ' ', ' arch=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -2582,7 +2582,8 @@ class Spec(object):
         return 0
 
     def __str__(self):
-        return self.format() + self.dep_string()
+        ret = self.format() + self.dep_string()
+        return ret.strip()
 
     def _install_status(self):
         """Helper for tree to print DB install status."""
@@ -2656,7 +2657,7 @@ class Spec(object):
 #
 # These are possible token types in the spec grammar.
 #
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, QT, ID = range(11)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, QT, ID, VAL = range(12)
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -2671,16 +2672,23 @@ class SpecLexer(spack.parse.Lexer):
             (r'\:', lambda scanner, val: self.token(COLON, val)),
             (r'\,', lambda scanner, val: self.token(COMMA, val)),
             (r'\+', lambda scanner, val: self.token(ON,    val)),
-            (r'\-', lambda scanner, val: self.token(OFF,   val)),
             (r'\~', lambda scanner, val: self.token(OFF,   val)),
             (r'\%', lambda scanner, val: self.token(PCT,   val)),
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
             # This is more liberal than identifier_re (see above).
             # Checked by check_identifier() for better error messages.
-            (r'([\"\'])(?:(?=(\\?))\2.)*?\1',
-             lambda scanner, val: self.token(QT, val)),
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
-            (r'\s+', lambda scanner, val: None)])
+            (r'\s+', lambda scanner, val: None)],
+
+            [EQ],
+
+            [(r'[\S].*',
+              lambda scanner, val: self.token(VAL,    val)),
+             (r'([\"\'])(?:(?=(\\?))\2.)*?\1',
+              lambda scanner, val: self.token(QT, val)),
+             (r'\s+', lambda scanner, val: None)],
+
+            [QT, VAL])
 
 
 # Lexer is always the same for every parser.
@@ -2708,7 +2716,7 @@ class SpecParser(spack.parse.Parser):
                         if self.accept(QT):
                             self.token.value = self.token.value[1:-1]
                         else:
-                            self.expect(ID)
+                            self.expect(VAL)
                         specs[-1]._add_flag(
                             self.previous.value, self.token.value)
                     else:
@@ -2845,7 +2853,7 @@ class SpecParser(spack.parse.Parser):
                     if self.accept(QT):
                         self.token.value = self.token.value[1:-1]
                     else:
-                        self.expect(ID)
+                        self.expect(VAL)
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:

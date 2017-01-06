@@ -123,15 +123,15 @@ class TestSpecSyntax(object):
             "^stackwalker@8.1_1e")
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
             "^stackwalker@8.1_1e")
         self.check_parse(
             'mvapich_foo'
-            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4'
+            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3" +debug~qt_4'
             '^stackwalker@8.1_1e')
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
             "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
@@ -158,19 +158,19 @@ class TestSpecSyntax(object):
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
         self.check_parse(
-            "x arch=test-redhat6-None"
-            "^y arch=test-None-x86_64"
+            "x arch=test-redhat6-None "
+            "^y arch=test-None-x86_64 "
             "^z arch=linux-None-None",
 
-            "x os=fe"
-            "^y target=be"
+            "x os=fe "
+            "^y target=be "
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64"
+            "x arch=test-debian6-x86_64 "
             "^y arch=test-debian6-x86_64",
 
-            "x os=default_os target=default_target"
+            "x os=default_os target=default_target "
             "^y os=default_os target=default_target")
 
         self.check_parse("x^y", "x@: ^y@:")
@@ -244,7 +244,7 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
             "^stackwalker@8.1_1e")
         self.check_lex(
             complex_lex,
@@ -256,7 +256,7 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo "
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug ~qt_4 "
             "^stackwalker @ 8.1_1e")
         self.check_lex(
             complex_lex,
@@ -268,12 +268,12 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo "
-            "^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug -qt_4 "
+            "^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug ~qt_4 "
             "^stackwalker @8.1_1e")
 
     def test_way_too_many_spaces(self):
         self.check_lex(
             complex_lex,
             "mvapich_foo "
-            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
             "^ stackwalker @ 8.1_1e")

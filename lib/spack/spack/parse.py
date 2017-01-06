@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import shlex
 import itertools
 import spack.error
 
@@ -53,19 +54,52 @@ class Token:
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
 
-    def __init__(self, lexicon):
-        self.scanner = re.Scanner(lexicon)
+    def __init__(self, lexicon0, mode_switches_01=[], lexicon1=[], mode_switches_10=[]):
+        self.scanner0 = re.Scanner(lexicon0)
+        self.mode_switches_01 = mode_switches_01
+        self.scanner1 = re.Scanner(lexicon1)
+        self.mode_switches_10 = mode_switches_10
+        self.mode = 0
 
     def token(self, type, value=''):
-        return Token(type, value,
-                     self.scanner.match.start(0), self.scanner.match.end(0))
+        if self.mode == 0:
+            return Token(type, value,
+                         self.scanner0.match.start(0), self.scanner0.match.end(0))
+        else:
+            return Token(type, value,
+                         self.scanner1.match.start(0), self.scanner1.match.end(0))
 
-    def lex(self, text):
-        tokens, remainder = self.scanner.scan(text)
-        if remainder:
-            raise LexError("Invalid character", text, text.index(remainder))
+    def lex_word(self, word):
+        scanner = self.scanner0
+        mode_switches = self.mode_switches_01
+        if self.mode == 1:
+            scanner = self.scanner1
+            mode_switches = self.mode_switches_10
+
+        tokens, remainder = scanner.scan(word)
+        remainder_used = 0
+
+        for i,t in enumerate(tokens):
+            if t.type in mode_switches:
+                #combine post-switch tokens with remainder and scan in other mode
+                self.mode = 1 - self.mode #swap 0/1
+                remainder_used = 1
+                tokens = tokens[:i + 1] + self.lex_word(
+                    ''.join(t.value for t in tokens[i + 1:])+remainder)
+
+        if remainder and remainder_used == 0:
+            raise LexError("Invalid character", word, word.index(remainder))
+
         return tokens
 
+    def lex(self, text):
+        lexed = []
+        if isinstance(text, basestring):
+            text = shlex.split(text)
+        for word in text:
+            tokens = self.lex_word(word)
+            lexed.extend(tokens)
+        return lexed
 
 class Parser(object):
     """Base class for simple recursive descent parsers."""
@@ -121,6 +155,8 @@ class Parser(object):
             sys.exit(1)
 
     def setup(self, text):
+        if isinstance(text, basestring):
+            text = shlex.split(text)
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 
