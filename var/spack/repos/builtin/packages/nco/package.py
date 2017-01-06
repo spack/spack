@@ -37,6 +37,8 @@ class Nco(AutotoolsPackage):
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
 
+    variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
+
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
     depends_on('netcdf')
@@ -44,5 +46,10 @@ class Nco(AutotoolsPackage):
     depends_on('gsl')              # desirable for ncap2
     depends_on('udunits2')         # allows dimensional unit transformations
 
-    depends_on('flex',  type='build')
+    depends_on('flex', type='build')
     depends_on('bison', type='build')
+    depends_on('texinfo@4.12:', type='build', when='+doc')
+
+    def configure_args(self):
+        spec = self.spec
+        return ['--{0}-doc'.format('enable' if '+doc' in spec else 'disable')]
