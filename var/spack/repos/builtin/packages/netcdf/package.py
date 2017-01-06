@@ -167,3 +167,7 @@ class Netcdf(AutotoolsPackage):
         config_args.append('LIBS=%s'     % ' '.join(LIBS))
 
         return config_args
+
+    def check(self):
+        # h5_test fails when run in parallel
+        make('check', parallel=False)
