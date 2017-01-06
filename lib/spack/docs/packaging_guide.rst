@@ -3107,7 +3107,6 @@ dependencies as well.  This is equivalent to
 
 * Any combination of ``build``, ``link``, and ``run`` separated by
   commas.
-* ``nobuild``, ``('build','run')``, ``norun`` to omit one type.
 * ``all`` or ``alldeps`` for all types of dependencies.
 
 You can also use ``spack graph`` to generate graphs in the widely used
