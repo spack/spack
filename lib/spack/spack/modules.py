@@ -70,6 +70,9 @@ _roots = spack.config.get_config('config').get('module_roots', {})
 """Specifics about modules are in modules.yaml"""
 _module_config = spack.config.get_config('modules')
 
+def verbose_autoload():
+    configuration = _module_config.get('lmod', {})
+    return configuration.get('verbose_autoload', True)
 
 def print_help():
     """
@@ -428,10 +431,6 @@ class EnvModule(object):
     def module_specific_content(self, configuration):
         return tuple()
 
-    def verbose_autoload(self):
-        configuration = _module_config.get('lmod', {})
-        return configuration.get('verbose_autoload', True)
-
     # Subclasses can return a fragment of module code that prints out
     # a warning that modules are being autoloaded.
     def autoload_warner(self):
@@ -538,7 +537,7 @@ class TclModule(EnvModule):
         _roots.get(name, join_path(spack.share_path, 'modules')))
 
     def autoload_warner(self):
-        if self.verbose_autoload():
+        if verbose_autoload():
             return 'puts stderr "Autoloading {module_file}"\n'
         return ''
 
@@ -671,7 +670,7 @@ class LmodModule(EnvModule):
     }
 
     def autoload_warner(self):
-        if self.verbose_autoload():
+        if verbose_autoload():
             return 'LmodMessage("Autoloading {module_file}")\n'
         return ''
 
