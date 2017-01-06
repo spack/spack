@@ -28,7 +28,7 @@ import os
 from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Mkl(IntelInstaller):
+class IntelMkl(IntelInstaller):
     """Intel Math Kernel Library.
 
     Note: You will have to add the download file to a
@@ -55,6 +55,7 @@ class Mkl(IntelInstaller):
     # virtual dependency
     provides('blas')
     provides('lapack')
+    provides('mkl')
     # TODO: MKL also provides implementation of Scalapack.
 
     @property

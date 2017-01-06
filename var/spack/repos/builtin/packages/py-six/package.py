@@ -34,7 +34,7 @@ class PySix(Package):
     version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
     version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
 
-    extends('python')
+    extends('python', ignore=r'bin/pytest')
 
     depends_on('py-setuptools', type='build')
 
