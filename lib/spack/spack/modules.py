@@ -70,9 +70,11 @@ _roots = spack.config.get_config('config').get('module_roots', {})
 """Specifics about modules are in modules.yaml"""
 _module_config = spack.config.get_config('modules')
 
+
 def verbose_autoload():
     configuration = _module_config.get('lmod', {})
     return configuration.get('verbose_autoload', True)
+
 
 def print_help():
     """
