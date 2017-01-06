@@ -43,7 +43,6 @@ class Nco(AutotoolsPackage):
     depends_on('antlr@2.7.7+cxx')  # required for ncap2
     depends_on('gsl')              # desirable for ncap2
     depends_on('udunits2')         # allows dimensional unit transformations
-    # depends_on('opendap')        # enables network transparency
 
     depends_on('flex',  type='build')
     depends_on('bison', type='build')
