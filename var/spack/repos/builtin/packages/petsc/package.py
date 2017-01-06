@@ -133,6 +133,10 @@ class Petsc(Package):
         return compiler_opts
 
     def install(self, spec, prefix):
+        # The environmental variable PETSC_DIR MUST be the current directory
+        # If set outside of Spack, configure will fail without this line
+        os.environ['PETSC_DIR'] = os.getcwd()
+
         options = ['--with-ssl=0',
                    '--with-x=0',
                    '--download-c2html=0',
