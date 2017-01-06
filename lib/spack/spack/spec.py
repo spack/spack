@@ -737,7 +737,8 @@ class FlagMap(HashableMap):
         cond_symbol = ' ' if len(sorted_keys) > 0 else ''
         return cond_symbol + ' '.join(
             str(key) + '=\"' + ' '.join(
-                str(f) for f in self[key]) + '\"' for key in sorted_keys) + cond_symbol
+                str(f) for f in self[key]) + '\"'
+            for key in sorted_keys) + cond_symbol
 
 
 class DependencyMap(HashableMap):
