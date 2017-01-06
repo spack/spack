@@ -141,7 +141,7 @@ class R(Package):
         # extension and any other R extensions it depends on.
         r_libs_path = []
         for d in extension_spec.traverse(
-            deptype=('build', 'run'), deptype_query='run'):
+                deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
 
