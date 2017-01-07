@@ -154,6 +154,20 @@ class UrlParseTest(unittest.TestCase):
             'foo-bar', '1.21',
             'http://example.com/foo_bar-1.21.tar.gz')
 
+    def test_version_gitlab(self):
+        self.check(
+             'vtk', '7.0.0',
+             'https://gitlab.kitware.com/vtk/vtk/repository/'
+             'archive.tar.bz2?ref=v7.0.0')
+        self.check(
+             'icet', '1.2.3',
+             'https://gitlab.kitware.com/icet/icet/repository/'
+             'archive.tar.gz?ref=IceT-1.2.3')
+        self.check(
+             'foo', '42.1337',
+             'http://example.com/org/foo/repository/'
+             'archive.zip?ref=42.1337bar')
+
     def test_version_github(self):
         self.check(
             'yajl', '1.0.5',

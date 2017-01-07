@@ -36,7 +36,7 @@ class RFormula(Package):
 
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

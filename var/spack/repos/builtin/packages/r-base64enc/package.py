@@ -35,7 +35,7 @@ class RBase64enc(Package):
 
     version('0.1-3', '0f476dacdd11a3e0ad56d13f5bc2f190')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

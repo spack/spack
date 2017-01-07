@@ -35,7 +35,7 @@ class RReshape2(Package):
 
     version('1.4.1', '41e9dffdf5c6fa830321ac9c8ebffe00')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-plyr', type=nolink)
     depends_on('r-stringr', type=nolink)

@@ -42,7 +42,7 @@ class RXgboost(Package):
 
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
     depends_on('r-datatable', type=nolink)

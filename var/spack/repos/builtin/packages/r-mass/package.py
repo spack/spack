@@ -35,7 +35,7 @@ class RMass(Package):
 
     version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

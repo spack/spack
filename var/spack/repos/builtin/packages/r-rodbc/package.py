@@ -34,7 +34,7 @@ class RRodbc(Package):
 
     version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')
 
-    extends('R')
+    extends('r')
 
     depends_on('unixodbc')
 

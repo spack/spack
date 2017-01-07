@@ -36,7 +36,7 @@ class RTidyr(Package):
 
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
-    extends('R')
+    extends('r')
     depends_on('r-tibble', type=nolink)
     depends_on('r-dplyr', type=nolink)
     depends_on('r-stringi', type=nolink)

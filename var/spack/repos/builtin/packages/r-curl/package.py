@@ -43,7 +43,7 @@ class RCurl(Package):
     version('1.0', '93d34926d6071e1fba7e728b482f0dd9')
     version('0.9.7', 'a101f7de948cb828fef571c730f39217')
 
-    extends('R')
+    extends('r')
 
     depends_on('curl')
 

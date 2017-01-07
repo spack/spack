@@ -40,7 +40,7 @@ class RSurvey(Package):
 
     version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

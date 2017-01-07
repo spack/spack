@@ -35,7 +35,7 @@ class RNnet(Package):
 
     version('7.3-12', 'dc7c6f0d0de53d8fc72b44554400a74e')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

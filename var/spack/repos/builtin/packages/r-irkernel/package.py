@@ -35,7 +35,7 @@ class RIrkernel(Package):
     version('master', git='https://github.com/IRkernel/IRkernel.git',
         tag='0.7')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-repr', type=nolink)
     depends_on('r-irdisplay', type=nolink)

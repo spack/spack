@@ -34,7 +34,7 @@ class RThdata(Package):
 
     version('1.0-7', '3e8b6b1a4699544f175215aed7039a94')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-survival', type=nolink)
     depends_on('r-mass', type=nolink)

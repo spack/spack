@@ -48,7 +48,7 @@ class RStanheaders(Package):
 
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -49,7 +49,7 @@ class RDigest(Package):
 
     version('0.6.9', '48048ce6c466bdb124716e45ba4a0e83')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

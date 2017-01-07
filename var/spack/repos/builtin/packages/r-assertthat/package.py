@@ -36,7 +36,7 @@ class RAssertthat(Package):
 
     version('0.1', '59f9d7f7c00077ea54d763b78eeb5798')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

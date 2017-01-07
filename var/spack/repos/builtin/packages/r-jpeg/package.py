@@ -36,7 +36,7 @@ class RJpeg(Package):
 
     version('0.1-8', '696007451d14395b1ed1d0e9af667a57')
 
-    extends('R')
+    extends('r')
 
     depends_on('jpeg')
 

@@ -42,7 +42,7 @@ class RFilehash(Package):
 
     version('2.3', '01fffafe09b148ccadc9814c103bdc2f')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

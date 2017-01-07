@@ -40,7 +40,7 @@ class RPlyr(Package):
 
     version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-rcpp', type=nolink)
 
