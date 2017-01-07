@@ -245,7 +245,7 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4"
             "^stackwalker@8.1_1e")
         self.check_lex(
             complex_lex,
@@ -257,7 +257,7 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo "
-            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug ~qt_4 "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 "
             "^stackwalker @ 8.1_1e")
         self.check_lex(
             complex_lex,
@@ -269,10 +269,15 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo "
-            "^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug ~qt_4 "
+            "^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug -qt_4 "
             "^stackwalker @8.1_1e")
 
     def test_way_too_many_spaces(self):
+        self.check_lex(
+            complex_lex,
+            "mvapich_foo "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
         self.check_lex(
             complex_lex,
             "mvapich_foo "

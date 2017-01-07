@@ -2673,6 +2673,7 @@ class SpecLexer(spack.parse.Lexer):
             (r'\:', lambda scanner, val: self.token(COLON, val)),
             (r'\,', lambda scanner, val: self.token(COMMA, val)),
             (r'\+', lambda scanner, val: self.token(ON,    val)),
+            (r'\-', lambda scanner, val: self.token(OFF,   val)),
             (r'\~', lambda scanner, val: self.token(OFF,   val)),
             (r'\%', lambda scanner, val: self.token(PCT,   val)),
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
