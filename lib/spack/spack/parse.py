@@ -55,7 +55,7 @@ class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
 
     def __init__(self, lexicon0, mode_switches_01=[],
-                       lexicon1=[], mode_switches_10=[]):
+                 lexicon1=[], mode_switches_10=[]):
         self.scanner0 = re.Scanner(lexicon0)
         self.mode_switches_01 = mode_switches_01
         self.scanner1 = re.Scanner(lexicon1)

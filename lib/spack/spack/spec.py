@@ -2454,8 +2454,8 @@ class Spec(object):
                         write(fmt % str(self.variants), c)
                 elif c == '=':
                     if self.architecture and str(self.architecture):
-                        write(fmt % (
-                                ' arch' + c + str(self.architecture) + ' '), c)
+                        a_str = ' arch' + c + str(self.architecture) + ' '
+                        write(fmt % (a_str), c)
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
