@@ -2704,12 +2704,14 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
+
         try:
-            while self.next:
+            while self.next or self.previous:
                 # TODO: clean this parsing up a bit
                 if self.previous:
                     specs.append(self.spec(self.previous.value))
-                if self.accept(ID):
+                    self.previous = None
+                elif self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
                         if not specs:
@@ -2720,9 +2722,11 @@ class SpecParser(spack.parse.Parser):
                             self.expect(VAL)
                         specs[-1]._add_flag(
                             self.previous.value, self.token.value)
+                        self.previous = None
                     else:
-                        specs.append(self.spec(self.previous.value))
-                    self.previous = None
+                        value = self.previous.value
+                        self.previous = None
+                        specs.append(self.spec(value))
                 elif self.accept(HASH):
                     specs.append(self.spec_by_hash())
 
@@ -2742,11 +2746,12 @@ class SpecParser(spack.parse.Parser):
                     specs[-1]._add_dependency(dep, ())
 
                 else:
-                    # Attempt to construct an anonymous spec, but check that
-                    # the first token is valid
-                    # TODO: Is this check even necessary, or will it all be Lex
-                    # errors now?
-                    specs.append(self.spec(None, True))
+                    # If the next token can be part of a valid anonymous spec,
+                    # create the anonymous spec
+                    if self.next.type in (AT, ON, OFF, PCT):
+                        specs.append(self.spec(None))
+                    else:
+                        self.unexpected_token()
 
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
@@ -2783,7 +2788,7 @@ class SpecParser(spack.parse.Parser):
 
         return matches[0]
 
-    def spec(self, name, check_valid_token=False):
+    def spec(self, name):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
         if name:
@@ -2834,19 +2839,15 @@ class SpecParser(spack.parse.Parser):
                 for version in vlist:
                     spec._add_version(version)
                 added_version = True
-                check_valid_token = False
 
             elif self.accept(ON):
                 spec._add_variant(self.variant(), True)
-                check_valid_token = False
 
             elif self.accept(OFF):
                 spec._add_variant(self.variant(), False)
-                check_valid_token = False
 
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
-                check_valid_token = False
 
             elif self.accept(ID):
                 self.previous = self.token
@@ -2858,11 +2859,9 @@ class SpecParser(spack.parse.Parser):
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:
-                    return spec
+                    break
 
             else:
-                if check_valid_token:
-                    self.unexpected_token()
                 break
 
         # If there was no version in the spec, consier it an open range

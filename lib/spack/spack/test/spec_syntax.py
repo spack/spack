@@ -114,7 +114,6 @@ class TestSpecSyntax(object):
         self.check_parse("openmpi^hwloc@:1.4b7-rc3")
         self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
 
-    @pytest.mark.xfail
     def test_multiple_specs(self):
         self.check_parse("mvapich emacs")
 
