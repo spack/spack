@@ -57,9 +57,7 @@ The default is to install the package along with all its dependencies.
 Alternatively one can decide to install only the package or only
 the dependencies."""
     )
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="Explicitly set number of make jobs.  Default is #cpus.")
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="Don't remove the install prefix if installation fails.")

@@ -105,3 +105,7 @@ _arguments['long'] = Args(
 _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='Show full dependency hashes as well as versions.')
+
+_arguments['jobs'] = Args(
+    '-j', '--jobs', action='store', type=int, dest="jobs",
+    help="Explicitly set number of make jobs.  Default is #cpus.")
