@@ -108,7 +108,6 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
 
-
     try:
         specs = spack.spec.parse(args)
         for spec in specs:

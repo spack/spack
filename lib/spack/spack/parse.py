@@ -54,7 +54,8 @@ class Token:
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
 
-    def __init__(self, lexicon0, mode_switches_01=[], lexicon1=[], mode_switches_10=[]):
+    def __init__(self, lexicon0, mode_switches_01=[],
+                       lexicon1=[], mode_switches_10=[]):
         self.scanner0 = re.Scanner(lexicon0)
         self.mode_switches_01 = mode_switches_01
         self.scanner1 = re.Scanner(lexicon1)
@@ -64,10 +65,12 @@ class Lexer(object):
     def token(self, type, value=''):
         if self.mode == 0:
             return Token(type, value,
-                         self.scanner0.match.start(0), self.scanner0.match.end(0))
+                         self.scanner0.match.start(0),
+                         self.scanner0.match.end(0))
         else:
             return Token(type, value,
-                         self.scanner1.match.start(0), self.scanner1.match.end(0))
+                         self.scanner1.match.start(0),
+                         self.scanner1.match.end(0))
 
     def lex_word(self, word):
         scanner = self.scanner0
@@ -79,13 +82,14 @@ class Lexer(object):
         tokens, remainder = scanner.scan(word)
         remainder_used = 0
 
-        for i,t in enumerate(tokens):
+        for i, t in enumerate(tokens):
             if t.type in mode_switches:
-                #combine post-switch tokens with remainder and scan in other mode
-                self.mode = 1 - self.mode #swap 0/1
+                # Combine post-switch tokens with remainder and
+                # scan in other mode
+                self.mode = 1 - self.mode  # swap 0/1
                 remainder_used = 1
                 tokens = tokens[:i + 1] + self.lex_word(
-                    ''.join(t.value for t in tokens[i + 1:])+remainder)
+                    ''.join(t.value for t in tokens[i + 1:]) + remainder)
 
         if remainder and not remainder_used:
             raise LexError("Invalid character", word, word.index(remainder))
@@ -98,6 +102,7 @@ class Lexer(object):
             tokens = self.lex_word(word)
             lexed.extend(tokens)
         return lexed
+
 
 class Parser(object):
     """Base class for simple recursive descent parsers."""
