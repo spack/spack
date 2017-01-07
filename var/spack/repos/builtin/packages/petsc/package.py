@@ -225,7 +225,7 @@ class Petsc(Package):
 
         # Set PETSC_DIR in the module file
         run_env.set('PETSC_DIR', self.prefix)
-        run_env.unset('PETSC_DIR', self.prefix)
+        run_env.unset('PETSC_ARCH')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # Set up PETSC_DIR for everyone using PETSc package
