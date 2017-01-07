@@ -34,7 +34,7 @@ class RLabeling(Package):
 
     version('0.3', 'ccd7082ec0b211aba8a89d85176bb534')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

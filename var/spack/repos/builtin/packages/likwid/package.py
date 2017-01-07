@@ -35,8 +35,11 @@ class Likwid(Package):
 
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 
+    # NOTE: There is no way to use an externally provided hwloc with Likwid.
+    # The reason is that the internal hwloc is patched to contain extra
+    # functionality and functions are prefixed with "likwid_".
+
     # TODO: how to specify those?
-    # depends_on('hwloc')
     # depends_on('lua')
 
     # TODO: check
@@ -57,5 +60,10 @@ class Likwid(Package):
                     'PREFIX = ' +
                     prefix,
                     'config.mk')
+
+        filter_file('^INSTALL_CHOWN.*',
+                    'INSTALL_CHOWN = -o $(USER)',
+                    'config.mk')
+
         make()
         make('install')

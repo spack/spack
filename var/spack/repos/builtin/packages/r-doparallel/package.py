@@ -35,7 +35,7 @@ class RDoparallel(Package):
 
     version('1.0.10', 'd9fbde8f315d98d055483ee3493c9b43')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-foreach', type=nolink)
     depends_on('r-iterators', type=nolink)

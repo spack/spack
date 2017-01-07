@@ -35,7 +35,7 @@ class Uberftp(Package):
     version('2_7', 'faaea2d6e1958c1105cfc9147824e03c')
     version('2_6', '784210976f259f9d19c0798c19778d34')
 
-    depends_on('globus_toolkit')
+    depends_on('globus-toolkit')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))

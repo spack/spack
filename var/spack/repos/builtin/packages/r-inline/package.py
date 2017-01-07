@@ -36,7 +36,7 @@ class RInline(Package):
 
     version('0.3.14', '9fe304a6ebf0e3889c4c6a7ad1c50bca')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

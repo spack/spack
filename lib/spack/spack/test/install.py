@@ -22,116 +22,120 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import filecmp
+import pytest
 import shutil
 import tempfile
-import filecmp
 
 import spack
 import spack.store
-from llnl.util.filesystem import *
-from spack.directory_layout import YamlDirectoryLayout
+from llnl.util.filesystem import join_path
 from spack.database import Database
+from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockArchive
+from spack.spec import Spec
 
 
-class InstallTest(MockPackagesTest):
-    """Tests install and uninstall on a trivial package."""
+@pytest.fixture()
+def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    install_dir = tmpdir.mkdir('install_dir')
+    spack.store.layout = YamlDirectoryLayout(str(install_dir))
+    spack.store.db = Database(str(install_dir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    redirect_dir = tmpdir.mkdir('redirect_dir')
+    yield redirect_dir
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
 
-    def setUp(self):
-        super(InstallTest, self).setUp()
 
-        # create a simple installable package directory and tarball
-        self.repo = MockArchive()
+def fake_fetchify(url, pkg):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(url))
+    pkg.fetcher = fetcher
 
-        # We use a fake package, so skip the checksum.
-        spack.do_checksum = False
 
-        # Use a fake install directory to avoid conflicts bt/w
-        # installed pkgs and mock packages.
-        self.tmpdir = tempfile.mkdtemp()
-        self.redirect = tempfile.mkdtemp()
-        self.orig_layout = spack.store.layout
-        self.orig_db = spack.store.db
+@pytest.mark.usefixtures('install_mockery')
+def test_install_and_uninstall(mock_archive):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
 
-        spack.store.layout = YamlDirectoryLayout(self.tmpdir)
-        spack.store.db     = Database(self.tmpdir)
+    # Get the package
+    pkg = spack.repo.get(spec)
 
-    def tearDown(self):
-        super(InstallTest, self).tearDown()
-        self.repo.destroy()
+    fake_fetchify(mock_archive.url, pkg)
 
-        # Turn checksumming back on
-        spack.do_checksum = True
+    try:
+        pkg.do_install()
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix()
+        raise
 
-        # restore spack's layout.
-        spack.store.layout = self.orig_layout
-        spack.store.db     = self.orig_db
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-        shutil.rmtree(self.redirect, ignore_errors=True)
 
-    def fake_fetchify(self, pkg):
-        """Fake the URL for a package so it downloads from a file."""
-        fetcher = FetchStrategyComposite()
-        fetcher.append(URLFetchStrategy(self.repo.url))
-        pkg.fetcher = fetcher
+@pytest.mark.usefixtures('install_mockery')
+def test_store(mock_archive):
+    spec = Spec('cmake-client').concretized()
 
-    def test_install_and_uninstall(self):
-        # Get a basic concrete spec for the trivial install package.
-        spec = Spec('trivial_install_test_package')
-        spec.concretize()
-        self.assertTrue(spec.concrete)
+    for s in spec.traverse():
+        fake_fetchify(mock_archive.url, s.package)
 
-        # Get the package
-        pkg = spack.repo.get(spec)
+    pkg = spec.package
+    try:
+        pkg.do_install()
+    except Exception:
+        pkg.remove_prefix()
+        raise
 
-        self.fake_fetchify(pkg)
 
-        try:
-            pkg.do_install()
-            pkg.do_uninstall()
-        except Exception:
-            pkg.remove_prefix()
-            raise
+@pytest.mark.usefixtures('install_mockery')
+def test_failing_build(mock_archive):
+    spec = Spec('failing-build').concretized()
 
-    def test_install_redirected_succeeds(self):
-        spec = Spec('redir')
-        spec.concretize()
-        pkg = spack.repo.get(spec)
-        spack.store.layout.destdir = self.redirect
-        spack.store.layout.redirected.add(pkg.name)
+    for s in spec.traverse():
+        fake_fetchify(mock_archive.url, s.package)
 
-        self.fake_fetchify(pkg)
-
+    pkg = spec.package
+    with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
 
-    def test_install_redirected_matches(self):
-        spec = Spec('redir')
-        spec.concretize()
-        pkg = spack.repo.get(spec)
-        spack.store.layout.destdir = self.redirect
-        spack.store.layout.redirected.add(pkg.name)
 
-        self.fake_fetchify(pkg)
+def test_install_redirected_succeeds(mock_archive, install_mockery):
+    spec = Spec('redir')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    spack.store.layout.destdir = str(install_mockery)
+    spack.store.layout.redirected.add(pkg.name)
 
-        pkg.do_install()
+    fake_fetchify(mock_archive.url, pkg)
 
-        spack.store.layout.redirected.clear()
-        pkg.do_install()
-        self.assertTrue(filecmp.dircmp(
-            self.tmpdir,
-            join_path(self.redirect, self.tmpdir)))
+    pkg.do_install()
 
-    def test_store(self):
-        spec = Spec('cmake-client').concretized()
 
-        for s in spec.traverse():
-            self.fake_fetchify(s.package)
+def test_install_redirected_matches(mock_archive, install_mockery):
+    spec = Spec('redir')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    spack.store.layout.destdir = str(install_mockery)
+    spack.store.layout.redirected.add(pkg.name)
 
-        pkg = spec.package
-        try:
-            pkg.do_install()
-        except Exception:
-            pkg.remove_prefix()
-            raise
+    fake_fetchify(mock_archive.url, pkg)
+
+    pkg.do_install()
+
+    spack.store.layout.redirected.clear()
+    pkg.do_install()
+    assert filecmp.dircmp(
+        spack.store.layout.root,
+        spack.store.layout.destdir + spack.store.layout.root)

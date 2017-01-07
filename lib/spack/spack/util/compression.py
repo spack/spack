@@ -45,6 +45,7 @@ def decompressor_for(path, extension=None):
     if ((extension and re.match(r'\.?zip$', extension)) or
             path.endswith('.zip')):
         unzip = which('unzip', required=True)
+        unzip.add_default_arg('-q')
         return unzip
     if extension and re.match(r'gz', extension):
         gunzip = which('gunzip', required=True)

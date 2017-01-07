@@ -37,7 +37,7 @@ class RMgcv(Package):
 
     version('1.8-13', '30607be3aaf44b13bd8c81fc32e8c984')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-nlme', type=nolink)
     depends_on('r-matrix', type=nolink)

@@ -43,7 +43,7 @@ class RRcpp(Package):
     version('0.12.6', 'db4280fb0a79cd19be73a662c33b0a8b')
     version('0.12.5', 'f03ec05b4e391cc46e7ce330e82ff5e2')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

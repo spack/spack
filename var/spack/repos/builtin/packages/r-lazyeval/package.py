@@ -36,7 +36,7 @@ class RLazyeval(Package):
 
     version('0.2.0', 'df1daac908dcf02ae7e12f4335b1b13b')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

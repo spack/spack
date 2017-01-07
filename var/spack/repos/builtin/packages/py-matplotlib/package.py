@@ -76,7 +76,7 @@ class PyMatplotlib(Package):
 
     # --------- Optional external programs
     # ffmpeg/avconv or mencoder
-    depends_on('ImageMagick', when='+animation')
+    depends_on('image-magick', when='+animation')
 
     # --------- Optional dependencies
     depends_on('pkg-config', type='build')    # why not...

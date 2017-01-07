@@ -36,7 +36,7 @@ class RSurvival(Package):
 
     version('2.39-5', 'a3cc6b5762e8c5c0bb9e64a276710be2')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-matrix', type=nolink)
 

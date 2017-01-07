@@ -70,13 +70,49 @@ class Clang(Compiler):
     @property
     def cxx11_flag(self):
         if self.is_apple:
-            # FIXME: figure out from which version Apple's clang supports c++11
-            return "-std=c++11"
+            # Adapted from CMake's AppleClang-CXX rules
+            # Spack's AppleClang detection only valid form Xcode >= 4.6
+            if self.version < ver('4.0.0'):
+                tty.die("Only Apple LLVM 4.0 and above support c++11")
+            else:
+                return "-std=c++11"
         else:
             if self.version < ver('3.3'):
                 tty.die("Only Clang 3.3 and above support c++11.")
             else:
                 return "-std=c++11"
+
+    @property
+    def cxx14_flag(self):
+        if self.is_apple:
+            # Adapted from CMake's rules for AppleClang
+            if self.version < ver('5.1.0'):
+                tty.die("Only Apple LLVM 5.1 and above support c++14.")
+            elif self.version < ver('6.1.0'):
+                return "-std=c++1y"
+            else:
+                return "-std=c++14"
+        else:
+            if self.version < ver('3.4'):
+                tty.die("Only Clang 3.4 and above support c++14.")
+            elif self.version < ver('3.5'):
+                return "-std=c++1y"
+            else:
+                return "-std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        if self.is_apple:
+            # Adapted from CMake's rules for AppleClang
+            if self.version < ver('6.1.0'):
+                tty.die("Only Apple LLVM 6.1 and above support c++17.")
+            else:
+                return "-std=c++1z"
+        else:
+            if self.version < ver('3.5'):
+                tty.die("Only Clang 3.5 and above support c++17.")
+            else:
+                return "-std=c++1z"
 
     @property
     def pic_flag(self):
@@ -148,7 +184,7 @@ class Clang(Compiler):
     def f77_version(cls, f77):
         return cls.fc_version(f77)
 
-    def setup_custom_environment(self, env):
+    def setup_custom_environment(self, pkg, env):
         """Set the DEVELOPER_DIR environment for the Xcode toolchain.
 
         On macOS, not all buildsystems support querying CC and CXX for the
@@ -160,9 +196,13 @@ class Clang(Compiler):
         the 'DEVELOPER_DIR' environment variables to cause the xcrun and
         related tools to use this Xcode.app.
         """
-        super(Clang, self).setup_custom_environment(env)
+        super(Clang, self).setup_custom_environment(pkg, env)
 
-        if not self.is_apple:
+        if not self.is_apple or not pkg.use_xcode:
+            # if we do it for all packages, we get into big troubles with MPI:
+            # filter_compilers(self) will use mockup XCode compilers on macOS
+            # with Clang. Those point to Spack's compiler wrappers and
+            # consequently render MPI non-functional outside of Spack.
             return
 
         xcode_select = Executable('xcode-select')

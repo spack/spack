@@ -36,7 +36,7 @@ class RIrdisplay(Package):
 
     version('0.4.4', '5be672fb82185b90f23bd99ac1e1cdb6')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-repr', type=nolink)
 

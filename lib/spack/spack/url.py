@@ -163,7 +163,7 @@ def determine_url_file_extension(path):
     return ext
 
 
-def parse_version_offset(path):
+def parse_version_offset(path, debug=False):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
     original_path = path
@@ -188,8 +188,12 @@ def parse_version_offset(path):
         # e.g. https://github.com/petdance/ack/tarball/1.93_02
         (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
 
+        # Yorick is very special.
+        # e.g. https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz
+        (r'github.com/[^/]+/yorick/archive/y_(\d+(?:_\d+)*)$', path),
+
         # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
-        (r'github.com/[^/]+/[^/]+/archive/v?(\d+(?:\.\d+)*)$', path),
+        (r'github.com/[^/]+/[^/]+/archive/(?:release-)?v?(\w+(?:[.-]\w+)*)$', path),  # noqa
 
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
@@ -209,8 +213,8 @@ def parse_version_offset(path):
         # e.g. lame-398-1
         (r'-((\d)+-\d)', stem),
 
-        # e.g. foobar_1.2-3
-        (r'_((\d+\.)+\d+(-\d+)?[a-z]?)', stem),
+        # e.g. foobar_1.2-3 or 3.98-1.4
+        (r'_((\d+\.)+\d+(-(\d+(\.\d+)?))?[a-z]?)', stem),
 
         # e.g. foobar-4.5.1
         (r'-((\d+\.)*\d+)$', stem),
@@ -246,6 +250,10 @@ def parse_version_offset(path):
         regex, match_string = vtype
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
+            if debug:
+                tty.msg("Parsing URL: %s" % path,
+                        "  Matched regex %d: r'%s'" % (i, regex))
+
             version = match.group(1)
             start   = match.start(1)
 
@@ -258,17 +266,17 @@ def parse_version_offset(path):
     raise UndetectableVersionError(original_path)
 
 
-def parse_version(path):
+def parse_version(path, debug=False):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, l = parse_version_offset(path)
+    ver, start, l = parse_version_offset(path, debug=debug)
     return Version(ver)
 
 
-def parse_name_offset(path, v=None):
+def parse_name_offset(path, v=None, debug=False):
     if v is None:
-        v = parse_version(path)
+        v = parse_version(path, debug=debug)
 
     path, ext, suffix = split_url_extension(path)
 

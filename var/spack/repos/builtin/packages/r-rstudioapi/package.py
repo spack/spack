@@ -36,7 +36,7 @@ class RRstudioapi(Package):
     version('0.6', 'fdb13bf46aab02421557e713fceab66b')
     version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

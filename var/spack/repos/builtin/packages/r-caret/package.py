@@ -35,7 +35,7 @@ class RCaret(Package):
 
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-lattice', type=nolink)
     depends_on('r-ggplot2', type=nolink)

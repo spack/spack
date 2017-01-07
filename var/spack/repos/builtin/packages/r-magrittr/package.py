@@ -38,7 +38,7 @@ class RMagrittr(Package):
 
     version('1.5', 'e74ab7329f2b9833f0c3c1216f86d65a')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

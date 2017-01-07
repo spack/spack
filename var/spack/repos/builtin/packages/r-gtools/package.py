@@ -53,7 +53,7 @@ class RGtools(Package):
 
     version('3.5.0', '45f8800c0336d35046641fbacc56bdbb')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -37,7 +37,7 @@ class RKnitr(Package):
     version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')
     version('0.6' , 'c67d6db84cd55594a9e870c90651a3db')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-evaluate', type=nolink)
     depends_on('r-digest', type=nolink)

@@ -35,7 +35,7 @@ class RBitops(Package):
 
     version('1.0-6', 'fba16485a51b1ccd354abde5816b6bdd')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

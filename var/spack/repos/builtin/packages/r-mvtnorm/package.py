@@ -35,7 +35,7 @@ class RMvtnorm(Package):
 
     version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -36,7 +36,7 @@ class RGgvis(Package):
 
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-assertthat', type=nolink)
     depends_on('r-jsonlite', type=nolink)

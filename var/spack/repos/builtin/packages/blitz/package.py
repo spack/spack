@@ -31,3 +31,9 @@ class Blitz(AutotoolsPackage):
     url = "https://github.com/blitzpp/blitz/tarball/1.0.0"
 
     version('1.0.0', '9f040b9827fe22228a892603671a77af')
+
+    build_targets = ['lib']
+
+    def check(self):
+        make('check-testsuite')
+        make('check-examples')

@@ -45,12 +45,18 @@ class AutotoolsPackage(PackageBase):
 
     They all have sensible defaults and for many packages the only thing
     necessary will be to override `configure_args`
+
+    Additionally, you may specify make targets for build and install
+    phases by overriding `build_targets` and `install_targets`
     """
     phases = ['autoreconf', 'configure', 'build', 'install']
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'AutotoolsPackage'
     patch_config_guess = True
+
+    build_targets = []
+    install_targets = ['install']
 
     def do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
@@ -152,12 +158,12 @@ class AutotoolsPackage(PackageBase):
         inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
-        """The usual `make` after configure"""
-        inspect.getmodule(self).make()
+        """Make the build targets"""
+        inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """...and the final `make install` after configure"""
-        inspect.getmodule(self).make('install')
+        """Make the install targets"""
+        inspect.getmodule(self).make(*self.install_targets)
 
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)

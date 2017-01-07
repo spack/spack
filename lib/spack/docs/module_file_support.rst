@@ -63,7 +63,7 @@ of installed packages.
 
    $ module avail
 
-   ------- /home/gamblin2/spack/share/spack/modules/linux-debian7-x86_64 --------
+   ------- ~/spack/share/spack/modules/linux-debian7-x86_64 --------
    adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
    automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
    boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
@@ -140,7 +140,7 @@ Spack.  For example, this will add the ``mpich`` package built with
    $ spack use mpich %gcc@4.4.7
    Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
    $ which mpicc
-   ~/src/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+   ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
 Or, similarly with modules, you could type:
 
@@ -353,9 +353,9 @@ and has similar effects on module file of dependees. Even in this case
 ``run_env`` must be filled with the desired list of environment modifications.
 
 .. note::
- The ``R`` package and callback APIs
+ The ``r`` package and callback APIs
   A typical example in which overriding both methods prove to be useful
-  is given by the ``R`` package. This package installs libraries and headers
+  is given by the ``r`` package. This package installs libraries and headers
   in non-standard locations and it is possible to prepend the appropriate directory
   to the corresponding environment variables:
 
@@ -367,14 +367,14 @@ and has similar effects on module file of dependees. Even in this case
 
   with the following snippet:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
+  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
      :pyobject: R.setup_environment
 
-  The ``R`` package also knows which environment variable should be modified
+  The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
+  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
      :lines: 128-129,146-151
 
 .. _modules-yaml:

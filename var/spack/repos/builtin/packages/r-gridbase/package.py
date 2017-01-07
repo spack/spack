@@ -34,7 +34,7 @@ class RGridbase(Package):
 
     version('0.4-7', '6d5064a85f5c966a92ee468ae44c5f1f')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

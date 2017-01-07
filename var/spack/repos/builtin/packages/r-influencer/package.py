@@ -40,7 +40,7 @@ class RInfluencer(Package):
 
     version('0.1.0', '6c8b6decd78c341364b5811fb3050ba5')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-igraph', type=nolink)
     depends_on('r-matrix', type=nolink)

@@ -42,7 +42,7 @@ class RStringi(Package):
 
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
-    extends('R')
+    extends('r')
 
     depends_on('icu4c')
 

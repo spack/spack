@@ -38,7 +38,7 @@ class RZoo(Package):
 
     version('1.7-13', '99521dfa4c668e692720cefcc5a1bf30')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-lattice', type=nolink)
 

@@ -106,8 +106,15 @@ def print_text_info(pkg):
     print
     print "Virtual Packages: "
     if pkg.provided:
-        for spec, when in pkg.provided.items():
-            print "    %s provides %s" % (when, spec)
+        inverse_map = {}
+        for spec, whens in pkg.provided.items():
+            for when in whens:
+                if when not in inverse_map:
+                    inverse_map[when] = set()
+                inverse_map[when].add(spec)
+        for when, specs in reversed(sorted(inverse_map.items())):
+            print "    %s provides %s" % (
+                when, ', '.join(str(s) for s in specs))
     else:
         print "    None"
 

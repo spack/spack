@@ -36,7 +36,7 @@ class RLmtest(Package):
 
     version('0.9-34', 'fcdf7286bb5ccc2ca46be00bf25ac2fe')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-zoo', type=nolink)
 

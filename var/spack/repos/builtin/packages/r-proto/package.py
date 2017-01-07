@@ -35,7 +35,7 @@ class RProto(Package):
 
     version('0.3-10', 'd5523943a5be6ca2f0ab557c900f8212')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

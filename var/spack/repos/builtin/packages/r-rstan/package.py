@@ -42,7 +42,7 @@ class RRstan(Package):
 
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-ggplot2', type=nolink)
     depends_on('r-stanheaders', type=nolink)

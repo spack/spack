@@ -42,7 +42,7 @@ class RRpostgresql(Package):
 
     version('0.4-1', 'e7b22e212afbb2cbb88bab937f93e55a')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-dbi', type=nolink)
     depends_on('postgresql')

@@ -36,7 +36,7 @@ class RBoot(Package):
 
     version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

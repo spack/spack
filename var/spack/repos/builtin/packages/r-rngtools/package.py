@@ -38,7 +38,7 @@ class RRngtools(Package):
 
     version('1.2.4', '715967f8b3af2848a76593a7c718c1cd')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-pkgmaker', type=nolink)
     depends_on('r-stringr', type=nolink)

@@ -39,7 +39,7 @@ class RNmf(Package):
 
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-pkgmaker', type=nolink)
     depends_on('r-registry', type=nolink)

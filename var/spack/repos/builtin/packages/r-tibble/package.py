@@ -35,7 +35,7 @@ class RTibble(Package):
 
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-assertthat', type=nolink)
     depends_on('r-lazyeval', type=nolink)

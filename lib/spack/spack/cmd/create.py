@@ -215,7 +215,7 @@ class PythonGuess(DefaultGuess):
 class RGuess(DefaultGuess):
     """Provides appropriate overrides for R extensions"""
     dependencies = """\
-    extends('R')
+    extends('r')
 
     # FIXME: Add additional dependencies if required.
     # depends_on('r-foo', type=nolink)"""
@@ -283,7 +283,7 @@ class BuildSystemGuesser(object):
         'scons': SconsGuess,
         'bazel': BazelGuess,
         'python': PythonGuess,
-        'R': RGuess,
+        'r': RGuess,
         'octave': OctaveGuess
     }
 
@@ -306,7 +306,7 @@ class BuildSystemGuesser(object):
             (r'/CMakeLists.txt$', 'cmake'),
             (r'/SConstruct$',     'scons'),
             (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'R'),
+            (r'/NAMESPACE$',      'r'),
             (r'/WORKSPACE$',      'bazel')
         ]
 
@@ -314,7 +314,7 @@ class BuildSystemGuesser(object):
         if stage.archive_file.endswith('.zip'):
             try:
                 unzip  = which('unzip')
-                output = unzip('-l', stage.archive_file, output=str)
+                output = unzip('-lq', stage.archive_file, output=str)
             except:
                 output = ''
         else:

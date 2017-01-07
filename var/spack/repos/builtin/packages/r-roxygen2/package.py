@@ -35,7 +35,7 @@ class RRoxygen2(Package):
 
     version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-stringr', type=nolink)
     depends_on('r-stringi', type=nolink)

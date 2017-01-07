@@ -35,7 +35,7 @@ class RWhisker(Package):
 
     version('0.3-2', 'c4b9bf9a22e69ce003fe68663ab5e8e6')
 
-    extends('R')
+    extends('r')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -37,9 +37,11 @@ _json_dump_args = {
 def load(stream):
     """Spack JSON needs to be ordered to support specs."""
     if isinstance(stream, basestring):
-        return json.loads(stream)
+        return _byteify(json.loads(stream, object_hook=_byteify),
+                        ignore_dicts=True)
     else:
-        return json.load(stream)
+        return _byteify(json.load(stream, object_hook=_byteify),
+                        ignore_dicts=True)
 
 
 def dump(data, stream=None):
@@ -50,7 +52,25 @@ def dump(data, stream=None):
         return json.dump(data, stream, **_json_dump_args)
 
 
+def _byteify(data, ignore_dicts=False):
+    # if this is a unicode string, return its string representation
+    if isinstance(data, unicode):
+        return data.encode('utf-8')
+    # if this is a list of values, return list of byteified values
+    if isinstance(data, list):
+        return [_byteify(item, ignore_dicts=True) for item in data]
+    # if this is a dictionary, return dictionary of byteified keys and values
+    # but only if we haven't already byteified it
+    if isinstance(data, dict) and not ignore_dicts:
+        return dict((_byteify(key, ignore_dicts=True),
+                     _byteify(value, ignore_dicts=True)) for key, value in
+                    data.iteritems())
+    # if it's anything else, return it in its original form
+    return data
+
+
 class SpackJSONError(spack.error.SpackError):
     """Raised when there are issues with JSON parsing."""
+
     def __init__(self, msg, yaml_error):
         super(SpackJSONError, self).__init__(msg, str(yaml_error))

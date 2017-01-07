@@ -36,7 +36,7 @@ class RXlconnect(Package):
     version('0.2-12', '3340d05d259f0a41262eab4ed32617ad')
     version('0.2-11', '9d1769a103cda05665df399cc335017d')
 
-    extends('R')
+    extends('r')
 
     depends_on('r-xlconnectjars', type=nolink)
     depends_on('r-rjava', type=nolink)

@@ -47,7 +47,7 @@ from spack import *
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
-    url='https://storage.googleapis.com/golang/go1.7.4.src.tar.gz'
+    url = 'https://storage.googleapis.com/golang/go1.7.4.src.tar.gz'
 
     extendable = True
 
@@ -105,7 +105,6 @@ class Go(Package):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
-        spack_env.set('GOROOT_BOOTSTRAP', self.spec['go-bootstrap'].prefix)
 
     def setup_dependent_package(self, module, ext_spec):
         """Called before go modules' install() methods.
