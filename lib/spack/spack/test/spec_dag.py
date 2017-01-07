@@ -640,7 +640,9 @@ class TestSpecDag(object):
         assert spec['dt-diamond']._dependencies[
             'dt-diamond-right'].deptypes == ('build', 'link')
 
-        assert 'dt-diamond-bottom' in spec['dt-diamond-left'].build_only_deps
+        if spec.concrete:
+            assert ('dt-diamond-bottom' in
+                    spec['dt-diamond-left'].build_only_deps)
 
         assert spec['dt-diamond-right'] ._dependencies[
             'dt-diamond-bottom'].deptypes == ('build', 'link', 'run')
@@ -648,8 +650,7 @@ class TestSpecDag(object):
     def check_diamond_normalized_dag(self, spec):
         bottom = Spec('dt-diamond-bottom')
         dag = Spec('dt-diamond',
-                   ['build', 'link'], Spec('dt-diamond-left',
-                                           ['build'], bottom),
+                   ['build', 'link'], Spec('dt-diamond-left'),
                    ['build', 'link'], Spec('dt-diamond-right',
                                            ['build', 'link', 'run'], bottom))
         assert spec.eq_dag(dag)
