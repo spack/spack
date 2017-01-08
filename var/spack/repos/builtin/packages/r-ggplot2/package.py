@@ -40,9 +40,9 @@ class RGgplot2(RPackage):
 
     version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
 
-    depends_on('r-digest', type=nolink)
-    depends_on('r-gtable', type=nolink)
-    depends_on('r-mass', type=nolink)
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-reshape2', type=nolink)
-    depends_on('r-scales', type=nolink)
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-gtable', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))

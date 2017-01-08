@@ -38,6 +38,6 @@ class RMaptools(RPackage):
 
     version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
 
-    depends_on('r-sp', type=nolink)
-    depends_on('r-foreign', type=nolink)
-    depends_on('r-lattice', type=nolink)
+    depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-foreign', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))

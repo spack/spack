@@ -38,8 +38,8 @@ class RMultcomp(RPackage):
 
     version('1.4-6', 'f1353ede2ed78b23859a7f1f1f9ebe88')
 
-    depends_on('r-mvtnorm', type=nolink)
-    depends_on('r-survival', type=nolink)
-    depends_on('r-thdata', type=nolink)
-    depends_on('r-sandwich', type=nolink)
-    depends_on('r-codetools', type=nolink)
+    depends_on('r-mvtnorm', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-thdata', type=('build', 'run'))
+    depends_on('r-sandwich', type=('build', 'run'))
+    depends_on('r-codetools', type=('build', 'run'))

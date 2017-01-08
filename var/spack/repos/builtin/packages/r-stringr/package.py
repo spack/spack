@@ -38,5 +38,5 @@ class RStringr(RPackage):
 
     version('1.0.0', '5ca977c90351f78b1b888b379114a7b4')
 
-    depends_on('r-stringi', type=nolink)
-    depends_on('r-magrittr', type=nolink)
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

@@ -36,4 +36,4 @@ class RSurvival(RPackage):
 
     version('2.39-5', 'a3cc6b5762e8c5c0bb9e64a276710be2')
 
-    depends_on('r-matrix', type=nolink)
+    depends_on('r-matrix', type=('build', 'run'))

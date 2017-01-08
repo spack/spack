@@ -35,10 +35,10 @@ class RRmarkdown(RPackage):
 
     version('1.0', '264aa6a59e9680109e38df8270e14c58')
 
-    depends_on('r-knitr', type=nolink)
-    depends_on('r-yaml', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-catools', type=nolink)
-    depends_on('r-evaluate', type=nolink)
-    depends_on('r-base64enc', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-catools', type=('build', 'run'))
+    depends_on('r-evaluate', type=('build', 'run'))
+    depends_on('r-base64enc', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))

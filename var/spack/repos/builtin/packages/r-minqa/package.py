@@ -35,4 +35,4 @@ class RMinqa(RPackage):
 
     version('1.2.4', 'bcaae4fdba60a33528f2116e2fd51105')
 
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-rcpp', type=('build', 'run'))

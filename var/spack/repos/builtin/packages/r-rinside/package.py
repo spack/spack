@@ -48,4 +48,4 @@ class RRinside(RPackage):
 
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-rcpp', type=('build', 'run'))

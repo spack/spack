@@ -42,5 +42,5 @@ class RPartykit(RPackage):
 
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
-    depends_on('r-survival', type=nolink)
-    depends_on('r-formula', type=nolink)
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-formula', type=('build', 'run'))

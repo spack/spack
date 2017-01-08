@@ -36,9 +36,9 @@ class RTidyr(RPackage):
 
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
-    depends_on('r-tibble', type=nolink)
-    depends_on('r-dplyr', type=nolink)
-    depends_on('r-stringi', type=nolink)
-    depends_on('r-lazyeval', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-lazyeval', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

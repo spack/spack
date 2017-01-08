@@ -37,5 +37,5 @@ class RRgooglemaps(RPackage):
 
     version('1.2.0.7', '2e1df804f0331b4122d841105f0c7ea5')
 
-    depends_on('r-png', type=nolink)
-    depends_on('r-rjsonio', type=nolink)
+    depends_on('r-png', type=('build', 'run'))
+    depends_on('r-rjsonio', type=('build', 'run'))

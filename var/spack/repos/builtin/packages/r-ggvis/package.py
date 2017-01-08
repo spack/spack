@@ -36,10 +36,10 @@ class RGgvis(RPackage):
 
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 
-    depends_on('r-assertthat', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-shiny', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-dplyr', type=nolink)
-    depends_on('r-lazyeval', type=nolink)
-    depends_on('r-htmltools', type=nolink)
+    depends_on('r-assertthat', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-shiny', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-lazyeval', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))

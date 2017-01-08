@@ -35,4 +35,4 @@ class RGridextra(RPackage):
 
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 
-    depends_on('r-gtable', type=nolink)
+    depends_on('r-gtable', type=('build', 'run'))

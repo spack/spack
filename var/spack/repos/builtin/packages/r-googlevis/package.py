@@ -38,4 +38,4 @@ class RGooglevis(RPackage):
 
     version('0.6.0', 'ec36fd2a6884ddc7baa894007d0d0468')
 
-    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-jsonlite', type=('build', 'run'))

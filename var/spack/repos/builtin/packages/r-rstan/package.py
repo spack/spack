@@ -42,10 +42,10 @@ class RRstan(RPackage):
 
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
-    depends_on('r-ggplot2', type=nolink)
-    depends_on('r-stanheaders', type=nolink)
-    depends_on('r-inline', type=nolink)
-    depends_on('r-gridextra', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-    depends_on('r-rcppeigen', type=nolink)
-    depends_on('r-bh', type=nolink)
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-stanheaders', type=('build', 'run'))
+    depends_on('r-inline', type=('build', 'run'))
+    depends_on('r-gridextra', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcppeigen', type=('build', 'run'))
+    depends_on('r-bh', type=('build', 'run'))

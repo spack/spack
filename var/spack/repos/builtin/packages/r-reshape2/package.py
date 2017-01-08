@@ -35,6 +35,6 @@ class RReshape2(RPackage):
 
     version('1.4.1', '41e9dffdf5c6fa830321ac9c8ebffe00')
 
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

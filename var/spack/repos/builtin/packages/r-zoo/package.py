@@ -38,4 +38,4 @@ class RZoo(RPackage):
 
     version('1.7-13', '99521dfa4c668e692720cefcc5a1bf30')
 
-    depends_on('r-lattice', type=nolink)
+    depends_on('r-lattice', type=('build', 'run'))

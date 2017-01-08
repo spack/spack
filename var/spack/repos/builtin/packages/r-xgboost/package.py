@@ -42,7 +42,7 @@ class RXgboost(RPackage):
 
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')
 
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-datatable', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-stringr', type=nolink)
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-datatable', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))

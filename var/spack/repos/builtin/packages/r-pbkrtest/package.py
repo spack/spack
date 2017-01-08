@@ -38,6 +38,6 @@ class RPbkrtest(RPackage):
 
     version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
 
-    depends_on('r-lme4', type=nolink)
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-mass', type=nolink)
+    depends_on('r-lme4', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))

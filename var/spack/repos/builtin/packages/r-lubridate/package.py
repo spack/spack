@@ -39,4 +39,4 @@ class RLubridate(RPackage):
 
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 
-    depends_on('r-stringr', type=nolink)
+    depends_on('r-stringr', type=('build', 'run'))

@@ -35,5 +35,5 @@ class RXlsx(RPackage):
 
     version('0.5.7', '36b1b16f29c54b6089b1dae923180dd5')
 
-    depends_on('r-rjava', type=nolink)
-    depends_on('r-xlsxjars', type=nolink)
+    depends_on('r-rjava', type=('build', 'run'))
+    depends_on('r-xlsxjars', type=('build', 'run'))
