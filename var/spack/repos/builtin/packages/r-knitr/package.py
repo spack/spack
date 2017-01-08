@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RKnitr(Package):
+class RKnitr(RPackage):
     """Provides a general-purpose tool for dynamic report generation in R using
     Literate Programming techniques."""
 
@@ -35,9 +35,7 @@ class RKnitr(Package):
     list_url = "https://cran.rstudio.com/src/contrib/Archive/knitr"
 
     version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')
-    version('0.6' , 'c67d6db84cd55594a9e870c90651a3db')
-
-    extends('r')
+    version('0.6',  'c67d6db84cd55594a9e870c90651a3db')
 
     depends_on('r-evaluate', type=nolink)
     depends_on('r-digest', type=nolink)
@@ -46,7 +44,3 @@ class RKnitr(Package):
     depends_on('r-stringr', type=nolink)
     depends_on('r-markdown', type=nolink)
     depends_on('r-yaml', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

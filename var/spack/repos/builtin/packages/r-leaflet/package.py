@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLeaflet(Package):
+class RLeaflet(RPackage):
     """Create and customize interactive maps using the 'Leaflet' JavaScript
     library and the 'htmlwidgets' package. These maps can be used directly from
     the R console, from 'RStudio', in Shiny apps and R Markdown documents."""
@@ -35,8 +35,6 @@ class RLeaflet(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/leaflet"
 
     version('1.0.1', '7f3d8b17092604d87d4eeb579f73d5df')
-
-    extends('r')
 
     depends_on('r-base64enc', type=nolink)
     depends_on('r-htmlwidgets', type=nolink)
@@ -48,7 +46,3 @@ class RLeaflet(Package):
     depends_on('r-raster', type=nolink)
     depends_on('r-scales', type=nolink)
     depends_on('r-sp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

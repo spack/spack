@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGgmap(Package):
+class RGgmap(RPackage):
     """A collection of functions to visualize spatial data and models on top of
     static maps from various online sources (e.g Google Maps and Stamen Maps).
     It includes tools common to those tasks, including functions for
@@ -36,8 +36,6 @@ class RGgmap(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/ggmap"
 
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
-
-    extends('r')
 
     depends_on('r-ggplot2', type=nolink)
     depends_on('r-proto', type=nolink)
@@ -51,7 +49,3 @@ class RGgmap(Package):
     depends_on('r-geosphere', type=nolink)
     depends_on('r-digest', type=nolink)
     depends_on('r-scales', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

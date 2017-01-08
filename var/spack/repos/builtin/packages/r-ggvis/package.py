@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGgvis(Package):
+class RGgvis(RPackage):
     """An implementation of an interactive grammar of graphics, taking the best
     parts of 'ggplot2', combining them with the reactive framework from 'shiny'
     and web graphics from 'vega'."""
@@ -36,8 +36,6 @@ class RGgvis(Package):
 
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 
-    extends('r')
-
     depends_on('r-assertthat', type=nolink)
     depends_on('r-jsonlite', type=nolink)
     depends_on('r-shiny', type=nolink)
@@ -45,7 +43,3 @@ class RGgvis(Package):
     depends_on('r-dplyr', type=nolink)
     depends_on('r-lazyeval', type=nolink)
     depends_on('r-htmltools', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

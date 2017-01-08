@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDplyr(Package):
+class RDplyr(RPackage):
     """A fast, consistent tool for working with data frame like objects, both
     in memory and out of memory."""
 
@@ -35,8 +35,6 @@ class RDplyr(Package):
 
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 
-    extends('r')
-
     depends_on('r-assertthat', type=nolink)
     depends_on('r-r6', type=nolink)
     depends_on('r-rcpp', type=nolink)
@@ -45,7 +43,3 @@ class RDplyr(Package):
     depends_on('r-lazyeval', type=nolink)
     depends_on('r-dbi', type=nolink)
     depends_on('r-bh', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNmf(Package):
+class RNmf(RPackage):
     """Provides a framework to perform Non-negative Matrix Factorization (NMF).
     The package implements a set of already published algorithms and seeding
     methods, and provides a framework to test, develop and plug new/custom
@@ -38,8 +38,6 @@ class RNmf(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/NMF"
 
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
-
-    extends('r')
 
     depends_on('r-pkgmaker', type=nolink)
     depends_on('r-registry', type=nolink)
@@ -54,7 +52,3 @@ class RNmf(Package):
     depends_on('r-doparallel', type=nolink)
     depends_on('r-ggplot2', type=nolink)
     depends_on('r-reshape2', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

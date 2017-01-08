@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RR6(Package):
+class RR6(RPackage):
     """The R6 package allows the creation of classes with reference semantics,
     similar to R's built-in reference classes. Compared to reference classes,
     R6 classes are simpler and lighter-weight, and they are not built on S4
@@ -38,9 +38,3 @@ class RR6(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/R6"
 
     version('2.1.2', 'b6afb9430e48707be87638675390e457')
-
-    extends('r')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

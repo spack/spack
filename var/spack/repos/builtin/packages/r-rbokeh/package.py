@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RRbokeh(Package):
+class RRbokeh(RPackage):
     """R interface for creating plots in Bokeh. Bokeh by Continuum
     Analytics."""
 
@@ -35,8 +35,6 @@ class RRbokeh(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/rbokeh"
 
     version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
-
-    extends('r')
 
     depends_on('r-htmlwidgets', type=nolink)
     depends_on('r-maps', type=nolink)
@@ -49,7 +47,3 @@ class RRbokeh(Package):
     depends_on('r-ggplot2', type=nolink)
     depends_on('r-scales', type=nolink)
     depends_on('r-gistr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

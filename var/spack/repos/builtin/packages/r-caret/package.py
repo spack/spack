@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCaret(Package):
+class RCaret(RPackage):
     """Misc functions for training and plotting classification and regression
     models."""
 
@@ -35,8 +35,6 @@ class RCaret(Package):
 
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
 
-    extends('r')
-
     depends_on('r-lattice', type=nolink)
     depends_on('r-ggplot2', type=nolink)
     depends_on('r-car', type=nolink)
@@ -44,7 +42,3 @@ class RCaret(Package):
     depends_on('r-plyr', type=nolink)
     depends_on('r-nlme', type=nolink)
     depends_on('r-reshape2', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
