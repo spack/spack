@@ -34,6 +34,7 @@ class MakefilePackage(PackageBase):
     """Specialized class for packages that are built using editable Makefiles
 
     This class provides three phases that can be overridden:
+
     * edit
     * build
     * install

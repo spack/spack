@@ -37,6 +37,7 @@ class CMakePackage(PackageBase):
     """Specialized class for packages that are built using CMake
 
     This class provides three phases that can be overridden:
+
     * cmake
     * build
     * install

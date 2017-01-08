@@ -40,6 +40,7 @@ class AutotoolsPackage(PackageBase):
     """Specialized class for packages that are built using GNU Autotools
 
     This class provides four phases that can be overridden:
+
     * autoreconf
     * configure
     * build
