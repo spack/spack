@@ -1507,7 +1507,6 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
-  * **alldeps**: All dependency types.  **Note:** No quotes here
  
 """""""""""""""""""
 Dependency Formulas
