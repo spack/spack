@@ -50,7 +50,7 @@ class Tk(AutotoolsPackage):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-                self.spec.version.up_to(2))))
+            self.spec.version.up_to(2))))
 
     def root_configure_dir(self):
         return 'unix'
