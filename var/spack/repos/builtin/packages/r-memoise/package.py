@@ -35,4 +35,4 @@ class RMemoise(RPackage):
 
     version('1.0.0', 'd31145292e2a88ae9a504cab1602e4ac')
 
-    depends_on('r-digest', type=nolink)
+    depends_on('r-digest', type=('build', 'run'))

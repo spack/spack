@@ -39,8 +39,8 @@ class PyMacs2(Package):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-macs2 requires py-setuptools during runtime as well.
-    depends_on('py-setuptools', type=nolink)
-    depends_on('py-numpy@1.6:', type=nolink)
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-numpy@1.6:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

@@ -37,8 +37,8 @@ class PyPudb(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-urwid@1.1.1:', type=nolink)
-    depends_on('py-pygments@1.0:', type=nolink)
+    depends_on('py-urwid@1.1.1:', type=('build', 'run'))
+    depends_on('py-pygments@1.0:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

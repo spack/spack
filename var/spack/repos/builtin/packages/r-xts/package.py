@@ -37,4 +37,4 @@ class RXts(RPackage):
 
     version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
 
-    depends_on('r-zoo', type=nolink)
+    depends_on('r-zoo', type=('build', 'run'))

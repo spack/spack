@@ -35,8 +35,8 @@ class RCar(RPackage):
 
     version('2.1-2', '0f78ad74ef7130126d319acec23951a0')
 
-    depends_on('r-mass', type=nolink)
-    depends_on('r-mgcv', type=nolink)
-    depends_on('r-nnet', type=nolink)
-    depends_on('r-pbkrtest', type=nolink)
-    depends_on('r-quantreg', type=nolink)
+    depends_on('r-mass', type=('build','run'))
+    depends_on('r-mgcv', type=('build','run'))
+    depends_on('r-nnet', type=('build','run'))
+    depends_on('r-pbkrtest', type=('build','run'))
+    depends_on('r-quantreg', type=('build','run'))

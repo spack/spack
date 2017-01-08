@@ -36,4 +36,4 @@ class RIrlba(RPackage):
 
     version('2.0.0', '557674cf8b68fea5b9f231058c324d26')
 
-    depends_on('r-matrix', type=nolink)
+    depends_on('r-matrix', type=('build', 'run'))

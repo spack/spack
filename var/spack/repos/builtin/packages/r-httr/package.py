@@ -36,8 +36,8 @@ class RHttr(RPackage):
 
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
 
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-mime', type=nolink)
-    depends_on('r-curl', type=nolink)
-    depends_on('r-openssl', type=nolink)
-    depends_on('r-r6', type=nolink)
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-mime', type=('build', 'run'))
+    depends_on('r-curl', type=('build', 'run'))
+    depends_on('r-openssl', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

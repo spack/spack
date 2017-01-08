@@ -35,4 +35,4 @@ class RXlconnectjars(RPackage):
     version('0.2-12', '6984e5140cd1c887c017ef6f88cbba81')
     version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')
 
-    depends_on('r-rjava', type=nolink)
+    depends_on('r-rjava', type=('build', 'run'))

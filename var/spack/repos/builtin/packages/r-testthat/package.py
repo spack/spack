@@ -35,8 +35,8 @@ class RTestthat(RPackage):
 
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
 
-    depends_on('r-digest', type=nolink)
-    depends_on('r-crayon', type=nolink)
-    depends_on('r-praise', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-r6', type=nolink)
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-crayon', type=('build', 'run'))
+    depends_on('r-praise', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

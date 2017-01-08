@@ -34,10 +34,10 @@ class RDiagrammer(RPackage):
 
     version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
 
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-igraph', type=nolink)
-    depends_on('r-influencer', type=nolink)
-    depends_on('r-rstudioapi@0.6:', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-visnetwork', type=nolink)
-    depends_on('r-scales', type=nolink)
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-igraph', type=('build', 'run'))
+    depends_on('r-influencer', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.6:', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-visnetwork', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))

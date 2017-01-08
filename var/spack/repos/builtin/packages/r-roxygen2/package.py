@@ -35,8 +35,8 @@ class RRoxygen2(RPackage):
 
     version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
 
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-stringi', type=nolink)
-    depends_on('r-brew', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-brew', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

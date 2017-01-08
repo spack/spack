@@ -36,5 +36,5 @@ class RRaster(RPackage):
 
     version('2.5-8', '2a7db931c74d50516e82d04687c0a577')
 
-    depends_on('r-sp', type=nolink)
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

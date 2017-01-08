@@ -37,4 +37,4 @@ class REvaluate(RPackage):
 
     version('0.9', '877d89ce8a9ef7f403b1089ca1021775')
 
-    depends_on('r-stringr', type=nolink)
+    depends_on('r-stringr', type=('build', 'run'))

@@ -41,4 +41,4 @@ class RRsnns(RPackage):
 
     version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
 
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-rcpp', type=('build', 'run'))

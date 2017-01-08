@@ -34,4 +34,4 @@ class RMapproj(RPackage):
 
     version('1.2-4', '10e22bde1c790e1540672f15ddcaee71')
 
-    depends_on('r-maps', type=nolink)
+    depends_on('r-maps', type=('build', 'run'))

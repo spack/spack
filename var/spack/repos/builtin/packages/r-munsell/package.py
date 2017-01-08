@@ -38,4 +38,4 @@ class RMunsell(RPackage):
 
     version('0.4.3', 'ebd205323dc37c948f499ee08be9c476')
 
-    depends_on('r-colorspace', type=nolink)
+    depends_on('r-colorspace', type=('build', 'run'))

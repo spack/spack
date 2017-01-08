@@ -36,4 +36,4 @@ class RLmtest(RPackage):
 
     version('0.9-34', 'fcdf7286bb5ccc2ca46be00bf25ac2fe')
 
-    depends_on('r-zoo', type=nolink)
+    depends_on('r-zoo', type=('build', 'run'))

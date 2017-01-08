@@ -41,5 +41,5 @@ class RPbdzmq(RPackage):
 
     version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
 
-    depends_on('r-r6', type=nolink)
+    depends_on('r-r6', type=('build', 'run'))
     depends_on('zeromq')

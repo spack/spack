@@ -126,8 +126,6 @@ from spack.provider_index import ProviderIndex
 __all__ = [
     'Spec',
     'alldeps',
-    'nolink',
-    'nobuild',
     'canonical_deptype',
     'validate_deptype',
     'parse',
@@ -188,14 +186,10 @@ _any_version = VersionList([':'])
 
 # Special types of dependencies.
 alldeps = ('build', 'link', 'run')
-nolink  = ('build', 'run')
-nobuild = ('link', 'run')
 norun   = ('link', 'build')
 special_types = {
     'alldeps': alldeps,
     'all': alldeps,  # allow "all" as string but not symbol.
-    'nolink': nolink,
-    'nobuild': nobuild,
     'norun': norun,
 }
 

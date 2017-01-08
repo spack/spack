@@ -37,7 +37,7 @@ class PyPytest(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-py@1.4.29:', type=nolink)
+    depends_on('py-py@1.4.29:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

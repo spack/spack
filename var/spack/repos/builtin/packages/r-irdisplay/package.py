@@ -36,4 +36,4 @@ class RIrdisplay(RPackage):
 
     version('0.4.4', '5be672fb82185b90f23bd99ac1e1cdb6')
 
-    depends_on('r-repr', type=nolink)
+    depends_on('r-repr', type=('build', 'run'))

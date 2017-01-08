@@ -35,9 +35,9 @@ class RScales(RPackage):
 
     version('0.4.0', '7b5602d9c55595901192248bca25c099')
 
-    depends_on('r-rcolorbrewer', type=nolink)
-    depends_on('r-dichromat', type=nolink)
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-munsell', type=nolink)
-    depends_on('r-labeling', type=nolink)
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-dichromat', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-munsell', type=('build', 'run'))
+    depends_on('r-labeling', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

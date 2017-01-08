@@ -37,10 +37,10 @@ class RShiny(RPackage):
 
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
-    depends_on('r-httpuv', type=nolink)
-    depends_on('r-mime', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-xtable', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-r6', type=nolink)
+    depends_on('r-httpuv', type=('build', 'run'))
+    depends_on('r-mime', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-xtable', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

@@ -50,10 +50,10 @@ class PyH5py(Package):
     depends_on('py-mpi4py', when='+mpi')
 
     # Build and runtime dependencies
-    depends_on('py-numpy@1.6.1:', type=nolink)
+    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
 
     # Runtime dependencies
-    depends_on('py-six', type=nolink)
+    depends_on('py-six', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))

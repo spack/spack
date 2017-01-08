@@ -40,7 +40,7 @@ class PyMako(Package):
     depends_on('py-setuptools', type='build')
     # depends_on('py-mock',   type='test')  # TODO: Add test deptype
     # depends_on('py-pytest', type='test')  # TODO: Add test deptype
-    depends_on('py-markupsafe@0.9.2:', type=nolink)
+    depends_on('py-markupsafe@0.9.2:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

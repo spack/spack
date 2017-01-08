@@ -34,5 +34,5 @@ class RTtr(RPackage):
 
     version('0.23-1', '35f693ac0d97e8ec742ebea2da222986')
 
-    depends_on('r-xts', type=nolink)
-    depends_on('r-zoo', type=nolink)
+    depends_on('r-xts', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))

@@ -36,6 +36,6 @@ class RHtmlwidgets(RPackage):
 
     version('0.6', '7fa522d2eda97593978021bda9670c0e')
 
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-yaml', type=nolink)
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))

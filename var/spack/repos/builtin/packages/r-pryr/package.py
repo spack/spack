@@ -36,5 +36,5 @@ class RPryr(RPackage):
 
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

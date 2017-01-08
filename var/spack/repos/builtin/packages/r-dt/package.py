@@ -36,6 +36,6 @@ class RDt(RPackage):
 
     version('0.1', '5c8df984921fa484784ec4b8a4fb6f3c')
 
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-magrittr', type=nolink)
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

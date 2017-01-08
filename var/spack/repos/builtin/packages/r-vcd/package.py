@@ -39,6 +39,6 @@ class RVcd(RPackage):
 
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
 
-    depends_on('r-mass', type=nolink)
-    depends_on('r-colorspace', type=nolink)
-    depends_on('r-lmtest', type=nolink)
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-colorspace', type=('build', 'run'))
+    depends_on('r-lmtest', type=('build', 'run'))

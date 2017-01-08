@@ -37,8 +37,8 @@ class PyScikitLearn(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-scipy', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

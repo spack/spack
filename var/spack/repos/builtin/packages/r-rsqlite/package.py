@@ -36,4 +36,4 @@ class RRsqlite(RPackage):
 
     version('1.0.0', 'e6cbe2709612b687c13a10d30c7bad45')
 
-    depends_on('r-dbi', type=nolink)
+    depends_on('r-dbi', type=('build', 'run'))

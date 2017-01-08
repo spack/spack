@@ -35,7 +35,7 @@ class RVisnetwork(RPackage):
 
     version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
 
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-magrittr', type=nolink)
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
