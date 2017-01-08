@@ -31,7 +31,8 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
+from spack.util.executable import Executable
+from llnl.util.filesystem import working_dir, join_path
 from spack.package import PackageBase
 
 
@@ -125,6 +126,10 @@ class AutotoolsPackage(PackageBase):
 
         return False
 
+    def root_configure_dir(self):
+        """Directory containing configure script"""
+        return self.stage.source_path
+
     def build_directory(self):
         """Override to provide another place to build the package"""
         return self.stage.source_path
@@ -145,9 +150,10 @@ class AutotoolsPackage(PackageBase):
     def is_configure_or_die(self):
         """Checks the presence of a ``configure`` file after the
         autoreconf phase"""
-        if not os.path.exists('configure'):
-            raise RuntimeError(
-                'configure script not found in {0}'.format(os.getcwd()))
+        with working_dir(self.root_configure_dir()):
+            if not os.path.exists('configure'):
+                raise RuntimeError(
+                    'configure script not found in {0}'.format(os.getcwd()))
 
     def configure_args(self):
         """Method to be overridden. Should return an iterable containing
@@ -160,8 +166,12 @@ class AutotoolsPackage(PackageBase):
         and an appropriately set prefix
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+
+        configure_path = join_path(self.root_configure_dir(), 'configure')
+        configure = Executable(os.path.abspath(configure_path))
+
         with working_dir(self.build_directory(), create=True):
-            inspect.getmodule(self).configure(*options)
+            configure(*options)
 
     def build(self, spec, prefix):
         """Make the build targets"""

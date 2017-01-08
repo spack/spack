@@ -35,17 +35,13 @@ class Zlib(AutotoolsPackage):
 
     version('1.2.10', 'd9794246f853d15ce0fcbf79b9a3cf13')
     # author had this to say about 1.2.9....
-    # Due to the bug fixes, any installations of 1.2.9 should be immediately 
+    # Due to the bug fixes, any installations of 1.2.9 should be immediately
     # replaced with 1.2.10.
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
-    def configure(self, spec, prefix):
-
-        if '+pic' in spec:
-            environ['CFLAGS'] = self.compiler.pic_flag
-
-        config_args = ['--prefix', prefix]
-        configure(*config_args)
+    def setup_environment(self, spack_env, run_env):
+        if '+pic' in self.spec:
+            spack_env.set('CFLAGS', self.compiler.pic_flag)
