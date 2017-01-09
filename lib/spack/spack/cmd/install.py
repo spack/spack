@@ -330,7 +330,7 @@ def install(parser, args, **kwargs):
             # Decorate PackageBase.do_install to get installation status
             PackageBase.do_install = junit_output(
                 spec, test_suite
-                )(PackageBase.do_install)
+            )(PackageBase.do_install)
 
         # Do the actual installation
         if args.things_to_install == 'dependencies':
