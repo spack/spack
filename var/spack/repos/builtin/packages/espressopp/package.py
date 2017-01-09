@@ -54,11 +54,12 @@ class Espressopp(CMakePackage):
     depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
+    depends_on('py-numpy', when="+ug", type='build')
+    depends_on('py-numpy', when="+pdf", type='build')
+    depends_on('py-matplotlib', when="+ug", type='build')
+    depends_on('py-matplotlib', when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')
     depends_on("doxygen", when="+dg", type='build')
-
-    # Documentation cannot be built in parallel
-    parallel = False
 
     def build_type(self):
         spec = self.spec
@@ -70,16 +71,12 @@ class Espressopp(CMakePackage):
     def cmake_args(self):
         return ['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON']
 
-    @property
-    def build_targets(self):
-        spec = self.spec
-
-        targets = ['all']
-        if '+ug' in spec:
-            targets.append('ug')
-        if '+pdf' in spec:
-            targets.append('ug-pdf')
-        if '+dg' in spec:
-            targets.append('doc')
-
-        return targets
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory()):
+            make()
+            if '+ug' in spec:
+                make("ug", parallel=False)
+            if '+pdf' in spec:
+                make("ug-pdf", parallel=False)
+            if '+dg' in spec:
+                make("doc", parallel=False)
