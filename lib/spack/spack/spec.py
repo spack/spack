@@ -2682,13 +2682,11 @@ class SpecLexer(spack.parse.Lexer):
             # Checked by check_identifier() for better error messages.
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
             (r'\s+', lambda scanner, val: None)],
-
             [EQ],
-
             [(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
              (r'\s+', lambda scanner, val: None)],
-
             [VAL])
+
 
 # Lexer is always the same for every parser.
 _lexer = SpecLexer()

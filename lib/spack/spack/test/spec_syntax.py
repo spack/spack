@@ -82,6 +82,7 @@ kv_lex = [Token(sp.ID, 'mvapich_foo'),
           Token(sp.AT),
           Token(sp.ID, '8.1_1e')]
 
+
 class TestSpecSyntax(object):
     # ========================================================================
     # Parse checks
