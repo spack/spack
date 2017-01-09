@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Tao(Package):
@@ -40,7 +41,9 @@ class Tao(Package):
     depends_on('petsc@3.4.0:3.4.999~complex', when='@2.2.2')
 
     def install(self, spec, prefix):
-        make('all')
+        os.environ['TAO_DIR'] = os.getcwd()
+        make('all', parallel=False)
+        make('install')
 
     def setup_environment(self, spack_env, run_env):
         # configure fails if these env vars are set outside of Spack
@@ -52,6 +55,6 @@ class Tao(Package):
         run_env.unset('TAO_ARCH')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # Set up TAO_DIR for everyone using PETSc package
+        # Set up TAO_DIR for everyone using TAO package
         spack_env.set('TAO_DIR', self.prefix)
         spack_env.unset('TAO_ARCH')

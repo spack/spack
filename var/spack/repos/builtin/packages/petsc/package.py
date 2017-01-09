@@ -93,6 +93,7 @@ class Petsc(Package):
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
     depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
+    depends_on('superlu-dist@3.3', when='@3.4.5+superlu-dist+mpi')
     depends_on('superlu-dist@:4.3', when='@3.4.4:3.6.4+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@for-pflotran-0.1.0+superlu-dist+mpi')
