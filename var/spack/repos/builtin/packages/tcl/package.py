@@ -52,9 +52,6 @@ class Tcl(AutotoolsPackage):
         env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
                 self.spec.version.up_to(2))))
 
-    def root_configure_dir(self):
-        return 'unix'
-
     def build_directory(self):
         return 'unix'
 
