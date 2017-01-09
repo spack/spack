@@ -1999,49 +1999,121 @@ the Python extensions provided by them: once for ``+python`` and once
 for ``~python``.  Other than using a little extra disk space, that
 solution has no serious problems.
 
------------------------------------
-Implementing the ``install`` method
------------------------------------
+---------------------------------------
+Implementing the installation procedure
+---------------------------------------
 
-The last element of a package is its ``install()`` method.  This is
+The last element of a package is its **installation procedure**.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. code-block:: python
-   :linenos:
+Defining an installation procedure means overriding a set of methods or attributes
+that will be called at some point during the installation of the package.
+What determines the actual set of entities that are available for overriding
+is the package base class, which is usually specialized for a given build system.
+The classes that are currently provided by ``Spack`` are:
 
-   def install(self, spec prefix):
-       configure('--prefix={0}'.format(prefix))
+    +------------------------------------+----------------------------------+
+    |                                    |   **Base class purpose**         |
+    +====================================+==================================+
+    |          :py:class:`.Package`      | General base class not           |
+    |                                    | specialized for any build system |
+    +------------------------------------+----------------------------------+
+    |   :py:class:`.MakefilePackage`     | Specialized class for packages   |
+    |                                    | that are built invoking an       |
+    |                                    | hand-written Makefile            |
+    +------------------------------------+----------------------------------+
+    |   :py:class:`.AutotoolsPackage`    | Specialized class for packages   |
+    |                                    | that are built using GNU         |
+    |                                    | Autotools                        |
+    +------------------------------------+----------------------------------+
+    |  :py:class:`.CMakePackage`         | Specialized class for packages   |
+    |                                    | that are built using CMake       |
+    +------------------------------------+----------------------------------+
+    |  :py:class:`.RPackage`             | Specialized class for            |
+    |                                    | :py:class:`.R` extensions        |
+    +------------------------------------+----------------------------------+
 
-       make()
-       make('install')
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Mechanics of an installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``install`` takes a ``spec``: a description of how the package should
-be built, and a ``prefix``: the path to the directory where the
-software should be installed.
+When a user runs ``spack install``, Spack:
 
-Spack provides wrapper functions for ``configure`` and ``make`` so
-that you can call them in a similar way to how you'd call a shell
-command.  In reality, these are Python functions.  Spack provides
-these functions to make writing packages more natural. See the section
-on :ref:`shell wrappers <shell-wrappers>`.
+* fetches an archive for the correct version of the software
+* expands the archive
+* sets the current working directory to the root directory of the expanded archive
 
-Now that the metadata is out of the way, we can move on to the
-``install()`` method.  When a user runs ``spack install``, Spack
-fetches an archive for the correct version of the software, expands
-the archive, and sets the current working directory to the root
-directory of the expanded archive.  It then instantiates a package
-object and calls the ``install()`` method.
+Then, depending on the base class of the package under consideration, it will execute
+a certain number of **phases** that reflect the way a package of that type is usually built.
+The name and order in which the phases will be executed can be obtained either reading the API docs in this manual, or
+using the ``spack info`` command:
 
-The ``install()`` signature looks like this:
+.. code-block:: console
+    :emphasize-lines: 13,14
+
+    $ spack info m4
+    AutotoolsPackage:    m4
+    Homepage:            https://www.gnu.org/software/m4/m4.html
+
+    Safe versions:
+        1.4.17    ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+
+    Variants:
+        Name       Default   Description
+
+        sigsegv    on        Build the libsigsegv dependency
+
+    Installation Phases:
+        autoreconf    configure    build    install
+
+    Build Dependencies:
+        libsigsegv
+
+    Link Dependencies:
+        libsigsegv
+
+    Run Dependencies:
+        None
+
+    Virtual Packages:
+        None
+
+    Description:
+        GNU M4 is an implementation of the traditional Unix macro processor.
+
+Typically, phases have  default implementations that fit most of the common cases:
+
+.. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
+    :pyobject: AutotoolsPackage.configure
+    :linenos:
+
+making it just sufficient for a packager to override a few
+build-system specific helper methods or attributes to provide, for instance,
+configure arguments:
+
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/m4/package.py
+    :pyobject: M4.configure_args
+    :linenos:
+
+.. note::
+    Each specific build-system has a list of attributes that can be overridden to
+    fine-tune the installation of a package without overriding an entire phase. To
+    have more information on them the place to go is the API docs at the end of this manual.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding an entire phase
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In extreme cases it may be necessary to override an entire phase. Regardless
+of the build-system in use the signature for it is:
 
 .. code-block:: python
 
    class Foo(Package):
        def install(self, spec, prefix):
            ...
-
-The parameters are as follows:
 
 ``self``
     For those not used to Python instance methods, this is the
@@ -2059,19 +2131,15 @@ The parameters are as follows:
     targets into.  It acts like a string, but it's actually its own
     special type, :py:class:`Prefix <spack.util.prefix.Prefix>`.
 
-``spec`` and ``prefix`` are passed to ``install`` for convenience.
-``spec`` is also available as an attribute on the package
-(``self.spec``), and ``prefix`` is actually an attribute of ``spec``
-(``spec.prefix``).
+The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always
+correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
 
-As mentioned in :ref:`install-environment`, you will usually not need
-to refer to dependencies explicitly in your package file, as the
-compiler wrappers take care of most of the heavy lifting here.  There
-will be times, though, when you need to refer to the install locations
-of dependencies, or when you need to do something different depending
-on the version, compiler, dependencies, etc. that your package is
-built with.  These parameters give you access to this type of
-information.
+As mentioned in :ref:`install-environment`, you will usually not need to refer
+to dependencies explicitly in your package file, as the compiler wrappers take care of most of
+the heavy lifting here.  There will be times, though, when you need to refer to
+the install locations of dependencies, or when you need to do something different
+depending on the version, compiler, dependencies, etc. that your package is
+built with.  These parameters give you access to this type of information.
 
 .. _install-environment:
 
