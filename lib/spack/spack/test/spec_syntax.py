@@ -55,34 +55,32 @@ complex_lex = [Token(sp.ID, 'mvapich_foo'),
                Token(sp.ID, '8.1_1e')]
 
 # Another sample lexer output with a kv pair.
-kv_lex =      [Token(sp.ID, 'mvapich_foo'),
-               Token(sp.ID, 'debug'),
-               Token(sp.EQ),
-               Token(sp.VAL, '4'),
-               Token(sp.DEP),
-               Token(sp.ID, '_openmpi'),
-               Token(sp.AT),
-               Token(sp.ID, '1.2'),
-               Token(sp.COLON),
-               Token(sp.ID, '1.4'),
-               Token(sp.COMMA),
-               Token(sp.ID, '1.6'),
-               Token(sp.PCT),
-               Token(sp.ID, 'intel'),
-               Token(sp.AT),
-               Token(sp.ID, '12.1'),
-               Token(sp.COLON),
-               Token(sp.ID, '12.6'),
-               Token(sp.ON),
-               Token(sp.ID, 'debug'),
-               Token(sp.OFF),
-               Token(sp.ID, 'qt_4'),
-               Token(sp.DEP),
-               Token(sp.ID, 'stackwalker'),
-               Token(sp.AT),
-               Token(sp.ID, '8.1_1e')]
-
-
+kv_lex = [Token(sp.ID, 'mvapich_foo'),
+          Token(sp.ID, 'debug'),
+          Token(sp.EQ),
+          Token(sp.VAL, '4'),
+          Token(sp.DEP),
+          Token(sp.ID, '_openmpi'),
+          Token(sp.AT),
+          Token(sp.ID, '1.2'),
+          Token(sp.COLON),
+          Token(sp.ID, '1.4'),
+          Token(sp.COMMA),
+          Token(sp.ID, '1.6'),
+          Token(sp.PCT),
+          Token(sp.ID, 'intel'),
+          Token(sp.AT),
+          Token(sp.ID, '12.1'),
+          Token(sp.COLON),
+          Token(sp.ID, '12.6'),
+          Token(sp.ON),
+          Token(sp.ID, 'debug'),
+          Token(sp.OFF),
+          Token(sp.ID, 'qt_4'),
+          Token(sp.DEP),
+          Token(sp.ID, 'stackwalker'),
+          Token(sp.AT),
+          Token(sp.ID, '8.1_1e')]
 
 class TestSpecSyntax(object):
     # ========================================================================
@@ -339,7 +337,6 @@ class TestSpecSyntax(object):
             "mvapich_foo 'debug = 4' "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
-
 
     def test_kv_without_quotes(self):
         self.check_lex(

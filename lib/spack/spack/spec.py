@@ -2685,8 +2685,7 @@ class SpecLexer(spack.parse.Lexer):
 
             [EQ],
 
-            [(r'[\S].*',
-              lambda scanner, val: self.token(VAL,    val)),
+            [(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
              (r'\s+', lambda scanner, val: None)],
 
             [VAL])
