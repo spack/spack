@@ -23,33 +23,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class Libmesh(AutotoolsPackage):
-    """The libMesh library provides a framework for the numerical simulation of
-       partial differential equations using arbitrary unstructured
-       discretizations on serial and parallel platforms."""
+class Moose(Package):
+    """The Multiphysics Object-Oriented Simulation Environment (MOOSE)
+    is a finite-element, multiphysics framework primarily developed by
+    Idaho National Laboratory."""
 
-    homepage = "http://libmesh.github.io/"
-    url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
-    list_url = "https://github.com/libMesh/libmesh/releases"
+    homepage = "http://mooseframework.org/"
+    url      = "https://github.com/idaholab/moose/archive/C++03_final.tar.gz"
 
-    version('1.1.0', '92e636163d64cc23762df1cdeec257fe')
-    version('1.0.0', 'cb464fc63ea0b71b1e69fa3f5d4f93a4')
+    version('master', git='https://github.com/idaholab/moose.git', branch='master')
+    version('C++03_final', '5103e8c8bd1eb7b9c49902ea655359ff')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
+    depends_on('libmesh+mpi')
 
-    depends_on('mpi', when='+mpi')
+    def install(self, spec, prefix):
+        if self.run_tests:
+            with working_dir('test'):
+                make()
+                run_tests = which('./run_tests')
+                run_tests('-j{0}'.format(make_jobs))
 
-    # Parallel version of libmesh needs parallel solvers
-    depends_on('petsc+mpi', when='+mpi')
+        copy_tree('.', prefix)
 
-    def configure_args(self):
-        spec = self.spec
-        config_args = []
-
-        if '+mpi' in spec:
-            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
-            config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
-
-        return config_args
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('CC',  spec['mpi'].mpicc)
+        run_env.set('CXX', spec['mpi'].mpicxx)
+        run_env.set('F77', spec['mpi'].mpif77)
+        run_env.set('FC',  spec['mpi'].mpifc)
