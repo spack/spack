@@ -89,7 +89,8 @@ class Lexer(object):
                 self.mode = 1 - self.mode  # swap 0/1
                 remainder_used = 1
                 tokens = tokens[:i + 1] + self.lex_word(
-                    ''.join(t.value for t in tokens[i + 1:]) + remainder)
+                    word[word.index(t.value) + len(t.value):])
+                break
 
         if remainder and not remainder_used:
             raise LexError("Invalid character", word, word.index(remainder))
