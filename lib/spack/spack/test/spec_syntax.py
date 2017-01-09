@@ -54,6 +54,35 @@ complex_lex = [Token(sp.ID, 'mvapich_foo'),
                Token(sp.AT),
                Token(sp.ID, '8.1_1e')]
 
+# Another sample lexer output with a kv pair.
+kv_lex =      [Token(sp.ID, 'mvapich_foo'),
+               Token(sp.ID, 'debug'),
+               Token(sp.EQ),
+               Token(sp.VAL, '4'),
+               Token(sp.DEP),
+               Token(sp.ID, '_openmpi'),
+               Token(sp.AT),
+               Token(sp.ID, '1.2'),
+               Token(sp.COLON),
+               Token(sp.ID, '1.4'),
+               Token(sp.COMMA),
+               Token(sp.ID, '1.6'),
+               Token(sp.PCT),
+               Token(sp.ID, 'intel'),
+               Token(sp.AT),
+               Token(sp.ID, '12.1'),
+               Token(sp.COLON),
+               Token(sp.ID, '12.6'),
+               Token(sp.ON),
+               Token(sp.ID, 'debug'),
+               Token(sp.OFF),
+               Token(sp.ID, 'qt_4'),
+               Token(sp.DEP),
+               Token(sp.ID, 'stackwalker'),
+               Token(sp.AT),
+               Token(sp.ID, '8.1_1e')]
+
+
 
 class TestSpecSyntax(object):
     # ========================================================================
@@ -85,7 +114,7 @@ class TestSpecSyntax(object):
         spec = shlex.split(spec)
         lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == sp.ID:
+            if tok.type == sp.ID or tok.type == sp.VAL:
                 assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
@@ -116,6 +145,16 @@ class TestSpecSyntax(object):
 
     def test_multiple_specs(self):
         self.check_parse("mvapich emacs")
+
+    def test_multiple_specs_after_kv(self):
+        self.check_parse('mvapich cppflags="-O3 -fPIC" emacs')
+        self.check_parse('mvapich cflags="-O3" emacs',
+                         'mvapich cflags=-O3 emacs')
+
+    def test_multiple_specs_long_second(self):
+        self.check_parse('mvapich emacs@1.1.1%intel cflags="-O3"',
+                         'mvapich emacs @1.1.1 %intel cflags=-O3')
+        self.check_parse('mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
 
     def test_full_specs(self):
         self.check_parse(
@@ -282,4 +321,46 @@ class TestSpecSyntax(object):
             complex_lex,
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_with_quotes(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug='4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            'mvapich_foo debug="4" '
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo 'debug = 4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+
+    def test_kv_without_quotes(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug=4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_with_spaces(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug = 4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug =4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug= 4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
