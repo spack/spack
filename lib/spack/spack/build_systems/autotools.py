@@ -36,28 +36,53 @@ from spack.package import PackageBase
 
 
 class AutotoolsPackage(PackageBase):
-    """Specialized class for packages that are built using GNU Autotools
+    """Specialized class for packages that are built using GNU Autotools.
 
     This class provides four phases that can be overridden:
 
-    * autoreconf
-    * configure
-    * build
-    * install
+        1. :py:meth:`.AutotoolsPackage.autoreconf`
+        2. :py:meth:`.AutotoolsPackage.configure`
+        3. :py:meth:`.AutotoolsPackage.build`
+        4. :py:meth:`.AutotoolsPackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override ``configure_args``
+    necessary will be to override :py:meth:`.configure_args`:
 
-    Additionally, you may specify make targets for build and install
-    phases by overriding ``build_targets`` and ``install_targets``
+    .. code-block:: python
+
+        def configure_args(self):
+            spec = self.spec
+            args = ['--enable-c++']
+            # ...
+            return args
+
+    For a finer tuning you may override:
+
+        +-----------------------------------------------+--------------------+
+        | **Method**                                    | **Purpose**        |
+        +===============================================+====================+
+        | :py:attr:`.AutotoolsPackage.build_targets`    | Specify ``make``   |
+        |                                               | targets for the    |
+        |                                               | build phase        |
+        +-----------------------------------------------+--------------------+
+        | :py:attr:`.AutotoolsPackage.install_targets`  | Specify ``make``   |
+        |                                               | targets for the    |
+        |                                               | install phase      |
+        +-----------------------------------------------+--------------------+
+
     """
+    #: phases of a GNU Autotools package
     phases = ['autoreconf', 'configure', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: this attribute is used in UI queries that require to know which
+    #: build-system class we are using
     build_system_class = 'AutotoolsPackage'
     patch_config_guess = True
 
+    #: targets for ``make`` during the :py:meth:`.AutotoolsPackage.build`
+    #: phase
     build_targets = []
+    #: targets for ``make`` during the :py:meth:`.AutotoolsPackage.install`
+    #: phase
     install_targets = ['install']
 
     def do_patch_config_guess(self):
@@ -144,22 +169,25 @@ class AutotoolsPackage(PackageBase):
 
     @PackageBase.sanity_check('autoreconf')
     def is_configure_or_die(self):
-        """Checks the presence of a ``configure`` file after the
-        autoreconf phase"""
+        """Checks the presence of a `configure` file after the
+        :py:meth:`.autoreconf` phase.
+
+        :raise RuntimeError: if the ``configure`` script does not exist.
+        """
         with working_dir(self.build_directory()):
             if not os.path.exists('configure'):
                 raise RuntimeError(
                     'configure script not found in {0}'.format(os.getcwd()))
 
     def configure_args(self):
-        """Method to be overridden. Should return an iterable containing
-        all the arguments that must be passed to configure, except ``--prefix``
+        """Returns a list containing all the arguments that must be passed to
+        configure, except ``--prefix`` which will be pre-pended to the list.
         """
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in ``configure_args``
-        and an appropriately set prefix
+        """Runs configure with the arguments specified in :py:meth:`.configure_args`
+        and an appropriately set prefix.
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
 
@@ -167,12 +195,12 @@ class AutotoolsPackage(PackageBase):
             inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
-        """Make the build targets"""
+        """Makes the build targets"""
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Make the install targets"""
+        """Makes the install targets"""
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 
@@ -181,8 +209,8 @@ class AutotoolsPackage(PackageBase):
     def _run_default_function(self):
         """This function is run after build if ``self.run_tests == True``
 
-        It will search for a method named ``check`` and run it. A sensible
-        default is provided in the base class.
+        It will search for a method named :py:meth:`.check` and run it. A
+        sensible default is provided in the base class.
         """
         try:
             fn = getattr(self, 'check')
