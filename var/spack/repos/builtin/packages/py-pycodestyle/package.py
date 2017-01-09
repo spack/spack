@@ -46,7 +46,7 @@ class PyPycodestyle(Package):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pycodestyle requires py-setuptools during runtime as well.
-    depends_on('py-setuptools', type=nolink)
+    depends_on('py-setuptools', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

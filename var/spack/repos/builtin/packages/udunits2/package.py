@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Udunits2(Package):
+class Udunits2(AutotoolsPackage):
     """Automated units conversion"""
 
     homepage = "http://www.unidata.ucar.edu/software/udunits"
@@ -35,7 +35,5 @@ class Udunits2(Package):
 
     depends_on('expat')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+    depends_on('bison', type='build')
+    depends_on('flex',  type='build')

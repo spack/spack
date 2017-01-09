@@ -200,7 +200,7 @@ class PythonGuess(DefaultGuess):
 
     # FIXME: Add additional dependencies if required.
     # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=nolink)"""
+    # depends_on('py-foo',        type=('build', 'run'))"""
 
     body = """\
     def install(self, spec, prefix):
@@ -215,16 +215,11 @@ class PythonGuess(DefaultGuess):
 class RGuess(DefaultGuess):
     """Provides appropriate overrides for R extensions"""
     dependencies = """\
-    extends('r')
-
-    # FIXME: Add additional dependencies if required.
-    # depends_on('r-foo', type=nolink)"""
+    # FIXME: Add dependencies if required.
+    # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)"""
+    # FIXME: Override install() if necessary."""
 
     def __init__(self, name, *args):
         name = 'r-{0}'.format(name)
@@ -237,7 +232,7 @@ class OctaveGuess(DefaultGuess):
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('octave-foo', type=nolink)"""
+    # depends_on('octave-foo', type=('build', 'run'))"""
 
     body = """\
     def install(self, spec, prefix):

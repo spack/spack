@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDt(Package):
+class RDt(RPackage):
     """Data objects in R can be rendered as HTML tables using the JavaScript
     library 'DataTables' (typically via R Markdown or Shiny). The 'DataTables'
     library has been included in this R package. The package name 'DT' is an
@@ -36,12 +36,6 @@ class RDt(Package):
 
     version('0.1', '5c8df984921fa484784ec4b8a4fb6f3c')
 
-    extends('r')
-
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

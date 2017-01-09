@@ -1507,11 +1507,7 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
-  * **alldeps**: All dependency types.  **Note:** No quotes here
-  * **nolink**: Equal to ``("build", "run")``, for use by dependencies
-    that are not expressed via a linker (e.g., Python or Lua module
-    loading).  **Note:** No quotes here
-
+ 
 """""""""""""""""""
 Dependency Formulas
 """""""""""""""""""
@@ -3110,7 +3106,6 @@ dependencies as well.  This is equivalent to
 
 * Any combination of ``build``, ``link``, and ``run`` separated by
   commas.
-* ``nobuild``, ``nolink``, ``norun`` to omit one type.
 * ``all`` or ``alldeps`` for all types of dependencies.
 
 You can also use ``spack graph`` to generate graphs in the widely used

@@ -56,15 +56,15 @@ class PyYt(Package):
 
     extends("python")
 
-    depends_on("py-astropy", type="nolink", when="+astropy")
-    depends_on("py-cython", type="nolink")
-    depends_on("py-h5py", type="nolink", when="+h5py")
-    depends_on("py-ipython", type="nolink")
-    depends_on("py-matplotlib", type="nolink")
-    depends_on("py-numpy", type="nolink")
-    depends_on("py-scipy", type="nolink", when="+scipy")
+    depends_on("py-astropy", type=('build', 'run'), when="+astropy")
+    depends_on("py-cython", type=('build', 'run'))
+    depends_on("py-h5py", type=('build', 'run'), when="+h5py")
+    depends_on("py-ipython", type=('build', 'run'))
+    depends_on("py-matplotlib", type=('build', 'run'))
+    depends_on("py-numpy", type=('build', 'run'))
+    depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type="build")
-    depends_on("py-sympy", type="nolink")
+    depends_on("py-sympy", type=('build', 'run'))
     depends_on("python @2.7:2.999,3.4:")
 
     def install(self, spec, prefix):

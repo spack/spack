@@ -23,27 +23,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-from spack import *
+import inspect
+
+from spack.directives import extends
+from spack.package import PackageBase
 
 
-class RRbokeh(RPackage):
-    """R interface for creating plots in Bokeh. Bokeh by Continuum
-    Analytics."""
+class RPackage(PackageBase):
+    """Specialized class for packages that are built using R
 
-    homepage = "https://hafen.github.io/rbokeh"
-    url      = "https://cran.r-project.org/src/contrib/rbokeh_0.5.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rbokeh"
+    This class provides a single phase that can be overridden:
+    * install
 
-    version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
+    It has sensible defaults and for many packages the only thing
+    necessary will be to add dependencies
+    """
+    phases = ['install']
 
-    depends_on('r-htmlwidgets', type=('build', 'run'))
-    depends_on('r-maps', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-hexbin', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-pryr', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
-    depends_on('r-gistr', type=('build', 'run'))
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'RPackage'
+
+    extends('r')
+
+    def install(self, spec, prefix):
+        """Install the R package"""
+        inspect.getmodule(self).R(
+            'CMD', 'INSTALL',
+            '--library={0}'.format(self.module.r_lib_dir),
+            self.stage.source_path)
+
+    # Check that self.prefix is there after installation
+    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
