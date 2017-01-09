@@ -2659,7 +2659,7 @@ class Spec(object):
 #
 # These are possible token types in the spec grammar.
 #
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, QT, ID, VAL = range(12)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL = range(11)
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -2687,12 +2687,9 @@ class SpecLexer(spack.parse.Lexer):
 
             [(r'[\S].*',
               lambda scanner, val: self.token(VAL,    val)),
-             (r'([\"\'])(?:(?=(\\?))\2.)*?\1',
-              lambda scanner, val: self.token(QT, val)),
              (r'\s+', lambda scanner, val: None)],
 
-            [QT, VAL])
-
+            [VAL])
 
 # Lexer is always the same for every parser.
 _lexer = SpecLexer()
@@ -2711,35 +2708,44 @@ class SpecParser(spack.parse.Parser):
             while self.next or self.previous:
                 # TODO: clean this parsing up a bit
                 if self.previous:
+                    # We picked up the name of this spec while finishing the
+                    # previous spec
                     specs.append(self.spec(self.previous.value))
                     self.previous = None
                 elif self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
+                        # We're either parsing an anonymous spec beginning
+                        # with a key-value pair or adding a key-value pair
+                        # to the last spec
                         if not specs:
                             specs.append(self.spec(None))
-                        if self.accept(QT):
-                            self.token.value = self.token.value[1:-1]
-                        else:
-                            self.expect(VAL)
+                        self.expect(VAL)
                         specs[-1]._add_flag(
                             self.previous.value, self.token.value)
                         self.previous = None
                     else:
+                        # We're parsing a new spec by name
                         value = self.previous.value
                         self.previous = None
                         specs.append(self.spec(value))
                 elif self.accept(HASH):
+                    # We're finding a spec by hash
                     specs.append(self.spec_by_hash())
 
                 elif self.accept(DEP):
                     if not specs:
+                        # We're parsing an anonymous spec beginning with a
+                        # dependency
                         self.previous = self.token
                         specs.append(self.spec(None))
                         self.previous = None
                     if self.accept(HASH):
+                        # We're finding a dependency by hash for an anonymous
+                        # spec
                         dep = self.spec_by_hash()
                     else:
+                        # We're adding a dependency to the last spec
                         self.expect(ID)
                         dep = self.spec(self.token.value)
 
@@ -2854,13 +2860,12 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(ID):
                 self.previous = self.token
                 if self.accept(EQ):
-                    if self.accept(QT):
-                        self.token.value = self.token.value[1:-1]
-                    else:
-                        self.expect(VAL)
+                    # We're adding a key-value pair to the spec
+                    self.expect(VAL)
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:
+                    # We've found the start of a new spec. Go back to do_parse
                     break
 
             else:
