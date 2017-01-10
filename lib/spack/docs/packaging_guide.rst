@@ -1999,6 +1999,8 @@ the Python extensions provided by them: once for ``+python`` and once
 for ``~python``.  Other than using a little extra disk space, that
 solution has no serious problems.
 
+.. _installation_procedure:
+
 ---------------------------------------
 Implementing the installation procedure
 ---------------------------------------
@@ -2697,9 +2699,9 @@ build system.
 
 .. _sanity-checks:
 
--------------------------------
-Sanity checking an installation
--------------------------------
+------------------------
+Checking an installation
+------------------------
 
 By default, Spack assumes that a build has failed if nothing is
 written to the install prefix, and that it has succeeded if anything
@@ -2718,15 +2720,17 @@ Consider a simple autotools build like this:
 If you are using using standard autotools or CMake, ``configure`` and
 ``make`` will not write anything to the install prefix.  Only ``make
 install`` writes the files, and only once the build is already
-complete.  Not all builds are like this.  Many builds of scientific
-software modify the install prefix *before* ``make install``. Builds
-like this can falsely report that they were successfully installed if
-an error occurs before the install is complete but after files have
-been written to the ``prefix``.
+complete.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``sanity_check_is_file`` and ``sanity_check_is_dir``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Not all builds are like this.  Many builds of scientific
+software modify the install prefix *before* ``make install``. Builds
+like this can falsely report that they were successfully installed if
+an error occurs before the install is complete but after files have
+been written to the ``prefix``.
 
 You can optionally specify *sanity checks* to deal with this problem.
 Add properties like this to your package:
@@ -2750,6 +2754,33 @@ Now, after ``install()`` runs, Spack will check whether
 the build will fail and the install prefix will be removed.  If they
 succeed, Spack considers the build successful and keeps the prefix in
 place.
+
+^^^^^^^^^^^^^^^^
+Build-time tests
+^^^^^^^^^^^^^^^^
+
+Sometimes packages finish to build "correctly" and issues with their run-time
+behavior are discovered only at a later stage, maybe after a full software stack
+relying on them has already been built. To avoid situation of that kind it's possible
+to code build-time tests that will be executed only if the option ``--run-tests``
+of ``spack install`` has been activated.
+
+The proper way to write these tests is relying on two decorators that come with
+any base class listed in :ref:`installation_procedure`.
+
+.. code-block:: python
+
+   @MakefilePackage.sanity_check('build')
+   @MakefilePackage.on_package_attributes(run_tests=True)
+   def check_build(self):
+        # Custom implementation goes here
+        pass
+
+The first decorator ``MakefilePackage.sanity_check('build')`` schedules this
+function to be invoked after the ``build`` phase has been executed, while the
+second one makes the invocation  conditional on the fact that ``self.run_tests == True``.
+It is also possible to schedule a function to be invoked *before* a given phase
+using the ``MakefilePackage.precondition`` decorator.
 
 .. _file-manipulation:
 
