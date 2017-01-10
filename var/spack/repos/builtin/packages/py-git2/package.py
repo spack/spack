@@ -47,5 +47,5 @@ class PyGit2(PythonPackage):
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
         # http://www.pygit2.org/install.html
-        spack_env.set('LIBGIT2'] = spec['libgit2'].prefix)
-        spack_env.set('LIBGIT2_LIB'] = spec['libgit2'].prefix.lib)
+        spack_env.set('LIBGIT2', spec['libgit2'].prefix)
+        spack_env.set('LIBGIT2_LIB', spec['libgit2'].prefix.lib)
