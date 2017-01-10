@@ -25,29 +25,27 @@
 from spack import *
 
 
-class PyGit2(Package):
+class PyGit2(PythonPackage):
     """Pygit2 is a set of Python bindings to the libgit2 shared library,
     libgit2 implements the core of Git.
     """
 
     homepage = "http://www.pygit2.org/"
-    url      = "https://pypi.python.org/packages/aa/56/84dcce942a48d4b7b970cfb7a779b8db1d904e5ec5f71e7a67a63a23a4e2/pygit2-0.24.1.tar.gz"
 
-    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545')
+    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545',
+        url="https://pypi.python.org/packages/aa/56/84dcce942a48d4b7b970cfb7a779b8db1d904e5ec5f71e7a67a63a23a4e2/pygit2-0.24.1.tar.gz")
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('libgit2@0.24.2')
-    depends_on('py-six', type=nolink)
-    depends_on('py-cffi', type=nolink)
+    # Version must match with libgit2
+    # See: http://www.pygit2.org/install.html
+    depends_on('libgit2@0.24.:', when='0.24.:')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-cffi', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        # See: https://github.com/libgit2/pygit2/blob/master/pygit2/_build.py
-        env['LIBGIT2'] = spec['libgit2'].prefix
-        env['LIBGIT2_LIB'] = spec['libgit2'].prefix.lib
 
-        # Will this make Python add RPATHs?
-        # See: https://github.com/libgit2/pygit2/issues/134
-        # env['LD_RUN_PATH'] = spec['libgit2'].prefix.lib
-
-        setup_py('install', '--prefix={0}'.format(prefix))
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        # http://www.pygit2.org/install.html
+        spack_env.set('LIBGIT2'] = spec['libgit2'].prefix)
+        spack_env.set('LIBGIT2_LIB'] = spec['libgit2'].prefix.lib)
