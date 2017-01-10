@@ -37,8 +37,8 @@ class PyBiopython(Package):
     version('1.65', '143e7861ade85c0a8b5e2bbdd1da1f67')
 
     extends('python')
-    depends_on('py-mx', type=nolink)
-    depends_on('py-numpy', type=nolink)
+    depends_on('py-mx', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

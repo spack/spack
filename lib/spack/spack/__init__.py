@@ -159,13 +159,15 @@ from spack.package import Package
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
-__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage']
+from spack.build_systems.r import RPackage
+__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
+            'RPackage']
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps, nolink
-__all__ += ['Spec', 'alldeps', 'nolink']
+from spack.spec import Spec, alldeps
+__all__ += ['Spec', 'alldeps']
 
 from spack.multimethod import when
 __all__ += ['when']

@@ -36,7 +36,7 @@ class PyCclib(Package):
 
     extends('python')
 
-    depends_on('py-numpy@1.5:', type=nolink)
+    depends_on('py-numpy@1.5:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

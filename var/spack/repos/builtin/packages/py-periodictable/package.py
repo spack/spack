@@ -34,8 +34,8 @@ class PyPeriodictable(Package):
 
     version('1.4.1', '7246b63cc0b6b1be6e86b6616f9e866e')
 
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-pyparsing', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pyparsing', type=('build', 'run'))
     extends('python')
 
     def install(self, spec, prefix):

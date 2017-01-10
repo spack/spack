@@ -42,8 +42,8 @@ class PyJinja2(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-markupsafe', type=nolink)
-    depends_on('py-babel@0.8:', type=nolink)  # optional, required for i18n
+    depends_on('py-markupsafe', type=('build', 'run'))
+    depends_on('py-babel@0.8:', type=('build', 'run'))  # optional, required for i18n
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

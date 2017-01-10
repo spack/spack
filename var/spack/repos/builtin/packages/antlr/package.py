@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Antlr(Package):
+class Antlr(AutotoolsPackage):
     """ANTLR (ANother Tool for Language Recognition) is a powerful parser
     generator for reading, processing, executing, or translating structured
     text or binary files. It's widely used to build languages, tools, and
@@ -34,9 +34,6 @@ class Antlr(Package):
 
     homepage = "http://www.antlr.org"
     url      = "https://github.com/antlr/antlr/tarball/v2.7.7"
-
-    # NOTE: This requires that a system Java be available.
-    # Spack does not yet know how to install Java compilers
 
     # Notes from http://nco.sourceforge.net/#bld
     # The first steps to build (i.e., compile, for the most part) NCO from
@@ -52,27 +49,18 @@ class Antlr(Package):
     # Unpatched version
     # url='http://dust.ess.uci.edu/nco/antlr-2.7.7.tar.gz')
 
-    variant('cxx', default=False, description='Enable ANTLR for C++')
-    variant('java', default=False, description='Enable ANTLR for Java')
+    variant('cxx',    default=True,  description='Enable ANTLR for C++')
+    variant('java',   default=False, description='Enable ANTLR for Java')
     variant('python', default=False, description='Enable ANTLR for Python')
-    variant('csharp', default=False, description='Enable ANTLR for Csharp')
 
-    def install(self, spec, prefix):
-        # Check for future enabling of variants
-        for v in ('+java', '+python', '+csharp'):
-            if v in spec:
-                raise Error(
-                    ('Illegal variant %s; ' % v) + 'for now, '
-                    'Spack only knows how to build antlr or antlr+cxx')
+    extends('python', when='+python')
+    depends_on('jdk', type=('build', 'run'), when='+java')
 
-        config_args = [
-            '--prefix=%s' % prefix,
-            '--%s-cxx' % ('enable' if '+cxx' in spec else 'disable'),
-            '--%s-java' % ('enable' if '+java' in spec else 'disable'),
-            '--%s-python' % ('enable' if '+python' in spec else 'disable'),
-            '--%s-csharp' % ('enable' if '+csharp' in spec else 'disable')]
+    def configure_args(self):
+        spec = self.spec
 
-        # which('autoreconf')('-iv')
-        configure(*config_args)
-        make()
-        make("install")
+        return [
+            '--{0}-cxx'.format('enable' if '+cxx' in spec else 'disable'),
+            '--{0}-java'.format('enable' if '+java' in spec else 'disable'),
+            '--{0}-python'.format('enable' if '+python' in spec else 'disable')
+        ]

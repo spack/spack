@@ -58,7 +58,7 @@ class Go(Package):
 
     provides('golang')
 
-    depends_on('git', type='alldeps')
+    depends_on('git', type=('build', 'link', 'run'))
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
     depends_on('go-bootstrap', type='build')
