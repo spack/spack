@@ -75,7 +75,7 @@ class ConstraintAction(argparse.Action):
 
 
 _arguments['constraint'] = Args(
-    'constraint', nargs='*', action=ConstraintAction,
+    'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
     help='Constraint to select a subset of installed packages')
 
 _arguments['module_type'] = Args(
