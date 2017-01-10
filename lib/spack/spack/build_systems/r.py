@@ -34,7 +34,7 @@ class RPackage(PackageBase):
 
     This class provides a single phase that can be overridden:
 
-    * install
+        1. :py:meth:`~.RPackage.install`
 
     It has sensible defaults and for many packages the only thing
     necessary will be to add dependencies
@@ -48,7 +48,7 @@ class RPackage(PackageBase):
     extends('r')
 
     def install(self, spec, prefix):
-        """Install the R package"""
+        """Installs an R package."""
         inspect.getmodule(self).R(
             'CMD', 'INSTALL',
             '--library={0}'.format(self.module.r_lib_dir),

@@ -2011,7 +2011,7 @@ Defining an installation procedure means overriding a set of methods or attribut
 that will be called at some point during the installation of the package.
 What determines the actual set of entities that are available for overriding
 is the package base class, which is usually specialized for a given build system.
-The classes that are currently provided by ``Spack`` are:
+The classes that are currently provided by Spack are:
 
     +------------------------------------+----------------------------------+
     |                                    |   **Base class purpose**         |
