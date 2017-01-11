@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRjava(Package):
+class RRjava(RPackage):
     """Low-level interface to Java VM very much like .C/.Call and friends.
     Allows creation of objects, calling methods and accessing fields."""
 
@@ -35,10 +35,4 @@ class RRjava(Package):
 
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
-    extends('R')
-
     depends_on('jdk')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

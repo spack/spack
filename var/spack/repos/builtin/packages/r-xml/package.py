@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXml(Package):
+class RXml(RPackage):
     """Many approaches for both reading and creating XML (and HTML) documents
     (including DTDs), both local and accessible via HTTP or FTP. Also offers
     access to an 'XPath' "interpreter"."""
@@ -34,12 +34,7 @@ class RXml(Package):
     url      = "https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/XML"
 
-    version('3.98-1', '1a7f3ce6f264eeb109bfa57bedb26c14')
-
-    extends('R')
+    version('3.98-1.5', 'd1cfcd56f7aec96a84ffca91aea507ee')
+    version('3.98-1.4', '1a7f3ce6f264eeb109bfa57bedb26c14')
 
     depends_on('libxml2')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

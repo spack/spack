@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RWhisker(Package):
+class RWhisker(RPackage):
     """logicless templating, reuse templates in many programming languages
     including R"""
 
@@ -34,9 +34,3 @@ class RWhisker(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/whisker"
 
     version('0.3-2', 'c4b9bf9a22e69ce003fe68663ab5e8e6')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

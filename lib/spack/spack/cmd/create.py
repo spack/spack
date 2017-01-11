@@ -145,10 +145,10 @@ class AutotoolsGuess(DefaultGuess):
 
     body = """\
     def configure_args(self):
-       # FIXME: Add arguments other than --prefix
-       # FIXME: If not needed delete the function
-       args = []
-       return args"""
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete the function
+        args = []
+        return args"""
 
 
 class CMakeGuess(DefaultGuess):
@@ -161,11 +161,11 @@ class CMakeGuess(DefaultGuess):
 
     body = """\
     def cmake_args(self):
-       # FIXME: Add arguments other than
-       # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-       # FIXME: If not needed delete the function
-       args = []
-       return args"""
+        # FIXME: Add arguments other than
+        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+        # FIXME: If not needed delete the function
+        args = []
+        return args"""
 
 
 class SconsGuess(DefaultGuess):
@@ -200,7 +200,7 @@ class PythonGuess(DefaultGuess):
 
     # FIXME: Add additional dependencies if required.
     # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=nolink)"""
+    # depends_on('py-foo',        type=('build', 'run'))"""
 
     body = """\
     def install(self, spec, prefix):
@@ -215,16 +215,11 @@ class PythonGuess(DefaultGuess):
 class RGuess(DefaultGuess):
     """Provides appropriate overrides for R extensions"""
     dependencies = """\
-    extends('R')
-
-    # FIXME: Add additional dependencies if required.
-    # depends_on('r-foo', type=nolink)"""
+    # FIXME: Add dependencies if required.
+    # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)"""
+    # FIXME: Override install() if necessary."""
 
     def __init__(self, name, *args):
         name = 'r-{0}'.format(name)
@@ -237,7 +232,7 @@ class OctaveGuess(DefaultGuess):
     extends('octave')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('octave-foo', type=nolink)"""
+    # depends_on('octave-foo', type=('build', 'run'))"""
 
     body = """\
     def install(self, spec, prefix):
@@ -283,7 +278,7 @@ class BuildSystemGuesser(object):
         'scons': SconsGuess,
         'bazel': BazelGuess,
         'python': PythonGuess,
-        'R': RGuess,
+        'r': RGuess,
         'octave': OctaveGuess
     }
 
@@ -306,7 +301,7 @@ class BuildSystemGuesser(object):
             (r'/CMakeLists.txt$', 'cmake'),
             (r'/SConstruct$',     'scons'),
             (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'R'),
+            (r'/NAMESPACE$',      'r'),
             (r'/WORKSPACE$',      'bazel')
         ]
 
@@ -314,7 +309,7 @@ class BuildSystemGuesser(object):
         if stage.archive_file.endswith('.zip'):
             try:
                 unzip  = which('unzip')
-                output = unzip('-l', stage.archive_file, output=str)
+                output = unzip('-lq', stage.archive_file, output=str)
             except:
                 output = ''
         else:
@@ -434,7 +429,6 @@ def create(parser, args):
     # Figure out a name and repo for the package.
     name, version = guess_name_and_version(url, args)
     spec = Spec(name)
-    name = spec.name.lower()  # factors out namespace, if any
     repo = find_repository(spec, args)
 
     tty.msg("This looks like a URL for %s version %s" % (name, version))

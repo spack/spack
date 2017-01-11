@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RThdata(Package):
+class RThdata(RPackage):
     """Contains data sets used in other packages Torsten Hothorn maintains."""
 
     homepage = "https://cran.r-project.org/package=TH.data"
@@ -34,11 +34,5 @@ class RThdata(Package):
 
     version('1.0-7', '3e8b6b1a4699544f175215aed7039a94')
 
-    extends('R')
-
-    depends_on('r-survival', type=nolink)
-    depends_on('r-mass', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))

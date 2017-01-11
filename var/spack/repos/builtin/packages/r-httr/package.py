@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RHttr(Package):
+class RHttr(RPackage):
     """Useful tools for working with HTTP organised by HTTP verbs (GET(),
     POST(), etc). Configuration functions make it easy to control additional
     request components (authenticate(), add_headers() and so on)."""
@@ -36,14 +36,8 @@ class RHttr(Package):
 
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
 
-    extends('R')
-
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-mime', type=nolink)
-    depends_on('r-curl', type=nolink)
-    depends_on('r-openssl', type=nolink)
-    depends_on('r-R6', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-mime', type=('build', 'run'))
+    depends_on('r-curl', type=('build', 'run'))
+    depends_on('r-openssl', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

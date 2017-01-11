@@ -25,6 +25,7 @@
 
 import argparse
 
+import spack.cmd
 import spack.store
 import spack.modules
 from spack.util.pattern import Args
@@ -55,19 +56,26 @@ class ConstraintAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
         self.values = values
-        namespace.contraint = values
+        namespace.constraint = values
         namespace.specs = self._specs
 
     def _specs(self, **kwargs):
-        specs = [s for s in spack.store.db.query(**kwargs)]
-        values = ' '.join(self.values)
-        if values:
-            specs = [x for x in specs if x.satisfies(values, strict=True)]
-        return specs
+        qspecs = spack.cmd.parse_specs(self.values)
+
+        # return everything for an empty query.
+        if not qspecs:
+            return spack.store.db.query()
+
+        # Return only matching stuff otherwise.
+        specs = set()
+        for spec in qspecs:
+            for s in spack.store.db.query(spec, **kwargs):
+                specs.add(s)
+        return sorted(specs)
 
 
 _arguments['constraint'] = Args(
-    'constraint', nargs='*', action=ConstraintAction,
+    'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
     help='Constraint to select a subset of installed packages')
 
 _arguments['module_type'] = Args(

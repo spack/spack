@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RForeign(Package):
+class RForeign(RPackage):
     """Functions for reading and writing data stored by some versions of Epi
     Info, Minitab, S, SAS, SPSS, Stata, Systat and Weka and for reading and
     writing some dBase files."""
@@ -35,9 +35,3 @@ class RForeign(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/foreign"
 
     version('0.8-66', 'ff12190f4631dca31e30ca786c2c8f62')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

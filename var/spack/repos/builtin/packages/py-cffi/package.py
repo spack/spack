@@ -37,7 +37,7 @@ class PyCffi(Package):
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('py-pycparser', type=nolink)
+    depends_on('py-pycparser', type=('build', 'run'))
     depends_on('libffi')
 
     def install(self, spec, prefix):

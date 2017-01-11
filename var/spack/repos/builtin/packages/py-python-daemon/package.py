@@ -44,7 +44,7 @@ class PyPythonDaemon(Package):
 
     extends("python")
     depends_on("py-setuptools", type='build')
-    depends_on("py-lockfile", type=nolink)
+    depends_on("py-lockfile", type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

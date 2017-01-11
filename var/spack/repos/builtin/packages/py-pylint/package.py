@@ -33,7 +33,10 @@ class PyPylint(Package):
     version('1.4.1', 'df7c679bdcce5019389038847e4de622')
     version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')
 
-    extends('python')
+    extends('python', ignore=r'bin/pytest')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-astroid', type=('build', 'run'))
+    depends_on('py-logilab-common', type=('build', 'run'))
     depends_on('py-nose', type='build')
     depends_on('py-setuptools', type='build')
 

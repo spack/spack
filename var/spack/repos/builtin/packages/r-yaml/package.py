@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RYaml(Package):
+class RYaml(RPackage):
     """This package implements the libyaml YAML 1.1 parser and emitter
     (http://pyyaml.org/wiki/LibYAML) for R."""
 
@@ -34,9 +34,3 @@ class RYaml(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/yaml"
 
     version('2.1.13', 'f2203ea395adaff6bd09134666191d9a')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

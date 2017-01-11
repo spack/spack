@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCubature(Package):
+class RCubature(RPackage):
     """Adaptive multivariate integration over hypercubes"""
 
     homepage = "https://cran.r-project.org/package=cubature"
@@ -33,9 +33,3 @@ class RCubature(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/cubature"
 
     version('1.1-2', '5617e1d82baa803a3814d92461da45c9')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

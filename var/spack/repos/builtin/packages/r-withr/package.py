@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RWithr(Package):
+class RWithr(RPackage):
     """A set of functions to run code 'with' safely and temporarily modified
     global state. Many of these functions were originally a part of the
     'devtools' package, this provides a simple package with limited
@@ -36,9 +36,3 @@ class RWithr(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/withr"
 
     version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

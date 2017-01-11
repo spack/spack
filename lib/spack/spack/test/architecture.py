@@ -30,52 +30,34 @@ import os
 import platform as py_platform
 import spack
 import spack.architecture
-from spack.spec import *
+from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
 
-from spack.test.mock_packages_test import *
+
+def test_dict_functions_for_architecture():
+    arch = spack.architecture.Arch()
+    arch.platform = spack.architecture.platform()
+    arch.platform_os = arch.platform.operating_system('default_os')
+    arch.target = arch.platform.target('default_target')
+
+    new_arch = spack.architecture.Arch.from_dict(arch.to_dict())
+
+    assert arch == new_arch
+    assert isinstance(arch, spack.architecture.Arch)
+    assert isinstance(arch.platform, spack.architecture.Platform)
+    assert isinstance(arch.platform_os, spack.architecture.OperatingSystem)
+    assert isinstance(arch.target, spack.architecture.Target)
+    assert isinstance(new_arch, spack.architecture.Arch)
+    assert isinstance(new_arch.platform, spack.architecture.Platform)
+    assert isinstance(new_arch.platform_os, spack.architecture.OperatingSystem)
+    assert isinstance(new_arch.target, spack.architecture.Target)
 
 
-class ArchitectureTest(MockPackagesTest):
-
-    def setUp(self):
-        super(ArchitectureTest, self).setUp()
-        self.platform = spack.architecture.platform()
-
-    def tearDown(self):
-        super(ArchitectureTest, self).tearDown()
-
-    def test_dict_functions_for_architecture(self):
-        arch = spack.architecture.Arch()
-        arch.platform = spack.architecture.platform()
-        arch.platform_os = arch.platform.operating_system('default_os')
-        arch.target = arch.platform.target('default_target')
-
-        d = arch.to_dict()
-
-        new_arch = spack.architecture.arch_from_dict(d)
-
-        self.assertEqual(arch, new_arch)
-
-        self.assertTrue(isinstance(arch, spack.architecture.Arch))
-        self.assertTrue(isinstance(arch.platform, spack.architecture.Platform))
-        self.assertTrue(isinstance(arch.platform_os,
-                                   spack.architecture.OperatingSystem))
-        self.assertTrue(isinstance(arch.target,
-                                   spack.architecture.Target))
-        self.assertTrue(isinstance(new_arch, spack.architecture.Arch))
-        self.assertTrue(isinstance(new_arch.platform,
-                                   spack.architecture.Platform))
-        self.assertTrue(isinstance(new_arch.platform_os,
-                                   spack.architecture.OperatingSystem))
-        self.assertTrue(isinstance(new_arch.target,
-                                   spack.architecture.Target))
-
-    def test_platform(self):
-        output_platform_class = spack.architecture.platform()
+def test_platform():
+        output_platform_class = spack.architecture.real_platform()
         if os.path.exists('/opt/cray/craype'):
             my_platform_class = Cray()
         elif os.path.exists('/bgsys'):
@@ -85,79 +67,95 @@ class ArchitectureTest(MockPackagesTest):
         elif 'Darwin' in py_platform.system():
             my_platform_class = Darwin()
 
-        self.assertEqual(str(output_platform_class), str(my_platform_class))
+        assert str(output_platform_class) == str(my_platform_class)
 
-    def test_boolness(self):
-        # Make sure architecture reports that it's False when nothing's set.
-        arch = spack.architecture.Arch()
-        self.assertFalse(arch)
 
-        # Dummy architecture parts
-        plat = spack.architecture.platform()
-        plat_os = plat.operating_system('default_os')
-        plat_target = plat.target('default_target')
+def test_boolness():
+    # Make sure architecture reports that it's False when nothing's set.
+    arch = spack.architecture.Arch()
+    assert not arch
 
-        # Make sure architecture reports that it's True when anything is set.
-        arch = spack.architecture.Arch()
-        arch.platform = plat
-        self.assertTrue(arch)
+    # Dummy architecture parts
+    plat = spack.architecture.platform()
+    plat_os = plat.operating_system('default_os')
+    plat_target = plat.target('default_target')
 
-        arch = spack.architecture.Arch()
-        arch.platform_os = plat_os
-        self.assertTrue(arch)
+    # Make sure architecture reports that it's True when anything is set.
+    arch = spack.architecture.Arch()
+    arch.platform = plat
+    assert arch
 
-        arch = spack.architecture.Arch()
-        arch.target = plat_target
-        self.assertTrue(arch)
+    arch = spack.architecture.Arch()
+    arch.platform_os = plat_os
+    assert arch
 
-    def test_user_front_end_input(self):
-        """Test when user inputs just frontend that both the frontend target
-            and frontend operating system match
-        """
-        frontend_os = self.platform.operating_system("frontend")
-        frontend_target = self.platform.target("frontend")
-        frontend_spec = Spec("libelf os=frontend target=frontend")
-        frontend_spec.concretize()
-        self.assertEqual(frontend_os, frontend_spec.architecture.platform_os)
-        self.assertEqual(frontend_target, frontend_spec.architecture.target)
+    arch = spack.architecture.Arch()
+    arch.target = plat_target
+    assert arch
 
-    def test_user_back_end_input(self):
-        """Test when user inputs backend that both the backend target and
-            backend operating system match
-        """
-        backend_os = self.platform.operating_system("backend")
-        backend_target = self.platform.target("backend")
-        backend_spec = Spec("libelf os=backend target=backend")
-        backend_spec.concretize()
-        self.assertEqual(backend_os, backend_spec.architecture.platform_os)
-        self.assertEqual(backend_target, backend_spec.architecture.target)
 
-    def test_user_defaults(self):
-        default_os = self.platform.operating_system("default_os")
-        default_target = self.platform.target("default_target")
+def test_user_front_end_input(config):
+    """Test when user inputs just frontend that both the frontend target
+    and frontend operating system match
+    """
+    platform = spack.architecture.platform()
+    frontend_os = str(platform.operating_system('frontend'))
+    frontend_target = str(platform.target('frontend'))
 
-        default_spec = Spec("libelf")  # default is no args
-        default_spec.concretize()
-        self.assertEqual(default_os, default_spec.architecture.platform_os)
-        self.assertEqual(default_target, default_spec.architecture.target)
+    frontend_spec = Spec('libelf os=frontend target=frontend')
+    frontend_spec.concretize()
 
-    def test_user_input_combination(self):
-        os_list = self.platform.operating_sys.keys()
-        target_list = self.platform.targets.keys()
-        additional = ["fe", "be", "frontend", "backend"]
+    assert frontend_os == frontend_spec.architecture.platform_os
+    assert frontend_target == frontend_spec.architecture.target
 
-        os_list.extend(additional)
-        target_list.extend(additional)
 
-        combinations = itertools.product(os_list, target_list)
-        results = []
-        for arch in combinations:
-            o, t = arch
-            spec = Spec("libelf os=%s target=%s" % (o, t))
-            spec.concretize()
-            results.append(spec.architecture.platform_os ==
-                           self.platform.operating_system(o))
-            results.append(spec.architecture.target == self.platform.target(t))
-        res = all(results)
+def test_user_back_end_input(config):
+    """Test when user inputs backend that both the backend target and
+    backend operating system match
+    """
+    platform = spack.architecture.platform()
+    backend_os = str(platform.operating_system("backend"))
+    backend_target = str(platform.target("backend"))
 
-        self.assertTrue(res)
+    backend_spec = Spec("libelf os=backend target=backend")
+    backend_spec.concretize()
+
+    assert backend_os == backend_spec.architecture.platform_os
+    assert backend_target == backend_spec.architecture.target
+
+
+def test_user_defaults(config):
+    platform = spack.architecture.platform()
+    default_os = str(platform.operating_system("default_os"))
+    default_target = str(platform.target("default_target"))
+
+    default_spec = Spec("libelf")  # default is no args
+    default_spec.concretize()
+
+    assert default_os == default_spec.architecture.platform_os
+    assert default_target == default_spec.architecture.target
+
+
+def test_user_input_combination(config):
+    platform = spack.architecture.platform()
+    os_list = platform.operating_sys.keys()
+    target_list = platform.targets.keys()
+    additional = ["fe", "be", "frontend", "backend"]
+
+    os_list.extend(additional)
+    target_list.extend(additional)
+
+    combinations = itertools.product(os_list, target_list)
+    results = []
+    for arch in combinations:
+        o, t = arch
+        spec = Spec("libelf os=%s target=%s" % (o, t))
+        spec.concretize()
+        results.append(
+            spec.architecture.platform_os == str(platform.operating_system(o))
+        )
+        results.append(
+            spec.architecture.target == str(platform.target(t))
+        )
+    res = all(results)
+    assert res

@@ -26,7 +26,7 @@ from spack import *
 import sys
 
 
-class Numdiff(Package):
+class Numdiff(AutotoolsPackage):
     """Numdiff is a little program that can be used to compare putatively
     similar files line by line and field by field, ignoring small numeric
     differences or/and different numeric formats."""
@@ -36,10 +36,4 @@ class Numdiff(Package):
 
     version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
 
-    depends_on('gettext', when=sys.platform == 'darwin', type='build')
-
-    def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        configure(*options)
-        make()
-        make('install')
+    depends_on('gettext', when=sys.platform == 'darwin')

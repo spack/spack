@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPlotrix(Package):
+class RPlotrix(RPackage):
     """Lots of plots, various labeling, axis and color scaling functions."""
 
     homepage = "https://cran.r-project.org/package=plotrix"
@@ -33,9 +33,3 @@ class RPlotrix(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/plotrix"
 
     version('3.6-3', '23e3e022a13a596e9b77b40afcb4a2ef')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

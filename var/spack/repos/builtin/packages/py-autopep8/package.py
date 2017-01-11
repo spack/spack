@@ -38,7 +38,7 @@ class PyAutopep8(Package):
     extends('python', ignore='bin/pep8')
     depends_on('python@2.6:2.7,3.2:')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    depends_on('py-pycodestyle@1.5.7:1.7.0', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
 

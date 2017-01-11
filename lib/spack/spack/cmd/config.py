@@ -35,10 +35,18 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 
     get_parser = sp.add_parser('get', help='Print configuration values.')
-    get_parser.add_argument('section', help="Configuration section to print.")
+    get_parser.add_argument('section',
+                            help="Configuration section to print. "
+                                 "Options: %(choices)s.",
+                            metavar='SECTION',
+                            choices=spack.config.section_schemas)
 
     edit_parser = sp.add_parser('edit', help='Edit configuration file.')
-    edit_parser.add_argument('section', help="Configuration section to edit")
+    edit_parser.add_argument('section',
+                             help="Configuration section to edit. "
+                                  "Options: %(choices)s.",
+                             metavar='SECTION',
+                             choices=spack.config.section_schemas)
 
 
 def config_get(args):

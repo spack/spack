@@ -32,8 +32,9 @@ class PyMatplotlib(Package):
     environments across platforms."""
 
     homepage = "https://pypi.python.org/pypi/matplotlib"
-    url      = "https://pypi.python.org/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
 
+    version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')
     version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
@@ -62,24 +63,24 @@ class PyMatplotlib(Package):
     depends_on('libpng@1.2:')
     depends_on('freetype@2.3:')
 
-    depends_on('py-numpy@1.6:', type=nolink)
-    depends_on('py-dateutil@1.1:', type=nolink)
-    depends_on('py-pyparsing', type=nolink)
-    depends_on('py-pytz', type=nolink)
-    depends_on('py-cycler@0.9:', type=nolink)
+    depends_on('py-numpy@1.6:', type=('build', 'run'))
+    depends_on('py-dateutil@1.1:', type=('build', 'run'))
+    depends_on('py-pyparsing', type=('build', 'run'))
+    depends_on('py-pytz', type=('build', 'run'))
+    depends_on('py-cycler@0.9:', type=('build', 'run'))
 
     # ------ Optional GUI frameworks
     depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1
     depends_on('qt', when='+qt')
-    depends_on('py-pyside', when='+qt', type=nolink)
+    depends_on('py-pyside', when='+qt', type=('build', 'run'))
 
     # --------- Optional external programs
     # ffmpeg/avconv or mencoder
-    depends_on('ImageMagick', when='+animation')
+    depends_on('image-magick', when='+animation')
 
     # --------- Optional dependencies
     depends_on('pkg-config', type='build')    # why not...
-    depends_on('py-pillow', when='+image', type=nolink)
+    depends_on('py-pillow', when='+image', type=('build', 'run'))
     depends_on('py-ipython', when='+ipython')
     depends_on('ghostscript', when='+latex', type='run')
     depends_on('texlive', when='+latex', type='run')
@@ -92,7 +93,7 @@ class PyMatplotlib(Package):
     # depends_on('agg@2.4:')
     depends_on('qhull@2012.1:')
     # depends_on('ttconv')
-    depends_on('py-six@1.9.0:', type=nolink)
+    depends_on('py-six@1.9.0:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('build')

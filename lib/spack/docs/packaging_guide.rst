@@ -93,8 +93,10 @@ always choose to download just one tarball initially, and run
       $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
    If it fails entirely, you can get minimal boilerplate by using
-   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
+   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a
+   directory and ``package.py`` file for the package in
+   ``var/spack/repos/builtin/packages``, or within your own :ref:`package
+   repository <repositories>`.
 
 .. note::
 
@@ -1505,11 +1507,7 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
-  * **alldeps**: All dependency types.  **Note:** No quotes here
-  * **nolink**: Equal to ``("build", "run")``, for use by dependencies
-    that are not expressed via a linker (e.g., Python or Lua module
-    loading).  **Note:** No quotes here
-
+ 
 """""""""""""""""""
 Dependency Formulas
 """""""""""""""""""
@@ -2026,8 +2024,8 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libpng/package.py
-   :pyobject: Libpng.install
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/mpfr/package.py
+   :pyobject: Mpfr.install
    :linenos:
 
 ``install`` takes a ``spec``: a description of how the package should
@@ -3108,7 +3106,6 @@ dependencies as well.  This is equivalent to
 
 * Any combination of ``build``, ``link``, and ``run`` separated by
   commas.
-* ``nobuild``, ``nolink``, ``norun`` to omit one type.
 * ``all`` or ``alldeps`` for all types of dependencies.
 
 You can also use ``spack graph`` to generate graphs in the widely used
@@ -3119,6 +3116,8 @@ example:
 
 This graph can be provided as input to other graphing tools, such as
 those in `Graphviz <http://www.graphviz.org>`_.
+
+.. _packaging-shell-support:
 
 -------------------------
 Interactive shell support
@@ -3157,11 +3156,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
+   ==> Staging archive: ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
+   ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
 
 ``spack cd`` here changed the current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a

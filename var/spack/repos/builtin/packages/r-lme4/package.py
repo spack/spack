@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLme4(Package):
+class RLme4(RPackage):
     """Fit linear and generalized linear mixed-effects models. The models and
     their components are represented using S4 classes and methods. The core
     computational algorithms are implemented using the 'Eigen' C++ library for
@@ -37,17 +37,11 @@ class RLme4(Package):
 
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-mass', type=nolink)
-    depends_on('r-lattice', type=nolink)
-    depends_on('r-nlme', type=nolink)
-    depends_on('r-minqa', type=nolink)
-    depends_on('r-nloptr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-    depends_on('r-rcppeigen', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-minqa', type=('build', 'run'))
+    depends_on('r-nloptr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcppeigen', type=('build', 'run'))

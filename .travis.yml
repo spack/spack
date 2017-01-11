@@ -1,3 +1,6 @@
+#=============================================================================
+# Project settings
+#=============================================================================
 language: python
 
 # Only build master and develop on push; do not build every branch.
@@ -6,23 +9,36 @@ branches:
     - master
     - develop
 
-# Construct build matrix
+#=============================================================================
+# Build matrix
+#=============================================================================
 python:
   - 2.6
   - 2.7
 
 env:
-  - TEST_SUITE=unit CYAML=true
-  - TEST_SUITE=unit CYAML=false
+  - TEST_SUITE=unit
   - TEST_SUITE=flake8
   - TEST_SUITE=doc
 
 matrix:
+  # Flake8 and Sphinx no longer support Python 2.6, and one run is enough.
   exclude:
   - python: 2.6
-    # Flake8 no longer supports Python 2.6
     env: TEST_SUITE=flake8
+  - python: 2.6
+    env: TEST_SUITE=doc
+  # Explicitly include an OS X build with homebrew's python.
+  # Works around Python issues on Travis for OSX, described here:
+  # http://blog.fizyk.net.pl/blog/running-python-tests-on-traviss-osx-workers.html
+  include:
+  - os: osx
+    language: generic
+    env: TEST_SUITE=unit
 
+#=============================================================================
+# Environment
+#=============================================================================
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 
@@ -30,16 +46,24 @@ sudo: false
 addons:
   apt:
     packages:
+      - gfortran
       - graphviz
       - libyaml-dev
 
+# Work around Travis's lack of support for Python on OSX
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions python > /dev/null || brew install python; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gcc    > /dev/null || brew install gcc;    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+
 # Install various dependencies
 install:
-  - pip install coveralls
-  - pip install flake8
-  - pip install sphinx
-  - pip install mercurial
-  - if [[ $CYAML == true ]]; then pip install --global-option "--with-libyaml" pyyaml; fi
+  - pip install --upgrade coveralls
+  - pip install --upgrade flake8
+  - pip install --upgrade sphinx
+  - pip install --upgrade mercurial
 
 before_script:
   # Need this for the git tests to succeed.
@@ -49,11 +73,17 @@ before_script:
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
+#=============================================================================
+# Building
+#=============================================================================
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $CYAML == false && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 && $TRAVIS_OS_NAME == "linux" ]]; then coveralls; fi
 
+#=============================================================================
+# Notifications
+#=============================================================================
 notifications:
   email:
     recipients: tgamblin@llnl.gov

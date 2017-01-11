@@ -41,7 +41,7 @@ class Nwchem(Package):
     depends_on('mpi')
     depends_on('scalapack')
 
-    depends_on('python@2.7:2.8', type=nolink)
+    depends_on('python@2.7:2.8', type=('build', 'run'))
 
     # patches for 6.6-27746:
     urls_for_patches = {

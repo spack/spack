@@ -25,20 +25,14 @@
 from spack import *
 
 
-class RLattice(Package):
+class RLattice(RPackage):
     """A powerful and elegant high-level data visualization system inspired by
     Trellis graphics, with an emphasis on multivariate data. Lattice is
     sufficient for typical graphics needs, and is also flexible enough to
     handle most nonstandard requirements. See ?Lattice for an introduction."""
 
     homepage = "http://lattice.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/lattice_0.20-33.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/lattice_0.20-34.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/lattice"
 
-    version('0.20-33', 'd487c94db1bfe00a27270f4c71baf53e')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')

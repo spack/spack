@@ -28,26 +28,46 @@ import glob
 import llnl.util.tty as tty
 from spack import *
 
+# - vanilla CentOS 7, and possibly other systems, fail a test:
+#   TestCloneNEWUSERAndRemapRootDisableSetgroups
+#
+#   The Fix, discussed here: https://github.com/golang/go/issues/16283
+#   is to enable "user_namespace".
+#
+#   On a Digital Ocean image, this can be achieved by updating
+#   `/etc/default/grub` so that the `GRUB_CMDLINE_LINUX` variable
+#   includes `user_namespace.enable=1`, re-cooking the grub
+#   configuration with `sudo grub2-mkconfig -o /boot/grub2/grub.cfg`,
+#   and then rebooting.
+#
+# - on CentOS 7 systems (and possibly others) you need to have the
+#   glibc package installed or various static cgo tests fail.
+
 
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
-    url = "https://go.googlesource.com/go"
+    url = 'https://storage.googleapis.com/golang/go1.7.4.src.tar.gz'
 
     extendable = True
 
-    version('1.6.2', git='https://go.googlesource.com/go', tag='go1.6.2')
-    version('1.5.4', git='https://go.googlesource.com/go', tag='go1.5.4')
-    version('1.4.2', git='https://go.googlesource.com/go', tag='go1.4.2')
+    version('1.7.4', '49c1076428a5d3b5ad7ac65233fcca2f')
+    version('1.6.4', 'b023240be707b34059d2c114d3465c92')
 
     variant('test', default=True, description='Build and run tests as part of the build.')
 
     provides('golang')
 
-    depends_on('git', type='alldeps')
+    depends_on('git', type=('build', 'link', 'run'))
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
     depends_on('go-bootstrap', type='build')
+
+    # https://github.com/golang/go/issues/17545
+    patch('time_test.patch', when='@1.6.4:1.7.4')
+
+    # https://github.com/golang/go/issues/17986
+    patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.4')
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the
@@ -64,6 +84,9 @@ class Go(Package):
     @when('@1.5.0:')
     def patch(self):
         pass
+
+    def url_for_version(self, version):
+        return "https://storage.googleapis.com/golang/go{0}.src.tar.gz".format(version)
 
     def install(self, spec, prefix):
         bash = which('bash')
@@ -82,7 +105,6 @@ class Go(Package):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
-        spack_env.set('GOROOT_BOOTSTRAP', self.spec['go-bootstrap'].prefix)
 
     def setup_dependent_package(self, module, ext_spec):
         """Called before go modules' install() methods.

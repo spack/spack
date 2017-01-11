@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNnet(Package):
+class RNnet(RPackage):
     """Software for feed-forward neural networks with a single hidden layer,
     and for multinomial log-linear models."""
 
@@ -34,9 +34,3 @@ class RNnet(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/nnet"
 
     version('7.3-12', 'dc7c6f0d0de53d8fc72b44554400a74e')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

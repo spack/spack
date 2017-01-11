@@ -23,8 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.architecture import Platform, Target
-from spack.operating_systems.linux_distro import LinuxDistro
-from spack.operating_systems.cnl import Cnl
+from spack.architecture import OperatingSystem as OS
 
 
 class Test(Platform):
@@ -33,18 +32,17 @@ class Test(Platform):
     back_end    = 'x86_64'
     default     = 'x86_64'
 
-    back_os = 'CNL10'
-    default_os = 'CNL10'
+    front_os = 'redhat6'
+    back_os = 'debian6'
+    default_os = 'debian6'
 
     def __init__(self):
         super(Test, self).__init__('test')
         self.add_target(self.default, Target(self.default))
         self.add_target(self.front_end, Target(self.front_end))
 
-        self.add_operating_system(self.default_os, Cnl())
-        linux_dist = LinuxDistro()
-        self.front_os = linux_dist.name
-        self.add_operating_system(self.front_os, linux_dist)
+        self.add_operating_system(self.default_os, OS('debian', 6))
+        self.add_operating_system(self.front_os, OS('redhat', 6))
 
     @classmethod
     def detect(self):

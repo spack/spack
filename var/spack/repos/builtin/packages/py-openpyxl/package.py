@@ -35,7 +35,7 @@ class PyOpenpyxl(Package):
 
     extends('python')
 
-    depends_on('py-jdcal', type=nolink)
+    depends_on('py-jdcal', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):

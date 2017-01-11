@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version, nolink
+from spack import depends_on, extends, version
 from spack import Package
 
 
@@ -37,9 +37,9 @@ class PyAstroid(Package):
     version('1.4.1', 'ed70bfed5e4b25be4292e7fe72da2c02')
 
     extends('python')
-    depends_on('py-logilab-common', type=nolink)
+    depends_on('py-logilab-common', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six', type=nolink)
+    depends_on('py-six', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)

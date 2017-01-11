@@ -25,7 +25,7 @@
 from spack import *
 
 
-class ROpenssl(Package):
+class ROpenssl(RPackage):
     """Bindings to OpenSSL libssl and libcrypto, plus custom SSH pubkey
     parsers. Supports RSA, DSA and EC curves P-256, P-384 and P-521.
     Cryptographic signatures can either be created and verified manually or via
@@ -43,10 +43,4 @@ class ROpenssl(Package):
 
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
-    extends('R')
-
     depends_on('openssl')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

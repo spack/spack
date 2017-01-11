@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNp(Package):
+class RNp(RPackage):
     """This package provides a variety of nonparametric (and semiparametric)
     kernel methods that seamlessly handle a mix of continuous, unordered, and
     ordered factor data types. We would like to gratefully acknowledge support
@@ -40,11 +40,5 @@ class RNp(Package):
 
     version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
 
-    extends('R')
-
-    depends_on('r-boot', type=nolink)
-    depends_on('r-cubature', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-boot', type=('build', 'run'))
+    depends_on('r-cubature', type=('build', 'run'))

@@ -39,7 +39,7 @@ class PyBabel(Package):
     extends('python')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytz',       type=nolink)
+    depends_on('py-pytz',       type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

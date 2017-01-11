@@ -38,6 +38,7 @@ class PyPyside(Package):
 
     extends('python')
     depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx', type=('build', 'run'))
     depends_on('qt@4.5:4.9')
     depends_on('libxml2@2.6.32:')
     depends_on('libxslt@1.1.19:')

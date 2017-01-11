@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGtable(Package):
+class RGtable(RPackage):
     """Tools to make it easier to work with "tables" of 'grobs'."""
 
     homepage = "https://cran.r-project.org/web/packages/gtable/index.html"
@@ -33,9 +33,3 @@ class RGtable(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/gtable"
 
     version('0.2.0', '124090ae40b2dd3170ae11180e0d4cab')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

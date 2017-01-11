@@ -45,6 +45,11 @@ class Trilinos(CMakePackage):
     homepage = "https://trilinos.org/"
     base_url = "https://github.com/trilinos/Trilinos/archive"
 
+    version('develop',
+            git='https://github.com/trilinos/Trilinos.git', tag='develop')
+    version('master',
+            git='https://github.com/trilinos/Trilinos.git', tag='master')
+    version('12.10.1', '40f28628b63310f9bd17c26d9ebe32b1')
     version('12.8.1', '01c0026f1e2050842857db941060ecd5')
     version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
     version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
@@ -61,12 +66,16 @@ class Trilinos(CMakePackage):
         return '%s/trilinos-release-%s.tar.gz' % \
             (Trilinos.base_url, version.dashed)
 
+    variant('xsdkflags',        default=False,
+            description='Compile using the default xSDK configuration')
     variant('metis',        default=True,
             description='Compile with METIS and ParMETIS')
     variant('mumps',        default=True,
             description='Compile with support for MUMPS solvers')
     variant('superlu-dist', default=True,
             description='Compile with SuperluDist solvers')
+    variant('superlu', default=False,
+            description='Compile with SuperLU solvers')
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
@@ -107,13 +116,14 @@ class Trilinos(CMakePackage):
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
+    depends_on('superlu+fpic@4.3', when='+superlu')
     depends_on('hypre~internal-superlu', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python')
     depends_on('swig', when='+python')
 
-    patch('umfpack_from_suitesparse.patch')
+    patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
 
     # check that the combination of variants makes sense
     def variants_check(self):
@@ -123,6 +133,10 @@ class Trilinos(CMakePackage):
             # working.
             raise RuntimeError('The superlu-dist variant can only be used' +
                                ' with Trilinos @12.0.1:')
+        if '+superlu-dist' in self.spec and '+superlu' in self.spec:
+            # Only choose one type of superlu
+            raise RuntimeError('The superlu-dist and superlu variant' +
+                               ' cannot be used together')
 
     def cmake_args(self):
         spec = self.spec
@@ -156,10 +170,23 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
-                'ON' if '+hypre' in spec else 'OFF'),
             '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
         ])
+
+        # Force Trilinos to use the MPI wrappers instead of raw compilers
+        # this is needed on Apple systems that require full resolution of
+        # all symbols when linking shared libraries
+        options.extend([
+            '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
+        ])
+        if '+hypre' in spec:
+            options.extend([
+                '-DTPL_ENABLE_HYPRE:BOOL=ON',
+                '-DHYPRE_INCLUDE_DIRS:PATH=%s' % spec['hypre'].prefix.include,
+                '-DHYPRE_LIBRARY_DIRS:PATH=%s' % spec['hypre'].prefix.lib
+            ])
 
         if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
             # Panzer uses some std:chrono that is not recognized by Intel
@@ -169,6 +196,8 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_Panzer:BOOL=OFF'
             ])
 
+        if '+xsdkflags' in spec:
+            options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
         if '+hdf5' in spec:
             options.extend([
                 '-DTPL_ENABLE_HDF5:BOOL=ON',
@@ -299,6 +328,20 @@ class Trilinos(CMakePackage):
         else:
             options.extend([
                 '-DTPL_ENABLE_SuperLUDist:BOOL=OFF',
+            ])
+
+        # superlu:
+        if '+superlu' in spec:
+            options.extend([
+                '-DTPL_ENABLE_SuperLU:BOOL=ON',
+                '-DSuperLU_LIBRARY_DIRS=%s' %
+                spec['superlu'].prefix.lib,
+                '-DSuperLU_INCLUDE_DIRS=%s' %
+                spec['superlu'].prefix.include
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_SuperLU:BOOL=OFF',
             ])
 
         # python

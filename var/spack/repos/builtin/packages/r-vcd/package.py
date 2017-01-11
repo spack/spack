@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RVcd(Package):
+class RVcd(RPackage):
     """Visualization techniques, data sets, summary and inference procedures
     aimed particularly at categorical data. Special emphasis is given to highly
     extensible grid graphics. The package was package was originally inspired
@@ -39,12 +39,6 @@ class RVcd(Package):
 
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
 
-    extends('R')
-
-    depends_on('r-mass', type=nolink)
-    depends_on('r-colorspace', type=nolink)
-    depends_on('r-lmtest', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-colorspace', type=('build', 'run'))
+    depends_on('r-lmtest', type=('build', 'run'))

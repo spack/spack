@@ -76,7 +76,7 @@ class Opencv(Package):
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
     depends_on('jdk', when='+java')
-    depends_on('py-numpy', when='+python', type='nolink')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
 
     extends('python', when='+python')
 

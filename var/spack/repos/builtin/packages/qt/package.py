@@ -51,6 +51,7 @@ class Qt(Package):
     variant('webkit',     default=False, description="Build the Webkit extension")
     variant('examples',   default=False, description="Build examples.")
     variant('dbus',       default=False, description="Build with D-Bus support.")
+    variant('phonon',     default=False, description="Build with phonon support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -63,13 +64,13 @@ class Qt(Package):
 
     # Use system openssl for security.
     depends_on("openssl")
-    depends_on("glib")
+    depends_on("glib", when='@4:')
     depends_on("gtkplus", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("dbus", when='@4:+dbus')
     depends_on("libtiff")
-    depends_on("libpng@1.2.56", when='@3')
+    depends_on("libpng@1.2.57", when='@3')
     depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
@@ -90,6 +91,8 @@ class Qt(Package):
     # depends_on("pulse", when='+multimedia')
     # depends_on("flac", when='+multimedia')
     # depends_on("ogg", when='+multimedia')
+
+    use_xcode = True
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -179,7 +182,7 @@ class Qt(Package):
         if '~examples' in self.spec:
             config_args.extend(['-nomake', 'examples'])
 
-        if '@4' in self.spec:
+        if '@4' in self.spec and '~phonon' in self.spec:
             config_args.append('-no-phonon')
 
         if '+dbus' in self.spec:

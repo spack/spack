@@ -31,13 +31,15 @@ class PyPytables(Package):
     homepage = "http://www.pytables.org/"
     url      = "https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz"
 
+    version('3.3.0', '056c161ae0fd2d6e585b766adacf3b0b',
+            url='https://github.com/PyTables/PyTables/archive/v3.3.0.tar.gz')
     version('3.2.2', '7cbb0972e4d6580f629996a5bed92441')
 
     extends('python')
     depends_on('hdf5')
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-numexpr', type=nolink)
-    depends_on('py-cython', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numexpr', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):

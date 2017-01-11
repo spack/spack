@@ -29,10 +29,17 @@ class Cairo(AutotoolsPackage):
     """Cairo is a 2D graphics library with support for multiple output
     devices."""
     homepage = "http://cairographics.org"
-    url      = "http://cairographics.org/releases/cairo-1.14.0.tar.xz"
+    url      = "http://cairographics.org/releases/cairo-1.14.8.tar.xz"
 
-    version('1.14.0', 'fc3a5edeba703f906f2241b394f0cced')
+    version('1.14.8', 'c6f7b99986f93c9df78653c3e6a3b5043f65145e')
+    version('1.14.0', '53cf589b983412ea7f78feee2e1ba9cea6e3ebae')
 
+    variant('X', default=False, description="Build with X11 support")
+
+    depends_on('libx11', when='+X')
+    depends_on('libxext', when='+X')
+    depends_on('libxrender', when='+X')
+    depends_on('libxcb', when='+X')
     depends_on("libpng")
     depends_on("glib")
     depends_on("pixman")

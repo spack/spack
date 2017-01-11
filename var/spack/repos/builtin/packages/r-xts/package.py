@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXts(Package):
+class RXts(RPackage):
     """Provide for uniform handling of R's different time-based data classes by
     extending zoo, maximizing native format information preservation and
     allowing for user level customization and extension, while simplifying
@@ -37,10 +37,4 @@ class RXts(Package):
 
     version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
 
-    extends('R')
-
-    depends_on('r-zoo', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-zoo', type=('build', 'run'))

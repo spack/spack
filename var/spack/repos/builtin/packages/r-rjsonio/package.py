@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRjsonio(Package):
+class RRjsonio(RPackage):
     """This is a package that allows conversion to and from data in Javascript
     object notation (JSON) format. This allows R objects to be inserted into
     Javascript/ECMAScript/ActionScript code and allows R programmers to read
@@ -47,9 +47,3 @@ class RRjsonio(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/RJSONIO"
 
     version('1.3-0', '72c395622ba8d1435ec43849fd32c830')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

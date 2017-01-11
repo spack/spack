@@ -199,6 +199,7 @@ class ConfigScope(object):
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
 
+
 #
 # Below are configuration scopes.
 #
@@ -456,54 +457,6 @@ def print_section(section):
         syaml.dump(data, stream=sys.stdout, default_flow_style=False)
     except (yaml.YAMLError, IOError):
         raise ConfigError("Error reading configuration: %s" % section)
-
-
-def spec_externals(spec):
-    """Return a list of external specs (with external directory path filled in),
-       one for each known external installation."""
-    # break circular import.
-    from spack.build_environment import get_path_from_module
-
-    allpkgs = get_config('packages')
-    name = spec.name
-
-    external_specs = []
-    pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    pkg_modules = allpkgs.get(name, {}).get('modules', None)
-    if (not pkg_paths) and (not pkg_modules):
-        return []
-
-    for external_spec, path in pkg_paths.iteritems():
-        if not path:
-            # skip entries without paths (avoid creating extra Specs)
-            continue
-
-        external_spec = spack.spec.Spec(external_spec, external=path)
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
-
-    for external_spec, module in pkg_modules.iteritems():
-        if not module:
-            continue
-
-        path = get_path_from_module(module)
-
-        external_spec = spack.spec.Spec(
-            external_spec, external=path, external_module=module)
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
-
-    return external_specs
-
-
-def is_spec_buildable(spec):
-    """Return true if the spec pkgspec is configured as buildable"""
-    allpkgs = get_config('packages')
-    if spec.name not in allpkgs:
-        return True
-    if 'buildable' not in allpkgs[spec.name]:
-        return True
-    return allpkgs[spec.name]['buildable']
 
 
 class ConfigError(SpackError):

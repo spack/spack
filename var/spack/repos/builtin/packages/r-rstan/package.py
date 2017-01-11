@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRstan(Package):
+class RRstan(RPackage):
     """User-facing R functions are provided to parse, compile, test, estimate,
     and analyze Stan models by accessing the header-only Stan library provided
     by the 'StanHeaders' package. The Stan project develops a probabilistic
@@ -42,16 +42,10 @@ class RRstan(Package):
 
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
-    extends('R')
-
-    depends_on('r-ggplot2', type=nolink)
-    depends_on('r-stanheaders', type=nolink)
-    depends_on('r-inline', type=nolink)
-    depends_on('r-gridextra', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-    depends_on('r-rcppeigen', type=nolink)
-    depends_on('r-bh', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-stanheaders', type=('build', 'run'))
+    depends_on('r-inline', type=('build', 'run'))
+    depends_on('r-gridextra', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcppeigen', type=('build', 'run'))
+    depends_on('r-bh', type=('build', 'run'))

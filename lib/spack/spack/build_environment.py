@@ -51,17 +51,19 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import os
-import sys
-import multiprocessing
-import traceback
 import inspect
+import multiprocessing
+import os
 import shutil
+import sys
+import traceback
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import *
+
 import spack
 import spack.store
-from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -227,7 +229,7 @@ def set_compiler_environment_variables(pkg, env):
     for mod in compiler.modules:
         load_module(mod)
 
-    compiler.setup_custom_environment(env)
+    compiler.setup_custom_environment(pkg, env)
 
     return env
 
@@ -305,6 +307,23 @@ def set_build_environment_variables(pkg, env, dirty=False):
             if '/macports/' in p:
                 env.remove_path('PATH', p)
 
+    # Set environment variables if specified for
+    # the given compiler
+    compiler = pkg.compiler
+    environment = compiler.environment
+    if 'set' in environment:
+        env_to_set = environment['set']
+        for key, value in env_to_set.iteritems():
+            env.set('SPACK_ENV_SET_%s' % key, value)
+            env.set('%s' % key, value)
+        # Let shell know which variables to set
+        env_variables = ":".join(env_to_set.keys())
+        env.set('SPACK_ENV_TO_SET', env_variables)
+
+    if compiler.extra_rpaths:
+        extra_rpaths = ':'.join(compiler.extra_rpaths)
+        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
+
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, [
         '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
@@ -325,8 +344,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
-    if pkg.spec.architecture.target.module_name:
-        load_module(pkg.spec.architecture.target.module_name)
+    if pkg.architecture.target.module_name:
+        load_module(pkg.architecture.target.module_name)
 
     return env
 
@@ -435,7 +454,8 @@ def parent_class_modules(cls):
     """
     Get list of super class modules that are all descend from spack.Package
     """
-    if not issubclass(cls, spack.Package) or issubclass(spack.Package, cls):
+    if (not issubclass(cls, spack.package.Package) or
+        issubclass(spack.package.Package, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -478,7 +498,7 @@ def setup_package(pkg, dirty=False):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
-    pkg.spec.architecture.platform.setup_platform_environment(pkg, spack_env)
+    pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
@@ -565,7 +585,7 @@ def fork(pkg, function, dirty=False):
     try:
         # Forward sys.stdin to be able to activate / deactivate
         # verbosity pressing a key at run-time
-        input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+        input_stream = lang.duplicate_stream(sys.stdin)
         p = multiprocessing.Process(
             target=child_execution,
             args=(child_connection, input_stream)
@@ -607,9 +627,9 @@ def get_package_context(traceback):
     for tb in stack:
         frame = tb.tb_frame
         if 'self' in frame.f_locals:
-            # Find the first proper subclass of spack.PackageBase.
+            # Find the first proper subclass of PackageBase.
             obj = frame.f_locals['self']
-            if isinstance(obj, spack.PackageBase):
+            if isinstance(obj, spack.package.PackageBase):
                 break
 
     # we found obj, the Package implementation we care about.

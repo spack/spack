@@ -26,6 +26,7 @@
 This test does sanity checks on Spack's builtin package database.
 """
 import unittest
+import re
 
 import spack
 from spack.repository import RepoPath
@@ -57,3 +58,13 @@ class PackageSanityTest(unittest.TestCase):
                     # If there is a url for the version check it.
                     v_url = pkg.url_for_version(v)
                     self.assertEqual(vattrs['url'], v_url)
+
+    def test_all_versions_are_lowercase(self):
+        """Spack package names must be lowercase, and use `-` instead of `_`.
+        """
+        errors = []
+        for name in spack.repo.all_package_names():
+            if re.search(r'[_A-Z]', name):
+                errors.append(name)
+
+        self.assertEqual([], errors)

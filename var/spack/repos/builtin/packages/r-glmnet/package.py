@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGlmnet(Package):
+class RGlmnet(RPackage):
     """Extremely efficient procedures for fitting the entire lasso or
     elastic-net regularization path for linear regression, logistic and
     multinomial regression models, Poisson regression and the Cox model. Two
@@ -39,11 +39,5 @@ class RGlmnet(Package):
 
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-foreach', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))

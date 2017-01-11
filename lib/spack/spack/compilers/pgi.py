@@ -55,6 +55,10 @@ class Pgi(Compiler):
     def cxx11_flag(self):
         return "-std=c++11"
 
+    @property
+    def pic_flag(self):
+        return "-fpic"
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.

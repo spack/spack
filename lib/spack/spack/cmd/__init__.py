@@ -61,7 +61,17 @@ for file in os.listdir(command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
         commands.append(cmd)
+commands.append('test')
 commands.sort()
+
+
+def remove_options(parser, *options):
+    """Remove some options from a parser."""
+    for option in options:
+        for action in parser._actions:
+            if vars(action)['option_strings'][0] == option:
+                parser._handle_conflict_resolve(None, [(option, action)])
+                break
 
 
 def get_cmd_function_name(name):
@@ -144,7 +154,9 @@ def disambiguate_spec(spec):
     elif len(matching_specs) > 1:
         args = ["%s matches multiple packages." % spec,
                 "Matching packages:"]
-        args += ["  " + str(s) for s in matching_specs]
+        color = sys.stdout.isatty()
+        args += [colorize("  @K{%s} " % s.dag_hash(7), color=color) +
+                 s.format('$_$@$%@$=', color=color) for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)
 

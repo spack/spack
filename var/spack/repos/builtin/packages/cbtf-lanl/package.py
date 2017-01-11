@@ -49,10 +49,10 @@ class CbtfLanl(Package):
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
     # Mirror access template example
-    # url      = "file:/g/g24/jeg/cbtf-lanl-1.5.tar.gz"
-    # version('1.5', 'c3f78f967b0a42c6734ce4be0e602426')
+    # url      = "file:/g/g24/jeg/cbtf-lanl-1.6.tar.gz"
+    # version('1.6', 'c3f78f967b0a42c6734ce4be0e602426')
 
-    version('1.6', branch='master',
+    version('1.8', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
 
     depends_on("cmake@3.0.2:", type='build')

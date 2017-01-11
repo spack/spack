@@ -36,7 +36,7 @@ class PyH5py(Package):
     version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
     version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    variant('mpi', default=True, description='Build with MPI support')
 
     extends('python')
 
@@ -50,10 +50,10 @@ class PyH5py(Package):
     depends_on('py-mpi4py', when='+mpi')
 
     # Build and runtime dependencies
-    depends_on('py-numpy@1.6.1:', type=nolink)
+    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
 
     # Runtime dependencies
-    depends_on('py-six', type=nolink)
+    depends_on('py-six', type=('build', 'run'))
 
     def install(self, spec, prefix):
         setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))

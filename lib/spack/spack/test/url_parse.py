@@ -59,10 +59,10 @@ class UrlParseTest(unittest.TestCase):
 
     def test_version_sourceforge_download(self):
         self.check(
-            'foo_bar', '1.21',
+            'foo-bar', '1.21',
             'http://sourceforge.net/foo_bar-1.21.tar.gz/download')
         self.check(
-            'foo_bar', '1.21',
+            'foo-bar', '1.21',
             'http://sf.net/foo_bar-1.21.tar.gz/download')
 
     def test_no_version(self):
@@ -71,7 +71,7 @@ class UrlParseTest(unittest.TestCase):
 
     def test_version_all_dots(self):
         self.check(
-            'foo.bar.la', '1.14', 'http://example.com/foo.bar.la.1.14.zip')
+            'foo-bar-la', '1.14', 'http://example.com/foo.bar.la.1.14.zip')
 
     def test_version_underscore_separator(self):
         self.check(
@@ -136,12 +136,12 @@ class UrlParseTest(unittest.TestCase):
 
     def test_version_single_digit(self):
         self.check(
-            'foo_bar', '45',
+            'foo-bar', '45',
             'http://example.com/foo_bar.45.tar.gz')
 
     def test_noseparator_single_digit(self):
         self.check(
-            'foo_bar', '45',
+            'foo-bar', '45',
             'http://example.com/foo_bar45.tar.gz')
 
     def test_version_developer_that_hates_us_format(self):
@@ -151,8 +151,22 @@ class UrlParseTest(unittest.TestCase):
 
     def test_version_regular(self):
         self.check(
-            'foo_bar', '1.21',
+            'foo-bar', '1.21',
             'http://example.com/foo_bar-1.21.tar.gz')
+
+    def test_version_gitlab(self):
+        self.check(
+             'vtk', '7.0.0',
+             'https://gitlab.kitware.com/vtk/vtk/repository/'
+             'archive.tar.bz2?ref=v7.0.0')
+        self.check(
+             'icet', '1.2.3',
+             'https://gitlab.kitware.com/icet/icet/repository/'
+             'archive.tar.gz?ref=IceT-1.2.3')
+        self.check(
+             'foo', '42.1337',
+             'http://example.com/org/foo/repository/'
+             'archive.zip?ref=42.1337bar')
 
     def test_version_github(self):
         self.check(
@@ -216,7 +230,7 @@ class UrlParseTest(unittest.TestCase):
 
     def test_imagemagick_style(self):
         self.check(
-            'ImageMagick', '6.7.5-7',
+            'imagemagick', '6.7.5-7',
 
             'http://downloads.sf.net/project/machomebrew/mirror/ImageMagick-6.7.5-7.tar.bz2')
 
@@ -247,7 +261,7 @@ class UrlParseTest(unittest.TestCase):
 
     def test_xaw3d_version(self):
         self.check(
-            'Xaw3d', '1.5E',
+            'xaw3d', '1.5E',
             'ftp://ftp.visi.com/users/hawkeyd/X/Xaw3d-1.5E.tar.gz')
 
     def test_fann_version(self):
@@ -324,5 +338,29 @@ class UrlParseTest(unittest.TestCase):
 
     def test_github_raw_url(self):
         self.check(
-            'PowerParser', '2.0.7',
+            'powerparser', '2.0.7',
             'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')
+
+    def test_r_xml_version(self):
+        self.check(
+            'xml', '3.98-1.4',
+            'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz')
+
+    def test_nco_version(self):
+        self.check(
+            'nco', '4.6.2-beta03',
+            'https://github.com/nco/nco/archive/4.6.2-beta03.tar.gz')
+
+        self.check(
+            'nco', '4.6.3-alpha04',
+            'https://github.com/nco/nco/archive/4.6.3-alpha04.tar.gz')
+
+    def test_yorick_version(self):
+        self.check(
+            'yorick', '2_2_04',
+            'https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz')
+
+    def test_luaposix_version(self):
+        self.check(
+            'luaposix', '33.4.0',
+            'https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz')

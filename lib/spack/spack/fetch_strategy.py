@@ -911,7 +911,10 @@ def from_list_url(pkg):
             versions = pkg.fetch_remote_versions()
             try:
                 url_from_list = versions[pkg.version]
-                return URLFetchStrategy(url=url_from_list, digest=None)
+                digest = None
+                if pkg.version in pkg.versions:
+                    digest = pkg.versions[pkg.version].get('md5', None)
+                return URLFetchStrategy(url=url_from_list, digest=digest)
             except KeyError:
                 tty.msg("Can not find version %s in url_list" %
                         self.version)

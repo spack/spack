@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPackrat(Package):
+class RPackrat(RPackage):
     """Manage the R packages your project depends on in an isolated, portable,
     and reproducible way."""
 
@@ -34,9 +34,3 @@ class RPackrat(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/packrat"
 
     version('0.4.7-1', '80c2413269b292ade163a70ba5053e84')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

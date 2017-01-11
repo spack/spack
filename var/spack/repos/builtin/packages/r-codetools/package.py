@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCodetools(Package):
+class RCodetools(RPackage):
     """Code analysis tools for R."""
 
     homepage = "https://cran.r-project.org/web/packages/codetools/index.html"
@@ -33,9 +33,3 @@ class RCodetools(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/codetools"
 
     version('0.2-14', '7ec41d4f8bd6ba85facc8c5e6adc1f4d')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

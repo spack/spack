@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMapproj(Package):
+class RMapproj(RPackage):
     """Converts latitude/longitude into projected coordinates."""
 
     homepage = "https://cran.r-project.org/package=mapproj"
@@ -34,10 +34,4 @@ class RMapproj(Package):
 
     version('1.2-4', '10e22bde1c790e1540672f15ddcaee71')
 
-    extends('R')
-
-    depends_on('r-maps', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-maps', type=('build', 'run'))

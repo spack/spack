@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RJsonlite(Package):
+class RJsonlite(RPackage):
     """A fast JSON parser and generator optimized for statistical data and the
     web. Started out as a fork of 'RJSONIO', but has been completely rewritten
     in recent versions. The package offers flexible, robust, high performance
@@ -43,9 +43,3 @@ class RJsonlite(Package):
 
     version('1.0', 'c8524e086de22ab39b8ac8000220cc87')
     version('0.9.21', '4fc382747f88a79ff0718a0d06bed45d')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
