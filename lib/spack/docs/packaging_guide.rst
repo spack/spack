@@ -2036,15 +2036,24 @@ The classes that are currently provided by Spack are:
     |                                    | :py:class:`.R` extensions        |
     +------------------------------------+----------------------------------+
 
+.. note::
+    Choice of the appropriate base class for a package
+        In most cases packagers don't have to worry about the selection of the right base class
+        for a package, as ``spack create`` will make the appropriate choice on their behalf. In those
+        rare cases where manual intervention is needed we need to stress that a
+        package base class depends on the *build system* being used, not the language of the package.
+        For example, a Python extension installed with CMake would ``extends('python')`` and
+        subclass from :py:class:`.CMakePackage`.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Mechanics of an installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When a user runs ``spack install``, Spack:
 
-* fetches an archive for the correct version of the software
-* expands the archive
-* sets the current working directory to the root directory of the expanded archive
+* Fetches an archive for the correct version of the software
+* Expands the archive
+* Sets the current working directory to the root directory of the expanded archive
 
 Then, depending on the base class of the package under consideration, it will execute
 a certain number of **phases** that reflect the way a package of that type is usually built.
@@ -2101,8 +2110,8 @@ configure arguments:
 .. note::
     Each specific build system has a list of attributes that can be overridden to
     fine-tune the installation of a package without overriding an entire phase. To
-    have more information on them the place to go is the API docs at the end of this manual.
-
+    have more information on them the place to go is the API docs of the :py:mod:`~.build_systems`
+    module.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Overriding an entire phase
