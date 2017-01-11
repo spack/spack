@@ -25,26 +25,33 @@
 from spack import *
 
 
-class Boxlib(Package):
+class Boxlib(CMakePackage):
     """BoxLib, a software framework for massively parallel
        block-structured adaptive mesh refinement (AMR) codes."""
 
     homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://ccse.lbl.gov/pub/Downloads/BoxLib.git"
+    base_url = "https://github.com/BoxLib-Codes/BoxLib.git"
 
-    # TODO: figure out how best to version this.  No tags in the repo!
-    version('master', git='https://ccse.lbl.gov/pub/Downloads/BoxLib.git')
+    version('master', git='https://github.com/BoxLib-Codes/BoxLib.git',
+            tag='master')
+
+    # Latest version has build errors when using CMake
+    # version('1.3.5', '78f9436e152f18d0e55f6fd9b4e35a33',
+    #     tag='v1.3.5', git='https://github.com/BoxLib-Codes/BoxLib.git')
 
     depends_on('mpi')
-    depends_on('cmake', type='build')
 
-    def install(self, spec, prefix):
-        args = std_cmake_args
-        args += ['-DCCSE_ENABLE_MPI=1',
-                 '-DCMAKE_C_COMPILER=%s' % which('mpicc'),
-                 '-DCMAKE_CXX_COMPILER=%s' % which('mpicxx'),
-                 '-DCMAKE_Fortran_COMPILER=%s' % which('mpif90')]
+    def cmake_args(self):
+        spec = self.spec
+        options = []
 
-        cmake('.', *args)
-        make()
-        make("install")
+        options.extend([
+            # '-DBL_SPACEDIM=3',
+            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
+            '-DENABLE_FBASELIB=ON',
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].prefix.bin + "/mpicc",
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].prefix.bin + "/mpic++",
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].prefix.bin + "/mpif90"
+        ])
+
+        return options
