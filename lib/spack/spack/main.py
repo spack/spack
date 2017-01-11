@@ -159,10 +159,16 @@ class SpackArgumentParser(argparse.ArgumentParser):
         def add_subcommand_group(title, commands):
             """Add informational help group for a specific subcommand set."""
             cmd_set = set(commands)
+            print()
+            print(cmd_set)
+            print([action.metavar for action in self.actions])
+            print()
 
             # make a dict of commands of interest
-            cmds = dict((action.metavar, action) for action in self.actions
-                        if action.metavar in cmd_set)
+            n2c = lambda c: c.replace('-', '_')
+            cmds = dict(
+                (n2c(action.metavar), action) for action in self.actions
+                if n2c(action.metavar) in cmd_set)
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)

@@ -702,6 +702,13 @@ function _spack_test {
     fi
 }
 
+function _spack_test-suite {
+    if $list_options
+    then
+        compgen -W "-c --complete" -- "$cur"
+    fi
+}
+
 function _spack_uninstall {
     if $list_options
     then
