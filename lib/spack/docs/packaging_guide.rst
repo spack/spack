@@ -2022,8 +2022,8 @@ The classes that are currently provided by Spack are:
     |                                    | specialized for any build system |
     +------------------------------------+----------------------------------+
     |   :py:class:`.MakefilePackage`     | Specialized class for packages   |
-    |                                    | that are built invoking an       |
-    |                                    | hand-written Makefile            |
+    |                                    | that are built invoking          |
+    |                                    | hand-written Makefiles           |
     +------------------------------------+----------------------------------+
     |   :py:class:`.AutotoolsPackage`    | Specialized class for packages   |
     |                                    | that are built using GNU         |
@@ -2084,14 +2084,14 @@ using the ``spack info`` command:
     Description:
         GNU M4 is an implementation of the traditional Unix macro processor.
 
-Typically, phases have  default implementations that fit most of the common cases:
+Typically, phases have default implementations that fit most of the common cases:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
     :pyobject: AutotoolsPackage.configure
     :linenos:
 
 making it just sufficient for a packager to override a few
-build-system specific helper methods or attributes to provide, for instance,
+build system specific helper methods or attributes to provide, for instance,
 configure arguments:
 
 .. literalinclude::  ../../../var/spack/repos/builtin/packages/m4/package.py
@@ -2099,7 +2099,7 @@ configure arguments:
     :linenos:
 
 .. note::
-    Each specific build-system has a list of attributes that can be overridden to
+    Each specific build system has a list of attributes that can be overridden to
     fine-tune the installation of a package without overriding an entire phase. To
     have more information on them the place to go is the API docs at the end of this manual.
 
@@ -2109,7 +2109,7 @@ Overriding an entire phase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In extreme cases it may be necessary to override an entire phase. Regardless
-of the build-system in use the signature for it is:
+of the build system in use the signature for it is:
 
 .. code-block:: python
 
@@ -2761,8 +2761,8 @@ Build-time tests
 
 Sometimes packages finish to build "correctly" and issues with their run-time
 behavior are discovered only at a later stage, maybe after a full software stack
-relying on them has already been built. To avoid situation of that kind it's possible
-to code build-time tests that will be executed only if the option ``--run-tests``
+relying on them has already been built. To avoid situations of that kind it's possible
+to write build-time tests that will be executed only if the option ``--run-tests``
 of ``spack install`` has been activated.
 
 The proper way to write these tests is relying on two decorators that come with
@@ -2781,6 +2781,16 @@ function to be invoked after the ``build`` phase has been executed, while the
 second one makes the invocation  conditional on the fact that ``self.run_tests == True``.
 It is also possible to schedule a function to be invoked *before* a given phase
 using the ``MakefilePackage.precondition`` decorator.
+
+.. note::
+
+    Default implementations for build-time tests
+
+        Packages that are built using specific build systems may have already a
+        default implementation for build-time tests. For instance :py:class:`~.AutotoolsPackage`
+        based packages will try to invoke ``make test`` and ``make check`` if
+        Spack is asked to run tests. You'll find more information on each class
+        looking at the :py:mod:`~.build_systems` documentation.
 
 .. _file-manipulation:
 
