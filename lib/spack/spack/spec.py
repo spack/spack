@@ -1388,7 +1388,7 @@ class Spec(object):
             deptypes = dep_spec.deptypes
 
             # remove self from all dependents, unless it is already removed
-            if self.name in dependent._depencies:
+            if self.name in dependent._dependencies:
                 del dependent._dependencies[self.name]
 
             # add the replacement, unless it is already a dep of dependent.
