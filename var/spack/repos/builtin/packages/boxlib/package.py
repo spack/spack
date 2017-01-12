@@ -30,14 +30,9 @@ class Boxlib(CMakePackage):
        block-structured adaptive mesh refinement (AMR) codes."""
 
     homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://github.com/BoxLib-Codes/BoxLib.git"
+    url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
 
-    version('master', git='https://github.com/BoxLib-Codes/BoxLib.git',
-            tag='master')
-
-    # Latest version has build errors when using CMake
-    # version('1.3.5', '78f9436e152f18d0e55f6fd9b4e35a33',
-    #     tag='v1.3.5', git='https://github.com/BoxLib-Codes/BoxLib.git')
+    version('16.12.2', 'a28d92a5ff3fbbdbbd0a776a59f18526')
 
     depends_on('mpi')
 
