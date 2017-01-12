@@ -53,6 +53,7 @@ class PyYt(Package):
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
+    variant("devmode", default=False, description="enable development mode")
 
     extends("python")
 
@@ -68,7 +69,10 @@ class PyYt(Package):
     depends_on("python @2.7:2.999,3.4:")
 
     def install(self, spec, prefix):
-        setup_py("install", "--prefix=%s" % prefix)
+        if '+devmode' in spec:
+            setup_py("develop", "--prefix=%s" % prefix)
+        else:
+            setup_py("install", "--prefix=%s" % prefix)
         self.check_install(spec, prefix)
 
     def check_install(self, spec, prefix):
