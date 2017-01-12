@@ -553,6 +553,11 @@ def fork(pkg, function, dirty=False):
             setup_package(pkg, dirty=dirty)
             function(input_stream)
             child_connection.send(None)
+        except StopIteration as e:
+            # StopIteration is used to stop installations
+            # before the final stage, mainly for debug purposes
+            tty.msg(e.message)
+            child_connection.send(None)
         except:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
