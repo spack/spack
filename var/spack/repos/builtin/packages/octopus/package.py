@@ -101,7 +101,7 @@ class Octopus(Package):
             ])
         if '+arpack-ng' in spec:
             args.extend([
-                '--with-arpack={}'.format(arpack.joined()), 
+                '--with-arpack={0}'.format(arpack.joined()), 
             ])
         if '+scalapack' in spec:
             args.extend([
