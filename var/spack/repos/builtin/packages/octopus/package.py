@@ -96,7 +96,8 @@ class Octopus(Package):
         if '+netcdf' in spec:
             args.extend([
                 '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
-                '--with-netcdf-include=%s' % spec['netcdf-fortran'].prefix.include,
+                '--with-netcdf-include=%s' % 
+                spec['netcdf-fortran'].prefix.include,
             ])
         if '+arpack-ng' in spec:
             args.extend([
