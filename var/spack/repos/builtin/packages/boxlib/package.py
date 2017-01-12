@@ -50,7 +50,7 @@ class Boxlib(CMakePackage):
             '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
             '-DENABLE_FBASELIB=ON',
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpic++,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
         ])
 
