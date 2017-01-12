@@ -30,7 +30,7 @@ class Boxlib(CMakePackage):
        block-structured adaptive mesh refinement (AMR) codes."""
 
     homepage = "https://ccse.lbl.gov/BoxLib/"
-    base_url = "https://github.com/BoxLib-Codes/BoxLib.git"
+    url = "https://github.com/BoxLib-Codes/BoxLib.git"
 
     version('master', git='https://github.com/BoxLib-Codes/BoxLib.git',
             tag='master')
@@ -49,9 +49,9 @@ class Boxlib(CMakePackage):
             # '-DBL_SPACEDIM=3',
             '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
             '-DENABLE_FBASELIB=ON',
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].prefix.bin + "/mpicc",
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].prefix.bin + "/mpic++",
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].prefix.bin + "/mpif90"
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpic++,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
         ])
 
         return options
