@@ -14,10 +14,16 @@
 #   ~/.spack/packages.yaml
 # -------------------------------------------------------------------------
 packages:
+  ibm-mpi:
+    version: ['10.1.0.2']
+    paths:
+        ibm-mpi@10.1.0.2: /opt/ibm/spectrum_mpi/
+    buildable: False
+
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag]
+    compiler: [gcc, intel, pgi, clang, xl, xl_r, nag]
     providers:
-      mpi: [openmpi, mpich]
+      mpi: [openmpi, mpich, ibm-mpi@10.1.0.2]
       blas: [openblas]
       lapack: [openblas]
       pil: [py-pillow]
