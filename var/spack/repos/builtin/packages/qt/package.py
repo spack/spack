@@ -64,7 +64,7 @@ class Qt(Package):
 
     # Use system openssl for security.
     depends_on("openssl")
-    depends_on("glib")
+    depends_on("glib", when='@4:')
     depends_on("gtkplus", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
