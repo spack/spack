@@ -32,9 +32,9 @@ class Lz4(Package):
     typically reaching RAM speed limits on multi-core systems."""
 
     homepage = "http://cyan4973.github.io/lz4/"
-    url      = "https://github.com/Cyan4973/lz4/archive/r131.tar.gz"
+    url      = "https://github.com/lz4/lz4/archive/r131.tar.gz"
 
-    version('131', '42b09fab42331da9d3fb33bd5c560de9')
+    version('r131', '42b09fab42331da9d3fb33bd5c560de9')
 
     # depends_on('valgrind', type='test')
 
