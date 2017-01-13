@@ -219,9 +219,8 @@ def display_specs(specs, **kwargs):
             format = "    %%-%ds%%s" % width
 
             for abbrv, spec in zip(abbreviated, specs):
-                if hashes:
-                    print(gray_hash(spec, hlen), )
-                print(format % (abbrv, spec.prefix))
+                prefix = gray_hash(spec, hlen) if hashes else ''
+                print prefix + (format % (abbrv, spec.prefix))
 
         elif mode == 'deps':
             for spec in specs:
