@@ -254,6 +254,13 @@ class Boost(Package):
                 'toolset=%s' % self.determine_toolset(spec)
             ])
 
+        # clang is not officially supported for pre-compiled headers
+        # and at least in clang 3.9 still fails to build
+        #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
+        #   https://svn.boost.org/trac/boost/ticket/12496
+        if spec.satisfies('%clang'):
+            options.extend(['pch=off'])
+
         return threadingOpts
 
     def add_buildopt_symlinks(self, prefix):
