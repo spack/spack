@@ -68,6 +68,7 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide
    developer_guide
+   testing_guide
    API Docs <spack>
 
 ==================
