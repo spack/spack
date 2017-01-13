@@ -40,15 +40,18 @@ class PyIpdb(Package):
     # section on ipdb's GitHub:
     #     https://github.com/gotcha/ipdb#third-party-support
     extends('python')
+    depends_on('python@2.6:2.7,3.2:')
 
-    # Dependencies gathered from: https://github.com/gotcha/ipdb/blob/master/setup.py
-    depends_on('py-setuptools', type='build')
-    # ipdb needs many packages available at runtime
-    depends_on('py-ipython',        type=('build', 'link'))
-    depends_on('py-traitlets',      type=('build', 'link'))
-    depends_on('py-six',            type=('build', 'link'))
-    depends_on('py-pexpect',        type=('build', 'link'))
-    depends_on('py-prompt-toolkit', type=('build', 'link'))
+    # Dependencies gathered from:
+    #     https://github.com/gotcha/ipdb/blob/master/setup.py
+    # However additional dependencies added below were found via testing.
+    depends_on('py-setuptools',      type='build')
+    # ipdb needs iPython and others available at runtime
+    depends_on('py-ipython@0.10.2:', type=('build', 'link'))
+    depends_on('py-traitlets',       type=('build', 'link'))
+    depends_on('py-six',             type=('build', 'link'))
+    depends_on('py-pexpect',         type=('build', 'link'))
+    depends_on('py-prompt-toolkit',  type=('build', 'link'))
 
     def install(self, spec, prefix):
         # Installation is uncomplicated, this should suffice.
