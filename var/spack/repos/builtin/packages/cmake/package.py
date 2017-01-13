@@ -29,7 +29,7 @@ class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage  = 'https://www.cmake.org'
-    url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
+    url       = 'https://cmake.org/files/v3.4/cmake-3.5.2.tar.gz'
 
     version('3.6.1',    'd6dd661380adacdb12f41b926ec99545')
     version('3.6.0',    'aa40fbecf49d99c083415c2411d12db9')
@@ -66,7 +66,7 @@ class Cmake(Package):
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
 	# Patch required to use cmake with IBM XL compilers
-    patch('ibm-xl.patch')
+    patch('ibm-xl.patch', when= '@3.5.2')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
