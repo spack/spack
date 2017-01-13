@@ -71,10 +71,6 @@ _roots = spack.config.get_config('config').get('module_roots', {})
 _module_config = spack.config.get_config('modules')
 
 
-def verbose_autoload():
-    configuration = _module_config.get('lmod', {})
-    return configuration.get('verbose_autoload', True)
-
 
 def print_help():
     """
@@ -445,7 +441,7 @@ class EnvModule(object):
         else:
             module_file = spec
         return self.autoload_format.format(module_file=module_file,
-                                           warner=self.autoload_warner())
+                                           warner=self.autoload_warner().format(module_file=module_file))
 
     def prerequisite(self, spec):
         m = type(self)(spec)
@@ -486,6 +482,12 @@ class EnvModule(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+    def verbose_autoload(self):
+        #luigi#configuration = _module_config.get('lmod', {})
+        configuration = _module_config.get(self.name, {})
+        return configuration.get('verbose_autoload', True)
+
 
 
 class Dotkit(EnvModule):
@@ -539,7 +541,7 @@ class TclModule(EnvModule):
         _roots.get(name, join_path(spack.share_path, 'modules')))
 
     def autoload_warner(self):
-        if verbose_autoload():
+        if self.verbose_autoload():
             return 'puts stderr "Autoloading {module_file}"\n'
         return ''
 
@@ -672,7 +674,7 @@ class LmodModule(EnvModule):
     }
 
     def autoload_warner(self):
-        if verbose_autoload():
+        if self.verbose_autoload():
             return 'LmodMessage("Autoloading {module_file}")\n'
         return ''
 
