@@ -104,8 +104,12 @@ def filter_shebangs_in_directory(directory, filenames=None):
 
 def post_install(pkg):
     """This hook edits scripts so that they call /bin/bash
-       $spack_prefix/bin/sbang instead of something longer than the
-       shebang limit."""
+    $spack_prefix/bin/sbang instead of something longer than the
+    shebang limit.
+    """
+    if pkg.spec.external:
+        tty.debug('SKIP: shebang filtering [external package]')
+        return
 
     for directory, _, filenames in os.walk(pkg.prefix):
         filter_shebangs_in_directory(directory, filenames)

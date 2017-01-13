@@ -954,7 +954,7 @@ class Spec(object):
         self._concrete = kwargs.get('concrete', False)
 
         # Allow a spec to be constructed with an external path.
-        self.external  = kwargs.get('external', None)
+        self.external = kwargs.get('external', None)
         self.external_module = kwargs.get('external_module', None)
 
         # This allows users to construct a spec DAG with literals.
@@ -1349,6 +1349,13 @@ class Spec(object):
         if params:
             d['parameters'] = params
 
+        d['external'] = False
+        if self.external:
+            d['external'] = {
+                'path': self.external,
+                'module': bool(self.external_module)
+            }
+
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
@@ -1411,6 +1418,16 @@ class Spec(object):
                 spec.variants[name] = VariantSpec(name, value)
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
+
+        if 'external' in node:
+            spec.external = None
+            if node['external']:
+                spec.external = node['external']['path']
+                spec.external_module = node['external']['module']
+                if spec.external_module is False:
+                    spec.external_module = None
+        else:
+            spec.external = None
 
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.

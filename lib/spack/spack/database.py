@@ -67,9 +67,9 @@ from spack.version import Version
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.2')
+_db_version = Version('0.9.3')
 
-# Default timeout for spack database locks is 5 min.
+# Default timeout for spack database locks is 1 min.
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
@@ -421,9 +421,27 @@ class Database(object):
             old_data = self._data
             try:
                 self._data = {}
+                missing_specs = set(directory_layout.all_specs())
+                for key, entry in old_data.items():
+                    try:
+                        layout = spack.store.layout
+                        if entry.spec.external:
+                            layout = None
+                        kwargs = {
+                            'spec': entry.spec,
+                            'directory_layout': layout,
+                            'explicit': entry.explicit
+                        }
+                        self._add(**kwargs)
+                        missing_specs.discard(entry.spec)
+                    except Exception as e:
+                        # Something went wrong, so the spec was not restored
+                        # from old data
+                        tty.debug(e.message)
+                        pass
 
                 # Ask the directory layout to traverse the filesystem.
-                for spec in directory_layout.all_specs():
+                for spec in missing_specs:
                     # Try to recover explicit value from old DB, but
                     # default it to False if DB was corrupt.
                     explicit = False
@@ -542,7 +560,7 @@ class Database(object):
 
         key = spec.dag_hash()
         if key not in self._data:
-            installed = False
+            installed = True if spec.external else False
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
