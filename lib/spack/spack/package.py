@@ -1094,9 +1094,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         try:
             # Check if the package was already registered in the DB
             # If this is the case, then just exit
-            spack.store.db.get_record(self.spec)
+            rec = spack.store.db.get_record(self.spec)
             message = '{s.name}@{s.version} : already registered in DB'
             tty.msg(message.format(s=self))
+            # Update the value of rec.explicit if it is necessary
+            self._update_explicit_entry_in_db(rec, explicit)
+
         except KeyError:
             # If not register it and generate the module file
             # For external packages we just need to run
@@ -1108,6 +1111,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             message = '{s.name}@{s.version} : registering into DB'
             tty.msg(message.format(s=self))
             spack.store.db.add(self.spec, None, explicit=explicit)
+
+    def _update_explicit_entry_in_db(self, rec, explicit):
+        if explicit and not rec.explicit:
+            with spack.store.db.write_transaction():
+                rec = spack.store.db.get_record(self.spec)
+                rec.explicit = True
+                message = '{s.name}@{s.version} : marking the package explicit'
+                tty.msg(message.format(s=self))
 
     def do_install(self,
                    keep_prefix=False,
@@ -1165,11 +1176,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 msg= '{0.name} is already installed in {0.prefix}'
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
-                if (not rec.explicit) and explicit:
-                    with spack.store.db.write_transaction():
-                        rec = spack.store.db.get_record(self.spec)
-                        rec.explicit = True
-                return
+                return self._update_explicit_entry_in_db(rec, explicit)
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
