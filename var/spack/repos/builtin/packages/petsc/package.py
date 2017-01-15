@@ -37,11 +37,6 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
-    version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
-    version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
-            commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
-
-    version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
     version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
     version('3.6.4', '7632da2375a3df35b8891c9526dbdde7')
     version('3.6.3', '91dd3522de5a5ef039ff8f50800db606')
@@ -71,18 +66,15 @@ class Petsc(Package):
             description='Activates support for SuperluDist (only parallel)')
 
     # Virtual dependencies
-    # Git repository needs sowing to build Fortran interface
-    depends_on('sowing', when='@develop')
-
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7', type='build')
+    depends_on('python @2.6:2.7')
 
     # Other dependencies
-    depends_on('boost', when='@:3.5+boost')
+    depends_on('boost', when='+boost')
     depends_on('metis@5:', when='+metis')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -92,9 +84,8 @@ class Petsc(Package):
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
     depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
-    depends_on('superlu-dist@:4.3', when='@3.4.4:3.6.4+superlu-dist+mpi')
+    depends_on('superlu-dist@:4.3', when='@:3.6.4+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
-    depends_on('superlu-dist@5.0.0:', when='@for-pflotran-0.1.0+superlu-dist+mpi')
     depends_on('mumps+mpi', when='+mumps+mpi')
     depends_on('scalapack', when='+mumps+mpi')
 
@@ -133,11 +124,7 @@ class Petsc(Package):
         return compiler_opts
 
     def install(self, spec, prefix):
-        options = ['--with-ssl=0',
-                   '--with-x=0',
-                   '--download-c2html=0',
-                   '--download-sowing=0',
-                   '--download-hwloc=0']
+        options = ['--with-ssl=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (

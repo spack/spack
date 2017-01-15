@@ -56,7 +56,10 @@ class NetlibScalapack(Package):
     depends_on('mpi')
     depends_on('lapack')
     depends_on('blas')
-    depends_on('cmake', when='@2.0.0:', type='build')
+    ## depends_on('cmake', when='@2.0.0:', type='build')
+    depends_on('cmake', type='build')
+
+    patch('spectrum_mpi.patch', when='^ibm-mpi')
 
     @property
     def scalapack_libs(self):
@@ -87,6 +90,13 @@ class NetlibScalapack(Package):
             options.extend([
                 "-DCMAKE_C_FLAGS=-fPIC",
                 "-DCMAKE_Fortran_FLAGS=-fPIC"
+            ])
+
+        # use optimization level 3 with IBM XL compilers
+        if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            options.extend([
+                "-DCMAKE_C_FLAGS=-O3",
+                "-DCMAKE_Fortran_FLAGS=-O3",
             ])
 
         options.extend(std_cmake_args)

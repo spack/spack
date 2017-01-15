@@ -35,7 +35,7 @@ class SuiteSparse(Package):
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    variant('tbb', default=True, description='Build with Intel TBB')
+    variant('tbb', default=False, description='Build with Intel TBB')
     variant('fpic', default=True, description='Build position independent code (required to link with shared libraries)')
 
     depends_on('blas')
@@ -46,7 +46,7 @@ class SuiteSparse(Package):
     # flags does not seem to be used, which leads to linking errors on Linux.
     depends_on('tbb', when='@4.5.3:+tbb')
 
-    patch('tbb_453.patch', when='@4.5.3')
+    patch('tbb_453.patch', when='@4.5.3+tbb')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -60,24 +60,16 @@ class SuiteSparse(Package):
         # inject Spack compiler wrappers
         make_args.extend([
             'AUTOCC=no',
-            'CC=cc',
-            'CXX=c++',
-            'F77=f77',
-            'CUDA_ROOT     =',
-            'GPU_BLAS_PATH =',
-            'GPU_CONFIG    =',
-            'CUDA_PATH     =',
-            'CUDART_LIB    =',
-            'CUBLAS_LIB    =',
-            'CUDA_INC_PATH =',
-            'NV20          =',
-            'NV30          =',
-            'NV35          =',
-            'NVCC          = echo',
-            'NVCCFLAGS     =',
+            'CC=%s' % self.compiler.cc,
+            'CXX=%s' % self.compiler.cxx,
+            'F77=%s' % self.compiler.f77,
         ])
+
         if '+fpic' in spec:
             make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+
+        if '%xl' in spec or '%xl_r' in spec:
+            make_args.extend(['CFLAGS+=-DBLAS_NO_UNDERSCORE'])
 
         # use Spack's metis in CHOLMOD/Partition module,
         # otherwise internal Metis will be compiled

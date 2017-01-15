@@ -24,13 +24,15 @@
 ##############################################################################
 
 from spack import *
+from spack import architecture
+import os, subprocess
 import shutil
 
 
-class Hdf5(AutotoolsPackage):
+class Hdf5(Package):
     """HDF5 is a data model, library, and file format for storing and managing
-    data. It supports an unlimited variety of datatypes, and is designed for
-    flexible and efficient I/O and for high volume and complex data.
+       data. It supports an unlimited variety of datatypes, and is designed for
+       flexible and efficient I/O and for high volume and complex data.
     """
 
     homepage = "http://www.hdfgroup.org/HDF5/"
@@ -40,12 +42,6 @@ class Hdf5(AutotoolsPackage):
 
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
-    version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c',
-            # The link for the latest version differs from the links for
-            # the previous releases. Do not forget to remove this once
-            # the version 1.8.18 is not the latest one for the 1.8.* branch.
-            url='http://hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.gz')
-    version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
     version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
@@ -63,22 +59,25 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
 
-    depends_on('mpi', when='+mpi')
-    depends_on('szip', when='+szip')
-    depends_on('zlib@1.1.2:')
+    depends_on("mpi", when='+mpi')
+    depends_on("szip", when='+szip')
+    depends_on("zlib@1.1.2:")
 
-    @AutotoolsPackage.precondition('configure')
-    def validate(self):
+    patch('ibm-mpi-1.10.0-patch1.patch', when='^ibm-mpi')
+
+    def get_arch(self):
+        arch = architecture.Arch()
+        arch.platform = architecture.platform()
+        return str(arch.platform.target('default_target'))
+
+    def validate(self, spec):
         """
         Checks if incompatible variants have been activated at the same time
 
         :param spec: spec of the package
         :raises RuntimeError: in case of inconsistencies
         """
-        spec = self.spec
         if '+fortran' in spec and not self.compiler.fc:
             msg = 'cannot build a fortran variant without a fortran compiler'
             raise RuntimeError(msg)
@@ -87,8 +86,23 @@ class Hdf5(AutotoolsPackage):
             msg = 'cannot use variant +threadsafe with either +cxx or +fortran'
             raise RuntimeError(msg)
 
-    def configure_args(self):
-        spec = self.spec
+    def install(self, spec, prefix):
+        ## update the config.sub/guess files if on ppc64le
+        if self.get_arch() == 'ppc64le':
+            ## update the config.sub/guess files
+            with working_dir("bin"):
+                # get new config.guess and config.sub files
+                print 'Backing up existing config.[sub|guess] files\n'
+                subprocess.call("mv config.sub config.sub.orig", shell=True)
+                subprocess.call("mv config.guess config.guess.orig", shell=True)
+                print 'Downloading lastest config.[sub|guess] files\n'
+                subprocess.call("wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'", shell=True)
+                subprocess.call("wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'", shell=True)
+    
+        if '^ibm-mpi' in spec:
+            os.environ['RUNSERIAL'] = '/opt/ibm/spectrum_mpi/bin/mpirun -np 1'
+
+        self.validate(spec)
         # Handle compilation after spec validation
         extra_args = []
 
@@ -123,11 +137,6 @@ class Hdf5(AutotoolsPackage):
             if spec.satisfies('@:1.8.16'):
                 extra_args.append('--enable-fortran2003')
 
-        if '+pic' in spec:
-            extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
-
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
             # together. There doesn't seem to be a real reason for this, except
@@ -154,13 +163,21 @@ class Hdf5(AutotoolsPackage):
                 '--disable-hl',
             ])
 
-        return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
+        configure(
+            "--prefix=%s" % prefix,
+            "--with-zlib=%s" % spec['zlib'].prefix,
+            *extra_args)
+        make()
 
-    @AutotoolsPackage.sanity_check('install')
-    def check_install(self):
-        # Build and run a small program to test the installed HDF5 library
-        spec = self.spec
-        print("Checking HDF5 installation...")
+        if self.run_tests:
+            make("check")
+
+        make("install")
+        self.check_install(spec)
+
+    def check_install(self, spec):
+        "Build and run a small program to test the installed HDF5 library"
+        print "Checking HDF5 installation..."
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
             source = r"""
@@ -188,35 +205,32 @@ HDF5 version {version} {version}
             # TODO: Automate these path and library settings
             cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
             cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"),
-               "-L%s" % join_path(spec.prefix, "lib64"),
-               "-lhdf5",
+               "-L%s" % join_path(spec.prefix, "lib"), "-lhdf5",
                "-lz")
             try:
-                check = Executable('./check')
+                if '^ibm-mpi' in spec:
+                    check = Executable('/opt/ibm/spectrum_mpi/bin/mpirun -np 1 ./check')
+                else:
+                    check = Executable('./check')
+
                 output = check(return_output=True)
             except:
                 output = ""
             success = output == expected
             if not success:
-                print("Produced output does not match expected output.")
-                print("Expected output:")
-                print('-' * 80)
-                print(expected)
-                print('-' * 80)
-                print("Produced output:")
-                print('-' * 80)
-                print(output)
-                print('-' * 80)
+                print "Produced output does not match expected output."
+                print "Expected output:"
+                print '-' * 80
+                print expected
+                print '-' * 80
+                print "Produced output:"
+                print '-' * 80
+                print output
+                print '-' * 80
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
 
     def url_for_version(self, version):
-        # If we have a specific URL for this version, return it.
-        version_urls = self.version_urls()
-        if version in version_urls:
-            return version_urls[version]
-
         base_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
 
         if version == Version("1.2.2"):

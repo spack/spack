@@ -23,28 +23,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack import architecture
+import subprocess
 
 
-class Matio(AutotoolsPackage):
+
+class Matio(Package):
     """matio is an C library for reading and writing Matlab MAT files"""
     homepage = "http://sourceforge.net/projects/matio/"
-    url = "http://downloads.sourceforge.net/project/matio/matio/1.5.9/matio-1.5.9.tar.gz"
+    url = "http://downloads.sourceforge.net/project/matio/matio/1.5.2/matio-1.5.2.tar.gz"
 
-    version('1.5.9', 'aab5b4219a3c0262afe7eeb7bdd2f463')
     version('1.5.2', '85b007b99916c63791f28398f6a4c6f1')
 
-    variant("zlib", default=True,
-            description='support for compressed mat files')
-    variant("hdf5", default=True,
-            description='support for version 7.3 mat files via hdf5')
+    def get_arch(self):
+        arch = architecture.Arch()
+        arch.platform = architecture.platform()
+        return str(arch.platform.target('default_target'))
 
-    depends_on("zlib", when="+zlib")
-    depends_on("hdf5", when="+hdf5")
+    def install(self, spec, prefix):
+        ## update the config.sub/guess files if on ppc64le
+        if self.get_arch() == 'ppc64le':
+            with working_dir("config"):
+                # get new config.guess and config.sub files
+                print 'Backing up existing config.[sub|guess] files\n'
+                subprocess.call("mv config.sub config.sub.orig", shell=True)
+                subprocess.call("mv config.guess config.guess.orig", shell=True)
+                print 'Downloading lastest config.[sub|guess] files\n'
+                subprocess.call("wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'", shell=True)
+                subprocess.call("wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'", shell=True)
+        configure('--prefix=%s' % prefix)
 
-    def configure_args(self):
-        args = []
-        if '+zlib' in self.spec:
-            args.append("--with-zlib=%s" % self.spec['zlib'].prefix)
-        if '+hdf5' in self.spec:
-            args.append("--with-hdf5=%s" % self.spec['hdf5'].prefix)
-        return args
+        make()
+        make("install")

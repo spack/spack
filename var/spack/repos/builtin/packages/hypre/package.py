@@ -23,9 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import sys
-
+import os, sys
+import subprocess
 
 class Hypre(Package):
     """Hypre is a library of high performance preconditioners that
@@ -35,38 +34,47 @@ class Hypre(Package):
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
-    version('develop', git='https://github.com/LLNL/hypre', tag='master')
-    version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
     # hypre does not know how to build shared libraries on Darwin
-    variant('shared', default=(sys.platform != 'darwin'),
-            description="Build shared library (disables static library)")
+    variant('shared', default=sys.platform!='darwin', description="Build shared library version (disables static library)")
     # SuperluDist have conflicting headers with those in Hypre
-    variant('internal-superlu', default=True,
-            description="Use internal Superlu routines")
+    variant('internal-superlu', default=True, description="Use internal Superlu routines")
 
     depends_on("mpi")
     depends_on("blas")
     depends_on("lapack")
 
-    def install(self, spec, prefix):
-        os.environ['CC'] = spec['mpi'].mpicc
-        os.environ['CXX'] = spec['mpi'].mpicxx
-        os.environ['F77'] = spec['mpi'].mpif77
+    patch('ibm-mpi.patch', when='^ibm-mpi')
 
-        # Note: --with-(lapack|blas)_libs= needs space separated list of names
-        lapack = spec['lapack'].lapack_libs
-        blas = spec['blas'].blas_libs
+    def install(self, spec, prefix):
+        blas_dir = spec['blas'].prefix
+        lapack_dir = spec['lapack'].prefix
+        mpi_dir = spec['mpi'].prefix
+
+        if '^ibm-mpi' in spec:
+            os.environ['CC'] = spec['mpi'].mpicc
+            os.environ['CXX'] = spec['mpi'].mpicxx
+            os.environ['F77'] = spec['mpi'].mpif77
+        else:
+            os.environ['CC'] = os.path.join(mpi_dir, 'bin', 'mpicc')
+            os.environ['CXX'] = os.path.join(mpi_dir, 'bin', 'mpicxx')
+            os.environ['F77'] = os.path.join(mpi_dir, 'bin', 'mpif77')
 
         configure_args = [
-            '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % ' '.join(lapack.names),
-            '--with-lapack-lib-dirs=%s' % ' '.join(lapack.directories),
-            '--with-blas-libs=%s' % ' '.join(blas.names),
-            '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
-        ]
+                "--prefix=%s" % prefix,
+                "--with-lapack-libs=lapack",
+                "--with-blas-libs=blas"]
+        if spec.satisfies('^netlib-lapack'):
+                # netlib-lapack puts the libs in lib64
+                configure_args.extend([
+                    "--with-lapack-lib-dirs=%s/lib64" % lapack_dir,
+                    "--with-blas-lib-dirs=%s/lib64" % blas_dir])
+        else:
+                configure_args.extend([
+                    "--with-lapack-lib-dirs=%s/lib" % lapack_dir,
+                    "--with-blas-lib-dirs=%s/lib" % blas_dir])
 
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")
@@ -79,16 +87,17 @@ class Hypre(Package):
 
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
+        with working_dir("src/config"):
+            # get new config.guess and config.sub files
+            print 'Backing up existing config.[sub|guess] files\n'
+            subprocess.call("mv config.sub config.sub.orig", shell=True)
+            subprocess.call("mv config.guess config.guess.orig", shell=True)
+            print 'Downloading lastest config.[sub|guess] files\n'
+            subprocess.call("wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'", shell=True)
+            subprocess.call("wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'", shell=True)
+
         with working_dir("src"):
             configure(*configure_args)
 
             make()
-            if self.run_tests:
-                make("check")
-                make("test")
-                Executable(join_path('test', 'ij'))()
-                sstruct = Executable(join_path('test', 'struct'))
-                sstruct()
-                sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
-                        '-rhsone')
             make("install")
