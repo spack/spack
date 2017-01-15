@@ -1,0 +1,12 @@
+diff -Naur hypre-2.10.0b/src/configure hypre-2.10.0b-patched/src/configure
+--- hypre-2.10.0b/src/configure	2015-01-22 18:01:13.000000000 -0500
++++ hypre-2.10.0b-patched/src/configure	2016-07-06 16:31:31.679596019 -0400
+@@ -4072,7 +4072,7 @@
+ esac
+ eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+ $as_echo "$ac_try_echo") >&5
+-  (eval "$ac_try") 2>&5
++  (eval "/opt/ibm/spectrum_mpi/bin/mpirun -np 1 $ac_try") 2>&5
+   ac_status=$?
+   $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+   (exit $ac_status); }; }; then

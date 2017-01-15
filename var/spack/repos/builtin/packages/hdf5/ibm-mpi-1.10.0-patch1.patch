@@ -1,0 +1,30 @@
+diff -Naur hdf5-1.10.0-patch1/configure hdf5-1.10.0-patch1-patched/configure
+--- hdf5-1.10.0-patch1/configure	2016-05-18 15:06:24.000000000 -0400
++++ hdf5-1.10.0-patch1/configure	2016-07-08 14:30:25.865984735 -0400
+@@ -2011,7 +2011,7 @@
+ esac
+ eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+ $as_echo "$ac_try_echo"; } >&5
+-  (eval "$ac_try") 2>&5
++  (eval "/opt/ibm/spectrum_mpi/bin/mpirun -np 1 $ac_try") 2>&5
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }; }; then :
+@@ -2488,7 +2488,7 @@
+ esac
+ eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+ $as_echo "$ac_try_echo"; } >&5
+-  (eval "$ac_try") 2>&5
++  (eval "/opt/ibm/spectrum_mpi/bin/mpirun -np 1 $ac_try") 2>&5
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }; }; then :
+@@ -4686,7 +4686,7 @@
+ esac
+ eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+ $as_echo "$ac_try_echo"; } >&5
+-  (eval "$ac_try") 2>&5
++  (eval "/opt/ibm/spectrum_mpi/bin/mpirun -np 1 $ac_try") 2>&5
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }; }; then

@@ -1,0 +1,14 @@
+diff -Naur scalapack-2.0.2/CMAKE/FortranMangling.cmake scalapack-2.0.2-patched/CMAKE/FortranMangling.cmake
+--- scalapack-2.0.2/CMAKE/FortranMangling.cmake	2012-01-13 16:41:00.000000000 -0500
++++ scalapack-2.0.2-patched/CMAKE/FortranMangling.cmake	2016-07-05 17:57:36.482797604 -0400
+@@ -49,7 +49,9 @@
+ MESSAGE(STATUS "=========")
+ MESSAGE(STATUS "Testing FORTRAN_MANGLING")
+    
+-    execute_process ( COMMAND  ${PROJECT_SOURCE_DIR}/BLACS/INSTALL/xintface
++    set ( EXECUTE_COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ${PROJECT_SOURCE_DIR}/BLACS/INSTALL/xintface ${MPIEXEC_POSTFLAG} )
++
++    execute_process ( COMMAND  ${EXECUTE_COMMAND}
+                          RESULT_VARIABLE xintface_RES
+                          OUTPUT_VARIABLE xintface_OUT
+                          ERROR_VARIABLE xintface_ERR)
