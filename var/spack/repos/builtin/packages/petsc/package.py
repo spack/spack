@@ -41,6 +41,7 @@ class Petsc(Package):
     version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
             commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
 
+    version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
     version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
     version('3.6.4', '7632da2375a3df35b8891c9526dbdde7')
