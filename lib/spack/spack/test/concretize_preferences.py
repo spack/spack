@@ -43,6 +43,9 @@ def concretize_scope(config, tmpdir):
     spack.config.config_scopes.pop('concretize')
     spack.package_prefs._pkgsort = PreferredPackages()
 
+    # reset provider index each time, too
+    spack.repo._provider_index = None
+
 
 def concretize(abstract_spec):
     return Spec(abstract_spec).concretized()
@@ -123,7 +126,8 @@ class TestConcretizePreferences(object):
         # set up a packages.yaml file with a vdep as a key.  We use
         # syaml.load here to make sure source lines in the config are
         # attached to parsed strings, as the error message uses them.
-        conf = syaml.load("""mpi:
+        conf = syaml.load("""\
+mpi:
     paths:
       mpi-with-lapack@2.1: /path/to/lapack
 """)
@@ -135,7 +139,8 @@ class TestConcretizePreferences(object):
 
     def test_all_is_not_a_virtual(self):
         """Verify that `all` is allowed in packages.yaml."""
-        conf = syaml.load("""all:
+        conf = syaml.load("""\
+all:
         variants: [+mpi]
 """)
         spack.config.update_config('packages', conf, 'concretize')
@@ -143,3 +148,26 @@ class TestConcretizePreferences(object):
         # should be no error for 'all':
         spack.package_prefs._pkgsort = PreferredPackages()
         spack.package_prefs.get_packages_config()
+
+    def test_external_mpi(self):
+        # make sure this doesn't give us an external first.
+        spec = Spec('mpi')
+        spec.concretize()
+        assert not spec['mpi'].external
+
+        # load config
+        conf = syaml.load("""\
+all:
+    providers:
+        mpi: [mpich]
+mpich:
+    buildable: false
+    paths:
+        mpich@3.0.4: /dummy/path
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # ensure that once config is in place, external is used
+        spec = Spec('mpi')
+        spec.concretize()
+        assert spec['mpich'].external == '/dummy/path'
