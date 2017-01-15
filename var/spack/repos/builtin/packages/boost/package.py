@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack
 import sys
 import os
-from glob import glob
 
 
 class Boost(Package):
@@ -125,9 +125,19 @@ class Boost(Package):
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
+    depends_on('zlib')
+    depends_on('bzip2')
+
+
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
+
+    ## <SM> Patch fix for IBM XL compiler
+    patch('xl_1_61_0_le.patch', when='@1.61.0%xl_r')
+    patch('xl_1_61_0_le.patch', when='@1.61.0%xl')
+    patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
+    patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
     def url_for_version(self, version):
         """
@@ -145,7 +155,9 @@ class Boost(Package):
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
-                    'clang++': 'clang'}
+                    'clang++': 'clang',
+                    'xlc++':'xlcpp',
+                    'xlc++_r':'xlcpp'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
@@ -155,26 +167,6 @@ class Boost(Package):
 
         # fallback to gcc if no toolset found
         return 'gcc'
-
-    def bjam_python_line(self, spec):
-        from os.path import dirname, splitext
-        pydir = 'python%s.%s*' % spec['python'].version.version[:2]
-        incs = join_path(spec['python'].prefix.include, pydir, "pyconfig.h")
-        incs = glob(incs)
-        incs = " ".join([dirname(u) for u in incs])
-
-        pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
-        all_libs = join_path(spec['python'].prefix.lib, pylib)
-        libs = [u for u in all_libs if splitext(u)[1] == dso_suffix]
-        if len(libs) == 0:
-            libs = [u for u in all_libs if splitext(u)[1] == '.a']
-
-        libs = " ".join(libs)
-        return 'using python : %s : %s : %s : %s ;\n' % (
-            spec['python'].version.up_to(2),
-            join_path(spec['python'].prefix.bin, 'python'),
-            incs, libs
-        )
 
     def determine_bootstrap_options(self, spec, withLibs, options):
         boostToolsetId = self.determine_toolset(spec)
@@ -201,7 +193,9 @@ class Boost(Package):
                 f.write('using mpi : %s ;\n' %
                         join_path(spec['mpi'].prefix.bin, 'mpicxx'))
             if '+python' in spec:
-                f.write(self.bjam_python_line(spec))
+                f.write('using python : %s : %s ;\n' %
+                        (spec['python'].version.up_to(2),
+                         join_path(spec['python'].prefix.bin, 'python')))
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
