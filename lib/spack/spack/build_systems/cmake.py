@@ -103,6 +103,7 @@ class CMakePackage(PackageBase):
     def cmake_args(self):
         """Method to be overridden. Should return an iterable containing
         all the arguments that must be passed to configure, except:
+
         * CMAKE_INSTALL_PREFIX
         * CMAKE_BUILD_TYPE
         """
