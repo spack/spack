@@ -1099,19 +1099,27 @@ structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, the patch will be fetched
-from the URL and then applied to your source code.
+If you supply a URL instead of a filename, you need to supply a checksum,
+like this:
 
-.. warning::
+.. code-block:: python
 
-   It is generally better to use a filename rather than a URL for your
-   patch.  Patches fetched from URLs are not currently checksummed,
-   and adding checksums for them is tedious for the package builder.
-   File patches go into the spack repository, which gives you git's
-   integrity guarantees.  URL patches may be removed in a future spack
-   version.
+   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
+         md5='f91c6a04df56e228fe946291d2f38c9a')
+
+This directive provides an ``md5`` checksum.  You can use other hashing
+algorihtms like ``sha256`` as well.  The patch will be fetched from the
+URL, checked, and applied to your source code.  You can use the ``spack
+md5`` command to generate a checksum for a patch file.
 
 ``patch`` can take two options keyword arguments.  They are:
+
+""""""""""""""""""""""""""""""""""""""
+``md5``, ``sha256``, ``sha512``, etc.
+""""""""""""""""""""""""""""""""""""""
+
+Use one of these when you supply a patch to be downloaded from a remote
+site. The downloaded file will be validated using the given checksum.
 
 """"""""
 ``when``
@@ -1490,7 +1498,7 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
- 
+
 """""""""""""""""""
 Dependency Formulas
 """""""""""""""""""
@@ -2160,7 +2168,7 @@ below.
 .. _compiler-wrappers:
 
 ^^^^^^^^^^^^^^^^^^^^^
-Compiler interceptors
+Compiler wrappers
 ^^^^^^^^^^^^^^^^^^^^^
 
 As mentioned, ``CC``, ``CXX``, ``F77``, and ``FC`` are set to point to
