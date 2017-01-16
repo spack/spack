@@ -51,11 +51,8 @@ class Mpich(AutotoolsPackage):
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
-    def is_on_cray(self):
-        return os.environ.get("CRAYPE_VERSION")
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if self.is_on_cray():
+        if 'platform=cray' in self.spec:
             spack_env.set('MPICC',  spack_cc)
             spack_env.set('MPICXX', spack_cxx)
             spack_env.set('MPIF77', spack_fc)
@@ -74,7 +71,7 @@ class Mpich(AutotoolsPackage):
 
     def setup_dependent_package(self, module, dep_spec):
         # Is this a Cray machine? (TODO: We need a better test than this.)
-        if self.is_on_cray():
+        if 'platform=cray' in self.spec:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc
