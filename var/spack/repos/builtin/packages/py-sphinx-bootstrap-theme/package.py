@@ -25,15 +25,17 @@
 from spack import *
 
 
-class Libwebsockets(CMakePackage):
-    """C library for lightweight websocket clients and servers."""
+class PySphinxBootstrapTheme(Package):
+    """Sphinx Bootstrap Theme."""
 
-    homepage = "https://github.com/warmcat/libwebsockets"
-    url      = "https://github.com/warmcat/libwebsockets/archive/v2.1.0.tar.gz"
+    homepage = "https://pypi.python.org/pypi/sphinx-bootstrap-theme/"
+    url      = "https://pypi.io/packages/source/s/sphinx-bootstrap-theme/sphinx-bootstrap-theme-0.4.13.tar.gz"
 
-    version('2.1.0', '4df3be57dee43aeebd54a3ed56568f50')
-    version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
-    version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
+    version('0.4.13', '32e513a9c8ffbb8c1e4b036e8f74fb51')
 
-    depends_on('zlib')
-    depends_on('openssl')
+    extends('python')
+
+    depends_on('py-setuptools', type='build')
+
+    def install(self, spec, prefix):
+        setup_py('install', '--prefix={0}'.format(prefix))

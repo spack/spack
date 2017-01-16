@@ -25,36 +25,24 @@
 from spack import *
 
 
-class Tk(AutotoolsPackage):
-    """Tk is a graphical user interface toolkit that takes developing
-       desktop applications to a higher level than conventional
-       approaches. Tk is the standard GUI not only for Tcl, but for
-       many other dynamic languages, and can produce rich, native
-       applications that run unchanged across Windows, Mac OS X, Linux
-       and more."""
-    homepage = "http://www.tcl.tk"
+class Cppad(CMakePackage):
+    """A Package for Differentiation of C++ Algorithms."""
 
-    version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
-    version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
+    homepage = "https://www.coin-or.org/CppAD/"
 
-    variant('X', default=False, description='Enable X11 support')
+    version('20170114', '565a534dc813fa1289764222cd8c11ea')
+    version('develop', git='https://github.com/coin-or/CppAD.git')
 
-    depends_on("tcl")
-    depends_on("libx11", when='+X')
+    depends_on('cmake', type='build')
 
     def url_for_version(self, version):
-        base_url = "http://prdownloads.sourceforge.net/tcl"
-        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
+        """Handle version-based custom URLs."""
+        return "http://www.coin-or.org/download/source/CppAD/cppad-%s.gpl.tgz" % (version)
 
-    def setup_environment(self, spack_env, run_env):
-        # When using Tkinter from within spack provided python+tk, python
-        # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-            self.spec.version.up_to(2))))
-
-    def build_directory(self):
-        return 'unix'
-
-    def configure_args(self):
-        spec = self.spec
-        return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]
+    def cmake_args(self):
+        # This package does not obey CMAKE_INSTALL_PREFIX
+        args = [
+            "-Dcppad_prefix=%s" % (self.prefix),
+            "-Dcmake_install_docdir=share/cppad/doc"
+        ]
+        return args

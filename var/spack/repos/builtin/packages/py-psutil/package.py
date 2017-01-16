@@ -25,15 +25,19 @@
 from spack import *
 
 
-class Libwebsockets(CMakePackage):
-    """C library for lightweight websocket clients and servers."""
+class PyPsutil(Package):
+    """psutil is a cross-platform library for retrieving information on
+    running processes and system utilization (CPU, memory, disks, network)
+    in Python."""
 
-    homepage = "https://github.com/warmcat/libwebsockets"
-    url      = "https://github.com/warmcat/libwebsockets/archive/v2.1.0.tar.gz"
+    homepage = "https://pypi.python.org/pypi/psutil"
+    url      = "https://pypi.python.org/packages/d9/c8/8c7a2ab8ec108ba9ab9a4762c5a0d67c283d41b13b5ce46be81fdcae3656/psutil-5.0.1.tar.gz"
 
-    version('2.1.0', '4df3be57dee43aeebd54a3ed56568f50')
-    version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
-    version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
+    version('5.0.1', '153dc8be94badc4072016ceeac7808dc')
 
-    depends_on('zlib')
-    depends_on('openssl')
+    extends('python')
+    depends_on('python@2.6:')
+    depends_on('py-setuptools', type='build')
+
+    def install(self, spec, prefix):
+        setup_py('install', '--prefix=%s' % prefix)

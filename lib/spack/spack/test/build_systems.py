@@ -22,18 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+
+import spack
+from spack.build_environment import get_std_cmake_args
+from spack.spec import Spec
 
 
-class Libwebsockets(CMakePackage):
-    """C library for lightweight websocket clients and servers."""
+def test_cmake_std_args(config, builtin_mock):
+    # Call the function on a CMakePackage instance
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    assert pkg.std_cmake_args == get_std_cmake_args(pkg)
 
-    homepage = "https://github.com/warmcat/libwebsockets"
-    url      = "https://github.com/warmcat/libwebsockets/archive/v2.1.0.tar.gz"
-
-    version('2.1.0', '4df3be57dee43aeebd54a3ed56568f50')
-    version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
-    version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
-
-    depends_on('zlib')
-    depends_on('openssl')
+    # Call it on another kind of package
+    s = Spec('mpich')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    assert get_std_cmake_args(pkg)

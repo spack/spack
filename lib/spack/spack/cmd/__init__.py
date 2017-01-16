@@ -108,9 +108,6 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
 
-    if isinstance(args, (python_list, tuple)):
-        args = " ".join(args)
-
     try:
         specs = spack.spec.parse(args)
         for spec in specs:
@@ -219,9 +216,8 @@ def display_specs(specs, **kwargs):
             format = "    %%-%ds%%s" % width
 
             for abbrv, spec in zip(abbreviated, specs):
-                if hashes:
-                    print(gray_hash(spec, hlen), )
-                print(format % (abbrv, spec.prefix))
+                prefix = gray_hash(spec, hlen) if hashes else ''
+                print prefix + (format % (abbrv, spec.prefix))
 
         elif mode == 'deps':
             for spec in specs:

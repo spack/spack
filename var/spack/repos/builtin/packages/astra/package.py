@@ -25,15 +25,17 @@
 from spack import *
 
 
-class Libwebsockets(CMakePackage):
-    """C library for lightweight websocket clients and servers."""
+class Astra(Package):
+    """A Space Charge Tracking Algorithm."""
 
-    homepage = "https://github.com/warmcat/libwebsockets"
-    url      = "https://github.com/warmcat/libwebsockets/archive/v2.1.0.tar.gz"
+    homepage = "http://www.desy.de/~mpyflo/"
 
-    version('2.1.0', '4df3be57dee43aeebd54a3ed56568f50')
-    version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
-    version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
+    version('2016-11-30', '17135b7a4adbacc1843a50a6a2ae2c25', expand=False,
+            url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/Astra')
 
-    depends_on('zlib')
-    depends_on('openssl')
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('Astra', prefix.bin)
+
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix.bin, 'Astra'))
