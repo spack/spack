@@ -244,31 +244,56 @@ class TestSpecSematics(object):
         check_satisfies('mpich foo=False', 'mpich~foo')
 
     def test_satisfies_multi_value_variant(self):
-        check_satisfies(
-            'multivalue_variant foo="bar,baz"',
-            'multivalue_variant foo="bar,baz"'
-        )
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo="bar,baz"')
+
         # A more constrained spec satisfies a less constrained one
-        check_satisfies(
-            'multivalue_variant foo="bar,baz"',
-            'multivalue_variant foo="bar"'
-        )
-        check_satisfies(
-            'multivalue_variant foo="bar,baz"',
-            'multivalue_variant foo="baz"'
-        )
-        check_satisfies(
-            'multivalue_variant foo="bar,baz,barbaz"',
-            'multivalue_variant foo="bar,baz"'
-        )
-        check_satisfies(
-            'multivalue_variant foo="bar,baz"',
-            'foo="bar,baz"'
-        )
-        check_satisfies(
-            'multivalue_variant foo="bar,baz"',
-            'foo="bar"'
-        )
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo="bar"')
+
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo="baz"')
+
+        check_satisfies('multivalue_variant foo="bar,baz,barbaz"',
+                        'multivalue_variant foo="bar,baz"')
+
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'foo="bar,baz"')
+
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'foo="bar"')
+
+    def test_unsatisfiable_multi_value_variant(self):
+        # these should fail for concrete specs
+        check_unsatisfiable('multivalue_variant foo="bar"',
+                            'multivalue_variant foo="bar,baz"',
+                            concrete=True)
+
+        check_unsatisfiable('multivalue_variant foo="bar,baz"',
+                            'multivalue_variant foo="bar,baz,quux"',
+                            concrete=True)
+
+        # but succeed for abstract ones (b/c they COULD satisfy the
+        # constraint if constrained)
+        check_satisfiable('multivalue_variant foo="bar"',
+                          'multivalue_variant foo="bar,baz"')
+
+        check_satisfiable('multivalue_variant foo="bar,baz"',
+                          'multivalue_variant foo="bar,baz,quux"')
+
+    def test_unsatisfiable_variant_types(self):
+        # These should fail due to incompatible types
+        check_unsatisfiable('multivalue_variant +foo',
+                            'multivalue_variant foo="bar"')
+
+        check_unsatisfiable('multivalue_variant ~foo',
+                            'multivalue_variant foo="bar"')
+
+        check_unsatisfiable('multivalue_variant foo="bar"',
+                            'multivalue_variant +foo')
+
+        check_unsatisfiable('multivalue_variant foo="bar"',
+                            'multivalue_variant ~foo')
 
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.

@@ -96,19 +96,23 @@ class Variant(object):
         # Check the name of the variant
         if self.name != vspec.name:
             raise InconsistentValidationError(vspec, self)
+
         # Check the values of the variant spec
         value = vspec.value
         if isinstance(vspec.value, bool):
             value = (vspec.value,)
+
         # If the value is exclusive there must be at most one
         if self.exclusive and len(value) != 1:
             raise MultipleValuesInExclusiveVariantError(vspec, pkg)
+
         # Check and record the values that are not allowed
         not_allowed_values = [
             x for x in value if not self.single_value_validator(x)
         ]
         if not_allowed_values:
             raise InvalidVariantValueError(self, not_allowed_values, pkg)
+
         # Validate the group of values if needed
         if self.group_validator is not None:
             self.group_validator(value)
@@ -147,11 +151,11 @@ class VariantSpec(object):
 
     def __init__(self, name, value):
         self.name = name
-        # Stores the original value passed to initialize this instance
-        self._original_value = value
+
         # Stores 'value' after a bit of massaging
         # done by the property setter
         self._value = None
+
         # Invokes property setter
         self.value = value
 
@@ -168,12 +172,14 @@ class VariantSpec(object):
     def value(self, value):
         # Store the original value
         self._original_value = value
+
         # If value is a string representation of a boolean, turn
         # it to a boolean
         if str(value).upper() == 'TRUE':
             self._value = True
         elif str(value).upper() == 'FALSE':
             self._value = False
+
         # Otherwise store a tuple of CSV string representations
         # Tuple is necessary here instead of list because the
         # values need to be hashed
@@ -183,13 +189,14 @@ class VariantSpec(object):
                 t = next(csv.reader(f, skipinitialspace=True))
             except StopIteration:
                 t = []
+
             # With multi-value variants it is necessary
             # to remove duplicates and give an order
             # to a set
             self._value = tuple(sorted(set(t)))
 
     def _cmp_key(self):
-        return self.name, self.value
+        return (self.name, self.value)
 
     def copy(self):
         """Returns an instance of VariantSpec equivalent to self
@@ -213,12 +220,12 @@ class VariantSpec(object):
         :return: True or False
         :rtype: bool
         """
-        single_value_satisfies = self.value == other.value
-        multi_value_satisfies = False
-        if isinstance(self.value, tuple):
-            not_satisfied = set(other.value) - set(self.value)
-            multi_value_satisfies = len(not_satisfied) == 0
-        return single_value_satisfies or multi_value_satisfies
+        if isinstance(other.value, bool):
+            return self.value == other.value
+        elif isinstance(self.value, bool):
+            return False
+        else:
+            return all(v in self.value for v in other.value)
 
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
@@ -244,12 +251,17 @@ class VariantSpec(object):
         :return: True or False
         :rtype: bool
         """
-        changed = False
-        if isinstance(self.value, tuple) and isinstance(other.value, tuple):
+        UVSE = UnsatisfiableVariantSpecError
+        if isinstance(other.value, bool):
+            if not isinstance(self.value, bool) or self.value != other.value:
+                raise UVSE(other.value, self.value)
+            return False
+        elif isinstance(self.value, bool):
+            raise UVSE(other.value, self.value)
+        else:
             old_value = self.value
             self.value = ','.join(self.value + other.value)
             return old_value != self.value
-        return changed
 
     def yaml_entry(self):
         """Returns a key, value tuple suitable to be an entry in a yaml dict
@@ -295,14 +307,17 @@ class VariantMap(lang.HashableMap):
         if not isinstance(vspec, VariantSpec):
             msg = 'VariantMap accepts only values of type VariantSpec'
             raise TypeError(msg)
+
         # Raise an error if the variant was already in this map
         if name in self.dict:
             msg = 'Cannot specify variant "{0}" twice'.format(name)
             raise DuplicateVariantError(msg)
+
         # Raise an error if name and vspec.name don't match
         if name != vspec.name:
             msg = 'Inconsistent key "{0}", must be "{1}" to match VariantSpec'
             raise KeyError(msg.format(name, vspec.name))
+
         # Set the item
         super(VariantMap, self).__setitem__(name, vspec)
 
@@ -310,25 +325,31 @@ class VariantMap(lang.HashableMap):
         """Returns True if this VariantMap is more constrained than other,
         False otherwise.
 
+        TODO: how does this deal with exclusive-valued variants?  These
+        TODO: should be evaluated differently from multi-valued variants.
+
         :param VariantMap other: VariantMap to satisfy
         :param bool strict: if True return False if a key is in other and
             not in self, otherwise discard that key and proceed with evaluation
 
         :return: True or False
         :rtype: bool
+
         """
         to_be_checked = [k for k in other]
         if not (strict or self.spec._concrete):
             to_be_checked = filter(lambda x: x in self, to_be_checked)
 
-        return all(
-            k in self and self[k].satisfies(other[k]) for k in to_be_checked
-        )
+        return all(k in self and self[k].satisfies(other[k])
+                   for k in to_be_checked)
 
     def constrain(self, other):
         """Add all variants in other that aren't in self to self. Also
         constrain all multi-valued variants that are already present.
         Return True if self changed, False otherwise
+
+        TODO: how does this deal with exclusive-valued variants?  These
+        TODO: should be evaluated differently from multi-valued variants.
 
         :param VariantMap other: instance against which we constrain self
         :return: True or False
@@ -419,7 +440,8 @@ class UnknownVariantError(error.SpecError):
 class InconsistentValidationError(error.SpecError):
 
     def __init__(self, vspec, variant):
-        msg = 'trying to validate variant "{0.name}" with the validator of "{1.name}"'  # NOQA: ignore=E501
+        msg = ('trying to validate variant "{0.name}" '
+               'with the validator of "{1.name}"')
         super(InconsistentValidationError, self).__init__(
             msg.format(vspec, variant)
         )
