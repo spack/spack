@@ -183,7 +183,7 @@ from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
 # User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", "vim"))
+editor = Executable(os.environ.get("EDITOR", "vi"))
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
