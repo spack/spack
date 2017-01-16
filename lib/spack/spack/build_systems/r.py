@@ -33,6 +33,7 @@ class RPackage(PackageBase):
     """Specialized class for packages that are built using R
 
     This class provides a single phase that can be overridden:
+
     * install
 
     It has sensible defaults and for many packages the only thing
