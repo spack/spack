@@ -72,26 +72,27 @@ def setup_parser(subparser):
     excl_args.add_argument(
         '-c', '--command', dest='path', action='store_const',
         const=spack.cmd.command_path,
-        help='edit the command with the supplied name')
+        help="Edit the command with the supplied name.")
     excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
-        const=spack.test_path, help='edit the test with the supplied name')
+        const=spack.test_path,
+        help="Edit the test with the supplied name.")
     excl_args.add_argument(
         '-m', '--module', dest='path', action='store_const',
         const=spack.module_path,
-        help='edit the main spack module with the supplied name')
+        help="Edit the main spack module with the supplied name.")
 
     # Options for editing packages
     excl_args.add_argument(
         '-r', '--repo', default=None,
-        help='path to repo to edit package in')
+        help="Path to repo to edit package in.")
     excl_args.add_argument(
         '-N', '--namespace', default=None,
-        help='namespace of package to edit')
+        help="Namespace of package to edit.")
 
     subparser.add_argument(
         'name', nargs='?', default=None,
-        help='name of package to edit')
+        help="name of package to edit")
 
 
 def edit(parser, args):

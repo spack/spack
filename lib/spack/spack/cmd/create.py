@@ -294,7 +294,7 @@ def setup_parser(subparser):
         help="url of package archive")
     subparser.add_argument(
         '--keep-stage', action='store_true',
-        help="don't clean up staging area when command completes")
+        help="Don't clean up staging area when command completes.")
     subparser.add_argument(
         '-n', '--name',
         help="name of the package to create")
@@ -303,13 +303,14 @@ def setup_parser(subparser):
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',
-        help="path to a repository where the package should be created")
+        help="Path to a repository where the package should be created.")
     subparser.add_argument(
         '-N', '--namespace',
-        help="namespace for the package")
+        help="Specify a namespace for the package. Must be the namespace of "
+        "a repository registered with Spack.")
     subparser.add_argument(
         '-f', '--force', action='store_true',
-        help="overwrite any existing package file with the same name")
+        help="Overwrite any existing package file with the same name.")
 
 
 class BuildSystemGuesser:
