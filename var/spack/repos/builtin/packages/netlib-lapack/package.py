@@ -1,4 +1,4 @@
-#############################################################################
+##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -90,21 +90,22 @@ class NetlibLapack(Package):
         if spec.satisfies('@3.6.0:'):
             cmake_args.extend(['-DCBLAS=ON'])  # always build CBLAS
 
-        if self.compiler.name == 'intel':
-            # Intel compiler finds serious syntax issues when trying to
-            # build CBLAS and LapackE
-            cmake_args.extend(['-DCBLAS=OFF'])
-            cmake_args.extend(['-DLAPACKE:BOOL=OFF'])
-
-        # deprecated routines are commonly need by, for example, suitesparse
-        # Note that OpenBLAS spack is built with deprecated routines
-        cmake_args.extend(['-DBUILD_DEPRECATED:BOOL=ON'])
-
         if '+external-blas' in spec:
             cmake_args.extend([
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
                 '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].blas_libs.joined(';')
             ])
+
+        if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS=-O3',
+                '-DCMAKE_Fortran_FLAGS=-O3',
+            ])
+
+        if self.compiler.name =='xl':
+            cmake_args.extend(['-DCMAKE_C_FLAGS=-O3'])
+            cmake_args.extend(['-DCMAKE_Fortran_FLAGS=-O3'])
+
 
         cmake_args.extend(std_cmake_args)
 
