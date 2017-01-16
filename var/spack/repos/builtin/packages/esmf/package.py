@@ -60,10 +60,7 @@ class Esmf(Package):
     depends_on('xerces-c@3.1.0:', when='+xerces')
 
     # NOTE: ESMF cannot be installed with GCC 6. It uses constructs that
-    # are no longer valid in GCC 6. It should install properly with GCC 5
-
-    # NOTE: ESMF cannot be installed with MVAPICH2. It results in undefined
-    # references that cause `make install` to crash.
+    # are no longer valid in GCC 6. GCC 4 is recommended for installation.
 
     def url_for_version(self, version):
         return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
@@ -72,7 +69,7 @@ class Esmf(Package):
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
 
-        # Unset any environment variables that may influence the installation
+        # Unset any environment variables that may influence the installation.
         for var in os.environ:
             if var.startswith('ESMF_'):
                 os.environ.pop(var)
@@ -89,7 +86,7 @@ class Esmf(Package):
         # with the install target.
         os.environ['ESMF_INSTALL_PREFIX'] = prefix
 
-        # Installation subdirectories default to
+        # Installation subdirectories default to:
         # bin/binO/Linux.gfortran.64.default.default
         os.environ['ESMF_INSTALL_BINDIR'] = 'bin'
         os.environ['ESMF_INSTALL_LIBDIR'] = 'lib'
@@ -138,15 +135,15 @@ class Esmf(Package):
         # ESMF_COMM must be set to indicate which MPI implementation
         # is used to build the ESMF library.
         if '+mpi' in spec:
-            if '^mpich' in spec:
+            if '^mvapich2' in spec:
+                os.environ['ESMF_COMM'] = 'mvapich2'
+            elif '^mpich' in spec:
                 # FIXME: mpich or mpich2?
-                os.environ['ESMF_COMM'] = 'mpich'
+                os.environ['ESMF_COMM'] = 'mpich2'
             elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
             elif '^intel-parallel-studio+mpi' in spec:
                 os.environ['ESMF_COMM'] = 'intelmpi'
-            else:
-                raise InstallError('ESMF cannot be built with MVAPICH2')
         else:
             # Force use of the single-processor MPI-bypass library.
             os.environ['ESMF_COMM'] = 'mpiuni'
