@@ -39,10 +39,10 @@ import spack.store
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify confguration By default modify the *highest*
+# Commands that modify configuration by default modify the *highest*
 # priority scope.
 default_modify_scope = spack.config.highest_precedence_scope().name
-# Commands that list confguration list *all* scopes by default.
+# Commands that list configuration list *all* scopes by default.
 default_list_scope = None
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -61,7 +61,6 @@ for file in os.listdir(command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
         commands.append(cmd)
-commands.append('test')
 commands.sort()
 
 
