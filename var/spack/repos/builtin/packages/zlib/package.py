@@ -31,8 +31,9 @@ class Zlib(AutotoolsPackage):
        data-compression library."""
 
     homepage = "http://zlib.net"
-    url = "http://zlib.net/zlib-1.2.10.tar.gz"
+    url = "http://zlib.net/zlib-1.2.11.tar.gz"
 
+    version('1.2.11', 'c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1')
     version('1.2.10', '8d7e9f698ce48787b6e1c67e6bff79e487303e66077e25cb9784ac8835978017')
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
