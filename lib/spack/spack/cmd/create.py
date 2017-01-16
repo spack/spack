@@ -288,7 +288,7 @@ templates = {
     'python':    PythonPackageTemplate,
     'r':         RPackageTemplate,
     'octave':    OctavePackageTemplate,
-    'default':   PackageTemplate
+    'generic':   PackageTemplate
 }
 
 
@@ -363,7 +363,7 @@ class BuildSystemGuesser:
 
         # Determine the build system based on the files contained
         # in the archive.
-        build_system = 'default'
+        build_system = 'generic'
         for pattern, bs in clues:
             if any(re.search(pattern, l) for l in lines):
                 build_system = bs
@@ -469,7 +469,7 @@ def get_build_system(args, guesser):
 
     If a template is specified, always use that. Otherwise, if a URL
     is provided, download the tarball and peek inside to guess what
-    build system it uses. Otherwise, use a default.
+    build system it uses. Otherwise, use a generic template by default.
 
     :param argparse.Namespace args: The arguments given to ``spack create``
     :param BuildSystemGuesser guesser: The first_stage_function given to \
@@ -480,7 +480,7 @@ def get_build_system(args, guesser):
     """
 
     # Default template
-    template = 'default'
+    template = 'generic'
 
     if args.template:
         # Use a user-supplied template if one is present
@@ -489,8 +489,12 @@ def get_build_system(args, guesser):
     elif args.url:
         # Use whatever build system the guesser detected
         template = guesser.build_system
-        tty.msg("This package looks like it uses the {0} build system".format(
-            template))
+        if template == 'generic':
+            tty.warn("Unable to detect a build system. "
+                     "Using a generic package template.")
+        else:
+            msg = "This package looks like it uses the {0} build system"
+            tty.msg(msg.format(template))
 
     return template
 

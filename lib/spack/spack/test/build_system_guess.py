@@ -37,7 +37,8 @@ import spack.stage
         ('SConstruct',     'scons'),
         ('setup.py',       'python'),
         ('NAMESPACE',      'r'),
-        ('foobar',         'default')
+        ('WORKSPACE',      'bazel'),
+        ('foobar',         'generic')
     ]
 )
 def url_and_build_system(request, tmpdir):
