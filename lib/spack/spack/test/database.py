@@ -375,13 +375,16 @@ def test_110_no_write_with_exception_on_install(database):
 
 def test_external_entries_in_db(database):
     install_db = database.mock.db
+
     rec = install_db.get_record('mpileaks ^zmpi')
     assert rec.spec.external is None
     assert rec.spec.external_module is None
+
     rec = install_db.get_record('externaltool')
     assert rec.spec.external == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is False
+
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = install_db.get_record('externaltool')
     assert rec.spec.external == '/path/to/external_tool'
