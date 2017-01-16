@@ -136,10 +136,6 @@ generates a boilerplate template for your package, and opens up the new
        version('6.1.0', '86ee6e54ebfc4a90b643a65e402c4048')
 
        # FIXME: Add dependencies if required.
-       # depends_on('m4', type='build')
-       # depends_on('autoconf', type='build')
-       # depends_on('automake', type='build')
-       # depends_on('libtool', type='build')
        # depends_on('foo')
 
        def configure_args(self):
@@ -218,6 +214,20 @@ a name with ``--name`` or a build system template to use with ``--template``:
 
    $ spack create --name gmp https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
    $ spack create --force --template autotools https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+
+.. note::
+
+   If you are creating a package that uses the Autotools build system
+   but does not come with a ``configure`` script, you'll need to add an
+   ``autoreconf`` method to your package that explains how to generate
+   the ``configure`` script. You may also need the following dependencies:
+
+   .. code-block:: python
+
+      depends_on('autoconf', type='build')
+      depends_on('automake', type='build')
+      depends_on('libtool',  type='build')
+      depends_on('m4',       type='build')
 
 A complete list of available build system templates can be found by running
 ``spack create --help``.

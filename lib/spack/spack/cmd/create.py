@@ -142,16 +142,12 @@ class AutotoolsPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on('m4', type='build')
-    # depends_on('autoconf', type='build')
-    # depends_on('automake', type='build')
-    # depends_on('libtool', type='build')
     # depends_on('foo')"""
 
     body = """\
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete the function
+        # FIXME: If not needed delete this function
         args = []
         return args"""
 
@@ -169,7 +165,7 @@ class CMakePackageTemplate(PackageTemplate):
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete the function
+        # FIXME: If not needed delete this function
         args = []
         return args"""
 
