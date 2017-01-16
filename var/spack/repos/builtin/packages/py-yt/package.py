@@ -65,6 +65,7 @@ class PyYt(Package):
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type="build")
     depends_on("py-sympy", type=('build', 'run'))
+    depends_on("py-pillow", type=('build', 'run'))
     depends_on("python @2.7:2.999,3.4:")
 
     def install(self, spec, prefix):
