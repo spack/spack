@@ -66,7 +66,7 @@ class VariantSpecTest(unittest.TestCase):
         a = VariantSpec('foo', 'bar,baz')
         b = eval(repr(a))
         self.assertEqual(a, b)
-        self.assertEqual(str(a), ' foo=bar,baz')
+        self.assertEqual(str(a), 'foo=bar,baz')
         b = VariantSpec('foo', True)
         self.assertEqual(str(b), '+foo')
         b.value = False

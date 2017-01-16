@@ -277,7 +277,7 @@ class VariantSpec(object):
         if isinstance(self.value, bool):
             return '{0}{1}'.format('+' if self.value else '~', self.name)
         else:
-            return ' {0}={1} '.format(
+            return '{0}={1}'.format(
                 self.name, ','.join(str(x) for x in self.value))
 
 
@@ -377,10 +377,30 @@ class VariantMap(lang.HashableMap):
         return clone
 
     def __str__(self):
+        # print keys in order
         sorted_keys = sorted(self.keys())
-        pad = ' ' if len(self) > 0 else ''
-        return "%s%s%s" % (
-            pad, ' '.join(str(self[key]) for key in sorted_keys), pad)
+
+        # add spaces before and after key/value variants.
+        string = cStringIO.StringIO()
+
+        kv = False
+        for key in sorted_keys:
+            vspec = self[key]
+
+            if not isinstance(vspec.value, bool):
+                # add space before all kv pairs.
+                string.write(' ')
+                kv = True
+            else:
+                # not a kv pair this time
+                if kv:
+                    # if it was LAST time, then pad after.
+                    string.write(' ')
+                kv = False
+
+            string.write(str(vspec))
+
+        return string.getvalue()
 
 
 class DuplicateVariantError(error.SpecError):
