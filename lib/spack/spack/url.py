@@ -213,7 +213,9 @@ def parse_version_offset(path, debug=False):
         # Search dotted versions:
         #   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
         #   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
+        #   e.g., http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+        (r'\?version=((\d+\.)+\d+)', suffix),
 
         # e.g. boost_1_39_0
         (r'((\d+_)+\d+)$', stem),
@@ -304,6 +306,7 @@ def parse_name_offset(path, v=None, debug=False):
         (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
         (r'github.com/[^/]+/([^/]+)/archive', path),
         (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
+        (r'([^/]+)/download.php', path),
 
         (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
         (r'([^/]+)%s' % v, stem),
