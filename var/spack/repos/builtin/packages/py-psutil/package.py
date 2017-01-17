@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPsutil(Package):
+class PyPsutil(PythonPackage):
     """psutil is a cross-platform library for retrieving information on
     running processes and system utilization (CPU, memory, disks, network)
     in Python."""
@@ -35,9 +35,5 @@ class PyPsutil(Package):
 
     version('5.0.1', '153dc8be94badc4072016ceeac7808dc')
 
-    extends('python')
     depends_on('python@2.6:')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
