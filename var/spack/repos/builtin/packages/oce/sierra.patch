@@ -18,7 +18,7 @@ index 54e241e..72873c6 100644
 -	endif(NOT APPLE)
 +	endif(APPLE)
  endif(WIN32)
-
+ 
  # Adde-DHAVE_TBB in TKernel in order to benefit from Standard_MMgrTBBalloc
 @@ -70,4 +70,3 @@ if (OCE_BUILD_TKERNEL_WITH_INSTALL_RPATH)
  	set_target_properties_install_rpath(${TOOLKIT} "${OCE_INSTALL_LIB_DIR_RPATH};${OCE_INSTALL_PACKAGE_LIB_DIR_RPATH}")
@@ -26,20 +26,15 @@ index 54e241e..72873c6 100644
  endif ()
 -
 diff --git a/src/OSD/OSD_Chronometer.cxx b/src/OSD/OSD_Chronometer.cxx
-index 444f844..25970d0 100644
+index 0e1949c..e82fac3 100644
 --- a/src/OSD/OSD_Chronometer.cxx
 +++ b/src/OSD/OSD_Chronometer.cxx
 @@ -51,7 +51,7 @@
    #include <mach/mach.h>
  #endif
-
+ 
 -#if defined(__APPLE__) && defined(__MACH__)
-+#if defined(__OOOOPPLE__) && defined(__MACH__)
++#if defined(__OPPLE__) && defined(__MACH__)
  #include "gettime_osx.h"
  #endif
-
-@@ -283,4 +283,3 @@ void OSD_Chronometer::Show (Standard_Real& user,
-   system = Cumul_sys;
-   if (!StopSav) Start();
- }
--
+ 
