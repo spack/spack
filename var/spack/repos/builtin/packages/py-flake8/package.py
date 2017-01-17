@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyFlake8(Package):
+class PyFlake8(PythonPackage):
     """Flake8 is a wrapper around PyFlakes, pep8 and Ned Batchelder's
     McCabe script."""
 
@@ -40,28 +40,29 @@ class PyFlake8(Package):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-flake8 requires py-setuptools during runtime as well.
-    depends_on('py-setuptools', type=nolink)
+    depends_on('py-setuptools', type=('build', 'run'))
 
     # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
-    depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=nolink)  # noqa
+    depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=('build', 'run'))
     # pyflakes >= 0.8.1, < 1.1
-    depends_on('py-pyflakes@0.8.1:1.0.0', when='@2.5.4', type=nolink)
+    depends_on('py-pyflakes@0.8.1:1.0.0', when='@2.5.4', type=('build', 'run'))
 
     # pycodestyle >= 2.0.0, < 2.1.0
-    depends_on('py-pycodestyle@2.0.0:2.0.999', when='@3.0.4', type=nolink)
+    depends_on('py-pycodestyle@2.0.0:2.0.999', when='@3.0.4', type=('build', 'run'))
     # pep8 >= 1.5.7, != 1.6.0, != 1.6.1, != 1.6.2
-    depends_on('py-pycodestyle@1.5.7,1.7.0:', when='@2.5.4', type=nolink)
+    depends_on('py-pycodestyle@1.5.7,1.7.0:', when='@2.5.4', type=('build', 'run'))
 
     # mccabe >= 0.5.0, < 0.6.0
-    depends_on('py-mccabe@0.5.0:0.5.999', when='@3.0.4', type=nolink)
+    depends_on('py-mccabe@0.5.0:0.5.999', when='@3.0.4', type=('build', 'run'))
     # mccabe >= 0.2.1, < 0.5
-    depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=nolink)
+    depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=('build', 'run'))
 
-    depends_on('py-configparser', when='^python@:3.3.999', type=nolink)
-    depends_on('py-enum34', when='^python@:3.1.999', type=nolink)
+    # These dependencies breaks concretization
+    # See https://github.com/LLNL/spack/issues/2793
+    # depends_on('py-configparser', when='^python@:3.3.999', type=('build', 'run'))  # noqa
+    # depends_on('py-enum34', when='^python@:3.1.999', type=('build', 'run'))
+    depends_on('py-configparser', type=('build', 'run'))
+    depends_on('py-enum34', type=('build', 'run'))
 
     # TODO: Add test dependencies
     # depends_on('py-nose', type='test')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

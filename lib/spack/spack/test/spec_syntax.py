@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
+import shlex
 
 import spack.spec as sp
 from spack.parse import Token
@@ -53,6 +54,34 @@ complex_lex = [Token(sp.ID, 'mvapich_foo'),
                Token(sp.AT),
                Token(sp.ID, '8.1_1e')]
 
+# Another sample lexer output with a kv pair.
+kv_lex = [Token(sp.ID, 'mvapich_foo'),
+          Token(sp.ID, 'debug'),
+          Token(sp.EQ),
+          Token(sp.VAL, '4'),
+          Token(sp.DEP),
+          Token(sp.ID, '_openmpi'),
+          Token(sp.AT),
+          Token(sp.ID, '1.2'),
+          Token(sp.COLON),
+          Token(sp.ID, '1.4'),
+          Token(sp.COMMA),
+          Token(sp.ID, '1.6'),
+          Token(sp.PCT),
+          Token(sp.ID, 'intel'),
+          Token(sp.AT),
+          Token(sp.ID, '12.1'),
+          Token(sp.COLON),
+          Token(sp.ID, '12.6'),
+          Token(sp.ON),
+          Token(sp.ID, 'debug'),
+          Token(sp.OFF),
+          Token(sp.ID, 'qt_4'),
+          Token(sp.DEP),
+          Token(sp.ID, 'stackwalker'),
+          Token(sp.AT),
+          Token(sp.ID, '8.1_1e')]
+
 
 class TestSpecSyntax(object):
     # ========================================================================
@@ -81,9 +110,10 @@ class TestSpecSyntax(object):
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
+        spec = shlex.split(spec)
         lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == sp.ID:
+            if tok.type == sp.ID or tok.type == sp.VAL:
                 assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
@@ -112,9 +142,18 @@ class TestSpecSyntax(object):
         self.check_parse("openmpi^hwloc@:1.4b7-rc3")
         self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
 
-    @pytest.mark.xfail
     def test_multiple_specs(self):
         self.check_parse("mvapich emacs")
+
+    def test_multiple_specs_after_kv(self):
+        self.check_parse('mvapich cppflags="-O3 -fPIC" emacs')
+        self.check_parse('mvapich cflags="-O3" emacs',
+                         'mvapich cflags=-O3 emacs')
+
+    def test_multiple_specs_long_second(self):
+        self.check_parse('mvapich emacs@1.1.1%intel cflags="-O3"',
+                         'mvapich emacs @1.1.1 %intel cflags=-O3')
+        self.check_parse('mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
 
     def test_full_specs(self):
         self.check_parse(
@@ -123,15 +162,15 @@ class TestSpecSyntax(object):
             "^stackwalker@8.1_1e")
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
             "^stackwalker@8.1_1e")
         self.check_parse(
             'mvapich_foo'
-            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4'
+            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3" +debug~qt_4'
             '^stackwalker@8.1_1e')
         self.check_parse(
             "mvapich_foo"
-            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
             "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
@@ -158,19 +197,19 @@ class TestSpecSyntax(object):
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
         self.check_parse(
-            "x arch=test-redhat6-None"
-            "^y arch=test-None-x86_64"
+            "x arch=test-redhat6-None "
+            "^y arch=test-None-x86_64 "
             "^z arch=linux-None-None",
 
-            "x os=fe"
-            "^y target=be"
+            "x os=fe "
+            "^y target=be "
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64"
+            "x arch=test-debian6-x86_64 "
             "^y arch=test-debian6-x86_64",
 
-            "x os=default_os target=default_target"
+            "x os=default_os target=default_target "
             "^y os=default_os target=default_target")
 
         self.check_parse("x^y", "x@: ^y@:")
@@ -184,7 +223,7 @@ class TestSpecSyntax(object):
             'x@1.2+debug+debug',
             'x ^y@1.2+debug debug=true',
             'x ^y@1.2 debug=false debug=true',
-            'x ^y@1.2 debug=false~debug'
+            'x ^y@1.2 debug=false ~debug'
         ]
         self._check_raises(DuplicateVariantError, duplicates)
 
@@ -275,5 +314,51 @@ class TestSpecSyntax(object):
         self.check_lex(
             complex_lex,
             "mvapich_foo "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            complex_lex,
+            "mvapich_foo "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_with_quotes(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug='4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            'mvapich_foo debug="4" '
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo 'debug = 4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_without_quotes(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug=4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_with_spaces(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug = 4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug =4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")

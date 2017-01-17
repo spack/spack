@@ -88,7 +88,7 @@ from spack.util.path import canonicalize_path
 # Initialize various data structures & objects at the core of Spack.
 #-----------------------------------------------------------------------------
 # Version information
-spack_version = Version("0.9.1")
+spack_version = Version("0.10.0")
 
 
 # Set up the default packages database.
@@ -159,13 +159,16 @@ from spack.package import Package
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
-__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage']
+from spack.build_systems.python import PythonPackage
+from spack.build_systems.r import RPackage
+__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
+            'PythonPackage', 'RPackage']
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps, nolink
-__all__ += ['Spec', 'alldeps', 'nolink']
+from spack.spec import Spec, alldeps
+__all__ += ['Spec', 'alldeps']
 
 from spack.multimethod import when
 __all__ += ['when']

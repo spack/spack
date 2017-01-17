@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySncosmo(Package):
+class PySncosmo(PythonPackage):
     """SNCosmo is a Python library for high-level supernova cosmology
     analysis."""
 
@@ -37,15 +37,12 @@ class PySncosmo(Package):
     # Required dependencies
     # py-sncosmo binaries are duplicates of those from py-astropy
     extends('python', ignore=r'bin/.*')
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-scipy', type=nolink)
-    depends_on('py-astropy', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-astropy', type=('build', 'run'))
 
     # Recommended dependencies
-    depends_on('py-matplotlib', type=nolink)
-    depends_on('py-iminuit', type=nolink)
-    depends_on('py-emcee', type=nolink)
-    depends_on('py-nestle', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-iminuit', type=('build', 'run'))
+    depends_on('py-emcee', type=('build', 'run'))
+    depends_on('py-nestle', type=('build', 'run'))

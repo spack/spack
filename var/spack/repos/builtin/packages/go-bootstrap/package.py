@@ -53,7 +53,7 @@ class GoBootstrap(Package):
 
     provides('golang@:1.4-bootstrap-20161024')
 
-    depends_on('git', type='alldeps')
+    depends_on('git', type=('build', 'link', 'run'))
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the

@@ -45,8 +45,9 @@ class Conduit(Package):
     coupling between packages in-core, serialization, and I/O tasks."""
 
     homepage = "http://software.llnl.gov/conduit"
-    url = "https://github.com/LLNL/conduit/archive/v0.2.0.tar.gz"
+    url = "https://github.com/LLNL/conduit/archive/v0.2.1.tar.gz"
 
+    version('0.2.1', 'cd2b42c76f70ac3546582b6da77c6028')
     version('0.2.0', 'd595573dedf55514c11d7391092fd760')
 
     version('master', git='https://github.com/LLNL/conduit.git')

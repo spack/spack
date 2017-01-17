@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 from spack.util.environment import *
 import shutil
@@ -62,8 +63,7 @@ class R(Package):
     depends_on('ncurses')
     depends_on('icu4c')
     depends_on('glib')
-    depends_on('zlib')
-    depends_on('zlib@:1.2.8', when='@:3.3.1')
+    depends_on('zlib@:1.2.8')
     depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
@@ -139,7 +139,8 @@ class R(Package):
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
-        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
+        for d in extension_spec.traverse(
+                deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
 
