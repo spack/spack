@@ -32,8 +32,9 @@ class Oce(Package):
     Open CASCADE library.
     """
     homepage = "https://github.com/tpaviot/oce"
-    url      = "https://github.com/tpaviot/oce/archive/OCE-0.17.tar.gz"
+    url      = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
+    version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
     version('0.17.1', '36c67b87093c675698b483454258af91')
     version('0.17',   'f1a89395c4b0d199bea3db62b85f818d')
@@ -56,8 +57,9 @@ class Oce(Package):
 
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
-    if (platform.system() == "Darwin") and (platform.mac_ver()[0] == '10.12'):
-        patch('sierra.patch')
+    if (platform.system() == "Darwin") and (
+       '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12'):
+        patch('sierra.patch', when='@0.17.2:0.18')
 
     def install(self, spec, prefix):
         options = []
@@ -89,4 +91,5 @@ class Oce(Package):
 
         cmake('.', *options)
         make("install/strip")
-        make("test")
+        if self.run_tests:
+            make("test")
