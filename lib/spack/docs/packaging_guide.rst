@@ -2035,6 +2035,11 @@ The classes that are currently provided by Spack are:
     |  :py:class:`.RPackage`             | Specialized class for            |
     |                                    | :py:class:`.R` extensions        |
     +------------------------------------+----------------------------------+
+    |  :py:class:`.PythonPackage`        | Specialized class for            |
+    |                                    | :py:class:`.Python` extensions   |
+    +------------------------------------+----------------------------------+
+
+
 
 .. note::
     Choice of the appropriate base class for a package
