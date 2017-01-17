@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Sessreg(AutoolsPackage):
+class Sessreg(AutotoolsPackage):
     """Sessreg is a simple program for managing utmp/wtmp entries for X
     sessions. It was originally written for use with xdm, but may also be
     used with other display managers such as gdm or kdm."""
