@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Parallel(Package):
+class Parallel(AutotoolsPackage):
     """GNU parallel is a shell tool for executing jobs in parallel using
     one or more computers. A job can be a single command or a small
     script that has to be run for each of the lines in the input.
@@ -36,9 +36,3 @@ class Parallel(Package):
 
     version('20160422', '24621f684130472694333709bd4454cb')
     version('20160322', '4e81e0d36902ab4c4e969ee6f35e6e57')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

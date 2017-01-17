@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xmag(Package):
+class Xmag(AutotoolsPackage):
     """xmag displays a magnified snapshot of a portion of an X11 screen."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xmag"
@@ -40,9 +40,3 @@ class Xmag(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

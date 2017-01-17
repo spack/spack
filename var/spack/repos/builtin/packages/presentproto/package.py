@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Presentproto(Package):
+class Presentproto(AutotoolsPackage):
     """Present protocol specification and Xlib/Xserver headers."""
 
     homepage = "https://cgit.freedesktop.org/xorg/proto/presentproto/"
@@ -35,8 +35,3 @@ class Presentproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

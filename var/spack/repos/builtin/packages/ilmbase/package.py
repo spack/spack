@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ilmbase(Package):
+class Ilmbase(AutotoolsPackage):
     """OpenEXR ILM Base libraries (high dynamic-range image file format)"""
 
     homepage = "http://www.openexr.com/"
@@ -36,7 +36,3 @@ class Ilmbase(Package):
     version('2.0.1', '74c0d0d2873960bd0dc1993f8e03f0ae')
     version('1.0.2', '26c133ee8ca48e1196fbfb3ffe292ab4')
     version('0.9.0', '4df45f8116cb7a013b286caf6da30a2e')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make('install')

@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Libgd(Package):
+class Libgd(AutotoolsPackage):
     """GD is an open source code library for the dynamic creation of images
        by programmers. GD is written in C, and "wrappers" are available
        for Perl, PHP and other languages. GD creates PNG, JPEG, GIF,
@@ -55,7 +55,7 @@ class Libgd(Package):
     depends_on('libtiff')
     depends_on('fontconfig')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         autoreconf("--install", "--force",
                    "-I", "m4",
                    "-I", join_path(spec['gettext'].prefix,
@@ -67,6 +67,3 @@ class Libgd(Package):
                    "-I", join_path(spec['libtool'].prefix,
                                    "share", "aclocal")
                    )
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make("install")

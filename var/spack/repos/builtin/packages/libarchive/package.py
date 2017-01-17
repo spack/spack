@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libarchive(Package):
+class Libarchive(AutotoolsPackage):
     """libarchive: C library and command-line tools for reading and
        writing tar, cpio, zip, ISO, and other archive formats."""
 
@@ -48,10 +48,5 @@ class Libarchive(Package):
     depends_on('libxml2')
     depends_on('expat')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        if self.run_tests:
-            make('check')  # cannot build test suite with Intel compilers
-        make('install')
+    # NOTE: `make check` is known to fail with the Intel compilers
+    # The build test suite cannot be built with Intel

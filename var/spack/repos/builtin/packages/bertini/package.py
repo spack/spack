@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bertini(Package):
+class Bertini(AutotoolsPackage):
     """Bertini is a general-purpose solver, written in C, that was created
     for research about polynomial continuation. It solves for the numerical
     solution of systems of polynomial equations using homotopy continuation."""
@@ -42,9 +42,3 @@ class Bertini(Package):
     depends_on('gmp')
     depends_on('mpfr')
     depends_on('mpi', when='+mpi')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

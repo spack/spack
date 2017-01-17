@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Grandr(Package):
+class Grandr(AutotoolsPackage):
     """RandR user interface using GTK+ libraries."""
 
     homepage = "https://cgit.freedesktop.org/xorg/app/grandr"
@@ -36,10 +36,3 @@ class Grandr(Package):
     depends_on('gtkplus@2.0.0:')
     depends_on('gconf')
     depends_on('xrandr@1.2:')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')
