@@ -2110,7 +2110,7 @@ configure arguments:
 .. note::
     Each specific build system has a list of attributes that can be overridden to
     fine-tune the installation of a package without overriding an entire phase. To
-    have more information on them the place to go is the API docs of the :py:mod:`~.build_systems`
+    have more information on them the place to go is the API docs of the :py:mod:`~.spack.build_systems`
     module.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2799,7 +2799,7 @@ using the ``MakefilePackage.precondition`` decorator.
         default implementation for build-time tests. For instance :py:class:`~.AutotoolsPackage`
         based packages will try to invoke ``make test`` and ``make check`` if
         Spack is asked to run tests. You'll find more information on each class
-        looking at the :py:mod:`~.build_systems` documentation.
+        looking at the :py:mod:`~.spack.build_systems` documentation.
 
 .. _file-manipulation:
 
