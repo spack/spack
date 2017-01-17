@@ -25,7 +25,7 @@
 from spack import *
 
 
-class P4est(Package):
+class P4est(AutotoolsPackage):
     """Dynamic management of a collection (a forest) of adaptive octrees in
     parallel"""
     homepage = "http://www.p4est.org"
@@ -42,8 +42,8 @@ class P4est(Package):
     depends_on('mpi')
     depends_on('zlib')
 
-    def install(self, spec, prefix):
-        options = [
+    def configure_args(self):
+        return [
             '--enable-mpi',
             '--enable-shared',
             '--disable-vtk-binary',
@@ -55,10 +55,3 @@ class P4est(Package):
             'FC=%s'  % self.spec['mpi'].mpifc,
             'F77=%s' % self.spec['mpi'].mpif77
         ]
-
-        configure('--prefix=%s' % prefix, *options)
-
-        make()
-        if self.run_tests:
-            make("check")
-        make("install")
