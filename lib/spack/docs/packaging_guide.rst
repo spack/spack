@@ -914,7 +914,7 @@ Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
 -------------------------------------------------
-Expanding additional resources in the source tree
+Resources (expanding extra tarballs)
 -------------------------------------------------
 
 Some packages (most notably compilers) provide optional features if additional
