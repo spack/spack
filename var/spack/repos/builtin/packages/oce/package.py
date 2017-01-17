@@ -87,7 +87,11 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+            # use @rpath on Sierra due to limit of dynamic loader
+            options.append('-DCMAKE_MACOSX_RPATH=ON')
+        else:
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         cmake('.', *options)
         make("install/strip")
