@@ -53,7 +53,11 @@ class PyYt(Package):
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
+<<<<<<< HEAD
     variant("devmode", default=False, description="enable development mode")
+=======
+    variant("rockstar", default=False, description="enable rockstar support")
+>>>>>>> update/yt-rockstar
 
     extends("python")
 
@@ -66,6 +70,7 @@ class PyYt(Package):
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type="build")
     depends_on("py-sympy", type=('build', 'run'))
+    depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
     depends_on("python @2.7:2.999,3.4:")
 
     def install(self, spec, prefix):
@@ -73,6 +78,13 @@ class PyYt(Package):
             setup_py("develop", "--prefix=%s" % prefix)
         else:
             setup_py("install", "--prefix=%s" % prefix)
+        if '+rockstar' in spec:
+            if os.path.exists('rockstar.cfg'):
+                os.remove('rockstar.cfg')
+            rockstar_cfg = open('rockstar.cfg', 'w')
+            rockstar_cfg.write(spec.get_dependency('rockstar').spec.prefix)
+            rockstar_cfg.close()
+        setup_py("install", "--prefix=%s" % prefix)
         self.check_install(spec, prefix)
 
     def check_install(self, spec, prefix):
