@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyNbformat(Package):
+class PyNbformat(PythonPackage):
     """The Jupyter Notebook format"""
 
     homepage = "https://github.com/jupyter/nbformat"
@@ -35,13 +35,8 @@ class PyNbformat(Package):
     version('4.0.1', 'ab7172e517c9d561c0c01eef5631b4c8')
     version('4.0.0', '7cf61359fa4e9cf3ef5e969e2fcb909e')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-    depends_on('py-ipython-genutils')
-    depends_on('py-traitlets')
-    depends_on('py-jsonschema')
-    depends_on('py-jupyter-core')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-ipython-genutils', type=('build', 'run'))
+    depends_on('py-traitlets', type=('build', 'run'))
+    depends_on('py-jsonschema', type=('build', 'run'))
+    depends_on('py-jupyter-core', type=('build', 'run'))

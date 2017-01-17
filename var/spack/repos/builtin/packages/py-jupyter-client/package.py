@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyJupyterClient(Package):
+class PyJupyterClient(PythonPackage):
     """Jupyter protocol client APIs"""
 
     homepage = "https://github.com/jupyter/jupyter_client"
@@ -40,13 +40,8 @@ class PyJupyterClient(Package):
     version('4.1.0', 'cf42048b889c8434fbb5813a9eec1d34')
     version('4.0.0', '00fa63c67cb3adf359d09dc4d803aff5')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.7.999,3.3:')
-    depends_on('py-traitlets')
-    depends_on('py-jupyter-core')
-    depends_on('py-zmq@13:')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-traitlets', type=('build', 'run'))
+    depends_on('py-jupyter-core', type=('build', 'run'))
+    depends_on('py-zmq@13:', type=('build', 'run'))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPip(Package):
+class PyPip(PythonPackage):
     """The PyPA recommended tool for installing Python packages."""
 
     homepage = "https://pypi.python.org/pypi/pip"
@@ -33,9 +33,4 @@ class PyPip(Package):
 
     version('9.0.1', '35f01da33009719497f01a4ba69d63c9')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -26,7 +26,7 @@
 from spack import *
 
 
-class PyMacs2(Package):
+class PyMacs2(PythonPackage):
     """MACS2 Model-based Analysis of ChIP-Seq"""
 
     homepage = "https://github.com/taoliu/MACS"
@@ -34,13 +34,9 @@ class PyMacs2(Package):
 
     version('2.1.1.20160309', '2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')
 
-    extends('python')
     depends_on('python@2.7:2.8')
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-macs2 requires py-setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy@1.6:', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

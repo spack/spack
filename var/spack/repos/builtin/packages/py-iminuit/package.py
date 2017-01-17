@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyIminuit(Package):
+class PyIminuit(PythonPackage):
     """Interactive IPython-Friendly Minimizer based on SEAL Minuit2."""
 
     homepage = "https://pypi.python.org/pypi/iminuit"
@@ -34,13 +34,9 @@ class PyIminuit(Package):
     version('1.2', '4701ec472cae42015e26251703e6e984')
 
     # Required dependencies
-    extends('python')
     depends_on('py-setuptools', type='build')
 
     # Optional dependencies
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-cython', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyNose(Package):
+class PyNose(PythonPackage):
     """nose extends the test loading and running features of unittest,
     making it easier to write, find and run tests."""
 
@@ -36,8 +36,4 @@ class PyNose(Package):
     version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
     version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

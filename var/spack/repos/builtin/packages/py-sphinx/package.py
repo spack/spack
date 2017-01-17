@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySphinx(Package):
+class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
     homepage = "http://sphinx-doc.org"
     url      = "https://pypi.python.org/packages/source/S/Sphinx/Sphinx-1.3.1.tar.gz"
@@ -49,6 +49,3 @@ class PySphinx(Package):
     depends_on('py-alabaster@0.7:',          type=('build', 'run'))
     depends_on('py-imagesize', when='@1.4:', type=('build', 'run'))
     depends_on('py-sphinx-rtd-theme@0.1:',   type=('build', 'run'))  # optional as of 1.4
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

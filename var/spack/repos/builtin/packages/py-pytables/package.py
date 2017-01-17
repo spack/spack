@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPytables(Package):
+class PyPytables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
     efficiently and easily cope with extremely large amounts of data."""
     homepage = "http://www.pytables.org/"
@@ -35,13 +35,12 @@ class PyPytables(Package):
             url='https://github.com/PyTables/PyTables/archive/v3.3.0.tar.gz')
     version('3.2.2', '7cbb0972e4d6580f629996a5bed92441')
 
-    extends('python')
-    depends_on('hdf5')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-numexpr', type=('build', 'run'))
+    depends_on('hdf5@1.8.0:1.8.999')
+    depends_on('py-numpy@1.8.0:', type=('build', 'run'))
+    depends_on('py-numexpr@2.5.2:', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    def install(self, spec, prefix):
-        env["HDF5_DIR"] = spec['hdf5'].prefix
-        setup_py('install', '--prefix=%s' % prefix)
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('HDF5_DIR', self.spec['hdf5'].prefix)

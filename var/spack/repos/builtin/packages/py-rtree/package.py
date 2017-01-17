@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class PyRtree(Package):
+class PyRtree(PythonPackage):
     """Python interface to the RTREE.4 Library."""
     homepage = "http://toblerity.org/rtree/"
     url      = "https://github.com/Toblerity/rtree/tarball/0.8.2"
@@ -46,16 +45,12 @@ class PyRtree(Package):
     # Does not work with Spack
     # version('0.8.2', '593c7ac6babc397b8ba58f1636c1e0a0')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('libspatialindex')
 
-    def install(self, spec, prefix):
-        lib = os.path.join(spec['libspatialindex'].prefix, 'lib')
-        os.environ['SPATIALINDEX_LIBRARY'] = \
-            os.path.join(lib, 'libspatialindex.%s' % dso_suffix)
-        os.environ['SPATIALINDEX_C_LIBRARY'] = \
-            os.path.join(lib, 'libspatialindex_c.%s' % dso_suffix)
-
-        setup_py('install', '--prefix=%s' % prefix)
+    def setup_environment(self, spack_env, run_env):
+        lib = self.spec['libspatialindex'].prefix.lib
+        spack_env.set('SPATIALINDEX_LIBRARY',
+                      join_path(lib, 'libspatialindex.%s'   % dso_suffix))
+        spack_env.set('SPATIALINDEX_C_LIBRARY',
+                      join_path(lib, 'libspatialindex_c.%s' % dso_suffix))

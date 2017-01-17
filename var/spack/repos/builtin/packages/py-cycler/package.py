@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyCycler(Package):
+class PyCycler(PythonPackage):
     """Composable style cycles."""
 
     homepage = "http://matplotlib.org/cycler/"
@@ -33,10 +33,5 @@ class PyCycler(Package):
 
     version('0.10.0', '83dd0df7810e838b59e4dd9fa6e2d198')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('py-six',        type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyIpywidgets(Package):
+class PyIpywidgets(PythonPackage):
     """IPython widgets for the Jupyter Notebook"""
 
     homepage = "https://github.com/ipython/ipywidgets"
@@ -33,13 +33,8 @@ class PyIpywidgets(Package):
 
     version('5.2.2', '112f3daa4aa0f42f8dda831cea3649c8')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.7.999,3.3:')
-    depends_on('py-ipython@4.0.0:')
-    depends_on('py-ipykernel@4.2.2:')
-    depends_on('py-traitlets@4.2.1:')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-ipython@4.0.0:', type=('build', 'run'))
+    depends_on('py-ipykernel@4.2.2:', type=('build', 'run'))
+    depends_on('py-traitlets@4.2.1:', type=('build', 'run'))

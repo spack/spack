@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySncosmo(Package):
+class PySncosmo(PythonPackage):
     """SNCosmo is a Python library for high-level supernova cosmology
     analysis."""
 
@@ -46,6 +46,3 @@ class PySncosmo(Package):
     depends_on('py-iminuit', type=('build', 'run'))
     depends_on('py-emcee', type=('build', 'run'))
     depends_on('py-nestle', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

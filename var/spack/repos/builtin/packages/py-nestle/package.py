@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyNestle(Package):
+class PyNestle(PythonPackage):
     """Nested sampling algorithms for evaluating Bayesian evidence."""
 
     homepage = "http://kbarbary.github.io/nestle/"
@@ -34,11 +34,7 @@ class PyNestle(Package):
     version('0.1.1', '4875c0f9a0a8e263c1d7f5fa6ce604c5')
 
     # Required dependencies
-    extends('python')
     depends_on('py-numpy', type=('build', 'run'))
 
     # Optional dependencies
     depends_on('py-scipy', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

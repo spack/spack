@@ -22,11 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+from spack import *
 
 
-class PyAstroid(Package):
+class PyAstroid(PythonPackage):
     homepage = "https://www.astroid.org/"
     url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
 
@@ -36,10 +35,6 @@ class PyAstroid(Package):
     version('1.4.2', '677f7965840f375af51b0e86403bee6a')
     version('1.4.1', 'ed70bfed5e4b25be4292e7fe72da2c02')
 
-    extends('python')
     depends_on('py-logilab-common', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

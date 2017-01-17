@@ -25,18 +25,13 @@
 from spack import *
 
 
-class PyCertifi(Package):
+class PyCertifi(PythonPackage):
     """Certifi: A carefully curated collection of Root Certificates for validating
     the trustworthiness of SSL certificates while verifying the identity of TLS
     hosts."""
     homepage = "https://github.com/certifi/python-certifi"
-    # base https://pypi.python.org/pypi/certifi/
     url      = "https://github.com/certifi/python-certifi/archive/2016.02.28.tar.gz"
 
     version('2016.02.28', '5ccfc23bd5e931863f0b01ef3e9d2dbd3bef0e1b')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
