@@ -99,6 +99,11 @@ class Python(Package):
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
 
+    @when('@:2.6,3.0:3.3')
+    def patch(self):
+        # See https://github.com/LLNL/spack/issues/1490
+        pass
+
     def install(self, spec, prefix):
         # TODO: The '--no-user-cfg' option for Python installation is only in
         # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and

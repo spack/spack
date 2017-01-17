@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMonotonic(Package):
+class PyMonotonic(PythonPackage):
     """An implementation of time.monotonic() for Python 2 & < 3.3"""
 
     homepage = "https://pypi.python.org/pypi/monotonic"
@@ -33,9 +33,4 @@ class PyMonotonic(Package):
 
     version('1.2', 'd14c93aabc3d6af25ef086b032b123cf')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

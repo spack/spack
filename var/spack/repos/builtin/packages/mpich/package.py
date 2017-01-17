@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Mpich(AutotoolsPackage):
@@ -52,10 +51,17 @@ class Mpich(AutotoolsPackage):
     provides('mpi@:1.3', when='@1:')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
+        if 'platform=cray' in self.spec:
+            spack_env.set('MPICC',  spack_cc)
+            spack_env.set('MPICXX', spack_cxx)
+            spack_env.set('MPIF77', spack_fc)
+            spack_env.set('MPIF90', spack_fc)
+        else:
+            spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
         spack_env.set('MPICH_CC', spack_cc)
         spack_env.set('MPICH_CXX', spack_cxx)
@@ -64,8 +70,7 @@ class Mpich(AutotoolsPackage):
         spack_env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        # Is this a Cray machine? (TODO: We need a better test than this.)
-        if os.environ.get('CRAYPE_VERSION'):
+        if 'platform=cray' in self.spec:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc

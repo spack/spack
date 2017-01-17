@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyWcwidth(Package):
+class PyWcwidth(PythonPackage):
     """Measures number of Terminal column cells of wide-character codes"""
 
     homepage = "https://pypi.python.org/pypi/wcwidth"
@@ -33,9 +33,4 @@ class PyWcwidth(Package):
 
     version('0.1.7', 'b3b6a0a08f0c8a34d1de8cf44150a4ad')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

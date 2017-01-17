@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyH5py(Package):
+class PyH5py(PythonPackage):
     """The h5py package provides both a high- and low-level interface to the
     HDF5 library from Python."""
 
@@ -37,8 +37,6 @@ class PyH5py(Package):
     version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
 
     variant('mpi', default=True, description='Build with MPI support')
-
-    extends('python')
 
     # Build dependencies
     depends_on('py-cython@0.19:', type='build')
@@ -55,11 +53,11 @@ class PyH5py(Package):
     # Runtime dependencies
     depends_on('py-six', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
+    phases = ['configure', 'install']
+
+    def configure(self, spec, prefix):
+        self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
 
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
-            setup_py('configure', '--mpi')
-
-        setup_py('install', '--prefix={0}'.format(prefix))
+            self.setup_py('configure', '--mpi')

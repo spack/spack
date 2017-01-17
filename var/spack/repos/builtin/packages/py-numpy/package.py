@@ -26,7 +26,7 @@ from spack import *
 import platform
 
 
-class PyNumpy(Package):
+class PyNumpy(PythonPackage):
     """NumPy is the fundamental package for scientific computing with Python.
     It contains among other things: a powerful N-dimensional array object,
     sophisticated (broadcasting) functions, tools for integrating C/C++ and
@@ -46,7 +46,6 @@ class PyNumpy(Package):
     variant('blas',   default=True)
     variant('lapack', default=True)
 
-    extends('python')
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-nose', type='build')
     depends_on('py-setuptools', type='build')
@@ -65,7 +64,8 @@ class PyNumpy(Package):
                 self.spec.version, python_version, arch),
             'numpy/core/include')
 
-    def install(self, spec, prefix):
+    def patch(self):
+        spec = self.spec
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
         lapackblas = LibraryList('')
         if '+lapack' in spec:
@@ -82,5 +82,3 @@ class PyNumpy(Package):
                 if not ((platform.system() == "Darwin") and
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
-
-        setup_py('install', '--prefix={0}'.format(prefix))

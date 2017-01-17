@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPycodestyle(Package):
+class PyPycodestyle(PythonPackage):
     """pycodestyle is a tool to check your Python code against some of the
     style conventions in PEP 8. Note: formerly called pep8."""
 
@@ -42,11 +42,6 @@ class PyPycodestyle(Package):
     version('1.5.5', 'cfa12df9b86b3a1dfb13aced1927e12f')
     version('1.5.4', '3977a760829652543544074c684610ee')
 
-    extends('python')
-
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pycodestyle requires py-setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySix(Package):
+class PySix(PythonPackage):
     """Python 2 and 3 compatibility utilities."""
 
     homepage = "https://pypi.python.org/pypi/six"
@@ -37,6 +37,3 @@ class PySix(Package):
     extends('python', ignore=r'bin/pytest')
 
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

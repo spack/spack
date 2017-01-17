@@ -25,17 +25,12 @@
 from spack import *
 
 
-class PyBackportsAbc(Package):
+class PyBackportsAbc(PythonPackage):
     """Backports_ABC: A backport of recent additions to the 'collections.abc'
     module."""
     homepage = "https://github.com/cython/backports_abc"
-    # base https://pypi.python.org/pypi/backports_abc/
     url      = "https://github.com/cython/backports_abc/archive/0.4.tar.gz"
 
     version('0.4', 'e4246ae689221c9cbe84369fdb59e8c74d02b298')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

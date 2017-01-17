@@ -90,8 +90,6 @@ class Trilinos(CMakePackage):
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
 
-    depends_on('cmake', type='build')
-
     # Everything should be compiled with -fpic
     depends_on('blas')
     depends_on('lapack')

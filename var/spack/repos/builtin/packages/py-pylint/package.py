@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPylint(Package):
+class PyPylint(PythonPackage):
     """array processing for numbers, strings, records, and objects."""
     homepage = "https://pypi.python.org/pypi/pylint"
     url      = "https://pypi.python.org/packages/source/p/pylint/pylint-1.4.1.tar.gz"
@@ -39,6 +39,3 @@ class PyPylint(Package):
     depends_on('py-logilab-common', type=('build', 'run'))
     depends_on('py-nose', type='build')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

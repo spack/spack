@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyRestview(Package):
+class PyRestview(PythonPackage):
     """A viewer for ReStructuredText documents that renders them on the fly."""
 
     homepage = "https://mg.pov.lt/restview/"
@@ -33,9 +33,7 @@ class PyRestview(Package):
 
     version('2.6.1', 'ac8b70e15b8f1732d1733d674813666b')
 
-    extends('python')
-    depends_on('py-docutils', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7.999,3.3:3.5')
+    depends_on('py-docutils@0.13.1:', type=('build', 'run'))
+    depends_on('py-readme-renderer', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

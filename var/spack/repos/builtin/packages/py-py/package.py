@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPy(Package):
+class PyPy(PythonPackage):
     """library with cross-python path, ini-parsing, io, code, log facilities"""
 
     homepage = "http://pylib.readthedocs.io/en/latest/"
@@ -33,9 +33,4 @@ class PyPy(Package):
 
     version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

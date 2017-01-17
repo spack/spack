@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyJupyterNotebook(Package):
+class PyJupyterNotebook(PythonPackage):
     """Jupyter Interactive Notebook"""
 
     homepage = "https://github.com/jupyter/notebook"
@@ -44,23 +44,18 @@ class PyJupyterNotebook(Package):
 
     variant('terminal', default=False, description="Enable terminal functionality")
 
-    extends('python')
-    
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.7.999,3.3:')
     depends_on('npm', type='build')
-    depends_on('py-jinja2')
-    depends_on('py-tornado@4:')
-    depends_on('py-ipython-genutils')
-    depends_on('py-traitlets')
-    depends_on('py-jupyter-core')
-    depends_on('py-jupyter-client')
-    depends_on('py-jupyter-console')
-    depends_on('py-nbformat')
-    depends_on('py-nbconvert')
-    depends_on('py-ipykernel')
-    depends_on('py-terminado@0.3.3:', when="+terminal")
-    depends_on('py-ipywidgets', when="+terminal")
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-tornado@4:', type=('build', 'run'))
+    depends_on('py-ipython-genutils', type=('build', 'run'))
+    depends_on('py-traitlets', type=('build', 'run'))
+    depends_on('py-jupyter-core', type=('build', 'run'))
+    depends_on('py-jupyter-client', type=('build', 'run'))
+    depends_on('py-jupyter-console', type=('build', 'run'))
+    depends_on('py-nbformat', type=('build', 'run'))
+    depends_on('py-nbconvert', type=('build', 'run'))
+    depends_on('py-ipykernel', type=('build', 'run'))
+    depends_on('py-terminado@0.3.3:', when="+terminal", type=('build', 'run'))
+    depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))
