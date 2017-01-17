@@ -2045,9 +2045,9 @@ The classes that are currently provided by Spack are:
         For example, a Python extension installed with CMake would ``extends('python')`` and
         subclass from :py:class:`.CMakePackage`.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Mechanics of an installation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+Installation pipeline
+^^^^^^^^^^^^^^^^^^^^^
 
 When a user runs ``spack install``, Spack:
 
@@ -2735,7 +2735,7 @@ complete.
 ``sanity_check_is_file`` and ``sanity_check_is_dir``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Not all builds are like this.  Many builds of scientific
+Unfortunately, many builds of scientific
 software modify the install prefix *before* ``make install``. Builds
 like this can falsely report that they were successfully installed if
 an error occurs before the install is complete but after files have
@@ -2800,6 +2800,10 @@ using the ``MakefilePackage.precondition`` decorator.
         based packages will try to invoke ``make test`` and ``make check`` if
         Spack is asked to run tests. You'll find more information on each class
         looking at the :py:mod:`~.spack.build_systems` documentation.
+
+.. warning::
+
+    The API for adding tests is not yet considered stable and may change drastically in future releases.
 
 .. _file-manipulation:
 
