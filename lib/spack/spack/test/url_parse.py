@@ -364,3 +364,8 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'luaposix', '33.4.0',
             'https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz')
+
+    def test_sionlib_version(self):
+        self.check(
+            'sionlib', '1.7.1',
+            'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')
