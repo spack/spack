@@ -50,7 +50,7 @@ Here's an example:
 
 .. code-block:: console
 
-   $ spack create https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+   $ spack create --url https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
 
 Spack examines the tarball URL and tries to figure out the name of the package
 to be created. If the name contains uppercase letters, these are automatically
@@ -63,7 +63,7 @@ you how many you would like to download and checksum:
 
 .. code-block:: console
 
-   $ spack create https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+   $ spack create --url https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
    ==> This looks like a URL for gmp
    ==> Found 16 versions of gmp:
 
@@ -199,21 +199,21 @@ cannot be downloaded from a URL? You can still create a boilerplate
 
 .. code-block:: console
 
-   $ spack create --name intel
+   $ spack create intel
 
 This will create a simple ``intel`` package with an ``install()``
 method that you can craft to install your package.
 
-What if ``spack create <url>`` guessed the wrong name or build system?
+What if ``spack create --url <url>`` guessed the wrong name or build system?
 For example, if your package uses the Autotools build system but does
 not come with a ``configure`` script, Spack won't realize it uses
 Autotools. You can overwrite the old package with ``--force`` and specify
-a name with ``--name`` or a build system template to use with ``--template``:
+a name or specify a build system template to use with ``--template``:
 
 .. code-block:: console
 
-   $ spack create --name gmp https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
-   $ spack create --force --template autotools https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+   $ spack create gmp --url https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+   $ spack create --force --template autotools --url https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
 
 .. note::
 
@@ -1490,7 +1490,7 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
- 
+
 """""""""""""""""""
 Dependency Formulas
 """""""""""""""""""
