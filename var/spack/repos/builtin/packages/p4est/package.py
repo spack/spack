@@ -25,7 +25,7 @@
 from spack import *
 
 
-class P4est(Package):
+class P4est(AutotoolsPackage):
     """Dynamic management of a collection (a forest) of adaptive octrees in
     parallel"""
     homepage = "http://www.p4est.org"
