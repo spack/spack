@@ -53,11 +53,8 @@ class PyYt(Package):
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
-<<<<<<< HEAD
     variant("devmode", default=False, description="enable development mode")
-=======
     variant("rockstar", default=False, description="enable rockstar support")
->>>>>>> update/yt-rockstar
 
     extends("python")
 
@@ -71,6 +68,7 @@ class PyYt(Package):
     depends_on("py-setuptools", type="build")
     depends_on("py-sympy", type=('build', 'run'))
     depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
+    depends_on("py-pillow", type=('build', 'run'))
     depends_on("python @2.7:2.999,3.4:")
 
     def install(self, spec, prefix):
