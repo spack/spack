@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPathlib2(Package):
+class PyPathlib2(PythonPackage):
     """Backport of pathlib from python 3.4"""
 
     homepage = "https://pypi.python.org/pypi/pathlib2"
@@ -33,10 +33,5 @@ class PyPathlib2(Package):
 
     version('2.1.0', '38e4f58b4d69dfcb9edb49a54a8b28d2')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@:3.3.999')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

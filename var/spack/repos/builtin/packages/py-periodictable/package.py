@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPeriodictable(Package):
+class PyPeriodictable(PythonPackage):
     """nose extends the test loading and running features of unittest,
     making it easier to write, find and run tests."""
 
@@ -36,7 +36,3 @@ class PyPeriodictable(Package):
 
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

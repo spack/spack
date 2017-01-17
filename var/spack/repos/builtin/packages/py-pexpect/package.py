@@ -25,16 +25,12 @@
 from spack import *
 
 
-class PyPexpect(Package):
+class PyPexpect(PythonPackage):
     """Pexpect allows easy control of interactive console applications."""
     homepage = "https://pypi.python.org/pypi/pexpect"
     url      = "https://pypi.io/packages/source/p/pexpect/pexpect-4.2.1.tar.gz"
 
     version('4.2.1', '3694410001a99dff83f0b500a1ca1c95')
+    version('3.3', '0de72541d3f1374b795472fed841dce8')
 
-    extends('python')
-    
-    depends_on('py-ptyprocess')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on('py-ptyprocess', type=('build', 'run'))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyGnuplot(Package):
+class PyGnuplot(PythonPackage):
     """Gnuplot.py is a Python package that allows you to create graphs from
        within Python using the gnuplot plotting program."""
     homepage = "http://gnuplot-py.sourceforge.net/"
@@ -33,8 +33,4 @@ class PyGnuplot(Package):
 
     version('1.8', 'abd6f571e7aec68ae7db90a5217cd5b1')
 
-    extends('python')
     depends_on('py-numpy', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

@@ -194,19 +194,20 @@ class BazelPackageTemplate(PackageTemplate):
 
 
 class PythonPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for Python extensions"""
+    """Provides appropriate overrides for python extensions"""
+    base_class_name = 'PythonPackage'
 
     dependencies = """\
-    extends('python')
-
-    # FIXME: Add additional dependencies if required.
+    # FIXME: Add dependencies if required.
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        setup_py('install', '--prefix={0}'.format(prefix))"""
+    def build_args(self):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete the function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy

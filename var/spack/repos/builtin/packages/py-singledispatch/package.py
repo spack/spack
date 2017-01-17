@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySingledispatch(Package):
+class PySingledispatch(PythonPackage):
     """This library brings functools.singledispatch to Python 2.6-3.3."""
 
     homepage = "https://pypi.python.org/pypi/singledispatch"
@@ -33,11 +33,9 @@ class PySingledispatch(Package):
 
     version('3.4.0.3', 'af2fc6a3d6cc5a02d0bf54d909785fcb')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('py-six')
-    depends_on('py-ordereddict', when="^python@:2.6.999")
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    # This dependency breaks concretization
+    # See https://github.com/LLNL/spack/issues/2793
+    # depends_on('py-ordereddict', when="^python@:2.6.999", type=('build', 'run'))  # noqa

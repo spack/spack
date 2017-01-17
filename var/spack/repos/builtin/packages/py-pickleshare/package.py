@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPickleshare(Package):
+class PyPickleshare(PythonPackage):
     """Tiny 'shelve'-like database with concurrency support"""
 
     homepage = "https://pypi.python.org/pypi/pickleshare"
@@ -33,9 +33,4 @@ class PyPickleshare(Package):
 
     version('0.7.4', '6a9e5dd8dfc023031f6b7b3f824cab12')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

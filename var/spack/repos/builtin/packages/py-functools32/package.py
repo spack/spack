@@ -25,17 +25,11 @@
 from spack import *
 
 
-class PyFunctools32(Package):
+class PyFunctools32(PythonPackage):
     """Backport of the functools module from Python 3.2.3 for use on 2.7 and
     PyPy."""
 
     homepage = "https://github.com/MiCHiLU/python-functools32"
-    # base https://pypi.python.org/pypi/functools32
     url      = "https://pypi.python.org/packages/source/f/functools32/functools32-3.2.3-2.tar.gz"
 
     version('3.2.3-2', '09f24ffd9af9f6cd0f63cb9f4e23d4b2')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

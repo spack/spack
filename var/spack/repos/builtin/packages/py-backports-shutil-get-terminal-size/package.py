@@ -25,8 +25,8 @@
 from spack import *
 
 
-class PyBackportsShutilGetTerminalSize(Package):
-    """A backport of the get_terminal_size function 
+class PyBackportsShutilGetTerminalSize(PythonPackage):
+    """A backport of the get_terminal_size function
     from Python 3.3's shutil."""
 
     homepage = "https://pypi.python.org/pypi/backports.shutil_get_terminal_size"
@@ -34,10 +34,5 @@ class PyBackportsShutilGetTerminalSize(Package):
 
     version('1.0.0', '03267762480bd86b50580dc19dff3c66')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@:3.2.999')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMccabe(Package):
+class PyMccabe(PythonPackage):
     """Ned's script to check McCabe complexity."""
 
     homepage = "https://github.com/PyCQA/mccabe"
@@ -41,13 +41,9 @@ class PyMccabe(Package):
     version('0.2',   '36d4808c37e187dbb1fe2373a0ac6645')
     version('0.1',   '3c9e8e72612a9c01d865630cc569150a')
 
-    extends('python')
     depends_on('python@2.7:2.8,3.3:')
 
     depends_on('py-setuptools', type='build')
 
     # TODO: Add test dependencies
     # depends_on('py-pytest', type='test')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class PyPyside(Package):
+class PyPyside(PythonPackage):
     """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
@@ -36,7 +36,6 @@ class PyPyside(Package):
 
     depends_on('cmake', type='build')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx', type=('build', 'run'))
     depends_on('qt@4.5:4.9')
@@ -80,5 +79,5 @@ class PyPyside(Package):
                     "'Programming Language :: Python :: 3.5'",
                     "setup.py")
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix, '--jobs=%s' % make_jobs)
+    def build_args(self, spec, prefix):
+        return ['--jobs={0}'.format(make_jobs)]

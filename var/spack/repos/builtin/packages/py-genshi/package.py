@@ -22,11 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import version, extends, depends_on
-from spack import Package
+from spack import *
 
 
-class PyGenshi(Package):
+class PyGenshi(PythonPackage):
     """Python toolkit for generation of output for the web"""
     homepage = "https://genshi.edgewall.org/"
     url      = "http://ftp.edgewall.com/pub/genshi/Genshi-0.7.tar.gz"
@@ -35,8 +34,4 @@ class PyGenshi(Package):
     version('0.6.1', '372c368c8931110b0a521fa6091742d7')
     version('0.6', '604e8b23b4697655d36a69c2d8ef7187')
 
-    extends("python")
     depends_on("py-setuptools", type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
