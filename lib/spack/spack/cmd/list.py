@@ -33,7 +33,7 @@ import llnl.util.tty as tty
 import spack
 from llnl.util.tty.colify import colify
 
-description = "Print available spack packages to stdout in different formats"
+description = "print available spack packages to stdout in different formats"
 
 formatters = {}
 
@@ -47,13 +47,13 @@ def formatter(func):
 def setup_parser(subparser):
     subparser.add_argument(
         'filter', nargs=argparse.REMAINDER,
-        help='Optional case-insensitive glob patterns to filter results.')
+        help='optional case-insensitive glob patterns to filter results')
     subparser.add_argument(
         '-d', '--search-description', action='store_true', default=False,
-        help='Filtering will also search the description for a match.')
+        help='filtering will also search the description for a match')
     subparser.add_argument(
         '--format', default='name_only', choices=formatters,
-        help='Format to be used to print the output [default: name_only]')
+        help='format to be used to print the output [default: name_only]')
 
 
 def filter_by_name(pkgs, args):
