@@ -24,7 +24,6 @@
 ##############################################################################
 import os
 import re
-import sys
 import functools
 import collections
 import inspect
@@ -39,14 +38,15 @@ def index_by(objects, *funcs):
        Values are used as keys.  For example, suppose you have four
        objects with attributes that look like this:
 
-           a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
-           b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
-           c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
-           d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+          a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
+          b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
+          c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
+          d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
 
-           list_of_specs = [a,b,c,d]
-           index1 = index_by(list_of_specs, lambda s: s.arch, lambda s: s.compiler)
-           index2 = index_by(list_of_specs, lambda s: s.compiler)
+          list_of_specs = [a,b,c,d]
+          index1 = index_by(list_of_specs, lambda s: s.arch,
+                            lambda s: s.compiler)
+          index2 = index_by(list_of_specs, lambda s: s.compiler)
 
        ``index1'' now has two levels of dicts, with lists at the
        leaves, like this:
@@ -137,7 +137,7 @@ def get_calling_module_name():
     finally:
         del stack
 
-    if not '__module__' in caller_locals:
+    if '__module__' not in caller_locals:
         raise RuntimeError("Must invoke get_calling_module_name() "
                            "from inside a class definition!")
 
@@ -173,10 +173,10 @@ def has_method(cls, name):
 class memoized(object):
     """Decorator that caches the results of a function, storing them
        in an attribute of that function."""
+
     def __init__(self, func):
         self.func = func
         self.cache = {}
-
 
     def __call__(self, *args):
         if not isinstance(args, collections.Hashable):
@@ -187,11 +187,9 @@ class memoized(object):
             self.cache[args] = self.func(*args)
         return self.cache[args]
 
-
     def __get__(self, obj, objtype):
         """Support instance methods."""
         return functools.partial(self.__call__, obj)
-
 
     def clear(self):
         """Expunge cache so that self.func will be called again."""
@@ -237,13 +235,21 @@ def key_ordering(cls):
     if not has_method(cls, '_cmp_key'):
         raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
 
-    setter('__eq__', lambda s,o: (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
-    setter('__lt__', lambda s,o: o is not None and s._cmp_key() <  o._cmp_key())
-    setter('__le__', lambda s,o: o is not None and s._cmp_key() <= o._cmp_key())
+    setter('__eq__',
+           lambda s, o:
+           (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
+    setter('__lt__',
+           lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
+    setter('__le__',
+           lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
 
-    setter('__ne__', lambda s,o: (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
-    setter('__gt__', lambda s,o: o is None or s._cmp_key() >  o._cmp_key())
-    setter('__ge__', lambda s,o: o is None or s._cmp_key() >= o._cmp_key())
+    setter('__ne__',
+           lambda s, o:
+           (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
+    setter('__gt__',
+           lambda s, o: o is None or s._cmp_key() > o._cmp_key())
+    setter('__ge__',
+           lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
 
     setter('__hash__', lambda self: hash(self._cmp_key()))
 
@@ -254,9 +260,9 @@ def key_ordering(cls):
 class HashableMap(dict):
     """This is a hashable, comparable dictionary.  Hash is performed on
        a tuple of the values in the dictionary."""
+
     def _cmp_key(self):
         return tuple(sorted(self.values()))
-
 
     def copy(self):
         """Type-agnostic clone method.  Preserves subclass type."""
@@ -336,24 +342,35 @@ def match_predicate(*args):
     return match
 
 
+def dedupe(sequence):
+    """Yields a stable de-duplication of an hashable sequence
 
-def DictWrapper(dictionary):
-    """Returns a class that wraps a dictionary and enables it to be used
-       like an object."""
-    class wrapper(object):
-        def __getattr__(self, name):        return dictionary[name]
-        def __setattr__(self, name, value): dictionary[name] = value
-        def setdefault(self, *args):        return dictionary.setdefault(*args)
-        def get(self, *args):               return dictionary.get(*args)
-        def keys(self):                     return dictionary.keys()
-        def values(self):                   return dictionary.values()
-        def items(self):                    return dictionary.items()
-        def __iter__(self):                 return iter(dictionary)
+    Args:
+        sequence: hashable sequence to be de-duplicated
 
-
-    return wrapper()
+    Returns:
+        stable de-duplication of the sequence
+    """
+    seen = set()
+    for x in sequence:
+        if x not in seen:
+            yield x
+            seen.add(x)
 
 
 class RequiredAttributeError(ValueError):
+
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
+
+
+def duplicate_stream(original):
+    """Duplicates a stream  at the os level.
+
+    :param stream original: original stream to be duplicated. Must have a
+        `fileno` callable attribute.
+
+    :return: duplicate of the original stream
+    :rtype: file like object
+    """
+    return os.fdopen(os.dup(original.fileno()))

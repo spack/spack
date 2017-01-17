@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Mpfr(Package):
     """The MPFR library is a C library for multiple-precision
        floating-point computations with correct rounding."""
@@ -34,7 +35,7 @@ class Mpfr(Package):
     version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
     version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
 
-    depends_on('gmp')
+    depends_on('gmp')  # mpir is a drop-in replacement for this
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

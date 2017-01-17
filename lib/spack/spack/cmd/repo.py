@@ -23,19 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import re
-import shutil
 
-from external import argparse
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
 
 import spack.spec
 import spack.config
-from spack.util.environment import get_path
 from spack.repository import *
 
 description = "Manage package source repositories."
+
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
@@ -57,13 +53,15 @@ def setup_parser(subparser):
 
     # Add
     add_parser = sp.add_parser('add', help=repo_add.__doc__)
-    add_parser.add_argument('path', help="Path to a Spack package repository directory.")
+    add_parser.add_argument(
+        'path', help="Path to a Spack package repository directory.")
     add_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
         help="Configuration scope to modify.")
 
     # Remove
-    remove_parser = sp.add_parser('remove', help=repo_remove.__doc__, aliases=['rm'])
+    remove_parser = sp.add_parser(
+        'remove', help=repo_remove.__doc__, aliases=['rm'])
     remove_parser.add_argument(
         'path_or_namespace',
         help="Path or namespace of a Spack package repository.")
@@ -100,14 +98,15 @@ def repo_add(args):
 
     # If that succeeds, finally add it to the configuration.
     repos = spack.config.get_config('repos', args.scope)
-    if not repos: repos = []
+    if not repos:
+        repos = []
 
     if repo.root in repos or path in repos:
         tty.die("Repository is already registered with Spack: %s" % path)
 
     repos.insert(0, canon_path)
     spack.config.update_config('repos', repos, args.scope)
-    tty.msg("Created repo with namespace '%s'." % repo.namespace)
+    tty.msg("Added repo with namespace '%s'." % repo.namespace)
 
 
 def repo_remove(args):
@@ -135,7 +134,7 @@ def repo_remove(args):
                 tty.msg("Removed repository %s with namespace '%s'."
                         % (repo.root, repo.namespace))
                 return
-        except RepoError as e:
+        except RepoError:
             continue
 
     tty.die("No repository with path or namespace: %s"
@@ -149,7 +148,7 @@ def repo_list(args):
     for r in roots:
         try:
             repos.append(Repo(r))
-        except RepoError as e:
+        except RepoError:
             continue
 
     msg = "%d package repositor" % len(repos)
@@ -166,9 +165,9 @@ def repo_list(args):
 
 
 def repo(parser, args):
-    action = { 'create' : repo_create,
-               'list'   : repo_list,
-               'add'    : repo_add,
-               'remove' : repo_remove,
-               'rm'     : repo_remove}
+    action = {'create': repo_create,
+              'list': repo_list,
+              'add': repo_add,
+              'remove': repo_remove,
+              'rm': repo_remove}
     action[args.repo_command](args)

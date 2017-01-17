@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ipopt(Package):
     """Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt) is a
        software package for large-scale nonlinear optimization."""
@@ -38,9 +39,9 @@ class Ipopt(Package):
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("pkg-config")
-    depends_on("mumps+double~mpi") 
-    
+    depends_on("pkg-config", type='build')
+    depends_on("mumps+double~mpi")
+
     def install(self, spec, prefix):
         # Dependency directories
         blas_dir = spec['blas'].prefix
@@ -52,10 +53,9 @@ class Ipopt(Package):
         mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
         mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
 
-        # By convention, spack links blas & lapack libs to libblas & liblapack
-        blas_lib = "-L%s" % blas_dir.lib + " -lblas"
-        lapack_lib = "-L%s" % lapack_dir.lib + " -llapack"
-        
+        blas_lib = spec['blas'].blas_libs.ld_flags
+        lapack_lib = spec['lapack'].lapack_libs.ld_flags
+
         configure_args = [
             "--prefix=%s" % prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
@@ -65,8 +65,8 @@ class Ipopt(Package):
             "--with-blas-lib=%s" % blas_lib,
             "--with-lapack-incdir=%s" % lapack_dir.include,
             "--with-lapack-lib=%s" % lapack_lib
-            ]
-        
+        ]
+
         configure(*configure_args)
 
         # IPOPT does not build correctly in parallel on OS X

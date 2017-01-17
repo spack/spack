@@ -25,15 +25,26 @@
 from spack import *
 
 
-class Matio(Package):
+class Matio(AutotoolsPackage):
     """matio is an C library for reading and writing Matlab MAT files"""
     homepage = "http://sourceforge.net/projects/matio/"
-    url = "http://downloads.sourceforge.net/project/matio/matio/1.5.2/matio-1.5.2.tar.gz"
+    url = "http://downloads.sourceforge.net/project/matio/matio/1.5.9/matio-1.5.9.tar.gz"
 
+    version('1.5.9', 'aab5b4219a3c0262afe7eeb7bdd2f463')
     version('1.5.2', '85b007b99916c63791f28398f6a4c6f1')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+    variant("zlib", default=True,
+            description='support for compressed mat files')
+    variant("hdf5", default=True,
+            description='support for version 7.3 mat files via hdf5')
 
-        make()
-        make("install")
+    depends_on("zlib", when="+zlib")
+    depends_on("hdf5", when="+hdf5")
+
+    def configure_args(self):
+        args = []
+        if '+zlib' in self.spec:
+            args.append("--with-zlib=%s" % self.spec['zlib'].prefix)
+        if '+hdf5' in self.spec:
+            args.append("--with-hdf5=%s" % self.spec['hdf5'].prefix)
+        return args

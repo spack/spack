@@ -22,71 +22,111 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import unittest
+import pytest
+import shlex
 
-import spack.spec
+import spack.spec as sp
 from spack.parse import Token
 from spack.spec import *
 
 # Sample output for a complex lexing.
-complex_lex = [Token(ID, 'mvapich_foo'),
-               Token(DEP),
-               Token(ID, '_openmpi'),
-               Token(AT),
-               Token(ID, '1.2'),
-               Token(COLON),
-               Token(ID, '1.4'),
-               Token(COMMA),
-               Token(ID, '1.6'),
-               Token(PCT),
-               Token(ID, 'intel'),
-               Token(AT),
-               Token(ID, '12.1'),
-               Token(COLON),
-               Token(ID, '12.6'),
-               Token(ON),
-               Token(ID, 'debug'),
-               Token(OFF),
-               Token(ID, 'qt_4'),
-               Token(DEP),
-               Token(ID, 'stackwalker'),
-               Token(AT),
-               Token(ID, '8.1_1e')]
+complex_lex = [Token(sp.ID, 'mvapich_foo'),
+               Token(sp.DEP),
+               Token(sp.ID, '_openmpi'),
+               Token(sp.AT),
+               Token(sp.ID, '1.2'),
+               Token(sp.COLON),
+               Token(sp.ID, '1.4'),
+               Token(sp.COMMA),
+               Token(sp.ID, '1.6'),
+               Token(sp.PCT),
+               Token(sp.ID, 'intel'),
+               Token(sp.AT),
+               Token(sp.ID, '12.1'),
+               Token(sp.COLON),
+               Token(sp.ID, '12.6'),
+               Token(sp.ON),
+               Token(sp.ID, 'debug'),
+               Token(sp.OFF),
+               Token(sp.ID, 'qt_4'),
+               Token(sp.DEP),
+               Token(sp.ID, 'stackwalker'),
+               Token(sp.AT),
+               Token(sp.ID, '8.1_1e')]
+
+# Another sample lexer output with a kv pair.
+kv_lex = [Token(sp.ID, 'mvapich_foo'),
+          Token(sp.ID, 'debug'),
+          Token(sp.EQ),
+          Token(sp.VAL, '4'),
+          Token(sp.DEP),
+          Token(sp.ID, '_openmpi'),
+          Token(sp.AT),
+          Token(sp.ID, '1.2'),
+          Token(sp.COLON),
+          Token(sp.ID, '1.4'),
+          Token(sp.COMMA),
+          Token(sp.ID, '1.6'),
+          Token(sp.PCT),
+          Token(sp.ID, 'intel'),
+          Token(sp.AT),
+          Token(sp.ID, '12.1'),
+          Token(sp.COLON),
+          Token(sp.ID, '12.6'),
+          Token(sp.ON),
+          Token(sp.ID, 'debug'),
+          Token(sp.OFF),
+          Token(sp.ID, 'qt_4'),
+          Token(sp.DEP),
+          Token(sp.ID, 'stackwalker'),
+          Token(sp.AT),
+          Token(sp.ID, '8.1_1e')]
 
 
-class SpecSyntaxTest(unittest.TestCase):
-    # ================================================================================
+class TestSpecSyntax(object):
+    # ========================================================================
     # Parse checks
-    # ================================================================================
-    def check_parse(self, expected, spec=None):
-        """Assert that the provided spec is able to be parsed.
-           If this is called with one argument, it assumes that the string is
-           canonical (i.e., no spaces and ~ instead of - for variants) and that it
-           will convert back to the string it came from.
+    # ========================================================================
 
-           If this is called with two arguments, the first argument is the expected
-           canonical form and the second is a non-canonical input to be parsed.
+    def check_parse(self, expected, spec=None, remove_arch=True):
+        """Assert that the provided spec is able to be parsed.
+
+           If this is called with one argument, it assumes that the
+           string is canonical (i.e., no spaces and ~ instead of - for
+           variants) and that it will convert back to the string it came
+           from.
+
+           If this is called with two arguments, the first argument is
+           the expected canonical form and the second is a non-canonical
+           input to be parsed.
+
         """
         if spec is None:
             spec = expected
-        output = spack.spec.parse(spec)
-        parsed = (" ".join(str(spec) for spec in output))
-        self.assertEqual(expected, parsed)
+        output = sp.parse(spec)
 
+        parsed = (" ".join(str(spec) for spec in output))
+        assert expected == parsed
 
     def check_lex(self, tokens, spec):
-        """Check that the provided spec parses to the provided list of tokens."""
-        lex_output = SpecLexer().lex(spec)
+        """Check that the provided spec parses to the provided token list."""
+        spec = shlex.split(spec)
+        lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == ID:
-                self.assertEqual(tok, spec_tok)
+            if tok.type == sp.ID or tok.type == sp.VAL:
+                assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
-                self.assertEqual(tok.type, spec_tok.type)
+                assert tok.type == spec_tok.type
 
-    # ================================================================================
+    def _check_raises(self, exc_type, items):
+        for item in items:
+            with pytest.raises(exc_type):
+                self.check_parse(item)
+
+    # ========================================================================
     # Parse checks
-    # ===============================================================================
+    # ========================================================================
     def test_package_names(self):
         self.check_parse("mvapich")
         self.check_parse("mvapich_foo")
@@ -102,80 +142,223 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse("openmpi^hwloc@:1.4b7-rc3")
         self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
 
+    def test_multiple_specs(self):
+        self.check_parse("mvapich emacs")
+
+    def test_multiple_specs_after_kv(self):
+        self.check_parse('mvapich cppflags="-O3 -fPIC" emacs')
+        self.check_parse('mvapich cflags="-O3" emacs',
+                         'mvapich cflags=-O3 emacs')
+
+    def test_multiple_specs_long_second(self):
+        self.check_parse('mvapich emacs@1.1.1%intel cflags="-O3"',
+                         'mvapich emacs @1.1.1 %intel cflags=-O3')
+        self.check_parse('mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
+
     def test_full_specs(self):
-        self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4^stackwalker@8.1_1e")
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4"
+            "^stackwalker@8.1_1e")
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            "^stackwalker@8.1_1e")
+        self.check_parse(
+            'mvapich_foo'
+            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3" +debug~qt_4'
+            '^stackwalker@8.1_1e')
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            "^stackwalker@8.1_1e arch=test-redhat6-x86_32")
 
     def test_canonicalize(self):
         self.check_parse(
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e",
-            "mvapich_foo ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^stackwalker@8.1_1e",
+
+            "mvapich_foo "
+            "^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e")
 
         self.check_parse(
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e",
-            "mvapich_foo ^stackwalker@8.1_1e ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^stackwalker@8.1_1e",
+
+            "mvapich_foo "
+            "^stackwalker@8.1_1e "
+            "^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
 
         self.check_parse(
             "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
+        self.check_parse(
+            "x arch=test-redhat6-None "
+            "^y arch=test-None-x86_64 "
+            "^z arch=linux-None-None",
+
+            "x os=fe "
+            "^y target=be "
+            "^z platform=linux")
+
+        self.check_parse(
+            "x arch=test-debian6-x86_64 "
+            "^y arch=test-debian6-x86_64",
+
+            "x os=default_os target=default_target "
+            "^y os=default_os target=default_target")
+
         self.check_parse("x^y", "x@: ^y@:")
 
     def test_parse_errors(self):
-        self.assertRaises(SpecParseError, self.check_parse, "x@@1.2")
-        self.assertRaises(SpecParseError, self.check_parse, "x ^y@@1.2")
-        self.assertRaises(SpecParseError, self.check_parse, "x@1.2::")
-        self.assertRaises(SpecParseError, self.check_parse, "x::")
+        errors = ['x@@1.2', 'x ^y@@1.2', 'x@1.2::', 'x::']
+        self._check_raises(SpecParseError, errors)
 
     def test_duplicate_variant(self):
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x@1.2+debug+debug")
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug+debug")
+        duplicates = [
+            'x@1.2+debug+debug',
+            'x ^y@1.2+debug debug=true',
+            'x ^y@1.2 debug=false debug=true',
+            'x ^y@1.2 debug=false ~debug'
+        ]
+        self._check_raises(DuplicateVariantError, duplicates)
 
-    def test_duplicate_depdendence(self):
-        self.assertRaises(DuplicateDependencyError, self.check_parse, "x ^y ^y")
+    def test_duplicate_dependency(self):
+        self._check_raises(DuplicateDependencyError, ["x ^y ^y"])
 
     def test_duplicate_compiler(self):
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%intel%intel")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%intel%gcc")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%gcc%intel")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%intel%intel")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%intel%gcc")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%gcc%intel")
+        duplicates = [
+            "x%intel%intel",
+            "x%intel%gcc",
+            "x%gcc%intel",
+            "x ^y%intel%intel",
+            "x ^y%intel%gcc",
+            "x ^y%gcc%intel"
+        ]
+        self._check_raises(DuplicateCompilerSpecError, duplicates)
 
+    def test_duplicate_architecture(self):
+        duplicates = [
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64",
+            "x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le",
+            "x arch=linux-rhel7-ppc64le arch=linux-rhel7-x86_64",
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64",
+            "y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le"
+        ]
+        self._check_raises(DuplicateArchitectureError, duplicates)
 
-    # ================================================================================
+    def test_duplicate_architecture_component(self):
+        duplicates = [
+            "x os=fe os=fe",
+            "x os=fe os=be",
+            "x target=fe target=fe",
+            "x target=fe target=be",
+            "x platform=test platform=test",
+            "x os=fe platform=test target=fe os=fe",
+            "x target=be platform=test os=be os=fe"
+        ]
+        self._check_raises(DuplicateArchitectureError, duplicates)
+
+    # ========================================================================
     # Lex checks
-    # ================================================================================
+    # ========================================================================
     def test_ambiguous(self):
         # This first one is ambiguous because - can be in an identifier AND
         # indicate disabling an option.
-        self.assertRaises(
-            AssertionError, self.check_lex, complex_lex,
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug-qt_4^stackwalker@8.1_1e")
+        with pytest.raises(AssertionError):
+            self.check_lex(
+                complex_lex,
+                "mvapich_foo"
+                "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug-qt_4"
+                "^stackwalker@8.1_1e"
+            )
 
-    # The following lexes are non-ambiguous (add a space before -qt_4) and should all
-    # result in the tokens in complex_lex
+    # The following lexes are non-ambiguous (add a space before -qt_4)
+    # and should all result in the tokens in complex_lex
     def test_minimal_spaces(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4"
+            "^stackwalker@8.1_1e")
         self.check_lex(
             complex_lex,
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^stackwalker@8.1_1e")
 
     def test_spaces_between_dependences(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 ^stackwalker @ 8.1_1e")
+            "mvapich_foo "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 "
+            "^stackwalker @ 8.1_1e")
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker @ 8.1_1e")
+            "mvapich_foo "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker @ 8.1_1e")
 
     def test_spaces_between_options(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug -qt_4 ^stackwalker @8.1_1e")
+            "mvapich_foo "
+            "^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug -qt_4 "
+            "^stackwalker @8.1_1e")
 
     def test_way_too_many_spaces(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^ _openmpi @ 1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 ^ stackwalker @ 8.1_1e")
+            "mvapich_foo "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            complex_lex,
+            "mvapich_foo "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_with_quotes(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug='4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            'mvapich_foo debug="4" '
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo 'debug = 4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_without_quotes(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug=4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+
+    def test_kv_with_spaces(self):
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug = 4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug =4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")
+        self.check_lex(
+            kv_lex,
+            "mvapich_foo debug= 4 "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")

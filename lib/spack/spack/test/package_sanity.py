@@ -26,6 +26,7 @@
 This test does sanity checks on Spack's builtin package database.
 """
 import unittest
+import re
 
 import spack
 from spack.repository import RepoPath
@@ -38,11 +39,9 @@ class PackageSanityTest(unittest.TestCase):
         for name in spack.repo.all_package_names():
             spack.repo.get(name)
 
-
     def test_get_all_packages(self):
         """Get all packages once and make sure that works."""
         self.check_db()
-
 
     def test_get_all_mock_packages(self):
         """Get the mock packages once each too."""
@@ -50,7 +49,6 @@ class PackageSanityTest(unittest.TestCase):
         spack.repo.swap(db)
         self.check_db()
         spack.repo.swap(db)
-
 
     def test_url_versions(self):
         """Check URLs for regular packages, if they are explicitly defined."""
@@ -60,3 +58,13 @@ class PackageSanityTest(unittest.TestCase):
                     # If there is a url for the version check it.
                     v_url = pkg.url_for_version(v)
                     self.assertEqual(vattrs['url'], v_url)
+
+    def test_all_versions_are_lowercase(self):
+        """Spack package names must be lowercase, and use `-` instead of `_`.
+        """
+        errors = []
+        for name in spack.repo.all_package_names():
+            if re.search(r'[_A-Z]', name):
+                errors.append(name)
+
+        self.assertEqual([], errors)

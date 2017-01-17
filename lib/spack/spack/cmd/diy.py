@@ -30,10 +30,11 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
-from spack.cmd.edit import edit_package
+import spack.cmd.common.arguments as arguments
 from spack.stage import DIYStage
 
 description = "Do-It-Yourself: build from an existing source directory."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -50,7 +51,10 @@ def setup_parser(subparser):
         help="Do not display verbose build output while installing.")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install.  Must contain package AND verison.")
+        help="specs to use for install.  Must contain package AND version.")
+
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
 
 def diy(self, args):
@@ -61,39 +65,33 @@ def diy(self, args):
     if len(specs) > 1:
         tty.die("spack diy only takes one spec.")
 
-    # Take a write lock before checking for existence.
-    with spack.installed_db.write_transaction():
-        spec = specs[0]
-        if not spack.repo.exists(spec.name):
-            tty.warn("No such package: %s" % spec.name)
-            create = tty.get_yes_or_no("Create this package?", default=False)
-            if not create:
-                tty.msg("Exiting without creating.")
-                sys.exit(1)
-            else:
-                tty.msg("Running 'spack edit -f %s'" % spec.name)
-                edit_package(spec.name, spack.repo.first_repo(), None, True)
-                return
+    spec = specs[0]
+    if not spack.repo.exists(spec.name):
+        tty.die("No package for '{0}' was found.".format(spec.name),
+                "  Use `spack create` to create a new package")
 
-        if not spec.versions.concrete:
-            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
+    if not spec.versions.concrete:
+        tty.die(
+            "spack diy spec must have a single, concrete version. "
+            "Did you forget a package version number?")
 
-        spec.concretize()
-        package = spack.repo.get(spec)
+    spec.concretize()
+    package = spack.repo.get(spec)
 
-        if package.installed:
-            tty.error("Already installed in %s" % package.prefix)
-            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
-            sys.exit(1)
+    if package.installed:
+        tty.error("Already installed in %s" % package.prefix)
+        tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+        sys.exit(1)
 
-        # Forces the build to run out of the current directory.
-        package.stage = DIYStage(os.getcwd())
+    # Forces the build to run out of the current directory.
+    package.stage = DIYStage(os.getcwd())
 
-        # TODO: make this an argument, not a global.
-        spack.do_checksum = False
+    # TODO: make this an argument, not a global.
+    spack.do_checksum = False
 
-        package.do_install(
-            keep_prefix=args.keep_prefix,
-            ignore_deps=args.ignore_deps,
-            verbose=not args.quiet,
-            keep_stage=True)   # don't remove source dir for DIY.
+    package.do_install(
+        keep_prefix=args.keep_prefix,
+        install_deps=not args.ignore_deps,
+        verbose=not args.quiet,
+        keep_stage=True,   # don't remove source dir for DIY.
+        dirty=args.dirty)

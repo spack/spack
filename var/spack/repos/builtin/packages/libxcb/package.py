@@ -24,30 +24,38 @@
 ##############################################################################
 from spack import *
 
+
 class Libxcb(Package):
     """The X protocol C-language Binding (XCB) is a replacement
     for Xlib featuring a small footprint, latency hiding, direct
     access to the protocol, improved threading support, and
     extensibility."""
 
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
+    homepage = "https://xcb.freedesktop.org/"
+    url      = "https://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
 
+    version('1.12', '95eee7c28798e16ba5443f188b27a476')
     version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
     version('1.11.1', '118623c15a96b08622603a71d8789bf3')
-    depends_on("python")
-    depends_on("xcb-proto")
-    depends_on("pkg-config")
 
-    # depends_on('pthread')    # Ubuntu: apt-get install libpthread-stubs0-dev
-    # depends_on('xau')        # Ubuntu: apt-get install libxau-dev
+    depends_on('libpthread-stubs')
+    depends_on('libxau@0.99.2:')
+    depends_on('libxdmcp')
+
+    depends_on('xcb-proto', type='build')
+    depends_on('python@2:2.8', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def patch(self):
-        filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {', 'src/xcb.h')
-
+        filter_file(
+            'typedef struct xcb_auth_info_t {',
+            'typedef struct {',
+            'src/xcb.h')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('check')
+        make('install')

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Hypre(Package):
     """Hypre is included here as an example of a package that depends on
        both LAPACK and BLAS."""

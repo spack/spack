@@ -25,64 +25,116 @@
 from spack import *
 
 
-class Netcdf(Package):
-    """NetCDF is a set of software libraries and self-describing, machine-independent
-    data formats that support the creation, access, and sharing of array-oriented
-    scientific data."""
+class Netcdf(AutotoolsPackage):
+    """NetCDF is a set of software libraries and self-describing,
+    machine-independent data formats that support the creation, access,
+    and sharing of array-oriented scientific data."""
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz"
 
-    version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
-    version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
+    version('4.4.1',   '7843e35b661c99e1d49e60791d5072d8')
+    version('4.4.0',   'cffda0cbd97fdb3a06e9274f7aef438e')
+    version('4.3.3.1', '5c9dad3705a3408d27f696e5b31fb88c')
+    version('4.3.3',   '5fbd0e108a54bd82cb5702a73f56d2ae')
 
-    variant('mpi',  default=True,  description='Enables MPI parallelism')
-    variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('mpi',     default=True,  description='Enables MPI parallelism')
+    variant('hdf4',    default=False, description='Enable HDF4 support')
+    variant('shared',  default=True,  description='Enable shared library')
+    variant('parallel-netcdf', default=False, description='Enable PnetCDF support')
+    variant('dap',     default=False, description='Enable DAP support')
+    variant('cdmremote', default=False, description='Enable CDM Remote support')
+    # These variants control the number of dimensions (i.e. coordinates and
+    # attributes) and variables (e.g. time, entity ID, number of coordinates)
+    # that can be used in any particular NetCDF file.
+    variant('maxdims', default=1024,
+            description='Defines the maximum dimensions of NetCDF files.')
+    variant('maxvars', default=8192,
+            description='Defines the maximum variables of NetCDF files.')
 
-    depends_on("m4")
+    depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
-
-    # Required for DAP support
-    depends_on("curl")
+    depends_on("curl@7.18.0:", when='+dap')
+    depends_on("curl@7.18.0:", when='+cdmremote')
+    depends_on('parallel-netcdf', when='@4.2.1.1:+parallel-netcdf')
 
     # Required for NetCDF-4 support
-    depends_on("zlib")
-    depends_on("hdf5+mpi", when='+mpi')
-    depends_on("hdf5~mpi", when='~mpi')
+    depends_on("zlib@1.2.5:")
+    depends_on('hdf5')
 
-    def install(self, spec, prefix):
+    # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
+    # https://github.com/Unidata/netcdf-c/issues/250
+    depends_on('hdf5@:1.8', when='@:4.4.0')
+
+    def patch(self):
+        try:
+            max_dims = int(self.spec.variants['maxdims'].value)
+            max_vars = int(self.spec.variants['maxvars'].value)
+        except (ValueError, TypeError):
+            raise TypeError('NetCDF variant values max[dims|vars] must be '
+                            'integer values.')
+
+        ff = FileFilter(join_path('include', 'netcdf.h'))
+        ff.filter(r'^(#define\s+NC_MAX_DIMS\s+)\d+(.*)$',
+                  r'\1{0}\2'.format(max_dims))
+        ff.filter(r'^(#define\s+NC_MAX_VARS\s+)\d+(.*)$',
+                  r'\1{0}\2'.format(max_vars))
+
+    def configure_args(self):
+        spec = self.spec
+        # Workaround until variant forwarding works properly
+        if '+mpi' in spec and spec.satisfies('^hdf5~mpi'):
+            raise RuntimeError('Invalid spec. Package netcdf requires '
+                               'hdf5+mpi, but spec asked for hdf5~mpi.')
+
         # Environment variables
+        CFLAGS   = []
         CPPFLAGS = []
         LDFLAGS  = []
         LIBS     = []
 
         config_args = [
-            "--prefix=%s" % prefix,
             "--enable-fsync",
             "--enable-v2",
             "--enable-utilities",
-            "--enable-shared",
             "--enable-static",
             "--enable-largefile",
             # necessary for HDF5 support
             "--enable-netcdf-4",
             "--enable-dynamic-loading",
-            # necessary for DAP support
-            "--enable-dap"
         ]
 
-        # Make sure Netcdf links against Spack's curl
-        # Otherwise it may pick up system's curl, which could lead to link errors:
-        # /usr/lib/x86_64-linux-gnu/libcurl.so: undefined reference to `SSL_CTX_use_certificate_chain_file@OPENSSL_1.0.0'
-        LIBS.append("-lcurl")
-        CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-        LDFLAGS.append( "-L%s" % spec['curl'].prefix.lib)
+        if '+shared' in spec:
+            config_args.append('--enable-shared')
+        else:
+            config_args.append('--disable-shared')
+            # We don't have shared libraries but we still want it to be
+            # possible to use this library in shared builds
+            CFLAGS.append('-fPIC')
+
+        if '+dap' in spec:
+            config_args.append('--enable-dap')
+        else:
+            config_args.append('--disable-dap')
+
+        if '+cdmremote' in spec:
+            config_args.append('--enable-cdmremote')
+        else:
+            config_args.append('--disable-cdmremote')
+
+        if '+dap' in spec or '+cdmremote' in spec:
+            # Make sure Netcdf links against Spack's curl, otherwise it may
+            # pick up system's curl, which can give link errors, e.g.:
+            #   undefined reference to `SSL_CTX_use_certificate_chain_file`
+            LIBS.append("-lcurl")
+            CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
+            LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
 
         CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
-        LDFLAGS.append( "-L%s/lib"     % spec['hdf5'].prefix)
+        LDFLAGS.append("-L%s/lib"     % spec['hdf5'].prefix)
 
         # HDF4 support
         # As of NetCDF 4.1.3, "--with-hdf4=..." is no longer a valid option
@@ -90,22 +142,32 @@ class Netcdf(Package):
         if '+hdf4' in spec:
             config_args.append("--enable-hdf4")
             CPPFLAGS.append("-I%s/include" % spec['hdf'].prefix)
-            LDFLAGS.append( "-L%s/lib"     % spec['hdf'].prefix)
-            LIBS.append(    "-l%s"         % "jpeg")
+            LDFLAGS.append("-L%s/lib"     % spec['hdf'].prefix)
+            LIBS.append("-l%s"         % "jpeg")
 
-        if 'szip' in spec:
+        if '+szip' in spec:
             CPPFLAGS.append("-I%s/include" % spec['szip'].prefix)
-            LDFLAGS.append( "-L%s/lib"     % spec['szip'].prefix)
-            LIBS.append(    "-l%s"         % "sz")
+            LDFLAGS.append("-L%s/lib"     % spec['szip'].prefix)
+            LIBS.append("-l%s"         % "sz")
+
+        # PnetCDF support
+        if '+parallel-netcdf' in spec:
+            config_args.append('--enable-pnetcdf')
+            config_args.append('CC=%s' % spec['mpi'].mpicc)
+            CPPFLAGS.append("-I%s/include" % spec['parallel-netcdf'].prefix)
+            LDFLAGS.append("-L%s/lib"      % spec['parallel-netcdf'].prefix)
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # Use the netcdf-fortran package to install Fortran support.
 
+        config_args.append('CFLAGS=%s'   % ' '.join(CFLAGS))
         config_args.append('CPPFLAGS=%s' % ' '.join(CPPFLAGS))
         config_args.append('LDFLAGS=%s'  % ' '.join(LDFLAGS))
         config_args.append('LIBS=%s'     % ' '.join(LIBS))
 
-        configure(*config_args)
-        make()
-        make("install")
+        return config_args
+
+    def check(self):
+        # h5_test fails when run in parallel
+        make('check', parallel=False)

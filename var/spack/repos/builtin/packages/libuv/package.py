@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libuv(Package):
     """Multi-platform library with a focus on asynchronous IO"""
     homepage = "http://libuv.org"
@@ -31,9 +32,9 @@ class Libuv(Package):
 
     version('1.9.0', '14737f9c76123a19a290dabb7d1cd04c')
 
-    depends_on('automake')
-    depends_on('autoconf')
-    depends_on('libtool')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
 
     def install(self, spec, prefix):
         bash = which("bash")

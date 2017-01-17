@@ -26,7 +26,7 @@ import os
 
 import spack
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import join_path, mkdirp
 
 
 def pre_install(pkg):
@@ -154,6 +154,14 @@ def symlink_license(pkg):
     target = pkg.global_license_file
     for filename in pkg.license_files:
         link_name = join_path(pkg.prefix, filename)
+        license_dir = os.path.dirname(link_name)
+        if not os.path.exists(license_dir):
+            mkdirp(license_dir)
+
+        # If example file already exists, overwrite it with a symlink
+        if os.path.exists(link_name):
+            os.remove(link_name)
+
         if os.path.exists(target):
             os.symlink(target, link_name)
             tty.msg("Added local symlink %s to global license file" %

@@ -29,9 +29,11 @@ import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
 
+
 def padder(str_list, extra=0):
     """Return a function to pad elements of a list."""
     length = max(len(str(s)) for s in str_list) + extra
+
     def pad(string):
         string = str(string)
         padding = max(0, length - len(string))
@@ -40,13 +42,17 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    subparser.add_argument('name', metavar="PACKAGE", help="Name of package to get info for.")
+    subparser.add_argument(
+        'name', metavar="PACKAGE", help="Name of package to get info for.")
 
 
 def print_text_info(pkg):
     """Print out a plain text description of a package."""
-    print "Package:   ", pkg.name
-    print "Homepage:  ", pkg.homepage
+    header = "{0}:   ".format(pkg.build_system_class)
+
+    print header, pkg.name
+    whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
+    print "Homepage:", whitespaces, pkg.homepage
 
     print
     print "Safe versions:  "
@@ -82,17 +88,33 @@ def print_text_info(pkg):
             print "    " + fmt % (name, default, desc)
 
     print
-    print "Dependencies:"
-    if pkg.dependencies:
-        colify(pkg.dependencies, indent=4)
-    else:
-        print "    None"
+    print "Installation Phases:"
+    phase_str = ''
+    for phase in pkg.phases:
+        phase_str += "    {0}".format(phase)
+    print phase_str
+
+    for deptype in ('build', 'link', 'run'):
+        print
+        print "%s Dependencies:" % deptype.capitalize()
+        deps = sorted(pkg.dependencies_of_type(deptype))
+        if deps:
+            colify(deps, indent=4)
+        else:
+            print "    None"
 
     print
-    print "Virtual packages: "
+    print "Virtual Packages: "
     if pkg.provided:
-        for spec, when in pkg.provided.items():
-            print "    %s provides %s" % (when, spec)
+        inverse_map = {}
+        for spec, whens in pkg.provided.items():
+            for when in whens:
+                if when not in inverse_map:
+                    inverse_map[when] = set()
+                inverse_map[when].add(spec)
+        for when, specs in reversed(sorted(inverse_map.items())):
+            print "    %s provides %s" % (
+                when, ', '.join(str(s) for s in specs))
     else:
         print "    None"
 

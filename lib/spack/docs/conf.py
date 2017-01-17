@@ -1,26 +1,27 @@
+# flake8: noqa
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 # -*- coding: utf-8 -*-
 #
@@ -37,26 +38,85 @@
 
 import sys
 import os
+import re
+import shutil
 import subprocess
+from glob import glob
+from sphinx.apidoc import main as sphinx_apidoc
+
+# -- Spack customizations -----------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
+sys.path.append(os.path.abspath('..'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 spack_root = '../../..'
 os.environ['SPACK_ROOT'] = spack_root
-os.environ['PATH'] += os.pathsep + '$SPACK_ROOT/bin'
+os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
 
+# Get the spack version for use in the docs
 spack_version =  subprocess.Popen(
     [spack_root + '/bin/spack', '-V'],
     stderr=subprocess.PIPE).communicate()[1].strip().split('.')
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
-os.environ['COLIFY_SIZE'] = '25x80'
+os.environ['COLIFY_SIZE'] = '25x120'
+
+#
+# Generate package list using spack command
+#
+with open('package_list.rst', 'w') as plist_file:
+    subprocess.Popen(
+        [spack_root + '/bin/spack', 'list', '--format=rst'], stdout=plist_file)
+
+#
+# Find all the `cmd-spack-*` references and add them to a command index
+#
+command_names = []
+for filename in glob('*rst'):
+    with open(filename) as f:
+        for line in f:
+            match = re.match('.. _(cmd-spack-.*):', line)
+            if match:
+                command_names.append(match.group(1).strip())
+
+shutil.copy('command_index.in', 'command_index.rst')
+with open('command_index.rst', 'a') as index:
+    index.write('\n')
+    for cmd in sorted(command_names):
+        index.write('   * :ref:`%s`\n' % cmd)
+
+
+# Run sphinx-apidoc
+sphinx_apidoc(['-T', '-o', '.', '../spack'])
+os.remove('modules.rst')
+
+#
+# Exclude everything in spack.__all__ from indexing.  All of these
+# symbols are imported from elsewhere in spack; their inclusion in
+# __all__ simply allows package authors to use `from spack import *`.
+# Excluding them ensures they're only documented in their "real" module.
+#
+# This also avoids issues where some of these symbols shadow core spack
+# modules.  Sphinx will complain about duplicate docs when this happens.
+#
+import fileinput, spack
+handling_spack = False
+for line in fileinput.input('spack.rst', inplace=1):
+    if handling_spack:
+        if not line.startswith('    :noindex:'):
+            print '    :noindex: %s' % ' '.join(spack.__all__)
+        handling_spack = False
+
+    if line.startswith('.. automodule::'):
+        handling_spack = (line == '.. automodule:: spack\n')
+
+    print line,
 
 # Enable todo items
 todo_include_todos = True

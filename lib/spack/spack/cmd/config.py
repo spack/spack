@@ -22,32 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-import argparse
-
-import llnl.util.tty as tty
-
 import spack.config
 
 description = "Get and set configuration options."
 
+
 def setup_parser(subparser):
     # User can only choose one
-    scope_group = subparser.add_mutually_exclusive_group()
-    scope_group.add_argument(
-        '--user', action='store_const', const='user', dest='scope',
-        help="Use config file in user home directory (default).")
-    scope_group.add_argument(
-        '--site', action='store_const', const='site', dest='scope',
-        help="Use config file in spack prefix.")
+    subparser.add_argument('--scope', choices=spack.config.config_scopes,
+                           help="Configuration scope to read/modify.")
 
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 
     get_parser = sp.add_parser('get', help='Print configuration values.')
-    get_parser.add_argument('section', help="Configuration section to print.")
+    get_parser.add_argument('section',
+                            help="Configuration section to print. "
+                                 "Options: %(choices)s.",
+                            metavar='SECTION',
+                            choices=spack.config.section_schemas)
 
     edit_parser = sp.add_parser('edit', help='Edit configuration file.')
-    edit_parser.add_argument('section', help="Configuration section to edit")
+    edit_parser.add_argument('section',
+                             help="Configuration section to edit. "
+                                  "Options: %(choices)s.",
+                             metavar='SECTION',
+                             choices=spack.config.section_schemas)
 
 
 def config_get(args):
@@ -64,6 +63,6 @@ def config_edit(args):
 
 
 def config(parser, args):
-    action = { 'get' : config_get,
-               'edit' : config_edit }
+    action = {'get': config_get,
+              'edit': config_edit}
     action[args.config_command](args)

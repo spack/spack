@@ -24,22 +24,44 @@
 ##############################################################################
 from spack import *
 
+
 class Emacs(Package):
     """The Emacs programmable text editor."""
+
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
+    variant('X', default=False, description="Enable an X toolkit")
+    variant('toolkit', default='gtk',
+            description="Select an X toolkit (gtk, athena)")
+
     depends_on('ncurses')
-    # Emacs also depends on:
-    #     GTK or other widget library
-    #     libtiff, png, etc.
-    # For now, we assume the system provides all that stuff.
-    # For Ubuntu 14.04 LTS:
-    #     sudo apt-get install libgtk-3-dev libxpm-dev libtiff5-dev libjpeg8-dev libgif-dev libpng12-dev
+    depends_on('libtiff', when='+X')
+    depends_on('libpng', when='+X')
+    depends_on('libxpm', when='+X')
+    depends_on('giflib', when='+X')
+    depends_on('libx11', when='+X')
+    depends_on('libxaw', when='+X toolkit=athena')
+    depends_on('gtkplus+X', when='+X toolkit=gtk')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        args = []
+        toolkit = spec.variants['toolkit'].value
+        if '+X' in spec:
+            if toolkit not in ('gtk', 'athena'):
+                raise InstallError("toolkit must be in (gtk, athena), not %s" %
+                                   toolkit)
+            args = [
+                '--with-x',
+                '--with-x-toolkit={0}'.format(toolkit)
+            ]
+        else:
+            args = ['--without-x']
+
+        configure('--prefix={0}'.format(prefix), *args)
+
         make()
         make("install")

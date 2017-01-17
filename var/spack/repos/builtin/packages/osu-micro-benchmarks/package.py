@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class OsuMicroBenchmarks(Package):
     """The Ohio MicroBenchmark suite is a collection of independent MPI
     message passing performance microbenchmarks developed and written at
@@ -40,7 +41,6 @@ class OsuMicroBenchmarks(Package):
 
     depends_on('mpi')
     depends_on('cuda', when='+cuda')
-
 
     def install(self, spec, prefix):
         config_args = [

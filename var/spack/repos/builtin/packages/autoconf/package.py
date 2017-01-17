@@ -24,18 +24,32 @@
 ##############################################################################
 from spack import *
 
-class Autoconf(Package):
+
+class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
-    homepage = "https://www.gnu.org/software/autoconf/"
-    url      = "http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz"
+
+    homepage = 'https://www.gnu.org/software/autoconf/'
+    url = 'http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
 
     version('2.69', '82d05e03b93e45f5a39b828dc9c6c29b')
     version('2.62', '6c1f3b3734999035d77da5024aab4fbd')
+    version('2.59', 'd4d45eaa1769d45e59dcb131a4af17a0')
+    version('2.13', '9de56d4a161a723228220b0f425dc711')
 
-    depends_on("m4")
+    depends_on('m4@1.4.6:',   type='build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    def _make_executable(self, name):
+        return Executable(join_path(self.prefix.bin, name))
 
-        make()
-        make("install")
+    def setup_dependent_package(self, module, dependent_spec):
+        # Autoconf is very likely to be a build dependency,
+        # so we add the tools it provides to the dependent module
+        executables = ['autoconf',
+                       'autoheader',
+                       'autom4te',
+                       'autoreconf',
+                       'autoscan',
+                       'autoupdate',
+                       'ifnames']
+        for name in executables:
+            setattr(module, name, self._make_executable(name))

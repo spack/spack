@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
+
 
 class Mpibash(Package):
     """Parallel scripting right from the Bourne-Again Shell (Bash)"""
@@ -36,7 +36,7 @@ class Mpibash(Package):
     patch('mpibash-4.3.patch', level=1, when='@4.3')
 
     # above patch modifies configure.ac
-    depends_on('autoconf')
+    depends_on('autoconf', type='build')
 
     # uses MPI_Exscan which is in MPI-1.2 and later
     depends_on('mpi@1.2:')

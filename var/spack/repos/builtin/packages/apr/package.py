@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Apr(Package):
     """Apache portable runtime."""
     homepage  = 'https://apr.apache.org/'

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Python(Package):
     """Dummy Python package to demonstrate preferred versions."""
     homepage = "http://www.python.org"
@@ -40,4 +41,3 @@ class Python(Package):
 
     def install(self, spec, prefix):
         pass
-

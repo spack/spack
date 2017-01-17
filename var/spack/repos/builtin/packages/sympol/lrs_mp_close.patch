@@ -1,0 +1,10 @@
+--- old/sympol/raycomputationlrs.cpp
++++ new/sympol/raycomputationlrs.cpp
+@@ -66,7 +66,6 @@
+         return true;
+     }
+ 
+-    lrs_mp_close();
+     
+     if (RayComputationLRS::ms_fIn != NULL) {
+         if (std::fclose(RayComputationLRS::ms_fIn)) {

@@ -24,11 +24,15 @@
 ##############################################################################
 from spack import *
 
+
 class Ndiff(Package):
-    """The ndiff tool is a binary utility that compares putatively similar files
-       while ignoring small numeric differernces. This utility is most often used
-       to compare files containing a lot of floating-point numeric data that
-       may be slightly different due to numeric error."""
+    """The ndiff tool is a binary utility that compares putatively similar
+       files while ignoring small numeric differernces. This utility is
+       most often used to compare files containing a lot of
+       floating-point numeric data that may be slightly different due to
+       numeric error.
+
+    """
 
     homepage = "http://ftp.math.utah.edu/pub/ndiff/"
     url      = "http://ftp.math.utah.edu/pub/ndiff/ndiff-2.00.tar.gz"

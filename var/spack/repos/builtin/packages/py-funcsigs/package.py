@@ -23,21 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
-class PyFuncsigs(Package):
+
+class PyFuncsigs(PythonPackage):
     """Python function signatures from PEP362 for Python 2.6, 2.7 and 3.2."""
     homepage = "https://pypi.python.org/pypi/funcsigs"
     url      = "https://pypi.python.org/packages/source/f/funcsigs/funcsigs-0.4.tar.gz"
 
     version('0.4', 'fb1d031f284233e09701f6db1281c2a5')
 
-    extends('python')
-
-    depends_on('py-setuptools')
-
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
-
-
-
+    depends_on('py-setuptools', type='build')

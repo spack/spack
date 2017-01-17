@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Harfbuzz(Package):
     """The Harfbuzz package contains an OpenType text shaping engine."""
     homepage = "http://www.freedesktop.org/wiki/Software/HarfBuzz/"
@@ -31,9 +32,12 @@ class Harfbuzz(Package):
 
     version('0.9.37', 'bfe733250e34629a188d82e3b971bc1e')
 
+    depends_on("pkg-config", type="build")
     depends_on("glib")
-    depends_on("icu")
+    depends_on("icu4c")
     depends_on("freetype")
+    depends_on("cairo")
+    depends_on("zlib")
 
     def patch(self):
         change_sed_delimiter('@', ';', 'src/Makefile.in')

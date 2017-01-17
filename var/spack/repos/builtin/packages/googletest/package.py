@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Googletest(Package):
     """Google test framework for C++.  Also called gtest."""
     homepage = "https://github.com/google/googletest"
@@ -31,7 +32,7 @@ class Googletest(Package):
 
     version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
 
-    depends_on("cmake")
+    depends_on("cmake", type='build')
 
     def install(self, spec, prefix):
         which('cmake')('.', *std_cmake_args)
@@ -40,9 +41,8 @@ class Googletest(Package):
 
         # Google Test doesn't have a make install
         # We have to do our own install here.
-	install_tree('include', prefix.include)
+        install_tree('include', prefix.include)
 
         mkdirp(prefix.lib)
-	install('./libgtest.a', '%s' % prefix.lib)
-	install('./libgtest_main.a', '%s' % prefix.lib)
-
+        install('./libgtest.a', '%s' % prefix.lib)
+        install('./libgtest_main.a', '%s' % prefix.lib)

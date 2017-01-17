@@ -1,8 +1,33 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 from contextlib import closing
 from glob import glob
 import sys
+from os.path import isfile
 
 
 class Gcc(Package):
@@ -10,13 +35,18 @@ class Gcc(Package):
        Objective-C, Fortran, and Java."""
     homepage = "https://gcc.gnu.org"
 
-    url = "http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
-    list_url = 'http://open-source-box.org/gcc/'
+    url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
+    list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 2
 
+    version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
+    version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
+    version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
+    version('5.1.0', 'd5525b1127d07d215960e6051c5da35e')
+    version('4.9.4', '87c24a4090c1577ba817ec6882602491')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
     version('4.9.1', 'fddf71348546af523353bd43d34919c1')
@@ -32,6 +62,9 @@ class Gcc(Package):
     variant('gold',
             default=sys.platform != 'darwin',
             description="Build the gold linker plugin for ld-based LTO")
+    variant('piclibs',
+            default=False,
+            description="Build PIC versions of libgfortran.a and libstdc++.a")
 
     depends_on("mpfr")
     depends_on("gmp")
@@ -49,6 +82,9 @@ class Gcc(Package):
     else:
         provides('golang', when='@4.7.1:')
 
+    patch('piclibs.patch', when='+piclibs')
+    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
+
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
@@ -56,8 +92,22 @@ class Gcc(Package):
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
-        if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
+        if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
+           not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
             enabled_languages.add('go')
+
+        # Fix a standard header file for OS X Yosemite that
+        # is GCC incompatible by replacing non-GCC compliant macros
+        if 'yosemite' in spec.architecture:
+            if isfile(r'/usr/include/dispatch/object.h'):
+                new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
+                mkdirp(new_dispatch_dir)
+                cp = which('cp')
+                new_header = join_path(new_dispatch_dir, 'object.h')
+                cp(r'/usr/include/dispatch/object.h', new_header)
+                filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
+                            'typedef void* dispatch_block_t',
+                            new_header)
 
         # Generic options to compile GCC
         options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,

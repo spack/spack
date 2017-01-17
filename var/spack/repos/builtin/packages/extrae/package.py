@@ -25,7 +25,23 @@
 from spack import *
 
 # typical working line with extrae 3.0.1
-# ./configure --prefix=/usr/local --with-mpi=/usr/lib64/mpi/gcc/openmpi --with-unwind=/usr/local --with-papi=/usr --with-dwarf=/usr --with-elf=/usr --with-dyninst=/usr --with-binutils=/usr --with-xml-prefix=/usr --enable-openmp --enable-nanos --enable-pthread --disable-parallel-merge LDFLAGS=-pthread
+# ./configure
+#   --prefix=/usr/local
+#   --with-mpi=/usr/lib64/mpi/gcc/openmpi
+#   --with-unwind=/usr/local
+#   --with-papi=/usr
+#   --with-dwarf=/usr
+#   --with-elf=/usr
+#   --with-dyninst=/usr
+#   --with-binutils=/usr
+#   --with-xml-prefix=/usr
+#   --enable-openmp
+#   --enable-nanos
+#   --enable-pthread
+#   --disable-parallel-merge
+#
+# LDFLAGS=-pthread
+
 
 class Extrae(Package):
     """Extrae is the package devoted to generate tracefiles which can
@@ -37,8 +53,8 @@ class Extrae(Package):
        programming models either alone or in conjunction with MPI :
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
     homepage = "http://www.bsc.es/computer-sciences/extrae"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-3.0.1.tar.bz2"
-    version('3.0.1', 'a6a8ca96cd877723cd8cc5df6bdb922b')
+    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-3.3.0.tar.bz2"
+    version('3.3.0', 'f46e3f1a6086b5b3ac41c9585b42952d')
 
     depends_on("mpi")
     depends_on("dyninst")
@@ -46,6 +62,9 @@ class Extrae(Package):
     depends_on("boost")
     depends_on("libdwarf")
     depends_on("papi")
+    depends_on("libelf")
+    depends_on("libxml2")
+    depends_on("binutils+libiberty")
 
     def install(self, spec, prefix):
         if 'openmpi' in spec:
@@ -55,16 +74,19 @@ class Extrae(Package):
         elif 'mvapich2' in spec:
             mpi = spec['mvapich2']
 
-        configure("--prefix=%s"				% prefix,
-	            "--with-mpi=%s"				% mpi.prefix,
-	            "--with-unwind=%s"			% spec['libunwind'].prefix,
-	            "--with-dyninst=%s"			% spec['dyninst'].prefix,
-	            "--with-boost=%s"			% spec['boost'].prefix,
-	            "--with-dwarf=%s"			% spec['libdwarf'].prefix,
-	            "--with-papi=%s"			% spec['papi'].prefix,
-	            "--with-dyninst-headers=%s"	% spec['dyninst'].prefix.include,
-	            "--with-dyninst-libs=%s"	% spec['dyninst'].prefix.lib)
+        configure("--prefix=%s" % prefix,
+                  "--with-mpi=%s" % mpi.prefix,
+                  "--with-unwind=%s" % spec['libunwind'].prefix,
+                  "--with-dyninst=%s" % spec['dyninst'].prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-dwarf=%s" % spec['libdwarf'].prefix,
+                  "--with-papi=%s" % spec['papi'].prefix,
+                  "--with-dyninst-headers=%s" % spec[
+                      'dyninst'].prefix.include,
+                  "--with-elf=%s" % spec['libelf'].prefix,
+                  "--with-xml-prefix=%s" % spec['libxml2'].prefix,
+                  "--with-binutils=%s" % spec['binutils'].prefix,
+                  "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib)
 
         make()
         make("install", parallel=False)
-

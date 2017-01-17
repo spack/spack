@@ -29,21 +29,21 @@ import subprocess
 
 class Turbomole(Package):
     """TURBOMOLE: Program Package for ab initio Electronic Structure
-       Calculations. NB: Requires a license to download."""
+    Calculations.
 
-    # NOTE: Turbomole requires purchase of a license to download. Go to the
-    # NOTE: Turbomole home page, http://www.turbomole-gmbh.com, for details.
-    # NOTE: Spack will search the current directory for this file. It is
-    # NOTE: probably best to add this file to a Spack mirror so that it can be
-    # NOTE: found from anywhere.  For information on setting up a Spack mirror
-    # NOTE: see http://software.llnl.gov/spack/mirrors.html
+    Note: Turbomole requires purchase of a license to download. Go to the
+    Turbomole home page, http://www.turbomole-gmbh.com, for details.
+    Spack will search the current directory for this file. It is
+    probably best to add this file to a Spack mirror so that it can be
+    found from anywhere.  For information on setting up a Spack mirror
+    see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.turbomole-gmbh.com/"
 
     version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
             url="file://%s/turbolinux702.tar.gz" % os.getcwd())
 
-    variant('mpi', default=False, description='Set up MPI environment')
+    variant('mpi', default=True, description='Set up MPI environment')
     variant('smp', default=False, description='Set up SMP environment')
 
     # Turbomole's install is odd. There are three variants

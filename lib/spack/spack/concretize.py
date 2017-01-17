@@ -33,6 +33,7 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+from __future__ import print_function
 import spack
 import spack.spec
 import spack.compilers
@@ -40,11 +41,12 @@ import spack.architecture
 import spack.error
 from spack.version import *
 from functools import partial
-from spec import DependencyMap
 from itertools import chain
-from spack.config import *
+from spack.package_prefs import *
+
 
 class DefaultConcretizer(object):
+
     """This class doesn't have any state, it just provides some methods for
        concretization.  You can subclass it to override just some of the
        default concretization strategies, or you can override all of them.
@@ -60,14 +62,19 @@ class DefaultConcretizer(object):
             if not providers:
                 raise UnsatisfiableProviderSpecError(providers[0], spec)
             spec_w_preferred_providers = find_spec(
-                spec, lambda(x): spack.pkgsort.spec_has_preferred_provider(x.name, spec.name))
+                spec,
+                lambda x: pkgsort().spec_has_preferred_provider(
+                    x.name, spec.name))
             if not spec_w_preferred_providers:
                 spec_w_preferred_providers = spec
-            provider_cmp = partial(spack.pkgsort.provider_compare, spec_w_preferred_providers.name, spec.name)
+            provider_cmp = partial(pkgsort().provider_compare,
+                                   spec_w_preferred_providers.name,
+                                   spec.name)
             candidates = sorted(providers, cmp=provider_cmp)
 
-        # For each candidate package, if it has externals, add those to the usable list.
-        # if it's not buildable, then *only* add the externals.
+        # For each candidate package, if it has externals, add those
+        # to the usable list.  if it's not buildable, then *only* add
+        # the externals.
         usable = []
         for cspec in candidates:
             if is_spec_buildable(cspec):
@@ -83,10 +90,15 @@ class DefaultConcretizer(object):
             raise NoBuildError(spec)
 
         def cmp_externals(a, b):
-            if a.name != b.name:
+            if a.name != b.name and (not a.external or a.external_module and
+                                     not b.external and b.external_module):
                 # We're choosing between different providers, so
                 # maintain order from provider sort
-                return candidates.index(a) - candidates.index(b)
+                index_of_a = next(i for i in range(0, len(candidates))
+                                  if a.satisfies(candidates[i]))
+                index_of_b = next(i for i in range(0, len(candidates))
+                                  if b.satisfies(candidates[i]))
+                return index_of_a - index_of_b
 
             result = cmp_specs(a, b)
             if result != 0:
@@ -101,7 +113,7 @@ class DefaultConcretizer(object):
         usable.sort(cmp=cmp_externals)
         return usable
 
-
+    # XXX(deptypes): Look here.
     def choose_virtual_or_external(self, spec):
         """Given a list of candidate virtual and external packages, try to
            find one that is most ABI compatible.
@@ -112,25 +124,25 @@ class DefaultConcretizer(object):
 
         # Find the nearest spec in the dag that has a compiler.  We'll
         # use that spec to calibrate compiler compatibility.
-        abi_exemplar = find_spec(spec, lambda(x): x.compiler)
+        abi_exemplar = find_spec(spec, lambda x: x.compiler)
         if not abi_exemplar:
             abi_exemplar = spec.root
 
         # Make a list including ABI compatibility of specs with the exemplar.
         strict = [spack.abi.compatible(c, abi_exemplar) for c in candidates]
-        loose  = [spack.abi.compatible(c, abi_exemplar, loose=True) for c in candidates]
+        loose = [spack.abi.compatible(c, abi_exemplar, loose=True)
+                 for c in candidates]
         keys = zip(strict, loose, candidates)
 
         # Sort candidates from most to least compatibility.
         # Note:
         #   1. We reverse because True > False.
         #   2. Sort is stable, so c's keep their order.
-        keys.sort(key=lambda k:k[:2], reverse=True)
+        keys.sort(key=lambda k: k[:2], reverse=True)
 
         # Pull the candidates back out and return them in order
-        candidates = [c for s,l,c in keys]
+        candidates = [c for s, l, c in keys]
         return candidates
-
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
@@ -153,15 +165,56 @@ class DefaultConcretizer(object):
         # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
-        cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
-        valid_versions = sorted(
-            [v for v in pkg.versions
-             if any(v.satisfies(sv) for sv in spec.versions)],
-            cmp=cmp_versions)
 
-        def prefer_key(v):
-            return pkg.versions.get(Version(v)).get('preferred', False)
-        valid_versions.sort(key=prefer_key, reverse=True)
+        # ---------- Produce prioritized list of versions
+        # Get list of preferences from packages.yaml
+        preferred = pkgsort()
+        # NOTE: pkgsort() == spack.package_prefs.PreferredPackages()
+
+        yaml_specs = [
+            x[0] for x in
+            preferred._spec_for_pkgname(spec.name, 'version', None)]
+        n = len(yaml_specs)
+        yaml_index = dict(
+            [(spc, n - index) for index, spc in enumerate(yaml_specs)])
+
+        # List of versions we could consider, in sorted order
+        unsorted_versions = [
+            v for v in pkg.versions
+            if any(v.satisfies(sv) for sv in spec.versions)]
+
+        # The keys below show the order of precedence of factors used
+        # to select a version when concretizing.  The item with
+        # the "largest" key will be selected.
+        #
+        # NOTE: When COMPARING VERSIONS, the '@develop' version is always
+        #       larger than other versions.  BUT when CONCRETIZING,
+        #       the largest NON-develop version is selected by
+        #       default.
+        keys = [(
+            # ------- Special direction from the user
+            # Respect order listed in packages.yaml
+            yaml_index.get(v, -1),
+
+            # The preferred=True flag (packages or packages.yaml or both?)
+            pkg.versions.get(Version(v)).get('preferred', False),
+
+            # ------- Regular case: use latest non-develop version by default.
+            # Avoid @develop version, which would otherwise be the "largest"
+            # in straight version comparisons
+            not v.isdevelop(),
+
+            # Compare the version itself
+            # This includes the logic:
+            #    a) develop > everything (disabled by "not v.isdevelop() above)
+            #    b) numeric > non-numeric
+            #    c) Numeric or string comparison
+            v) for v in unsorted_versions]
+        keys.sort(reverse=True)
+
+        # List of versions in complete sorted order
+        valid_versions = [x[-1] for x in keys]
+        # --------------------------
 
         if valid_versions:
             spec.versions = ver([valid_versions[0]])
@@ -186,44 +239,54 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-
     def concretize_architecture(self, spec):
-        """If the spec already had an architecture, return.  Otherwise if
-           the root of the DAG has an architecture, then use that.
-           Otherwise take the system's default architecture.
-
-           Intuition: Architectures won't be set a lot, and generally you
-           want the host system's architecture.  When architectures are
-           mised in a spec, it is likely because the tool requries a
-           cross-compiled component, e.g. for tools that run on BlueGene
-           or Cray machines.  These constraints will likely come directly
-           from packages, so require the user to be explicit if they want
-           to mess with the architecture, and revert to the default when
-           they're not explicit.
+        """If the spec is empty provide the defaults of the platform. If the
+        architecture is not a basestring, then check if either the platform,
+        target or operating system are concretized. If any of the fields are
+        changed then return True. If everything is concretized (i.e the
+        architecture attribute is a namedtuple of classes) then return False.
+        If the target is a string type, then convert the string into a
+        concretized architecture. If it has no architecture and the root of the
+        DAG has an architecture, then use the root otherwise use the defaults
+        on the platform.
         """
-        if spec.architecture is not None:
-            return False
+        root_arch = spec.root.architecture
+        sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        spec_changed = False
 
-        if spec.root.architecture:
-            spec.architecture = spec.root.architecture
-        else:
-            spec.architecture = spack.architecture.sys_type()
+        if spec.architecture is None:
+            spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec_changed = True
 
-        assert(spec.architecture is not None)
-        return True   # changed
+        default_archs = [root_arch, sys_arch]
+        while not spec.architecture.concrete and default_archs:
+            arch = default_archs.pop(0)
 
+            replacement_fields = [k for k, v in arch.to_cmp_dict().iteritems()
+                                  if v and not getattr(spec.architecture, k)]
+            for field in replacement_fields:
+                setattr(spec.architecture, field, getattr(arch, field))
+                spec_changed = True
+
+        return spec_changed
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
-           the default variants from the package specification.
+           the user preferences from packages.yaml or the default variants from
+           the package specification.
         """
         changed = False
+        preferred_variants = pkgsort().spec_preferred_variants(
+            spec.package_class.name)
         for name, variant in spec.package_class.variants.items():
             if name not in spec.variants:
-                spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
                 changed = True
+                if name in preferred_variants:
+                    spec.variants[name] = preferred_variants.get(name)
+                else:
+                    spec.variants[name] = \
+                        spack.spec.VariantSpec(name, variant.default)
         return changed
-
 
     def concretize_compiler(self, spec):
         """If the spec already has a compiler, we're done.  If not, then take
@@ -237,15 +300,32 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
+        # Pass on concretizing the compiler if the target or operating system
+        # is not yet determined
+        if not (spec.architecture.platform_os and spec.architecture.target):
+            # We haven't changed, but other changes need to happen before we
+            # continue. `return True` here to force concretization to keep
+            # running.
+            return True
+
+        # Only use a matching compiler if it is of the proper style
+        # Takes advantage of the proper logic already existing in
+        # compiler_for_spec Should think whether this can be more
+        # efficient
+        def _proper_compiler_style(cspec, aspec):
+            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
+
         all_compilers = spack.compilers.all_compilers()
 
         if (spec.compiler and
             spec.compiler.concrete and
-            spec.compiler in all_compilers):
+                spec.compiler in all_compilers):
             return False
 
-        #Find the another spec that has a compiler, or the root if none do
-        other_spec = spec if spec.compiler else find_spec(spec, lambda(x) : x.compiler)
+        # Find the another spec that has a compiler, or the root if none do
+        other_spec = spec if spec.compiler else find_spec(
+            spec, lambda x: x.compiler)
+
         if not other_spec:
             other_spec = spec.root
         other_compiler = other_spec.compiler
@@ -256,25 +336,114 @@ class DefaultConcretizer(object):
             spec.compiler = other_compiler.copy()
             return True
 
-        # Filter the compilers into a sorted list based on the compiler_order from spackconfig
-        compiler_list = all_compilers if not other_compiler else spack.compilers.find(other_compiler)
-        cmp_compilers = partial(spack.pkgsort.compiler_compare, other_spec.name)
+        # Filter the compilers into a sorted list based on the compiler_order
+        # from spackconfig
+        compiler_list = all_compilers if not other_compiler else \
+            spack.compilers.find(other_compiler)
+        cmp_compilers = partial(
+            pkgsort().compiler_compare, other_spec.name)
         matches = sorted(compiler_list, cmp=cmp_compilers)
         if not matches:
-            raise UnavailableCompilerVersionError(other_compiler)
+            arch = spec.architecture
+            raise UnavailableCompilerVersionError(other_compiler,
+                                                  arch.platform_os,
+                                                  arch.target)
 
         # copy concrete version into other_compiler
-        spec.compiler = matches[0].copy()
+        try:
+            spec.compiler = next(
+                c for c in matches
+                if _proper_compiler_style(c, spec.architecture)).copy()
+        except StopIteration:
+            raise UnavailableCompilerVersionError(
+                spec.compiler, spec.architecture.platform_os,
+                spec.architecture.target
+            )
+
         assert(spec.compiler.concrete)
         return True  # things changed.
+
+    def concretize_compiler_flags(self, spec):
+        """
+        The compiler flags are updated to match those of the spec whose
+        compiler is used, defaulting to no compiler flags in the spec.
+        Default specs set at the compiler level will still be added later.
+        """
+        # Pass on concretizing the compiler flags if the target or operating
+        # system is not set.
+        if not (spec.architecture.platform_os and spec.architecture.target):
+            # We haven't changed, but other changes need to happen before we
+            # continue. `return True` here to force concretization to keep
+            # running.
+            return True
+
+        ret = False
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            try:
+                nearest = next(p for p in spec.traverse(direction='parents')
+                               if ((p.compiler == spec.compiler and
+                                    p is not spec) and
+                                   flag in p.compiler_flags))
+                if flag not in spec.compiler_flags or \
+                        not (sorted(spec.compiler_flags[flag]) >=
+                             sorted(nearest.compiler_flags[flag])):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(
+                            set(spec.compiler_flags[flag]) |
+                            set(nearest.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[
+                            flag] = nearest.compiler_flags[flag]
+                    ret = True
+
+            except StopIteration:
+                if (flag in spec.root.compiler_flags and
+                    ((flag not in spec.compiler_flags) or
+                     sorted(spec.compiler_flags[flag]) !=
+                     sorted(spec.root.compiler_flags[flag]))):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(
+                            set(spec.compiler_flags[flag]) |
+                            set(spec.root.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[
+                            flag] = spec.root.compiler_flags[flag]
+                    ret = True
+                else:
+                    if flag not in spec.compiler_flags:
+                        spec.compiler_flags[flag] = []
+
+        # Include the compiler flag defaults from the config files
+        # This ensures that spack will detect conflicts that stem from a change
+        # in default compiler flags.
+        compiler = spack.compilers.compiler_for_spec(
+            spec.compiler, spec.architecture)
+        for flag in compiler.flags:
+            if flag not in spec.compiler_flags:
+                spec.compiler_flags[flag] = compiler.flags[flag]
+                if compiler.flags[flag] != []:
+                    ret = True
+            else:
+                if ((sorted(spec.compiler_flags[flag]) !=
+                     sorted(compiler.flags[flag])) and
+                    (not set(spec.compiler_flags[flag]) >=
+                     set(compiler.flags[flag]))):
+                    ret = True
+                    spec.compiler_flags[flag] = list(
+                        set(spec.compiler_flags[flag]) |
+                        set(compiler.flags[flag]))
+
+        return ret
 
 
 def find_spec(spec, condition):
     """Searches the dag from spec in an intelligent order and looks
        for a spec that matches a condition"""
     # First search parents, then search children
-    dagiter = chain(spec.traverse(direction='parents',  root=False),
-                    spec.traverse(direction='children', root=False))
+    deptype = ('build', 'link')
+    dagiter = chain(
+        spec.traverse(direction='parents',  deptype=deptype, root=False),
+        spec.traverse(direction='children', deptype=deptype, root=False))
     visited = set()
     for relative in dagiter:
         if condition(relative):
@@ -282,9 +451,11 @@ def find_spec(spec, condition):
         visited.add(id(relative))
 
     # Then search all other relatives in the DAG *except* spec
-    for relative in spec.root.traverse():
-        if relative is spec: continue
-        if id(relative) in visited: continue
+    for relative in spec.root.traverse(deptypes=spack.alldeps):
+        if relative is spec:
+            continue
+        if id(relative) in visited:
+            continue
         if condition(relative):
             return relative
 
@@ -295,62 +466,35 @@ def find_spec(spec, condition):
     return None   # Nothing matched the condition.
 
 
-def cmp_specs(lhs, rhs):
-    # Package name sort order is not configurable, always goes alphabetical
-    if lhs.name != rhs.name:
-        return cmp(lhs.name, rhs.name)
-
-    # Package version is second in compare order
-    pkgname = lhs.name
-    if lhs.versions != rhs.versions:
-        return spack.pkgsort.version_compare(
-            pkgname, lhs.versions, rhs.versions)
-
-    # Compiler is third
-    if lhs.compiler != rhs.compiler:
-        return spack.pkgsort.compiler_compare(
-            pkgname, lhs.compiler, rhs.compiler)
-
-    # Variants
-    if lhs.variants != rhs.variants:
-        return spack.pkgsort.variant_compare(
-            pkgname, lhs.variants, rhs.variants)
-
-    # Architecture
-    if lhs.architecture != rhs.architecture:
-        return spack.pkgsort.architecture_compare(
-            pkgname, lhs.architecture, rhs.architecture)
-
-    # Dependency is not configurable
-    lhash, rhash = hash(lhs), hash(rhs)
-    if lhash != rhash:
-        return -1 if lhash < rhash else 1
-
-    # Equal specs
-    return 0
-
-
-
 class UnavailableCompilerVersionError(spack.error.SpackError):
+
     """Raised when there is no available compiler that satisfies a
        compiler spec."""
-    def __init__(self, compiler_spec):
+
+    def __init__(self, compiler_spec, operating_system, target):
         super(UnavailableCompilerVersionError, self).__init__(
-            "No available compiler version matches '%s'" % compiler_spec,
+            "No available compiler version matches '%s' on operating_system %s"
+            "for target %s"
+            % (compiler_spec, operating_system, target),
             "Run 'spack compilers' to see available compiler Options.")
 
 
 class NoValidVersionError(spack.error.SpackError):
+
     """Raised when there is no way to have a concrete version for a
        particular spec."""
+
     def __init__(self, spec):
         super(NoValidVersionError, self).__init__(
-            "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions))
+            "There are no valid versions for %s that match '%s'"
+            % (spec.name, spec.versions))
 
 
 class NoBuildError(spack.error.SpackError):
     """Raised when a package is configured with the buildable option False, but
        no satisfactory external versions can be found"""
+
     def __init__(self, spec):
-        super(NoBuildError, self).__init__(
-            "The spec '%s' is configured as not buildable, and no matching external installs were found" % spec.name)
+        msg = ("The spec '%s' is configured as not buildable, "
+               "and no matching external installs were found")
+        super(NoBuildError, self).__init__(msg % spec.name)

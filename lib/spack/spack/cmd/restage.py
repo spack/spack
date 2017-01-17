@@ -31,6 +31,7 @@ import spack.cmd
 
 description = "Revert checked out package source code."
 
+
 def setup_parser(subparser):
     subparser.add_argument('packages', nargs=argparse.REMAINDER,
                            help="specs of packages to restage")

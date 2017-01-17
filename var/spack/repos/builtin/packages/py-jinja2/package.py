@@ -22,30 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+from spack import *
 
 
-class PyJinja2(Package):
-    """
-    Jinja2 is a template engine written in pure Python. It provides
+class PyJinja2(PythonPackage):
+    """Jinja2 is a template engine written in pure Python. It provides
     a Django inspired non-XML syntax but supports inline expressions
-    and an optional sandboxed environment.
-    """
+    and an optional sandboxed environment."""
 
     homepage = "http://jinja.pocoo.org/"
-    url      = "https://github.com/pallets/jinja/archive/2.8.tar.gz"
+    url      = "https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.8.tar.gz"
 
-    version('2.8', '4114200650d7630594e3bc70af23f59e')
-    version('2.7.3', '55b87bdc8e585b8b5b86734eefce2621')
-    version('2.7.2', '8e8f226809ae6363009b9296e30adf30')
-    version('2.7.1', '69b6675553c81b1087f95cae7f2179bb')
-    version('2.7', 'ec70433f325051dcedacbb2465028a35')
+    version('2.8',   'edb51693fe22c53cee5403775c71a99e')
+    version('2.7.3', 'b9dffd2f3b43d673802fe857c8445b1a')
+    version('2.7.2', 'df1581455564e97010e38bc792012aa5')
+    version('2.7.1', '282aed153e69f970d6e76f78ed9d027a')
+    version('2.7',   'c2fb12cbbb523c57d3d15bfe4dc0e8fe')
 
-    extends("python")
-    depends_on("py-setuptools")
-    depends_on("py-markupsafe")
-
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
-
+    depends_on('py-setuptools', type='build')
+    depends_on('py-markupsafe', type=('build', 'run'))
+    depends_on('py-babel@0.8:', type=('build', 'run'))  # optional, required for i18n

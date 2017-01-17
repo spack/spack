@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 import sys
+import shutil
 
 
-class Graphviz(Package):
+class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
     homepage = "http://www.graphviz.org"
     url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
@@ -37,18 +38,23 @@ class Graphviz(Package):
     # related to missing Perl packages. If spack begins support for Perl in the
     # future, this package can be updated to depend_on('perl') and the
     # ncecessary devel packages.
-    variant('perl', default=False, description='Enable if you need the optional Perl language bindings.')  # NOQA: ignore=E501
+    variant(
+        'perl', default=False,
+        description='Enable if you need the optional Perl language bindings.')
 
     parallel = False
 
     depends_on("swig")
     depends_on("python")
     depends_on("ghostscript")
-    depends_on("pkg-config")
+    depends_on("freetype")
+    depends_on("expat")
+    depends_on("libtool")
+    depends_on("pkg-config", type='build')
 
-    def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        if '+perl' not in spec:
+    def configure_args(self):
+        options = []
+        if '+perl' not in self.spec:
             options.append('--disable-perl')
 
         # On OSX fix the compiler error:
@@ -58,6 +64,7 @@ class Graphviz(Package):
         if sys.platform == 'darwin':
             options.append('CFLAGS=-I/opt/X11/include')
 
-        configure(*options)
-        make()
-        make("install")
+        # A hack to patch config.guess in the libltdl sub directory
+        shutil.copyfile('./config/config.guess', 'libltdl/config/config.guess')
+
+        return options
