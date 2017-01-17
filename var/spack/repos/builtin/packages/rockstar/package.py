@@ -39,3 +39,9 @@ class Rockstar(Package):
                     shutil.copytree(join_path(".",filename), join_path(prefix, filename))
                 else:
                     install(filename, join_path(prefix, filename))
+
+	mkdir(prefix.bin)
+	mkdir(prefix.lib)
+
+	install('rockstar', join_path(prefix.bin, 'rockstar'))
+	install('librockstar.so', join_path(prefix.lib, 'librockstar.so'))
