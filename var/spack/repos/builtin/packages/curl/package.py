@@ -32,10 +32,15 @@ class Curl(Package):
     homepage = "http://curl.haxx.se"
     url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
 
-    version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
-    version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
-    version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
-    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
+    # Newer versions of curl require newer versions of libssh2
+    # But that introduces a circular dependency; see #2321
+    # These versions can be uncommented once the circular
+    # dependency is addressed.
+    # version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
+    # version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
+    # version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
+    # version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
+
     version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
     version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
     version('7.45.0', '62c1a352b28558f25ba6209214beadc8')
@@ -43,7 +48,18 @@ class Curl(Package):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
-    depends_on("openssl")
+    # `libcurl@1.48:` use the symbol libssh2_scp_recv2
+    #     https://curl.haxx.se/changes.html#7_49_1
+    # That needs `libssh2@1.7.0:`
+    #     https://www.libssh2.org/changes.html
+    #
+    # Curl cannot depend on libssh2 until #2321 is addressed.
+    # depends_on("libssh2@1.7.0:", when="@1.48:")
+    # depends_on("libssh2", when="@:1.47")
+
+    # This will be redundant if we can depend on libssh2
+    depends_on('openssl')
+
     depends_on("zlib")
 
     def install(self, spec, prefix):
