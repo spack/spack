@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RIrkernel(Package):
+class RIrkernel(RPackage):
     """R kernel for Jupyter"""
 
     homepage = "https://irkernel.github.io/"
@@ -35,17 +35,11 @@ class RIrkernel(Package):
     version('master', git='https://github.com/IRkernel/IRkernel.git',
         tag='0.7')
 
-    extends('R')
-
-    depends_on('r-repr', type=nolink)
-    depends_on('r-irdisplay', type=nolink)
-    depends_on('r-evaluate', type=nolink)
-    depends_on('r-crayon', type=nolink)
-    depends_on('r-pbdzmq', type=nolink)
-    depends_on('r-devtools', type=nolink)
-    depends_on('r-uuid', type=nolink)
-    depends_on('r-digest', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-repr', type=('build', 'run'))
+    depends_on('r-irdisplay', type=('build', 'run'))
+    depends_on('r-evaluate', type=('build', 'run'))
+    depends_on('r-crayon', type=('build', 'run'))
+    depends_on('r-pbdzmq', type=('build', 'run'))
+    depends_on('r-devtools', type=('build', 'run'))
+    depends_on('r-uuid', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))

@@ -22,60 +22,44 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import shutil
-import tempfile
-import unittest
 
-from llnl.util.filesystem import *
-from spack.cmd.create import BuildSystemGuesser
-from spack.stage import Stage
-from spack.test.mock_packages_test import *
-from spack.util.executable import which
+import pytest
+import spack.cmd.create
+import spack.util.executable
+import spack.stage
 
 
-class InstallTest(unittest.TestCase):
-    """Tests the build system guesser in spack create"""
+@pytest.fixture(
+    scope='function',
+    params=[
+        ('configure',      'autotools'),
+        ('CMakeLists.txt', 'cmake'),
+        ('SConstruct',     'scons'),
+        ('setup.py',       'python'),
+        ('NAMESPACE',      'r'),
+        ('WORKSPACE',      'bazel'),
+        ('foobar',         'generic')
+    ]
+)
+def url_and_build_system(request, tmpdir):
+    """Sets up the resources to be pulled by the stage with
+    the appropriate file name and returns their url along with
+    the correct build-system guess
+    """
+    tar = spack.util.executable.which('tar')
+    orig_dir = tmpdir.chdir()
+    filename, system = request.param
+    tmpdir.ensure('archive', filename)
+    tar('czf', 'archive.tar.gz', 'archive')
+    url = 'file://' + str(tmpdir.join('archive.tar.gz'))
+    yield url, system
+    orig_dir.chdir()
 
-    def setUp(self):
-        self.tar = which('tar')
-        self.tmpdir = tempfile.mkdtemp()
-        self.orig_dir = os.getcwd()
-        os.chdir(self.tmpdir)
-        self.stage = None
 
-    def tearDown(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-        os.chdir(self.orig_dir)
-
-    def check_archive(self, filename, system):
-        mkdirp('archive')
-        touch(join_path('archive', filename))
-        self.tar('czf', 'archive.tar.gz', 'archive')
-
-        url = 'file://' + join_path(os.getcwd(), 'archive.tar.gz')
-        print url
-        with Stage(url) as stage:
-            stage.fetch()
-
-            guesser = BuildSystemGuesser()
-            guesser(stage, url)
-            self.assertEqual(system, guesser.build_system)
-
-    def test_autotools(self):
-        self.check_archive('configure', 'autotools')
-
-    def test_cmake(self):
-        self.check_archive('CMakeLists.txt', 'cmake')
-
-    def test_scons(self):
-        self.check_archive('SConstruct', 'scons')
-
-    def test_python(self):
-        self.check_archive('setup.py', 'python')
-
-    def test_R(self):
-        self.check_archive('NAMESPACE', 'R')
-
-    def test_unknown(self):
-        self.check_archive('foobar', 'unknown')
+def test_build_systems(url_and_build_system):
+    url, build_system = url_and_build_system
+    with spack.stage.Stage(url) as stage:
+        stage.fetch()
+        guesser = spack.cmd.create.BuildSystemGuesser()
+        guesser(stage, url)
+        assert build_system == guesser.build_system

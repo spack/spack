@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RIterators(Package):
+class RIterators(RPackage):
     """Support for iterators, which allow a programmer to traverse through all
     the elements of a vector, list, or other collection of data."""
 
@@ -34,9 +34,3 @@ class RIterators(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/iterators"
 
     version('1.0.8', '2ded7f82cddd8174f1ec98607946c6ee')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

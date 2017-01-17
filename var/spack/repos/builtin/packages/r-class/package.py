@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RClass(Package):
+class RClass(RPackage):
     """Various functions for classification, including k-nearest neighbour,
     Learning Vector Quantization and Self-Organizing Maps."""
 
@@ -35,10 +35,4 @@ class RClass(Package):
 
     version('7.3-14', '6a21dd206fe4ea29c55faeb65fb2b71e')
 
-    extends('R')
-
-    depends_on('r-mass', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-mass', type=('build','run'))

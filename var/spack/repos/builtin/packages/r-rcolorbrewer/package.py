@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRcolorbrewer(Package):
+class RRcolorbrewer(RPackage):
     """Provides color schemes for maps (and other graphics) designed by Cynthia
     Brewer as described at http://colorbrewer2.org"""
 
@@ -34,9 +34,3 @@ class RRcolorbrewer(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/RColorBrewer"
 
     version('1.1-2', '66054d83eade4dff8a43ad4732691182')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

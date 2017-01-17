@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RShiny(Package):
+class RShiny(RPackage):
     """Makes it incredibly easy to build interactive web applications with R.
     Automatic "reactive" binding between inputs and outputs and extensive
     pre-built widgets make it possible to build beautiful, responsive, and
@@ -37,16 +37,10 @@ class RShiny(Package):
 
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
-    extends('R')
-
-    depends_on('r-httpuv', type=nolink)
-    depends_on('r-mime', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-xtable', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-R6', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-httpuv', type=('build', 'run'))
+    depends_on('r-mime', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-xtable', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

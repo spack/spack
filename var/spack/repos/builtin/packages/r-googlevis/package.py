@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGooglevis(Package):
+class RGooglevis(RPackage):
     """R interface to Google Charts API, allowing users to create interactive
     charts based on data frames. Charts are displayed locally via the R HTTP
     help server. A modern browser with an Internet connection is required and
@@ -38,10 +38,4 @@ class RGooglevis(Package):
 
     version('0.6.0', 'ec36fd2a6884ddc7baa894007d0d0468')
 
-    extends('R')
-
-    depends_on('r-jsonlite', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-jsonlite', type=('build', 'run'))

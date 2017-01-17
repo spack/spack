@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyAlabaster(Package):
+class PyAlabaster(PythonPackage):
     """Alabaster is a visually (c)lean, responsive, configurable theme
     for the Sphinx documentation system."""
 
@@ -35,9 +35,4 @@ class PyAlabaster(Package):
     version('0.7.9', 'b29646a8bbe7aa52830375b7d17b5d7a',
             url="https://pypi.python.org/packages/71/c3/70da7d8ac18a4f4c502887bd2549e05745fa403e2cd9d06a8a9910a762bc/alabaster-0.7.9.tar.gz")
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

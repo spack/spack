@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMass(Package):
+class RMass(RPackage):
     """Functions and datasets to support Venables and Ripley, "Modern Applied
     Statistics with S" (4th edition, 2002)."""
 
@@ -34,9 +34,3 @@ class RMass(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/MASS"
 
     version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

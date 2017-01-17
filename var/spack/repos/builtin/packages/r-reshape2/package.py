@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RReshape2(Package):
+class RReshape2(RPackage):
     """Flexibly restructure and aggregate data using just two functions: melt
     and dcast (or acast)."""
 
@@ -35,12 +35,6 @@ class RReshape2(Package):
 
     version('1.4.1', '41e9dffdf5c6fa830321ac9c8ebffe00')
 
-    extends('R')
-
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

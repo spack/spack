@@ -188,7 +188,7 @@ where the compiler is installed.  For example:
 .. code-block:: console
 
    $ spack compiler find /usr/local/tools/ic-13.0.079
-   ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/compilers.yaml
        intel@13.0.079
 
 Or you can run ``spack compiler find`` with no arguments to force
@@ -200,7 +200,7 @@ installed, but you know that new compilers have been added to your
 
    $ module load gcc-4.9.0
    $ spack compiler find
-   ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/compilers.yaml
        gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to add it to
@@ -531,7 +531,7 @@ flags to the ``icc`` command:
    .. code-block:: console
 
        $ spack location --install-dir gcc
-       /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
+       ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
 
 #. Set up ``compilers.yaml``, for example:
 
@@ -543,12 +543,12 @@ flags to the ``icc`` command:
            operating_system: centos7
            paths:
              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
-             cflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+             cflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
              cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
-             cxxflags: -gxx-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
+             cxxflags: -gxx-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
              f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-             fflags: -gcc-name /home2/rpfische/spack2/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+             fflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
            spec: intel@15.0.24.4.9.3
 
 
@@ -632,7 +632,7 @@ the command line:
 
 .. code-block:: console
 
-   $ spack install openmpi fflags=\"-mismatch\"
+   $ spack install openmpi fflags="-mismatch"
 
 Or it can be set permanently in your ``compilers.yaml``:
 

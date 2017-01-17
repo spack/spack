@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RBase64enc(Package):
+class RBase64enc(RPackage):
     """This package provides tools for handling base64 encoding. It is more
     flexible than the orphaned base64 package."""
 
@@ -34,9 +34,3 @@ class RBase64enc(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/base64enc"
 
     version('0.1-3', '0f476dacdd11a3e0ad56d13f5bc2f190')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

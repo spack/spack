@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMvtnorm(Package):
+class RMvtnorm(RPackage):
     """Computes multivariate normal and t probabilities, quantiles, random
     deviates and densities."""
 
@@ -34,9 +34,3 @@ class RMvtnorm(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/mvtnorm"
 
     version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

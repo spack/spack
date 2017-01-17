@@ -38,6 +38,10 @@ class Petsc(Package):
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
+    version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
+            commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
+
+    version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
     version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
     version('3.6.4', '7632da2375a3df35b8891c9526dbdde7')
@@ -63,24 +67,30 @@ class Petsc(Package):
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     variant('mumps',   default=True,
-            description='Activates support for MUMPS (only parallel)')
+            description='Activates support for MUMPS (only parallel'
+            ' and 32bit indices)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
+    variant('int64', default=False,
+            description='Compile with 64bit indices')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')
-    
+
+    # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
+    # with BLAS/LAPACK
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7')
+    depends_on('python @2.6:2.7', type='build')
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
-    depends_on('metis@5:', when='+metis')
+    depends_on('metis@5:~int64', when='+metis~int64')
+    depends_on('metis@5:+int64', when='+metis+int64')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')
@@ -88,11 +98,16 @@ class Petsc(Package):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
-    depends_on('superlu-dist@:4.3', when='@:3.6.4+superlu-dist+mpi')
-    depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
-    depends_on('mumps+mpi', when='+mumps+mpi')
-    depends_on('scalapack', when='+mumps+mpi')
+    depends_on('hypre~internal-superlu~int64', when='+hypre+mpi~complex~int64')
+    depends_on('hypre~internal-superlu+int64', when='+hypre+mpi~complex+int64')
+    depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.0.0:~int64', when='@3.7:+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.0.0:+int64', when='@3.7:+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.0.0:~int64', when='@for-pflotran-0.1.0+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.0.0:+int64', when='@for-pflotran-0.1.0+superlu-dist+mpi+int64')
+    depends_on('mumps+mpi', when='+mumps+mpi~int64')
+    depends_on('scalapack', when='+mumps+mpi~int64')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -130,8 +145,9 @@ class Petsc(Package):
 
     def install(self, spec, prefix):
         options = ['--with-ssl=0',
+                   '--with-x=0',
                    '--download-c2html=0',
-                   '--download-sowing=0',		   
+                   '--download-sowing=0',
                    '--download-hwloc=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
@@ -140,7 +156,8 @@ class Petsc(Package):
             '--with-scalar-type=%s' % (
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
-            '--with-debugging=%s' % ('1' if '+debug' in spec else '0')
+            '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
@@ -213,6 +230,16 @@ class Petsc(Package):
                         '-pc_type', 'hypre',
                         '-pc_hypre_type', 'boomeramg')
 
+    def setup_environment(self, spack_env, run_env):
+        # configure fails if these env vars are set outside of Spack
+        spack_env.unset('PETSC_DIR')
+        spack_env.unset('PETSC_ARCH')
+
+        # Set PETSC_DIR in the module file
+        run_env.set('PETSC_DIR', self.prefix)
+        run_env.unset('PETSC_ARCH')
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # set up PETSC_DIR for everyone using PETSc package
+        # Set up PETSC_DIR for everyone using PETSc package
         spack_env.set('PETSC_DIR', self.prefix)
+        spack_env.unset('PETSC_ARCH')

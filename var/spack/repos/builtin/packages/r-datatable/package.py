@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDatatable(Package):
+class RDatatable(RPackage):
     """Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
     fast add/modify/delete of columns by group using no copies at all, list
     columns and a fast file reader (fread). Offers a natural and flexible
@@ -37,10 +37,4 @@ class RDatatable(Package):
 
     version('1.9.6', 'b1c0c7cce490bdf42ab288541cc55372')
 
-    extends('R')
-
-    depends_on('r-chron', type='nolink')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-chron', type=('build', 'run'))

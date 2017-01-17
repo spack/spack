@@ -27,7 +27,7 @@
 from spack import *
 
 
-class REvaluate(Package):
+class REvaluate(RPackage):
     """Parsing and evaluation tools that make it easy to recreate the command
     line behaviour of R."""
 
@@ -37,10 +37,4 @@ class REvaluate(Package):
 
     version('0.9', '877d89ce8a9ef7f403b1089ca1021775')
 
-    extends('R')
-
-    depends_on('r-stringr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-stringr', type=('build', 'run'))

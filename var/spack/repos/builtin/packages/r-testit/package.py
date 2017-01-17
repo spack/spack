@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RTestit(Package):
+class RTestit(RPackage):
     """Provides two convenience functions assert() and test_pkg() to facilitate
     testing R packages."""
 
@@ -35,9 +35,3 @@ class RTestit(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/testit"
 
     version('0.5', 'f206d3cbdc5174e353d2d05ba6a12e59')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

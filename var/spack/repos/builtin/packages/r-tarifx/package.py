@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RTarifx(Package):
+class RTarifx(RPackage):
     """A collection of various utility and convenience functions."""
 
     homepage = "https://cran.r-project.org/package=taRifx"
@@ -34,11 +34,5 @@ class RTarifx(Package):
 
     version('1.0.6', '7e782e04bd69d929b29f91553382e6a2')
 
-    extends('R')
-
-    depends_on('r-reshape2', type=nolink)
-    depends_on('r-plyr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))

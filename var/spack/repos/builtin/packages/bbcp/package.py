@@ -32,6 +32,9 @@ class Bbcp(Package):
     version('git', git='http://www.slac.stanford.edu/~abh/bbcp/bbcp.git',
             branch="master")
 
+    depends_on('zlib')
+    depends_on('openssl')
+
     def install(self, spec, prefix):
         cd("src")
         make()

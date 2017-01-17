@@ -114,14 +114,18 @@ def query_arguments(args):
 def find(parser, args):
     q_args = query_arguments(args)
     query_specs = args.specs(**q_args)
+
     # Exit early if no package matches the constraint
     if not query_specs and args.constraint:
-        msg = "No package matches the query: {0}".format(args.constraint)
+        msg = "No package matches the query: {0}".format(
+            ' '.join(args.constraint))
         tty.msg(msg)
         return
+
     # Display the result
     if sys.stdout.isatty():
         tty.msg("%d installed packages." % len(query_specs))
+
     display_specs(query_specs,
                   mode=args.mode,
                   long=args.long,

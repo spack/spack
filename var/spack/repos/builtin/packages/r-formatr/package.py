@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RFormatr(Package):
+class RFormatr(RPackage):
     """Provides a function tidy_source() to format R source code. Spaces and
     indent will be added to the code automatically, and comments will be
     preserved under certain conditions, so that R code will be more
@@ -39,13 +39,7 @@ class RFormatr(Package):
 
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 
-    extends('R')
-
-    depends_on('r-codetools', type=nolink)
-    depends_on('r-shiny', type=nolink)
-    depends_on('r-testit', type=nolink)
-    # depends_on('r-knitr', type=nolink) - mutual dependency
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-codetools', type=('build', 'run'))
+    depends_on('r-shiny', type=('build', 'run'))
+    depends_on('r-testit', type=('build', 'run'))
+    # depends_on('r-knitr', type=('build', 'run')) - mutual dependency

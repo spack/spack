@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMunsell(Package):
+class RMunsell(RPackage):
     """Provides easy access to, and manipulation of, the Munsell colours.
     Provides a mapping between Munsell's original notation (e.g. "5R 5/10") and
     hexadecimal strings suitable for use directly in R graphics. Also provides
@@ -38,10 +38,4 @@ class RMunsell(Package):
 
     version('0.4.3', 'ebd205323dc37c948f499ee08be9c476')
 
-    extends('R')
-
-    depends_on('r-colorspace', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-colorspace', type=('build', 'run'))

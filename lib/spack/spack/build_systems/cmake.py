@@ -24,30 +24,39 @@
 ##############################################################################
 
 import inspect
-import os
 import platform
 
 import llnl.util.tty as tty
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
+from spack.directives import depends_on
 from spack.package import PackageBase
 
 
 class CMakePackage(PackageBase):
-    """Specialized class for packages that are built using cmake
+    """Specialized class for packages that are built using CMake
 
     This class provides three phases that can be overridden:
-    - cmake
-    - build
-    - install
+
+    * cmake
+    * build
+    * install
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override `cmake_args`
+    necessary will be to override ``cmake_args``
+
+    Additionally, you may specify make targets for build and install
+    phases by overriding ``build_targets`` and ``install_targets``
     """
     phases = ['cmake', 'build', 'install']
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'CMakePackage'
+
+    build_targets = []
+    install_targets = ['install']
+
+    depends_on('cmake', type='build')
 
     def build_type(self):
         """Override to provide the correct build_type in case a complex
@@ -94,8 +103,9 @@ class CMakePackage(PackageBase):
     def cmake_args(self):
         """Method to be overridden. Should return an iterable containing
         all the arguments that must be passed to configure, except:
-        - CMAKE_INSTALL_PREFIX
-        - CMAKE_BUILD_TYPE
+
+        * CMAKE_INSTALL_PREFIX
+        * CMAKE_BUILD_TYPE
         """
         return []
 
@@ -103,26 +113,25 @@ class CMakePackage(PackageBase):
         """Run cmake in the build directory"""
         options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
             self.cmake_args()
-        create = not os.path.exists(self.build_directory())
-        with working_dir(self.build_directory(), create=create):
+        with working_dir(self.build_directory(), create=True):
             inspect.getmodule(self).cmake(*options)
 
     def build(self, spec, prefix):
-        """The usual `make` after cmake"""
+        """Make the build targets"""
         with working_dir(self.build_directory()):
-            inspect.getmodule(self).make()
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """...and the final `make install` after cmake"""
+        """Make the install targets"""
         with working_dir(self.build_directory()):
-            inspect.getmodule(self).make('install')
+            inspect.getmodule(self).make(*self.install_targets)
 
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)
     def _run_default_function(self):
-        """This function is run after build if self.run_tests == True
+        """This function is run after build if ``self.run_tests == True``
 
-        It will search for a method named `check` and run it. A sensible
+        It will search for a method named ``check`` and run it. A sensible
         default is provided in the base class.
         """
         try:
@@ -133,7 +142,7 @@ class CMakePackage(PackageBase):
             tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     def check(self):
-        """Default test : search the Makefile for the target `test`
+        """Default test: search the Makefile for the target ``test``
         and run them if found.
         """
         with working_dir(self.build_directory()):

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMagrittr(Package):
+class RMagrittr(RPackage):
     """Provides a mechanism for chaining commands with a new forward-pipe
     operator, %>%. This operator will forward a value, or the result of an
     expression, into the next function call/expression. There is flexible
@@ -37,9 +37,3 @@ class RMagrittr(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/magrittr"
 
     version('1.5', 'e74ab7329f2b9833f0c3c1216f86d65a')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -83,12 +83,12 @@ class Fenics(Package):
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('qt', when='+qt')
 
-    depends_on('py-ply', type=nolink)
-    depends_on('py-six', type=nolink)
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-sympy', type=nolink)
-    depends_on('swig@3.0.3:', type=nolink)
-    depends_on('cmake@2.8.12:', type=nolink)
+    depends_on('py-ply', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-sympy', type=('build', 'run'))
+    depends_on('swig@3.0.3:', type=('build', 'run'))
+    depends_on('cmake@2.8.12:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')

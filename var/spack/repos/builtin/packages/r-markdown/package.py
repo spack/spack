@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMarkdown(Package):
+class RMarkdown(RPackage):
     """Provides R bindings to the 'Sundown' 'Markdown' rendering library
     (https://github.com/vmg/sundown). 'Markdown' is a plain-text formatting
     syntax that can be converted to 'XHTML' or other formats. See
@@ -38,10 +38,4 @@ class RMarkdown(Package):
 
     version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 
-    extends('R')
-
-    depends_on('r-mime', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-mime', type=('build', 'run'))

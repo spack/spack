@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RC50(Package):
+class RC50(RPackage):
     """C5.0 decision trees and rule-based models for pattern recognition."""
 
     homepage = "https://cran.r-project.org/package=C50"
@@ -35,10 +35,4 @@ class RC50(Package):
 
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 
-    extends('R')
-
-    depends_on('r-partykit', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-partykit', type=('build','run'))

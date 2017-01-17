@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RSurvival(Package):
+class RSurvival(RPackage):
     """Contains the core survival analysis routines, including definition of
     Surv objects, Kaplan-Meier and Aalen-Johansen (multi-state) curves, Cox
     models, and parametric accelerated failure time models."""
@@ -36,10 +36,4 @@ class RSurvival(Package):
 
     version('2.39-5', 'a3cc6b5762e8c5c0bb9e64a276710be2')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))

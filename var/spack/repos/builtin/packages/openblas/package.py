@@ -27,10 +27,10 @@ from spack.package_test import *
 import os
 
 
-class Openblas(Package):
+class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
-    homepage = "http://www.openblas.net"
-    url = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
+    homepage = 'http://www.openblas.net'
+    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz'
 
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
@@ -38,12 +38,13 @@ class Openblas(Package):
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    variant('shared', default=True,
-            description="Build shared libraries as well as static libs.")
-    variant('openmp', default=False,
-            description="Enable OpenMP support.")
-    variant('fpic',   default=True,
-            description="Build position independent code")
+    variant(
+        'shared',
+        default=True,
+        description='Build shared libraries as well as static libs.'
+    )
+    variant('openmp', default=False, description="Enable OpenMP support.")
+    variant('pic', default=True, description='Build position independent code')
 
     # virtual dependency
     provides('blas')
@@ -53,6 +54,8 @@ class Openblas(Package):
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
+
+    parallel = False
 
     @property
     def blas_libs(self):
@@ -65,61 +68,82 @@ class Openblas(Package):
     def lapack_libs(self):
         return self.blas_libs
 
-    def install(self, spec, prefix):
+    @MakefilePackage.precondition('edit')
+    def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
         # require both.
         if self.compiler.f77 is None:
-            raise InstallError('OpenBLAS requires both C and Fortran ',
-                               'compilers!')
+            raise InstallError(
+                'OpenBLAS requires both C and Fortran compilers!'
+            )
+        # Add support for OpenMP
+        if '+openmp' in self.spec and self.spec.satisfies('%clang'):
+            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
+            # be used with any (!) compiler named clang, bummer.
+            raise InstallError(
+                'OpenBLAS does not support OpenMP with clang!'
+            )
 
+    @property
+    def make_defs(self):
         # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-        make_defs = ['CC=%s' % spack_cc,
-                     'FC=%s' % spack_f77,
-                     'MAKE_NO_J=1']
 
-        make_targets = ['libs', 'netlib']
-
-        # Build shared if variant is set.
-        if '+shared' in spec:
-            make_targets += ['shared']
-        else:
-            if '+fpic' in spec:
-                make_defs.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+        make_defs = [
+            'CC={0}'.format(spack_cc),
+            'FC={0}'.format(spack_f77),
+            'MAKE_NO_J=1'
+        ]
+        if self.spec.satisfies('%gcc@:4.8.4'):
+            make_defs += ['NO_AVX2=1']
+        if '~shared' in self.spec:
+            if '+pic' in self.spec:
+                make_defs.extend([
+                    'CFLAGS={0}'.format(self.compiler.pic_flag),
+                    'FFLAGS={0}'.format(self.compiler.pic_flag)
+                ])
             make_defs += ['NO_SHARED=1']
-
         # fix missing _dggsvd_ and _sggsvd_
-        if spec.satisfies('@0.2.16'):
+        if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
-
         # Add support for OpenMP
-        if '+openmp' in spec:
-            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
-            # be used with any (!) compiler named clang, bummer.
-            if spec.satisfies('%clang'):
-                raise InstallError('OpenBLAS does not support ',
-                                   'OpenMP with clang!')
-
+        if '+openmp' in self.spec:
             make_defs += ['USE_OPENMP=1']
 
-        make_args = make_defs + make_targets
-        make(*make_args)
+        return make_defs
 
-        make("tests", *make_defs)
+    @property
+    def build_targets(self):
+        targets = ['libs', 'netlib']
 
-        # no quotes around prefix (spack doesn't use a shell)
-        make('install', "PREFIX=%s" % prefix, *make_defs)
+        # Build shared if variant is set.
+        if '+shared' in self.spec:
+            targets += ['shared']
 
+        return self.make_defs + targets
+
+    @MakefilePackage.sanity_check('build')
+    def check_build(self):
+        make('tests', *self.make_defs)
+
+    @property
+    def install_targets(self):
+        make_args = [
+            'install',
+            'PREFIX={0}'.format(self.prefix),
+        ]
+        return make_args + self.make_defs
+
+    @MakefilePackage.sanity_check('install')
+    def check_install(self):
+        spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
-        self.check_install(spec)
-
-    def check_install(self, spec):
         source_file = join_path(os.path.dirname(self.module.__file__),
                                 'test_cblas_dgemm.c')
         blessed_file = join_path(os.path.dirname(self.module.__file__),

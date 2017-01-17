@@ -25,6 +25,7 @@
 
 import inspect
 
+import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 from spack.package import PackageBase
 
@@ -33,9 +34,10 @@ class MakefilePackage(PackageBase):
     """Specialized class for packages that are built using editable Makefiles
 
     This class provides three phases that can be overridden:
-    - edit
-    - build
-    - install
+
+    * edit
+    * build
+    * install
 
     It is necessary to override the 'edit' phase, while 'build' and 'install'
     have sensible defaults.
@@ -45,33 +47,26 @@ class MakefilePackage(PackageBase):
     # build-system class we are using
     build_system_class = 'MakefilePackage'
 
+    build_targets = []
+    install_targets = ['install']
+
     def build_directory(self):
         """Directory where the main Makefile is located"""
         return self.stage.source_path
 
-    def build_args(self):
-        """List of arguments that should be passed to make at build time"""
-        return []
-
-    def install_args(self):
-        """List of arguments that should be passed to make at install time"""
-        return []
-
     def edit(self, spec, prefix):
         """This phase cannot be defaulted for obvious reasons..."""
-        raise NotImplementedError('\'edit\' function not implemented')
+        tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
-        """Default build phase : call make passing build_args"""
-        args = self.build_args()
+        """Make the build targets"""
         with working_dir(self.build_directory()):
-            inspect.getmodule(self).make(*args)
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Default install phase : call make passing install_args"""
-        args = self.install_args() + ['install']
+        """Make the install targets"""
         with working_dir(self.build_directory()):
-            inspect.getmodule(self).make(*args)
+            inspect.getmodule(self).make(*self.install_targets)
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)

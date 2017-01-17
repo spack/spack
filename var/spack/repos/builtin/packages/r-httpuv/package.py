@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RHttpuv(Package):
+class RHttpuv(RPackage):
     """Provides low-level socket and protocol support for handling HTTP and
     WebSocket requests directly from within R. It is primarily intended as a
     building block for other packages, rather than making it particularly easy
@@ -40,10 +40,4 @@ class RHttpuv(Package):
 
     version('1.3.3', 'c78ae068cf59e949b9791be987bb4489')
 
-    extends('R')
-
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rcpp', type=('build', 'run'))

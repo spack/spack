@@ -31,6 +31,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir
 from spack.package import PackageBase
 
 
@@ -38,19 +39,26 @@ class AutotoolsPackage(PackageBase):
     """Specialized class for packages that are built using GNU Autotools
 
     This class provides four phases that can be overridden:
-    - autoreconf
-    - configure
-    - build
-    - install
+
+    * autoreconf
+    * configure
+    * build
+    * install
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override `configure_args`
+    necessary will be to override ``configure_args``
+
+    Additionally, you may specify make targets for build and install
+    phases by overriding ``build_targets`` and ``install_targets``
     """
     phases = ['autoreconf', 'configure', 'build', 'install']
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'AutotoolsPackage'
     patch_config_guess = True
+
+    build_targets = []
+    install_targets = ['install']
 
     def do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
@@ -118,6 +126,10 @@ class AutotoolsPackage(PackageBase):
 
         return False
 
+    def build_directory(self):
+        """Override to provide another place to build the package"""
+        return self.stage.source_path
+
     def patch(self):
         """Perform any required patches."""
 
@@ -132,39 +144,44 @@ class AutotoolsPackage(PackageBase):
 
     @PackageBase.sanity_check('autoreconf')
     def is_configure_or_die(self):
-        """Checks the presence of a `configure` file after the
+        """Checks the presence of a ``configure`` file after the
         autoreconf phase"""
-        if not os.path.exists('configure'):
-            raise RuntimeError(
-                'configure script not found in {0}'.format(os.getcwd()))
+        with working_dir(self.build_directory()):
+            if not os.path.exists('configure'):
+                raise RuntimeError(
+                    'configure script not found in {0}'.format(os.getcwd()))
 
     def configure_args(self):
         """Method to be overridden. Should return an iterable containing
-        all the arguments that must be passed to configure, except --prefix
+        all the arguments that must be passed to configure, except ``--prefix``
         """
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in `configure_args`
+        """Runs configure with the arguments specified in ``configure_args``
         and an appropriately set prefix
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-        inspect.getmodule(self).configure(*options)
+
+        with working_dir(self.build_directory()):
+            inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
-        """The usual `make` after configure"""
-        inspect.getmodule(self).make()
+        """Make the build targets"""
+        with working_dir(self.build_directory()):
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """...and the final `make install` after configure"""
-        inspect.getmodule(self).make('install')
+        """Make the install targets"""
+        with working_dir(self.build_directory()):
+            inspect.getmodule(self).make(*self.install_targets)
 
     @PackageBase.sanity_check('build')
     @PackageBase.on_package_attributes(run_tests=True)
     def _run_default_function(self):
-        """This function is run after build if self.run_tests == True
+        """This function is run after build if ``self.run_tests == True``
 
-        It will search for a method named `check` and run it. A sensible
+        It will search for a method named ``check`` and run it. A sensible
         default is provided in the base class.
         """
         try:
@@ -175,11 +192,12 @@ class AutotoolsPackage(PackageBase):
             tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     def check(self):
-        """Default test : search the Makefile for targets `test` and `check`
+        """Default test: search the Makefile for targets ``test`` and ``check``
         and run them if found.
         """
-        self._if_make_target_execute('test')
-        self._if_make_target_execute('check')
+        with working_dir(self.build_directory()):
+            self._if_make_target_execute('test')
+            self._if_make_target_execute('check')
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)

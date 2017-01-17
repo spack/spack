@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Munge(Package):
+class Munge(AutotoolsPackage):
     """ MUNGE Uid 'N' Gid Emporium """
     homepage = "https://code.google.com/p/munge/"
     url      = "https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2"
@@ -39,7 +39,4 @@ class Munge(Package):
 
     def install(self, spec, prefix):
         os.makedirs(os.path.join(prefix, "lib/systemd/system"))
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")
+        super(Munge, self).install(spec, prefix)

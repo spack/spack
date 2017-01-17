@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RRzmq(Package):
+class RRzmq(RPackage):
     """Interface to the ZeroMQ lightweight messaging kernel."""
 
     homepage = "http://github.com/armstrtw/rzmq"
@@ -36,9 +36,3 @@ class RRzmq(Package):
     version('0.7.7', '8ba18fd1c222d1eb25bb622ccd2897e0')
 
     depends_on('zeromq')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

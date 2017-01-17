@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMagic(Package):
+class RMagic(RPackage):
     """A collection of efficient, vectorized algorithms for the creation and
     investigation of magic squares and hypercubes, including a variety of
     functions for the manipulation and analysis of arbitrarily dimensioned
@@ -37,10 +37,4 @@ class RMagic(Package):
 
     version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')
 
-    extends('R')
-
-    depends_on('r-abind', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-abind', type=('build', 'run'))

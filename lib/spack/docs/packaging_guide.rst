@@ -17,7 +17,7 @@ There are two key parts of Spack:
    software according to a spec.
 
 Specs allow a user to describe a *particular* build in a way that a
-package author can understand.  Packages allow a the packager to
+package author can understand.  Packages allow the packager to
 encapsulate the build logic for different versions, compilers,
 options, platforms, and dependency combinations in one place.
 Essentially, a package translates a spec into build logic.
@@ -40,85 +40,68 @@ Creating & editing packages
 ^^^^^^^^^^^^^^^^
 
 The ``spack create`` command creates a directory with the package name and
-generates a ``package.py`` file with a boilerplate package template from a URL.
-The URL should point to a tarball or other software archive.  In most cases,
-``spack create`` plus a few modifications is all you need to get a package
-working.
+generates a ``package.py`` file with a boilerplate package template. If given
+a URL pointing to a tarball or other software archive, ``spack create`` is
+smart enough to determine basic information about the package, including its name
+and build system. In most cases, ``spack create`` plus a few modifications is
+all you need to get a package working.
 
 Here's an example:
 
 .. code-block:: console
 
-   $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
+   $ spack create https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
 
 Spack examines the tarball URL and tries to figure out the name of the package
-to be created. Once the name is determined a directory in the appropriate
-repository is created with that name. Spack prefers, but does not require, that
-names be lower case so the directory name will be lower case when ``spack
-create`` generates it. In cases where it is desired to have mixed case or upper
-case simply rename the directory. Spack also tries to determine what version
-strings look like for this package. Using this information, it will try to find
-*additional* versions by spidering the package's webpage.  If it finds multiple
-versions, Spack prompts you to tell it how many versions you want to download
-and checksum:
+to be created. If the name contains uppercase letters, these are automatically
+converted to lowercase. If the name contains underscores or periods, these are
+automatically converted to dashes.
+
+Spack also searches for *additional* versions located in the same directory of
+the website. Spack prompts you to tell you how many versions it found and asks
+you how many you would like to download and checksum:
 
 .. code-block:: console
 
-   $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
-   ==> This looks like a URL for cmake version 2.8.12.1.
-   ==> Creating template for package cmake
-   ==> Found 18 versions of cmake.
-     2.8.12.1  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
-     2.8.12    http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz
-     2.8.11.2  http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
-     ...
-     2.8.0     http://www.cmake.org/files/v2.8/cmake-2.8.0.tar.gz
+   $ spack create https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+   ==> This looks like a URL for gmp
+   ==> Found 16 versions of gmp:
 
-   Include how many checksums in the package file? (default is 5, q to abort)
+     6.1.2   https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+     6.1.1   https://gmplib.org/download/gmp/gmp-6.1.1.tar.bz2
+     6.1.0   https://gmplib.org/download/gmp/gmp-6.1.0.tar.bz2
+     ...
+     5.0.0   https://gmplib.org/download/gmp/gmp-5.0.0.tar.bz2
+
+   How many would you like to checksum? (default is 1, q to abort)
 
 Spack will automatically download the number of tarballs you specify
 (starting with the most recent) and checksum each of them.
 
 You do not *have* to download all of the versions up front. You can
 always choose to download just one tarball initially, and run
-:ref:`cmd-spack-checksum` later if you need more.
-
-.. note::
-
-   If ``spack create`` fails to detect the package name correctly,
-   you can try supplying it yourself, e.g.:
-
-   .. code-block:: console
-
-      $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
-
-   If it fails entirely, you can get minimal boilerplate by using
-   :ref:`spack edit --force <spack-edit-f>`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
-
-.. note::
-
-   Spack can fetch packages from source code repositories, but,
-   ``spack create`` will *not* currently create a boilerplate package
-   from a repository URL.  You will need to use :ref:`spack edit --force <spack-edit-f>`
-   and manually edit the ``version()`` directives to fetch from a
-   repo.  See :ref:`vcs-fetch` for details.
+:ref:`cmd-spack-checksum` later if you need more versions.
 
 Let's say you download 3 tarballs:
 
-.. code-block:: none
+.. code-block:: console
 
-   Include how many checksums in the package file? (default is 5, q to abort) 3
-   ==> Downloading...
-   ==> Fetching http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
-   ######################################################################    98.6%
-   ==> Fetching http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz
-   #####################################################################     96.7%
-   ==> Fetching http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
-   ####################################################################      95.2%
+	How many would you like to checksum? (default is 1, q to abort) 3
+	==> Downloading...
+	==> Fetching https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+	######################################################################## 100.0%
+	==> Fetching https://gmplib.org/download/gmp/gmp-6.1.1.tar.bz2
+	######################################################################## 100.0%
+	==> Fetching https://gmplib.org/download/gmp/gmp-6.1.0.tar.bz2
+	######################################################################## 100.0%
+	==> Checksummed 3 versions of gmp:
+	==> This package looks like it uses the autotools build system
+	==> Created template for gmp package
+	==> Created package file: /Users/Adam/spack/var/spack/repos/builtin/packages/gmp/package.py
 
-Now Spack generates boilerplate code and opens a new ``package.py``
-file in your favorite ``$EDITOR``:
+Spack automatically creates a directory in the appropriate repository,
+generates a boilerplate template for your package, and opens up the new
+``package.py`` in your favorite ``$EDITOR``:
 
 .. code-block:: python
    :linenos:
@@ -128,11 +111,11 @@ file in your favorite ``$EDITOR``:
    # next to all the things you'll want to change. Once you've handled
    # them, you can save this file and test your package like this:
    #
-   #     spack install cmake
+   #     spack install gmp
    #
    # You can edit this file again by typing:
    #
-   #     spack edit cmake
+   #     spack edit gmp
    #
    # See the Spack documentation for more information on packaging.
    # If you submit this package back to Spack as a pull request,
@@ -141,33 +124,46 @@ file in your favorite ``$EDITOR``:
    from spack import *
 
 
-   class Cmake(Package):
+   class Gmp(AutotoolsPackage):
        """FIXME: Put a proper description of your package here."""
 
        # FIXME: Add a proper url for your package's homepage here.
        homepage = "http://www.example.com"
-       url      = "http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz"
+       url      = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
 
-       version('2.8.12.1', '9d38cd4e2c94c3cea97d0e2924814acc')
-       version('2.8.12',   '105bc6d21cc2e9b6aff901e43c53afea')
-       version('2.8.11.2', '6f5d7b8e7534a5d9e1a7664ba63cf882')
+       version('6.1.2', '8ddbb26dc3bd4e2302984debba1406a5')
+       version('6.1.1', '4c175f86e11eb32d8bf9872ca3a8e11d')
+       version('6.1.0', '86ee6e54ebfc4a90b643a65e402c4048')
 
-       # FIXME: Add dependencies if this package requires them.
-       # depends_on("foo")
+       # FIXME: Add dependencies if required.
+       # depends_on('foo')
 
-       def install(self, spec, prefix):
-           # FIXME: Modify the configure line to suit your build system here.
-           configure("--prefix=" + prefix)
-
-           # FIXME: Add logic to build and install here
-           make()
-           make("install")
+       def configure_args(self):
+           # FIXME: Add arguments other than --prefix
+           # FIXME: If not needed delete the function
+           args = []
+           return args
 
 The tedious stuff (creating the class, checksumming archives) has been
-done for you.
+done for you. You'll notice that ``spack create`` correctly detected that
+``gmp`` uses the Autotools build system. It created a new ``Gmp`` package
+that subclasses the ``AutotoolsPackage`` base class. This base class
+provides basic installation methods common to all Autotools packages:
+
+.. code-block:: bash
+
+   ./configure --prefix=/path/to/installation/directory
+
+   make
+   make check
+   make install
+
+For most Autotools packages, this is sufficient. If you need to add
+additional arguments to the ``./configure`` call, add them via the
+``configure_args`` function.
 
 In the generated package, the download ``url`` attribute is already
-set.  All the things you still need to change are marked with
+set. All the things you still need to change are marked with
 ``FIXME`` labels. You can delete the commented instructions between
 the license and the first import statement after reading them.
 The rest of the tasks you need to do are as follows:
@@ -175,28 +171,66 @@ The rest of the tasks you need to do are as follows:
 #. Add a description.
 
    Immediately inside the package class is a *docstring* in
-   triple-quotes (``"""``).  It's used to generate the description
+   triple-quotes (``"""``).  It is used to generate the description
    shown when users run ``spack info``.
 
 #. Change the ``homepage`` to a useful URL.
 
    The ``homepage`` is displayed when users run ``spack info`` so
-   that they can learn about packages.
+   that they can learn more about your package.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
    ``depends_on`` tells Spack that other packages need to be built
-   and installed before this one.  See :ref:`dependencies`.
+   and installed before this one. See :ref:`dependencies`.
 
-#. Get the ``install()`` method working.
+#. Get the installation working.
 
-   The ``install()`` method implements the logic to build a
-   package.  The code should look familiar; it is designed to look
-   like a shell script. Specifics will differ depending on the package,
-   and :ref:`implementing the install method <install-method>` is
+   Your new package may require specific flags during ``configure``.
+   These can be added via ``configure_args``. Specifics will differ
+   depending on the package and its build system.
+   :ref:`Implementing the install method <install-method>` is
    covered in detail later.
 
-Before going into details, we'll cover a few more basics.
+Passing a URL to ``spack create`` is a convenient and easy way to get
+a basic package template, but what if your software is licensed and
+cannot be downloaded from a URL? You can still create a boilerplate
+``package.py`` by telling ``spack create`` what name you want to use:
+
+.. code-block:: console
+
+   $ spack create --name intel
+
+This will create a simple ``intel`` package with an ``install()``
+method that you can craft to install your package.
+
+What if ``spack create <url>`` guessed the wrong name or build system?
+For example, if your package uses the Autotools build system but does
+not come with a ``configure`` script, Spack won't realize it uses
+Autotools. You can overwrite the old package with ``--force`` and specify
+a name with ``--name`` or a build system template to use with ``--template``:
+
+.. code-block:: console
+
+   $ spack create --name gmp https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+   $ spack create --force --template autotools https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+
+.. note::
+
+   If you are creating a package that uses the Autotools build system
+   but does not come with a ``configure`` script, you'll need to add an
+   ``autoreconf`` method to your package that explains how to generate
+   the ``configure`` script. You may also need the following dependencies:
+
+   .. code-block:: python
+
+      depends_on('autoconf', type='build')
+      depends_on('automake', type='build')
+      depends_on('libtool',  type='build')
+      depends_on('m4',       type='build')
+
+A complete list of available build system templates can be found by running
+``spack create --help``.
 
 .. _cmd-spack-edit:
 
@@ -204,76 +238,29 @@ Before going into details, we'll cover a few more basics.
 ``spack edit``
 ^^^^^^^^^^^^^^
 
-One of the easiest ways to learn to write packages is to look at
+One of the easiest ways to learn how to write packages is to look at
 existing ones.  You can edit a package file by name with the ``spack
 edit`` command:
 
 .. code-block:: console
 
-   $ spack edit cmake
+   $ spack edit gmp
 
 So, if you used ``spack create`` to create a package, then saved and
 closed the resulting file, you can get back to it with ``spack edit``.
-The ``cmake`` package actually lives in
-``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``,
-but this provides a much simpler shortcut and saves you the trouble
-of typing the full path.
-
-If you try to edit a package that doesn't exist, Spack will recommend
-using ``spack create`` or ``spack edit --force``:
-
-.. code-block:: console
-
-   $ spack edit foo
-   ==> Error: No package 'foo'.  Use spack create, or supply -f/--force to edit a new file.
-
-.. _spack-edit-f:
-
-^^^^^^^^^^^^^^^^^^^^^^
-``spack edit --force``
-^^^^^^^^^^^^^^^^^^^^^^
-
-``spack edit --force`` can be used to create a new, minimal boilerplate
-package:
-
-.. code-block:: console
-
-   $ spack edit --force foo
-
-Unlike ``spack create``, which infers names and versions, and which
-actually downloads the tarball and checksums it for you, ``spack edit
---force`` has no such fanciness.  It will substitute dummy values for you
-to fill in yourself:
-
-.. code-block:: python
-   :linenos:
-
-   from spack import *
-
-   class Foo(Package):
-       """Description"""
-
-       homepage = "http://www.example.com"
-       url      = "http://www.example.com/foo-1.0.tar.gz"
-
-       version('1.0', '0123456789abcdef0123456789abcdef')
-
-       def install(self, spec, prefix):
-           configure("--prefix=%s" % prefix)
-           make()
-           make("install")
-
-This is useful when ``spack create`` cannot figure out the name and
-version of your package from the archive URL.
+The ``gmp`` package actually lives in
+``$SPACK_ROOT/var/spack/repos/builtin/packages/gmp/package.py``,
+but ``spack edit`` provides a much simpler shortcut and saves you the
+trouble of typing the full path.
 
 ----------------------------
 Naming & directory structure
 ----------------------------
 
 This section describes how packages need to be named, and where they
-live in Spack's directory structure.  In general, :ref:`cmd-spack-create` and
-:ref:`cmd-spack-edit` handle creating package files for you, so you can skip
-most of the details here.
+live in Spack's directory structure.  In general, :ref:`cmd-spack-create`
+handles creating package files for you, so you can skip most of the
+details here.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``var/spack/repos/builtin/packages``
@@ -306,10 +293,9 @@ directories or files (like patches) that it needs to build.
 Package Names
 ^^^^^^^^^^^^^
 
-Packages are named after the directory containing ``package.py``. It is
-preferred, but not required, that the directory, and thus the package name, are
-lower case. So, ``libelf``'s ``package.py`` lives in a directory called
-``libelf``.  The ``package.py`` file defines a class called ``Libelf``, which
+Packages are named after the directory containing ``package.py``. So,
+``libelf``'s ``package.py`` lives in a directory called ``libelf``.
+The ``package.py`` file defines a class called ``Libelf``, which
 extends Spack's ``Package`` class.  For example, here is
 ``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
@@ -334,21 +320,22 @@ these:
 
 .. code-block:: console
 
-   $ spack install libelf
+   $ spack info libelf
+   $ spack versions libelf
    $ spack install libelf@0.8.13
 
 Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/repos/builtin/packages``.  Likewise, if you say
-``spack install py-numpy``, then Spack looks for
+``libelf/package.py`` in ``var/spack/repos/builtin/packages``.
+Likewise, if you run ``spack install py-numpy``, Spack looks for
 ``py-numpy/package.py``.
 
 Spack uses the directory name as the package name in order to give
-packagers more freedom in naming their packages.  Package names can
-contain letters, numbers, dashes, and underscores.  Using a Python
-identifier (e.g., a class name or a module name) would make it
-difficult to support these options.  So, you can name a package
-``3proxy`` or ``_foo`` and Spack won't care.  It just needs to see
-that name in the package spec.
+packagers more freedom in naming their packages. Package names can
+contain letters, numbers, and dashes. Using a Python identifier
+(e.g., a class name or a module name) would make it difficult to
+support these options.  So, you can name a package ``3proxy`` or
+``foo-bar`` and Spack won't care. It just needs to see that name
+in the packages directory.
 
 ^^^^^^^^^^^^^^^^^^^
 Package class names
@@ -357,16 +344,14 @@ Package class names
 Spack loads ``package.py`` files dynamically, and it needs to find a
 special class name in the file for the load to succeed.  The **class
 name** (``Libelf`` in our example) is formed by converting words
-separated by `-` or ``_`` in the file name to camel case.  If the name
+separated by ``-`` in the file name to CamelCase. If the name
 starts with a number, we prefix the class name with ``_``. Here are
 some examples:
 
 =================  =================
  Module Name         Class Name
 =================  =================
- ``foo_bar``         ``FooBar``
- ``docbook-xml``     ``DocbookXml``
- ``FooBar``          ``Foobar``
+ ``foo-bar``         ``FooBar``
  ``3proxy``          ``_3proxy``
 =================  =================
 
@@ -1505,11 +1490,7 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
-  * **alldeps**: All dependency types.  **Note:** No quotes here
-  * **nolink**: Equal to ``("build", "run")``, for use by dependencies
-    that are not expressed via a linker (e.g., Python or Lua module
-    loading).  **Note:** No quotes here
-
+ 
 """""""""""""""""""
 Dependency Formulas
 """""""""""""""""""
@@ -2026,8 +2007,8 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libpng/package.py
-   :pyobject: Libpng.install
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/mpfr/package.py
+   :pyobject: Mpfr.install
    :linenos:
 
 ``install`` takes a ``spec``: a description of how the package should
@@ -2721,7 +2702,7 @@ running:
    from spack import *
 
 This is already part of the boilerplate for packages created with
-``spack create`` or ``spack edit``.
+``spack create``.
 
 ^^^^^^^^^^^^^^^^^^^
 Filtering functions
@@ -3108,7 +3089,6 @@ dependencies as well.  This is equivalent to
 
 * Any combination of ``build``, ``link``, and ``run`` separated by
   commas.
-* ``nobuild``, ``nolink``, ``norun`` to omit one type.
 * ``all`` or ``alldeps`` for all types of dependencies.
 
 You can also use ``spack graph`` to generate graphs in the widely used
@@ -3159,11 +3139,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
+   ==> Staging archive: ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
+   ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
 
 ``spack cd`` here changed the current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a

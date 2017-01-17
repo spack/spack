@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRcpp(Package):
+class RRcpp(RPackage):
     """The 'Rcpp' package provides R functions as well as C++ classes which
     offer a seamless integration of R and C++. Many R data types and objects
     can be mapped back and forth to C++ equivalents which facilitates both
@@ -42,9 +42,3 @@ class RRcpp(Package):
 
     version('0.12.6', 'db4280fb0a79cd19be73a662c33b0a8b')
     version('0.12.5', 'f03ec05b4e391cc46e7ce330e82ff5e2')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

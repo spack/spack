@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXtable(Package):
+class RXtable(RPackage):
     """Coerce data to LaTeX and HTML tables."""
 
     homepage = "http://xtable.r-forge.r-project.org/"
@@ -33,9 +33,3 @@ class RXtable(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/xtable"
 
     version('1.8-2', '239e4825cd046156a67efae3aac01d86')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

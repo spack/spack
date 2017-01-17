@@ -26,20 +26,20 @@ Spack works out of the box. Simply clone spack and get going.
 
 .. code-block:: console
 
-  becker33:~$ git clone https://github.com/LLNL/spack.git
-  Initialized empty Git repository in /g/g0/becker33/testclone/spack/.git/
+  $ git clone https://github.com/LLNL/spack.git
+  Initialized empty Git repository in ~/spack/.git/
   remote: Counting objects: 47125, done.
   remote: Compressing objects: 100% (68/68), done.
   remote: Total 47125 (delta 16), reused 2 (delta 2), pack-reused 47047
   Receiving objects: 100% (47125/47125), 12.02 MiB | 2.11 MiB/s, done.
   Resolving deltas: 100% (23044/23044), done.
-  becker33:~$ cd spack
+  $ cd spack
 
 Then add Spack to your path.
 
 .. code-block:: console
 
-  becker33:spack$ export PATH=~/spack/bin/spack:$PATH
+  $ export PATH=~/spack/bin:$PATH
 
 You're good to go!
 
@@ -51,7 +51,7 @@ The ``spack list`` command shows available packages.
 
 .. code-block:: console
 
-  becker33:spack$ spack list
+  $ spack list
   ==> 1016 packages.
   abinit                           hwloc                  piranha              r-rjava
   ack                              hydra                  pixman               r-rjson
@@ -64,7 +64,7 @@ we can view all available python packages.
 
 .. code-block:: console
 
-  becker33:spack$ spack list py
+  $ spack list py
   ==> 129 packages.
   py-3to2            py-epydoc          py-nestle         py-pycparser         py-six
   py-alabaster       py-flake8          py-netcdf         py-pydatalog         py-sncosmo
@@ -82,19 +82,19 @@ software, simply type ``spack install <package_name>``
 
   $ spack install libelf
   ==> Installing libelf
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
-  curl: (37) Couldn't open file /g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
-  ==> Fetching from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz failed.
+  ==> Trying to fetch from ~/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
+  curl: (37) Couldn't open file ~/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
+  ==> Fetching from ~/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz failed.
   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a/libelf-0.8.13.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
+  ==> Staging archive: ~/spack/var/spack/stage/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a/libelf-0.8.13.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
   ==> No patches needed for libelf
   ==> Building libelf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libelf
     Fetch: 1.21s.  Build: 8.42s.  Total: 9.62s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
 
 
 Spack's spec syntax is the interface by which we can request specific
@@ -105,16 +105,16 @@ compilers.
 
   $ spack install libelf %intel
   ==> Installing libelf
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
+  ==> Trying to fetch from ~/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj/libelf-0.8.13.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj
+  ==> Staging archive: ~/spack/var/spack/stage/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj/libelf-0.8.13.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj
   ==> No patches needed for libelf
   ==> Building libelf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libelf
     Fetch: 0.09s.  Build: 50.64s.  Total: 50.72s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj
 
 Note that this installation is located separately from the previous
 one. We will discuss this in more detail later, but this is part of what
@@ -154,56 +154,56 @@ compilers.
 
   $ spack install libelf @0.8.12
   ==> Installing libelf
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
-  curl: (37) Couldn't open file /g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
-  ==> Fetching from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz failed.
+  ==> Trying to fetch from ~/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
+  curl: (37) Couldn't open file ~/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
+  ==> Fetching from ~/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz failed.
   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.12.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy/libelf-0.8.12.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy
+  ==> Staging archive: ~/spack/var/spack/stage/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy/libelf-0.8.12.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy
   ==> No patches needed for libelf
   ==> Building libelf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libelf
     Fetch: 1.12s.  Build: 7.88s.  Total: 9.00s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy
 
 
 
   $ spack install libelf %intel@15.0.4
   ==> Installing libelf
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
+  ==> Trying to fetch from ~/spack/var/spack/cache/libelf/libelf-0.8.13.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.13-w33hrejdyqu2j2gggdswitls2zv6kdsi/libelf-0.8.13.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.13-w33hrejdyqu2j2gggdswitls2zv6kdsi
+  ==> Staging archive: ~/spack/var/spack/stage/libelf-0.8.13-w33hrejdyqu2j2gggdswitls2zv6kdsi/libelf-0.8.13.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libelf-0.8.13-w33hrejdyqu2j2gggdswitls2zv6kdsi
   ==> No patches needed for libelf
   ==> Building libelf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libelf
     Fetch: 0.09s.  Build: 55.51s.  Total: 55.60s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/intel-15.0.4/libelf-0.8.13-w33hrejdyqu2j2gggdswitls2zv6kdsi
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/intel-15.0.4/libelf-0.8.13-w33hrejdyqu2j2gggdswitls2zv6kdsi
 
 
-The spec syntax also includes compiler flags. Spack accepts ``cppflags``,
-``cflags``, ``cxxflags``, ``fflags``, ``ldflags``, and ``ldlibs``
-parameters.  The values of these fields must be escape-quoted with ``\"``
-on the command line. These values are injected into the compile line
-automatically by the Spack compiler wrappers.
+The spec syntax also includes compiler flags. Spack accepts
+``cppflags``, ``cflags``, ``cxxflags``, ``fflags``, ``ldflags``, and
+``ldlibs`` parameters.  The values of these fields must be quoted on
+the command line if they include spaces. These values are injected
+into the compile line automatically by the Spack compiler wrappers.
 
 .. code-block:: console
 
-  $ spack install libelf @0.8.12 cppflags=\"-O3\"
+  $ spack install libelf @0.8.12 cppflags="-O3"
   ==> Installing libelf
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
+  ==> Trying to fetch from ~/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw/libelf-0.8.12.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
+  ==> Staging archive: ~/spack/var/spack/stage/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw/libelf-0.8.12.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
   ==> No patches needed for libelf
   ==> Building libelf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libelf
     Fetch: 0.04s.  Build: 7.95s.  Total: 7.99s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
 
 
 The ``spack find`` command is used to query installed packages. Note that
@@ -258,21 +258,21 @@ existing package's hash matches the desired spec.
 
   $ spack install libdwarf
   ==> Installing libdwarf
-  ==> libelf is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
+  ==> libelf is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
   ==> Can not find version 20160507 in url_list
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
-  curl: (37) Couldn't open file /g/g0/becker33/SC16-spack/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
-  ==> Fetching from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz failed.
+  ==> Trying to fetch from ~/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
+  curl: (37) Couldn't open file ~/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
+  ==> Fetching from ~/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz failed.
   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20160507.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz/libdwarf-20160507.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz
+  ==> Staging archive: ~/spack/var/spack/stage/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz/libdwarf-20160507.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz
   ==> No patches needed for libdwarf
   ==> Building libdwarf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libdwarf
     Fetch: 1.56s.  Build: 33.59s.  Total: 35.15s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz
 
 
 Dependencies can be explicitly requested using the ``^`` sigil. Note that
@@ -284,32 +284,32 @@ top-level package, we can also specify about a dependency using ``^``.
   $ spack install libdwarf ^libelf @0.8.12 %intel
   ==> Installing libdwarf
   ==> Installing libelf
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
+  ==> Trying to fetch from ~/spack/var/spack/cache/libelf/libelf-0.8.12.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.12-4blbe3qxqct3ymrfoxxnxysmybvbxay7/libelf-0.8.12.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libelf-0.8.12-4blbe3qxqct3ymrfoxxnxysmybvbxay7
+  ==> Staging archive: ~/spack/var/spack/stage/libelf-0.8.12-4blbe3qxqct3ymrfoxxnxysmybvbxay7/libelf-0.8.12.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libelf-0.8.12-4blbe3qxqct3ymrfoxxnxysmybvbxay7
   ==> No patches needed for libelf
   ==> Building libelf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libelf
     Fetch: 0.04s.  Build: 52.16s.  Total: 52.19s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libelf-0.8.12-4blbe3qxqct3ymrfoxxnxysmybvbxay7
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libelf-0.8.12-4blbe3qxqct3ymrfoxxnxysmybvbxay7
   ==> Can not find version 20160507 in url_list
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
+  ==> Trying to fetch from ~/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
   ################################################################################################################################################################################# 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libdwarf-20160507-csruprgucaujkfkrcywhwou7nbeis5fo/libdwarf-20160507.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libdwarf-20160507-csruprgucaujkfkrcywhwou7nbeis5fo
+  ==> Staging archive: ~/spack/var/spack/stage/libdwarf-20160507-csruprgucaujkfkrcywhwou7nbeis5fo/libdwarf-20160507.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libdwarf-20160507-csruprgucaujkfkrcywhwou7nbeis5fo
   ==> No patches needed for libdwarf
   ==> Building libdwarf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libdwarf
     Fetch: 0.40s.  Build: 2m 17.29s.  Total: 2m 17.69s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libdwarf-20160507-csruprgucaujkfkrcywhwou7nbeis5fo
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libdwarf-20160507-csruprgucaujkfkrcywhwou7nbeis5fo
 
 
 Packages can also be referred to from the command line by their package
 hash. Using the ``spack find -lf`` command earlier we saw that the hash
-of our optimized installation of libelf (``cppflags=\"-O3\"``) began with
+of our optimized installation of libelf (``cppflags="-O3"``) began with
 ``vrv2ttb``. We can now explicitly build with that package without typing
 the entire spec, by using the ``/`` sigil to refer to it by hash. As with
 other tools like git, you do not need to specify an *entire* hash on the
@@ -321,18 +321,18 @@ packages share the prefix) then spack will report an error.
 
   $ spack install libdwarf ^/vrv2ttb
   ==> Installing libdwarf
-  ==> libelf is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
+  ==> libelf is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
   ==> Can not find version 20160507 in url_list
-  ==> Trying to fetch from file:///g/g0/becker33/SC16-spack/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
+  ==> Trying to fetch from ~/spack/var/spack/cache/libdwarf/libdwarf-20160507.tar.gz
   #################################################################################################################################################################################################################################################### 100.0%
-  ==> Staging archive: /g/g0/becker33/SC16-spack/spack/var/spack/stage/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t/libdwarf-20160507.tar.gz
-  ==> Created stage in /g/g0/becker33/SC16-spack/spack/var/spack/stage/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t
+  ==> Staging archive: ~/spack/var/spack/stage/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t/libdwarf-20160507.tar.gz
+  ==> Created stage in ~/spack/var/spack/stage/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t
   ==> No patches needed for libdwarf
   ==> Building libdwarf [Package]
   ==> Executing phase : 'install'
   ==> Successfully installed libdwarf
     Fetch: 0.96s.  Build: 24.03s.  Total: 24.99s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t
 
 
 The ``spack find`` command can also take a ``-d`` flag, which can show
@@ -395,7 +395,7 @@ dependency. If we install it "out of the box," it will build with
   ==> Building zlib [Package]
   ==> Successfully installed zlib
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Installing openmpi
   ==> Installing hwloc
   ==> Installing libpciaccess
@@ -403,43 +403,43 @@ dependency. If we install it "out of the box," it will build with
   ==> Building util-macros [Package]
   ==> Successfully installed util-macros
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/util-macros-1.19.0-pc6zhs4cnkmg2cv4et4fizsp6scuvacg
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/util-macros-1.19.0-pc6zhs4cnkmg2cv4et4fizsp6scuvacg
   ==> Installing libtool
   ==> Installing m4
   ==> Installing libsigsegv
   ==> Building libsigsegv [Package]
   ==> Successfully installed libsigsegv
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libsigsegv-2.10-q4cok3yber7lhf3jswg6mysg7oi53unh
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libsigsegv-2.10-q4cok3yber7lhf3jswg6mysg7oi53unh
   ==> Building m4 [Package]
   ==> Successfully installed m4
     Fetch: .  Build: 0.23s.  Total: 0.23s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
   ==> Building libtool [Package]
   ==> Successfully installed libtool
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libtool-2.4.6-rdx5nkfjwlvcanz5il3ys2pe34j4vxx5
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libtool-2.4.6-rdx5nkfjwlvcanz5il3ys2pe34j4vxx5
   ==> Installing pkg-config
   ==> Building pkg-config [Package]
   ==> Successfully installed pkg-config
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/pkg-config-0.29.1-wpjnlzahdw6ahkrgmqyeugkj2zhv4tui
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/pkg-config-0.29.1-wpjnlzahdw6ahkrgmqyeugkj2zhv4tui
   ==> Building libpciaccess [Package]
   ==> Successfully installed libpciaccess
     Fetch: .  Build: 0.10s.  Total: 0.10s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libpciaccess-0.13.4-m2f6fpm22rpprq2ihkmfx6llf363264m
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libpciaccess-0.13.4-m2f6fpm22rpprq2ihkmfx6llf363264m
   ==> Building hwloc [Package]
   ==> Successfully installed hwloc
     Fetch: .  Build: 0.23s.  Total: 0.23s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hwloc-1.11.4-xpb6hbl2hsze25cgdgfnoppn6rchhzaz
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hwloc-1.11.4-xpb6hbl2hsze25cgdgfnoppn6rchhzaz
   ==> Building openmpi [Package]
   ==> Successfully installed openmpi
     Fetch: .  Build: 0.35s.  Total: 0.35s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
   ==> Building hdf5 [AutotoolsPackage]
   ==> Successfully installed hdf5
     Fetch: .  Build: 0.61s.  Total: 0.61s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
 
 
 Spack packages can also have variants. Boolean variants can be specified
@@ -453,11 +453,11 @@ support.
 
   $ spack install --fake hdf5~mpi
   ==> Installing hdf5
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Building hdf5 [AutotoolsPackage]
   ==> Successfully installed hdf5
     Fetch: .  Build: 0.22s.  Total: 0.22s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-twppaioxqn6lti4grgopnmhwcq3h2rpw
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-twppaioxqn6lti4grgopnmhwcq3h2rpw
 
 
 We might also want to install HDF5 with a different MPI
@@ -477,12 +477,12 @@ by any of several providers.
 
   $ spack install --fake hdf5+mpi ^mpich
   ==> Installing hdf5
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Building hdf5 [AutotoolsPackage]
   ==> Successfully installed hdf5
     Fetch: .  Build: 0.38s.  Total: 0.38s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
 
 
 We'll do a quick check in on what we have installed so far.
@@ -592,180 +592,180 @@ let's look at a more complicated package.
   $ spack install --fake trilinos
   ==> Installing trilinos
   ==> Installing superlu-dist
-  ==> openmpi is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  ==> openmpi is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
   ==> Installing parmetis
-  ==> openmpi is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  ==> openmpi is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
   ==> Installing cmake
   ==> Installing bzip2
   ==> Building bzip2 [Package]
   ==> Successfully installed bzip2
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bzip2-1.0.6-gll2xsahysy7ji5gkmfxwkofdt3mwjhs
-  ==> expat is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/expat-2.2.0-mg5kwd3kluxdgorj32vzbp7aksg3vqej
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bzip2-1.0.6-gll2xsahysy7ji5gkmfxwkofdt3mwjhs
+  ==> expat is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/expat-2.2.0-mg5kwd3kluxdgorj32vzbp7aksg3vqej
   ==> Installing ncurses
   ==> Building ncurses [Package]
   ==> Successfully installed ncurses
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/ncurses-6.0-fttg4astvrtq2buey4wq66tnyu7bgj2c
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/ncurses-6.0-fttg4astvrtq2buey4wq66tnyu7bgj2c
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Installing openssl
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Building openssl [Package]
   ==> Successfully installed openssl
     Fetch: .  Build: 0.23s.  Total: 0.23s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openssl-1.0.2j-kt5xyk2dkho6tzadnqlbnbujmljprylg
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openssl-1.0.2j-kt5xyk2dkho6tzadnqlbnbujmljprylg
   ==> Installing libarchive
   ==> Installing lzma
   ==> Building lzma [Package]
   ==> Successfully installed lzma
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/lzma-4.32.7-hah2cdo3zbulz6yg5do6dvnfn6en5v5c
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/lzma-4.32.7-hah2cdo3zbulz6yg5do6dvnfn6en5v5c
   ==> Installing nettle
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
   ==> Installing gmp
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
   ==> Building gmp [AutotoolsPackage]
   ==> Successfully installed gmp
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
   ==> Building nettle [Package]
   ==> Successfully installed nettle
     Fetch: .  Build: 0.18s.  Total: 0.18s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/nettle-3.2-w4ieitifcmrldo4ra7as63apagzf56ja
-  ==> bzip2 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bzip2-1.0.6-gll2xsahysy7ji5gkmfxwkofdt3mwjhs
-  ==> expat is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/expat-2.2.0-mg5kwd3kluxdgorj32vzbp7aksg3vqej
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/nettle-3.2-w4ieitifcmrldo4ra7as63apagzf56ja
+  ==> bzip2 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bzip2-1.0.6-gll2xsahysy7ji5gkmfxwkofdt3mwjhs
+  ==> expat is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/expat-2.2.0-mg5kwd3kluxdgorj32vzbp7aksg3vqej
   ==> Installing libxml2
   ==> Installing xz
   ==> Building xz [Package]
   ==> Successfully installed xz
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/xz-5.2.2-bxh6cpyqqozazm5okvjqk23sww3gccnf
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/xz-5.2.2-bxh6cpyqqozazm5okvjqk23sww3gccnf
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Building libxml2 [Package]
   ==> Successfully installed libxml2
     Fetch: .  Build: 0.35s.  Total: 0.35s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libxml2-2.9.4-un323rppyu5qipkegyf7flmymvtmunrx
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libxml2-2.9.4-un323rppyu5qipkegyf7flmymvtmunrx
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Installing lz4
   ==> Building lz4 [Package]
   ==> Successfully installed lz4
     Fetch: .  Build: 0.12s.  Total: 0.12s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/lz4-131-ivy2fcaw7ywujx74weebdi5bsm7q4vkc
-  ==> openssl is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openssl-1.0.2j-kt5xyk2dkho6tzadnqlbnbujmljprylg
-  ==> xz is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/xz-5.2.2-bxh6cpyqqozazm5okvjqk23sww3gccnf
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/lz4-131-ivy2fcaw7ywujx74weebdi5bsm7q4vkc
+  ==> openssl is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openssl-1.0.2j-kt5xyk2dkho6tzadnqlbnbujmljprylg
+  ==> xz is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/xz-5.2.2-bxh6cpyqqozazm5okvjqk23sww3gccnf
   ==> Installing lzo
   ==> Building lzo [AutotoolsPackage]
   ==> Successfully installed lzo
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/lzo-2.09-dlgnm74ozo6baactkft5oah2jre2ri2i
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/lzo-2.09-dlgnm74ozo6baactkft5oah2jre2ri2i
   ==> Building libarchive [Package]
   ==> Successfully installed libarchive
     Fetch: .  Build: 1.35s.  Total: 1.35s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libarchive-3.2.1-biq3kebw7vel7njusill7vv7mjldkqjv
-  ==> xz is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/xz-5.2.2-bxh6cpyqqozazm5okvjqk23sww3gccnf
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libarchive-3.2.1-biq3kebw7vel7njusill7vv7mjldkqjv
+  ==> xz is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/xz-5.2.2-bxh6cpyqqozazm5okvjqk23sww3gccnf
   ==> Installing curl
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
-  ==> openssl is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openssl-1.0.2j-kt5xyk2dkho6tzadnqlbnbujmljprylg
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> openssl is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openssl-1.0.2j-kt5xyk2dkho6tzadnqlbnbujmljprylg
   ==> Building curl [Package]
   ==> Successfully installed curl
     Fetch: .  Build: 0.36s.  Total: 0.36s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/curl-7.50.3-oze4gqutj4x2isbkcn5ob2bhhxbskod4
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/curl-7.50.3-oze4gqutj4x2isbkcn5ob2bhhxbskod4
   ==> Building cmake [Package]
   ==> Successfully installed cmake
     Fetch: .  Build: 1.64s.  Total: 1.64s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
   ==> Installing metis
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
   ==> Building metis [Package]
   ==> Successfully installed metis
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
   ==> Building parmetis [Package]
   ==> Successfully installed parmetis
     Fetch: .  Build: 0.62s.  Total: 0.62s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-rtg6hml5t6acdcnxomn3l5zfiful4d2t
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-rtg6hml5t6acdcnxomn3l5zfiful4d2t
   ==> Installing openblas
   ==> Building openblas [Package]
   ==> Successfully installed openblas
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
-  ==> metis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> metis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
   ==> Building superlu-dist [Package]
   ==> Successfully installed superlu-dist
     Fetch: .  Build: 0.85s.  Total: 0.85s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/superlu-dist-5.1.1-25r6jlvkpjnkiuwt2rtbzhk3l3htuxs7
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/superlu-dist-5.1.1-25r6jlvkpjnkiuwt2rtbzhk3l3htuxs7
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
   ==> Installing glm
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
   ==> Building glm [Package]
   ==> Successfully installed glm
     Fetch: .  Build: 0.12s.  Total: 0.12s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/glm-0.9.7.1-7a6oho4aerz7vftxd5ur7lywscht2iry
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/glm-0.9.7.1-7a6oho4aerz7vftxd5ur7lywscht2iry
   ==> Installing hypre
-  ==> openmpi is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> openmpi is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building hypre [Package]
   ==> Successfully installed hypre
     Fetch: .  Build: 0.61s.  Total: 0.61s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hypre-2.11.1-lf7hcejiiww5peesh57quda72z67veit
-  ==> metis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hypre-2.11.1-lf7hcejiiww5peesh57quda72z67veit
+  ==> metis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
   ==> Installing netlib-scalapack
-  ==> openmpi is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> openmpi is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building netlib-scalapack [Package]
   ==> Successfully installed netlib-scalapack
     Fetch: .  Build: 0.61s.  Total: 0.61s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dvcanz2qq4dfcexznbhbmzbxfj43uz4q
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dvcanz2qq4dfcexznbhbmzbxfj43uz4q
   ==> Installing suite-sparse
   ==> Installing tbb
   ==> Building tbb [Package]
   ==> Successfully installed tbb
     Fetch: .  Build: 0.12s.  Total: 0.12s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/tbb-4.4.4-zawzkkhrmdonbjpj3a5bb6gkgnqlrjeu
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
-  ==> metis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/tbb-4.4.4-zawzkkhrmdonbjpj3a5bb6gkgnqlrjeu
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> metis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
   ==> Building suite-sparse [Package]
   ==> Successfully installed suite-sparse
     Fetch: .  Build: 0.49s.  Total: 0.49s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/suite-sparse-4.5.3-lvur6hriy2j7xfjwh5punp3exwpynzm6
-  ==> openmpi is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/suite-sparse-4.5.3-lvur6hriy2j7xfjwh5punp3exwpynzm6
+  ==> openmpi is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
   ==> Installing netcdf
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
-  ==> curl is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/curl-7.50.3-oze4gqutj4x2isbkcn5ob2bhhxbskod4
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
-  ==> hdf5 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> curl is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/curl-7.50.3-oze4gqutj4x2isbkcn5ob2bhhxbskod4
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> hdf5 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
   ==> Building netcdf [Package]
   ==> Successfully installed netcdf
     Fetch: .  Build: 0.90s.  Total: 0.90s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netcdf-4.4.1-tcl4zbrmdfrit2cqlaxig6xieu5h552j
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netcdf-4.4.1-tcl4zbrmdfrit2cqlaxig6xieu5h552j
   ==> Installing mumps
-  ==> netlib-scalapack is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dvcanz2qq4dfcexznbhbmzbxfj43uz4q
-  ==> openmpi is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> netlib-scalapack is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dvcanz2qq4dfcexznbhbmzbxfj43uz4q
+  ==> openmpi is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openmpi-2.0.1-j4cgoq4furxvr73pq72r2qgywgksw3qn
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building mumps [Package]
   ==> Successfully installed mumps
     Fetch: .  Build: 0.74s.  Total: 0.74s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mumps-5.0.2-kr5r4nnx5tfcacxnk3ii5dsxbe6pu5fy
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mumps-5.0.2-kr5r4nnx5tfcacxnk3ii5dsxbe6pu5fy
   ==> Installing matio
   ==> Building matio [Package]
   ==> Successfully installed matio
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/matio-1.5.2-4zrozucookychlvc4q53omp2zyfk2bed
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/matio-1.5.2-4zrozucookychlvc4q53omp2zyfk2bed
   ==> Installing boost
-  ==> bzip2 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bzip2-1.0.6-gll2xsahysy7ji5gkmfxwkofdt3mwjhs
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> bzip2 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bzip2-1.0.6-gll2xsahysy7ji5gkmfxwkofdt3mwjhs
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
   ==> Building boost [Package]
   ==> Successfully installed boost
     Fetch: .  Build: 0.35s.  Total: 0.35s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/boost-1.62.0-je7eqvzt74kezwhh55y5lwt5dy6pnali
-  ==> parmetis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-rtg6hml5t6acdcnxomn3l5zfiful4d2t
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
-  ==> hdf5 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/boost-1.62.0-je7eqvzt74kezwhh55y5lwt5dy6pnali
+  ==> parmetis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-rtg6hml5t6acdcnxomn3l5zfiful4d2t
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> hdf5 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
   ==> Building trilinos [Package]
   ==> Successfully installed trilinos
     Fetch: .  Build: 2.63s.  Total: 2.63s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/trilinos-12.8.1-uvd6dfd7x4uyvck4awo3r3frudihn4ar
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/trilinos-12.8.1-uvd6dfd7x4uyvck4awo3r3frudihn4ar
 
 
 Now we're starting to see the power of Spack. Trilinos has 11 top level
@@ -785,67 +785,67 @@ with ``mpich``:
   $ spack install --fake trilinos ^hdf5+mpi ^mpich
   ==> Installing trilinos
   ==> Installing superlu-dist
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> metis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> metis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
   ==> Installing parmetis
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> metis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> metis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
   ==> Building parmetis [Package]
   ==> Successfully installed parmetis
     Fetch: .  Build: 0.38s.  Total: 0.38s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-43kbtni6p5y446c6qdkybq4htj7ot4zn
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-43kbtni6p5y446c6qdkybq4htj7ot4zn
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building superlu-dist [Package]
   ==> Successfully installed superlu-dist
     Fetch: .  Build: 0.61s.  Total: 0.61s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/superlu-dist-5.1.1-46uuupehmonx5jicc6xnegnud2n5jqyl
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
-  ==> glm is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/glm-0.9.7.1-7a6oho4aerz7vftxd5ur7lywscht2iry
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/superlu-dist-5.1.1-46uuupehmonx5jicc6xnegnud2n5jqyl
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  ==> glm is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/glm-0.9.7.1-7a6oho4aerz7vftxd5ur7lywscht2iry
   ==> Installing hypre
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building hypre [Package]
   ==> Successfully installed hypre
     Fetch: .  Build: 0.37s.  Total: 0.37s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hypre-2.11.1-6ajnyymoivs5apajd7thjisae36jv4lz
-  ==> metis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hypre-2.11.1-6ajnyymoivs5apajd7thjisae36jv4lz
+  ==> metis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/metis-5.1.0-ithifyl4xvqbn76js23wsb4tjnztrbdv
   ==> Installing netlib-scalapack
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> cmake is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> cmake is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/cmake-3.6.1-n2nkknrku6dvuneo3rjumim7axt7n36e
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building netlib-scalapack [Package]
   ==> Successfully installed netlib-scalapack
     Fetch: .  Build: 0.37s.  Total: 0.37s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dayeep27omm26wksd3iqvbu3gezc2eoh
-  ==> suite-sparse is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/suite-sparse-4.5.3-lvur6hriy2j7xfjwh5punp3exwpynzm6
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dayeep27omm26wksd3iqvbu3gezc2eoh
+  ==> suite-sparse is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/suite-sparse-4.5.3-lvur6hriy2j7xfjwh5punp3exwpynzm6
   ==> Installing netcdf
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
-  ==> curl is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/curl-7.50.3-oze4gqutj4x2isbkcn5ob2bhhxbskod4
-  ==> zlib is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
-  ==> hdf5 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> curl is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/curl-7.50.3-oze4gqutj4x2isbkcn5ob2bhhxbskod4
+  ==> zlib is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/zlib-1.2.8-ayc4jq7vxuzge5n444gutvskeytfdruh
+  ==> hdf5 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
   ==> Building netcdf [Package]
   ==> Successfully installed netcdf
     Fetch: .  Build: 0.67s.  Total: 0.67s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netcdf-4.4.1-gfemi4jk4qltvp33xhtpkam7dozbqvhq
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netcdf-4.4.1-gfemi4jk4qltvp33xhtpkam7dozbqvhq
   ==> Installing mumps
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> netlib-scalapack is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dayeep27omm26wksd3iqvbu3gezc2eoh
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> netlib-scalapack is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/netlib-scalapack-2.0.2-dayeep27omm26wksd3iqvbu3gezc2eoh
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
   ==> Building mumps [Package]
   ==> Successfully installed mumps
     Fetch: .  Build: 0.49s.  Total: 0.49s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mumps-5.0.2-w7t5pl3jhhwitfiyer63zj6zv7idkt3m
-  ==> mpich is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
-  ==> matio is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/matio-1.5.2-4zrozucookychlvc4q53omp2zyfk2bed
-  ==> boost is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/boost-1.62.0-je7eqvzt74kezwhh55y5lwt5dy6pnali
-  ==> parmetis is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-43kbtni6p5y446c6qdkybq4htj7ot4zn
-  ==> openblas is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
-  ==> hdf5 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mumps-5.0.2-w7t5pl3jhhwitfiyer63zj6zv7idkt3m
+  ==> mpich is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpich-3.2-5jlp2ndnsb67txggraglu47vjmayx5za
+  ==> matio is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/matio-1.5.2-4zrozucookychlvc4q53omp2zyfk2bed
+  ==> boost is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/boost-1.62.0-je7eqvzt74kezwhh55y5lwt5dy6pnali
+  ==> parmetis is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/parmetis-4.0.3-43kbtni6p5y446c6qdkybq4htj7ot4zn
+  ==> openblas is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/openblas-0.2.19-bwofa7fhff6od5zn56vy3j4eeyupsqgt
+  ==> hdf5 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
   ==> Building trilinos [Package]
   ==> Successfully installed trilinos
     Fetch: .  Build: 2.42s.  Total: 2.42s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/trilinos-12.8.1-ffwrpxnq7lhiw2abxn2u7ffr4jjsdwep
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/trilinos-12.8.1-ffwrpxnq7lhiw2abxn2u7ffr4jjsdwep
 
 We see that every package in the trilinos DAG that depends on MPI now
 uses ``mpich``.
@@ -1034,6 +1034,7 @@ We can uninstall packages by referring only to their hash.
 We can use either ``-f`` (force) or ``-d`` (remove dependents as well) to
 remove packages that are required by another installed package.
 
+.. code-block:: console
 
   $ spack uninstall /4blb
   ==> Error: Will not uninstall libelf@0.8.12%intel@16.0.3-4blbe3q
@@ -1063,6 +1064,7 @@ Spack will not uninstall packages that are not sufficiently
 specified. The ``-a`` (all) flag can be used to uninstall multiple
 packages at once.
 
+.. code-block:: console
 
   $ spack uninstall trilinos
   ==> Error: trilinos matches multiple packages:
@@ -1101,8 +1103,8 @@ already covered in the :ref:`basics-tutorial-install` and
 The ``spack find`` command can accept what we call "anonymous specs."
 These are expressions in spec syntax that do not contain a package
 name. For example, `spack find %intel` will return every package built
-with the intel compiler, and ``spack find cppflags=\\"-O3\\"`` will
-return every package which was built with ``cppflags=\\"-O3\\"``.
+with the intel compiler, and ``spack find cppflags="-O3"`` will
+return every package which was built with ``cppflags="-O3"``.
 
 .. code-block:: console
 
@@ -1113,7 +1115,7 @@ return every package which was built with ``cppflags=\\"-O3\\"``.
 
 
 
-  $ spack find cppflags=\"-O3\"
+  $ spack find cppflags="-O3"
   ==> 1 installed packages.
   -- linux-redhat6-x86_64 / gcc@4.4.7 -----------------------------
   libelf@0.8.12
@@ -1130,18 +1132,18 @@ command.
   $ spack find -pe
   ==> 10 installed packages.
   -- linux-redhat6-x86_64 / gcc@4.4.7 -----------------------------
-      hdf5@1.10.0-patch1  /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-twppaioxqn6lti4grgopnmhwcq3h2rpw
-      hdf5@1.10.0-patch1  /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
-      hdf5@1.10.0-patch1  /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
-      libdwarf@20160507   /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t
-      libdwarf@20160507   /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz
-      libelf@0.8.12       /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy
-      libelf@0.8.12       /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
-      libelf@0.8.13       /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
-      trilinos@12.8.1     /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/trilinos-12.8.1-uvd6dfd7x4uyvck4awo3r3frudihn4ar
+      hdf5@1.10.0-patch1  ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-twppaioxqn6lti4grgopnmhwcq3h2rpw
+      hdf5@1.10.0-patch1  ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-j36yfw25i6gdd3q4vwlupgkpwic4ua6m
+      hdf5@1.10.0-patch1  ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/hdf5-1.10.0-patch1-ezvtnox35albuaxqryuondweyjgeo6es
+      libdwarf@20160507   ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-dtg3tgnp7htccoly26gduqlrgvnwcp5t
+      libdwarf@20160507   ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libdwarf-20160507-yfx6p3g3rkmqvcqbmtb34o6pln7pqvcz
+      libelf@0.8.12       ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-ipggckv6i7h44iryzfa4dwdela32a7fy
+      libelf@0.8.12       ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.12-vrv2ttbd34xlfoxy4jwt6qsjrcbalmmw
+      libelf@0.8.13       ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/libelf-0.8.13-csrt4qxfkhjgn5xg3zjpkir7xdnszl2a
+      trilinos@12.8.1     ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/trilinos-12.8.1-uvd6dfd7x4uyvck4awo3r3frudihn4ar
 
   -- linux-redhat6-x86_64 / intel@16.0.3 --------------------------
-      libelf@0.8.13  /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj
+      libelf@0.8.13  ~/spack/opt/spack/linux-redhat6-x86_64/intel-16.0.3/libelf-0.8.13-7wgp32xksatkvw2tbssmehw2t5tnxndj
 
 
 ---------------------
@@ -1182,56 +1184,56 @@ compilers built with Spack can be added to the configuration.
 
   $ spack install --fake gcc@6.1.0
   ==> Installing gcc
-  ==> gmp is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
+  ==> gmp is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
   ==> Installing isl
-  ==> gmp is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
+  ==> gmp is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
   ==> Building isl [Package]
   ==> Successfully installed isl
     Fetch: .  Build: 0.19s.  Total: 0.19s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/isl-0.14-hs2w7mjjjaakkmbbv5yvfqf7yyzhorl6
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/isl-0.14-hs2w7mjjjaakkmbbv5yvfqf7yyzhorl6
   ==> Installing mpc
-  ==> gmp is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
+  ==> gmp is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
   ==> Installing mpfr
-  ==> gmp is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
+  ==> gmp is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gmp-6.1.1-uwn4gfdtq3sywy5uf4f7znrh66oybikf
   ==> Building mpfr [Package]
   ==> Successfully installed mpfr
     Fetch: .  Build: 0.17s.  Total: 0.17s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpfr-3.1.4-7kt5ij437khredfq4bvnyu22t3fmtfvt
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpfr-3.1.4-7kt5ij437khredfq4bvnyu22t3fmtfvt
   ==> Building mpc [Package]
   ==> Successfully installed mpc
     Fetch: .  Build: 0.28s.  Total: 0.28s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpc-1.0.3-g5taq6lt3zuy5l2jtggi5lctxnl4la5u
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpc-1.0.3-g5taq6lt3zuy5l2jtggi5lctxnl4la5u
   ==> Installing binutils
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
   ==> Installing bison
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
   ==> Building bison [Package]
   ==> Successfully installed bison
     Fetch: .  Build: 0.12s.  Total: 0.12s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bison-3.0.4-hkhfysfvq5l6rsns67g2htmkpxauvnwa
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bison-3.0.4-hkhfysfvq5l6rsns67g2htmkpxauvnwa
   ==> Installing flex
-  ==> m4 is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
-  ==> bison is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bison-3.0.4-hkhfysfvq5l6rsns67g2htmkpxauvnwa
+  ==> m4 is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/m4-1.4.17-qijdzvhjyybrtwbqm73vykhmkaqro3je
+  ==> bison is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/bison-3.0.4-hkhfysfvq5l6rsns67g2htmkpxauvnwa
   ==> Building flex [Package]
   ==> Successfully installed flex
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/flex-2.6.0-qd6d73rdfrozdrsdpimvl4tj7d5ps7qg
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/flex-2.6.0-qd6d73rdfrozdrsdpimvl4tj7d5ps7qg
   ==> Building binutils [Package]
   ==> Successfully installed binutils
     Fetch: .  Build: 0.11s.  Total: 0.11s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/binutils-2.27-iq2hry3gvaxszmwwbnll7njgdgaek56o
-  ==> mpfr is already installed in /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpfr-3.1.4-7kt5ij437khredfq4bvnyu22t3fmtfvt
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/binutils-2.27-iq2hry3gvaxszmwwbnll7njgdgaek56o
+  ==> mpfr is already installed in ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/mpfr-3.1.4-7kt5ij437khredfq4bvnyu22t3fmtfvt
   ==> Building gcc [Package]
   ==> Successfully installed gcc
     Fetch: .  Build: 0.66s.  Total: 0.66s.
-  [+] /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh
+  [+] ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh
 
 
 
   $ spack find -p gcc
   ==> 1 installed packages.
   -- linux-redhat6-x86_64 / gcc@4.4.7 -----------------------------
-      gcc@6.1.0  /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh
+      gcc@6.1.0  ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh
 
 
 If we had done a "real" install of gcc, we could add it to our
@@ -1241,13 +1243,13 @@ return no new compilers.
 
 .. code-block:: console
 
-  $ spack compiler add /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
+  $ spack compiler add ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
   ==> Found no new compilers
 
 If we had done a real install, the output would have been as follows:
 
 .. code-block:: console
 
-  $ spack compiler add /g/g0/becker33/SC16-spack/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
-  ==> Added 1 new compiler to /g/g0/becker33/.spack/linux/compilers.yaml
+  $ spack compiler add ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
+  ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
       gcc@6.1.0

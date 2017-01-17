@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RZoo(Package):
+class RZoo(RPackage):
     """An S3 class with methods for totally ordered indexed observations. It is
     particularly aimed at irregular time series of numeric vectors/matrices and
     factors. zoo's key design goals are independence of a particular
@@ -38,10 +38,4 @@ class RZoo(Package):
 
     version('1.7-13', '99521dfa4c668e692720cefcc5a1bf30')
 
-    extends('R')
-
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lattice', type=('build', 'run'))
