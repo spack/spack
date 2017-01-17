@@ -24,12 +24,9 @@
 ##############################################################################
 import filecmp
 import pytest
-import shutil
-import tempfile
 
 import spack
 import spack.store
-from llnl.util.filesystem import join_path
 from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
