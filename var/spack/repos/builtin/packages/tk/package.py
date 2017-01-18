@@ -52,7 +52,7 @@ class Tk(AutotoolsPackage):
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
-    def build_directory(self):
+    def configure_directory(self):
         return 'unix'
 
     def configure_args(self):

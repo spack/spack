@@ -36,6 +36,9 @@ class Libtool(AutotoolsPackage):
 
     depends_on('m4@1.4.6:', type='build')
 
+    def build_directory(self):
+        return 'spack-build'
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
 

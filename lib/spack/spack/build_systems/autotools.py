@@ -30,8 +30,10 @@ import shutil
 from subprocess import PIPE
 from subprocess import check_call
 
-from llnl.util.filesystem import working_dir
 from spack.package import PackageBase, run_after
+import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir, join_path
+from spack.util.executable import Executable
 
 
 class AutotoolsPackage(PackageBase):
@@ -147,9 +149,24 @@ class AutotoolsPackage(PackageBase):
 
         return False
 
+    def configure_directory(self):
+        """Returns the directory where 'configure' resides.
+
+        :return: directory where to find configure
+        """
+        return self.stage.source_path
+
+    @property
+    def configure_abs_path(self):
+        # Absolute path to configure
+        configure_abs_path = join_path(
+            os.path.abspath(self.configure_directory()), 'configure'
+        )
+        return configure_abs_path
+
     def build_directory(self):
         """Override to provide another place to build the package"""
-        return self.stage.source_path
+        return self.configure_directory()
 
     def patch(self):
         """Patches config.guess if
@@ -167,19 +184,46 @@ class AutotoolsPackage(PackageBase):
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
-        pass
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else try to regenerate it
+        autotools = ['m4', 'autoconf', 'automake', 'libtool']
+        missing = [x for x in autotools if x not in spec]
+        if missing:
+            msg = 'Cannot generate configure: missing dependencies {0}'
+            raise RuntimeError(msg.format(missing))
+        tty.msg('Configure script not found: trying to generate it')
+        tty.warn('*********************************************************')
+        tty.warn('* If the default procedure fails, consider implementing *')
+        tty.warn('*        a custom AUTORECONF phase in the package       *')
+        tty.warn('*********************************************************')
+        with working_dir(self.configure_directory()):
+            m = inspect.getmodule(self)
+            m.libtoolize()
+            m.aclocal()
+            m.autoconf()
+            autogen = Executable('./autogen.sh')
+            autogen()
 
     @run_after('autoreconf')
-    def is_configure_or_die(self):
-        """Checks the presence of a `configure` file after the
-        :py:meth:`.autoreconf` phase.
+    def set_configure_or_die(self):
+        """Checks the presence of a ``configure`` file after the
+        autoreconf phase. If it is found sets a module attribute
+        appropriately, otherwise raises an error.
 
-        :raise RuntimeError: if the ``configure`` script does not exist.
+        :raises RuntimeError: if a configure script is not found in
+            :py:meth:`~.configure_directory`
         """
-        with working_dir(self.build_directory()):
-            if not os.path.exists('configure'):
-                raise RuntimeError(
-                    'configure script not found in {0}'.format(os.getcwd()))
+        # Check if a configure script is there. If not raise a RuntimeError.
+        if not os.path.exists(self.configure_abs_path):
+            msg = 'configure script not found in {0}'
+            raise RuntimeError(msg.format(self.configure_directory()))
+
+        # Monkey-patch the configure script in the corresponding module
+        inspect.getmodule(self).configure = Executable(
+            self.configure_abs_path
+        )
 
     def configure_args(self):
         """Produces a list containing all the arguments that must be passed to
@@ -195,7 +239,7 @@ class AutotoolsPackage(PackageBase):
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
 
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory(), create=True):
             inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
