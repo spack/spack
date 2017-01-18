@@ -56,10 +56,9 @@ class Cmor(AutotoolsPackage):
             raise RuntimeError(msg)
 
     def configure_args(self):
-        spec = self.spec
         extra_args = ['--disable-debug']
 
-        if '+fortran' in spec:
+        if '+fortran' in self.spec:
             extra_args.append('--enable-fortran')
         else:
             extra_args.append('--disable-fortran')
