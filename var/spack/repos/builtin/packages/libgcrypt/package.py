@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libgcrypt(Package):
+class Libgcrypt(AutotoolsPackage):
     """Libgcrypt is a general purpose cryptographic library based on
        the code from GnuPG. It provides functions for all cryptographic
        building blocks: symmetric ciphers, hash algorithms, MACs, public
@@ -37,8 +37,3 @@ class Libgcrypt(Package):
     version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
 
     depends_on("libgpg-error")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

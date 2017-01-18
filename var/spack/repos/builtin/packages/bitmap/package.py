@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bitmap(Package):
+class Bitmap(AutotoolsPackage):
     """bitmap, bmtoa, atobm - X bitmap (XBM) editor and converter utilities."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/bitmap"
@@ -43,9 +43,3 @@ class Bitmap(Package):
     depends_on('xproto@7.0.25:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

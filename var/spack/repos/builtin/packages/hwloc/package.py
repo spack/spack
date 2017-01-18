@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Hwloc(Package):
+class Hwloc(AutotoolsPackage):
     """The Portable Hardware Locality (hwloc) software package
        provides a portable abstraction (across OS, versions,
        architectures, ...) of the hierarchical topology of modern
@@ -53,9 +53,3 @@ class Hwloc(Package):
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

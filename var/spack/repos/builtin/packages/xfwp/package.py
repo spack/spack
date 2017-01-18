@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xfwp(Package):
+class Xfwp(AutotoolsPackage):
     """xfwp proxies X11 protocol connections, such as through a firewall."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xfwp"
@@ -40,11 +40,5 @@ class Xfwp(Package):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        # FIXME: fails with the error message:
-        # io.c:1039:7: error: implicit declaration of function 'swab'
-
-        make()
-        make('install')
+    # FIXME: fails with the error message:
+    # io.c:1039:7: error: implicit declaration of function 'swab'

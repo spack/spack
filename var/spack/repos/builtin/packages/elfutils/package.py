@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Elfutils(Package):
+class Elfutils(AutotoolsPackage):
     """elfutils is a collection of various binary tools such as
     eu-objdump, eu-readelf, and other utilities that allow you to
     inspect and manipulate ELF files. Refer to Table 5.Tools Included
@@ -41,10 +41,9 @@ class Elfutils(Package):
 
     provides('elf')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
         autoreconf('-if')
 
-        configure('--prefix=%s' % prefix, '--enable-maintainer-mode')
-        make()
-        make("install")
+    def configure_args(self):
+        return ['--enable-maintainer-mode']

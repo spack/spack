@@ -25,7 +25,7 @@
 from spack import *
 
 
-class UtilMacros(Package):
+class UtilMacros(AutotoolsPackage):
     """This is a set of autoconf macros used by the configure.ac scripts in
     other Xorg modular packages, and is needed to generate new versions
     of their configure scripts with autoconf."""
@@ -34,8 +34,3 @@ class UtilMacros(Package):
     url = "https://www.x.org/archive/individual/util/util-macros-1.19.0.tar.bz2"
 
     version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

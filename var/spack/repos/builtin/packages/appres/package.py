@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Appres(Package):
+class Appres(AutotoolsPackage):
     """The appres program prints the resources seen by an application (or
     subhierarchy of an application) with the specified class and instance
     names.  It can be used to determine which resources a particular
@@ -42,9 +42,3 @@ class Appres(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
