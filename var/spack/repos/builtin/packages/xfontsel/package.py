@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xfontsel(Package):
+class Xfontsel(AutotoolsPackage):
     """xfontsel application provides a simple way to display the X11 core
     protocol fonts known to your X server, examine samples of each, and
     retrieve the X Logical Font Description ("XLFD") full name for a font."""
@@ -42,9 +42,3 @@ class Xfontsel(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

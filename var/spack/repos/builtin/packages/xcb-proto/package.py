@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XcbProto(Package):
+class XcbProto(AutotoolsPackage):
     """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to
     generate the majority of its code and API."""
 
@@ -37,8 +37,4 @@ class XcbProto(Package):
 
     extends('python')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        # make('check')  # fails xmllint validation
-        make('install')
+    # NOTE: `make check` fails xmllint validation

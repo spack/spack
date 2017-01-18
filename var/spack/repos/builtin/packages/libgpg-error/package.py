@@ -25,7 +25,7 @@
 from spack import *
 
 
-class LibgpgError(Package):
+class LibgpgError(AutotoolsPackage):
     """Libgpg-error is a small library that defines common error
        values for all GnuPG components. Among these are GPG, GPGSM,
        GPGME, GPG-Agent, libgcrypt, Libksba, DirMngr, Pinentry,
@@ -36,8 +36,3 @@ class LibgpgError(Package):
 
     version('1.21', 'ab0b5aba6d0a185b41d07bda804fd8b2')
     version('1.18', '12312802d2065774b787cbfc22cc04e9')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

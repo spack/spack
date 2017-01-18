@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gconf(Package):
+class Gconf(AutotoolsPackage):
     """GConf is a system for storing application preferences."""
 
     homepage = "https://projects.gnome.org/gconf/"
@@ -43,9 +43,3 @@ class Gconf(Package):
     # gobject-2.0 >= 2.7.0
     # dbus-1 >= 1.0.0
     # dbus-glib-1 >= 0.74
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

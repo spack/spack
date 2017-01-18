@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Htslib(Package):
+class Htslib(AutotoolsPackage):
     """C library for high-throughput sequencing data formats."""
 
     homepage = "https://github.com/samtools/htslib"
@@ -34,8 +34,3 @@ class Htslib(Package):
     version('1.3.1', '16d78f90b72f29971b042e8da8be6843')
 
     depends_on('zlib')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')

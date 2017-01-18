@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libuv(Package):
+class Libuv(AutotoolsPackage):
     """Multi-platform library with a focus on asynchronous IO"""
     homepage = "http://libuv.org"
     url      = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
@@ -36,11 +36,6 @@ class Libuv(Package):
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash('autogen.sh')
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("check")
-        make("install")

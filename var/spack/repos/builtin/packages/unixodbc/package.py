@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Unixodbc(Package):
+class Unixodbc(AutotoolsPackage):
     """ODBC is an open specification for providing application developers with
     a predictable API with which to access Data Sources. Data Sources include
     SQL Servers and any Data Source with an ODBC Driver."""
@@ -34,9 +34,3 @@ class Unixodbc(Package):
     url      = "ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-2.3.4.tar.gz"
 
     version('2.3.4', 'bd25d261ca1808c947cb687e2034be81')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

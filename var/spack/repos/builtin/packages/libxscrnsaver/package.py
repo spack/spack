@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxscrnsaver(Package):
+class Libxscrnsaver(AutotoolsPackage):
     """XScreenSaver - X11 Screen Saver extension client library"""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXScrnSaver"
@@ -40,9 +40,3 @@ class Libxscrnsaver(Package):
     depends_on('scrnsaverproto@1.2:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

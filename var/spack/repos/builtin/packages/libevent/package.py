@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libevent(Package):
+class Libevent(AutotoolsPackage):
     """The libevent API provides a mechanism to execute a callback function
        when a specific event occurs on a file descriptor or after a
        timeout has been reached. Furthermore, libevent also support
@@ -52,13 +52,11 @@ class Libevent(Package):
             description="Build with encryption enabled at the libevent level.")
     depends_on('openssl', when='+openssl')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
         configure_args = []
         if '+openssl' in spec:
             configure_args.append('--enable-openssl')
         else:
             configure_args.append('--enable-openssl')
 
-        configure("--prefix=%s" % prefix, *configure_args)
-        make()
-        make("install")
+        return configure_args

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Readline(Package):
+class Readline(AutotoolsPackage):
     """The GNU Readline library provides a set of functions for use by
        applications that allow users to edit command lines as they
        are typed in. Both Emacs and vi editing modes are
@@ -40,7 +40,5 @@ class Readline(Package):
 
     depends_on("ncurses")
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    def build(self, spec, prefix):
         make("SHLIB_LIBS=-lncurses")
-        make("install")

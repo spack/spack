@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Proxymngr(Package):
+class Proxymngr(AutotoolsPackage):
     """The proxy manager (proxymngr) is responsible for resolving requests from
     xfindproxy (and other similar clients), starting new proxies when
     appropriate, and keeping track of all of the available proxy services.
@@ -44,9 +44,3 @@ class Proxymngr(Package):
     depends_on('xproxymanagementprotocol', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

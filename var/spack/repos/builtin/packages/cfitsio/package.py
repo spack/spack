@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cfitsio(Package):
+class Cfitsio(AutotoolsPackage):
     """CFITSIO is a library of C and Fortran subroutines for reading and writing
     data files in FITS (Flexible Image Transport System) data format.
     """
@@ -37,8 +37,3 @@ class Cfitsio(Package):
     def url_for_version(self, version):
         url = 'ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio{0}.tar.gz'
         return url.format(version.joined)
-
-    def install(self, spec, prefix):
-        configure('--prefix=' + prefix)
-        make()
-        make('install')
