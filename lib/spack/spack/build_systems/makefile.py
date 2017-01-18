@@ -100,4 +100,4 @@ class MakefilePackage(PackageBase):
             inspect.getmodule(self).make(*self.install_targets)
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    PackageBase.run_after('install')(PackageBase.sanity_check_prefix)

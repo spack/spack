@@ -86,7 +86,7 @@ class Mpich(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-    @AutotoolsPackage.precondition('autoreconf')
+    @AutotoolsPackage.run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to

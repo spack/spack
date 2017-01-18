@@ -28,7 +28,7 @@ import sys
 
 
 class Hypre(Package):
-    """Hypre is a library of high performance preconditioners that
+    """Hypre is a library of high performance run_beforeers that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 

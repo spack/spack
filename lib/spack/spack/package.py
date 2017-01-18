@@ -83,8 +83,8 @@ class InstallPhase(object):
 
     def __init__(self, name):
         self.name = name
-        self.preconditions = []
-        self.sanity_checks = []
+        self.run_before = []
+        self.run_after = []
 
     def __get__(self, instance, owner):
         # The caller is a class that is trying to customize
@@ -101,14 +101,14 @@ class InstallPhase(object):
             self._on_phase_start(instance)
             # Execute phase pre-conditions,
             # and give them the chance to fail
-            for check in self.preconditions:
+            for callback in self.run_before:
                 # Do something sensible at some point
-                check(instance)
+                callback(instance)
             phase(spec, prefix)
             # Execute phase sanity_checks,
             # and give them the chance to fail
-            for check in self.sanity_checks:
-                check(instance)
+            for callback in self.run_after:
+                callback(instance)
             # Check instance attributes at the end of a phase
             self._on_phase_exit(instance)
         return phase_wrapper
@@ -129,8 +129,8 @@ class InstallPhase(object):
             # This bug-fix was not back-ported in Python 2.6
             # http://bugs.python.org/issue1515
             other = InstallPhase(self.name)
-            other.preconditions.extend(self.preconditions)
-            other.sanity_checks.extend(self.sanity_checks)
+            other.run_before.extend(self.run_before)
+            other.run_after.extend(self.run_after)
             return other
 
 
@@ -142,13 +142,14 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
     """
     phase_fmt = '_InstallPhase_{0}'
 
-    _InstallPhase_sanity_checks = {}
-    _InstallPhase_preconditions = {}
+    _InstallPhase_run_before = {}
+    _InstallPhase_run_after = {}
 
-    def __new__(meta, name, bases, attr_dict):
-        # Check if phases is in attr dict, then set
-        # install phases wrappers
+    def __new__(mcs, name, bases, attr_dict):
+
         if 'phases' in attr_dict:
+            # Turn the strings in 'phases' into InstallPhase instances
+            # and add them as private attributes
             _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]  # NOQA: ignore=E501
             for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):  # NOQA: ignore=E501
                 attr_dict[phase_name] = InstallPhase(callback_name)
@@ -157,7 +158,7 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
         def _append_checks(check_name):
             # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(meta, attr_name)
+            checks = getattr(mcs, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
                     try:
@@ -180,17 +181,17 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                             PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(meta, attr_name, {})
+                setattr(mcs, attr_name, {})
 
         @classmethod
         def _register_checks(cls, check_type, *args):
             def _register_sanity_checks(func):
                 attr_name = PackageMeta.phase_fmt.format(check_type)
-                check_list = getattr(meta, attr_name)
+                check_list = getattr(mcs, attr_name)
                 for item in args:
                     checks = check_list.setdefault(item, [])
                     checks.append(func)
-                setattr(meta, attr_name, check_list)
+                setattr(mcs, attr_name, check_list)
                 return func
             return _register_sanity_checks
 
@@ -207,32 +208,30 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
             return _execute_under_condition
 
         @classmethod
-        def precondition(cls, *args):
-            return cls._register_checks('preconditions', *args)
+        def run_before(cls, *args):
+            return cls._register_checks('run_before', *args)
 
         @classmethod
-        def sanity_check(cls, *args):
-            return cls._register_checks('sanity_checks', *args)
+        def run_after(cls, *args):
+            return cls._register_checks('run_after', *args)
 
         if all([not hasattr(x, '_register_checks') for x in bases]):
             attr_dict['_register_checks'] = _register_checks
 
-        if all([not hasattr(x, 'sanity_check') for x in bases]):
-            attr_dict['sanity_check'] = sanity_check
-            attr_dict['run_after'] = sanity_check
+        if all([not hasattr(x, 'run_after') for x in bases]):
+            attr_dict['run_after'] = run_after
 
-        if all([not hasattr(x, 'precondition') for x in bases]):
-            attr_dict['precondition'] = precondition
-            attr_dict['run_before'] = precondition
+        if all([not hasattr(x, 'run_before') for x in bases]):
+            attr_dict['run_before'] = run_before
 
         if all([not hasattr(x, 'on_package_attributes') for x in bases]):
             attr_dict['on_package_attributes'] = on_package_attributes
 
         # Preconditions
-        _append_checks('preconditions')
+        _append_checks('run_before')
         # Sanity checks
-        _append_checks('sanity_checks')
-        return super(PackageMeta, meta).__new__(meta, name, bases, attr_dict)
+        _append_checks('run_after')
+        return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
 
 class PackageBase(object):
@@ -1718,7 +1717,7 @@ class Package(PackageBase):
     build_system_class = 'Package'
     # This will be used as a registration decorator in user
     # packages, if need be
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    PackageBase.run_after('install')(PackageBase.sanity_check_prefix)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
