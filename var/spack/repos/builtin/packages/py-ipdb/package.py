@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyIpdb(Package):
+class PyIpdb(PythonPackage):
     """ipdb is the iPython debugger and has many additional features, including
     a better interactive debugging experience via colorized output."""
 
@@ -39,7 +39,6 @@ class PyIpdb(Package):
     # this the original packager does not know what they are. See the 3rd party
     # section on ipdb's GitHub:
     #     https://github.com/gotcha/ipdb#third-party-support
-    extends('python')
     depends_on('python@2.6:2.7,3.2:')
 
     # Dependencies gathered from:
@@ -52,7 +51,3 @@ class PyIpdb(Package):
     depends_on('py-six',             type=('build', 'link'))
     depends_on('py-pexpect',         type=('build', 'link'))
     depends_on('py-prompt-toolkit',  type=('build', 'link'))
-
-    def install(self, spec, prefix):
-        # Installation is uncomplicated, this should suffice.
-        setup_py('install', '--prefix={0}'.format(prefix))
