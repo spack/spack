@@ -22,20 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-
 import os
-import os.path
-
+import glob
 from llnl.util.filesystem import join_path
 
+
 class Tau(Package):
-    """
-    A portable profiling and tracing toolkit for performance
+    """A portable profiling and tracing toolkit for performance
     analysis of parallel programs written in Fortran, C, C++, UPC,
     Java, Python.
     """
+
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.25.tar.gz"
 
@@ -45,15 +43,20 @@ class Tau(Package):
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
     # TODO : shmem variant missing
-    variant('download', default=False, description='Downloads and builds various dependencies')
+    variant('download', default=False,
+            description='Downloads and builds various dependencies')
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=True, description='Use OpenMP threads')
-    variant('mpi', default=True, description='Specify use of TAU MPI wrapper library')
+    variant('mpi', default=True,
+            description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
-    variant('comm', default=True, description=' Generate profiles with MPI communicator info')
+    variant('comm', default=True,
+            description=' Generate profiles with MPI communicator info')
 
-    # TODO : Try to build direct OTF2 support? Some parts of the OTF support library in TAU are non-conformant,
-    # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2 support.
+    # TODO : Try to build direct OTF2 support? Some parts of the OTF support
+    # TODO : library in TAU are non-conformant,
+    # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2
+    # support.
     depends_on('pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
     depends_on('binutils', when='~download')
@@ -65,13 +68,17 @@ class Tau(Package):
 
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
-        # 1 - compilers are mapped to a given set of strings (and spack cc, cxx, etc. wrappers are not among them)
+        # 1 - compilers are mapped to a given set of strings
+        #     (and spack cc, cxx, etc. wrappers are not among them)
         # 2 - absolute paths are not allowed
-        # 3 - the usual environment variables seems not to be checked ('CC', 'CXX' and 'FC')
-        # 4 - if no -cc=<compiler> -cxx=<compiler> is passed tau is built with system compiler silently
+        # 3 - the usual environment variables seems not to be checked
+        #     ('CC', 'CXX' and 'FC')
+        # 4 - if no -cc=<compiler> -cxx=<compiler> is passed tau is built with
+        #     system compiler silently
         # (regardless of what %<compiler> is used in the spec)
         #
-        # In the following we give TAU what he expects and put compilers into PATH
+        # In the following we give TAU what he expects and put compilers into
+        # PATH
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
         compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
@@ -80,7 +87,8 @@ class Tau(Package):
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
         ##########
 
-        # Construct the string of custom compiler flags and append it to compiler related options
+        # Construct the string of custom compiler flags and append it to
+        # compiler related options
         useropt = ' '.join(useropt)
         useropt = "-useropt=%s" % useropt
         compiler_options.append(useropt)
@@ -92,8 +100,9 @@ class Tau(Package):
         change_sed_delimiter('@', ';', 'utils/FixMakefile')
         change_sed_delimiter('@', ';', 'utils/FixMakefile.sed.default')
 
-        # TAU configure, despite the name , seems to be a manually written script (nothing related to autotools).
-        # As such it has a few #peculiarities# that make this build quite hackish.
+        # TAU configure, despite the name , seems to be a manually
+        # written script (nothing related to autotools).  As such it has
+        # a few #peculiarities# that make this build quite hackish.
         options = ["-prefix=%s" % prefix,
                    "-iowrapper",
                    "-pdt=%s" % spec['pdt'].prefix]
@@ -137,3 +146,15 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
+
+    def setup_environment(self, spack_env, run_env):
+        pattern = join_path(self.prefix.lib, 'Makefile.*')
+        files = glob.glob(pattern)
+
+        # This function is called both at install time to set up
+        # the build environment and after install to generate the associated
+        # module file. In the former case there is no `self.prefix.lib`
+        # directory to inspect. The conditional below will set `TAU_MAKEFILE`
+        # in the latter case.
+        if files:
+            run_env.set('TAU_MAKEFILE', files[0])

@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Bison(Package):
-    """Bison is a general-purpose parser generator that converts 
-    an annotated context-free grammar into a deterministic LR or 
+    """Bison is a general-purpose parser generator that converts
+    an annotated context-free grammar into a deterministic LR or
     generalized LR (GLR) parser employing LALR(1) parser tables."""
 
     homepage = "http://www.gnu.org/software/bison/"
@@ -34,7 +35,7 @@ class Bison(Package):
 
     version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
 
-    depends_on("m4")
+    depends_on("m4", type='build')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

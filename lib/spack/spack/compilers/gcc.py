@@ -26,6 +26,7 @@ import llnl.util.tty as tty
 from spack.compiler import *
 from spack.version import ver
 
+
 class Gcc(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['gcc']
@@ -40,14 +41,18 @@ class Gcc(Compiler):
     fc_names = ['gfortran']
 
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    # Homebrew and Linuxes may build gcc with -X, -X.Y suffixes
-    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d']
+    # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
+    # Old compatibility versions may contain XY suffixes.
+    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = {'cc'  : 'gcc/gcc',
-                  'cxx' : 'gcc/g++',
-                  'f77' : 'gcc/gfortran',
-                  'fc'  : 'gcc/gfortran' }
+    link_paths = {'cc': 'gcc/gcc',
+                  'cxx': 'gcc/g++',
+                  'f77': 'gcc/gfortran',
+                  'fc': 'gcc/gfortran'}
+
+    PrgEnv = 'PrgEnv-gnu'
+    PrgEnv_compiler = 'gcc'
 
     @property
     def openmp_flag(self):
@@ -66,8 +71,21 @@ class Gcc(Compiler):
     def cxx14_flag(self):
         if self.version < ver('4.8'):
             tty.die("Only gcc 4.8 and above support c++14.")
+        elif self.version < ver('4.9'):
+            return "-std=c++1y"
         else:
             return "-std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        if self.version < ver('5.0'):
+            tty.die("Only gcc 5.0 and above support c++17.")
+        else:
+            return "-std=c++1z"
+
+    @property
+    def pic_flag(self):
+        return "-fPIC"
 
     @classmethod
     def fc_version(cls, fc):
@@ -76,7 +94,10 @@ class Gcc(Compiler):
             # older gfortran versions don't have simple dumpversion output.
             r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
 
-
     @classmethod
     def f77_version(cls, f77):
         return cls.fc_version(f77)
+
+    @property
+    def stdcxx_libs(self):
+        return ('-lstdc++', )

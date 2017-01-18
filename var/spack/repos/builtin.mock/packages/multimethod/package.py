@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack.architecture
 
 
 class Multimethod(Package):
@@ -49,7 +50,6 @@ class Multimethod(Package):
     def no_version_2(self):
         return 4
 
-
     #
     # These functions overlap, so there is ambiguity, but we'll take
     # the first one.
@@ -61,7 +61,6 @@ class Multimethod(Package):
     @when('@2:')
     def version_overlap(self):
         return 2
-
 
     #
     # More complicated case with cascading versions.
@@ -81,7 +80,6 @@ class Multimethod(Package):
     def mpi_version(self):
         return 1
 
-
     #
     # Use these to test whether the default method is called when no
     # match is found.  This also tests whether we can switch methods
@@ -98,31 +96,25 @@ class Multimethod(Package):
     def has_a_default(self):
         return 'intel'
 
-
-
     #
-    # Make sure we can switch methods on different architectures
+    # Make sure we can switch methods on different target
     #
-    @when('=x86_64')
-    def different_by_architecture(self):
-        return 'x86_64'
+    platform = spack.architecture.platform()
+    targets = platform.targets.values()
+    if len(targets) > 1:
+        targets = targets[:-1]
 
-    @when('=ppc64')
-    def different_by_architecture(self):
-        return 'ppc64'
-
-    @when('=ppc32')
-    def different_by_architecture(self):
-        return 'ppc32'
-
-    @when('=arm64')
-    def different_by_architecture(self):
-        return 'arm64'
-
-
+    for target in targets:
+        @when('target=' + target.name)
+        def different_by_target(self):
+            if isinstance(self.spec.architecture.target, basestring):
+                return self.spec.architecture.target
+            else:
+                return self.spec.architecture.target.name
     #
     # Make sure we can switch methods on different dependencies
     #
+
     @when('^mpich')
     def different_by_dep(self):
         return 'mpich'
@@ -130,7 +122,6 @@ class Multimethod(Package):
     @when('^zmpi')
     def different_by_dep(self):
         return 'zmpi'
-
 
     #
     # Make sure we can switch on virtual dependencies

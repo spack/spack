@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cram(Package):
     """Cram runs many small MPI jobs inside one large MPI job."""
     homepage = "https://github.com/llnl/cram"
@@ -33,6 +34,7 @@ class Cram(Package):
 
     extends('python')
     depends_on("mpi")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake(".", *std_cmake_args)

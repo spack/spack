@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Gl2ps(Package):
     """GL2PS is a C library providing high quality vector output for any
     OpenGL application."""

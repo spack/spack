@@ -24,24 +24,39 @@
 ##############################################################################
 from spack import *
 
+
 class Stat(Package):
     """Library to create, manipulate, and export graphs Graphlib."""
+
     homepage = "http://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/lee218llnl/stat/archive/v2.0.0.tar.gz"
 
     version('2.2.0', '26bd69dd57a15afdd5d0ebdb0b7fb6fc')
     version('2.1.0', 'ece26beaf057aa9134d62adcdda1ba91')
     version('2.0.0', 'c7494210b0ba26b577171b92838e1a9b')
+    version('3.0.0', 'a97cb235c266371c4a26329112de48a2',
+            url='https://github.com/LLNL/STAT/releases/download/v3.0.0/STAT-3.0.0.tar.gz')
 
+    # TODO: dysect requires Dyninst patch for version 3.0.0b
     variant('dysect', default=False, description="enable DySectAPI")
+    variant('examples', default=False, description="enable examples")
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
     depends_on('libelf')
     depends_on('libdwarf')
-    depends_on('dyninst')
-    depends_on('graphlib')
-    depends_on('graphviz')
+    depends_on('dyninst', when='~dysect')
+    depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
+    depends_on('graphlib@2.0.0', when='@2.0.0:2.2.0')
+    depends_on('graphlib@3.0.0', when='@3:')
+    depends_on('graphviz', type=('build', 'link', 'run'))
     depends_on('launchmon')
     depends_on('mrnet')
+    depends_on('python')
+    depends_on('py-pygtk')
+    depends_on('swig')
+    depends_on('mpi', when='+examples')
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 
@@ -49,16 +64,16 @@ class Stat(Package):
         configure_args = [
             "--enable-gui",
             "--prefix=%s" % prefix,
-            "--disable-examples", # Examples require MPI: avoid this dependency.
             "--with-launchmon=%s"   % spec['launchmon'].prefix,
             "--with-mrnet=%s"       % spec['mrnet'].prefix,
             "--with-graphlib=%s"    % spec['graphlib'].prefix,
             "--with-stackwalker=%s" % spec['dyninst'].prefix,
             "--with-libdwarf=%s"    % spec['libdwarf'].prefix
-            ]
+        ]
         if '+dysect' in spec:
             configure_args.append('--enable-dysectapi')
+        if '~examples' in spec:
+            configure_args.append('--disable-examples')
         configure(*configure_args)
 
-        make(parallel=False)
         make("install")

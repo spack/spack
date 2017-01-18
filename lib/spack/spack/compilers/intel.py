@@ -26,6 +26,7 @@ from spack.compiler import *
 import llnl.util.tty as tty
 from spack.version import ver
 
+
 class Intel(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['icc']
@@ -40,10 +41,13 @@ class Intel(Compiler):
     fc_names = ['ifort']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = { 'cc'  : 'intel/icc',
-                   'cxx' : 'intel/icpc',
-                   'f77' : 'intel/ifort',
-                   'fc'  : 'intel/ifort' }
+    link_paths = {'cc': 'intel/icc',
+                  'cxx': 'intel/icpc',
+                  'f77': 'intel/ifort',
+                  'fc': 'intel/ifort'}
+
+    PrgEnv = 'PrgEnv-intel'
+    PrgEnv_compiler = 'intel'
 
     @property
     def openmp_flag(self):
@@ -61,19 +65,36 @@ class Intel(Compiler):
         else:
             return "-std=c++11"
 
+    @property
+    def cxx14_flag(self):
+        # Adapted from CMake's Intel-CXX rules.
+        if self.version < ver('15'):
+            tty.die("Only intel 15.0 and above support c++14.")
+        elif self.version < ver('15.0.2'):
+            return "-std=c++1y"
+        else:
+            return "-std=c++14"
+
+    @property
+    def pic_flag(self):
+        return "-fPIC"
 
     @classmethod
     def default_version(cls, comp):
         """The '--version' option seems to be the most consistent one
-           for intel compilers.  Output looks like this::
+        for intel compilers.  Output looks like this::
 
-               icpc (ICC) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
+            icpc (ICC) 12.1.5 20120612
+            Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
 
-           or::
+        or::
 
-               ifort (IFORT) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
+            ifort (IFORT) 12.1.5 20120612
+            Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
         """
         return get_compiler_version(
             comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
+
+    @property
+    def stdcxx_libs(self):
+        return ('-cxxlib', )

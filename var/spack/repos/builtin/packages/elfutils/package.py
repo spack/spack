@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Elfutils(Package):
     """elfutils is a collection of various binary tools such as
     eu-objdump, eu-readelf, and other utilities that allow you to
@@ -47,4 +48,3 @@ class Elfutils(Package):
         configure('--prefix=%s' % prefix, '--enable-maintainer-mode')
         make()
         make("install")
-

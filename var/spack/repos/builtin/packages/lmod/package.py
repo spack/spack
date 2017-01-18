@@ -23,28 +23,50 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+from glob import glob
+
 
 class Lmod(Package):
-    """
-    Lmod is a Lua based module system that easily handles the MODULEPATH
+    """Lmod is a Lua based module system that easily handles the MODULEPATH
     Hierarchical problem. Environment Modules provide a convenient way to
     dynamically change the users' environment through modulefiles. This
     includes easily adding or removing directories to the PATH environment
     variable. Modulefiles for Library packages provide environment variables
     that specify where the library and header files can be found.
     """
-    homepage = "https://www.tacc.utexas.edu/research-development/tacc-projects/lmod"
-    url      = "http://sourceforge.net/projects/lmod/files/Lmod-6.0.1.tar.bz2/download"
 
+    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
+    url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
+
+    version('6.4.5', '14f6c58dbc0a5a75574d795eac2c1e3c')
+    version('6.4.1', '7978ba777c8aa41a4d8c05fec5f780f4')
+    version('6.3.7', '0fa4d5a24c41cae03776f781aa2dedc1')
     version('6.0.1', '91abf52fe5033bd419ffe2842ebe7af9')
 
-    depends_on("lua@5.2:")
+    depends_on('lua@5.2:')
+    depends_on('lua-luaposix', type=('build', 'run'))
+    depends_on('lua-luafilesystem', type=('build', 'run'))
+    depends_on('tcl', type=('build', 'run'))
+
+    parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        stage_lua_path = join_path(
+            self.stage.path, 'Lmod-{version}', 'src', '?.lua')
+        spack_env.append_path('LUA_PATH', stage_lua_path.format(
+            version=self.version), separator=';')
+
+    patch('fix_tclsh_paths.patch', when='@:6.4.3')
+
+    def patch(self):
+        """The tcl scripts should use the tclsh that was discovered
+           by the configure script.  Touch up their #! lines so that the
+           sed in the Makefile's install step has something to work on.
+           Requires the change in the associated patch file.fg"""
+        if self.spec.version <= Version('6.4.3'):
+            for tclscript in glob('src/*.tcl'):
+                filter_file(r'^#!.*tclsh', '#!@path_to_tclsh@', tclscript)
 
     def install(self, spec, prefix):
-        # Add our lua to PATH
-        os.environ['PATH'] = spec['lua'].prefix.bin + ';' + os.environ['PATH']
-        
         configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+        make('install')

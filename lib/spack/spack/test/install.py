@@ -22,83 +22,83 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import shutil
-import tempfile
-
+import pytest
 import spack
-from llnl.util.filesystem import *
+import spack.store
+from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockArchive
+from spack.spec import Spec
 
 
-class InstallTest(MockPackagesTest):
-    """Tests install and uninstall on a trivial package."""
-
-    def setUp(self):
-        super(InstallTest, self).setUp()
-
-        # create a simple installable package directory and tarball
-        self.repo = MockArchive()
-
-        # We use a fake package, so skip the checksum.
-        spack.do_checksum = False
-
-        # Use a fake install directory to avoid conflicts bt/w
-        # installed pkgs and mock packages.
-        self.tmpdir = tempfile.mkdtemp()
-        self.orig_layout = spack.install_layout
-        spack.install_layout = YamlDirectoryLayout(self.tmpdir)
-
-
-    def tearDown(self):
-        super(InstallTest, self).tearDown()
-        self.repo.destroy()
-
-        # Turn checksumming back on
-        spack.do_checksum = True
-
-        # restore spack's layout.
-        spack.install_layout = self.orig_layout
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+@pytest.fixture()
+def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
+    spack.store.db = Database(str(tmpdir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    yield
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
 
 
-    def fake_fetchify(self, pkg):
-        """Fake the URL for a package so it downloads from a file."""
-        fetcher = FetchStrategyComposite()
-        fetcher.append(URLFetchStrategy(self.repo.url))
-        pkg.fetcher = fetcher
+def fake_fetchify(url, pkg):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(url))
+    pkg.fetcher = fetcher
 
 
-    def ztest_install_and_uninstall(self):
-        # Get a basic concrete spec for the trivial install package.
-        spec = Spec('trivial_install_test_package')
-        spec.concretize()
-        self.assertTrue(spec.concrete)
+@pytest.mark.usefixtures('install_mockery')
+def test_install_and_uninstall(mock_archive):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
 
-        # Get the package
-        pkg = spack.repo.get(spec)
+    # Get the package
+    pkg = spack.repo.get(spec)
 
-        self.fake_fetchify(pkg)
+    fake_fetchify(mock_archive.url, pkg)
 
-        try:
-            pkg.do_install()
-            pkg.do_uninstall()
-        except Exception, e:
-            pkg.remove_prefix()
-            raise
+    try:
+        pkg.do_install()
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix()
+        raise
 
 
-    def test_install_environment(self):
-        spec = Spec('cmake-client').concretized()
+@pytest.mark.usefixtures('install_mockery')
+def test_store(mock_archive):
+    spec = Spec('cmake-client').concretized()
 
-        for s in spec.traverse():
-            self.fake_fetchify(s.package)
+    for s in spec.traverse():
+        fake_fetchify(mock_archive.url, s.package)
 
-        pkg = spec.package
-        try:
-            pkg.do_install()
-        except Exception, e:
-            pkg.remove_prefix()
-            raise
+    pkg = spec.package
+    try:
+        pkg.do_install()
+    except Exception:
+        pkg.remove_prefix()
+        raise
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_failing_build(mock_archive):
+    spec = Spec('failing-build').concretized()
+
+    for s in spec.traverse():
+        fake_fetchify(mock_archive.url, s.package)
+
+    pkg = spec.package
+    with pytest.raises(spack.build_environment.ChildError):
+        pkg.do_install()

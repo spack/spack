@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyqt(Package):
     """PyQt is a set of Python v2 and v3 bindings for Digia's Qt
        application framework and runs on all platforms supported by Qt
@@ -34,11 +35,11 @@ class PyPyqt(Package):
     version('4.11.3', '997c3e443165a89a559e0d96b061bf70')
 
     extends('python')
-    depends_on('py-sip')
+    depends_on('py-sip', type=('build', 'run'))
 
     # TODO: allow qt5 when conditional deps are supported.
     # TODO: Fix version matching so that @4 works like @:4
-    depends_on('qt@:4')
+    depends_on('qt@:4+phonon+dbus')
 
     def install(self, spec, prefix):
         python('configure.py',

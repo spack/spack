@@ -29,8 +29,8 @@ import argparse
 import llnl.util.tty as tty
 import spack
 import spack.cmd
+import spack.store
 import spack.repository
-from spack.cmd.find import display_specs
 
 description = "Remove an installed package"
 
@@ -39,65 +39,69 @@ error_message = """You can either:
     b) use spack uninstall -a to uninstall ALL matching specs.
 """
 
-
-def ask_for_confirmation(message):
-    while True:
-        tty.msg(message + '[y/n]')
-        choice = raw_input().lower()
-        if choice == 'y':
-            break
-        elif choice == 'n':
-            raise SystemExit('Operation aborted')
-        tty.warn('Please reply either "y" or "n"')
+# Arguments for display_specs when we find ambiguity
+display_args = {
+    'long': True,
+    'show_flags': True,
+    'variants': True
+}
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="Remove regardless of whether other packages depend on this one.")
+
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
-        help="USE CAREFULLY. Remove ALL installed packages that match each " +
-             "supplied spec. i.e., if you say uninstall libelf, ALL versions of " +
-             "libelf are uninstalled. This is both useful and dangerous, like rm -r.")
+        help="USE CAREFULLY. Remove ALL installed packages that match each "
+             "supplied spec. i.e., if you say uninstall `libelf`,"
+             " ALL versions of `libelf` are uninstalled. If no spec is "
+             "supplied all installed software will be uninstalled. This "
+             "is both useful and dangerous, like rm -r.")
+
     subparser.add_argument(
         '-d', '--dependents', action='store_true', dest='dependents',
-        help='Also uninstall any packages that depend on the ones given via command line.'
-    )
+        help='Also uninstall any packages that depend on the ones given '
+             'via command line.')
+
     subparser.add_argument(
         '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='Assume "yes" is the answer to every confirmation asked to the user.'
+        help='Assume "yes" is the answer to every confirmation requested')
 
-    )
-    subparser.add_argument('packages', nargs=argparse.REMAINDER, help="specs of packages to uninstall")
+    subparser.add_argument(
+        'packages',
+        nargs=argparse.REMAINDER,
+        help="specs of packages to uninstall")
 
 
 def concretize_specs(specs, allow_multiple_matches=False, force=False):
-    """
-    Returns a list of specs matching the non necessarily concretized specs given from cli
+    """Returns a list of specs matching the non necessarily
+    concretized specs given from cli
 
     Args:
         specs: list of specs to be matched against installed packages
-        allow_multiple_matches : boolean (if True multiple matches for each item in specs are admitted)
+        allow_multiple_matches : if True multiple matches are admitted
 
     Return:
         list of specs
     """
-    specs_from_cli = []  # List of specs that match expressions given via command line
+    # List of specs that match expressions given via command line
+    specs_from_cli = []
     has_errors = False
     for spec in specs:
-        matching = spack.installed_db.query(spec)
+        matching = spack.store.db.query(spec)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
             tty.error("%s matches multiple packages:" % spec)
             print()
-            display_specs(matching, long=True)
+            spack.cmd.display_specs(matching, **display_args)
             print()
             has_errors = True
 
         # No installed package matches the query
-        if len(matching) == 0 and not force:
+        if len(matching) == 0 and spec is not any:
             tty.error("%s does not match any installed packages." % spec)
             has_errors = True
 
@@ -109,8 +113,8 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
 
 
 def installed_dependents(specs):
-    """
-    Returns a dictionary that maps a spec with a list of its installed dependents
+    """Returns a dictionary that maps a spec with a list of its
+    installed dependents
 
     Args:
         specs: list of specs to be checked for dependents
@@ -120,7 +124,8 @@ def installed_dependents(specs):
     """
     dependents = {}
     for item in specs:
-        lst = [x for x in item.package.installed_dependents if x not in specs]
+        lst = [x for x in spack.store.db.installed_dependents(item)
+               if x not in specs]
         if lst:
             lst = list(set(lst))
             dependents[item] = lst
@@ -140,7 +145,7 @@ def do_uninstall(specs, force):
         try:
             # should work if package is known to spack
             packages.append(item.package)
-        except spack.repository.UnknownPackageError as e:
+        except spack.repository.UnknownPackageError:
             # The package.py file has gone away -- but still
             # want to uninstall.
             spack.Package(item).do_uninstall(force=True)
@@ -148,47 +153,63 @@ def do_uninstall(specs, force):
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order
     def num_installed_deps(pkg):
-        return len(pkg.installed_dependents)
+        return len(spack.store.db.installed_dependents(pkg.spec))
 
     packages.sort(key=num_installed_deps)
     for item in packages:
         item.do_uninstall(force=force)
 
 
+def get_uninstall_list(args):
+    specs = [any]
+    if args.packages:
+        specs = spack.cmd.parse_specs(args.packages)
+
+    # Gets the list of installed specs that match the ones give via cli
+    # takes care of '-a' is given in the cli
+    uninstall_list = concretize_specs(specs, args.all, args.force)
+
+    # Takes care of '-d'
+    dependent_list = installed_dependents(uninstall_list)
+
+    # Process dependent_list and update uninstall_list
+    has_error = False
+    if dependent_list and not args.dependents and not args.force:
+        for spec, lst in dependent_list.items():
+            tty.error("Will not uninstall %s" %
+                      spec.format("$_$@$%@$#", color=True))
+            print('')
+            print("The following packages depend on it:")
+            spack.cmd.display_specs(lst, **display_args)
+            print('')
+            has_error = True
+    elif args.dependents:
+        for key, lst in dependent_list.items():
+            uninstall_list.extend(lst)
+        uninstall_list = list(set(uninstall_list))
+    if has_error:
+        tty.die('You can use spack uninstall --dependents '
+                'to uninstall these dependencies as well')
+
+    return uninstall_list
+
+
 def uninstall(parser, args):
-    if not args.packages:
+    if not args.packages and not args.all:
         tty.die("uninstall requires at least one package argument.")
 
-    with spack.installed_db.write_transaction():
-        specs = spack.cmd.parse_specs(args.packages)
-        # Gets the list of installed specs that match the ones give via cli
-        uninstall_list = concretize_specs(specs, args.all, args.force)  # takes care of '-a' is given in the cli
-        dependent_list = installed_dependents(uninstall_list)  # takes care of '-d'
+    uninstall_list = get_uninstall_list(args)
 
-        # Process dependent_list and update uninstall_list
-        has_error = False
-        if dependent_list and not args.dependents and not args.force:
-            for spec, lst in dependent_list.items():
-                tty.error("Will not uninstall %s" % spec.format("$_$@$%@$#", color=True))
-                print('')
-                print("The following packages depend on it:")
-                display_specs(lst, long=True)
-                print('')
-                has_error = True
-        elif args.dependents:
-            for key, lst in dependent_list.items():
-                uninstall_list.extend(lst)
-            uninstall_list = list(set(uninstall_list))
+    if not uninstall_list:
+        tty.msg("There are no package to uninstall.")
+        return
 
-        if has_error:
-            tty.die('You can use spack uninstall --dependents to uninstall these dependencies as well')
+    if not args.yes_to_all:
+        tty.msg("The following packages will be uninstalled : ")
+        print('')
+        spack.cmd.display_specs(uninstall_list, **display_args)
+        print('')
+        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
 
-        if not args.yes_to_all:
-            tty.msg("The following packages will be uninstalled : ")
-            print('')
-            display_specs(uninstall_list, long=True)
-            print('')
-            ask_for_confirmation('Do you want to proceed ? ')
-
-        # Uninstall everything on the list
-        do_uninstall(uninstall_list, args.force)
+    # Uninstall everything on the list
+    do_uninstall(uninstall_list, args.force)

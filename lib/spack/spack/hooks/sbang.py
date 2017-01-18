@@ -23,8 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import stat
+import re
 
-from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
 import spack
@@ -33,6 +34,7 @@ import spack.modules
 # Character limit for shebang line.  Using Linux's 127 characters
 # here, as it is the shortest I could find on a modern OS.
 shebang_limit = 127
+
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
@@ -57,21 +59,32 @@ def filter_shebang(path):
     if original.startswith(new_sbang_line):
         return
 
-    backup = path + ".shebang.bak"
-    os.rename(path, backup)
+    # Use --! instead of #! on second line for lua.
+    if re.search(r'^#!(/[^/]*)*lua\b', original):
+        original = re.sub(r'^#', '--', original)
+
+    # Change non-writable files to be writable if needed.
+    saved_mode = None
+    if not os.access(path, os.W_OK):
+        st = os.stat(path)
+        saved_mode = st.st_mode
+        os.chmod(path, saved_mode | stat.S_IWRITE)
 
     with open(path, 'w') as new_file:
         new_file.write(new_sbang_line)
         new_file.write(original)
 
-    copy_mode(backup, path)
-    unset_executable_mode(backup)
+    # Restore original permissions.
+    if saved_mode is not None:
+        os.chmod(path, saved_mode)
 
-    tty.warn("Patched overly long shebang in %s" % path)
+    tty.warn("Patched overlong shebang in %s" % path)
 
 
-def filter_shebangs_in_directory(directory):
-    for file in os.listdir(directory):
+def filter_shebangs_in_directory(directory, filenames=None):
+    if filenames is None:
+        filenames = os.listdir(directory)
+    for file in filenames:
         path = os.path.join(directory, file)
 
         # only handle files
@@ -93,6 +106,6 @@ def post_install(pkg):
     """This hook edits scripts so that they call /bin/bash
        $spack_prefix/bin/sbang instead of something longer than the
        shebang limit."""
-    if not os.path.isdir(pkg.prefix.bin):
-        return
-    filter_shebangs_in_directory(pkg.prefix.bin)
+
+    for directory, _, filenames in os.walk(pkg.prefix):
+        filter_shebangs_in_directory(directory, filenames)

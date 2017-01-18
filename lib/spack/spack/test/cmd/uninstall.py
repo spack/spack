@@ -22,12 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.test.mock_database
-
-from spack.cmd.uninstall import uninstall
+import pytest
+import spack.store
+import spack.cmd.uninstall
 
 
 class MockArgs(object):
+
     def __init__(self, packages, all=False, force=False, dependents=False):
         self.packages = packages
         self.all = all
@@ -36,26 +37,28 @@ class MockArgs(object):
         self.yes_to_all = True
 
 
-class TestUninstall(spack.test.mock_database.MockDatabase):
-    def test_uninstall(self):
-        parser = None
-        # Multiple matches
-        args = MockArgs(['mpileaks'])
-        self.assertRaises(SystemExit, uninstall, parser, args)
-        # Installed dependents
-        args = MockArgs(['libelf'])
-        self.assertRaises(SystemExit, uninstall, parser, args)
-        # Recursive uninstall
-        args = MockArgs(['callpath'], all=True, dependents=True)
+def test_uninstall(database):
+    parser = None
+    uninstall = spack.cmd.uninstall.uninstall
+    # Multiple matches
+    args = MockArgs(['mpileaks'])
+    with pytest.raises(SystemExit):
         uninstall(parser, args)
+    # Installed dependents
+    args = MockArgs(['libelf'])
+    with pytest.raises(SystemExit):
+        uninstall(parser, args)
+    # Recursive uninstall
+    args = MockArgs(['callpath'], all=True, dependents=True)
+    uninstall(parser, args)
 
-        all_specs = spack.install_layout.all_specs()
-        self.assertEqual(len(all_specs), 7)
-        # query specs with multiple configurations
-        mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
-        callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
-        mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == 7
+    # query specs with multiple configurations
+    mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
+    callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
+    mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
 
-        self.assertEqual(len(mpileaks_specs), 0)
-        self.assertEqual(len(callpath_specs), 0)
-        self.assertEqual(len(mpi_specs),      3)
+    assert len(mpileaks_specs) == 0
+    assert len(callpath_specs) == 0
+    assert len(mpi_specs) == 3

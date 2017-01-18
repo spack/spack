@@ -24,7 +24,8 @@
 ##############################################################################
 from spack import *
 
-class PyCffi(Package):
+
+class PyCffi(PythonPackage):
     """Foreign Function Interface for Python calling C code"""
     homepage = "http://cffi.readthedocs.org/en/latest/"
     # base https://pypi.python.org/pypi/cffi
@@ -32,10 +33,15 @@ class PyCffi(Package):
 
     version('1.1.2', 'ca6e6c45b45caa87aee9adc7c796eaea')
 
-    extends('python')
-    depends_on('py-setuptools')
-    depends_on('py-pycparser')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pycparser', type=('build', 'run'))
     depends_on('libffi')
 
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    def setup_environment(self, spack_env, run_env):
+        # This sets the compiler (and flags) that distutils will use
+        # to create the final shared library.  It will use the
+        # compiler specified by the environment variable 'CC' for all
+        # other compilation.  We are setting the 'LDSHARED" to the
+        # spack compiler wrapper plus a few extra flags necessary for
+        # building the shared library.
+        spack_env.set('LDSHARED', "{0} -shared -pthread".format(spack_cc))

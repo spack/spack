@@ -28,23 +28,33 @@ from spack import *
 
 class Slepc(Package):
     """
-    Scalable Library for Eigenvalue Computations.
+    Scalable Library for Eigenvalue Problem Computations.
     """
 
     homepage = "http://www.grycap.upv.es/slepc"
     url = "http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz"
 
+    version('3.7.3', '3ef9bcc645a10c1779d56b3500472ceb66df692e389d635087d30e7c46424df9')
+    version('3.7.1', '670216f263e3074b21e0623c01bc0f562fdc0bffcd7bd42dd5d8edbe73a532c2')
+    version('3.6.3', '384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876')
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
 
-    variant('arpack', default=False, description='Enables Arpack wrappers')
+    variant('arpack', default=True, description='Enables Arpack wrappers')
 
-    depends_on('petsc')
-    depends_on('arpack-ng~mpi',when='+arpack^petsc~mpi')
-    depends_on('arpack-ng+mpi',when='+arpack^petsc+mpi')
+    # NOTE: make sure PETSc and SLEPc use the same python.
+    depends_on('python@2.6:2.7', type='build')
+    depends_on('petsc@3.7:', when='@3.7.1:')
+    depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
+    depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi')
+    depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi')
+
+    patch('install_name_371.patch', when='@3.7.1')
 
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
-        os.environ['SLEPC_DIR'] = self.stage.source_path
+        # Note that one should set the current (temporary) directory instead
+        # its symlink in spack/stage/ !
+        os.environ['SLEPC_DIR'] = os.getcwd()
 
         options = []
 
@@ -64,9 +74,10 @@ class Slepc(Package):
         configure('--prefix=%s' % prefix, *options)
 
         make('MAKE_NP=%s' % make_jobs, parallel=False)
-        #FIXME:
-        # make('test')
-        make('install')
+        if self.run_tests:
+            make('test', parallel=False)
+
+        make('install', parallel=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package

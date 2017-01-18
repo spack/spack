@@ -31,9 +31,15 @@ from StringIO import StringIO
 
 import spack
 
-__all__ = ['mod_to_class', 'spack_module_to_python_module', 'valid_module_name',
-           'valid_fully_qualified_module_name', 'validate_fully_qualified_module_name',
-           'validate_module_name', 'possible_spack_module_names', 'NamespaceTrie']
+__all__ = [
+    'mod_to_class',
+    'spack_module_to_python_module',
+    'valid_module_name',
+    'valid_fully_qualified_module_name',
+    'validate_fully_qualified_module_name',
+    'validate_module_name',
+    'possible_spack_module_names',
+    'NamespaceTrie']
 
 # Valid module names can contain '-' but can't start with it.
 _valid_module_re = r'^\w[\w-]*$'
@@ -67,8 +73,8 @@ def mod_to_class(mod_name):
     class_name = string.capwords(class_name, '-')
     class_name = class_name.replace('-', '')
 
-    # If a class starts with a number, prefix it with Number_ to make it a valid
-    # Python class name.
+    # If a class starts with a number, prefix it with Number_ to make it
+    # a valid Python class name.
     if re.match(r'^[0-9]', class_name):
         class_name = "_%s" % class_name
 
@@ -126,6 +132,7 @@ def validate_fully_qualified_module_name(mod_name):
 
 class InvalidModuleNameError(spack.error.SpackError):
     """Raised when we encounter a bad module name."""
+
     def __init__(self, name):
         super(InvalidModuleNameError, self).__init__(
             "Invalid module name: " + name)
@@ -134,6 +141,7 @@ class InvalidModuleNameError(spack.error.SpackError):
 
 class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
     """Raised when we encounter a bad full package name."""
+
     def __init__(self, name):
         super(InvalidFullyQualifiedModuleNameError, self).__init__(
             "Invalid fully qualified package name: " + name)
@@ -141,16 +149,16 @@ class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
 
 
 class NamespaceTrie(object):
+
     class Element(object):
+
         def __init__(self, value):
             self.value = value
-
 
     def __init__(self, separator='.'):
         self._subspaces = {}
         self._value = None
         self._sep = separator
-
 
     def __setitem__(self, namespace, value):
         first, sep, rest = namespace.partition(self._sep)
@@ -164,7 +172,6 @@ class NamespaceTrie(object):
 
         self._subspaces[first][rest] = value
 
-
     def _get_helper(self, namespace, full_name):
         first, sep, rest = namespace.partition(self._sep)
         if not first:
@@ -176,13 +183,12 @@ class NamespaceTrie(object):
         else:
             return self._subspaces[first]._get_helper(rest, full_name)
 
-
     def __getitem__(self, namespace):
         return self._get_helper(namespace, namespace)
 
-
     def is_prefix(self, namespace):
-        """True if the namespace has a value, or if it's the prefix of one that does."""
+        """True if the namespace has a value, or if it's the prefix of one that
+           does."""
         first, sep, rest = namespace.partition(self._sep)
         if not first:
             return True
@@ -190,7 +196,6 @@ class NamespaceTrie(object):
             return False
         else:
             return self._subspaces[first].is_prefix(rest)
-
 
     def is_leaf(self, namespace):
         """True if this namespace has no children in the trie."""
@@ -202,7 +207,6 @@ class NamespaceTrie(object):
         else:
             return self._subspaces[first].is_leaf(rest)
 
-
     def has_value(self, namespace):
         """True if there is a value set for the given namespace."""
         first, sep, rest = namespace.partition(self._sep)
@@ -213,11 +217,9 @@ class NamespaceTrie(object):
         else:
             return self._subspaces[first].has_value(rest)
 
-
     def __contains__(self, namespace):
         """Returns whether a value has been set for the namespace."""
         return self.has_value(namespace)
-
 
     def _str_helper(self, stream, level=0):
         indent = (level * '    ')
@@ -225,8 +227,7 @@ class NamespaceTrie(object):
             stream.write(indent + name + '\n')
             if self._value:
                 stream.write(indent + '  ' + repr(self._value.value))
-            stream.write(self._subspaces[name]._str_helper(stream, level+1))
-
+            stream.write(self._subspaces[name]._str_helper(stream, level + 1))
 
     def __str__(self):
         stream = StringIO()

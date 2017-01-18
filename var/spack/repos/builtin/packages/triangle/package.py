@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Triangle(Package):
     """Triangle is a two-dimensional mesh generator and Delaunay
        triangulator. Triangle generates exact Delaunay triangulations,

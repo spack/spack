@@ -25,18 +25,21 @@
 from spack import *
 import os
 
+
 class Paraver(Package):
     """"A very powerful performance visualization and analysis tool
         based on traces that can be used to analyse any information that
         is expressed on its input trace format.  Traces for parallel MPI,
         OpenMP and other programs can be genereated with Extrae."""
     homepage = "http://www.bsc.es/computer-sciences/performance-tools/paraver"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/paraver-sources-4.5.3.tar.gz"
+    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/paraver-sources-4.6.2.tar.gz"
 
-    version('4.5.3', '625de9ec0d639acd18d1aaa644b38f72')
+    # NOTE: Paraver provides only latest version for download.
+    #       Don't keep/add older versions.
+    version('4.6.2', 'c54e124382b597574628b00e31649803')
 
     depends_on("boost")
-    #depends_on("extrae")
+    # depends_on("extrae")
     depends_on("wx")
     depends_on("wxpropgrid")
 
@@ -47,8 +50,11 @@ class Paraver(Package):
         make("install")
 
         os.chdir("../paraver-kernel")
-		#"--with-extrae=%s" % spec['extrae'].prefix,
-        configure("--prefix=%s" % prefix, "--with-ptools-common-files=%s" % prefix, "--with-boost=%s" % spec['boost'].prefix, "--with-boost-serialization=boost_serialization")
+        # "--with-extrae=%s" % spec['extrae'].prefix,
+        configure("--prefix=%s" % prefix,
+                  "--with-ptools-common-files=%s" % prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-boost-serialization=boost_serialization")
         make()
         make("install")
 
@@ -58,8 +64,11 @@ class Paraver(Package):
         make("install")
 
         os.chdir("../wxparaver")
-		#"--with-extrae=%s" % spec['extrae'].prefix,
-        configure("--prefix=%s" % prefix, "--with-paraver=%s" % prefix, "--with-boost=%s" % spec['boost'].prefix, "--with-boost-serialization=boost_serialization", "--with-wxdir=%s" % spec['wx'].prefix.bin)
+        # "--with-extrae=%s" % spec['extrae'].prefix,
+        configure("--prefix=%s" % prefix,
+                  "--with-paraver=%s" % prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-boost-serialization=boost_serialization",
+                  "--with-wxdir=%s" % spec['wx'].prefix.bin)
         make()
         make("install")
-

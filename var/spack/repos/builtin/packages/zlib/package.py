@@ -24,19 +24,23 @@
 ##############################################################################
 from spack import *
 
-class Zlib(Package):
-    """zlib is designed to be a free, general-purpose, legally unencumbered --
-       that is, not covered by any patents -- lossless data-compression library for
-       use on virtually any computer hardware and operating system.
-    """
+
+class Zlib(AutotoolsPackage):
+    """A free, general-purpose, legally unencumbered lossless
+       data-compression library."""
 
     homepage = "http://zlib.net"
-    url      = "http://zlib.net/zlib-1.2.8.tar.gz"
+    url = "http://zlib.net/fossils/zlib-1.2.10.tar.gz"
 
+    version('1.2.10', 'd9794246f853d15ce0fcbf79b9a3cf13')
+    # author had this to say about 1.2.9....
+    # Due to the bug fixes, any installations of 1.2.9 should be immediately
+    # replaced with 1.2.10.
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
-        make()
-        make("install")
+    def setup_environment(self, spack_env, run_env):
+        if '+pic' in self.spec:
+            spack_env.set('CFLAGS', self.compiler.pic_flag)

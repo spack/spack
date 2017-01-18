@@ -24,19 +24,25 @@
 ##############################################################################
 from spack import *
 
-class Automake(Package):
+
+class Automake(AutotoolsPackage):
     """Automake -- make file builder part of autotools"""
-    homepage = "http://www.gnu.org/software/automake/"
-    url      = "http://ftp.gnu.org/gnu/automake/automake-1.14.tar.gz"
+
+    homepage = 'http://www.gnu.org/software/automake/'
+    url      = 'http://ftp.gnu.org/gnu/automake/automake-1.14.tar.gz'
 
     version('1.15',   '716946a105ca228ab545fc37a70df3a3')
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
 
-    depends_on('autoconf')
+    depends_on('autoconf', type='build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    def _make_executable(self, name):
+        return Executable(join_path(self.prefix.bin, name))
 
-        make()
-        make("install")
+    def setup_dependent_package(self, module, dependent_spec):
+        # Automake is very likely to be a build dependency,
+        # so we add the tools it provides to the dependent module
+        executables = ['aclocal', 'automake']
+        for name in executables:
+            setattr(module, name, self._make_executable(name))

@@ -22,33 +22,55 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-__all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
-           'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
-           'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
-           'set_executable', 'copy_mode', 'unset_executable_mode',
-           'remove_dead_links', 'remove_linked_tree', 'find_library_path',
-           'fix_darwin_install_name']
-
-import os
+import collections
+import errno
+import fileinput
 import glob
-import sys
+import numbers
+import os
 import re
 import shutil
 import stat
-import errno
-import getpass
-from contextlib import contextmanager, closing
-from tempfile import NamedTemporaryFile
 import subprocess
+import sys
+from contextlib import contextmanager
 
 import llnl.util.tty as tty
-from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+from llnl.util.lang import dedupe
+
+__all__ = [
+    'FileFilter',
+    'LibraryList',
+    'ancestor',
+    'can_access',
+    'change_sed_delimiter',
+    'copy_mode',
+    'filter_file',
+    'find_libraries',
+    'fix_darwin_install_name',
+    'force_remove',
+    'force_symlink',
+    'install',
+    'install_tree',
+    'is_exe',
+    'join_path',
+    'mkdirp',
+    'remove_dead_links',
+    'remove_if_dead_link',
+    'remove_linked_tree',
+    'set_executable',
+    'set_install_permissions',
+    'touch',
+    'touchp',
+    'traverse_tree',
+    'unset_executable_mode',
+    'working_dir']
+
 
 def filter_file(regex, repl, *filenames, **kwargs):
     """Like sed, but uses python regular expressions.
 
-       Filters every line of file through regex and replaces the file
+       Filters every line of each file through regex and replaces the file
        with a filtered version.  Preserves mode of filtered files.
 
        As with re.sub, ``repl`` can be either a string or a callable.
@@ -59,7 +81,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
        Keyword Options:
          string[=False]         If True, treat regex as a plain string.
-         backup[=True]          Make a backup files suffixed with ~
+         backup[=True]          Make backup file(s) suffixed with ~
          ignore_absent[=False]  Ignore any files that don't exist.
     """
     string = kwargs.get('string', False)
@@ -69,6 +91,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
         unescaped = repl.replace(r'\\', '\\')
+
         def replace_groups_with_groupid(m):
             def groupid_to_group(x):
                 return m.group(int(x.group(1)))
@@ -79,30 +102,32 @@ def filter_file(regex, repl, *filenames, **kwargs):
         regex = re.escape(regex)
 
     for filename in filenames:
-        backup = filename + "~"
+        backup_filename = filename + "~"
 
         if ignore_absent and not os.path.exists(filename):
             continue
 
-        shutil.copy(filename, backup)
+        # Create backup file. Don't overwrite an existing backup
+        # file in case this file is being filtered multiple times.
+        if not os.path.exists(backup_filename):
+            shutil.copy(filename, backup_filename)
+
         try:
-            with closing(open(backup)) as infile:
-                with closing(open(filename, 'w')) as outfile:
-                    for line in infile:
-                        foo = re.sub(regex, repl, line)
-                        outfile.write(foo)
+            for line in fileinput.input(filename, inplace=True):
+                print(re.sub(regex, repl, line.rstrip('\n')))
         except:
             # clean up the original file on failure.
-            shutil.move(backup, filename)
+            shutil.move(backup_filename, filename)
             raise
 
         finally:
             if not backup:
-                shutil.rmtree(backup, ignore_errors=True)
+                os.remove(backup_filename)
 
 
 class FileFilter(object):
     """Convenience class for calling filter_file a lot."""
+
     def __init__(self, *filenames):
         self.filenames = filenames
 
@@ -113,7 +138,7 @@ class FileFilter(object):
 def change_sed_delimiter(old_delim, new_delim, *filenames):
     """Find all sed search/replace commands and change the delimiter.
        e.g., if the file contains seds that look like 's///', you can
-       call change_sed_delimeter('/', '@', file) to change the
+       call change_sed_delimiter('/', '@', file) to change the
        delimiter to '@'.
 
        NOTE that this routine will fail if the delimiter is ' or ".
@@ -157,9 +182,12 @@ def set_install_permissions(path):
 def copy_mode(src, dest):
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
-    if src_mode & stat.S_IXUSR: dest_mode |= stat.S_IXUSR
-    if src_mode & stat.S_IXGRP: dest_mode |= stat.S_IXGRP
-    if src_mode & stat.S_IXOTH: dest_mode |= stat.S_IXOTH
+    if src_mode & stat.S_IXUSR:
+        dest_mode |= stat.S_IXUSR
+    if src_mode & stat.S_IXGRP:
+        dest_mode |= stat.S_IXGRP
+    if src_mode & stat.S_IXOTH:
+        dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
 
 
@@ -175,7 +203,7 @@ def install(src, dest):
     """Manually install a file to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
 
-    # Expand dsst to its eventual full path if it is a directory.
+    # Expand dest to its eventual full path if it is a directory.
     if os.path.isdir(dest):
         dest = join_path(dest, os.path.basename(src))
 
@@ -185,7 +213,7 @@ def install(src, dest):
 
 
 def install_tree(src, dest, **kwargs):
-    """Manually install a file to a particular location."""
+    """Manually install a directory tree to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
     shutil.copytree(src, dest, **kwargs)
 
@@ -199,23 +227,13 @@ def is_exe(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-def expand_user(path):
-    """Find instances of '%u' in a path and replace with the current user's
-       username."""
-    username = getpass.getuser()
-    if not username and '%u' in path:
-        tty.die("Couldn't get username to complete path '%s'" % path)
-
-    return path.replace('%u', username)
-
-
 def mkdirp(*paths):
     """Creates a directory, as well as parent directories if needed."""
     for path in paths:
         if not os.path.exists(path):
             os.makedirs(path)
         elif not os.path.isdir(path):
-            raise OSError(errno.EEXIST, "File alredy exists", path)
+            raise OSError(errno.EEXIST, "File already exists", path)
 
 
 def force_remove(*paths):
@@ -224,8 +242,9 @@ def force_remove(*paths):
     for path in paths:
         try:
             os.remove(path)
-        except OSError, e:
+        except OSError:
             pass
+
 
 @contextmanager
 def working_dir(dirname, **kwargs):
@@ -240,7 +259,7 @@ def working_dir(dirname, **kwargs):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    with open(path, 'a') as file:
+    with open(path, 'a'):
         os.utime(path, None)
 
 
@@ -253,7 +272,7 @@ def touchp(path):
 def force_symlink(src, dest):
     try:
         os.symlink(src, dest)
-    except OSError as e:
+    except OSError:
         os.remove(dest)
         os.symlink(src, dest)
 
@@ -275,7 +294,7 @@ def ancestor(dir, n=1):
 
 def can_access(file_name):
     """True if we have read/write access to the file."""
-    return os.access(file_name, os.R_OK|os.W_OK)
+    return os.access(file_name, os.R_OK | os.W_OK)
 
 
 def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
@@ -304,7 +323,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     Optional args:
 
-    order=[pre|post] -- Whether to do pre- or post-order traveral.
+    order=[pre|post] -- Whether to do pre- or post-order traversal.
 
     ignore=<predicate> -- Predicate indicating which files to ignore.
 
@@ -318,7 +337,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     follow_links = kwargs.get('follow_link', False)
 
     # Yield in pre or post order?
-    order  = kwargs.get('order', 'pre')
+    order = kwargs.get('order', 'pre')
     if order not in ('pre', 'post'):
         raise ValueError("Order must be 'pre' or 'post'.")
 
@@ -330,7 +349,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         return
 
     source_path = os.path.join(source_root, rel_path)
-    dest_path   = os.path.join(dest_root, rel_path)
+    dest_path = os.path.join(dest_root, rel_path)
 
     # preorder yields directories before children
     if order == 'pre':
@@ -338,18 +357,20 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     for f in os.listdir(source_path):
         source_child = os.path.join(source_path, f)
-        dest_child   = os.path.join(dest_path, f)
-        rel_child    = os.path.join(rel_path, f)
+        dest_child = os.path.join(dest_path, f)
+        rel_child = os.path.join(rel_path, f)
 
         # Treat as a directory
         if os.path.isdir(source_child) and (
-            follow_links or not os.path.islink(source_child)):
+                follow_links or not os.path.islink(source_child)):
 
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
-                for t in tuples: yield t
+                tuples = traverse_tree(
+                    source_root, dest_root, rel_child, **kwargs)
+                for t in tuples:
+                    yield t
 
         # Treat as a file.
         elif not ignore(os.path.join(rel_path, f)):
@@ -374,10 +395,21 @@ def remove_dead_links(root):
     """
     for file in os.listdir(root):
         path = join_path(root, file)
-        if os.path.islink(path):
-            real_path = os.path.realpath(path)
-            if not os.path.exists(real_path):
-                os.unlink(path)
+        remove_if_dead_link(path)
+
+
+def remove_if_dead_link(path):
+    """
+    Removes the argument if it is a dead link, does nothing otherwise
+
+    Args:
+        path: the potential dead link
+    """
+    if os.path.islink(path):
+        real_path = os.path.realpath(path)
+        if not os.path.exists(real_path):
+            os.unlink(path)
+
 
 def remove_linked_tree(path):
     """
@@ -402,37 +434,189 @@ def fix_darwin_install_name(path):
     Fix install name of dynamic libraries on Darwin to have full path.
     There are two parts of this task:
     (i) use install_name('-id',...) to change install name of a single lib;
-    (ii) use install_name('-change',...) to change the cross linking between libs.
-    The function assumes that all libraries are in one folder and currently won't
-    follow subfolders.
+    (ii) use install_name('-change',...) to change the cross linking between
+    libs. The function assumes that all libraries are in one folder and
+    currently won't follow subfolders.
 
     Args:
-        path: directory in which .dylib files are alocated
+        path: directory in which .dylib files are located
 
     """
-    libs = glob.glob(join_path(path,"*.dylib"))
+    libs = glob.glob(join_path(path, "*.dylib"))
     for lib in libs:
         # fix install name first:
-        subprocess.Popen(["install_name_tool", "-id",lib,lib], stdout=subprocess.PIPE).communicate()[0]
-        long_deps = subprocess.Popen(["otool", "-L",lib], stdout=subprocess.PIPE).communicate()[0].split('\n')
+        subprocess.Popen(
+            ["install_name_tool", "-id", lib, lib],
+            stdout=subprocess.PIPE).communicate()[0]
+        long_deps = subprocess.Popen(
+            ["otool", "-L", lib],
+            stdout=subprocess.PIPE).communicate()[0].split('\n')
         deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
         # fix all dependencies:
         for dep in deps:
             for loc in libs:
                 if dep == os.path.basename(loc):
-                    subprocess.Popen(["install_name_tool", "-change",dep,loc,lib], stdout=subprocess.PIPE).communicate()[0]
+                    subprocess.Popen(
+                        ["install_name_tool", "-change", dep, loc, lib],
+                        stdout=subprocess.PIPE).communicate()[0]
                     break
 
+# Utilities for libraries
 
-def find_library_path(libname, *paths):
-    """Searches for a file called <libname> in each path.
 
-    Return:
-      directory where the library was found, if found.  None otherwise.
+class LibraryList(collections.Sequence):
+    """Sequence of absolute paths to libraries
 
+    Provides a few convenience methods to manipulate library paths and get
+    commonly used compiler flags or names
     """
-    for path in paths:
-        library = join_path(path, libname)
-        if os.path.exists(library):
-            return path
-    return None
+
+    def __init__(self, libraries):
+        self.libraries = list(libraries)
+
+    @property
+    def directories(self):
+        """Stable de-duplication of the directories where the libraries
+        reside
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
+        >>> assert l.directories == ['/dir1', '/dir2']
+        """
+        return list(dedupe(
+            os.path.dirname(x) for x in self.libraries if os.path.dirname(x)
+        ))
+
+    @property
+    def basenames(self):
+        """Stable de-duplication of the base-names in the list
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
+        >>> assert l.basenames == ['liba.a', 'libb.a']
+        """
+        return list(dedupe(os.path.basename(x) for x in self.libraries))
+
+    @property
+    def names(self):
+        """Stable de-duplication of library names in the list
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
+        >>> assert l.names == ['a', 'b']
+        """
+        return list(dedupe(x.split('.')[0][3:] for x in self.basenames))
+
+    @property
+    def search_flags(self):
+        """Search flags for the libraries
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-L/dir1 -L/dir2'
+        """
+        return ' '.join(['-L' + x for x in self.directories])
+
+    @property
+    def link_flags(self):
+        """Link flags for the libraries
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-la -lb'
+        """
+        return ' '.join(['-l' + name for name in self.names])
+
+    @property
+    def ld_flags(self):
+        """Search flags + link flags
+
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
+        """
+        return self.search_flags + ' ' + self.link_flags
+
+    def __getitem__(self, item):
+        cls = type(self)
+        if isinstance(item, numbers.Integral):
+            return self.libraries[item]
+        return cls(self.libraries[item])
+
+    def __add__(self, other):
+        return LibraryList(dedupe(self.libraries + list(other)))
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __eq__(self, other):
+        return self.libraries == other.libraries
+
+    def __len__(self):
+        return len(self.libraries)
+
+    def joined(self, separator=' '):
+        return separator.join(self.libraries)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + repr(self.libraries) + ')'
+
+    def __str__(self):
+        return self.joined()
+
+
+def find_libraries(args, root, shared=True, recurse=False):
+    """Returns an iterable object containing a list of full paths to
+    libraries if found.
+
+    Args:
+        args: iterable object containing a list of library names to \
+            search for (e.g. 'libhdf5')
+        root: root folder where to start searching
+        shared: if True searches for shared libraries, otherwise for static
+        recurse: if False search only root folder, if True descends top-down \
+            from the root
+
+    Returns:
+        list of full paths to the libraries that have been found
+    """
+    if not isinstance(args, collections.Sequence) or isinstance(args, str):
+        message = '{0} expects a sequence of strings as first argument'
+        message += ' [got {1} instead]'
+        raise TypeError(message.format(find_libraries.__name__, type(args)))
+
+    # Construct the right suffix for the library
+    if shared is True:
+        suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+    else:
+        suffix = 'a'
+    # List of libraries we are searching with suffixes
+    libraries = ['{0}.{1}'.format(lib, suffix) for lib in args]
+    # Search method
+    if recurse is False:
+        search_method = _find_libraries_non_recursive
+    else:
+        search_method = _find_libraries_recursive
+
+    return search_method(libraries, root)
+
+
+def _find_libraries_recursive(libraries, root):
+    library_dict = collections.defaultdict(list)
+    for path, _, files in os.walk(root):
+        for lib in libraries:
+            if lib in files:
+                library_dict[lib].append(
+                    join_path(path, lib)
+                )
+    answer = []
+    for lib in libraries:
+        answer.extend(library_dict[lib])
+    return LibraryList(answer)
+
+
+def _find_libraries_non_recursive(libraries, root):
+
+    def lib_or_none(lib):
+        library = join_path(root, lib)
+        if not os.path.exists(library):
+            return None
+        return library
+
+    return LibraryList(
+        [lib_or_none(lib) for lib in libraries if lib_or_none(lib) is not None]
+    )

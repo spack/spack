@@ -24,15 +24,21 @@
 ##############################################################################
 from spack import *
 
-class PyPypar(Package):
-    """Pypar is an efficient but easy-to-use module that allows programs written in Python to run in parallel on multiple processors and communicate using MPI."""
+
+class PyPypar(PythonPackage):
+    """Pypar is an efficient but easy-to-use module that allows programs
+       written in Python to run in parallel on multiple processors and
+       communicate using MPI."""
     homepage = "http://code.google.com/p/pypar/"
-    url      = "https://pypar.googlecode.com/files/pypar-2.1.5_108.tgz"
+    url      = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz"
 
-    version('2.1.5_108', '7a1f28327d2a3b679f9455c843d850b8', url='https://pypar.googlecode.com/files/pypar-2.1.5_108.tgz')
-    extends('python')
+    version('2.1.5_108', '7a1f28327d2a3b679f9455c843d850b8')
+
     depends_on('mpi')
+    depends_on('py-numpy', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        with working_dir('source'):
-            python('setup.py', 'install', '--prefix=%s' % prefix)
+    def url_for_version(self, version):
+        return "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-%s.tgz" % version
+
+    def build_directory(self):
+        return 'source'

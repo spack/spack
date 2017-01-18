@@ -23,34 +23,56 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from subprocess import check_call
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack
-from spack.util.executable import which
+from spack.util.executable import ProcessError, which
+
+_SPACK_UPSTREAM = 'https://github.com/llnl/spack'
 
 description = "Create a new installation of spack in another prefix"
 
+
 def setup_parser(subparser):
-    subparser.add_argument('prefix', help="names of prefix where we should install spack")
+    subparser.add_argument(
+        '-r', '--remote', action='store', dest='remote',
+        help="name of the remote to bootstrap from", default='origin')
+    subparser.add_argument(
+        'prefix',
+        help="names of prefix where we should install spack")
 
 
-def get_origin_url():
+def get_origin_info(remote):
     git_dir = join_path(spack.prefix, '.git')
     git = which('git', required=True)
-    origin_url = git(
-        '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url',
-        output=str)
-    return origin_url.strip()
+    try:
+        branch = git('symbolic-ref', '--short', 'HEAD', output=str)
+    except ProcessError:
+        branch = 'develop'
+        tty.warn('No branch found; using default branch: %s' % branch)
+    if remote == 'origin' and \
+       branch not in ('master', 'develop'):
+        branch = 'develop'
+        tty.warn('Unknown branch found; using default branch: %s' % branch)
+    try:
+        origin_url = git(
+            '--git-dir=%s' % git_dir,
+            'config', '--get', 'remote.%s.url' % remote,
+            output=str)
+    except ProcessError:
+        origin_url = _SPACK_UPSTREAM
+        tty.warn('No git repository found; '
+                 'using default upstream URL: %s' % origin_url)
+    return (origin_url.strip(), branch.strip())
 
 
 def bootstrap(parser, args):
-    origin_url = get_origin_url()
+    origin_url, branch = get_origin_info(args.remote)
     prefix = args.prefix
 
-    tty.msg("Fetching spack from origin: %s" % origin_url)
+    tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
     if os.path.isfile(prefix):
         tty.die("There is already a file at %s" % prefix)
@@ -62,7 +84,8 @@ def bootstrap(parser, args):
 
     files_in_the_way = os.listdir(prefix)
     if files_in_the_way:
-        tty.die("There are already files there!  Delete these files before boostrapping spack.",
+        tty.die("There are already files there! "
+                "Delete these files before boostrapping spack.",
                 *files_in_the_way)
 
     tty.msg("Installing:",
@@ -73,8 +96,10 @@ def bootstrap(parser, args):
     git = which('git', required=True)
     git('init', '--shared', '-q')
     git('remote', 'add', 'origin', origin_url)
-    git('fetch', 'origin', 'master:refs/remotes/origin/master', '-n', '-q')
-    git('reset', '--hard', 'origin/master', '-q')
+    git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
+                           '-n', '-q')
+    git('reset', '--hard', 'origin/%s' % branch, '-q')
+    git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
 
     tty.msg("Successfully created a new spack in %s" % prefix,
             "Run %s/bin/spack to use this installation." % prefix)

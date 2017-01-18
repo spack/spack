@@ -27,12 +27,15 @@ from spack import *
 
 
 class Valgrind(Package):
-    """
-    Valgrind is an instrumentation framework for building dynamic analysis tools. There are Valgrind tools that can
-    automatically detect many memory management and threading bugs, and profile your programs in detail. You can also
-    use Valgrind to build new tools.
+    """An instrumentation framework for building dynamic analysis.
 
-    Valgrind is Open Source / Free Software, and is freely available under the GNU General Public License, version 2.
+    There are Valgrind tools that can automatically detect many memory
+    management and threading bugs, and profile your programs in
+    detail. You can also use Valgrind to build new tools.
+
+    Valgrind is Open Source / Free Software, and is freely available
+    under the GNU General Public License, version 2.
+
     """
     homepage = "http://valgrind.org/"
     url = "http://valgrind.org/downloads/valgrind-3.11.0.tar.bz2"
@@ -42,7 +45,8 @@ class Valgrind(Package):
     version('3.10.0', '7c311a72a20388aceced1aa5573ce970')
 
     variant('mpi', default=True, description='Activates MPI support for valgrind')
-    variant('boost', default=True, description='Activates boost support for valgrind')
+    variant('boost', default=True,
+            description='Activates boost support for valgrind')
 
     depends_on('mpi', when='+mpi')
     depends_on('boost', when='+boost')

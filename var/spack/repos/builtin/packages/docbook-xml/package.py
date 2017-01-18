@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import glob
 from spack import *
 
 
@@ -35,9 +34,18 @@ class DocbookXml(Package):
     version('4.5', '03083e288e87a7e829e437358da7ef9e')
 
     def install(self, spec, prefix):
-        cp = which('cp')
+        for item in os.listdir('.'):
+            src = os.path.abspath(item)
+            dst = os.path.join(prefix, item)
+            if os.path.isdir(item):
+                install_tree(src, dst, symlinks=True)
+            else:
+                install(src, dst)
 
-        install_args = ['-a', '-t', prefix]
-        install_args.extend(glob.glob('*'))
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        spack_env.set('XML_CATALOG_FILES', catalog, separator=' ')
 
-        cp(*install_args)
+    def setup_environment(self, spack_env, run_env):
+        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')

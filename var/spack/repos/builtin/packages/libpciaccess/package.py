@@ -23,25 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os.path
+
 
 class Libpciaccess(Package):
     """Generic PCI access library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libpciaccess-0.13.4.tar.bz2"
+    url      = "http://xorg.freedesktop.org/archive/individual/lib/libpciaccess-0.13.4.tar.gz"
 
-    version('0.13.4', 'ace78aec799b1cf6dfaea55d3879ed9f')
+    version('0.13.4', 'cc1fad87da60682af1d5fa43a5da45a4')
 
-    depends_on('libtool')
+    depends_on('libtool', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         # libpciaccess does not support OS X
-        if spec.satisfies('=darwin-x86_64'):
+        if spec.satisfies('platform=darwin'):
             # create a dummy directory
             mkdir(prefix.lib)
             return
 
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')

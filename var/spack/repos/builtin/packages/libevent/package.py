@@ -24,11 +24,13 @@
 ##############################################################################
 from spack import *
 
+
 class Libevent(Package):
     """The libevent API provides a mechanism to execute a callback function
-       when a specific event occurs on a file descriptor or after a timeout has been
-       reached. Furthermore, libevent also support callbacks due to signals or regular
-       timeouts.
+       when a specific event occurs on a file descriptor or after a
+       timeout has been reached. Furthermore, libevent also support
+       callbacks due to signals or regular timeouts.
+
     """
 
     homepage = "http://libevent.org"
@@ -46,7 +48,8 @@ class Libevent(Package):
     version('2.0.13', 'af786b4b3f790c9d3279792edf7867fc')
     version('2.0.12', '42986228baf95e325778ed328a93e070')
 
-    variant('openssl', default=True, description="Build with encryption enabled at the libevent level.")
+    variant('openssl', default=True,
+            description="Build with encryption enabled at the libevent level.")
     depends_on('openssl', when='+openssl')
 
     def install(self, spec, prefix):

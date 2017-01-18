@@ -24,8 +24,11 @@
 ##############################################################################
 from spack import *
 
-class PyScikitImage(Package):
-    """Image processing algorithms for SciPy, including IO, morphology, filtering, warping, color manipulation, object detection, etc."""
+
+class PyScikitImage(PythonPackage):
+    """Image processing algorithms for SciPy, including IO, morphology,
+    filtering, warping, color manipulation, object detection, etc."""
+
     homepage = "http://scikit-image.org/"
     url      = "https://pypi.python.org/packages/source/s/scikit-image/scikit-image-0.12.3.tar.gz"
 
@@ -33,12 +36,10 @@ class PyScikitImage(Package):
 
     extends('python', ignore=r'bin/.*\.py$')
 
-    depends_on('py-dask')
-    depends_on('py-pillow')
-    depends_on('py-networkx')
-    depends_on('py-six')
-    depends_on('py-scipy')
-    depends_on('py-matplotlib')
-
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    depends_on('py-dask', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
+    depends_on('py-networkx', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

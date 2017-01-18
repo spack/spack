@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Hdf(Package):
     """HDF4 (also known as HDF) is a library and multi-object
     file format for storing and managing data between machines."""
@@ -33,37 +34,42 @@ class Hdf(Package):
     list_url = "https://www.hdfgroup.org/ftp/HDF/releases/"
     list_depth = 3
 
+    version('4.2.12', '79fd1454c899c05e34a3da0456ab0c1c')
     version('4.2.11', '063f9928f3a19cc21367b71c3b8bbf19')
 
     variant('szip', default=False, description="Enable szip support")
 
-    depends_on("jpeg")
-    depends_on("szip", when='+szip')
-    depends_on("zlib")
+    depends_on('jpeg@6b:')
+    depends_on('szip', when='+szip')
+    depends_on('zlib@1.1.4:')
 
-
-    def url_for_version(self, version):
-       return "https://www.hdfgroup.org/ftp/HDF/releases/HDF" + str(version) + "/src/hdf-" + str(version) + ".tar.gz"
-
+    depends_on('bison', type='build')
+    depends_on('flex',  type='build')
 
     def install(self, spec, prefix):
         config_args = [
             'CFLAGS=-fPIC',
-            '--prefix=%s' % prefix,
-            '--with-jpeg=%s' % spec['jpeg'].prefix,
-            '--with-zlib=%s' % spec['zlib'].prefix,
-            '--disable-netcdf',  # must be disabled to build NetCDF with HDF4 support
+            '--prefix={0}'.format(prefix),
+            '--with-jpeg={0}'.format(spec['jpeg'].prefix),
+            '--with-zlib={0}'.format(spec['zlib'].prefix),
+            '--disable-netcdf',  # must be disabled to build NetCDF with HDF4
             '--enable-fortran',
-            '--disable-shared',  # fortran and shared libraries are not compatible
+            '--disable-shared',  # fortran and shared libs are not compatible
             '--enable-static',
             '--enable-production'
         ]
 
-        # SZip support
+        # Szip support
         if '+szip' in spec:
-            config_args.append('--with-szlib=%s' % spec['szip'].prefix)
+            config_args.append('--with-szlib={0}'.format(spec['szip'].prefix))
+        else:
+            config_args.append('--without-szlib')
 
         configure(*config_args)
 
         make()
-        make("install")
+
+        if self.run_tests:
+            make('check')
+
+        make('install')

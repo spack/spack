@@ -27,10 +27,12 @@ from spack import *
 
 
 class Scalasca(Package):
-    """
-    Scalasca is a software tool that supports the performance optimization of parallel programs by measuring and
-    analyzing their runtime behavior. The analysis identifies potential performance bottlenecks - in particular those
-    concerning communication and synchronization - and offers guidance in exploring their causes.
+    """Scalasca is a software tool that supports the performance optimization
+       of parallel programs by measuring and analyzing their runtime
+       behavior. The analysis identifies potential performance
+       bottlenecks - in particular those concerning communication and
+       synchronization - and offers guidance in exploring their causes.
+
     """
 
     homepage = "http://www.scalasca.org"
@@ -44,7 +46,8 @@ class Scalasca(Package):
 
     depends_on("mpi")
     ##########
-    # Hard-code dependencies for Scalasca according to what stated in the release page
+    # Hard-code dependencies for Scalasca according to what stated in the
+    # release page
     # The OTF2 library path should be detected automatically from SCOREP
     # SCALASCA 2.2.2
     depends_on("scorep@1.4:", when='@2.2.2')

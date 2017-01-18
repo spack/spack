@@ -22,9 +22,37 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import spack
 import spack.stage as stage
 
-description = "Remove all temporary build files and downloaded archives"
+description = "Remove temporary build files and/or downloaded archives"
+
+
+def setup_parser(subparser):
+    subparser.add_argument(
+        '-s', '--stage', action='store_true', default=True,
+        help="Remove all temporary build stages (default).")
+    subparser.add_argument(
+        '-d', '--downloads', action='store_true',
+        help="Remove cached downloads.")
+    subparser.add_argument(
+        '-m', '--misc-cache', action='store_true',
+        help="Remove long-lived caches, like the virtual package index.")
+    subparser.add_argument(
+        '-a', '--all', action='store_true',
+        help="Remove all of the above.")
+
 
 def purge(parser, args):
-    stage.purge()
+    # Special case: no flags.
+    if not any((args.stage, args.downloads, args.misc_cache, args.all)):
+        stage.purge()
+        return
+
+    # handle other flags with fall through.
+    if args.stage or args.all:
+        stage.purge()
+    if args.downloads or args.all:
+        spack.fetch_cache.destroy()
+    if args.misc_cache or args.all:
+        spack.misc_cache.destroy()

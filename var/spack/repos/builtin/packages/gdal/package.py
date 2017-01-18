@@ -24,23 +24,24 @@
 ##############################################################################
 from spack import *
 
+
 class Gdal(Package):
-    """
-    GDAL is a translator library for raster and vector geospatial
+    """GDAL is a translator library for raster and vector geospatial
     data formats that is released under an X/MIT style Open Source
     license by the Open Source Geospatial Foundation. As a library,
     it presents a single raster abstract data model and vector
     abstract data model to the calling application for all supported
     formats. It also comes with a variety of useful command line
-    utilities for data translation and processing
+    utilities for data translation and processing.
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/2.0.2/gdal-2.0.2.tar.gz"
+    url        = "http://download.osgeo.org/gdal/2.1.2/gdal-2.1.2.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 2
 
-    version('2.0.2', '573865f3f59ba7b4f8f4cddf223b52a5')
+    version('2.1.2', 'ae85b78888514c75e813d658cac9478e')
+    version('2.0.2', '940208e737c87d31a90eaae43d0efd65')
 
     extends('python')
 
@@ -62,7 +63,7 @@ class Gdal(Package):
     depends_on("libpng")
     depends_on("zlib")
     depends_on("proj")
-    depends_on("py-numpy")
+    depends_on("py-numpy", type=('build', 'run'))
 
     parallel = False
 

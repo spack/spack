@@ -23,21 +23,41 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import re
 
-class PyH5py(Package):
-    """The h5py package provides both a high- and low-level interface to the HDF5 library from Python."""
+
+class PyH5py(PythonPackage):
+    """The h5py package provides both a high- and low-level interface to the
+    HDF5 library from Python."""
+
     homepage = "https://pypi.python.org/pypi/h5py"
     url      = "https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz"
 
-    version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
+    version('2.6.0', 'ec476211bd1de3f5ac150544189b0bf4')
     version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
+    version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
 
-    extends('python', ignore=lambda f: re.match(r'bin/cy*', f))
-    depends_on('hdf5')
-    depends_on('py-numpy')
-    depends_on('py-cython')
+    variant('mpi', default=True, description='Build with MPI support')
 
-    def install(self, spec, prefix):
-        python('setup.py', 'configure', '--hdf5=%s' % spec['hdf5'].prefix)
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    # Build dependencies
+    depends_on('py-cython@0.19:', type='build')
+    depends_on('pkg-config', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('hdf5@1.8.4:')
+    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('mpi', when='+mpi')
+    depends_on('py-mpi4py', when='+mpi')
+
+    # Build and runtime dependencies
+    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
+
+    # Runtime dependencies
+    depends_on('py-six', type=('build', 'run'))
+
+    phases = ['configure', 'install']
+
+    def configure(self, spec, prefix):
+        self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
+
+        if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            self.setup_py('configure', '--mpi')

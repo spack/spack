@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class HoomdBlue(Package):
     """HOOMD-blue is a general-purpose particle simulation toolkit. It scales
     from a single CPU core to thousands of GPUs.
@@ -45,18 +46,18 @@ class HoomdBlue(Package):
     variant('doc',  default=True, description='Generate documentation')
 
     extends('python')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('boost+python')
-    depends_on('cmake')
+    depends_on('cmake', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
-    depends_on('doxygen', when='+doc')
+    depends_on('doxygen', when='+doc', type='build')
 
     def install(self, spec, prefix):
 
         cmake_args = [
             '-DPYTHON_EXECUTABLE=%s/python' % spec['python'].prefix.bin,
-            '-DBOOST_ROOT=%s'               % spec['boost' ].prefix
+            '-DBOOST_ROOT=%s'               % spec['boost'].prefix
         ]
 
         # MPI support
@@ -73,9 +74,9 @@ class HoomdBlue(Package):
             cmake_args.append('-DENABLE_CUDA=OFF')
 
         # CUDA-aware MPI library support
-        #if '+cuda' in spec and '+mpi' in spec:
+        # if '+cuda' in spec and '+mpi' in spec:
         #    cmake_args.append('-DENABLE_MPI_CUDA=ON')
-        #else:
+        # else:
         #    cmake_args.append('-DENABLE_MPI_CUDA=OFF')
 
         # There may be a bug in the MPI-CUDA code. See:

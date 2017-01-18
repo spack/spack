@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libvterm(Package):
     """An abstract library implementation of a terminal emulator"""
     homepage = "http://www.leonerd.org.uk/code/libvterm/"

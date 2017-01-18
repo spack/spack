@@ -23,11 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import spack
 import sys
-
 import os
-import sys
+from glob import glob
+
 
 class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source
@@ -43,6 +42,9 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 2
 
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+    version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
+    version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
     version('1.59.0', '6aa9a5c6a4ca1016edd0ed1178e3cb87')
     version('1.58.0', 'b8839650e61e9c1c0a89f371dd475546')
@@ -74,23 +76,24 @@ class Boost(Package):
     version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
 
     default_install_libs = set(['atomic',
-        'chrono',
-        'date_time',
-        'filesystem',
-        'graph',
-        'iostreams',
-        'locale',
-        'log',
-        'math',
-        'program_options',
-        'random',
-        'regex',
-        'serialization',
-        'signals',
-        'system',
-        'test',
-        'thread',
-        'wave'])
+                                'chrono',
+                                'date_time',
+                                'filesystem',
+                                'graph',
+                                'iostreams',
+                                'locale',
+                                'log',
+                                'math',
+                                'program_options',
+                                'random',
+                                'regex',
+                                'serialization',
+                                'signals',
+                                'system',
+                                'test',
+                                'thread',
+                                'timer',
+                                'wave'])
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -101,15 +104,24 @@ class Boost(Package):
 
     for lib in all_libs:
         variant(lib, default=(lib not in default_noinstall_libs),
-            description="Compile with {0} library".format(lib))
+                description="Compile with {0} library".format(lib))
 
-    variant('debug', default=False, description='Switch to the debug version of Boost')
-    variant('shared', default=True, description="Additionally build shared libraries")
-    variant('multithreaded', default=True, description="Build multi-threaded versions of libraries")
-    variant('singlethreaded', default=True, description="Build single-threaded versions of libraries")
-    variant('icu_support', default=False, description="Include ICU support (for regex/locale libraries)")
+    variant('debug', default=False,
+            description='Switch to the debug version of Boost')
+    variant('shared', default=True,
+            description="Additionally build shared libraries")
+    variant('multithreaded', default=True,
+            description="Build multi-threaded versions of libraries")
+    variant('singlethreaded', default=False,
+            description="Build single-threaded versions of libraries")
+    variant('icu', default=False,
+            description="Build with Unicode and ICU suport")
+    variant('graph', default=False,
+            description="Build the Boost Graph library")
+    variant('taggedlayout', default=False,
+            description="Augment library names with build options")
 
-    depends_on('icu', when='+icu_support')
+    depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
@@ -118,28 +130,55 @@ class Boost(Package):
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
+    patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
+
     def url_for_version(self, version):
-        """Handle Boost's weird URLs, which write the version two different ways."""
+        """
+        Handle Boost's weird URLs,
+        which write the version two different ways.
+        """
         parts = [str(p) for p in Version(version)]
         dots = ".".join(parts)
         underscores = "_".join(parts)
-        return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (
-            dots, underscores)
+        return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (dots, underscores)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("=darwin-x86_64"):
+        if spec.satisfies("platform=darwin"):
             return 'darwin'
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang'}
 
+        if spec.satisfies('@1.47:'):
+            toolsets['icpc'] += '-linux'
         for cc, toolset in toolsets.iteritems():
             if cc in self.compiler.cxx_names:
                 return toolset
 
         # fallback to gcc if no toolset found
         return 'gcc'
+
+    def bjam_python_line(self, spec):
+        from os.path import dirname, splitext
+        pydir = 'python%s.%s*' % spec['python'].version.version[:2]
+        incs = join_path(spec['python'].prefix.include, pydir, "pyconfig.h")
+        incs = glob(incs)
+        incs = " ".join([dirname(u) for u in incs])
+
+        pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
+        all_libs = join_path(spec['python'].prefix.lib, pylib)
+        libs = [u for u in all_libs if splitext(u)[1] == dso_suffix]
+        if len(libs) == 0:
+            libs = [u for u in all_libs if splitext(u)[1] == '.a']
+
+        libs = " ".join(libs)
+        return 'using python : %s : %s : %s : %s ;\n' % (
+            spec['python'].version.up_to(2),
+            join_path(spec['python'].prefix.bin, 'python'),
+            incs, libs
+        )
 
     def determine_bootstrap_options(self, spec, withLibs, options):
         boostToolsetId = self.determine_toolset(spec)
@@ -148,20 +187,25 @@ class Boost(Package):
 
         if '+python' in spec:
             options.append('--with-python=%s' %
-                join_path(spec['python'].prefix.bin, 'python'))
+                           join_path(spec['python'].prefix.bin, 'python'))
 
         with open('user-config.jam', 'w') as f:
-            compiler_wrapper = join_path(spack.build_env_path, 'c++')
-            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
-                compiler_wrapper))
+            # Boost may end up using gcc even though clang+gfortran is set in
+            # compilers.yaml. Make sure this does not happen:
+            if not spec.satisfies('%intel'):
+                # using intel-linux : : spack_cxx in user-config.jam leads to
+                # error: at project-config.jam:12
+                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
+                # error: version = <unspecified>
+                # error: previous initialization at ./user-config.jam:1
+                f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                                                       spack_cxx))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
-                    join_path(spec['mpi'].prefix.bin, 'mpicxx'))
+                        join_path(spec['mpi'].prefix.bin, 'mpicxx'))
             if '+python' in spec:
-                f.write('using python : %s : %s ;\n' %
-                    (spec['python'].version,
-                    join_path(spec['python'].prefix.bin, 'python')))
+                f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -177,8 +221,7 @@ class Boost(Package):
                 '-s', 'BZIP2_INCLUDE=%s' % spec['bzip2'].prefix.include,
                 '-s', 'BZIP2_LIBPATH=%s' % spec['bzip2'].prefix.lib,
                 '-s', 'ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
-                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib,
-                ])
+                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib])
 
         linkTypes = ['static']
         if '+shared' in spec:
@@ -190,20 +233,47 @@ class Boost(Package):
         if '+singlethreaded' in spec:
             threadingOpts.append('single')
         if not threadingOpts:
-            raise RuntimeError("At least one of {singlethreaded, multithreaded} must be enabled")
+            raise RuntimeError("At least one of {singlethreaded, " +
+                               "multithreaded} must be enabled")
+
+        if '+taggedlayout' in spec:
+            layout = 'tagged'
+        else:
+            if len(threadingOpts) > 1:
+                raise RuntimeError("Cannot build both single and " +
+                                   "multi-threaded targets with system layout")
+            layout = 'system'
 
         options.extend([
-            'toolset=%s' % self.determine_toolset(spec),
             'link=%s' % ','.join(linkTypes),
-            '--layout=tagged'])
+            '--layout=%s' % layout
+        ])
+
+        if not spec.satisfies('%intel'):
+            options.extend([
+                'toolset=%s' % self.determine_toolset(spec)
+            ])
+
+        # clang is not officially supported for pre-compiled headers
+        # and at least in clang 3.9 still fails to build
+        #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
+        #   https://svn.boost.org/trac/boost/ticket/12496
+        if spec.satisfies('%clang'):
+            options.extend(['pch=off'])
 
         return threadingOpts
 
+    def add_buildopt_symlinks(self, prefix):
+        with working_dir(prefix.lib):
+            for lib in os.listdir(os.curdir):
+                prefix, remainder = lib.split('.', 1)
+                symlink(lib, '%s-mt.%s' % (prefix, remainder))
+
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
-        # dependencies may have pulled in Spack's GNU libtool, and these two are
-        # not compatible. We thus create a symlink to Darwin's libtool and add
-        # it at the beginning of PATH.
+        # dependencies may have pulled in Spack's GNU libtool, and these two
+        # are not compatible. We thus create a symlink to Darwin's libtool
+        # and add it at the beginning of PATH.
         if sys.platform == 'darwin':
             newdir = os.path.abspath('darwin-libtool')
             mkdirp(newdir)
@@ -216,7 +286,8 @@ class Boost(Package):
                 withLibs.append(lib)
         if not withLibs:
             # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix directory.
+            # to configure/build anything, just copy over to the prefix
+            # directory.
             src = join_path(self.stage.source_path, 'boost')
             mkdirp(join_path(prefix, 'include'))
             dst = join_path(prefix, 'include', 'boost')
@@ -234,6 +305,9 @@ class Boost(Package):
             withLibs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
+        if '+graph' in spec and '+mpi' in spec:
+            withLibs.remove('graph')
+            withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
@@ -253,11 +327,17 @@ class Boost(Package):
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
+        b2('--clean')
+
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
         for threadingOpt in threadingOpts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
 
-        # The shared libraries are not installed correctly on Darwin; correct this
+        if '+multithreaded' in spec and '~taggedlayout' in spec:
+            self.add_buildopt_symlinks(prefix)
+
+        # The shared libraries are not installed correctly
+        # on Darwin; correct this
         if (sys.platform == 'darwin') and ('+shared' in spec):
             fix_darwin_install_name(prefix.lib)

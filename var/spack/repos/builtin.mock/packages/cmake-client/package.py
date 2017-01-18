@@ -25,21 +25,19 @@
 from spack import *
 import os
 
+
 def check(condition, msg):
     """Raise an install error if condition is False."""
     if not condition:
         raise InstallError(msg)
 
 
-class CmakeClient(Package):
+class CmakeClient(CMakePackage):
     """A dumy package that uses cmake."""
     homepage  = 'https://www.example.com'
     url       = 'https://www.example.com/cmake-client-1.0.tar.gz'
 
     version('1.0', '4cb3ff35b2472aae70f542116d616e63')
-
-    depends_on('cmake')
-
 
     def setup_environment(self, spack_env, run_env):
         spack_cc    # Ensure spack module-scope variable is avaiabl
@@ -47,8 +45,8 @@ class CmakeClient(Package):
               "setup_environment couldn't read global set by cmake.")
 
         check(self.spec['cmake'].link_arg == "test link arg",
-              "link arg on dependency spec not readable from setup_environment.")
-
+              "link arg on dependency spec not readable from "
+              "setup_environment.")
 
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
@@ -56,8 +54,8 @@ class CmakeClient(Package):
               "setup_dependent_environment couldn't read global set by cmake.")
 
         check(self.spec['cmake'].link_arg == "test link arg",
-              "link arg on dependency spec not readable from setup_dependent_environment.")
-
+              "link arg on dependency spec not readable from "
+              "setup_dependent_environment.")
 
     def setup_dependent_package(self, module, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
@@ -65,9 +63,13 @@ class CmakeClient(Package):
               "setup_dependent_package couldn't read global set by cmake.")
 
         check(self.spec['cmake'].link_arg == "test link arg",
-              "link arg on dependency spec not readable from setup_dependent_package.")
+              "link arg on dependency spec not readable from "
+              "setup_dependent_package.")
 
+    def cmake(self, spec, prefix):
+        pass
 
+    build = cmake
 
     def install(self, spec, prefix):
         # check that cmake is in the global scope.

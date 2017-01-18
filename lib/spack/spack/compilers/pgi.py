@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.compiler import *
-import llnl.util.tty as tty
+
 
 class Pgi(Compiler):
     # Subclasses use possible names of C compiler
@@ -39,10 +39,13 @@ class Pgi(Compiler):
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = { 'cc'  : 'pgi/pgcc',
-                   'cxx' : 'pgi/pgc++',
-                   'f77' : 'pgi/pgfortran',
-                   'fc'  : 'pgi/pgfortran' }
+    link_paths = {'cc': 'pgi/pgcc',
+                  'cxx': 'pgi/pgc++',
+                  'f77': 'pgi/pgfortran',
+                  'fc': 'pgi/pgfortran'}
+
+    PrgEnv = 'PrgEnv-pgi'
+    PrgEnv_compiler = 'pgi'
 
     @property
     def openmp_flag(self):
@@ -52,15 +55,18 @@ class Pgi(Compiler):
     def cxx11_flag(self):
         return "-std=c++11"
 
+    @property
+    def pic_flag(self):
+        return "-fpic"
 
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.
-           Output looks like this::
+        Output looks like this::
 
-               pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
-               The Portland Group - PGI Compilers and Tools
-               Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
+            pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
+            The Portland Group - PGI Compilers and Tools
+            Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
         """
         return get_compiler_version(
             comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')

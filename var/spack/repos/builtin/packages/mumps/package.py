@@ -23,7 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os, sys, glob
+import os
+import sys
+import glob
+
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
@@ -31,19 +34,30 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
+    # Alternate location if main server is down.
+    # version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
     version('5.0.1', 'b477573fdcc87babe861f62316833db0')
 
-    variant('mpi', default=True, description='Activate the compilation of MUMPS with the MPI support')
-    variant('scotch', default=False, description='Activate Scotch as a possible ordering library')
-    variant('ptscotch', default=False, description='Activate PT-Scotch as a possible ordering library')
-    variant('metis', default=False, description='Activate Metis as a possible ordering library')
-    variant('parmetis', default=False, description='Activate Parmetis as a possible ordering library')
-    variant('double', default=True, description='Activate the compilation of dmumps')
-    variant('float', default=True, description='Activate the compilation of smumps')
-    variant('complex', default=True, description='Activate the compilation of cmumps and/or zmumps')
-    variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
+    variant('mpi', default=True,
+            description='Compile MUMPS with MPI support')
+    variant('scotch', default=False,
+            description='Activate Scotch as a possible ordering library')
+    variant('ptscotch', default=False,
+            description='Activate PT-Scotch as a possible ordering library')
+    variant('metis', default=False,
+            description='Activate Metis as a possible ordering library')
+    variant('parmetis', default=False,
+            description='Activate Parmetis as a possible ordering library')
+    variant('double', default=True,
+            description='Activate the compilation of dmumps')
+    variant('float', default=True,
+            description='Activate the compilation of smumps')
+    variant('complex', default=True,
+            description='Activate the compilation of cmumps and/or zmumps')
+    variant('int64', default=False,
+            description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
-
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps + mpi', when='+ptscotch')
@@ -60,51 +74,63 @@ class Mumps(Package):
     # end before install
     # def patch(self):
     def write_makefile_inc(self):
-        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and '+mpi' not in self.spec:
-            raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')
+        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
+                '+mpi' not in self.spec):
+            raise RuntimeError(
+                'You cannot use the variants parmetis or ptscotch without mpi')
 
-        makefile_conf = ["LIBBLAS = -L%s -lblas" % self.spec['blas'].prefix.lib]
+        lapack_blas = (self.spec['lapack'].lapack_libs +
+                       self.spec['blas'].blas_libs)
+        makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
 
         orderings = ['-Dpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             join_lib = ' -l%s' % ('pt' if '+ptscotch' in self.spec else '')
-            makefile_conf.extend(
-                ["ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
-                 "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
-                                          join_lib,
-                                          join_lib.join(['esmumps', 'scotch', 'scotcherr']))])
+            makefile_conf.extend([
+                "ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
+                "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
+                                         join_lib,
+                                         join_lib.join(['esmumps',
+                                                        'scotch',
+                                                        'scotcherr']))
+            ])
+
             orderings.append('-Dscotch')
             if '+ptscotch' in self.spec:
                 orderings.append('-Dptscotch')
 
         if '+parmetis' in self.spec and '+metis' in self.spec:
-            libname = 'parmetis' if '+parmetis' in self.spec else 'metis'
-            makefile_conf.extend(
-                ["IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
-                 "LMETIS = -L%s -l%s -L%s -l%s" % (self.spec['parmetis'].prefix.lib, 'parmetis',self.spec['metis'].prefix.lib, 'metis')])
+            makefile_conf.extend([
+                "IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
+                "LMETIS = -L%s -l%s -L%s -l%s" % (
+                    self.spec['parmetis'].prefix.lib, 'parmetis',
+                    self.spec['metis'].prefix.lib, 'metis')
+            ])
 
             orderings.append('-Dparmetis')
         elif '+metis' in self.spec:
-            makefile_conf.extend(
-                ["IMETIS = -I%s" % self.spec['metis'].prefix.include,
-                 "LMETIS = -L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')])
+            makefile_conf.extend([
+                "IMETIS = -I%s" % self.spec['metis'].prefix.include,
+                "LMETIS = -L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')
+            ])
 
             orderings.append('-Dmetis')
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
         # when building shared libs need -fPIC, otherwise
-        # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used when making a shared object; recompile with -fPIC
+        # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
+        # can not be used when making a shared object; recompile with -fPIC
         fpic = '-fPIC' if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
-        if '+idx64' in self.spec:
+        if '+int64' in self.spec:
             makefile_conf.extend(
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
-                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic,'-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),
+                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # noqa
                  'OPTL    = %s -O ' % fpic,
                  'OPTC    = %s -O -DINTSIZE64' % fpic])
         else:
@@ -113,13 +139,13 @@ class Mumps(Package):
                  'OPTL    = %s -O ' % fpic,
                  'OPTC    = %s -O ' % fpic])
 
-
         if '+mpi' in self.spec:
+            scalapack = self.spec['scalapack'].scalapack_libs
             makefile_conf.extend(
                 ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
                  "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
                  "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "SCALAP = %s" % self.spec['scalapack'].fc_link,
+                 "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
@@ -130,20 +156,27 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        makefile_conf.append("CDEFS   = -DAdd_")
+        if self.compiler.name == 'intel':
+            # Intel Fortran compiler provides the main() function so
+            # C examples linked with the Fortran compiler require a
+            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+            makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
+        else:
+            makefile_conf.append("CDEFS   = -DAdd_")
 
         if '+shared' in self.spec:
             if sys.platform == 'darwin':
-                # Building dylibs with mpif90 causes segfaults on 10.8 and 10.10. Use gfortran. (Homebrew)
+                # Building dylibs with mpif90 causes segfaults on 10.8 and
+                # 10.10. Use gfortran. (Homebrew)
                 makefile_conf.extend([
                     'LIBEXT=.dylib',
-                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'],prefix.lib),
+                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'], prefix.lib),  # noqa
                     'RANLIB=echo'
                 ])
             else:
                 makefile_conf.extend([
                     'LIBEXT=.so',
-                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,
+                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,  # noqa
                     'RANLIB=echo'
                 ])
         else:
@@ -153,9 +186,8 @@ class Mumps(Package):
                 'RANLIB = ranlib'
             ])
 
-
-        makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
-                                          'Makefile.inc')
+        makefile_inc_template = join_path(
+            os.path.dirname(self.module.__file__), 'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
             makefile_conf.extend(fh.read().split('\n'))
 
@@ -163,8 +195,6 @@ class Mumps(Package):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
                 fh.write(makefile_inc)
-
-
 
     def install(self, spec, prefix):
         make_libs = []
@@ -189,15 +219,15 @@ class Mumps(Package):
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
 
-        if '~mpi' in spec:            
+        if '~mpi' in spec:
             lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
             lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
             install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
-            for f in glob.glob(join_path('libseq','*.h')):
+            for f in glob.glob(join_path('libseq', '*.h')):
                 install(f, prefix.include)
 
-        # FIXME: extend the tests to mpirun -np 2 (or alike) when build with MPI
-        # FIXME: use something like numdiff to compare blessed output with the current
+        # FIXME: extend the tests to mpirun -np 2 when build with MPI
+        # FIXME: use something like numdiff to compare output files
         with working_dir('examples'):
             if '+float' in spec:
                 os.system('./ssimpletest < input_simpletest_real')

@@ -24,18 +24,23 @@
 ##############################################################################
 from spack import *
 
-class Fontconfig(Package):
-    """Fontconfig customizing font access"""
+
+class Fontconfig(AutotoolsPackage):
+    """Fontconfig is a library for configuring/customizing font access"""
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
     url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz"
 
-    version('2.11.1' , 'e75e303b4f7756c2b16203a57ac87eba')
+    version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
 
     depends_on('freetype')
     depends_on('libxml2')
+    depends_on('pkg-config', type='build')
+    depends_on('font-util', type='build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-libxml2")
+    def configure_args(self):
+        font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')
 
-        make()
-        make("install")
+        return ["--prefix={0}".format(self.prefix),
+                "--enable-libxml2",
+                "--disable-docs",
+                "--with-default-fonts={0}".format(font_path)]

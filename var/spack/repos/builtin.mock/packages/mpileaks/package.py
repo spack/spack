@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Mpileaks(Package):
     homepage = "http://www.llnl.gov"
     url      = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
@@ -35,6 +36,8 @@ class Mpileaks(Package):
 
     variant('debug', default=False, description='Debug variant')
     variant('opt',   default=False, description='Optimized variant')
+    variant('shared', default=True, description='Build shared library')
+    variant('static', default=True, description='Build static library')
 
     depends_on("mpi")
     depends_on("callpath")

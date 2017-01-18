@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Xz(Package):
     """XZ Utils is free general-purpose data compression software with
        high compression ratio. XZ Utils were written for POSIX-like
@@ -36,7 +37,9 @@ class Xz(Package):
     version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        configure('--prefix={0}'.format(prefix))
 
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')

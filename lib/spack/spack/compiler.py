@@ -25,20 +25,19 @@
 import os
 import re
 import itertools
-from datetime import datetime
 
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path
 
 import spack.error
 import spack.spec
+import spack.architecture
 from spack.util.multiproc import parmap
 from spack.util.executable import *
 from spack.util.environment import get_path
-from spack.version import Version
 
 __all__ = ['Compiler', 'get_compiler_version']
+
 
 def _verify_executables(*paths):
     for path in paths:
@@ -48,8 +47,9 @@ def _verify_executables(*paths):
 
 _version_cache = {}
 
+
 def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
-    if not compiler_path in _version_cache:
+    if compiler_path not in _version_cache:
         compiler = Executable(compiler_path)
         output = compiler(version_arg, output=str, error=str)
 
@@ -107,22 +107,47 @@ class Compiler(object):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
+    # Cray PrgEnv name that can be used to load this compiler
+    PrgEnv = None
+    # Name of module used to switch versions of this compiler
+    PrgEnv_compiler = None
 
+    def __init__(self, cspec, operating_system, target,
+                 paths, modules=[], alias=None, environment=None,
+                 extra_rpaths=None, **kwargs):
+        self.spec = cspec
+        self.operating_system = str(operating_system)
+        self.target = target
+        self.modules = modules
+        self.alias = alias
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):
             if exe is None:
                 return None
+            exe = self._find_full_path(exe)
             _verify_executables(exe)
             return exe
 
-        self.cc  = check(cc)
-        self.cxx = check(cxx)
-        self.f77 = check(f77)
-        self.fc  = check(fc)
+        self.cc  = check(paths[0])
+        self.cxx = check(paths[1])
+        if len(paths) > 2:
+            self.f77 = check(paths[2])
+            if len(paths) == 3:
+                self.fc = self.f77
+            else:
+                self.fc  = check(paths[3])
 
-        self.spec = cspec
+        self.environment = environment
+        self.extra_rpaths = extra_rpaths or []
 
+        # Unfortunately have to make sure these params are accepted
+        # in the same order they are returned by sorted(flags)
+        # in compilers/__init__.py
+        self.flags = {}
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            value = kwargs.get(flag, None)
+            if value is not None:
+                self.flags[flag] = value.split()
 
     @property
     def version(self):
@@ -133,31 +158,40 @@ class Compiler(object):
     @property
     def openmp_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support OpenMP.",
-                "If you think it should, please edit the compiler subclass and",
-                "submit a pull request or issue.")
-
+        tty.die(
+            "The compiler you have chosen does not currently support OpenMP.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
     # This property should be overridden in the compiler subclass if
     # C++11 is supported by that compiler
     @property
     def cxx11_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support C++11.",
-                "If you think it should, please edit the compiler subclass and",
-                "submit a pull request or issue.")
-
+        tty.die(
+            "The compiler you have chosen does not currently support C++11.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
     # This property should be overridden in the compiler subclass if
     # C++14 is supported by that compiler
     @property
     def cxx14_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support C++14.",
-                "If you think it should, please edit the compiler subclass and",
-                "submit a pull request or issue.")
+        tty.die(
+            "The compiler you have chosen does not currently support C++14.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
-
+    # This property should be overridden in the compiler subclass if
+    # C++17 is supported by that compiler
+    @property
+    def cxx17_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die(
+            "The compiler you have chosen does not currently support C++17.",
+            "If you think it should, please edit the compiler subclass and",
+            "submit a pull request or issue.")
 
     #
     # Compiler classes have methods for querying the version of
@@ -166,7 +200,6 @@ class Compiler(object):
     # Compiler *instances* are just data objects, and can only be
     # constructed from an actual set of executables.
     #
-
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
@@ -187,7 +220,6 @@ class Compiler(object):
     @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)
-
 
     @classmethod
     def _find_matches_in_path(cls, compiler_names, detect_version, *path):
@@ -234,91 +266,61 @@ class Compiler(object):
                 version = detect_version(full_path)
                 return (version, prefix, suffix, full_path)
             except ProcessError, e:
-                tty.debug("Couldn't get version for compiler %s" % full_path, e)
+                tty.debug(
+                    "Couldn't get version for compiler %s" % full_path, e)
                 return None
             except Exception, e:
                 # Catching "Exception" here is fine because it just
                 # means something went wrong running a candidate executable.
-                tty.debug("Error while executing candidate compiler %s" % full_path,
-                          "%s: %s" %(e.__class__.__name__, e))
+                tty.debug("Error while executing candidate compiler %s"
+                          % full_path,
+                          "%s: %s" % (e.__class__.__name__, e))
                 return None
 
-        successful = [key for key in parmap(check, checks) if key is not None]
+        successful = [k for k in parmap(check, checks) if k is not None]
+
         # The 'successful' list is ordered like the input paths.
         # Reverse it here so that the dict creation (last insert wins)
         # does not spoil the intented precedence.
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
-    @classmethod
-    def find(cls, *path):
-        """Try to find this type of compiler in the user's
-           environment. For each set of compilers found, this returns
-           compiler objects with the cc, cxx, f77, fc paths and the
-           version filled in.
+    def _find_full_path(self, path):
+        """Return the actual path for a tool.
 
-           This will search for compilers with the names in cc_names,
-           cxx_names, etc. and it will group them if they have common
-           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
-           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
+        Some toolchains use forwarding executables (particularly Xcode-based
+        toolchains) which can be manipulated by external environment variables.
+        This method should be used to extract the actual path used for a tool
+        by finding out the end executable the forwarding executables end up
+        running.
         """
-        dicts = parmap(
-            lambda t: cls._find_matches_in_path(*t),
-            [(cls.cc_names,  cls.cc_version)  + tuple(path),
-             (cls.cxx_names, cls.cxx_version) + tuple(path),
-             (cls.f77_names, cls.f77_version) + tuple(path),
-             (cls.fc_names,  cls.fc_version)  + tuple(path)])
+        return path
 
-        all_keys = set()
-        for d in dicts:
-            all_keys.update(d)
-
-        compilers = {}
-        for k in all_keys:
-            ver, pre, suf = k
-
-            # Skip compilers with unknown version.
-            if ver == 'unknown':
-                continue
-
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
-            spec = spack.spec.CompilerSpec(cls.name, ver)
-
-            if ver in compilers:
-                prev = compilers[ver]
-
-                # prefer the one with more compilers.
-                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount  = len([p for p in paths      if p is not None])
-                prevcount = len([p for p in prev_paths if p is not None])
-
-                # Don't add if it's not an improvement over prev compiler.
-                if newcount <= prevcount:
-                    continue
-
-            compilers[ver] = cls(spec, *paths)
-
-        return list(compilers.values())
-
+    def setup_custom_environment(self, pkg, env):
+        """Set any environment variables necessary to use the compiler."""
+        pass
 
     def __repr__(self):
         """Return a string representation of the compiler toolchain."""
         return self.__str__()
 
-
     def __str__(self):
         """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
-            self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc))))
+            self.name, '\n     '.join((str(s) for s in (
+                self.cc, self.cxx, self.f77, self.fc, self.modules,
+                str(self.operating_system)))))
 
 
 class CompilerAccessError(spack.error.SpackError):
+
     def __init__(self, path):
         super(CompilerAccessError, self).__init__(
             "'%s' is not a valid compiler." % path)
 
 
 class InvalidCompilerError(spack.error.SpackError):
+
     def __init__(self):
         super(InvalidCompilerError, self).__init__(
             "Compiler has no executables.")
