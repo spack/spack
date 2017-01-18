@@ -25,7 +25,7 @@
 from spack import *
 
 
-class GlobusToolkit(Package):
+class GlobusToolkit(AutotoolsPackage):
     """The Globus Toolkit is an open source software toolkit used for building
        grids"""
 
@@ -33,8 +33,3 @@ class GlobusToolkit(Package):
     url      = "http://toolkit.globus.org/ftppub/gt6/installers/src/globus_toolkit-6.0.1470089956.tar.gz"
 
     version('6.0.1470089956', 'b77fe3cc5a5844df995688b0e630d077')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make('install')

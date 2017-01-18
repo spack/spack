@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XkeyboardConfig(Package):
+class XkeyboardConfig(AutotoolsPackage):
     """This project provides a consistent, well-structured, frequently
     released, open source database of keyboard configuration data. The
     project is targeted to XKB-based systems."""
@@ -49,9 +49,3 @@ class XkeyboardConfig(Package):
     # gmsgfmt
     # perl@5.8.1:
     # perl XML::Parser
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

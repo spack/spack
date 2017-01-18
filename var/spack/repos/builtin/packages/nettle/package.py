@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Nettle(Package):
+class Nettle(AutotoolsPackage):
     """The Nettle package contains the low-level cryptographic library
     that is designed to fit easily in many contexts."""
 
@@ -37,11 +37,3 @@ class Nettle(Package):
 
     depends_on('gmp')
     depends_on('m4', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fonttosfnt(Package):
+class Fonttosfnt(AutotoolsPackage):
     """Wrap a bitmap font in a sfnt (TrueType) wrapper."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/fonttosfnt"
@@ -39,9 +39,3 @@ class Fonttosfnt(Package):
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

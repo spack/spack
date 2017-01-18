@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xmlto(Package):
+class Xmlto(AutotoolsPackage):
     """Utility xmlto is a simple shell script for converting XML files to various
     formats. It serves as easy to use command line frontend to make fine output
     without remembering many long options and searching for the syntax of the
@@ -38,9 +38,3 @@ class Xmlto(Package):
 
     # FIXME: missing a lot of dependencies
     depends_on('libxslt')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

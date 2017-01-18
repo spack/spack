@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Spot(Package):
+class Spot(AutotoolsPackage):
     """Spot is a C++11 library for omega-automata manipulation and model
        checking."""
     homepage = "https://spot.lrde.epita.fr/index.html"
@@ -35,9 +35,3 @@ class Spot(Package):
 
     # depends_on("gcc@4.8:", type='build')
     depends_on("python@3.2:")
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

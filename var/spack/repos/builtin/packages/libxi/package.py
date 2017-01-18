@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxi(Package):
+class Libxi(AutotoolsPackage):
     """libXi - library for the X Input Extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXi"
@@ -40,9 +40,3 @@ class Libxi(Package):
     depends_on('xproto@7.0.13:', type='build')
     depends_on('xextproto@7.0.3:', type='build')
     depends_on('inputproto@2.2.99.1:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

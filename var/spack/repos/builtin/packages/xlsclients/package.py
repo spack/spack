@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xlsclients(Package):
+class Xlsclients(AutotoolsPackage):
     """xlsclients is a utility for listing information about the client
     applications running on a X11 server."""
 
@@ -39,9 +39,3 @@ class Xlsclients(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

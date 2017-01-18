@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Scrnsaverproto(Package):
+class Scrnsaverproto(AutotoolsPackage):
     """MIT Screen Saver Extension.
 
     This extension defines a protocol to control screensaver features
@@ -38,8 +38,3 @@ class Scrnsaverproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

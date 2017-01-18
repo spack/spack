@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XcbUtilWm(Package):
+class XcbUtilWm(AutotoolsPackage):
     """The XCB util modules provides a number of libraries which sit on top
     of libxcb, the core X protocol library, and some of the extension
     libraries. These experimental libraries provide convenience functions
@@ -41,9 +41,3 @@ class XcbUtilWm(Package):
     depends_on('libxcb@1.4:')
 
     depends_on('pkg-config@0.9.0:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

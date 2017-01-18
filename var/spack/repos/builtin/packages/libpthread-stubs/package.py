@@ -25,7 +25,7 @@
 from spack import *
 
 
-class LibpthreadStubs(Package):
+class LibpthreadStubs(AutotoolsPackage):
     """The libpthread-stubs package provides weak aliases for pthread
     functions not provided in libc or otherwise available by default."""
 
@@ -33,8 +33,3 @@ class LibpthreadStubs(Package):
     url      = "https://xcb.freedesktop.org/dist/libpthread-stubs-0.3.tar.gz"
 
     version('0.3', 'a09d928c4af54fe5436002345ef71138')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

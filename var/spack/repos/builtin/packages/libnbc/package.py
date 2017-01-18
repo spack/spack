@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libnbc(Package):
+class Libnbc(AutotoolsPackage):
     """LibNBC is a prototypic implementation of a nonblocking
     interface for MPI collective operations. Based on ANSI C and
     MPI-1, it supports all MPI-1 collective operations in a
@@ -37,8 +37,3 @@ class Libnbc(Package):
     version('1.1.1', 'ece5c94992591a9fa934a90e5dbe50ce')
 
     depends_on("mpi")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Cddlib(Package):
+class Cddlib(AutotoolsPackage):
     """The C-library cddlib is a C implementation of the Double Description
     Method of Motzkin et al. for generating all vertices (i.e. extreme points)
     and extreme rays of a general convex polyhedron in R^d given by a system
@@ -51,8 +51,3 @@ class Cddlib(Package):
 
     depends_on("gmp")
     depends_on("libtool", type="build")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xf86driproto(Package):
+class Xf86driproto(AutotoolsPackage):
     """XFree86 Direct Rendering Infrastructure Extension.
 
     This extension defines a protocol to allow user applications to access
@@ -39,8 +39,3 @@ class Xf86driproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

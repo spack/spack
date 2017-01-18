@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxaw(Package):
+class Libxaw(AutotoolsPackage):
     """Xaw is the X Athena Widget Set.
     Xaw is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
 
@@ -44,9 +44,3 @@ class Libxaw(Package):
     depends_on('xextproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

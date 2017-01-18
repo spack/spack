@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libwindowswm(Package):
+class Libwindowswm(AutotoolsPackage):
     """WindowsWM - Cygwin/X rootless window management extension.
 
     WindowsWM is a simple library designed to interface with the
@@ -45,9 +45,3 @@ class Libwindowswm(Package):
     depends_on('windowswmproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

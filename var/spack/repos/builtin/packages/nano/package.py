@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Nano(Package):
+class Nano(AutotoolsPackage):
     """Tiny little text editor"""
 
     homepage = "http://www.nano-editor.org"
@@ -33,8 +33,3 @@ class Nano(Package):
 
     version('2.6.3', '1213c7f17916e65afefc95054c1f90f9')
     version('2.6.2', '58568a4b8a33841d774c25f285fc11c1')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make('install')

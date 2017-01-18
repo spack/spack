@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Makedepend(Package):
+class Makedepend(AutotoolsPackage):
     """makedepend - create dependencies in makefiles."""
 
     homepage = "http://cgit.freedesktop.org/xorg/util/makedepend"
@@ -35,10 +35,3 @@ class Makedepend(Package):
 
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

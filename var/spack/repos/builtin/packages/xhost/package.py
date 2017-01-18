@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xhost(Package):
+class Xhost(AutotoolsPackage):
     """xhost is used to manage the list of host names or user names
     allowed to make connections to the X server."""
 
@@ -41,9 +41,3 @@ class Xhost(Package):
     depends_on('xproto@7.0.22:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

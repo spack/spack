@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Pango(Package):
+class Pango(AutotoolsPackage):
     """Pango is a library for laying out and rendering of text, with
        an emphasis on internationalization. It can be used anywhere
        that text layout is needed, though most of the work on Pango so
@@ -49,6 +49,4 @@ class Pango(Package):
     depends_on("glib")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
         make("install", parallel=False)

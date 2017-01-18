@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxpresent(Package):
+class Libxpresent(AutotoolsPackage):
     """This package contains header files and documentation for the Present
     extension.  Library and server implementations are separate."""
 
@@ -41,9 +41,3 @@ class Libxpresent(Package):
     depends_on('xextproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

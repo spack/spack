@@ -25,16 +25,10 @@
 from spack import *
 
 
-class Libgtextutils(Package):
+class Libgtextutils(AutotoolsPackage):
     """Gordon's Text utils Library."""
 
     homepage = "https://github.com/agordon/libgtextutils"
     url      = "https://github.com/agordon/libgtextutils/releases/download/0.7/libgtextutils-0.7.tar.gz"
 
     version('0.7', '593c7c62e3c76ec49f5736eed4f96806')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

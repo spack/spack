@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xconsole(Package):
+class Xconsole(AutotoolsPackage):
     """xconsole displays in a X11 window the messages which are usually sent
     to /dev/console."""
 
@@ -42,9 +42,3 @@ class Xconsole(Package):
     depends_on('xproto@7.0.17:')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

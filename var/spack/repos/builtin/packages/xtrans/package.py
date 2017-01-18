@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xtrans(Package):
+class Xtrans(AutotoolsPackage):
     """xtrans is a library of code that is shared among various X packages to
     handle network protocol transport in a modular fashion, allowing a
     single place to add new transport types.  It is used by the X server,
@@ -38,8 +38,3 @@ class Xtrans(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Glib(Package):
+class Glib(AutotoolsPackage):
     """The GLib package contains a low-level libraries useful for
        providing data structure handling for C, portability wrappers
        and interfaces for such runtime functionality as an event loop,
@@ -59,17 +58,17 @@ class Glib(Package):
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         autoreconf = which("autoreconf")
         autoreconf("--install", "--verbose", "--force",
                    "-I", "config",
-                   "-I", os.path.join(spec['pkg-config'].prefix,
-                                      "share", "aclocal"),
-                   "-I", os.path.join(spec['automake'].prefix,
-                                      "share", "aclocal"),
-                   "-I", os.path.join(spec['libtool'].prefix,
-                                      "share", "aclocal"),
+                   "-I", join_path(spec['pkg-config'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['automake'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['libtool'].prefix,
+                                   "share", "aclocal"),
                    )
-        configure("--prefix=%s" % prefix)
-        make()
+
+    def install(self, spec, prefix):
         make("install", parallel=False)

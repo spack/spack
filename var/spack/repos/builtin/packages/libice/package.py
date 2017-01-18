@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libice(Package):
+class Libice(AutotoolsPackage):
     """libICE - Inter-Client Exchange Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libICE"
@@ -37,9 +37,3 @@ class Libice(Package):
     depends_on('xtrans', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

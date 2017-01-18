@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XorgGtest(Package):
+class XorgGtest(AutotoolsPackage):
     """Provides a Google Test environment for starting and stopping
     a X server for testing purposes."""
 
@@ -43,9 +43,3 @@ class XorgGtest(Package):
 
     # TODO: may be missing evemu package?
     # TODO: what is the difference between xorg-gtest and googletest packages?
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

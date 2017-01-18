@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Netgauge(Package):
+class Netgauge(AutotoolsPackage):
     """Netgauge is a high-precision network parameter measurement
     tool. It supports benchmarking of many different network protocols
     and communication patterns. The main focus lies on accuracy,
@@ -37,8 +37,3 @@ class Netgauge(Package):
     version('2.4.6', 'e0e040ec6452e93ca21ccc54deac1d7f')
 
     depends_on("mpi")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

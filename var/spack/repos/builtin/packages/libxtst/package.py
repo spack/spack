@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxtst(Package):
+class Libxtst(AutotoolsPackage):
     """libXtst provides the Xlib-based client API for the XTEST & RECORD
     extensions.
 
@@ -51,9 +51,3 @@ class Libxtst(Package):
     depends_on('inputproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

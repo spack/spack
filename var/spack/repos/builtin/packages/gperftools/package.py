@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gperftools(Package):
+class Gperftools(AutotoolsPackage):
     """Google's fast malloc/free implementation, especially for
        multi-threaded applications.  Contains tcmalloc, heap-checker,
        heap-profiler, and cpu-profiler.
@@ -40,8 +40,3 @@ class Gperftools(Package):
             url="https://googledrive.com/host/0B6NtGsLhIcf7MWxMMF9JdTN3UVk/gperftools-2.3.tar.gz")
 
     depends_on("libunwind")
-
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")

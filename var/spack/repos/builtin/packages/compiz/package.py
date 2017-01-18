@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Compiz(Package):
+class Compiz(AutotoolsPackage):
     """compiz - OpenGL window and compositing manager.
 
     Compiz is an OpenGL compositing manager that use
@@ -55,9 +55,3 @@ class Compiz(Package):
     depends_on('libpng')
     depends_on('glib')
     depends_on('gconf')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

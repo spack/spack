@@ -25,7 +25,7 @@
 from spack import *
 
 
-class IntelGpuTools(Package):
+class IntelGpuTools(AutotoolsPackage):
     """Intel GPU Tools is a collection of tools for development and testing of
     the Intel DRM driver. There are many macro-level test suites that get used
     against the driver, including xtest, rendercheck, piglit, and oglconform,
@@ -58,10 +58,3 @@ class IntelGpuTools(Package):
     # python-docutils
     # x11proto-dri2-dev
     # xutils-dev
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xf86vidmodeproto(Package):
+class Xf86vidmodeproto(AutotoolsPackage):
     """XFree86 Video Mode Extension.
 
     This extension defines a protocol for dynamically configuring modelines
@@ -38,8 +38,3 @@ class Xf86vidmodeproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

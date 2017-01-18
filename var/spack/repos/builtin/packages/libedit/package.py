@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libedit(Package):
+class Libedit(AutotoolsPackage):
     """An autotools compatible port of the NetBSD editline library"""
     homepage = "http://thrysoee.dk/editline/"
     url      = "http://thrysoee.dk/editline/libedit-20150325-3.1.tar.gz"
@@ -34,9 +34,3 @@ class Libedit(Package):
             url="http://thrysoee.dk/editline/libedit-20150325-3.1.tar.gz")
 
     depends_on('ncurses')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

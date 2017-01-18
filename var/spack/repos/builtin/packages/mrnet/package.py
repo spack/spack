@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mrnet(Package):
+class Mrnet(AutotoolsPackage):
     """The MRNet Multi-Cast Reduction Network."""
     homepage = "http://paradyn.org/mrnet"
     url      = "ftp://ftp.cs.wisc.edu/paradyn/mrnet/mrnet_5.0.1.tar.gz"
@@ -43,14 +43,13 @@ class Mrnet(Package):
 
     depends_on("boost")
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        config_args = ['--enable-shared']
+
         # Build the MRNet LW thread safe libraries when the
         # lwthreads variant is present
         if '+lwthreads' in spec:
-            configure("--prefix=%s" % prefix, "--enable-shared",
-                      "--enable-ltwt-threadsafe")
-        else:
-            configure("--prefix=%s" % prefix, "--enable-shared")
+            config_args.append('--enable-ltwt-threadsafe')
 
-        make()
-        make("install")
+        return config_args

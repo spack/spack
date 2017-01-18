@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxaw3d(Package):
+class Libxaw3d(AutotoolsPackage):
     """Xaw3d is the X 3D Athena Widget Set.
     Xaw3d is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
 
@@ -42,9 +42,3 @@ class Libxaw3d(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

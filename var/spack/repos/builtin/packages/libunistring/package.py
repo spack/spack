@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libunistring(Package):
+class Libunistring(AutotoolsPackage):
     """This library provides functions for manipulating Unicode strings
     and for manipulating C strings according to the Unicode standard."""
 
@@ -34,9 +34,4 @@ class Libunistring(Package):
 
     version('0.9.6', 'cb09c398020c27edac10ca590e9e9ef3')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        # make('check')  # test-verify fails for me, contacted developers
-        make('install')
+    # NOTE: `make check` fails test-verify

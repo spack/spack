@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libsodium(Package):
+class Libsodium(AutotoolsPackage):
     """Sodium is a modern, easy-to-use software library for encryption,
     decryption, signatures, password hashing and more."""
     homepage = "https://download.libsodium.org/doc/"
@@ -44,9 +44,3 @@ class Libsodium(Package):
         if version < Version('1.0.4'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

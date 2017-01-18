@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xsetpointer(Package):
+class Xsetpointer(AutotoolsPackage):
     """Set an X Input device as the main pointer."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xsetpointer"
@@ -39,9 +39,3 @@ class Xsetpointer(Package):
     depends_on('inputproto@1.4:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

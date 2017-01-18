@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xineramaproto(Package):
+class Xineramaproto(AutotoolsPackage):
     """X Xinerama Extension.
 
     This is an X extension that allows multiple physical screens controlled
@@ -38,8 +38,3 @@ class Xineramaproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

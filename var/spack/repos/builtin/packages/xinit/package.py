@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xinit(Package):
+class Xinit(AutotoolsPackage):
     """The xinit program is used to start the X Window System server and a
     first client program on systems that are not using a display manager
     such as xdm."""
@@ -40,9 +40,3 @@ class Xinit(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -1490,7 +1490,7 @@ Additional hybrid dependency types are (note the lack of quotes):
 
   * **<not specified>**: ``type`` assumed to be ``("build",
     "link")``. This is the common case for compiled language usage.
- 
+
 """""""""""""""""""
 Dependency Formulas
 """""""""""""""""""
@@ -2007,9 +2007,14 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/mpfr/package.py
-   :pyobject: Mpfr.install
+.. code-block:: python
    :linenos:
+
+   def install(self, spec prefix):
+       configure('--prefix={0}'.format(prefix))
+
+       make()
+       make('install')
 
 ``install`` takes a ``spec``: a description of how the package should
 be built, and a ``prefix``: the path to the directory where the

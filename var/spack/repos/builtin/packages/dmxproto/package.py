@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Dmxproto(Package):
+class Dmxproto(AutotoolsPackage):
     """Distributed Multihead X (DMX) Extension.
 
     This extension defines a protocol for clients to access a front-end proxy
@@ -39,8 +39,3 @@ class Dmxproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

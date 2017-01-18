@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Constype(Package):
+class Constype(AutotoolsPackage):
     """constype prints on the standard output the Sun code for the type of
     display that the specified device is.
 
@@ -39,9 +39,3 @@ class Constype(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

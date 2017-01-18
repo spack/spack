@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Randrproto(Package):
+class Randrproto(AutotoolsPackage):
     """X Resize and Rotate Extension (RandR).
 
     This extension defines a protocol for clients to dynamically change X
@@ -39,8 +39,3 @@ class Randrproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')
