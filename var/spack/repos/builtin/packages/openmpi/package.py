@@ -239,7 +239,7 @@ class Openmpi(AutotoolsPackage):
 
         return config_args
 
-    @AutotoolsPackage.sanity_check('install')
+    @AutotoolsPackage.run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.

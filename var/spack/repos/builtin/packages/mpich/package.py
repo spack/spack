@@ -106,7 +106,7 @@ class Mpich(AutotoolsPackage):
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
 
-    @AutotoolsPackage.sanity_check('install')
+    @AutotoolsPackage.run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
         compilers that Spack built the package with.

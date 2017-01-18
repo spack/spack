@@ -219,9 +219,11 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
 
         if all([not hasattr(x, 'sanity_check') for x in bases]):
             attr_dict['sanity_check'] = sanity_check
+            attr_dict['run_after'] = sanity_check
 
         if all([not hasattr(x, 'precondition') for x in bases]):
             attr_dict['precondition'] = precondition
+            attr_dict['run_before'] = precondition
 
         if all([not hasattr(x, 'on_package_attributes') for x in bases]):
             attr_dict['on_package_attributes'] = on_package_attributes
