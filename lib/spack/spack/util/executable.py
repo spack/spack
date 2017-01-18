@@ -68,7 +68,7 @@ class Executable(object):
 
             Raise an exception if the subprocess returns an
             error. Default is True.  When not set, the return code is
-            avaiale as `exe.returncode`.
+            available as `exe.returncode`.
 
           ignore_errors
 

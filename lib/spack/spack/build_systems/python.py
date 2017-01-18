@@ -24,6 +24,7 @@
 ##############################################################################
 
 import inspect
+import os
 
 from spack.directives import extends
 from spack.package import PackageBase
@@ -105,19 +106,38 @@ class PythonPackage(PackageBase):
         """The directory containing the ``setup.py`` file."""
         return self.stage.source_path
 
-    def python(self, *args):
-        inspect.getmodule(self).python(*args)
+    def python(self, *args, **kwargs):
+        inspect.getmodule(self).python(*args, **kwargs)
 
-    def setup_py(self, *args):
+    def setup_py(self, *args, **kwargs):
         setup = self.setup_file(self.spec, self.prefix)
 
         with working_dir(self.build_directory()):
-            self.python(setup, '--no-user-cfg', *args)
+            self.python(setup, '--no-user-cfg', *args, **kwargs)
+
+    def _setup_command_available(self, command):
+        """Determines whether or not a setup.py command exists.
+
+        :param str command: The command to look for
+        :return: True if the command is found, else False
+        :rtype: bool
+        """
+        kwargs = {
+            'output': os.devnull,
+            'error':  os.devnull,
+            'fail_on_error': False
+        }
+
+        python = inspect.getmodule(self).python
+        setup = self.setup_file(self.spec, self.prefix)
+
+        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        return python.returncode == 0
 
     # The following phases and their descriptions come from:
     #   $ python setup.py --help-commands
-    # Only standard commands are included here, but some packages
-    # define extra commands as well
+
+    # Standard commands
 
     def build(self, spec, prefix):
         """Build everything needed to install."""
@@ -303,6 +323,29 @@ class PythonPackage(PackageBase):
 
     def check_args(self, spec, prefix):
         """Arguments to pass to check."""
+        return []
+
+    # Extra commands
+
+    @PackageBase.sanity_check('build')
+    @PackageBase.on_package_attributes(run_tests=True)
+    def test(self):
+        """Run unit tests after in-place build.
+
+        These tests are only run if the user supplies:
+
+        .. code-block:: console
+
+           $ spack install --run-tests
+
+        and if the package actually has a 'test' command."""
+        if self._setup_command_available('test'):
+            args = self.test_args(self.spec, self.prefix)
+
+            self.setup_py('test', *args)
+
+    def test_args(self, spec, prefix):
+        """Arguments to pass to test."""
         return []
 
     # Check that self.prefix is there after installation
