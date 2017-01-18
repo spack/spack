@@ -222,5 +222,13 @@ class AutotoolsPackage(PackageBase):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 
+    @PackageBase.sanity_check('install')
+    @PackageBase.on_package_attributes(run_tests=True)
+    def installcheck(self):
+        """Default post-installation test. Searches the Makefile for an
+        ``installcheck`` target and runs it if found."""
+        with working_dir(self.build_directory()):
+            self._if_make_target_execute('installcheck')
+
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
