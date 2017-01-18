@@ -136,7 +136,8 @@ class PackageTemplate(object):
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for Autotools-based packages"""
+    """Provides appropriate overrides for Autotools-based packages
+    that *do* come with a ``configure`` script"""
 
     base_class_name = 'AutotoolsPackage'
 
@@ -145,6 +146,33 @@ class AutotoolsPackageTemplate(PackageTemplate):
     # depends_on('foo')"""
 
     body = """\
+    def configure_args(self):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
+class AutoreconfPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Autotools-based packages
+    that *do not* come with a ``configure`` script"""
+
+    base_class_name = 'AutotoolsPackage'
+
+    dependencies = """\
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('foo')"""
+
+    body = """\
+    def autoreconf(self, spec, prefix):
+        # FIXME: Modify the autoreconf method as necessary
+        autoreconf('--install', '--verbose', '--force')
+
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -269,14 +297,15 @@ class OctavePackageTemplate(PackageTemplate):
 
 
 templates = {
-    'autotools': AutotoolsPackageTemplate,
-    'cmake':     CMakePackageTemplate,
-    'scons':     SconsPackageTemplate,
-    'bazel':     BazelPackageTemplate,
-    'python':    PythonPackageTemplate,
-    'r':         RPackageTemplate,
-    'octave':    OctavePackageTemplate,
-    'generic':   PackageTemplate
+    'autotools':  AutotoolsPackageTemplate,
+    'autoreconf': AutoreconfPackageTemplate,
+    'cmake':      CMakePackageTemplate,
+    'scons':      SconsPackageTemplate,
+    'bazel':      BazelPackageTemplate,
+    'python':     PythonPackageTemplate,
+    'r':          RPackageTemplate,
+    'octave':     OctavePackageTemplate,
+    'generic':    PackageTemplate
 }
 
 
@@ -326,12 +355,14 @@ class BuildSystemGuesser:
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
         clues = [
-            (r'/configure$',      'autotools'),
-            (r'/CMakeLists.txt$', 'cmake'),
-            (r'/SConstruct$',     'scons'),
-            (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'r'),
-            (r'/WORKSPACE$',      'bazel')
+            (r'/configure$',         'autotools'),
+            (r'/configure.(in|ac)$', 'autoreconf'),
+            (r'/Makefile.am$',       'autoreconf'),
+            (r'/CMakeLists.txt$',    'cmake'),
+            (r'/SConstruct$',        'scons'),
+            (r'/setup.py$',          'python'),
+            (r'/NAMESPACE$',         'r'),
+            (r'/WORKSPACE$',         'bazel')
         ]
 
         # Peek inside the compressed file.
@@ -356,6 +387,7 @@ class BuildSystemGuesser:
         for pattern, bs in clues:
             if any(re.search(pattern, l) for l in lines):
                 build_system = bs
+                break
 
         self.build_system = build_system
 
