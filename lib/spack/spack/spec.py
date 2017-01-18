@@ -2860,6 +2860,15 @@ class SpecParser(spack.parse.Parser):
                     # We've found the start of a new spec. Go back to do_parse
                     break
 
+            elif self.accept(HASH):
+                # Get spec by hash and confirm it matches what we already have
+                hash_spec = self.spec_by_hash()
+                if hash_spec.satisfies(spec):
+                    spec = hash_spec
+                    break
+                else:
+                    raise InvalidHashError(spec, hash_spec.dag_hash())
+
             else:
                 break
 
@@ -3139,3 +3148,9 @@ class AmbiguousHashError(SpecError):
         super(AmbiguousHashError, self).__init__(msg)
         for spec in specs:
             print('    ', spec.format('$.$@$%@+$+$=$#'))
+
+class InvalidHashError(SpecError):
+    def __init__(self, spec, hash):
+        super(InvalidHashError, self).__init__(
+            "The spec specified by %s does not match provided spec %s"
+            % (hash, spec))
