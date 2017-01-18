@@ -70,7 +70,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    @AutotoolsPackage.run_before('configure')
+    @run_before('configure')
     def validate(self):
         """
         Checks if incompatible variants have been activated at the same time
@@ -170,7 +170,7 @@ class Hdf5(AutotoolsPackage):
                     arg for arg in m.group(1).split(' ') if arg != '-l'),
                 'libtool')
 
-    @AutotoolsPackage.run_after('install')
+    @run_after('install')
     def check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec

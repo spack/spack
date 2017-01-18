@@ -32,7 +32,7 @@ from subprocess import check_call
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after, on_package_attributes
 
 
 class AutotoolsPackage(PackageBase):
@@ -168,7 +168,7 @@ class AutotoolsPackage(PackageBase):
         """Not needed usually, configure should be already there"""
         pass
 
-    @PackageBase.run_after('autoreconf')
+    @run_after('autoreconf')
     def is_configure_or_die(self):
         """Checks the presence of a `configure` file after the
         :py:meth:`.autoreconf` phase.
@@ -211,8 +211,8 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 
-    @PackageBase.run_after('build')
-    @PackageBase.on_package_attributes(run_tests=True)
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
     def _run_default_function(self):
         """This function is run after build if ``self.run_tests == True``
 
@@ -235,4 +235,4 @@ class AutotoolsPackage(PackageBase):
             self._if_make_target_execute('check')
 
     # Check that self.prefix is there after installation
-    PackageBase.run_after('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

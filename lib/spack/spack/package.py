@@ -155,7 +155,7 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                 attr_dict[phase_name] = InstallPhase(callback_name)
             attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
 
-        def _append_checks(check_name):
+        def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
             checks = getattr(mcs, attr_name)
@@ -183,55 +183,44 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                 # Clear the attribute for the next class
                 setattr(mcs, attr_name, {})
 
-        @classmethod
-        def _register_checks(cls, check_type, *args):
-            def _register_sanity_checks(func):
-                attr_name = PackageMeta.phase_fmt.format(check_type)
-                check_list = getattr(mcs, attr_name)
-                for item in args:
-                    checks = check_list.setdefault(item, [])
-                    checks.append(func)
-                setattr(mcs, attr_name, check_list)
-                return func
-            return _register_sanity_checks
-
-        @staticmethod
-        def on_package_attributes(**attrs):
-            def _execute_under_condition(func):
-                @functools.wraps(func)
-                def _wrapper(instance):
-                    # If all the attributes have the value we require, then
-                    # execute
-                    if all([getattr(instance, key, None) == value for key, value in attrs.items()]):  # NOQA: ignore=E501
-                        func(instance)
-                return _wrapper
-            return _execute_under_condition
-
-        @classmethod
-        def run_before(cls, *args):
-            return cls._register_checks('run_before', *args)
-
-        @classmethod
-        def run_after(cls, *args):
-            return cls._register_checks('run_after', *args)
-
-        if all([not hasattr(x, '_register_checks') for x in bases]):
-            attr_dict['_register_checks'] = _register_checks
-
-        if all([not hasattr(x, 'run_after') for x in bases]):
-            attr_dict['run_after'] = run_after
-
-        if all([not hasattr(x, 'run_before') for x in bases]):
-            attr_dict['run_before'] = run_before
-
-        if all([not hasattr(x, 'on_package_attributes') for x in bases]):
-            attr_dict['on_package_attributes'] = on_package_attributes
-
         # Preconditions
-        _append_checks('run_before')
+        _flush_callbacks('run_before')
         # Sanity checks
-        _append_checks('run_after')
+        _flush_callbacks('run_after')
         return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
+
+    @staticmethod
+    def register_callback(check_type, *phases):
+        def _decorator(func):
+            attr_name = PackageMeta.phase_fmt.format(check_type)
+            check_list = getattr(PackageMeta, attr_name)
+            for item in phases:
+                checks = check_list.setdefault(item, [])
+                checks.append(func)
+            setattr(PackageMeta, attr_name, check_list)
+            return func
+        return _decorator
+
+
+def run_before(*phases):
+    return PackageMeta.register_callback('run_before', *phases)
+
+
+def run_after(*phases):
+    return PackageMeta.register_callback('run_after', *phases)
+
+
+def on_package_attributes(**attr_dict):
+    def _execute_under_condition(func):
+
+        @functools.wraps(func)
+        def _wrapper(instance, *args, **kwargs):
+            # If all the attributes have the value we require, then execute
+            if all([getattr(instance, key, None) == value for key, value in attr_dict.items()]):  # NOQA: ignore=E501
+                func(instance, *args, **kwargs)
+        return _wrapper
+
+    return _execute_under_condition
 
 
 class PackageBase(object):
@@ -1717,7 +1706,7 @@ class Package(PackageBase):
     build_system_class = 'Package'
     # This will be used as a registration decorator in user
     # packages, if need be
-    PackageBase.run_after('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

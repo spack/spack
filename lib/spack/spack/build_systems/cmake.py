@@ -30,7 +30,7 @@ import llnl.util.tty as tty
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
 from spack.directives import depends_on
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after, on_package_attributes
 
 
 class CMakePackage(PackageBase):
@@ -155,8 +155,8 @@ class CMakePackage(PackageBase):
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 
-    @PackageBase.run_after('build')
-    @PackageBase.on_package_attributes(run_tests=True)
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
     def _run_default_function(self):
         """This function is run after build if ``self.run_tests == True``
 
@@ -178,4 +178,4 @@ class CMakePackage(PackageBase):
             self._if_make_target_execute('test')
 
     # Check that self.prefix is there after installation
-    PackageBase.run_after('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

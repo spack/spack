@@ -145,7 +145,7 @@ class Openmpi(AutotoolsPackage):
         elif self.spec.satisfies('@1.7:'):
             return 'verbs'
 
-    @AutotoolsPackage.run_before('autoreconf')
+    @run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
@@ -239,7 +239,7 @@ class Openmpi(AutotoolsPackage):
 
         return config_args
 
-    @AutotoolsPackage.run_after('install')
+    @run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.
