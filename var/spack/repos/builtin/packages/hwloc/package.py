@@ -42,6 +42,7 @@ class Hwloc(Package):
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 3
 
+    version('1.11.5', '8f5fe6a9be2eb478409ad5e640b2d3ba')
     version('1.11.4', 'b6f23eb59074fd09fdd84905d50b103d')
     version('1.11.3', 'c1d36a9de6028eac1d18ea4782ef958f')
     version('1.11.2', 'e4ca55c2a5c5656da4a4e37c8fc51b23')
