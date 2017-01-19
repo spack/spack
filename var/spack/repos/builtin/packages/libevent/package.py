@@ -53,6 +53,7 @@ class Libevent(AutotoolsPackage):
     depends_on('openssl', when='+openssl')
 
     def configure_args(self):
+        spec = self.spec
         configure_args = []
         if '+openssl' in spec:
             configure_args.append('--enable-openssl')

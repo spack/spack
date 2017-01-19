@@ -48,6 +48,7 @@ class Emacs(AutotoolsPackage):
     depends_on('gtkplus+X', when='+X toolkit=gtk')
 
     def configure_args(self):
+        spec = self.spec
         args = []
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
