@@ -46,6 +46,7 @@ class Libxml2(AutotoolsPackage):
     depends_on('pkg-config@0.9.0:', type='build')
 
     def configure_args(self):
+        spec = self.spec
         if '+python' in spec:
             python_args = [
                 '--with-python={0}'.format(spec['python'].prefix),
