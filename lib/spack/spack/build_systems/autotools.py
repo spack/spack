@@ -149,6 +149,7 @@ class AutotoolsPackage(PackageBase):
 
         return False
 
+    @property
     def configure_directory(self):
         """Returns the directory where 'configure' resides.
 
@@ -164,9 +165,10 @@ class AutotoolsPackage(PackageBase):
         )
         return configure_abs_path
 
+    @property
     def build_directory(self):
         """Override to provide another place to build the package"""
-        return self.configure_directory()
+        return self.configure_directory
 
     def patch(self):
         """Patches config.guess if
@@ -198,7 +200,7 @@ class AutotoolsPackage(PackageBase):
         tty.warn('* If the default procedure fails, consider implementing *')
         tty.warn('*        a custom AUTORECONF phase in the package       *')
         tty.warn('*********************************************************')
-        with working_dir(self.configure_directory()):
+        with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
             m.libtoolize()
             m.aclocal()
@@ -218,7 +220,7 @@ class AutotoolsPackage(PackageBase):
         # Check if a configure script is there. If not raise a RuntimeError.
         if not os.path.exists(self.configure_abs_path):
             msg = 'configure script not found in {0}'
-            raise RuntimeError(msg.format(self.configure_directory()))
+            raise RuntimeError(msg.format(self.configure_directory))
 
         # Monkey-patch the configure script in the corresponding module
         inspect.getmodule(self).configure = Executable(
@@ -239,21 +241,21 @@ class AutotoolsPackage(PackageBase):
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
 
-        with working_dir(self.build_directory(), create=True):
+        with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
         """Makes the install targets specified by
         :py:attr:``~.AutotoolsPackage.install_targets``
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
@@ -262,7 +264,7 @@ class AutotoolsPackage(PackageBase):
         """Searches the Makefile for targets ``test`` and ``check``
         and runs them if found.
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 

@@ -142,8 +142,7 @@ class Gcc(AutotoolsPackage):
 
         return options
 
-    def build_directory(self):
-        return 'spack-build'
+    build_directory = 'spack-build'
 
     @property
     def build_targets(self):
