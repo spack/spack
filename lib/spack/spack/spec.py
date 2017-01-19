@@ -2724,9 +2724,8 @@ class SpecParser(spack.parse.Parser):
                         self.previous = None
                     else:
                         # We're parsing a new spec by name
-                        value = self.previous.value
                         self.previous = None
-                        specs.append(self.spec(value))
+                        specs.append(self.spec(self.token.value))
                 elif self.accept(HASH):
                     # We're finding a spec by hash
                     specs.append(self.spec_by_hash())
