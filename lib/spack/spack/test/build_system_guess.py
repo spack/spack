@@ -32,12 +32,13 @@ import spack.stage
 @pytest.fixture(
     scope='function',
     params=[
-        ('configure', 'autotools'),
+        ('configure',      'autotools'),
         ('CMakeLists.txt', 'cmake'),
-        ('SConstruct', 'scons'),
-        ('setup.py', 'python'),
-        ('NAMESPACE', 'r'),
-        ('foobar', 'unknown')
+        ('SConstruct',     'scons'),
+        ('setup.py',       'python'),
+        ('NAMESPACE',      'r'),
+        ('WORKSPACE',      'bazel'),
+        ('foobar',         'generic')
     ]
 )
 def url_and_build_system(request, tmpdir):

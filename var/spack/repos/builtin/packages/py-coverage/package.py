@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyCoverage(Package):
+class PyCoverage(PythonPackage):
     """ Testing coverage checker for python """
 
     homepage = "http://nedbatchelder.com/code/coverage/"
@@ -34,8 +34,3 @@ class PyCoverage(Package):
     version('4.0a6', '1bb4058062646148965bef0796b61efc')
 
     depends_on('py-setuptools', type='build')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

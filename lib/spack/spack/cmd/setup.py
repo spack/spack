@@ -36,7 +36,6 @@ import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
 from llnl.util.filesystem import set_executable
 from spack import which
-from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
 
 description = "Create a configuration script and module, but don't build."
@@ -134,16 +133,8 @@ def setup(self, args):
     with spack.store.db.write_transaction():
         spec = specs[0]
         if not spack.repo.exists(spec.name):
-            tty.warn("No such package: %s" % spec.name)
-            create = tty.get_yes_or_no("Create this package?", default=False)
-            if not create:
-                tty.msg("Exiting without creating.")
-                sys.exit(1)
-            else:
-                tty.msg("Running 'spack edit -f %s'" % spec.name)
-                edit_package(spec.name, spack.repo.first_repo(), None, True)
-                return
-
+            tty.die("No package for '{0}' was found.".format(spec.name),
+                    "  Use `spack create` to create a new package")
         if not spec.versions.concrete:
             tty.die(
                 "spack setup spec must have a single, concrete version. "

@@ -22,11 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+from spack import *
 
 
-class PyPy2neo(Package):
+class PyPy2neo(PythonPackage):
     """Py2neo is a client library and toolkit for working with Neo4j from
     within Python applications and from the command line."""
 
@@ -40,7 +39,3 @@ class PyPy2neo(Package):
     version('2.0.4', 'b3f7efd3344dc3f66db4eda11e5899f7')
 
     depends_on("py-setuptools", type='build')
-    extends("python")
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

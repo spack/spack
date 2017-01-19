@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyUnittest2(Package):
+class PyUnittest2(PythonPackage):
     """unittest2 is a backport of the new features added to the unittest
     testing framework in Python 2.7 and onwards."""
 
@@ -34,8 +34,4 @@ class PyUnittest2(Package):
 
     version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
