@@ -236,11 +236,10 @@ fi;
 #
 # Set up modules and dotkit search paths in the user environment
 #
-_sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
-_sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")
-_sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+while read _mod_env _mod_path
+do
+	_spack_pathadd "${_mod_env}" "${_mod_path}"
+done < <(spack-shell)
 
 # Add programmable tab completion for Bash
 #
