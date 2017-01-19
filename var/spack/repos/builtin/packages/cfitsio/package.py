@@ -32,8 +32,27 @@ class Cfitsio(AutotoolsPackage):
 
     homepage = 'http://heasarc.gsfc.nasa.gov/fitsio/'
 
+    version('3.410', '8a4a66fcdd816aae41768baa0b025552')
     version('3.370', 'abebd2d02ba5b0503c633581e3bfa116')
+
+    variant('bzip2', default=True, description='Enable bzip2 support')
+    variant('shared', default=False, description='Build shared libraries')
+
+    depends_on('bzip2', when='+bzip2')
 
     def url_for_version(self, version):
         url = 'ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio{0}.tar.gz'
         return url.format(version.joined)
+
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
+        if '+bzip2' in spec:
+            extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix),
+        return extra_args
+
+    def build(self, spec, prefix):
+        targets = ['all']
+        if '+shared' in spec:
+            targets.append('shared')
+        make(*targets)
