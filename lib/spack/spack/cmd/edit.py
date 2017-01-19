@@ -70,6 +70,10 @@ def setup_parser(subparser):
     # Various types of Spack files that can be edited
     # Edits package files by default
     excl_args.add_argument(
+        '-b', '--build-system', dest='path', action='store_const',
+        const=spack.build_systems_path,
+        help="Edit the build system with the supplied name.")
+    excl_args.add_argument(
         '-c', '--command', dest='path', action='store_const',
         const=spack.cmd.command_path,
         help="Edit the command with the supplied name.")
