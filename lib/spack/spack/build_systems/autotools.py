@@ -161,7 +161,7 @@ class AutotoolsPackage(PackageBase):
     def configure_abs_path(self):
         # Absolute path to configure
         configure_abs_path = join_path(
-            os.path.abspath(self.configure_directory()), 'configure'
+            os.path.abspath(self.configure_directory), 'configure'
         )
         return configure_abs_path
 
