@@ -2658,6 +2658,8 @@ class Spec(object):
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
+        child_args = dict(kwargs)
+
         color = kwargs.pop('color', False)
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
@@ -2669,11 +2671,13 @@ class Spec(object):
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', ('build', 'link'))
+        base_depth = kwargs.pop('base_depth', 0)
         check_kwargs(kwargs, self.tree)
 
         out = ""
         for d, dep_spec in self.traverse_edges(
                 order='pre', cover=cover, depth=True, deptypes=deptypes):
+            d += base_depth
             node = dep_spec.spec
 
             if prefix is not None:
@@ -2708,6 +2712,10 @@ class Spec(object):
             if d > 0:
                 out += "^"
             out += node.format(fmt, color=color) + "\n"
+            
+            child_args['base_depth'] = d + 1
+            for build_dep in node.build_only_deps.itervalues():
+                out += build_dep.tree(**child_args)
         return out
 
     def __repr__(self):
