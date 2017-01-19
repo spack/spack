@@ -1520,7 +1520,7 @@ class Spec(object):
 
         if skip_build:
             build_only_constraint_deps = {}
-            for dep in self.get_build_only_deps():
+            for dep in self.identify_build_only_deps():
                 if dep in self._dependencies:
                     build_only_constraint_deps[dep] = (
                         self._dependencies.pop(dep))
@@ -1535,7 +1535,7 @@ class Spec(object):
 
         if skip_build:
             for spec in self.traverse():
-                build_only_deps = spec.get_build_only_deps()
+                build_only_deps = spec.identify_build_only_deps()
                 if build_only_deps:
                     build_parent = Spec(spec.name)
                     build_parent.versions = spec.versions.copy()
@@ -1585,14 +1585,17 @@ class Spec(object):
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
-    def get_build_only_deps(self):
+    def identify_build_only_deps(self):
+        """Use package dependency information to determine which dependencies
+        are only needed for building.
+        """
         pkg = spack.repo.get(self.fullname)
-        build_only_deps = set()
+        build_dep_names = set()
         for dep_name in pkg.dependencies:
             deptypes = pkg.dependency_types[dep_name]
             if set(deptypes) == set(['build']):
-                build_only_deps.add(dep_name)
-        return build_only_deps
+                build_dep_names.add(dep_name)
+        return build_dep_names
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
