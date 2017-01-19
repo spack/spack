@@ -2729,9 +2729,7 @@ class SpecParser(spack.parse.Parser):
                     if not specs:
                         # We're parsing an anonymous spec beginning with a
                         # dependency
-                        self.previous = self.token
                         specs.append(self.spec(None))
-                        self.previous = None
                     if self.accept(HASH):
                         # We're finding a dependency by hash for an anonymous
                         # spec
@@ -2822,16 +2820,6 @@ class SpecParser(spack.parse.Parser):
         # record this so that we know whether version is
         # unspecified or not.
         added_version = False
-
-        if self.previous and self.previous.value == DEP:
-            if self.accept(HASH):
-                spec.add_dependency(self.spec_by_hash())
-            else:
-                self.expect(ID)
-                if self.accept(EQ):
-                    raise SpecParseError(spack.parse.ParseError(
-                        "", "", "Expected dependency received anonymous spec"))
-                spec.add_dependency(self.spec(self.token.value))
 
         while self.next:
             if self.accept(AT):
