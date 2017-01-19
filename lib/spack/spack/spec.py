@@ -1518,6 +1518,13 @@ class Spec(object):
         changed = True
         force = False
 
+        if skip_build:
+            build_only_constraint_deps = {}
+            for dep in self.get_build_only_deps():
+                if dep in self._dependencies:
+                    build_only_constraint_deps[dep] = (
+                        self._dependencies.pop(dep))
+
         while changed:
             changes = (self.normalize(force, skip_build=skip_build,
                                       constrain_deps=constrain_deps),
@@ -1528,18 +1535,15 @@ class Spec(object):
 
         if skip_build:
             for spec in self.traverse():
-                pkg = spack.repo.get(spec.fullname)
-                build_only_deps = set()
-                for dep_name in pkg.dependencies:
-                    deptypes = pkg.dependency_types[dep_name]
-                    if set(deptypes) != set(['build']):
-                        continue
-                    build_only_deps.add(dep_name)
+                build_only_deps = spec.get_build_only_deps()
                 if build_only_deps:
                     build_parent = Spec(spec.name)
                     build_parent.versions = spec.versions.copy()
                     build_parent.variants = spec.variants.copy()
                     build_parent.variants.spec = build_parent
+                    build_parent._dependencies.update(
+                        build_only_constraint_deps)
+
                     frontend_arch = ArchSpec(
                         spack.architecture.frontend_sys_type())
                     if (not frontend_arch.concrete or
@@ -1580,6 +1584,15 @@ class Spec(object):
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
+
+    def get_build_only_deps(self):
+        pkg = spack.repo.get(self.fullname)
+        build_only_deps = set()
+        for dep_name in pkg.dependencies:
+            deptypes = pkg.dependency_types[dep_name]
+            if set(deptypes) == set(['build']):
+                build_only_deps.add(dep_name)
+        return build_only_deps
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
