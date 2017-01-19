@@ -77,12 +77,18 @@ def test_install_and_uninstall(mock_archive):
         raise
 
 
+def set_mock_fetcher(spec, url):
+    for s in spec.traverse():
+        fake_fetchify(url, s.package)
+        for build_dep in s.build_only_deps.itervalues():
+            fake_fetchify(url, build_dep.package)
+
+
 @pytest.mark.usefixtures('install_mockery')
 def test_store(mock_archive):
     spec = Spec('cmake-client').concretized()
 
-    for s in spec.traverse():
-        fake_fetchify(mock_archive.url, s.package)
+    set_mock_fetcher(spec, mock_archive.url)
 
     pkg = spec.package
     try:
@@ -96,8 +102,7 @@ def test_store(mock_archive):
 def test_failing_build(mock_archive):
     spec = Spec('failing-build').concretized()
 
-    for s in spec.traverse():
-        fake_fetchify(mock_archive.url, s.package)
+    set_mock_fetcher(spec, mock_archive.url)
 
     pkg = spec.package
     with pytest.raises(spack.build_environment.ChildError):
