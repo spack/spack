@@ -152,7 +152,8 @@ __all__ = [
     'UnsatisfiableArchitectureSpecError',
     'UnsatisfiableProviderSpecError',
     'UnsatisfiableDependencySpecError',
-    'AmbiguousHashError']
+    'AmbiguousHashError',
+    'RedundantSpecError']
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -2713,6 +2714,11 @@ class SpecParser(spack.parse.Parser):
                         if not specs:
                             specs.append(self.spec(None))
                         self.expect(VAL)
+                        # Raise an error if the previous spec is already
+                        # concrete (assigned by hash)
+                        if specs[-1].concrete:
+                            raise RedundantSpecError(specs[-1],
+                                                     'key-value pair')
                         specs[-1]._add_flag(
                             self.previous.value, self.token.value)
                         self.previous = None
@@ -2739,6 +2745,10 @@ class SpecParser(spack.parse.Parser):
                         self.expect(ID)
                         dep = self.spec(self.token.value)
 
+                    # Raise an error if the previous spec is already concrete
+                    # (assigned by hash)
+                    if specs[-1].concrete:
+                        raise RedundantSpecError(specs[-1], 'dependency')
                     # command line deps get empty deptypes now.
                     # Real deptypes are assigned later per packages.
                     specs[-1]._add_dependency(dep, ())
@@ -2747,6 +2757,12 @@ class SpecParser(spack.parse.Parser):
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
                     if self.next.type in (AT, ON, OFF, PCT):
+                        # Raise an error if the previous spec is already
+                        # concrete (assigned by hash)
+                        if specs and specs[-1].concrete:
+                            raise RedundantSpecError(specs[-1],
+                                                     'compiler, version, '
+                                                     'or variant')
                         specs.append(self.spec(None))
                     else:
                         self.unexpected_token()
@@ -2781,13 +2797,13 @@ class SpecParser(spack.parse.Parser):
 
         if len(matches) != 1:
             raise AmbiguousHashError(
-                "Multiple packages specify hash %s." % self.token.value,
-                *matches)
+                "Multiple packages specify hash beginning %s."
+                % self.token.value, *matches)
 
         return matches[0]
 
     def spec(self, name):
-        """Parse a spec out of the input.  If a spec is supplied, then initialize
+        """Parse a spec out of the input. If a spec is supplied, initialize
            and return it instead of creating a new one."""
         if name:
             spec_namespace, dot, spec_name = name.rpartition('.')
@@ -3137,8 +3153,17 @@ class AmbiguousHashError(SpecError):
         for spec in specs:
             print('    ', spec.format('$.$@$%@+$+$=$#'))
 
+
 class InvalidHashError(SpecError):
     def __init__(self, spec, hash):
         super(InvalidHashError, self).__init__(
             "The spec specified by %s does not match provided spec %s"
             % (hash, spec))
+
+
+class RedundantSpecError(SpecError):
+    def __init__(self, spec, addition):
+        super(RedundantSpecError, self).__init__(
+            "Attempting to add %s to spec %s which is already concrete."
+            " This is likely the result of adding to a spec specified by hash."
+            % (addition, spec))
