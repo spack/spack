@@ -2692,17 +2692,24 @@ class SpecParser(spack.parse.Parser):
     def __init__(self):
         super(SpecParser, self).__init__(_lexer)
         self.previous = None
+        self.hash_spec = None
 
     def do_parse(self):
         specs = []
 
         try:
             while self.next or self.previous:
+                # Note: Whenever we start a new spec, we verify the previous
+                # spec against the hash spec if one exists.
                 # TODO: clean this parsing up a bit
                 if self.previous:
                     # We picked up the name of this spec while finishing the
                     # previous spec
-                    specs.append(self.spec(self.previous.value))
+                    specs[-1] = self.verify_hash_spec(specs[-1])
+                    if self.previous.type == HASH:
+                        specs.append(self.spec_by_hash())
+                    else:
+                        specs.append(self.spec(self.previous.value))
                     self.previous = None
                 elif self.accept(ID):
                     self.previous = self.token
@@ -2720,9 +2727,13 @@ class SpecParser(spack.parse.Parser):
                         # We're parsing a new spec by name
                         value = self.previous.value
                         self.previous = None
+                        if specs:
+                            self.verify_hash_spec(specs[-1])
                         specs.append(self.spec(value))
                 elif self.accept(HASH):
                     # We're finding a spec by hash
+                    if specs:
+                        specs[-1] = self.verify_hash_spec(specs[-1])
                     specs.append(self.spec_by_hash())
 
                 elif self.accept(DEP):
@@ -2747,6 +2758,8 @@ class SpecParser(spack.parse.Parser):
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
                     if self.next.type in (AT, ON, OFF, PCT):
+                        if specs:
+                            specs[-1] = self.verify_hash_spec(specs[-1])
                         specs.append(self.spec(None))
                     else:
                         self.unexpected_token()
@@ -2762,7 +2775,18 @@ class SpecParser(spack.parse.Parser):
                 if s.architecture and not s.architecture.platform and \
                         (s.architecture.platform_os or s.architecture.target):
                     s._set_architecture(platform=platform_default)
+
+        if specs:
+            specs[-1] = self.verify_hash_spec(specs[-1])
         return specs
+
+    def verify_hash_spec(self, spec):
+        if self.hash_spec:
+            if not self.hash_spec.satisfies(spec):
+                raise InvalidHashError(spec, self.hash_spec.dag_hash())
+            spec = self.hash_spec
+            self.hash_spec = None
+        return spec
 
     def parse_compiler(self, text):
         self.setup(text)
@@ -2849,13 +2873,11 @@ class SpecParser(spack.parse.Parser):
                     break
 
             elif self.accept(HASH):
-                # Get spec by hash and confirm it matches what we already have
-                hash_spec = self.spec_by_hash()
-                if hash_spec.satisfies(spec):
-                    spec = hash_spec
+                # Get spec by hash and save to verify later against rest of spec
+                if self.hash_spec:
+                    self.previous = self.token
                     break
-                else:
-                    raise InvalidHashError(spec, hash_spec.dag_hash())
+                self.hash_spec = self.spec_by_hash()
 
             else:
                 break
