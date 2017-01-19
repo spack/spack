@@ -1858,6 +1858,10 @@ class Spec(object):
         if force:
             self._mark_concrete(False)
 
+        if skip_build:
+            for dep in self.identify_build_only_deps():
+                self._dependencies.pop(dep, None)
+
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
         # Get all the dependencies into one DependencyMap
