@@ -44,7 +44,7 @@ class CmakeClient(CMakePackage):
         check(from_cmake == "from_cmake",
               "setup_environment couldn't read global set by cmake.")
 
-        check(self.spec['cmake'].link_arg == "test link arg",
+        check(self.spec.build_only_deps['cmake'].link_arg == "test link arg",
               "link arg on dependency spec not readable from "
               "setup_environment.")
 
@@ -53,7 +53,7 @@ class CmakeClient(CMakePackage):
         check(from_cmake == "from_cmake",
               "setup_dependent_environment couldn't read global set by cmake.")
 
-        check(self.spec['cmake'].link_arg == "test link arg",
+        check(self.spec.build_only_deps['cmake'].link_arg == "test link arg",
               "link arg on dependency spec not readable from "
               "setup_dependent_environment.")
 
@@ -62,7 +62,7 @@ class CmakeClient(CMakePackage):
         check(from_cmake == "from_cmake",
               "setup_dependent_package couldn't read global set by cmake.")
 
-        check(self.spec['cmake'].link_arg == "test link arg",
+        check(self.spec.build_only_deps['cmake'].link_arg == "test link arg",
               "link arg on dependency spec not readable from "
               "setup_dependent_package.")
 
@@ -78,7 +78,8 @@ class CmakeClient(CMakePackage):
 
         # check that which('cmake') returns the right one.
         cmake = which('cmake')
-        check(cmake.exe[0].startswith(spec['cmake'].prefix.bin),
+        check(cmake.exe[0].
+              startswith(spec.build_only_deps['cmake'].prefix.bin),
               "Wrong cmake was in environment: %s" % cmake)
 
         check(from_cmake == "from_cmake",

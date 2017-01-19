@@ -2227,7 +2227,8 @@ class Spec(object):
         self.external = other.external
         self.external_module = other.external_module
         self.namespace = other.namespace
-        self.build_only_deps = other.build_only_deps
+        self.build_only_deps = dict(
+            (x, y.copy()) for (x, y) in other.build_only_deps.iteritems())
 
         self.external = other.external
         self.external_module = other.external_module
@@ -2717,7 +2718,7 @@ class Spec(object):
             if d > 0:
                 out += "^"
             out += node.format(fmt, color=color) + "\n"
-            
+
             child_args['base_depth'] = d + 1
             child_args['build_only_dep'] = True
             for build_dep in node.build_only_deps.itervalues():
