@@ -92,6 +92,10 @@ class PythonPackage(PackageBase):
     # Default phases
     phases = ['build', 'install']
 
+    # Name of modules that the Python package provides
+    # This is used to test whether or not the installation succeeded
+    import_modules = []
+
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
@@ -339,6 +343,7 @@ class PythonPackage(PackageBase):
            $ spack install --run-tests
 
         and if the package actually has a 'test' command."""
+
         if self._setup_command_available('test'):
             args = self.test_args(self.spec, self.prefix)
 
@@ -347,6 +352,16 @@ class PythonPackage(PackageBase):
     def test_args(self, spec, prefix):
         """Arguments to pass to test."""
         return []
+
+    @PackageBase.sanity_check('install')
+    def import_module_test(self):
+        """Attempts to import the module that was just installed.
+
+        This test is only run if the package overrides
+        :py:attr:`import_modules` with a list of module names."""
+
+        for module in self.import_modules:
+            self.python('-c', 'import {0}'.format(module))
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
