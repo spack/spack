@@ -186,6 +186,13 @@ class Metis(Package):
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
+        else:
+            rpath_options = []
+            for o in options:
+                if o.find('RPATH') >= 0:
+                    rpath_options.append(o)
+            for o in rpath_options:
+                options.remove(o)
         if '+debug' in spec:
             options.extend(['-DDEBUG:BOOL=ON',
                             '-DCMAKE_BUILD_TYPE:STRING=Debug'])

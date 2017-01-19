@@ -36,6 +36,7 @@ class Bzip2(Package):
     url      = "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
 
     version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
+    variant('shared', default=True, description='Enables the build of shared libraries.')
 
     def patch(self):
         # bzip2 comes with two separate Makefiles for static and dynamic builds
@@ -71,27 +72,30 @@ class Bzip2(Package):
 
     def install(self, spec, prefix):
         # Build the dynamic library first
-        make('-f', 'Makefile-libbz2_so')
+        if '+shared' in spec:
+            make('-f', 'Makefile-libbz2_so')
+
         # Build the static library and everything else
         make()
         make('install', 'PREFIX={0}'.format(prefix))
 
-        install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
+        if '+shared' in spec:
+            install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
 
-        v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))
-        if 'darwin' in self.spec.architecture:
-            lib = 'libbz2.dylib'
-            lib1, lib2, lib3 = ('libbz2.{0}.dylib'.format(v)
-                                for v in (v1, v2, v3))
-        else:
-            lib = 'libbz2.so'
-            lib1, lib2, lib3 = ('libbz2.so.{0}'.format(v)
-                                for v in (v1, v2, v3))
+            v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))
+            if 'darwin' in self.spec.architecture:
+                lib = 'libbz2.dylib'
+                lib1, lib2, lib3 = ('libbz2.{0}.dylib'.format(v)
+                                    for v in (v1, v2, v3))
+            else:
+                lib = 'libbz2.so'
+                lib1, lib2, lib3 = ('libbz2.so.{0}'.format(v)
+                                    for v in (v1, v2, v3))
 
-        install(lib3, join_path(prefix.lib, lib3))
-        with working_dir(prefix.lib):
-            for l in (lib, lib1, lib2):
-                symlink(lib3, l)
+            install(lib3, join_path(prefix.lib, lib3))
+            with working_dir(prefix.lib):
+                for l in (lib, lib1, lib2):
+                    symlink(lib3, l)
 
         with working_dir(prefix.bin):
             force_remove('bunzip2', 'bzcat')

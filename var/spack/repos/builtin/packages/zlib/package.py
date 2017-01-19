@@ -40,7 +40,15 @@ class Zlib(AutotoolsPackage):
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries.')
 
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:
             spack_env.set('CFLAGS', self.compiler.pic_flag)
+
+    def configure(self, spec, prefix):
+        config_args = ['--prefix', prefix]
+        if '+shared' not in spec:
+            config_args.append('--static')
+        configure(*config_args)
