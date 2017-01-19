@@ -1520,10 +1520,14 @@ class Spec(object):
 
         if skip_build:
             build_only_constraint_deps = {}
-            for dep in self.identify_build_only_deps():
-                if dep in self._dependencies:
-                    build_only_constraint_deps[dep] = (
-                        self._dependencies.pop(dep))
+            if not self.virtual:
+                for dep in self.identify_build_only_deps():
+                    if dep in self._dependencies:
+                        build_only_constraint_deps[dep] = (
+                            self._dependencies.pop(dep))
+            elif self._dependencies:
+                raise SpecError(
+                    "Cannot specify dependencies of a virtual package")
 
         while changed:
             changes = (self.normalize(force, skip_build=skip_build,
@@ -1858,7 +1862,7 @@ class Spec(object):
         if force:
             self._mark_concrete(False)
 
-        if skip_build:
+        if skip_build and not self.virtual:
             for dep in self.identify_build_only_deps():
                 self._dependencies.pop(dep, None)
 

@@ -95,14 +95,14 @@ def test_inheritance_of_diretives():
     # Check that Spec instantiation behaves as we expect
     s = Spec('simple-inheritance')
     s.concretize()
-    assert '^cmake' in s
+    assert 'cmake' in s.build_only_deps
     assert '^openblas' in s
     assert '+openblas' in s
     assert 'mpi' in s
 
     s = Spec('simple-inheritance~openblas')
     s.concretize()
-    assert '^cmake' in s
+    assert 'cmake' in s.build_only_deps
     assert '^openblas' not in s
     assert '~openblas' in s
     assert 'mpi' in s
