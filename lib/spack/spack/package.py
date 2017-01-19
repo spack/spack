@@ -78,7 +78,8 @@ class InstallPhase(object):
     search for execution. The method is retrieved at __get__ time, so that
     it can be overridden by subclasses of whatever class declared the phases.
 
-    It also provides hooks to execute prerequisite and sanity checks.
+    It also provides hooks to execute arbitrary callbacks before and after
+    the phase.
     """
 
     def __init__(self, name):
@@ -102,7 +103,6 @@ class InstallPhase(object):
             # Execute phase pre-conditions,
             # and give them the chance to fail
             for callback in self.run_before:
-                # Do something sensible at some point
                 callback(instance)
             phase(spec, prefix)
             # Execute phase sanity_checks,
@@ -203,21 +203,36 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
 
 
 def run_before(*phases):
+    """Registers a method of a package to be run before a given phase"""
     return PackageMeta.register_callback('run_before', *phases)
 
 
 def run_after(*phases):
+    """Registers a method of a package to be run after a given phase"""
     return PackageMeta.register_callback('run_after', *phases)
 
 
 def on_package_attributes(**attr_dict):
+    """Executes the decorated method only if at the moment of calling
+    the instance has attributes that are equal to certain values.
+
+    :param dict attr_dict: dictionary mapping attribute names to their
+        required values
+    """
     def _execute_under_condition(func):
 
         @functools.wraps(func)
         def _wrapper(instance, *args, **kwargs):
             # If all the attributes have the value we require, then execute
-            if all([getattr(instance, key, None) == value for key, value in attr_dict.items()]):  # NOQA: ignore=E501
-                func(instance, *args, **kwargs)
+            has_all_attributes = all(
+                [hasattr(instance, key) for key in attr_dict]
+            )
+            if has_all_attributes:
+                has_the_right_values = all(
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
+                )
+                if has_the_right_values:
+                    func(instance, *args, **kwargs)
         return _wrapper
 
     return _execute_under_condition
