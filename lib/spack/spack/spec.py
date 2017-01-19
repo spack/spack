@@ -2672,6 +2672,7 @@ class Spec(object):
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', ('build', 'link'))
         base_depth = kwargs.pop('base_depth', 0)
+        build_only_dep = kwargs.pop('build_only_dep', False)
         check_kwargs(kwargs, self.tree)
 
         out = ""
@@ -2704,6 +2705,10 @@ class Spec(object):
                 if dep_spec.deptypes:
                     for t in alldeps:
                         out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
+                elif build_only_dep:
+                    deptype_list = list(' ' * len(alldeps))
+                    deptype_list[alldeps.index('build')] = 'b'
+                    out += ''.join(deptype_list)
                 else:
                     out += ' ' * len(alldeps)
                 out += ']  '
@@ -2714,6 +2719,7 @@ class Spec(object):
             out += node.format(fmt, color=color) + "\n"
             
             child_args['base_depth'] = d + 1
+            child_args['build_only_dep'] = True
             for build_dep in node.build_only_deps.itervalues():
                 out += build_dep.tree(**child_args)
         return out
