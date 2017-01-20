@@ -455,7 +455,12 @@ def fix_darwin_install_name(path):
         # fix all dependencies:
         for dep in deps:
             for loc in libs:
-                if dep == os.path.basename(loc):
+                # We really want to check for either
+                #     dep == os.path.basename(loc)   or
+                #     dep == join_path(builddir, os.path.basename(loc)),
+                # but we don't know builddir (nor how symbolic links look
+                # in builddir). We thus only compare the basenames.
+                if os.path.basename(dep) == os.path.basename(loc):
                     subprocess.Popen(
                         ["install_name_tool", "-change", dep, loc, lib],
                         stdout=subprocess.PIPE).communicate()[0]
