@@ -340,14 +340,8 @@ class PythonPackage(PackageBase):
     def test(self, spec, prefix):
         """Run unit tests after in-place build.
 
-        These tests are only run if the user supplies:
-
-        .. code-block:: console
-
-           $ spack install --run-tests
-
-        and if the package actually has a 'test' command."""
-
+        These tests are only run if the package actually has a 'test' command.
+        """
         if self._setup_command_available('test'):
             args = self.test_args(spec, prefix)
 
