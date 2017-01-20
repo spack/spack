@@ -153,6 +153,7 @@ __all__ = [
     'UnsatisfiableProviderSpecError',
     'UnsatisfiableDependencySpecError',
     'AmbiguousHashError',
+    'InvalidHashError',
     'RedundantSpecError']
 
 # Valid pattern for an identifier in Spack
@@ -2716,7 +2717,7 @@ class SpecParser(spack.parse.Parser):
                         self.expect(VAL)
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
-                        if specs[-1].concrete:
+                        if specs[-1]._hash:
                             raise RedundantSpecError(specs[-1],
                                                      'key-value pair')
                         specs[-1]._add_flag(
@@ -2746,7 +2747,7 @@ class SpecParser(spack.parse.Parser):
 
                     # Raise an error if the previous spec is already concrete
                     # (assigned by hash)
-                    if specs[-1].concrete:
+                    if specs[-1]._hash:
                         raise RedundantSpecError(specs[-1], 'dependency')
                     # command line deps get empty deptypes now.
                     # Real deptypes are assigned later per packages.
@@ -2758,7 +2759,7 @@ class SpecParser(spack.parse.Parser):
                     if self.next.type in (AT, ON, OFF, PCT):
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
-                        if specs and specs[-1].concrete:
+                        if specs and specs[-1]._hash:
                             raise RedundantSpecError(specs[-1],
                                                      'compiler, version, '
                                                      'or variant')
@@ -2876,7 +2877,7 @@ class SpecParser(spack.parse.Parser):
                 break
 
         # If there was no version in the spec, consier it an open range
-        if not added_version:
+        if not added_version and not spec._hash:
             spec.versions = VersionList(':')
 
         return spec
