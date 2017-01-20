@@ -71,7 +71,6 @@ _roots = spack.config.get_config('config').get('module_roots', {})
 _module_config = spack.config.get_config('modules')
 
 
-
 def print_help():
     """
     For use by commands to tell user how to activate shell support.
@@ -440,8 +439,9 @@ class EnvModule(object):
             module_file = m.use_name
         else:
             module_file = spec
-        return self.autoload_format.format(module_file=module_file,
-                                           warner=self.autoload_warner().format(module_file=module_file))
+        return self.autoload_format.format(
+          module_file=module_file,
+          warner=self.autoload_warner().format(module_file=module_file))
 
     def prerequisite(self, spec):
         m = type(self)(spec)
@@ -484,10 +484,8 @@ class EnvModule(object):
                 pass
 
     def verbose_autoload(self):
-        #luigi#configuration = _module_config.get('lmod', {})
         configuration = _module_config.get(self.name, {})
         return configuration.get('verbose_autoload', True)
-
 
 
 class Dotkit(EnvModule):
