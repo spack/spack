@@ -36,7 +36,7 @@ class Cfitsio(AutotoolsPackage):
     version('3.370', 'abebd2d02ba5b0503c633581e3bfa116')
 
     variant('bzip2', default=True, description='Enable bzip2 support')
-    variant('shared', default=False, description='Build shared libraries')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on('bzip2', when='+bzip2')
 
@@ -51,8 +51,12 @@ class Cfitsio(AutotoolsPackage):
             extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix),
         return extra_args
 
-    def build(self, spec, prefix):
+    @property
+    def build_targets(self):
         targets = ['all']
-        if '+shared' in spec:
-            targets.append('shared')
-        make(*targets)
+
+        # Build shared if variant is set.
+        if '+shared' in self.spec:
+            targets += ['shared']
+
+        return targets
