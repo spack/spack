@@ -59,6 +59,6 @@ class Libevent(AutotoolsPackage):
         if '+openssl' in spec:
             configure_args.append('--enable-openssl')
         else:
-            configure_args.append('--enable-openssl')
+            configure_args.append('--disable-openssl')
 
         return configure_args
