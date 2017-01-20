@@ -229,8 +229,8 @@ class TestSpecSyntax(object):
         self.check_parse(str(specs[1]), '/ ' + hashes[1][:5])
         self.check_parse(str(specs[2]), specs[2].name + '/' + hashes[2])
         self.check_parse(str(specs[3]),
-                         specs[3].name + '@' + str(specs[3].version)
-                         + ' /' + hashes[3][:6])
+                         specs[3].name + '@' + str(specs[3].version) +
+                         ' /' + hashes[3][:6])
 
     def test_dep_spec_by_hash(self, database):
         specs = database.mock.db.query()
@@ -243,14 +243,16 @@ class TestSpecSyntax(object):
 
         spec1 = sp.Spec(specs[10].name + '^/' + hashes[4])
         assert specs[4].name in spec1 and spec1[specs[4].name] == specs[4]
-        spec2 = sp.Spec(specs[10].name + '%' + str(specs[10].compiler)
-                       + ' ^ / ' + hashes[-1])
-        assert (specs[-1].name in spec2 and spec2[specs[-1].name] == specs[-1]
-                and spec2.compiler == specs[10].compiler)
-        spec3 = sp.Spec(specs[10].name + '^/' + hashes[4][:4]
-                       + '^ / ' + hashes[-1][:5])
-        assert (specs[-1].name in spec3 and spec3[specs[-1].name] == specs[-1]
-                and specs[4].name in spec3 and spec3[specs[4].name] == specs[4])
+        spec2 = sp.Spec(specs[10].name + '%' + str(specs[10].compiler) +
+                        ' ^ / ' + hashes[-1])
+        assert (specs[-1].name in spec2 and
+                spec2[specs[-1].name] == specs[-1] and
+                spec2.compiler == specs[10].compiler)
+        spec3 = sp.Spec(specs[10].name + '^/' + hashes[4][:4] +
+                        '^ / ' + hashes[-1][:5])
+        assert (specs[-1].name in spec3 and
+                spec3[specs[-1].name] == specs[-1] and
+                specs[4].name in spec3 and spec3[specs[4].name] == specs[4])
 
     def test_multiple_specs_with_hash(self, database):
         specs = database.mock.db.query()
@@ -262,14 +264,14 @@ class TestSpecSyntax(object):
         assert len(output) == 2
         output = sp.parse('/' + hashes[0] + '/' + hashes[1])
         assert len(output) == 2
-        output = sp.parse('/' + hashes[0] + '/' + hashes[1]
-                          + ' ' + specs[2].name)
+        output = sp.parse('/' + hashes[0] + '/' + hashes[1] +
+                          ' ' + specs[2].name)
         assert len(output) == 3
-        output = sp.parse('/' + hashes[0]
-                          + ' ' + specs[1].name + ' ' + specs[2].name)
+        output = sp.parse('/' + hashes[0] +
+                              ' ' + specs[1].name + ' ' + specs[2].name)
         assert len(output) == 3
-        output = sp.parse('/' + hashes[0] + ' ' + specs[1].name
-                          + ' / ' + hashes[1])
+        output = sp.parse('/' + hashes[0] + ' ' +
+                          specs[1].name + ' / ' + hashes[1])
         assert len(output) == 2
 
     def test_ambiguous_hash(self, database):
@@ -280,9 +282,9 @@ class TestSpecSyntax(object):
         assert hashes[1][:1] == hashes[2][:1] == 'b'
 
         ambiguous_hashes = ['/b',
-                      specs[1].name + '/b',
-                      specs[0].name + '^/b',
-                      specs[0].name + '^' + specs[1].name + '/b']
+                            specs[1].name + '/b',
+                            specs[0].name + '^/b',
+                            specs[0].name + '^' + specs[1].name + '/b']
         self._check_raises(AmbiguousHashError, ambiguous_hashes)
 
     def test_invalid_hash(self, database):
@@ -290,8 +292,8 @@ class TestSpecSyntax(object):
         hashes = [s._hash for s in specs]  # Preserves order of elements
 
         # Make sure the database is as expected
-        assert (hashes[0] != hashes[3]
-                and hashes[1] != hashes[4] and len(specs) > 4)
+        assert (hashes[0] != hashes[3] and
+                hashes[1] != hashes[4] and len(specs) > 4)
 
         inputs = [specs[0].name + '/' + hashes[3],
                   specs[1].name + '^' + specs[4].name + '/' + hashes[0],
@@ -319,8 +321,8 @@ class TestSpecSyntax(object):
         assert len(specs) > 3
 
         redundant_specs = ['/' + hashes[0] + '%' + str(specs[0].compiler),
-                           specs[1].name + '/' + hashes[1]
-                               + '@' + str(specs[1].version),
+                           specs[1].name + '/' + hashes[1] +
+                           '@' + str(specs[1].version),
                            specs[2].name + '/' + hashes[2] + '^ libelf',
                            '/' + hashes[3] + ' cflags="-O3 -fPIC"']
         self._check_raises(RedundantSpecError, redundant_specs)
