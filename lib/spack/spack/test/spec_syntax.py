@@ -298,7 +298,6 @@ class TestSpecSyntax(object):
                   specs[1].name + '^' + specs[4].name + '/' + hashes[1]]
         self._check_raises(InvalidHashError, inputs)
 
-
     def test_nonexistent_hash(self, database):
         # This test uses database to make sure we don't accidentally access
         # real installs, however unlikely
