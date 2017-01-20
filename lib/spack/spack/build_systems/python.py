@@ -94,6 +94,12 @@ class PythonPackage(PackageBase):
 
     # Name of modules that the Python package provides
     # This is used to test whether or not the installation succeeded
+    # These names generally come from running:
+    #
+    # >>> import setuptools
+    # >>> setuptools.find_packages()
+    #
+    # in the source tarball directory
     import_modules = []
 
     # To be used in UI queries that require to know which
@@ -331,9 +337,7 @@ class PythonPackage(PackageBase):
 
     # Extra commands
 
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def test(self):
+    def test(self, spec, prefix):
         """Run unit tests after in-place build.
 
         These tests are only run if the user supplies:
@@ -345,13 +349,25 @@ class PythonPackage(PackageBase):
         and if the package actually has a 'test' command."""
 
         if self._setup_command_available('test'):
-            args = self.test_args(self.spec, self.prefix)
+            args = self.test_args(spec, prefix)
 
             self.setup_py('test', *args)
 
     def test_args(self, spec, prefix):
         """Arguments to pass to test."""
         return []
+
+    # Testing
+
+    @PackageBase.sanity_check('build')
+    @PackageBase.on_package_attributes(run_tests=True)
+    def _run_build_tests(self):
+        """This function is run after build if ``self.run_tests == True``
+
+        It will search for a method named ``test`` and run it. A sensible
+        default is provided in the base class.
+        """
+        self.test(self.spec, self.prefix)
 
     @PackageBase.sanity_check('install')
     def import_module_test(self):
@@ -360,8 +376,11 @@ class PythonPackage(PackageBase):
         This test is only run if the package overrides
         :py:attr:`import_modules` with a list of module names."""
 
-        for module in self.import_modules:
-            self.python('-c', 'import {0}'.format(module))
+        # Make sure we are importing the installed modules,
+        # not the ones in the current directory
+        with working_dir('..'):
+            for module in self.import_modules:
+                self.python('-c', 'import {0}'.format(module))
 
     # Check that self.prefix is there after installation
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)

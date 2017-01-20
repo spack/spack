@@ -33,6 +33,20 @@ class PyScipy(PythonPackage):
     homepage = "http://www.scipy.org/"
     url = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
 
+    import_modules = [
+        'scipy', 'scipy._build_utils', 'scipy._lib', 'scipy.cluster',
+        'scipy.constants', 'scipy.fftpack', 'scipy.integrate',
+        'scipy.interpolate', 'scipy.io', 'scipy.linalg', 'scipy.misc',
+        'scipy.ndimage', 'scipy.odr', 'scipy.optimize', 'scipy.signal',
+        'scipy.sparse', 'scipy.spatial', 'scipy.special', 'scipy.stats',
+        'scipy.weave', 'scipy.io.arff', 'scipy.io.harwell_boeing',
+        'scipy.io.matlab', 'scipy.optimize._lsq', 'scipy.sparse.csgraph',
+        'scipy.sparse.linalg', 'scipy.sparse.linalg.dsolve',
+        'scipy.sparse.linalg.eigen', 'scipy.sparse.linalg.isolve',
+        'scipy.sparse.linalg.eigen.arpack', 'scipy.sparse.linalg.eigen.lobpcg',
+        'scipy.special._precompute'
+    ]
+
     version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327',
             url="https://pypi.python.org/packages/22/41/b1538a75309ae4913cdbbdc8d1cc54cae6d37981d2759532c1aa37a41121/scipy-0.18.1.tar.gz")
     version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
@@ -40,12 +54,43 @@ class PyScipy(PythonPackage):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-nose', type='build')
-    # Known not to work with 2.23, 2.25
-    depends_on('binutils@2.26:', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
+
+    # FIXME: Is this really necessary?
+    # Known not to work with 2.23, 2.25
+    # depends_on('binutils@2.26:', type='build')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
     depends_on('blas')
     depends_on('lapack')
+
+    # Tests require:
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
+
+    def build_args(self, spec, prefix):
+        # Build in parallel
+        return ['-j', str(make_jobs)]
+
+    def test(self, spec, prefix):
+        # `setup.py test` is not supported.  Use one of the following
+        # instead:
+        #
+        # - `python runtests.py`              (to build and test)
+        # - `python runtests.py --no-build`   (to test installed scipy)
+        # - `>>> scipy.test()`           (run tests for installed scipy
+        #                                 from within an interpreter)
+        pass
+
+    @PythonPackage.sanity_check('install')
+    @PythonPackage.on_package_attributes(run_tests=True)
+    def install_test(self):
+        # Change directories due to the following error:
+        #
+        # ImportError: Error importing scipy: you should not try to import
+        #       scipy from its source directory; please exit the scipy
+        #       source tree, and relaunch your python interpreter from there.
+        with working_dir('..'):
+            python('-c', 'import scipy; scipy.test("full", verbose=2)')
