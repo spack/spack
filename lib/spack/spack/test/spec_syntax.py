@@ -268,7 +268,7 @@ class TestSpecSyntax(object):
                           ' ' + specs[2].name)
         assert len(output) == 3
         output = sp.parse('/' + hashes[0] +
-                              ' ' + specs[1].name + ' ' + specs[2].name)
+                          ' ' + specs[1].name + ' ' + specs[2].name)
         assert len(output) == 3
         output = sp.parse('/' + hashes[0] + ' ' +
                           specs[1].name + ' / ' + hashes[1])
