@@ -40,7 +40,7 @@ from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
-_flags_instance_vars = ['cflags', 'cxxflags', 'fflags']
+_flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
