@@ -2011,8 +2011,8 @@ the package you'll need to customize for each piece of software.
 
 Defining an installation procedure means overriding a set of methods or attributes
 that will be called at some point during the installation of the package.
-What determines the actual set of entities that are available for overriding
-is the package base class, which is usually specialized for a given build system.
+The package base class, usually specialized for a given build system, determines the
+actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
     +------------------------------------+----------------------------------+
@@ -2022,15 +2022,14 @@ The classes that are currently provided by Spack are:
     |                                    | specialized for any build system |
     +------------------------------------+----------------------------------+
     |   :py:class:`.MakefilePackage`     | Specialized class for packages   |
-    |                                    | that are built invoking          |
+    |                                    | built invoking                   |
     |                                    | hand-written Makefiles           |
     +------------------------------------+----------------------------------+
     |   :py:class:`.AutotoolsPackage`    | Specialized class for packages   |
-    |                                    | that are built using GNU         |
-    |                                    | Autotools                        |
+    |                                    | built using GNU Autotools        |
     +------------------------------------+----------------------------------+
     |  :py:class:`.CMakePackage`         | Specialized class for packages   |
-    |                                    | that are built using CMake       |
+    |                                    | built using CMake                |
     +------------------------------------+----------------------------------+
     |  :py:class:`.RPackage`             | Specialized class for            |
     |                                    | :py:class:`.R` extensions        |
@@ -2056,14 +2055,14 @@ Installation pipeline
 
 When a user runs ``spack install``, Spack:
 
-* Fetches an archive for the correct version of the software
-* Expands the archive
-* Sets the current working directory to the root directory of the expanded archive
+1. Fetches an archive for the correct version of the software.
+2. Expands the archive.
+3. Sets the current working directory to the root directory of the expanded archive.
 
 Then, depending on the base class of the package under consideration, it will execute
 a certain number of **phases** that reflect the way a package of that type is usually built.
-The name and order in which the phases will be executed can be obtained either reading the API docs in this manual, or
-using the ``spack info`` command:
+The name and order in which the phases will be executed can be obtained either reading the API
+docs at :py:mod:`~.spack.build_systems`, or using the ``spack info`` command:
 
 .. code-block:: console
     :emphasize-lines: 13,14
@@ -2086,17 +2085,8 @@ using the ``spack info`` command:
     Build Dependencies:
         libsigsegv
 
-    Link Dependencies:
-        libsigsegv
+    ...
 
-    Run Dependencies:
-        None
-
-    Virtual Packages:
-        None
-
-    Description:
-        GNU M4 is an implementation of the traditional Unix macro processor.
 
 Typically, phases have default implementations that fit most of the common cases:
 
@@ -2104,7 +2094,7 @@ Typically, phases have default implementations that fit most of the common cases
     :pyobject: AutotoolsPackage.configure
     :linenos:
 
-making it just sufficient for a packager to override a few
+It is thus just sufficient for a packager to override a few
 build system specific helper methods or attributes to provide, for instance,
 configure arguments:
 
@@ -2123,7 +2113,8 @@ Overriding an entire phase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In extreme cases it may be necessary to override an entire phase. Regardless
-of the build system in use the signature for it is:
+of the build system, the signature is the same. For example, the signature
+for the install phase is:
 
 .. code-block:: python
 
@@ -2800,11 +2791,12 @@ using the ``MakefilePackage.precondition`` decorator.
 
     Default implementations for build-time tests
 
-        Packages that are built using specific build systems may have already a
+        Packages that are built using specific build systems may already have a
         default implementation for build-time tests. For instance :py:class:`~.AutotoolsPackage`
         based packages will try to invoke ``make test`` and ``make check`` if
-        Spack is asked to run tests. You'll find more information on each class
-        looking at the :py:mod:`~.spack.build_systems` documentation.
+        Spack is asked to run tests.
+        More information on each class is available in the the :py:mod:`~.spack.build_systems`
+        documentation.
 
 .. warning::
 

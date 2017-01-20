@@ -36,7 +36,7 @@ from spack.package import PackageBase
 
 
 class AutotoolsPackage(PackageBase):
-    """Specialized class for packages that are built using GNU Autotools.
+    """Specialized class for packages built using GNU Autotools.
 
     This class provides four phases that can be overridden:
 
@@ -46,8 +46,8 @@ class AutotoolsPackage(PackageBase):
         4. :py:meth:`~.AutotoolsPackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`.configure_args`. For a finer
-    tuning you may override:
+    necessary will be to override the helper method :py:meth:`.configure_args`.
+    For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
@@ -67,10 +67,10 @@ class AutotoolsPackage(PackageBase):
     """
     #: Phases of a GNU Autotools package
     phases = ['autoreconf', 'configure', 'build', 'install']
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'AutotoolsPackage'
-    #: Whether to update or not ``config.guess`` on old architectures
+    #: Whether or not to update ``config.guess`` on old architectures
     patch_config_guess = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`

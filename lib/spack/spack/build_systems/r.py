@@ -36,13 +36,13 @@ class RPackage(PackageBase):
 
         1. :py:meth:`~.RPackage.install`
 
-    It has sensible defaults and for many packages the only thing
+    It has sensible defaults, and for many packages the only thing
     necessary will be to add dependencies
     """
     phases = ['install']
 
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'RPackage'
 
     extends('r')

@@ -34,7 +34,7 @@ from spack.package import PackageBase
 
 
 class CMakePackage(PackageBase):
-    """Specialized class for packages that are built using CMake
+    """Specialized class for packages built using CMake
 
     This class provides three phases that can be overridden:
 
@@ -44,7 +44,7 @@ class CMakePackage(PackageBase):
 
     They all have sensible defaults and for many packages the only thing
     necessary will be to override :py:meth:`~.CMakePackage.cmake_args`.
-    For a finer tuning you may override:
+    For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
@@ -54,9 +54,8 @@ class CMakePackage(PackageBase):
         |                                               | CMAKE_BUILD_TYPE   |
         |                                               | variable           |
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Directory where to |
-        |                                               | find the root      |
-        |                                               | CMakeLists.txt     |
+        | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Location of the    |
+        |                                               | root CMakeLists.txt|
         +-----------------------------------------------+--------------------+
         | :py:meth:`~.CMakePackage.build_directory`     | Directory where to |
         |                                               | build the package  |
@@ -66,8 +65,8 @@ class CMakePackage(PackageBase):
     """
     #: Phases of a CMake package
     phases = ['cmake', 'build', 'install']
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'CMakePackage'
 
     build_targets = []
@@ -83,9 +82,9 @@ class CMakePackage(PackageBase):
         return 'RelWithDebInfo'
 
     def root_cmakelists_dir(self):
-        """Returns the directory where to find the root CMakeLists.txt
+        """Returns the location of the root CMakeLists.txt
 
-        :return: directory where the root CMakeLists.txt is located
+        :return: directory containing the root CMakeLists.txt
         """
         return self.stage.source_path
 
@@ -120,7 +119,7 @@ class CMakePackage(PackageBase):
         return args
 
     def build_directory(self):
-        """Returns the directory where to build the package
+        """Returns the directory to use when building the package
 
         :return: directory where to build the package
         """
@@ -172,8 +171,8 @@ class CMakePackage(PackageBase):
             tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
 
     def check(self):
-        """Searches the Makefile for the target ``test`` and runs
-        it if found.
+        """Searches the CMake-generated Makefile for the target ``test``
+        and runs it if found.
         """
         with working_dir(self.build_directory()):
             self._if_make_target_execute('test')

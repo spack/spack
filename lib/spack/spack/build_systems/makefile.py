@@ -39,8 +39,8 @@ class MakefilePackage(PackageBase):
         2. :py:meth:`~.MakefilePackage.build`
         3. :py:meth:`~.MakefilePackage.install`
 
-    It is necessary to override the :py:meth:`~.MakefilePackage.edit` phase,
-    while :py:meth:`~.MakefilePackage.build` and
+    It is usually necessary to override the :py:meth:`~.MakefilePackage.edit`
+    phase, while :py:meth:`~.MakefilePackage.build` and
     :py:meth:`~.MakefilePackage.install` have sensible defaults.
     For a finer tuning you may override:
 
@@ -61,8 +61,8 @@ class MakefilePackage(PackageBase):
     """
     #: Phases of a package that is built with an hand-written Makefile
     phases = ['edit', 'build', 'install']
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'MakefilePackage'
 
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
@@ -73,7 +73,7 @@ class MakefilePackage(PackageBase):
     install_targets = ['install']
 
     def build_directory(self):
-        """Returns the directory where the main Makefile is located
+        """Returns the directory containing the main Makefile
 
         :return: build directory
         """
@@ -81,19 +81,19 @@ class MakefilePackage(PackageBase):
 
     def edit(self, spec, prefix):
         """Edits the Makefile before calling make. This phase cannot
-        be defaulted for obvious reasons.
+        be defaulted.
         """
         tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
-        """Calls make passing :py:attr:`~.MakefilePackage.build_targets`
+        """Calls make, passing :py:attr:`~.MakefilePackage.build_targets`
         as targets.
         """
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Calls make passing :py:attr:`~.MakefilePackage.install_targets`
+        """Calls make, passing :py:attr:`~.MakefilePackage.install_targets`
         as targets.
         """
         with working_dir(self.build_directory()):
