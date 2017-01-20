@@ -227,7 +227,7 @@ class Qt(Package):
     @when('@3')
     def configure(self):
         # A user reported that this was necessary to link Qt3 on ubuntu
-        os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
+        os.environ['LD_LIBRARY_PATH'] += os.pathsep + os.getcwd() + '/lib'
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
