@@ -28,14 +28,18 @@ from spack import *
 
 
 class Openssl(Package):
-    """The OpenSSL Project is a collaborative effort to develop a
-       robust, commercial-grade, full-featured, and Open Source
-       toolkit implementing the Secure Sockets Layer (SSL v2/v3) and
-       Transport Layer Security (TLS v1) protocols as well as a
-       full-strength general purpose cryptography library."""
+    """OpenSSL is an open source project that provides a robust,
+       commercial-grade, and full-featured toolkit for the Transport
+       Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
+       It is also a general-purpose cryptography library."""
     homepage = "http://www.openssl.org"
     url = "ftp://openssl.org/source/openssl-1.0.1h.tar.gz"
 
+    # Note: Version 1.0.2 is the "long-term support" version that will
+    # remain supported until 2019. We could thus make this version the
+    # preferred version, if we find that many packages cannot handle
+    # version 1.1.
+    version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
     version('1.0.2j', '96322138f0b69e61b7212bc53d5e912b')
     version('1.0.2i', '678374e63f8df456a697d3e5e5a931fb')
     version('1.0.2h', '9392e65072ce4b614c1392eefc1f23d0')
@@ -49,6 +53,8 @@ class Openssl(Package):
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
     depends_on("zlib")
+    # Also requires make and perl
+
     parallel = False
 
     def handle_fetch_error(self, error):
@@ -67,7 +73,9 @@ class Openssl(Package):
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
 
-        options = ['zlib', 'no-krb5', 'shared']
+        options = ['zlib', 'shared']
+        if spec.satisfies('@1.0'):
+            options.append('no-krb5')
 
         config = Executable('./config')
         config('--prefix=%s' % prefix,
@@ -80,4 +88,5 @@ class Openssl(Package):
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
+        make('test')            # 'VERBOSE=1'
         make('install')
