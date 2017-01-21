@@ -30,9 +30,8 @@ import shutil
 from subprocess import PIPE
 from subprocess import check_call
 
-import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
-from spack.package import PackageBase, run_after, on_package_attributes
+from spack.package import PackageBase, run_after
 
 
 class AutotoolsPackage(PackageBase):
@@ -79,6 +78,8 @@ class AutotoolsPackage(PackageBase):
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.install`
     #: phase
     install_targets = ['install']
+
+    build_time_test_callbacks = ['check']
 
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
@@ -211,20 +212,7 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def _run_default_function(self):
-        """This function is run after build if ``self.run_tests == True``
-
-        It will search for a method named :py:meth:`.check` and run it. A
-        sensible default is provided in the base class.
-        """
-        try:
-            fn = getattr(self, 'check')
-            tty.msg('Trying default sanity checks [check]')
-            fn()
-        except AttributeError:
-            tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
         """Searches the Makefile for targets ``test`` and ``check``
