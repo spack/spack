@@ -440,8 +440,8 @@ class EnvModule(object):
         else:
             module_file = spec
         return self.autoload_format.format(
-          module_file=module_file,
-          warner=self.autoload_warner().format(module_file=module_file))
+            module_file=module_file,
+            warner=self.autoload_warner().format(module_file=module_file))
 
     def prerequisite(self, spec):
         m = type(self)(spec)
