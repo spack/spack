@@ -82,7 +82,7 @@ class R(Package):
     depends_on('pcre')
     depends_on('jdk')
 
-    patch('zlib.patch', when='@:3.3.1', level=0)
+    patch('zlib.patch', when='@:3.3.1')
 
     @property
     def etcdir(self):
