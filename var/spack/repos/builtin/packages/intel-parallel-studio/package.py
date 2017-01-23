@@ -127,20 +127,7 @@ class IntelParallelStudio(IntelInstaller):
 
         return url + ".tgz"
 
-    def check_variants(self, spec):
-        error_message = '\t{variant} can not be turned off if "+all" is set'
-
-        if self.spec.satisfies('+all'):
-            errors = [error_message.format(variant=x)
-                      for x in ('mpi', 'mkl', 'daal', 'ipp', 'tools')
-                      if ('~' + x) in self.spec]
-            if errors:
-                errors = ['incompatible variants given'] + errors
-                raise InstallError('\n'.join(errors))
-
     def install(self, spec, prefix):
-        self.check_variants(spec)
-
         base_components = "ALL"  # when in doubt, install everything
         mpi_components = ""
         mkl_components = ""
