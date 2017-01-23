@@ -132,6 +132,13 @@ class TestSpecSyntax(object):
         self.check_parse("mvapich_foo")
         self.check_parse("_mvapich_foo")
 
+    def test_anonymous_specs(self):
+        self.check_parse("%intel")
+        self.check_parse("@2.7")
+        self.check_parse("^zlib")
+        self.check_parse("+foo")
+        self.check_parse("arch=test-None-None", "platform=test")
+
     def test_simple_dependence(self):
         self.check_parse("openmpi^hwloc")
         self.check_parse("openmpi^hwloc^libunwind")
