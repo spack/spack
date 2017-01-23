@@ -1706,9 +1706,13 @@ class PackageBase(object):
 
 
 class Package(PackageBase):
+    """General purpose class with a single ``install``
+    phase that needs to be coded by packagers.
+    """
+    #: The one and only phase
     phases = ['install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
     build_system_class = 'Package'
     # This will be used as a registration decorator in user
     # packages, if need be
