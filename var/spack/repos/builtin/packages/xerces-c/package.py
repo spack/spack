@@ -25,21 +25,17 @@
 from spack import *
 
 
-class XercesC(Package):
+class XercesC(AutotoolsPackage):
     """Xerces-C++ is a validating XML parser written in a portable subset of
     C++. Xerces-C++ makes it easy to give your application the ability to read
     and write XML data. A shared library is provided for parsing, generating,
     manipulating, and validating XML documents using the DOM, SAX, and SAX2
-    APIs.
-    """
+    APIs."""
 
     homepage = "https://xerces.apache.org/xerces-c"
     url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--disable-network")
-        make("clean")
-        make()
-        make("install")
+    def configure_args(self):
+        return ['--disable-network']
