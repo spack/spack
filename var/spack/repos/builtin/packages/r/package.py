@@ -63,7 +63,7 @@ class R(Package):
     depends_on('ncurses')
     depends_on('icu4c')
     depends_on('glib')
-    depends_on('zlib@:1.2.8')
+    depends_on('zlib@1.2.5:')
     depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
@@ -81,6 +81,8 @@ class R(Package):
     depends_on('curl')
     depends_on('pcre')
     depends_on('jdk')
+
+    patch('zlib.patch', when='@:3.3.1')
 
     @property
     def etcdir(self):
