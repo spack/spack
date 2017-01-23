@@ -54,7 +54,6 @@ class Openssl(Package):
 
     depends_on("zlib")
     depends_on("perl", type='build')
-    # Also requires make
 
     parallel = False
 
