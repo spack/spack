@@ -35,36 +35,67 @@ class MakefilePackage(PackageBase):
 
     This class provides three phases that can be overridden:
 
-    * edit
-    * build
-    * install
+        1. :py:meth:`~.MakefilePackage.edit`
+        2. :py:meth:`~.MakefilePackage.build`
+        3. :py:meth:`~.MakefilePackage.install`
 
-    It is necessary to override the 'edit' phase, while 'build' and 'install'
-    have sensible defaults.
+    It is usually necessary to override the :py:meth:`~.MakefilePackage.edit`
+    phase, while :py:meth:`~.MakefilePackage.build` and
+    :py:meth:`~.MakefilePackage.install` have sensible defaults.
+    For a finer tuning you may override:
+
+        +-----------------------------------------------+--------------------+
+        | **Method**                                    | **Purpose**        |
+        +===============================================+====================+
+        | :py:attr:`~.MakefilePackage.build_targets`    | Specify ``make``   |
+        |                                               | targets for the    |
+        |                                               | build phase        |
+        +-----------------------------------------------+--------------------+
+        | :py:attr:`~.MakefilePackage.install_targets`  | Specify ``make``   |
+        |                                               | targets for the    |
+        |                                               | install phase      |
+        +-----------------------------------------------+--------------------+
+        | :py:meth:`~.MakefilePackage.build_directory`  | Directory where the|
+        |                                               | Makefile is located|
+        +-----------------------------------------------+--------------------+
     """
+    #: Phases of a package that is built with an hand-written Makefile
     phases = ['edit', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'MakefilePackage'
 
+    #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
+    #: phase
     build_targets = []
+    #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
+    #: phase
     install_targets = ['install']
 
     def build_directory(self):
-        """Directory where the main Makefile is located"""
+        """Returns the directory containing the main Makefile
+
+        :return: build directory
+        """
         return self.stage.source_path
 
     def edit(self, spec, prefix):
-        """This phase cannot be defaulted for obvious reasons..."""
+        """Edits the Makefile before calling make. This phase cannot
+        be defaulted.
+        """
         tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
-        """Make the build targets"""
+        """Calls make, passing :py:attr:`~.MakefilePackage.build_targets`
+        as targets.
+        """
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Make the install targets"""
+        """Calls make, passing :py:attr:`~.MakefilePackage.install_targets`
+        as targets.
+        """
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 

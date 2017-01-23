@@ -1999,49 +1999,128 @@ the Python extensions provided by them: once for ``+python`` and once
 for ``~python``.  Other than using a little extra disk space, that
 solution has no serious problems.
 
------------------------------------
-Implementing the ``install`` method
------------------------------------
+.. _installation_procedure:
 
-The last element of a package is its ``install()`` method.  This is
+---------------------------------------
+Implementing the installation procedure
+---------------------------------------
+
+The last element of a package is its **installation procedure**.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. code-block:: python
-   :linenos:
+Defining an installation procedure means overriding a set of methods or attributes
+that will be called at some point during the installation of the package.
+The package base class, usually specialized for a given build system, determines the
+actual set of entities available for overriding.
+The classes that are currently provided by Spack are:
 
-   def install(self, spec prefix):
-       configure('--prefix={0}'.format(prefix))
+    +------------------------------------+----------------------------------+
+    |                                    |   **Base class purpose**         |
+    +====================================+==================================+
+    |          :py:class:`.Package`      | General base class not           |
+    |                                    | specialized for any build system |
+    +------------------------------------+----------------------------------+
+    |   :py:class:`.MakefilePackage`     | Specialized class for packages   |
+    |                                    | built invoking                   |
+    |                                    | hand-written Makefiles           |
+    +------------------------------------+----------------------------------+
+    |   :py:class:`.AutotoolsPackage`    | Specialized class for packages   |
+    |                                    | built using GNU Autotools        |
+    +------------------------------------+----------------------------------+
+    |  :py:class:`.CMakePackage`         | Specialized class for packages   |
+    |                                    | built using CMake                |
+    +------------------------------------+----------------------------------+
+    |  :py:class:`.RPackage`             | Specialized class for            |
+    |                                    | :py:class:`.R` extensions        |
+    +------------------------------------+----------------------------------+
+    |  :py:class:`.PythonPackage`        | Specialized class for            |
+    |                                    | :py:class:`.Python` extensions   |
+    +------------------------------------+----------------------------------+
 
-       make()
-       make('install')
 
-``install`` takes a ``spec``: a description of how the package should
-be built, and a ``prefix``: the path to the directory where the
-software should be installed.
 
-Spack provides wrapper functions for ``configure`` and ``make`` so
-that you can call them in a similar way to how you'd call a shell
-command.  In reality, these are Python functions.  Spack provides
-these functions to make writing packages more natural. See the section
-on :ref:`shell wrappers <shell-wrappers>`.
+.. note::
+    Choice of the appropriate base class for a package
+        In most cases packagers don't have to worry about the selection of the right base class
+        for a package, as ``spack create`` will make the appropriate choice on their behalf. In those
+        rare cases where manual intervention is needed we need to stress that a
+        package base class depends on the *build system* being used, not the language of the package.
+        For example, a Python extension installed with CMake would ``extends('python')`` and
+        subclass from :py:class:`.CMakePackage`.
 
-Now that the metadata is out of the way, we can move on to the
-``install()`` method.  When a user runs ``spack install``, Spack
-fetches an archive for the correct version of the software, expands
-the archive, and sets the current working directory to the root
-directory of the expanded archive.  It then instantiates a package
-object and calls the ``install()`` method.
+^^^^^^^^^^^^^^^^^^^^^
+Installation pipeline
+^^^^^^^^^^^^^^^^^^^^^
 
-The ``install()`` signature looks like this:
+When a user runs ``spack install``, Spack:
+
+1. Fetches an archive for the correct version of the software.
+2. Expands the archive.
+3. Sets the current working directory to the root directory of the expanded archive.
+
+Then, depending on the base class of the package under consideration, it will execute
+a certain number of **phases** that reflect the way a package of that type is usually built.
+The name and order in which the phases will be executed can be obtained either reading the API
+docs at :py:mod:`~.spack.build_systems`, or using the ``spack info`` command:
+
+.. code-block:: console
+    :emphasize-lines: 13,14
+
+    $ spack info m4
+    AutotoolsPackage:    m4
+    Homepage:            https://www.gnu.org/software/m4/m4.html
+
+    Safe versions:
+        1.4.17    ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+
+    Variants:
+        Name       Default   Description
+
+        sigsegv    on        Build the libsigsegv dependency
+
+    Installation Phases:
+        autoreconf    configure    build    install
+
+    Build Dependencies:
+        libsigsegv
+
+    ...
+
+
+Typically, phases have default implementations that fit most of the common cases:
+
+.. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
+    :pyobject: AutotoolsPackage.configure
+    :linenos:
+
+It is thus just sufficient for a packager to override a few
+build system specific helper methods or attributes to provide, for instance,
+configure arguments:
+
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/m4/package.py
+    :pyobject: M4.configure_args
+    :linenos:
+
+.. note::
+    Each specific build system has a list of attributes that can be overridden to
+    fine-tune the installation of a package without overriding an entire phase. To
+    have more information on them the place to go is the API docs of the :py:mod:`~.spack.build_systems`
+    module.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding an entire phase
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In extreme cases it may be necessary to override an entire phase. Regardless
+of the build system, the signature is the same. For example, the signature
+for the install phase is:
 
 .. code-block:: python
 
    class Foo(Package):
        def install(self, spec, prefix):
            ...
-
-The parameters are as follows:
 
 ``self``
     For those not used to Python instance methods, this is the
@@ -2059,19 +2138,15 @@ The parameters are as follows:
     targets into.  It acts like a string, but it's actually its own
     special type, :py:class:`Prefix <spack.util.prefix.Prefix>`.
 
-``spec`` and ``prefix`` are passed to ``install`` for convenience.
-``spec`` is also available as an attribute on the package
-(``self.spec``), and ``prefix`` is actually an attribute of ``spec``
-(``spec.prefix``).
+The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always
+correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
 
-As mentioned in :ref:`install-environment`, you will usually not need
-to refer to dependencies explicitly in your package file, as the
-compiler wrappers take care of most of the heavy lifting here.  There
-will be times, though, when you need to refer to the install locations
-of dependencies, or when you need to do something different depending
-on the version, compiler, dependencies, etc. that your package is
-built with.  These parameters give you access to this type of
-information.
+As mentioned in :ref:`install-environment`, you will usually not need to refer
+to dependencies explicitly in your package file, as the compiler wrappers take care of most of
+the heavy lifting here.  There will be times, though, when you need to refer to
+the install locations of dependencies, or when you need to do something different
+depending on the version, compiler, dependencies, etc. that your package is
+built with.  These parameters give you access to this type of information.
 
 .. _install-environment:
 
@@ -2629,9 +2704,9 @@ build system.
 
 .. _sanity-checks:
 
--------------------------------
-Sanity checking an installation
--------------------------------
+------------------------
+Checking an installation
+------------------------
 
 By default, Spack assumes that a build has failed if nothing is
 written to the install prefix, and that it has succeeded if anything
@@ -2650,15 +2725,17 @@ Consider a simple autotools build like this:
 If you are using using standard autotools or CMake, ``configure`` and
 ``make`` will not write anything to the install prefix.  Only ``make
 install`` writes the files, and only once the build is already
-complete.  Not all builds are like this.  Many builds of scientific
-software modify the install prefix *before* ``make install``. Builds
-like this can falsely report that they were successfully installed if
-an error occurs before the install is complete but after files have
-been written to the ``prefix``.
+complete.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``sanity_check_is_file`` and ``sanity_check_is_dir``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Unfortunately, many builds of scientific
+software modify the install prefix *before* ``make install``. Builds
+like this can falsely report that they were successfully installed if
+an error occurs before the install is complete but after files have
+been written to the ``prefix``.
 
 You can optionally specify *sanity checks* to deal with this problem.
 Add properties like this to your package:
@@ -2682,6 +2759,48 @@ Now, after ``install()`` runs, Spack will check whether
 the build will fail and the install prefix will be removed.  If they
 succeed, Spack considers the build successful and keeps the prefix in
 place.
+
+^^^^^^^^^^^^^^^^
+Build-time tests
+^^^^^^^^^^^^^^^^
+
+Sometimes packages finish to build "correctly" and issues with their run-time
+behavior are discovered only at a later stage, maybe after a full software stack
+relying on them has already been built. To avoid situations of that kind it's possible
+to write build-time tests that will be executed only if the option ``--run-tests``
+of ``spack install`` has been activated.
+
+The proper way to write these tests is relying on two decorators that come with
+any base class listed in :ref:`installation_procedure`.
+
+.. code-block:: python
+
+   @MakefilePackage.sanity_check('build')
+   @MakefilePackage.on_package_attributes(run_tests=True)
+   def check_build(self):
+        # Custom implementation goes here
+        pass
+
+The first decorator ``MakefilePackage.sanity_check('build')`` schedules this
+function to be invoked after the ``build`` phase has been executed, while the
+second one makes the invocation  conditional on the fact that ``self.run_tests == True``.
+It is also possible to schedule a function to be invoked *before* a given phase
+using the ``MakefilePackage.precondition`` decorator.
+
+.. note::
+
+    Default implementations for build-time tests
+
+        Packages that are built using specific build systems may already have a
+        default implementation for build-time tests. For instance :py:class:`~.AutotoolsPackage`
+        based packages will try to invoke ``make test`` and ``make check`` if
+        Spack is asked to run tests.
+        More information on each class is available in the the :py:mod:`~.spack.build_systems`
+        documentation.
+
+.. warning::
+
+    The API for adding tests is not yet considered stable and may change drastically in future releases.
 
 .. _file-manipulation:
 
