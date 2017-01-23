@@ -62,7 +62,8 @@ def _to_dict(compiler):
                       for attr in _path_instance_vars)
     d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
     d['flags'].update(dict((attr, getattr(compiler, attr, None))
-                      for attr in _flags_instance_vars if hasattr(compiler, attr)))
+                      for attr in _flags_instance_vars
+                           if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
