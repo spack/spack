@@ -2069,8 +2069,6 @@ class Spec(object):
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             deps_strict = strict
-            if not (self.name and other.name):
-                deps_strict = True
             return self.satisfies_dependencies(other, strict=deps_strict)
         else:
             return True
@@ -2699,19 +2697,13 @@ class SpecParser(spack.parse.Parser):
         specs = []
 
         try:
-            while self.next or self.previous:
+            while self.next:
                 # TODO: clean this parsing up a bit
-                if self.previous:
-                    # We picked up the name of this spec while finishing the
-                    # previous spec
-                    specs.append(self.spec(self.previous.value))
-                    self.previous = None
-                elif self.accept(ID):
+                if self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
-                        # We're either parsing an anonymous spec beginning
-                        # with a key-value pair or adding a key-value pair
-                        # to the last spec
+                        # We're parsing an anonymous spec beginning with a
+                        # key-value pair.
                         if not specs:
                             specs.append(self.spec(None))
                         self.expect(VAL)
@@ -2734,24 +2726,27 @@ class SpecParser(spack.parse.Parser):
                 elif self.accept(DEP):
                     if not specs:
                         # We're parsing an anonymous spec beginning with a
-                        # dependency
+                        # dependency. Push the token to recover after creating
+                        # anonymous spec
+                        self.push_tokens([self.token])
                         specs.append(self.spec(None))
-                    if self.accept(HASH):
-                        # We're finding a dependency by hash for an anonymous
-                        # spec
-                        dep = self.spec_by_hash()
                     else:
-                        # We're adding a dependency to the last spec
-                        self.expect(ID)
-                        dep = self.spec(self.token.value)
+                        if self.accept(HASH):
+                            # We're finding a dependency by hash for an anonymous
+                            # spec
+                            dep = self.spec_by_hash()
+                        else:
+                            # We're adding a dependency to the last spec
+                            self.expect(ID)
+                            dep = self.spec(self.token.value)
 
-                    # Raise an error if the previous spec is already concrete
-                    # (assigned by hash)
-                    if specs[-1]._hash:
-                        raise RedundantSpecError(specs[-1], 'dependency')
-                    # command line deps get empty deptypes now.
-                    # Real deptypes are assigned later per packages.
-                    specs[-1]._add_dependency(dep, ())
+                        # Raise an error if the previous spec is already concrete
+                        # (assigned by hash)
+                        if specs[-1]._hash:
+                            raise RedundantSpecError(specs[-1], 'dependency')
+                        # command line deps get empty deptypes now.
+                        # Real deptypes are assigned later per packages.
+                        specs[-1]._add_dependency(dep, ())
 
                 else:
                     # If the next token can be part of a valid anonymous spec,
@@ -2862,6 +2857,9 @@ class SpecParser(spack.parse.Parser):
                     self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse
+                    # and read this token again.
+                    self.push_tokens([self.token])
+                    self.previous = None
                     break
 
             elif self.accept(HASH):
