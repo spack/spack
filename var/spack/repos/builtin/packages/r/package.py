@@ -28,7 +28,7 @@ from spack.util.environment import *
 import shutil
 
 
-class R(Package):
+class R(AutotoolsPackage):
     """R is 'GNU S', a freely available language and environment for
     statistical computing and graphics which provides a wide variety of
     statistical and graphical techniques: linear and nonlinear modelling,
@@ -40,6 +40,7 @@ class R(Package):
 
     extendable = True
 
+    version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
     version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
     version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
@@ -82,35 +83,46 @@ class R(Package):
     depends_on('pcre')
     depends_on('jdk')
 
-    patch('zlib.patch', when='@:3.3.1')
+    patch('zlib.patch', when='@:3.3.2')
 
     @property
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
-    def install(self, spec, prefix):
-        rlibdir = join_path(prefix, 'rlib')
-        configure_args = ['--prefix=%s' % prefix,
-                          '--libdir=%s' % rlibdir,
-                          '--enable-R-shlib',
-                          '--enable-BLAS-shlib',
-                          '--enable-R-framework=no']
+    def configure_args(self):
+        spec   = self.spec
+        prefix = self.prefix
+
+        config_args = [
+            '--libdir={0}'.format(join_path(prefix, 'rlib')),
+            '--enable-R-shlib',
+            '--enable-BLAS-shlib',
+            '--enable-R-framework=no'
+        ]
+
         if '+external-lapack' in spec:
-            configure_args.extend(['--with-blas', '--with-lapack'])
+            config_args.extend([
+                '--with-blas',
+                '--with-lapack'
+            ])
 
-        configure(*configure_args)
-        make()
-        make('install')
+        if '+X' in spec:
+            config_args.append('--with-x')
+        else:
+            config_args.append('--without-x')
 
+        return config_args
+
+    @AutotoolsPackage.sanity_check('install')
+    def copy_makeconf(self):
         # Make a copy of Makeconf because it will be needed to properly build R
         # dependencies in Spack.
         src_makeconf = join_path(self.etcdir, 'Makeconf')
         dst_makeconf = join_path(self.etcdir, 'Makeconf.spack')
         shutil.copy(src_makeconf, dst_makeconf)
 
-        self.filter_compilers(spec, prefix)
-
-    def filter_compilers(self, spec, prefix):
+    @AutotoolsPackage.sanity_check('install')
+    def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
         to use the compilers that Spack built the package with.
 
