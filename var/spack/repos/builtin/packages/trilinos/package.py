@@ -157,6 +157,10 @@ class Trilinos(CMakePackage):
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DTPL_FIND_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DTrilinos_LINK_SEARCH_START_STATIC:BOOL=%s' % (
+                'OFF' if '+shared' in spec else 'ON'),
             '-DTPL_ENABLE_MPI:BOOL=ON',
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_BLAS=ON',
