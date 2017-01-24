@@ -26,7 +26,9 @@
 from spack import *
 import os
 
+
 class Libquo(Package):
+
     """QUO (as in "status quo") is a runtime library that aids in accommodating
     thread-level heterogeneity in dynamic, phased MPI+X applications comprising
     single- and multi-threaded libraries."""
