@@ -49,8 +49,6 @@ class Mesa(AutotoolsPackage):
     variant('gallium', default=False, description="compile with gallium llvm sw rendering")
     variant('drm', default=True, description="compile with drm")
 
-    #patch('osmesa-install-headers.patch')
-    
     depends_on("llvm@3.0", when='@8.0.5~gallium')
     depends_on("libxml2+python", when='@8.0.5~gallium') #
     depends_on("llvm+link_dylib+utils", when='@9:+gallium')
