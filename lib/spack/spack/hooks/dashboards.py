@@ -15,6 +15,7 @@ import platform
 import spack
 import time
 import xml.dom.minidom
+import calendar
 
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
@@ -118,8 +119,9 @@ class CDashTestCase(object):
         self.element = ET.Element('Test')
         name_element = ET.SubElement(self.element, 'Name')
         name_element.text = name
-        path_element = ET.SubElement(self.element, 'Path')
-        path_element.text = ""
+
+        #path_element = ET.SubElement(self.element, 'Path')
+        #path_element.text = ""
         cmd_line_element = ET.SubElement(self.element, 'FullCommandLine')
         cmd_line_element.text = "spack install"
         self.result = ET.SubElement(self.element, 'Results')
@@ -147,12 +149,198 @@ class CDashTestCase(object):
         value = ET.SubElement(cmd_line, 'Value')
         value.text = "spack install"
         # Logs
-        logs = ET.SubElement(self.result, 'Measurement')
-        value = ET.SubElement(logs, 'Value')
-        value.text = message
+        if message is not None:
+            logs = ET.SubElement(self.result, 'Measurement')
+            value = ET.SubElement(logs, 'Value')
+            value.text = message
 
 
-class CDashTestSuite(object):
+
+
+class CDashSimpleTestSuite(object):
+    def __init__(self, spec, filename, slot='Experimental'):
+        self.spec = spec
+        self.slot = slot
+        self.tests = []
+        self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
+        self.filename = filename
+
+    def create_filename(self, spec, subdir, step):
+        if "build" in str(step):
+            if self.filename is not None:
+                return "%s.%s.xml" % (self.filename, step)
+            else:
+                fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
+                basename = fmt.format(x=spec, hash=spec.dag_hash())
+                dirname = fs.join_path(spack.var_path, subdir)
+                fs.mkdirp(dirname)
+                return fs.join_path(dirname, basename)
+
+    def create_template(self):
+        template = ET.Element('Site')
+        buildName = str(self.spec.short_spec)
+        buildName = buildName.split('=')
+        template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
+        template.set('BuildStamp', self.buildstamp)
+        tempcompiler = self.spec.short_spec.split('%')[1].split(' ')[0]
+        template.set('CompilerName', tempcompiler.split('@')[0])
+        template.set('CompilerVersion', tempcompiler.split('@')[1])
+        template.set('Name', platform.node())
+        template.set('OSName', "Mac OS X")
+        template.set('Hostname', platform.node())
+        #template.set('Type', self.slot)
+        return template
+
+    def create_testcase(self, name, spec):
+        item = CDashTestCase(name, spec)
+        self.tests.append(item)
+        return item
+
+    def dump(self):
+        build_report = self.prepare_build_report()
+        filename = self.create_filename(self.spec, 'cdash', 'build')
+        self.dump_report(build_report, filename)
+        
+
+    def dump_report(self, report, filename):
+        with codecs.open(filename, 'wb', 'utf-8') as file:
+            xml_string = ET.tostring(report)
+            xml_string = xml.dom.minidom.parseString(xml_string).toprettyxml()
+            file.write(xml_string)
+
+    def now(self):
+        #return time.strftime("%a %b %d %H:%M:%S %Z")
+        return time.strftime("%b %d %H:%M %Z")
+
+    def epoch(self):
+        return str(calendar.timegm(time.gmtime()))
+
+
+    def prepare_build_report(self):
+        report = self.create_template()
+        build = ET.SubElement(report, 'Build')
+        start_element = ET.SubElement(build, 'StartDateTime')
+        start_element.text = self.now()
+        startBuild_element = ET.SubElement(build, 'StartBuildTime')
+        startBuild_element.text = self.epoch()
+        command_element = ET.SubElement(build, 'BuildCommand')
+        command_element.text = 'spack install'
+        log_element = ET.SubElement(build, 'Log')
+        log_element.set('Encoding', 'base64')
+        end_element = ET.SubElement(build, 'EndDateTime')
+        end_element.text = self.now()
+        endBuild_element = ET.SubElement(build, 'EndBuildTime')
+        endBuild_element.text = self.epoch()
+        ElapsedMinutes = ET.SubElement(build, 'ElapsedMinutes')
+        ElapsedMinutes.text = '0' #fix this
+        return report
+
+def fetch_text(path):
+    if not os.path.exists(path):
+        return ''
+
+    with codecs.open(path, 'rb', 'utf-8') as f:
+        return '\n'.join(
+            list(line.strip() for line in f.readlines())
+        )
+
+
+def dashboard_output(spec, test_suite):
+    # Cycle once and for all on the dependencies and skip
+    # the ones that are already installed. This ensures that
+    # for the same spec, the same number of entries will be
+    # displayed in the XML report
+    for x in spec.traverse(order='post'):
+        package = spack.repo.get(x)
+        if package.installed:
+            test_case = test_suite.create_testcase(package.name, x.short_spec)
+            test_case.set_duration(0.0)
+            test_case.set_result(
+                TestResult.SKIPPED,
+                message='Skipped [already installed]',
+                error_type='already_installed'
+            )
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, ** kwargs):
+
+            # Check if the package has been installed already
+            if self.installed:
+                return
+
+            test_case = test_suite.create_testcase(self.name,
+                                                   self.spec.short_spec)
+            # Try to install the package
+            try:
+                # If already installed set the spec as skipped
+                start_time = time.time()
+                # PackageBase.do_install
+                func(self, *args, **kwargs)
+                duration = time.time() - start_time
+                test_case.set_duration(duration)
+                test_case.set_result(TestResult.PASSED)
+            except InstallError:
+                # Check if the package relies on dependencies that
+                # did not install
+                duration = time.time() - start_time
+                test_case.set_duration(duration)
+                if [x for x in self.spec.dependencies(('link', 'run')) if not spack.repo.get(x).installed]:  # NOQA: ignore=E501
+                    test_case.set_duration(0.0)
+                    test_case.set_result(
+                        TestResult.SKIPPED,
+                        message='Skipped [failed dependencies]',
+                        error_type='dep_failed'
+                    )
+                else:
+                    # An InstallError is considered a failure (the recipe
+                    # didn't work correctly)
+                    text = fetch_text(self.build_log_path)
+                    test_case.set_result(
+                        TestResult.FAILED,
+                        message='Installation failure',
+                        text=text
+                    )
+            except FetchError:
+                # A FetchError is considered an error as
+                # we didn't even start building
+                duration = time.time() - start_time
+                test_case.set_duration(duration)
+                text = fetch_text(self.build_log_path)
+                test_case.set_result(
+                    TestResult.ERRORED,
+                    message='Unable to fetch package',
+                    text=text
+                )
+            except Exception:
+                # Anything else is also an error
+                duration = time.time() - start_time
+                test_case.set_duration(duration)
+                text = fetch_text(self.build_log_path)
+                test_case.set_result(
+                    TestResult.ERRORED,
+                    message='Unexpected exception thrown during install',
+                    text=text
+                )
+            except:
+                # Anything else is also an error
+                duration = time.time() - start_time
+                test_case.set_duration(duration)
+                text = fetch_text(self.build_log_path)
+                test_case.set_result(
+                    TestResult.ERRORED,
+                    message='Unknown error',
+                    text=text
+                )
+
+        return wrapper
+    return decorator
+
+
+
+
+
+class CDashCompleteTestSuite(object):
     def __init__(self, spec, filename, slot='Experimental'):
         self.spec = spec
         self.slot = slot
@@ -160,6 +348,10 @@ class CDashTestSuite(object):
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
         self.filename = filename
+        #tempcompiler = spec.short_spec.split('%')[1].split(' ')[0]
+        #self.CompilerName = tempcompiler.split('@')[0]
+        #self.CompilerVersion = tempcompiler.split('@')[1]
+        
 
     def create_filename(self, spec, subdir, step):
         if self.filename is not None:
@@ -173,10 +365,17 @@ class CDashTestSuite(object):
 
     def create_template(self):
         template = ET.Element('Site')
-        template.set('BuildName', str(self.spec.short_spec))
-        template.set('Name', platform.node())
-        template.set('Type', self.slot)
+        buildName = str(self.spec.short_spec)
+        buildName = buildName.split('=')
+        template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
+        tempcompiler = self.spec.short_spec.split('%')[1].split(' ')[0]
+        template.set('CompilerName', tempcompiler.split('@')[0])
+        template.set('CompilerVersion', tempcompiler.split('@')[1])
+        template.set('Name', platform.node())
+        template.set('OSName', "Mac OS X")
+        template.set('Hostname', platform.node())
+        #template.set('Type', self.slot)
         return template
 
     def create_testcase(self, name, spec):
@@ -201,23 +400,31 @@ class CDashTestSuite(object):
             file.write(xml_string)
 
     def now(self):
-        return time.strftime("%a %b %d %H:%M:%S %Z")
+        #return time.strftime("%a %b %d %H:%M:%S %Z")
+        return time.strftime("%b %d %H:%M %Z")
+
+    def epoch(self):
+        return str(calendar.timegm(time.gmtime()))
 
     def prepare_configure_report_(self):
         report = self.create_template()
         configure = ET.SubElement(report, 'Configure')
         start_time = ET.SubElement(configure, 'StartDateTime')
         start_time.text = self.now()
-        end_time = ET.SubElement(configure, 'EndDateTime')
-        end_time.text = self.now()
+        startConfigure_element = ET.SubElement(configure, 'StartConfigureTime')
+        startConfigure_element.text = self.epoch()
         command = ET.SubElement(configure, "ConfigureCommand")
         command.text = "spack install"
-        status = ET.SubElement(configure, "ConfigureStatus")
-        status.text = '0'
-        minutes = ET.SubElement(configure, "ElapsedMinutes")
-        minutes.text = '0.0'
         log = ET.SubElement(configure, 'Log')
         log.text = str(self.spec)
+        status = ET.SubElement(configure, "ConfigureStatus")
+        status.text = '0'
+        end_time = ET.SubElement(configure, 'EndDateTime')
+        end_time.text = self.now()
+        endConfigure_element = ET.SubElement(configure, 'EndConfigureTime')
+        endConfigure_element.text = self.epoch()
+        minutes = ET.SubElement(configure, "ElapsedMinutes")
+        minutes.text = '0'#fix this
         return report
 
     def prepare_build_report(self):
@@ -225,22 +432,39 @@ class CDashTestSuite(object):
         build = ET.SubElement(report, 'Build')
         start_element = ET.SubElement(build, 'StartDateTime')
         start_element.text = self.now()
+        startBuild_element = ET.SubElement(build, 'StartBuildTime')
+        startBuild_element.text = self.epoch()
         command_element = ET.SubElement(build, 'BuildCommand')
         command_element.text = 'spack install'
         log_element = ET.SubElement(build, 'Log')
         log_element.set('Encoding', 'base64')
-        stop_element = ET.SubElement(build, 'EndDateTime')
-        stop_element.text = self.now()
+        end_element = ET.SubElement(build, 'EndDateTime')
+        end_element.text = self.now()
+        endBuild_element = ET.SubElement(build, 'EndBuildTime')
+        endBuild_element.text = self.epoch()
+        ElapsedMinutes = ET.SubElement(build, 'ElapsedMinutes')
+        ElapsedMinutes.text = '0' #fix this
         return report
 
     def prepare_test_report(self):
         report = self.create_template()
         testing = ET.SubElement(report, 'Testing')
+        start_element = ET.SubElement(testing, 'StartDateTime')
+        start_element.text = self.now()
+        print type(self.now())
+        startTest_element = ET.SubElement(testing, 'StartTestTime')
+        startTest_element.text = self.epoch()
         testlist = ET.SubElement(testing, 'TestList')
         for item in self.tests:
             test_element = ET.SubElement(testlist, "Test")
             test_element.text = item.name
             testing.append(item.element)
+        end_element = ET.SubElement(testing, 'EndDateTime')
+        end_element.text = self.now()
+        endTest_element = ET.SubElement(testing, 'EndTestime')
+        endTest_element.text = self.epoch()
+        ElapsedMinutes = ET.SubElement(testing, 'ElapsedMinutes')
+        ElapsedMinutes.text = '0' #fix this
         return report
 
 
@@ -348,4 +572,5 @@ def dashboard_output(spec, test_suite):
 
 # announce the existing test suites
 test_suites = {"junit": JUnitTestSuite,
-               "cdash": CDashTestSuite}
+               "cdash-simple": CDashSimpleTestSuite,
+               "cdash-complete": CDashCompleteTestSuite,}
