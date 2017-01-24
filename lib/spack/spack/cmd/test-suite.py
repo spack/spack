@@ -8,13 +8,12 @@ import llnl.util.tty as tty
 from spack.spec import Spec
 import spack.cmd.install as install    
 import spack.cmd.uninstall as uninstall
-import spack.util.spack_yaml as yaml
+import spack.util.spack_yaml as syaml
 import spack.compilers 
 import spack
 
 description = "Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."
 
-#not sure if I will use this later cdash or junit, spack.io or whereever or other flags
 def setup_parser(subparser):
     subparser.add_argument(
         '-c', '--complete', action='store_true', dest='complete',
@@ -23,17 +22,9 @@ def setup_parser(subparser):
         'yamlFile', nargs=argparse.REMAINDER,
         help="yaml file that contains a list of tests, example yaml file can be found in /lib/spack/docs/tutorial/examples/test.yaml")
 
-'''
-fucntion Name: reduceCompilerList
-parameters:
-    masterList : list
-returns:
-    list
-Get the list of compilers from spack found on the system.
-Compares the spack list to test file.
-If a compiler is found on both lists its returned.
-'''
+
 def reduceCompilerList(masterList):
+    """Get the list of compilers from spack found on the system. Compares the spack list to test file. If a compiler is found on both lists its returned."""
     systemCompilers = []
     newMaster = []
     newList = []
@@ -49,29 +40,21 @@ def reduceCompilerList(masterList):
     return newList
 
 
-'''
-fucntion Name: removeTests
-parameters:
-    testList  : list
-    exclusion : str
-returns:
-    list
-
-Receieves a list of all tests and an excusion.
-Depending on the type of exclusion it will remove tests matching.
-Returns the list with the tests matching the excusion removed.
-
-exclusions can be in this form:
-pkg%compiler
-pkg@version
-compiler@version
-pkg@version%compiler@version
-pkg@version%compiler
-pkg%compiler@version
-pkg
-compiler
-'''
 def removeTests(testList, exclusion):
+    """Receieves a list of all tests and an excusion.
+    Depending on the type of exclusion it will remove tests matching.
+    Returns the list with the tests matching the excusion removed.
+
+    exclusions can be in this form:
+    pkg%compiler
+    pkg@version
+    compiler@version
+    pkg@version%compiler@version
+    pkg@version%compiler
+    pkg%compiler@version
+    pkg
+    compiler
+    """
     pkg = ""
     compiler=""
     teststoRemove = []
@@ -102,7 +85,9 @@ def removeTests(testList, exclusion):
         testList.remove(test)
     return testList
 
-def testsuite(parser, args):
+def test-suite(parser, args):
+    """Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."""
+
     if not args.yamlFile:
         tty.die("spack testsuite requires a yaml file as argument.")
     if args.complete:
@@ -111,7 +96,8 @@ def testsuite(parser, args):
     else:
         args.log_format='cdash-simple' #use cdash-complete if you want configure, build and test output.
         cdash = '--log-format=cdash-simple'
-    print args.complete
+    
+    cdash_root = "/var/spack/cdash/"
     enabledTests = []
     compilers = []
     packages = []
@@ -123,12 +109,13 @@ def testsuite(parser, args):
     path = ""
     dashboards = []
     #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
-    for files in args.yamlFile: #read yaml files which contains description of tests
-        with open(files, 'r') as stream:
+    for file in args.yamlFile: #read yaml files which contains description of tests
+        with open(file) as stream:
             try:
-                yamlFile= yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
+                yamlFile = syaml.load(stream)
+            except syaml.YAMLError as e:
+                raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+
 
             enabledTests= yamlFile['enable']
             packages= yamlFile['packages'] # list of packages to test. Current libelf, libdwarf, bzip2
@@ -143,9 +130,10 @@ def testsuite(parser, args):
                 dashboards = yamlFile['dashboard']
             except KeyError as e:
                 if path is "":
-                    tty.msg("dashboard url was not found. xml files will be stored at " + str(spack.prefix)+"/var/spack/cdash/")
+                    tty.msg("dashboard url was not found. xml files will be stored at " + str(spack.prefix)+cdash_root)
                 else:
                     tty.msg("dashboard url was not found. xml files will be stored at path provided.")
+
     #creating a list of packages 
     for package in packages:
         for pkg in package:
@@ -176,7 +164,6 @@ def testsuite(parser, args):
         for exclusion in exclusions:
             tests=removeTests(tests, exclusion)
 
-
     concreteTests = []
     
     #setting up tests for contretizing
@@ -204,7 +191,7 @@ def testsuite(parser, args):
 
     #Path contains xml files produced during the test run.
     if path is "": # if no path given in test yaml file. Uses default location.
-        path = spack.prefix+"/var/spack/cdash/"
+        path = spack.prefix+cdash_root
     for dashboard in dashboards:#allows for multiple dashboards
         files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
         for file in files:

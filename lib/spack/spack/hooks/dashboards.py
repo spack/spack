@@ -155,8 +155,6 @@ class CDashTestCase(object):
             value.text = message
 
 
-
-
 class CDashSimpleTestSuite(object):
     def __init__(self, spec, filename, slot='Experimental'):
         self.spec = spec
@@ -182,9 +180,8 @@ class CDashSimpleTestSuite(object):
         buildName = buildName.split('=')
         template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
-        tempcompiler = self.spec.short_spec.split('%')[1].split(' ')[0]
-        template.set('CompilerName', tempcompiler.split('@')[0])
-        template.set('CompilerVersion', tempcompiler.split('@')[1])
+        template.set('CompilerName', self.spec.compiler.name)
+        template.set('CompilerVersion', self.spec.compiler.version)
         template.set('Name', platform.node())
         template.set('OSName', platform.system())
         template.set('Hostname', platform.node())
@@ -337,9 +334,6 @@ def dashboard_output(spec, test_suite):
     return decorator
 
 
-
-
-
 class CDashCompleteTestSuite(object):
     def __init__(self, spec, filename, slot='Experimental'):
         self.spec = spec
@@ -369,9 +363,8 @@ class CDashCompleteTestSuite(object):
         buildName = buildName.split('=')
         template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
-        tempcompiler = self.spec.short_spec.split('%')[1].split(' ')[0]
-        template.set('CompilerName', tempcompiler.split('@')[0])
-        template.set('CompilerVersion', tempcompiler.split('@')[1])
+        template.set('CompilerName', self.spec.compiler.name)
+        template.set('CompilerVersion', self.spec.compiler.version)
         template.set('Name', platform.node())
         template.set('OSName', platform.system())
         template.set('Hostname', platform.node())
@@ -467,7 +460,6 @@ class CDashCompleteTestSuite(object):
         ElapsedMinutes.text = '0' #fix this
         return report
 
-
 def fetch_text(path):
     if not os.path.exists(path):
         return ''
@@ -476,7 +468,6 @@ def fetch_text(path):
         return '\n'.join(
             list(line.strip() for line in f.readlines())
         )
-
 
 def dashboard_output(spec, test_suite):
     # Cycle once and for all on the dependencies and skip

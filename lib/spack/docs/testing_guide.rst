@@ -29,6 +29,57 @@ To change the default behaviour, use
 The logs contain one test case per package being built.
 
 
+
+----------------
+using test-suite
+----------------
+
+Test-suite is designed to read in a yaml file describing all packages and compilers along 
+with versions. Using the enabled field will allow you to focus on specific packages.
+To narrow down the scope of a package or compiler, you can use the exclusion field.
+
+--Example of a yaml file---
+
+enable: [bzip2, libelf, .. ,libdwarf]
+
+exclusions: []
+
+packages:
+  - abinit:
+    - versions: [8.0.8b]
+  - ack:
+    - versions: [2.14]
+
+  compilers:
+  - gcc:
+    - versions: [4.9.0, ... 4.7.1, 4.6.3, 4.6.1]
+  - clang:
+    - versions: [7.3.0, 3.4, ... 3.1]
+  
+dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
+
+path: "~/home/username"
+
+---exclusion examples---
+ 	pkg%compiler
+    pkg@version
+    compiler@version
+    pkg@version%compiler@version
+    pkg@version%compiler
+    pkg%compiler@version
+    pkg
+    compiler
+
+Test-suite provides two outputs. One being a simple cdash output that only contains the build output.
+Complete contains all stages, configure, build and test. Using the -c or --complete flag will change the output mode.
+Test-suite produces simple by default.
+
+To run test-suite: 
+	$ spack test-suite -c /location/of/yamlFile
+
+Currently output files are stored in /spack/var/spack/cdash this may change in the future.
+If a dashboard field is provided the cdash output will be sent via PUT request, otherwise files will be left in /spack/var/spack/cdash.
+
 ^^^^^
 Junit
 ^^^^^
@@ -65,3 +116,5 @@ To upload the reports to an existing CDash instance, you can use the tool `curl`
    $ curl --upload-file report.build.xml <cdash url>/submit.php?project=<projectname>
    $ curl --upload-file report.configure.xml <cdash url>/submit.php?project=<projectname>
    $ curl --upload-file report.test.xml <cdash url>/submit.php?project=<projectname>
+
+
