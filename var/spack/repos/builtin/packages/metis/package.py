@@ -187,6 +187,8 @@ class Metis(Package):
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
         else:
+            # Remove all RPATH options 
+            # (RPATHxxx options somehow trigger cmake to link dynamically)
             rpath_options = []
             for o in options:
                 if o.find('RPATH') >= 0:

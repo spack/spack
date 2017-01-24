@@ -47,8 +47,8 @@ class Zlib(AutotoolsPackage):
         if '+pic' in self.spec:
             spack_env.set('CFLAGS', self.compiler.pic_flag)
 
-    def configure(self, spec, prefix):
-        config_args = ['--prefix', prefix]
-        if '+shared' not in spec:
+    def configure_args(self):
+        config_args = []
+        if '+shared' not in self.spec:
             config_args.append('--static')
-        configure(*config_args)
+        return config_args
