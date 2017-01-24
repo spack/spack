@@ -53,7 +53,7 @@ class Openssl(Package):
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
     depends_on("zlib")
-    # Also requires make and perl
+    depends_on("perl", type='build')
 
     parallel = False
 
