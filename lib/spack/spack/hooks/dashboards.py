@@ -186,7 +186,7 @@ class CDashSimpleTestSuite(object):
         template.set('CompilerName', tempcompiler.split('@')[0])
         template.set('CompilerVersion', tempcompiler.split('@')[1])
         template.set('Name', platform.node())
-        template.set('OSName', "Mac OS X")
+        template.set('OSName', platform.system())
         template.set('Hostname', platform.node())
         #template.set('Type', self.slot)
         return template
@@ -373,7 +373,7 @@ class CDashCompleteTestSuite(object):
         template.set('CompilerName', tempcompiler.split('@')[0])
         template.set('CompilerVersion', tempcompiler.split('@')[1])
         template.set('Name', platform.node())
-        template.set('OSName', "Mac OS X")
+        template.set('OSName', platform.system())
         template.set('Hostname', platform.node())
         #template.set('Type', self.slot)
         return template
