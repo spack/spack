@@ -26,7 +26,7 @@
 import inspect
 
 from spack.directives import extends
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 
 class RPackage(PackageBase):
@@ -55,4 +55,4 @@ class RPackage(PackageBase):
             self.stage.source_path)
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

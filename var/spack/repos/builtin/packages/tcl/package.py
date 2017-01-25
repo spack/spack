@@ -55,7 +55,7 @@ class Tcl(AutotoolsPackage):
     def build_directory(self):
         return 'unix'
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def symlink_tclsh(self):
         with working_dir(self.prefix.bin):
             symlink('tclsh{0}'.format(self.version.up_to(2)), 'tclsh')

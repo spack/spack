@@ -95,7 +95,7 @@ class PyMatplotlib(PythonPackage):
     # depends_on('ttconv')
     depends_on('py-six@1.9.0:', type=('build', 'run'))
 
-    @PythonPackage.sanity_check('install')
+    @run_after('install')
     def set_backend(self):
         spec = self.spec
         prefix = self.prefix
