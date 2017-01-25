@@ -40,6 +40,7 @@ from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
@@ -60,6 +61,9 @@ def _to_dict(compiler):
     d['paths'] = dict((attr, getattr(compiler, attr, None))
                       for attr in _path_instance_vars)
     d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
+    d['flags'].update(dict((attr, getattr(compiler, attr, None))
+                      for attr in _flags_instance_vars
+                           if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
