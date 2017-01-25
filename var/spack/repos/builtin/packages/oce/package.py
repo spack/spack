@@ -47,8 +47,8 @@ class Oce(Package):
     depends_on('tbb', when='+tbb')
 
     def url_for_version(self, version):
-        return 'https://github.com/tpaviot/oce/archive/OCE-%s.tar.gz' % \
-            (version.dotted)
+        return 'https://github.com/tpaviot/oce/archive/OCE-%s.tar.gz' % (
+            version.dotted)
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
