@@ -113,7 +113,7 @@ class R(AutotoolsPackage):
 
         return config_args
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def copy_makeconf(self):
         # Make a copy of Makeconf because it will be needed to properly build R
         # dependencies in Spack.
@@ -121,7 +121,7 @@ class R(AutotoolsPackage):
         dst_makeconf = join_path(self.etcdir, 'Makeconf.spack')
         shutil.copy(src_makeconf, dst_makeconf)
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
         to use the compilers that Spack built the package with.
