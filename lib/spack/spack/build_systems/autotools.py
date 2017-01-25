@@ -81,6 +81,8 @@ class AutotoolsPackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
+    install_time_test_callbacks = ['installcheck']
+
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
         this updated when installed on a newer architecture."""
@@ -222,11 +224,12 @@ class AutotoolsPackage(PackageBase):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 
-    @PackageBase.sanity_check('install')
-    @PackageBase.on_package_attributes(run_tests=True)
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+
     def installcheck(self):
-        """Default post-installation test. Searches the Makefile for an
-        ``installcheck`` target and runs it if found."""
+        """Searches the Makefile for an ``installcheck`` target
+        and runs it if found.
+        """
         with working_dir(self.build_directory()):
             self._if_make_target_execute('installcheck')
 
