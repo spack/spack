@@ -65,7 +65,7 @@ class PyYt(PythonPackage):
     depends_on("py-sympy", type=('build', 'run'))
     depends_on("python @2.7:2.999,3.4:")
 
-    @PythonPackage.sanity_check('install')
+    @run_after('install')
     def check_install(self):
         # The Python interpreter path can be too long for this
         # yt = Executable(join_path(prefix.bin, "yt"))

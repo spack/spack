@@ -379,7 +379,7 @@ class Trilinos(CMakePackage):
             ])
         return options
 
-    @CMakePackage.sanity_check('install')
+    @run_after('install')
     def filter_python(self):
         # When trilinos is built with Python, libpytrilinos is included
         # through cmake configure files. Namely, Trilinos_LIBRARIES in
