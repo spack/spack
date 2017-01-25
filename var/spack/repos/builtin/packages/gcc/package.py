@@ -156,7 +156,7 @@ class Gcc(AutotoolsPackage):
         spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
         return spec_dir[0] if spec_dir else None
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""

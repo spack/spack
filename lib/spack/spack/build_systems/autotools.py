@@ -30,9 +30,9 @@ import shutil
 from subprocess import PIPE
 from subprocess import check_call
 
-from spack.package import PackageBase, run_after
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, join_path
+from llnl.util.filesystem import working_dir, join_path, force_remove
+from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
 
@@ -81,7 +81,13 @@ class AutotoolsPackage(PackageBase):
     #: phase
     install_targets = ['install']
 
+    #: Callback names for build-time test
     build_time_test_callbacks = ['check']
+
+    #: Set to true to force the autoreconf step even if configure is present
+    force_autoreconf = False
+    #: Options to be passed to autoreconf when using the default implementation
+    autoreconf_extra_args = []
 
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
@@ -184,6 +190,11 @@ class AutotoolsPackage(PackageBase):
             if not self._do_patch_config_guess():
                 raise RuntimeError('Failed to find suitable config.guess')
 
+    @run_before('autoreconf')
+    def delete_configure_to_force_update(self):
+        if self.force_autoreconf:
+            force_remove(self.configure_abs_path)
+
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
@@ -202,11 +213,20 @@ class AutotoolsPackage(PackageBase):
         tty.warn('*********************************************************')
         with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
+            # This part should be redundant in principle, but
+            # won't hurt
             m.libtoolize()
             m.aclocal()
-            m.autoconf()
-            autogen = Executable('./autogen.sh')
-            autogen()
+            # This line is what is needed most of the time
+            # --install, --verbose, --force
+            autoreconf_args = ['-ivf']
+            if 'pkg-config' in spec:
+                autoreconf_args += [
+                    '-I',
+                    join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
+                ]
+            autoreconf_args += self.autoreconf_extra_args
+            m.autoreconf(*autoreconf_args)
 
     @run_after('autoreconf')
     def set_configure_or_die(self):
