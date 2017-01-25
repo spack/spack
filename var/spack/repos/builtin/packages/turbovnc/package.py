@@ -57,8 +57,21 @@ class Turbovnc(Package):
         return 'http://downloads.sourceforge.net/project/turbovnc/%s/turbovnc-%s.tar.gz' % (
             version, version)
 
+    def validate(self, spec):
+        """
+        Checks if incompatible versions of openssl were specified
+
+        :param spec: spec of the package
+        :raises RuntimeError: in case of inconsistencies
+        """
+
+        if spec.satisfies('@:2.1') and spec.satisfies('^openssl@1.1:'):
+            msg = 'turbovnc does not compile with openssl 1.1 '
+            raise RuntimeError(msg)
+
 
     def install(self, spec, prefix):
+        self.validate(spec)
         def feature_to_bool(feature, on='ON', off='OFF'):
             if feature in spec:
                 return on
