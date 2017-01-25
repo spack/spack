@@ -2775,17 +2775,17 @@ any base class listed in :ref:`installation_procedure`.
 
 .. code-block:: python
 
-   @MakefilePackage.sanity_check('build')
-   @MakefilePackage.on_package_attributes(run_tests=True)
+   @run_after('build')
+   @on_package_attributes(run_tests=True)
    def check_build(self):
         # Custom implementation goes here
         pass
 
-The first decorator ``MakefilePackage.sanity_check('build')`` schedules this
+The first decorator ``run_after('build')`` schedules this
 function to be invoked after the ``build`` phase has been executed, while the
 second one makes the invocation  conditional on the fact that ``self.run_tests == True``.
 It is also possible to schedule a function to be invoked *before* a given phase
-using the ``MakefilePackage.precondition`` decorator.
+using the ``run_before`` decorator.
 
 .. note::
 
