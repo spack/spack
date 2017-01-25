@@ -29,7 +29,7 @@ class Udunits2(AutotoolsPackage):
     """Automated units conversion"""
 
     homepage = "http://www.unidata.ucar.edu/software/udunits"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.21.tar.gz"
+    url      = "https://github.com/Unidata/UDUNITS-2/archive/v2.2.23.tar.gz"
 
     version('2.2.23', '2b95241a6243296b8ba908385a84a141')
     version('2.2.21', '1f6d3375efc1f124790a4efb7102cdb7')
