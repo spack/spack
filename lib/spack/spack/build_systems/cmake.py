@@ -26,11 +26,10 @@
 import inspect
 import platform
 
-import llnl.util.tty as tty
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
 from spack.directives import depends_on
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 
 class CMakePackage(PackageBase):
@@ -71,6 +70,8 @@ class CMakePackage(PackageBase):
 
     build_targets = []
     install_targets = ['install']
+
+    build_time_test_callbacks = ['check']
 
     depends_on('cmake', type='build')
 
@@ -155,20 +156,7 @@ class CMakePackage(PackageBase):
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def _run_default_function(self):
-        """This function is run after build if ``self.run_tests == True``
-
-        It will search for a method named ``check`` and run it. A sensible
-        default is provided in the base class.
-        """
-        try:
-            fn = getattr(self, 'check')
-            tty.msg('Trying default build sanity checks [check]')
-            fn()
-        except AttributeError:
-            tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
         """Searches the CMake-generated Makefile for the target ``test``
@@ -178,4 +166,4 @@ class CMakePackage(PackageBase):
             self._if_make_target_execute('test')
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

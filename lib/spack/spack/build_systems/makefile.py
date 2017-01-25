@@ -27,7 +27,7 @@ import inspect
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 
 class MakefilePackage(PackageBase):
@@ -100,4 +100,4 @@ class MakefilePackage(PackageBase):
             inspect.getmodule(self).make(*self.install_targets)
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

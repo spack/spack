@@ -26,7 +26,7 @@
 import inspect
 
 from spack.directives import extends
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
 
@@ -306,4 +306,4 @@ class PythonPackage(PackageBase):
         return []
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)
