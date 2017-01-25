@@ -2086,9 +2086,10 @@ class Spec(object):
             if other._dependencies and not self._dependencies:
                 return False
 
-            alldeps = set(d.name for d in self.traverse(root=False))
-            if not all(dep.name in alldeps
-                       for dep in other.traverse(root=False)):
+            selfdeps = self.traverse(root=False)
+            otherdeps = other.traverse(root=False)
+            if not all(any(d.satisfies(dep) for d in selfdeps)
+                       for dep in otherdeps):
                 return False
 
         elif not self._dependencies or not other._dependencies:
