@@ -1,9 +1,10 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2016, International Business Machines Corporation
 #
 # This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Serban Maerean, serban@us.ibm.com based on a similar file,
+# spack/lib/spack/spack/compilers/xl.py, produced by Todd Gamblin,
+# tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
@@ -27,24 +28,24 @@ import llnl.util.tty as tty
 from spack.version import ver
 
 
-class Xl(Compiler):
+class XlR(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['xlc']
+    cc_names = ['xlc_r']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['xlC', 'xlc++']
+    cxx_names = ['xlC_r', 'xlc++_r']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['xlf']
+    f77_names = ['xlf_r']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
+    fc_names = ['xlf90_r', 'xlf95_r', 'xlf2003_r', 'xlf2008_r']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = {'cc': 'xl/xlc',
-                  'cxx': 'xl/xlc++',
-                  'f77': 'xl/xlf',
-                  'fc': 'xl/xlf90'}
+    link_paths = {'cc': 'xl_r/xlc_r',
+                  'cxx': 'xl_r/xlc++_r',
+                  'f77': 'xl_r/xlf_r',
+                  'fc': 'xl_r/xlf90_r'}
 
     @property
     def openmp_flag(self):
@@ -59,7 +60,7 @@ class Xl(Compiler):
 
     @property
     def pic_flag(self):
-        return "-qpic"
+        return("-qpic")
 
     @property
     def fflags(self):
@@ -76,7 +77,7 @@ class Xl(Compiler):
         return "-qzerosize -qfixed"
 
     @classmethod
-    def default_version(cls, comp):
+    def default_version(self, comp):
         """The '-qversion' is the standard option fo XL compilers.
            Output looks like this::
 
