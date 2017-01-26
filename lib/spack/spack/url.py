@@ -282,7 +282,8 @@ def parse_version_offset(path):
         (r'\/(\d\.\d+)\/', path),
 
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
-        (r'\.v(\d+[a-z]?)', stem)]
+        (r'\.v(\d+[a-z]?)', stem)
+    ]
 
     for i, version_regex in enumerate(version_regexes):
         regex, match_string = version_regex
@@ -379,7 +380,8 @@ def parse_name_offset(path, v=None):
         (r'/([^/]+)%s' % v, path),
 
         (r'^([^/]+)[_.-]v?%s' % v, path),
-        (r'^([^/]+)%s' % v, path)]
+        (r'^([^/]+)%s' % v, path)
+    ]
 
     for i, name_regex in enumerate(name_regexes):
         regex, match_string = name_regex

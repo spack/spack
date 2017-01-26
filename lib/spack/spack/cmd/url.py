@@ -22,7 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from __future__ import print_function
+from __future__ import division, print_function
+
+from collections import defaultdict
 
 import spack
 
@@ -83,10 +85,10 @@ def url_parse(args):
     print()
 
     ver,  vs, vl, vi, vregex = parse_version_offset(url)
-    tty.msg("Matched version regex {0:>2}: r'{1}'".format(vi, vregex))
+    tty.msg('Matched version regex {0:>2}: r{1!r}'.format(vi, vregex))
 
     name, ns, nl, ni, nregex = parse_name_offset(url, ver)
-    tty.msg("Matched  name   regex {0:>2}: r'{1}'".format(ni, nregex))
+    tty.msg('Matched  name   regex {0:>2}: r{1!r}'.format(ni, nregex))
 
     print()
     tty.msg('Detected:')
@@ -172,7 +174,94 @@ def url_list(args):
 
 
 def url_test(args):
-    print('in url_test')
+    # Collect statistics on how many URLs were correctly parsed
+    total_urls       = 0
+    correct_names    = 0
+    correct_versions = 0
+
+    # Collect statistics on which regexes were matched and how often
+    name_regex_dict    = dict()
+    name_count_dict    = defaultdict(int)
+    version_regex_dict = dict()
+    version_count_dict = defaultdict(int)
+
+    tty.msg('Generating a summary of URL parsing in Spack...')
+
+    for pkg in spack.repo.all_packages():
+        url = getattr(pkg.__class__, 'url', None)
+        if url:
+            total_urls += 1
+
+            # Parse names
+            try:
+                name, ns, nl, ni, nregex = parse_name_offset(url)
+                name_regex_dict[ni] = nregex
+                name_count_dict[ni] += 1
+                if name_parsed_correctly(pkg, name):
+                    correct_names += 1
+            except UndetectableNameError:
+                pass
+
+            # Parse versions
+            try:
+                version, vs, vl, vi, vregex = parse_version_offset(url)
+                version_regex_dict[vi] = vregex
+                version_count_dict[vi] += 1
+                if version_parsed_correctly(pkg, version):
+                    correct_versions += 1
+            except UndetectableVersionError:
+                pass
+
+        for params in pkg.versions.values():
+            url = params.get('url', None)
+            if url:
+                total_urls += 1
+
+                # Parse names
+                try:
+                    name, ns, nl, ni, nregex = parse_name_offset(url)
+                    name_regex_dict[ni] = nregex
+                    name_count_dict[ni] += 1
+                    if name_parsed_correctly(pkg, name):
+                        correct_names += 1
+                except UndetectableNameError:
+                    pass
+
+                # Parse versions
+                try:
+                    version, vs, vl, vi, vregex = parse_version_offset(url)
+                    version_regex_dict[vi] = vregex
+                    version_count_dict[vi] += 1
+                    if version_parsed_correctly(pkg, version):
+                        correct_versions += 1
+                except UndetectableVersionError:
+                    pass
+
+    print()
+    print('    Total URLs found:          {0}'.format(total_urls))
+    print('    Names correctly parsed:    {0:>4}/{1:>4} ({2:>6.2%})'.format(
+        correct_names, total_urls, correct_names / total_urls))
+    print('    Versions correctly parsed: {0:>4}/{1:>4} ({2:>6.2%})'.format(
+        correct_versions, total_urls, correct_versions / total_urls))
+    print()
+
+    tty.msg('Statistics on name regular expresions:')
+
+    print()
+    print('    Index  Count  Regular Expresion')
+    for ni in name_regex_dict:
+        print('    {0:>3}: {1:>6}   r{2!r}'.format(
+            ni, name_count_dict[ni], name_regex_dict[ni]))
+    print()
+
+    tty.msg('Statistics on version regular expresions:')
+
+    print()
+    print('    Index  Count  Regular Expresion')
+    for vi in version_regex_dict:
+        print('    {0:>3}: {1:>6}   r{2!r}'.format(
+            vi, version_count_dict[vi], version_regex_dict[vi]))
+    print()
 
 
 def url(parser, args):
@@ -232,6 +321,6 @@ def version_parsed_correctly(pkg, version):
     # If the version parsed from the URL is listed in a version()
     # directive, we assume it was correctly parsed
     for pkg_version in pkg.versions:
-        if pkg_version == version:
+        if str(pkg_version) == version:
             return True
     return False
