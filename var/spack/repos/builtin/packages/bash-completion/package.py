@@ -25,10 +25,10 @@
 from spack import *
 
 
-class BashCompletion(Package):
+class BashCompletion(AutotoolsPackage):
     """Programmable completion functions for bash."""
     homepage = "https://github.com/scop/bash-completion"
-    url      = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
+    url = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
 
     version('2.3', '67e50f5f3c804350b43f2b664c33dde811d24292')
     version('develop',  git='https://github.com/scop/bash-completion.git')
@@ -41,16 +41,9 @@ class BashCompletion(Package):
     # Other dependencies
     depends_on('bash@4.1:', type='run')
 
-    def install(self, spec, prefix):
-        make_args = ['--prefix=%s' % prefix]
-
-        autoreconf('-i')
-        configure(*make_args)
-        make()
-        # make("check") # optional, requires dejagnu and tcllib
-        make("install",
-             parallel=False)
-
+    @run_after('install')
+    def show_message_to_user(self):
+        prefix = self.prefix
         # Guidelines for individual user as provided by the author at
         # https://github.com/scop/bash-completion
         print('=====================================================')
@@ -59,6 +52,6 @@ class BashCompletion(Package):
         print('')
         print('# Use bash-completion, if available')
         print('[[ $PS1 && -f %s/share/bash-completion/bash_completion ]] && \ ' % prefix)  # NOQA: ignore=E501
-        print('    . %s/share/bash-completion/bash_completion'  % prefix)
+        print('    . %s/share/bash-completion/bash_completion' % prefix)
         print('')
         print('=====================================================')

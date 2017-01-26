@@ -25,11 +25,11 @@
 from spack import *
 
 
-class Gource(Package):
+class Gource(AutotoolsPackage):
     """Software version control visualization."""
 
     homepage = "http://gource.io"
-    url      = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
+    url = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
 
     version('0.44', '79cda1bfaad16027d59cce55455bfab88b57c69d')
 
@@ -49,15 +49,17 @@ class Gource(Package):
     depends_on('sdl2')
     depends_on('sdl2-image')
 
-    def install(self, spec, prefix):
-        make_args = ['--prefix=%s' % prefix,
-                     '--disable-dependency-tracking',
-                     '--without-x',
-                     '--with-boost=%s' % spec['boost'].prefix]
+    parallel = False
+    force_autoreconf = True
 
-        autoreconf('-i')
-        configure(*make_args)
-        make()
+    def url_for_version(self, version):
+        tmp = 'https://github.com/acaudwell/Gource/releases/download/gource-{0}/gource-{0}.tar.gz'  # NOQA: ignore=E501
+        return tmp.format(version.dotted)
 
-        make("install",
-             parallel=False)
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--disable-dependency-tracking',
+            '--without-x',
+            '--with-boost=%s' % spec['boost'].prefix
+        ]

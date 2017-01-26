@@ -39,6 +39,7 @@ class Astyle(MakefilePackage):
 
     parallel = False
 
+    @property
     def build_directory(self):
         return join_path(self.stage.source_path, 'build', self.compiler.name)
 

@@ -42,6 +42,8 @@ class Tcl(AutotoolsPackage):
 
     depends_on('zlib')
 
+    configure_directory = 'unix'
+
     def url_for_version(self, version):
         base_url = 'http://prdownloads.sourceforge.net/tcl'
         return '{0}/tcl{1}-src.tar.gz'.format(base_url, version)
@@ -51,9 +53,6 @@ class Tcl(AutotoolsPackage):
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
         env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
                 self.spec.version.up_to(2))))
-
-    def build_directory(self):
-        return 'unix'
 
     @run_after('install')
     def symlink_tclsh(self):

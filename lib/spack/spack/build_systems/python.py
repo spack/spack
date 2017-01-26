@@ -97,10 +97,11 @@ class PythonPackage(PackageBase):
 
     extends('python')
 
-    def setup_file(self, spec, prefix):
+    def setup_file(self):
         """Returns the name of the setup file to use."""
         return 'setup.py'
 
+    @property
     def build_directory(self):
         """The directory containing the ``setup.py`` file."""
         return self.stage.source_path
@@ -109,7 +110,7 @@ class PythonPackage(PackageBase):
         inspect.getmodule(self).python(*args)
 
     def setup_py(self, *args):
-        setup = self.setup_file(self.spec, self.prefix)
+        setup = self.setup_file()
 
         with working_dir(self.build_directory()):
             self.python(setup, '--no-user-cfg', *args)

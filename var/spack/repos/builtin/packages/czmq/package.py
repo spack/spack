@@ -38,19 +38,3 @@ class Czmq(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('pkg-config', type='build')
     depends_on('zeromq')
-
-    def autoreconf(self, spec, prefix):
-        # Work around autogen.sh oddities
-        # bash = which("bash")
-        # bash("./autogen.sh")
-        mkdirp("config")
-        autoreconf = which("autoreconf")
-        autoreconf("--install", "--verbose", "--force",
-                   "-I", "config",
-                   "-I", join_path(spec['pkg-config'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['automake'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['libtool'].prefix,
-                                   "share", "aclocal"),
-                   )

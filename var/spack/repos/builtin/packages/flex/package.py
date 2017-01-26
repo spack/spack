@@ -61,11 +61,3 @@ class Flex(AutotoolsPackage):
             url += "/archive/flex-{0}.tar.gz".format(version.dashed)
 
         return url
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    @when('@:2.6.0')
-    def autoreconf(self, spec, prefix):
-        libtoolize('--install', '--force')
-        autoreconf('--install', '--force')
