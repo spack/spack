@@ -88,5 +88,6 @@ class Openssl(Package):
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
-        make('test')            # 'VERBOSE=1'
+        if self.run_tests:
+            make('test')            # 'VERBOSE=1'
         make('install')
