@@ -1560,16 +1560,19 @@ class PackageBase(object):
 
         # Activate any package dependencies that are also extensions.
         if not force:
-            for spec in self.spec.traverse(root=False, deptype='run'):
-                if spec.package.extends(self.extendee_spec):
-                    if not spec.package.activated:
-                        spec.package.do_activate(force=force)
+            for spec in self.dependency_activations():
+                if not spec.package.activated:
+                    spec.package.do_activate(force=force)
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.store.layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s" %
                 (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+
+    def dependency_activations(self):
+        return (spec for spec in self.spec.traverse(root=False, deptype='run')
+                if spec.package.extends(self.extendee_spec))
 
     def activate(self, extension, **kwargs):
         """Symlinks all files from the extension into extendee's install dir.

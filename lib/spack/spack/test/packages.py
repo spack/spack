@@ -108,6 +108,13 @@ def test_inheritance_of_diretives():
     assert 'mpi' in s
 
 
+def test_dependency_extensions():
+    s = Spec('extension2')
+    s.concretize()
+    deps = set(x.name for x in s.package.dependency_activations())
+    assert deps == set(['extension1'])
+
+
 def test_import_class_from_package(builtin_mock):
     from spack.pkg.builtin.mock.mpich import Mpich  # noqa
 
