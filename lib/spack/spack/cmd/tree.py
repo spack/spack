@@ -65,7 +65,7 @@ def create_softlinks(link_to_target, root):
 
 def print_links(link_to_target, root):
     for link, target in link_to_target.iteritems():
-        print link, '--->', target
+        print join_path(root, link), '--->', target
 
 
 def update_install(installed_specs, tree, config=None):
@@ -141,7 +141,7 @@ def update_install(installed_specs, tree, config=None):
 def read_spec_from_prefix(path):
     # Here path is expected to be a package prefix
     spec_yaml_path = join_path(path, '.spack', 'spec.yaml')
-    return spack.install_layout.read_spec(spec_yaml_path)
+    return spack.store.layout.read_spec(spec_yaml_path)
 
 
 def read_spec_from_target(link, target):
@@ -257,7 +257,7 @@ def tree(parser, args):
         if tree_id == 'all':
             root = args.root
             projection_id = args.projection
-            specs_to_project = spack.install_layout.all_specs()
+            specs_to_project = spack.store.layout.all_specs()
         else:
             tree = tree_config[tree_id]
             root = args.root or tree['root']
