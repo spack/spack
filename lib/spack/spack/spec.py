@@ -152,7 +152,9 @@ __all__ = [
     'UnsatisfiableArchitectureSpecError',
     'UnsatisfiableProviderSpecError',
     'UnsatisfiableDependencySpecError',
-    'AmbiguousHashError']
+    'AmbiguousHashError',
+    'InvalidHashError',
+    'RedundantSpecError']
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -1993,7 +1995,7 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
-    def satisfies(self, other, deps=True, strict=False):
+    def satisfies(self, other, deps=True, strict=False, strict_deps=False):
         """Determine if this spec satisfies all constraints of another.
 
         There are two senses for satisfies:
@@ -2067,7 +2069,8 @@ class Spec(object):
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             deps_strict = strict
-            if not (self.name and other.name):
+            if self.concrete and not other.name:
+                # We're dealing with existing specs
                 deps_strict = True
             return self.satisfies_dependencies(other, strict=deps_strict)
         else:
@@ -2083,9 +2086,10 @@ class Spec(object):
             if other._dependencies and not self._dependencies:
                 return False
 
-            alldeps = set(d.name for d in self.traverse(root=False))
-            if not all(dep.name in alldeps
-                       for dep in other.traverse(root=False)):
+            selfdeps = self.traverse(root=False)
+            otherdeps = other.traverse(root=False)
+            if not all(any(d.satisfies(dep) for d in selfdeps)
+                       for dep in otherdeps):
                 return False
 
         elif not self._dependencies or not other._dependencies:
@@ -2697,30 +2701,28 @@ class SpecParser(spack.parse.Parser):
         specs = []
 
         try:
-            while self.next or self.previous:
+            while self.next:
                 # TODO: clean this parsing up a bit
-                if self.previous:
-                    # We picked up the name of this spec while finishing the
-                    # previous spec
-                    specs.append(self.spec(self.previous.value))
-                    self.previous = None
-                elif self.accept(ID):
+                if self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
-                        # We're either parsing an anonymous spec beginning
-                        # with a key-value pair or adding a key-value pair
-                        # to the last spec
+                        # We're parsing an anonymous spec beginning with a
+                        # key-value pair.
                         if not specs:
                             specs.append(self.spec(None))
                         self.expect(VAL)
+                        # Raise an error if the previous spec is already
+                        # concrete (assigned by hash)
+                        if specs[-1]._hash:
+                            raise RedundantSpecError(specs[-1],
+                                                     'key-value pair')
                         specs[-1]._add_flag(
                             self.previous.value, self.token.value)
                         self.previous = None
                     else:
                         # We're parsing a new spec by name
-                        value = self.previous.value
                         self.previous = None
-                        specs.append(self.spec(value))
+                        specs.append(self.spec(self.token.value))
                 elif self.accept(HASH):
                     # We're finding a spec by hash
                     specs.append(self.spec_by_hash())
@@ -2728,27 +2730,38 @@ class SpecParser(spack.parse.Parser):
                 elif self.accept(DEP):
                     if not specs:
                         # We're parsing an anonymous spec beginning with a
-                        # dependency
-                        self.previous = self.token
+                        # dependency. Push the token to recover after creating
+                        # anonymous spec
+                        self.push_tokens([self.token])
                         specs.append(self.spec(None))
-                        self.previous = None
-                    if self.accept(HASH):
-                        # We're finding a dependency by hash for an anonymous
-                        # spec
-                        dep = self.spec_by_hash()
                     else:
-                        # We're adding a dependency to the last spec
-                        self.expect(ID)
-                        dep = self.spec(self.token.value)
+                        if self.accept(HASH):
+                            # We're finding a dependency by hash for an
+                            # anonymous spec
+                            dep = self.spec_by_hash()
+                        else:
+                            # We're adding a dependency to the last spec
+                            self.expect(ID)
+                            dep = self.spec(self.token.value)
 
-                    # command line deps get empty deptypes now.
-                    # Real deptypes are assigned later per packages.
-                    specs[-1]._add_dependency(dep, ())
+                        # Raise an error if the previous spec is already
+                        # concrete (assigned by hash)
+                        if specs[-1]._hash:
+                            raise RedundantSpecError(specs[-1], 'dependency')
+                        # command line deps get empty deptypes now.
+                        # Real deptypes are assigned later per packages.
+                        specs[-1]._add_dependency(dep, ())
 
                 else:
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
                     if self.next.type in (AT, ON, OFF, PCT):
+                        # Raise an error if the previous spec is already
+                        # concrete (assigned by hash)
+                        if specs and specs[-1]._hash:
+                            raise RedundantSpecError(specs[-1],
+                                                     'compiler, version, '
+                                                     'or variant')
                         specs.append(self.spec(None))
                     else:
                         self.unexpected_token()
@@ -2783,13 +2796,13 @@ class SpecParser(spack.parse.Parser):
 
         if len(matches) != 1:
             raise AmbiguousHashError(
-                "Multiple packages specify hash %s." % self.token.value,
-                *matches)
+                "Multiple packages specify hash beginning %s."
+                % self.token.value, *matches)
 
         return matches[0]
 
     def spec(self, name):
-        """Parse a spec out of the input.  If a spec is supplied, then initialize
+        """Parse a spec out of the input. If a spec is supplied, initialize
            and return it instead of creating a new one."""
         if name:
             spec_namespace, dot, spec_name = name.rpartition('.')
@@ -2823,16 +2836,6 @@ class SpecParser(spack.parse.Parser):
         # unspecified or not.
         added_version = False
 
-        if self.previous and self.previous.value == DEP:
-            if self.accept(HASH):
-                spec.add_dependency(self.spec_by_hash())
-            else:
-                self.expect(ID)
-                if self.accept(EQ):
-                    raise SpecParseError(spack.parse.ParseError(
-                        "", "", "Expected dependency received anonymous spec"))
-                spec.add_dependency(self.spec(self.token.value))
-
         while self.next:
             if self.accept(AT):
                 vlist = self.version_list()
@@ -2858,13 +2861,25 @@ class SpecParser(spack.parse.Parser):
                     self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse
+                    # and read this token again.
+                    self.push_tokens([self.token])
+                    self.previous = None
                     break
+
+            elif self.accept(HASH):
+                # Get spec by hash and confirm it matches what we already have
+                hash_spec = self.spec_by_hash()
+                if hash_spec.satisfies(spec):
+                    spec = hash_spec
+                    break
+                else:
+                    raise InvalidHashError(spec, hash_spec.dag_hash())
 
             else:
                 break
 
         # If there was no version in the spec, consier it an open range
-        if not added_version:
+        if not added_version and not spec._hash:
             spec.versions = VersionList(':')
 
         return spec
@@ -3139,3 +3154,18 @@ class AmbiguousHashError(SpecError):
         super(AmbiguousHashError, self).__init__(msg)
         for spec in specs:
             print('    ', spec.format('$.$@$%@+$+$=$#'))
+
+
+class InvalidHashError(SpecError):
+    def __init__(self, spec, hash):
+        super(InvalidHashError, self).__init__(
+            "The spec specified by %s does not match provided spec %s"
+            % (hash, spec))
+
+
+class RedundantSpecError(SpecError):
+    def __init__(self, spec, addition):
+        super(RedundantSpecError, self).__init__(
+            "Attempting to add %s to spec %s which is already concrete."
+            " This is likely the result of adding to a spec specified by hash."
+            % (addition, spec))
