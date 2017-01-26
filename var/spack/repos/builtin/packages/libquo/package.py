@@ -27,15 +27,13 @@ import os
 
 
 class Libquo(Package):
-    """A high-level, easy to use programming interface tailored specifically
-    for MPI/MPI+X codes that may benefit from evolving process binding
-    policies during their execution. QUO allows for arbitrary process binding
-    policies to be enacted and reverted during the execution of an MPI/MPI+X
-    application as different computational phases are entered and exited,
-    respectively."""
 
-    homepage = "https://github.com/losalamos/libquo"
-    url      = "https://github.com/losalamos/libquo/archive/v1.2.9.tar.gz"
+    """QUO (as in "status quo") is a runtime library that aids in accommodating
+    thread-level heterogeneity in dynamic, phased MPI+X applications comprising
+    single- and multi-threaded libraries."""
+
+    homepage = "https://github.com/lanl/libquo"
+    url      = "https://github.com/lanl/libquo/archive/v1.2.9.tar.gz"
 
     version('1.2.9', 'ca82ab33f13e2b89983f81e7c02e98c2')
 
