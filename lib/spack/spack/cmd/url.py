@@ -137,8 +137,7 @@ def url_list(args):
     # Print URLs
     for url in sorted(urls):
         if args.color or args.extrapolation:
-            print(color_url(
-                url, subs=args.extrapolation, errors=True))
+            print(color_url(url, subs=args.extrapolation, errors=True))
         else:
             print(url)
 
@@ -222,6 +221,11 @@ def url_test(args):
 
 
 def print_name_and_version(url):
+    """Prints a URL. Underlines the detected name with dashes and
+    the detected version with tildes.
+
+    :param str url: The url to parse
+    """
     name, ns, nl, ntup, ver, vs, vl, vtup = substitution_offsets(url)
     underlines = [' '] * max(ns + nl, vs + vl)
     for i in range(ns, ns + nl):
@@ -240,14 +244,13 @@ def url_list_parsing(args, urls, url, pkg):
     :param set urls: List of URLs that have already been added
     :param url: A URL to potentially add to ``urls`` depending on ``args``
     :type url: str or None
-    :param spack.package.PackageBase pkg: The package in Spack
+    :param spack.package.PackageBase pkg: The Spack package
     :returns: The updated ``urls`` list
     :rtype: set
     """
-
     if url:
         if args.incorrect_name:
-            # Only add URLs whose name was parsed incorrectly
+            # Only add URLs whose name was incorrectly parsed
             try:
                 name = parse_name(url)
                 if not name_parsed_correctly(pkg, name):
@@ -255,7 +258,7 @@ def url_list_parsing(args, urls, url, pkg):
             except UndetectableNameError:
                 urls.add(url)
         elif args.incorrect_version:
-            # Only add URLs whose version was parsed incorrectly
+            # Only add URLs whose version was incorrectly parsed
             try:
                 version = parse_version(url)
                 if not version_parsed_correctly(pkg, version):
@@ -271,17 +274,17 @@ def url_list_parsing(args, urls, url, pkg):
 def name_parsed_correctly(pkg, name):
     """Determine if the name of a package was correctly parsed.
 
-    :param spack.package.PackageBase pkg: The package in Spack
+    :param spack.package.PackageBase pkg: The Spack package
     :param str name: The name that was extracted from the URL
     :returns: True if the name was correctly parsed, else False
     :rtype: bool
     """
     pkg_name = pkg.name
 
-    # After determining a name, `spack create` determines a build system
-    # Some build systems prepend a special string to the front of the name
+    # After determining a name, `spack create` determines a build system.
+    # Some build systems prepend a special string to the front of the name.
     # Since this can't be guessed from the URL, it would be unfair to say
-    # that these names are incorrectly guessed, so we remove them
+    # that these names are incorrectly parsed, so we remove them.
     if pkg_name.startswith('r-'):
         pkg_name = pkg_name[2:]
     elif pkg_name.startswith('py-'):
@@ -295,8 +298,8 @@ def name_parsed_correctly(pkg, name):
 def version_parsed_correctly(pkg, version):
     """Determine if the version of a package was correctly parsed.
 
-    :param spack.package.PackageBase pkg: The package in Spack
-    :param str name: The version that was extracted from the URL
+    :param spack.package.PackageBase pkg: The Spack package
+    :param str version: The version that was extracted from the URL
     :returns: True if the name was correctly parsed, else False
     :rtype: bool
     """
