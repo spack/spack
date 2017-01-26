@@ -132,6 +132,13 @@ class TestSpecSyntax(object):
         self.check_parse("mvapich_foo")
         self.check_parse("_mvapich_foo")
 
+    def test_anonymous_specs(self):
+        self.check_parse("%intel")
+        self.check_parse("@2.7")
+        self.check_parse("^zlib")
+        self.check_parse("+foo")
+        self.check_parse("arch=test-None-None", "platform=test")
+
     def test_simple_dependence(self):
         self.check_parse("openmpi^hwloc")
         self.check_parse("openmpi^hwloc^libunwind")
@@ -217,6 +224,115 @@ class TestSpecSyntax(object):
     def test_parse_errors(self):
         errors = ['x@@1.2', 'x ^y@@1.2', 'x@1.2::', 'x::']
         self._check_raises(SpecParseError, errors)
+
+    def test_spec_by_hash(self, database):
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        # Make sure the database is still the shape we expect
+        assert len(specs) > 3
+
+        self.check_parse(str(specs[0]), '/' + hashes[0])
+        self.check_parse(str(specs[1]), '/ ' + hashes[1][:5])
+        self.check_parse(str(specs[2]), specs[2].name + '/' + hashes[2])
+        self.check_parse(str(specs[3]),
+                         specs[3].name + '@' + str(specs[3].version) +
+                         ' /' + hashes[3][:6])
+
+    def test_dep_spec_by_hash(self, database):
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        # Make sure the database is still the shape we expect
+        assert len(specs) > 10
+        assert specs[4].name in specs[10]
+        assert specs[-1].name in specs[10]
+
+        spec1 = sp.Spec(specs[10].name + '^/' + hashes[4])
+        assert specs[4].name in spec1 and spec1[specs[4].name] == specs[4]
+        spec2 = sp.Spec(specs[10].name + '%' + str(specs[10].compiler) +
+                        ' ^ / ' + hashes[-1])
+        assert (specs[-1].name in spec2 and
+                spec2[specs[-1].name] == specs[-1] and
+                spec2.compiler == specs[10].compiler)
+        spec3 = sp.Spec(specs[10].name + '^/' + hashes[4][:4] +
+                        '^ / ' + hashes[-1][:5])
+        assert (specs[-1].name in spec3 and
+                spec3[specs[-1].name] == specs[-1] and
+                specs[4].name in spec3 and spec3[specs[4].name] == specs[4])
+
+    def test_multiple_specs_with_hash(self, database):
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        assert len(specs) > 3
+
+        output = sp.parse(specs[0].name + '/' + hashes[0] + '/' + hashes[1])
+        assert len(output) == 2
+        output = sp.parse('/' + hashes[0] + '/' + hashes[1])
+        assert len(output) == 2
+        output = sp.parse('/' + hashes[0] + '/' + hashes[1] +
+                          ' ' + specs[2].name)
+        assert len(output) == 3
+        output = sp.parse('/' + hashes[0] +
+                          ' ' + specs[1].name + ' ' + specs[2].name)
+        assert len(output) == 3
+        output = sp.parse('/' + hashes[0] + ' ' +
+                          specs[1].name + ' / ' + hashes[1])
+        assert len(output) == 2
+
+    def test_ambiguous_hash(self, database):
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        # Make sure the database is as expected
+        assert hashes[1][:1] == hashes[2][:1] == 'b'
+
+        ambiguous_hashes = ['/b',
+                            specs[1].name + '/b',
+                            specs[0].name + '^/b',
+                            specs[0].name + '^' + specs[1].name + '/b']
+        self._check_raises(AmbiguousHashError, ambiguous_hashes)
+
+    def test_invalid_hash(self, database):
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        # Make sure the database is as expected
+        assert (hashes[0] != hashes[3] and
+                hashes[1] != hashes[4] and len(specs) > 4)
+
+        inputs = [specs[0].name + '/' + hashes[3],
+                  specs[1].name + '^' + specs[4].name + '/' + hashes[0],
+                  specs[1].name + '^' + specs[4].name + '/' + hashes[1]]
+        self._check_raises(InvalidHashError, inputs)
+
+    def test_nonexistent_hash(self, database):
+        # This test uses database to make sure we don't accidentally access
+        # real installs, however unlikely
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        # Make sure the database is as expected
+        assert 'abc123' not in [h[:6] for h in hashes]
+
+        nonexistant_hashes = ['/abc123',
+                              specs[0].name + '/abc123']
+        self._check_raises(SystemExit, nonexistant_hashes)
+
+    def test_redundant_spec(self, database):
+        specs = database.mock.db.query()
+        hashes = [s._hash for s in specs]  # Preserves order of elements
+
+        # Make sure the database is as expected
+        assert len(specs) > 3
+
+        redundant_specs = ['/' + hashes[0] + '%' + str(specs[0].compiler),
+                           specs[1].name + '/' + hashes[1] +
+                           '@' + str(specs[1].version),
+                           specs[2].name + '/' + hashes[2] + '^ libelf',
+                           '/' + hashes[3] + ' cflags="-O3 -fPIC"']
+        self._check_raises(RedundantSpecError, redundant_specs)
 
     def test_duplicate_variant(self):
         duplicates = [
