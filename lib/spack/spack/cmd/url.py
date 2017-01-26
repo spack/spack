@@ -70,7 +70,7 @@ def setup_parser(subparser):
         help='only list urls for which the version was incorrectly parsed')
 
     # Test
-    test_parser = sp.add_parser(
+    sp.add_parser(
         'test', help='print a summary of how well we are parsing package urls')
 
 
