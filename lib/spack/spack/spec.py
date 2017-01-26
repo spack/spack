@@ -2736,16 +2736,16 @@ class SpecParser(spack.parse.Parser):
                         specs.append(self.spec(None))
                     else:
                         if self.accept(HASH):
-                            # We're finding a dependency by hash for an anonymous
-                            # spec
+                            # We're finding a dependency by hash for an
+                            # anonymous spec
                             dep = self.spec_by_hash()
                         else:
                             # We're adding a dependency to the last spec
                             self.expect(ID)
                             dep = self.spec(self.token.value)
 
-                        # Raise an error if the previous spec is already concrete
-                        # (assigned by hash)
+                        # Raise an error if the previous spec is already
+                        # concrete (assigned by hash)
                         if specs[-1]._hash:
                             raise RedundantSpecError(specs[-1], 'dependency')
                         # command line deps get empty deptypes now.
