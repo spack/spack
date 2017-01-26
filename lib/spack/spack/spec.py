@@ -2011,8 +2011,8 @@ class Spec(object):
         other = self._autospec(other)
 
         # The only way to satisfy a concrete spec is to match its hash exactly.
-        if other._concrete:
-            return self._concrete and self.dag_hash() == other.dag_hash()
+        if other.concrete:
+            return self.concrete and self.dag_hash() == other.dag_hash()
 
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:

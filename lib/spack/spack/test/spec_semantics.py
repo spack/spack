@@ -287,6 +287,14 @@ class TestSpecSematics(object):
         # 'mpich' is concrete:
         check_unsatisfiable('mpich', 'mpich cppflags="-O3"', True)
 
+    def test_copy_satisfies_transitive(self):
+        spec = Spec('dttop')
+        spec.concretize()
+        copy = spec.copy()
+        for s in spec.traverse():
+            assert s.satisfies(copy[s.name])
+            assert copy[s.name].satisfies(s) 
+
     def test_unsatisfiable_compiler_flag_mismatch(self):
         # No matchi in specs
         check_unsatisfiable(
