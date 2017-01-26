@@ -37,6 +37,8 @@ class Automake(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
 
+    build_directory = 'spack-build'
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
 
