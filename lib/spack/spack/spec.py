@@ -98,6 +98,7 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import hashlib
 import ctypes
+import itertools
 from StringIO import StringIO
 from operator import attrgetter
 
@@ -1586,8 +1587,40 @@ class Spec(object):
 
                 s.external = get_path_from_module(s.external_module)
 
+        self.check_and_get_deps_for_build()
+
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
+
+    def check_and_get_deps_for_build(self):
+        """When a package builds, all of its build dependencies, and all of the
+           run dependencies of its build dependencies must be available in the
+           binary search path; this likewise holds for the build-only
+           dependencies. This ensures there is no conflict between the two
+           sets, where two differing instances of the same package are
+           required.
+        """
+        transitive_build = set(
+            itertools.chain.from_iterable(
+                s.traverse(deptype='run') for s in
+                self.dependencies(deptype='build')))
+        transitive_build_only = set(
+            itertools.chain.from_iterable(
+                s.traverse(deptype='run') for s in
+                self.build_only_deps.itervalues()))
+        transitive_build = dict((s.name, s) for s in transitive_build)
+        transitive_build_only = dict(
+            (s.name, s) for s in transitive_build_only)
+        common = set(transitive_build) & set(transitive_build_only)
+        for name in common:
+            if transitive_build[name] != transitive_build_only[name]:
+                raise SpecError(
+                    "Separate concretization of {0}".format(name) +
+                    "produced build-time conflict")
+        required_for_build = set(transitive_build.itervalues())
+        required_for_build.update(s for s in transitive_build_only.itervalues()
+                                  if s.name not in common)
+        return required_for_build
 
     def identify_build_only_deps(self):
         """Use package dependency information to determine which dependencies
