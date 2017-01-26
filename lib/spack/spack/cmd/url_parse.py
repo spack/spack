@@ -28,14 +28,14 @@ import spack
 import spack.url
 from spack.util.web import find_versions_of_archive
 
-description = "Show parsing of a URL, optionally spider web for versions."
+description = "show parsing of a URL, optionally spider web for versions"
 
 
 def setup_parser(subparser):
     subparser.add_argument('url', help="url of a package archive")
     subparser.add_argument(
         '-s', '--spider', action='store_true',
-        help="Spider the source page for versions.")
+        help="spider the source page for versions")
 
 
 def print_name_and_version(url):

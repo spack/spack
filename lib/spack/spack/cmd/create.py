@@ -39,7 +39,7 @@ from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.naming import *
 
-description = "Create a new package file"
+description = "create a new package file"
 
 package_template = '''\
 ##############################################################################
@@ -315,7 +315,7 @@ def setup_parser(subparser):
         help="url of package archive")
     subparser.add_argument(
         '--keep-stage', action='store_true',
-        help="Don't clean up staging area when command completes.")
+        help="don't clean up staging area when command completes")
     subparser.add_argument(
         '-n', '--name',
         help="name of the package to create")
@@ -324,14 +324,14 @@ def setup_parser(subparser):
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',
-        help="Path to a repository where the package should be created.")
+        help="path to a repository where the package should be created")
     subparser.add_argument(
         '-N', '--namespace',
-        help="Specify a namespace for the package. Must be the namespace of "
-        "a repository registered with Spack.")
+        help="specify a namespace for the package. must be the namespace of "
+        "a repository registered with Spack")
     subparser.add_argument(
         '-f', '--force', action='store_true',
-        help="Overwrite any existing package file with the same name.")
+        help="overwrite any existing package file with the same name")
 
 
 class BuildSystemGuesser:

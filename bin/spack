@@ -102,19 +102,19 @@ spec expressions:
       [^DEPENDENCY [CONSTRAINTS] ...]"""))
 
 parser.add_argument('-d', '--debug', action='store_true',
-                    help="Write out debug logs during compile")
+                    help="write out debug logs during compile")
 parser.add_argument('-D', '--pdb', action='store_true',
-                    help="Run spack under the pdb debugger")
+                    help="run spack under the pdb debugger")
 parser.add_argument('-k', '--insecure', action='store_true',
-                    help="Do not check ssl certificates when downloading.")
+                    help="do not check ssl certificates when downloading")
 parser.add_argument('-m', '--mock', action='store_true',
-                    help="Use mock packages instead of real ones.")
+                    help="use mock packages instead of real ones")
 parser.add_argument('-p', '--profile', action='store_true',
-                    help="Profile execution using cProfile.")
+                    help="profile execution using cProfile")
 parser.add_argument('-v', '--verbose', action='store_true',
-                    help="Print additional output during builds")
+                    help="print additional output during builds")
 parser.add_argument('-s', '--stacktrace', action='store_true',
-                    help="Add stacktrace information to all printed statements")
+                    help="add stacktrace information to all printed statements")
 parser.add_argument('-V', '--version', action='version',
                     version="%s" % spack.spack_version)
 

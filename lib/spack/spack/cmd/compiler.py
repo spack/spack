@@ -35,7 +35,7 @@ from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec, ArchSpec
 from spack.util.environment import get_path
 
-description = "Manage compilers"
+description = "manage compilers"
 
 
 def setup_parser(subparser):
@@ -47,35 +47,35 @@ def setup_parser(subparser):
     # Find
     find_parser = sp.add_parser(
         'find', aliases=['add'],
-        help='Search the system for compilers to add to Spack configuration.')
+        help='search the system for compilers to add to Spack configuration')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        help="configuration scope to modify")
 
     # Remove
     remove_parser = sp.add_parser(
-        'remove', aliases=['rm'], help='Remove compiler by spec.')
+        'remove', aliases=['rm'], help='remove compiler by spec')
     remove_parser.add_argument(
         '-a', '--all', action='store_true',
-        help='Remove ALL compilers that match spec.')
+        help='remove ALL compilers that match spec')
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_list_scope,
-        help="Configuration scope to read from.")
+        help="configuration scope to read from")
 
     # Info
-    info_parser = sp.add_parser('info', help='Show compiler paths.')
+    info_parser = sp.add_parser('info', help='show compiler paths')
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_list_scope,
-        help="Configuration scope to read from.")
+        help="configuration scope to read from")
 
 
 def compiler_find(args):

@@ -31,15 +31,15 @@ import platform
 import spack
 
 
+description = "launch an interpreter as spack would launch a command"
+
+
 def setup_parser(subparser):
     subparser.add_argument(
-        '-c', dest='python_command', help='Command to execute.')
+        '-c', dest='python_command', help='command to execute')
     subparser.add_argument(
         'python_args', nargs=argparse.REMAINDER,
-        help="File to run plus arguments.")
-
-
-description = "Launch an interpreter as spack would launch a command"
+        help="file to run plus arguments")
 
 
 def python(parser, args):
