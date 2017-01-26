@@ -2070,7 +2070,7 @@ class Spec(object):
         if deps:
             deps_strict = strict
             if self.concrete and not other.name:
-                #We're dealing with existing specs
+                # We're dealing with existing specs
                 deps_strict = True
             return self.satisfies_dependencies(other, strict=deps_strict)
         else:
