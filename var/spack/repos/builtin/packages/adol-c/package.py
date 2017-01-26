@@ -36,6 +36,8 @@ class AdolC(Package):
     version('2.6.2', '0f9547584c99c0673e4f81cf64e8d865')
     version('2.6.1', '1032b28427d6e399af4610e78c0f087b')
 
+    variant('advanced_branching', default=False,
+            description='Enable advanced branching to reduce retaping')
     variant('doc',      default=True,  description='Install documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
@@ -45,10 +47,13 @@ class AdolC(Package):
     patch('openmp_exam_261.patch', when='@2.6.1')
 
     def install(self, spec, prefix):
-        make_args = ['--prefix=%s' % prefix]
+        make_args = ['--prefix=%s' % prefix,
+                     '--enable-atrig-erf']
 
-        # --with-cflags=FLAGS     use CFLAGS=FLAGS (default: -O3 -Wall -ansi)
-        # --with-cxxflags=FLAGS   use CXXFLAGS=FLAGS (default: -O3 -Wall)
+        if '+advanced_branching' in spec:
+            make_args.extend([
+                '--enable-advanced-branching'
+            ])
 
         if '+openmp' in spec:
             if spec.satisfies('%gcc'):
