@@ -35,15 +35,15 @@ class Elfutils(AutotoolsPackage):
 
     homepage = "https://fedorahosted.org/elfutils/"
 
+    depends_on('libtool', type='build')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+
     version('0.163',
             git='git://git.fedorahosted.org/git/elfutils.git',
             tag='elfutils-0.163')
 
     provides('elf')
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which('autoreconf')
-        autoreconf('-if')
 
     def configure_args(self):
         return ['--enable-maintainer-mode']

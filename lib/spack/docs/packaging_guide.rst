@@ -405,70 +405,22 @@ For tarball downloads, Spack can currently support checksums using the
 MD5, SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512 algorithms.  It
 determines the algorithm to use based on the hash length.
 
------------------------
-Package Version Numbers
------------------------
+---------------------
+Versions and fetching
+---------------------
 
-Most Spack versions are numeric, a tuple of integers; for example,
-``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
-how to compare and sort numeric versions.
+The most straightforward way to add new versions to your package is to
+add a line like this in the package class:
 
-Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
-always considered to be "newer" than letters.  This is for consistency
-with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
+.. code-block:: python
+   :linenos:
 
-Spack versions may also be arbitrary non-numeric strings; any string
-here will suffice; for example, ``@develop``, ``@master``, ``@local``.
-The following rules determine the sort order of numeric
-vs. non-numeric versions:
+   class Foo(Package):
+       url = 'http://example.com/foo-1.0.tar.gz'
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       ...
 
-#. The non-numeric versions ``@develop`` is considered greatest (newest).
-
-#. Numeric versions are all less than ``@develop`` version, and are
-   sorted numerically.
-
-#. All other non-numeric versions are less than numeric versions, and
-   are sorted alphabetically.
-
-The logic behind this sort order is two-fold:
-
-#. Non-numeric versions are usually used for special cases while
-   developing or debugging a piece of software.  Keeping most of them
-   less than numeric versions ensures that Spack choose numeric
-   versions by default whenever possible.
-
-#. The most-recent development version of a package will usually be
-   newer than any released numeric versions.  This allows the
-   ``develop`` version to satisfy dependencies like ``depends_on(abc,
-   when="@x.y.z:")``
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Concretization Version Selection
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When concretizing, many versions might match a user-supplied spec.
-For example, the spec ``python`` matches all available versions of the
-package ``python``.  Similarly, ``python@3:`` matches all versions of
-Python3.  Given a set of versions that match a spec, Spack
-concretization uses the following priorities to decide which one to
-use:
-
-#. If the user provided a list of versions in ``packages.yaml``, the
-   first matching version in that list will be used.
-
-#. If one or more versions is specified as ``preferred=True``, in
-   either ``packages.yaml`` or ``package.py``, the largest matching
-   version will be used.  ("Latest" is defined by the sort order
-   above).
-
-#. If no preferences in particular are specified in the package or in
-   ``packages.yaml``, then the largest matching non-develop version
-   will be used.  By avoiding ``@develop``, this prevents users from
-   accidentally installing a ``@develop`` version.
-
-#. If all else fails and ``@develop`` is the only matching version, it
-   will be used.
+Versions should be listed with the newest version first.
 
 ^^^^^^^^^^^^^
 Date Versions
@@ -483,24 +435,6 @@ don't conflict with other numeric versions), you can use just
 Alternately, you might use a hybrid release-version / date scheme.
 For example, ``@1.3.2016.08.31`` would mean the version from the
 ``1.3`` branch, as of August 31, 2016.
-
-
--------------------
-Adding new versions
--------------------
-
-The most straightforward way to add new versions to your package is to
-add a line like this in the package class:
-
-.. code-block:: python
-   :linenos:
-
-   class Foo(Package):
-       url = 'http://example.com/foo-1.0.tar.gz'
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
-       ...
-
-Versions should be listed with the newest version first.
 
 ^^^^^^^^^^^^
 Version URLs
@@ -566,6 +500,37 @@ way to guess the URL systematically.
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
 
+^^^^^^^^^^^^^^^^^^^^^
+PyPI and version URLs
+^^^^^^^^^^^^^^^^^^^^^
+
+In addition to their developer websites, many python packages are hosted at the
+`Python Package Index (PyPi) <https://pypi.python.org/pypi>`_. Although links to
+these individual files are typically `generated using a hash
+<https://bitbucket.org/pypa/pypi/issues/438>`_ it is often possible to find a
+reliable link of the format
+
+.. code-block:: sh
+
+  https://pypi.python.org/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
+
+Packages hosted on GitHub and the like are often developer versions that do not
+contain all of the files (e.g. configuration scripts) necessary to support
+compilation. For this reason it is ideal to link to a repository such as PyPi
+if possible.
+
+More recently, sources are being indexed at `pypi.io <https://pypi.io>`_ as
+well. Links obtained from this site follow a similar pattern, namely
+
+.. code-block:: sh
+
+  https://pypi.io/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
+
+These links currently redirect back to `pypi.python.org
+<https://pypi.python.org>`_, but this `may change in the future
+<https://bitbucket.org/pypa/pypi/issues/438#comment-27243225>`_.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Skipping the expand step
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -596,6 +561,79 @@ it executable, then runs it with some arguments.
        installer = Executable(self.stage.archive_file)
        installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
+^^^^^^^^^^^^^^^^
+Download caching
+^^^^^^^^^^^^^^^^
+
+Spack maintains a cache (described :ref:`here <caching>`) which saves files
+retrieved during package installations to avoid re-downloading in the case that
+a package is installed with a different specification (but the same version) or
+reinstalled on account of a change in the hashing scheme.
+
+^^^^^^^^^^^^^^^^^^
+Version comparison
+^^^^^^^^^^^^^^^^^^
+
+Most Spack versions are numeric, a tuple of integers; for example,
+``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
+how to compare and sort numeric versions.
+
+Some Spack versions involve slight extensions of numeric syntax; for
+example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
+always considered to be "newer" than letters.  This is for consistency
+with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
+
+Spack versions may also be arbitrary non-numeric strings; any string
+here will suffice; for example, ``@develop``, ``@master``, ``@local``.
+The following rules determine the sort order of numeric
+vs. non-numeric versions:
+
+#. The non-numeric versions ``@develop`` is considered greatest (newest).
+
+#. Numeric versions are all less than ``@develop`` version, and are
+   sorted numerically.
+
+#. All other non-numeric versions are less than numeric versions, and
+   are sorted alphabetically.
+
+The logic behind this sort order is two-fold:
+
+#. Non-numeric versions are usually used for special cases while
+   developing or debugging a piece of software.  Keeping most of them
+   less than numeric versions ensures that Spack choose numeric
+   versions by default whenever possible.
+
+#. The most-recent development version of a package will usually be
+   newer than any released numeric versions.  This allows the
+   ``develop`` version to satisfy dependencies like ``depends_on(abc,
+   when="@x.y.z:")``
+
+^^^^^^^^^^^^^^^^^
+Version selection
+^^^^^^^^^^^^^^^^^
+
+When concretizing, many versions might match a user-supplied spec.
+For example, the spec ``python`` matches all available versions of the
+package ``python``.  Similarly, ``python@3:`` matches all versions of
+Python3.  Given a set of versions that match a spec, Spack
+concretization uses the following priorities to decide which one to
+use:
+
+#. If the user provided a list of versions in ``packages.yaml``, the
+   first matching version in that list will be used.
+
+#. If one or more versions is specified as ``preferred=True``, in
+   either ``packages.yaml`` or ``package.py``, the largest matching
+   version will be used.  ("Latest" is defined by the sort order
+   above).
+
+#. If no preferences in particular are specified in the package or in
+   ``packages.yaml``, then the largest matching non-develop version
+   will be used.  By avoiding ``@develop``, this prevents users from
+   accidentally installing a ``@develop`` version.
+
+#. If all else fails and ``@develop`` is the only matching version, it
+   will be used.
 
 ^^^^^^^^^^^^^
 ``spack md5``
@@ -693,9 +731,9 @@ versions. See the documentation on `attribute_list_url`_ and
 
 .. _vcs-fetch:
 
-------------------------------
-Fetching from VCS repositories
-------------------------------
+-------------------------------
+Fetching from code repositories
+-------------------------------
 
 For some packages, source code is provided in a Version Control System
 (VCS) repository rather than in a tarball.  Spack can fetch packages
@@ -793,9 +831,9 @@ Submodules
 
 .. _github-fetch:
 
-""""""
+^^^^^^
 GitHub
-""""""
+^^^^^^
 
 If a project is hosted on GitHub, *any* valid Git branch, tag or hash
 may be downloaded as a tarball.  This is accomplished simply by
@@ -875,38 +913,8 @@ Fetching a revision
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
------------------------------------------
-Standard repositories for python packages
------------------------------------------
-
-In addition to their developer websites, many python packages are hosted at the
-`Python Package Index (PyPi) <https://pypi.python.org/pypi>`_. Although links to
-these individual files are typically `generated using a hash
-<https://bitbucket.org/pypa/pypi/issues/438>`_ it is often possible to find a
-reliable link of the format
-
-.. code-block:: sh
-
-  https://pypi.python.org/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
-
-Packages hosted on GitHub and the like are often developer versions that do not
-contain all of the files (e.g. configuration scripts) necessary to support
-compilation. For this reason it is ideal to link to a repository such as PyPi
-if possible.
-
-More recently, sources are being indexed at `pypi.io <https://pypi.io>`_ as
-well. Links obtained from this site follow a similar pattern, namely
-
-.. code-block:: sh
-
-  https://pypi.io/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
-
-These links currently redirect back to `pypi.python.org
-<https://pypi.python.org>`_, but this `may change in the future
-<https://bitbucket.org/pypa/pypi/issues/438#comment-27243225>`_.
-
 -------------------------------------------------
-Expanding additional resources in the source tree
+Resources (expanding extra tarballs)
 -------------------------------------------------
 
 Some packages (most notably compilers) provide optional features if additional
@@ -925,15 +933,6 @@ possible to describe such a need with the ``resource`` directive :
 Based on the keywords present among the arguments the appropriate ``FetchStrategy``
 will be used for the resource. The keyword ``destination`` is relative to the source
 root of the package and should point to where the resource is to be expanded.
-
-------------------------------------------------------
-Automatic caching of files fetched during installation
-------------------------------------------------------
-
-Spack maintains a cache (described :ref:`here <caching>`) which saves files
-retrieved during package installations to avoid re-downloading in the case that
-a package is installed with a different specification (but the same version) or
-reinstalled on account of a change in the hashing scheme.
 
 .. _license:
 
@@ -1099,19 +1098,27 @@ structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, the patch will be fetched
-from the URL and then applied to your source code.
+If you supply a URL instead of a filename, you need to supply a checksum,
+like this:
 
-.. warning::
+.. code-block:: python
 
-   It is generally better to use a filename rather than a URL for your
-   patch.  Patches fetched from URLs are not currently checksummed,
-   and adding checksums for them is tedious for the package builder.
-   File patches go into the spack repository, which gives you git's
-   integrity guarantees.  URL patches may be removed in a future spack
-   version.
+   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
+         md5='f91c6a04df56e228fe946291d2f38c9a')
+
+This directive provides an ``md5`` checksum.  You can use other hashing
+algorihtms like ``sha256`` as well.  The patch will be fetched from the
+URL, checked, and applied to your source code.  You can use the ``spack
+md5`` command to generate a checksum for a patch file.
 
 ``patch`` can take two options keyword arguments.  They are:
+
+""""""""""""""""""""""""""""""""""""""
+``md5``, ``sha256``, ``sha512``, etc.
+""""""""""""""""""""""""""""""""""""""
+
+Use one of these when you supply a patch to be downloaded from a remote
+site. The downloaded file will be validated using the given checksum.
 
 """"""""
 ``when``
@@ -1960,7 +1967,7 @@ See the :ref:`concretization-preferences` section for more details.
 .. _install-method:
 
 ------------------
-Inconsistent Specs
+Conflicting Specs
 ------------------
 
 Suppose a user needs to install package C, which depends on packages A
@@ -2151,7 +2158,7 @@ built with.  These parameters give you access to this type of information.
 .. _install-environment:
 
 -----------------------
-The install environment
+The build environment
 -----------------------
 
 In general, you should not have to do much differently in your install
@@ -2168,6 +2175,17 @@ custom Makefiles, you may need to add logic to modify the makefiles.
 
 The remainder of the section covers the way Spack's build environment
 works.
+
+^^^^^^^^^^^^^^^^^^^^^
+Forking ``install()``
+^^^^^^^^^^^^^^^^^^^^^
+
+To give packagers free reign over their install environment, Spack forks
+a new process each time it invokes a package's ``install()`` method.
+This allows packages to have a sandboxed build environment, without
+impacting the environments ofother jobs that the main Spack process runs.
+Packages are free to change the environment or to modify Spack internals,
+because each ``install()`` call has its own dedicated process.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Environment variables
@@ -2189,6 +2207,10 @@ The Compiler environment variables that Spack sets are:
     ``F77``      Fortran 77 compiler
     ``FC``       Fortran 90 and above compiler
   ============  ===============================
+
+Spack sets these variables so that they point to *compiler
+wrappers*. These are covered in :ref:`their own section
+<compiler-wrappers>` below.
 
 All of these are standard variables respected by most build systems.
 If your project uses ``Autotools`` or ``CMake``, then it should pick
@@ -2237,145 +2259,9 @@ if you want to run commands in that environment to test them out, you
 can use the :ref:`cmd-spack-env` command, documented
 below.
 
-.. _compiler-wrappers:
-
 ^^^^^^^^^^^^^^^^^^^^^
-Compiler interceptors
-^^^^^^^^^^^^^^^^^^^^^
-
-As mentioned, ``CC``, ``CXX``, ``F77``, and ``FC`` are set to point to
-Spack's compiler wrappers.  These are simply called ``cc``, ``c++``,
-``f77``, and ``f90``, and they live in ``$SPACK_ROOT/lib/spack/env``.
-
-``$SPACK_ROOT/lib/spack/env`` is added first in the ``PATH``
-environment variable when ``install()`` runs so that system compilers
-are not picked up instead.
-
-All of these compiler wrappers point to a single compiler wrapper
-script that figures out which *real* compiler it should be building
-with.  This comes either from spec `concretization
-<abstract-and-concrete>`_ or from a user explicitly asking for a
-particular compiler using, e.g., ``%intel`` on the command line.
-
-In addition to invoking the right compiler, the compiler wrappers add
-flags to the compile line so that dependencies can be easily found.
-These flags are added for each dependency, if they exist:
-
-Compile-time library search paths
-* ``-L$dep_prefix/lib``
-* ``-L$dep_prefix/lib64``
-
-Runtime library search paths (RPATHs)
-* ``$rpath_flag$dep_prefix/lib``
-* ``$rpath_flag$dep_prefix/lib64``
-
-Include search paths
-* ``-I$dep_prefix/include``
-
-An example of this would be the ``libdwarf`` build, which has one
-dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
-build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``$rpath_flag$LIBELF_PREFIX/lib``
-inserted on the command line.  This is done transparently to the
-project's build system, which will just think it's using a system
-where ``libelf`` is readily available.  Because of this, you **do
-not** have to insert extra ``-I``, ``-L``, etc. on the command line.
-
-Another useful consequence of this is that you often do *not* have to
-add extra parameters on the ``configure`` line to get autotools to
-find dependencies.  The ``libdwarf`` install method just calls
-configure like this:
-
-.. code-block:: python
-
-   configure("--prefix=" + prefix)
-
-Because of the ``-L`` and ``-I`` arguments, configure will
-successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
-packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
-the command line.
-
-.. note::
-
-    For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
-    passes its flags to GCC instead of passing them directly to the linker.
-    Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
-    ``$rpath_flag`` can be overriden on a compiler specific basis in
-    ``lib/spack/spack/compilers/$compiler.py``.
-
-The compiler wrappers also pass the compiler flags specified by the user from
-the command line (``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``,
-and/or ``ldlibs``). They do not override the canonical autotools flags with the
-same names (but in ALL-CAPS) that may be passed into the build by particularly
-challenging package scripts.
-
-^^^^^^^^^^^^^^
-Compiler flags
-^^^^^^^^^^^^^^
-
-In rare circumstances such as compiling and running small unit tests, a package
-developer may need to know what are the appropriate compiler flags to enable
-features like ``OpenMP``, ``c++11``, ``c++14`` and alike. To that end the
-compiler classes in ``spack`` implement the following **properties**:
-``openmp_flag``, ``cxx11_flag``, ``cxx14_flag``, which can be accessed in a
-package by ``self.compiler.cxx11_flag`` and alike. Note that the implementation
-is such that if a given compiler version does not support this feature, an
-error will be produced. Therefore package developers can also use these properties
-to assert that a compiler supports the requested feature. This is handy when a
-package supports additional variants like
-
-.. code-block:: python
-
-   variant('openmp', default=True, description="Enable OpenMP support.")
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Message Parsing Interface (MPI)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-It is common for high performance computing software/packages to use ``MPI``.
-As a result of conretization, a given package can be built using different
-implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
-In some scenarios, to configure a package, one has to provide it with appropriate MPI
-compiler wrappers such as ``mpicc``, ``mpic++``.
-However different implementations of ``MPI`` may have different names for those
-wrappers.  In order to make package's ``install()`` method indifferent to the
-choice ``MPI`` implementation, each package which implements ``MPI`` sets up
-``self.spec.mpicc``, ``self.spec.mpicxx``, ``self.spec.mpifc`` and ``self.spec.mpif77``
-to point to ``C``, ``C++``, ``Fortran 90`` and ``Fortran 77`` ``MPI`` wrappers.
-Package developers are advised to use these variables, for example ``self.spec['mpi'].mpicc``
-instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
-the reasons outlined above.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Blas and Lapack libraries
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Different packages provide implementation of ``Blas`` and ``Lapack`` routines.
-The names of the resulting static and/or shared libraries differ from package
-to package. In order to make the ``install()`` method independent of the
-choice of ``Blas`` implementation, each package which provides it
-sets up ``self.spec.blas_libs`` to point to the correct ``Blas`` libraries.
-The same applies to packages which provide ``Lapack``. Package developers are advised to
-use these variables, for example ``spec['blas'].blas_libs.joined()`` instead of
-hard-coding ``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
-
-^^^^^^^^^^^^^^^^^^^^^
-Forking ``install()``
-^^^^^^^^^^^^^^^^^^^^^
-
-To give packagers free reign over their install environment, Spack
-forks a new process each time it invokes a package's ``install()``
-method.  This allows packages to have their own completely sandboxed
-build environment, without impacting other jobs that the main Spack
-process runs.  Packages are free to change the environment or to
-modify Spack internals, because each ``install()`` call has its own
-dedicated process.
-
-.. _prefix-objects:
-
------------------
 Failing the build
------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes you don't want a package to successfully install unless some
 condition is true.  You can explicitly cause the build to fail from
@@ -2386,9 +2272,89 @@ condition is true.  You can explicitly cause the build to fail from
    if spec.architecture.startswith('darwin'):
        raise InstallError('This package does not build on Mac OS X!')
 
---------------
+.. _shell-wrappers:
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Shell command functions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Recall the install method from ``libelf``:
+
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
+   :pyobject: Libelf.install
+   :linenos:
+
+Normally in Python, you'd have to write something like this in order
+to execute shell commands:
+
+.. code-block:: python
+
+   import subprocess
+   subprocess.check_call('configure', '--prefix={0}'.format(prefix))
+
+We've tried to make this a bit easier by providing callable wrapper
+objects for some shell commands.  By default, ``configure``,
+``cmake``, and ``make`` wrappers are are provided, so you can call
+them more naturally in your package files.
+
+If you need other commands, you can use ``which`` to get them:
+
+.. code-block:: python
+
+   sed = which('sed')
+   sed('s/foo/bar/', filename)
+
+The ``which`` function will search the ``PATH`` for the application.
+
+Callable wrappers also allow spack to provide some special features.
+For example, in Spack, ``make`` is parallel by default, and Spack
+figures out the number of cores on your machine and passes an
+appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
+``parallel`` `package attribute <attribute_parallel>`).  In
+a package file, you can supply a keyword argument, ``parallel=False``,
+to the ``make`` wrapper to disable parallel make.  In the ``libelf``
+package, this allows us to avoid race conditions in the library's
+build system.
+
+^^^^^^^^^^^^^^
+Compiler flags
+^^^^^^^^^^^^^^
+
+In rare circumstances such as compiling and running small unit tests, a
+package developer may need to know what are the appropriate compiler
+flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
+alike. To that end the compiler classes in ``spack`` implement the
+following **properties**: ``openmp_flag``, ``cxx11_flag``,
+``cxx14_flag``, which can be accessed in a package by
+``self.compiler.cxx11_flag`` and alike. Note that the implementation is
+such that if a given compiler version does not support this feature, an
+error will be produced. Therefore package developers can also use these
+properties to assert that a compiler supports the requested feature. This
+is handy when a package supports additional variants like
+
+.. code-block:: python
+
+   variant('openmp', default=True, description="Enable OpenMP support.")
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Blas and Lapack libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Different packages provide implementation of ``Blas`` and ``Lapack``
+routines.  The names of the resulting static and/or shared libraries
+differ from package to package. In order to make the ``install()`` method
+independent of the choice of ``Blas`` implementation, each package which
+provides it sets up ``self.spec.blas_libs`` to point to the correct
+``Blas`` libraries.  The same applies to packages which provide
+``Lapack``. Package developers are advised to use these variables, for
+example ``spec['blas'].blas_libs.joined()`` instead of hard-coding
+``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
+
+.. _prefix-objects:
+
+^^^^^^^^^^^^^^^^^^^^^
 Prefix objects
---------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Spack passes the ``prefix`` parameter to the install method so that
 you can pass it to ``configure``, ``cmake``, or some other installer,
@@ -2657,50 +2623,248 @@ method (the one without the ``@when`` decorator) will be called.
    versions.  There's not much we can do to get around this because of
    the way decorators work.
 
+.. _compiler-wrappers:
 
-.. _shell-wrappers:
+---------------------
+Compiler wrappers
+---------------------
 
------------------------
-Shell command functions
------------------------
+As mentioned, ``CC``, ``CXX``, ``F77``, and ``FC`` are set to point to
+Spack's compiler wrappers.  These are simply called ``cc``, ``c++``,
+``f77``, and ``f90``, and they live in ``$SPACK_ROOT/lib/spack/env``.
 
-Recall the install method from ``libelf``:
+``$SPACK_ROOT/lib/spack/env`` is added first in the ``PATH``
+environment variable when ``install()`` runs so that system compilers
+are not picked up instead.
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
-   :pyobject: Libelf.install
-   :linenos:
+All of these compiler wrappers point to a single compiler wrapper
+script that figures out which *real* compiler it should be building
+with.  This comes either from spec `concretization
+<abstract-and-concrete>`_ or from a user explicitly asking for a
+particular compiler using, e.g., ``%intel`` on the command line.
 
-Normally in Python, you'd have to write something like this in order
-to execute shell commands:
+In addition to invoking the right compiler, the compiler wrappers add
+flags to the compile line so that dependencies can be easily found.
+These flags are added for each dependency, if they exist:
+
+Compile-time library search paths
+* ``-L$dep_prefix/lib``
+* ``-L$dep_prefix/lib64``
+
+Runtime library search paths (RPATHs)
+* ``$rpath_flag$dep_prefix/lib``
+* ``$rpath_flag$dep_prefix/lib64``
+
+Include search paths
+* ``-I$dep_prefix/include``
+
+An example of this would be the ``libdwarf`` build, which has one
+dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
+build will have ``-I$LIBELF_PREFIX/include``,
+``-L$LIBELF_PREFIX/lib``, and ``$rpath_flag$LIBELF_PREFIX/lib``
+inserted on the command line.  This is done transparently to the
+project's build system, which will just think it's using a system
+where ``libelf`` is readily available.  Because of this, you **do
+not** have to insert extra ``-I``, ``-L``, etc. on the command line.
+
+Another useful consequence of this is that you often do *not* have to
+add extra parameters on the ``configure`` line to get autotools to
+find dependencies.  The ``libdwarf`` install method just calls
+configure like this:
 
 .. code-block:: python
 
-   import subprocess
-   subprocess.check_call('configure', '--prefix={0}'.format(prefix))
+   configure("--prefix=" + prefix)
 
-We've tried to make this a bit easier by providing callable wrapper
-objects for some shell commands.  By default, ``configure``,
-``cmake``, and ``make`` wrappers are are provided, so you can call
-them more naturally in your package files.
+Because of the ``-L`` and ``-I`` arguments, configure will
+successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
+packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
+the command line.
 
-If you need other commands, you can use ``which`` to get them:
+.. note::
+
+    For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
+    passes its flags to GCC instead of passing them directly to the linker.
+    Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
+    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``lib/spack/spack/compilers/$compiler.py``.
+
+The compiler wrappers also pass the compiler flags specified by the user from
+the command line (``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``,
+and/or ``ldlibs``). They do not override the canonical autotools flags with the
+same names (but in ALL-CAPS) that may be passed into the build by particularly
+challenging package scripts.
+
+---------------------
+MPI support in Spack
+---------------------
+
+It is common for high performance computing software/packages to use the
+Message Passing Interface ( ``MPI``).  As a result of conretization, a
+given package can be built using different implementations of MPI such as
+``Openmpi``, ``MPICH`` or ``IntelMPI``.  That is, when your package
+declares that it ``depends_on('mpi')``, it can be built with any of these
+``mpi`` implementations. In some scenarios, to configure a package, one
+has to provide it with appropriate MPI compiler wrappers such as
+``mpicc``, ``mpic++``.  However different implementations of ``MPI`` may
+have different names for those wrappers.
+
+Spack provides an idiomatic way to use MPI compilers in your package.  To
+use MPI wrappers to compile your whole build, do this in your
+``install()`` method:
 
 .. code-block:: python
 
-   sed = which('sed')
-   sed('s/foo/bar/', filename)
+   env['CC'] = spec['mpi'].mpicc
+   env['CXX'] = spec['mpi'].mpicxx
+   env['F77'] = spec['mpi'].mpif77
+   env['FC'] = spec['mpi'].mpifc
 
-The ``which`` function will search the ``PATH`` for the application.
+That's all.  A longer explanation of why this works is below.
 
-Callable wrappers also allow spack to provide some special features.
-For example, in Spack, ``make`` is parallel by default, and Spack
-figures out the number of cores on your machine and passes an
-appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
-``parallel`` `package attribute <attribute_parallel>`).  In
-a package file, you can supply a keyword argument, ``parallel=False``,
-to the ``make`` wrapper to disable parallel make.  In the ``libelf``
-package, this allows us to avoid race conditions in the library's
-build system.
+We don't try to force any particular build method on packagers.  The
+decision to use MPI wrappers depends on the way the package is written,
+on common practice, and on "what works".  Loosely, There are three types
+of MPI builds:
+
+  1. Some build systems work well without the wrappers and can treat MPI
+     as an external library, where the person doing the build has to
+     supply includes/libs/etc.  This is fairly uncommon.
+
+  2. Others really want the wrappers and assume you're using an MPI
+     "compiler" – i.e., they have no mechanism to add MPI
+     includes/libraries/etc.
+
+  3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
+     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+     regular library.
+
+Note that some CMake builds fall into case 2 because they either don't
+know about or don't like CMake's ``FindMPI`` support – they just assume
+an MPI compiler. Also, some autotools builds fall into case 3 (e.g. `here
+is an autotools version of CMake's FindMPI
+<https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
+
+Given all of this, we leave the use of the wrappers up to the packager.
+Spack will support all three ways of building MPI packages.
+
+^^^^^^^^^^^^^^^^^^^^^
+Packaging Conventions
+^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned above, in the ``install()`` method, ``CC``, ``CXX``,
+``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
+Spack's wrappers are not the MPI compiler wrappers, though they do
+automatically add ``–I``, ``–L``, and ``–Wl,-rpath`` args for
+dependencies in a similar way.  The MPI wrappers are a bit different in
+that they also add ``-l`` arguments for the MPI libraries, and some add
+special ``-D`` arguments to trigger build options in MPI programs.
+
+For case 1 above, you generally don't need to do more than patch your
+Makefile or add configure args as you normally would.
+
+For case 3, you don't need to do much of anything, as Spack puts the MPI
+compiler wrappers in the PATH, and the build will find them and
+interrogate them.
+
+For case 2, things are a bit more complicated, as you'll need to tell the
+build to use the MPI compiler wrappers instead of Spack's compiler
+wrappers.  All it takes some lines like this:
+
+.. code-block:: python
+
+   env['CC'] = spec['mpi'].mpicc
+   env['CXX'] = spec['mpi'].mpicxx
+   env['F77'] = spec['mpi'].mpif77
+   env['FC'] = spec['mpi'].mpifc
+
+Or, if you pass CC, CXX, etc. directly to your build with, e.g.,
+`--with-cc=<path>`, you'll want to substitute `spec['mpi'].mpicc` in
+there instead, e.g.:
+
+.. code-block:: python
+
+   configure('—prefix=%s' % prefix,
+             '—with-cc=%s' % spec['mpi'].mpicc)
+
+Now, you may think that doing this will lose the includes, library paths,
+and RPATHs that Spack's compiler wrapper get you, but we've actually set
+things up so that the MPI compiler wrappers use Spack's compiler wrappers
+when run from within Spack. So using the MPI wrappers should really be as
+simple as the code above.
+
+^^^^^^^^^^^^^^^^^^^^^
+``spec['mpi']``
+^^^^^^^^^^^^^^^^^^^^^
+
+Ok, so how does all this work?
+
+If your package has a virtual dependency like ``mpi``, then referring to
+``spec['mpi']`` within ``install()`` will get you the concrete ``mpi``
+implementation in your dependency DAG.  That is a spec object just like
+the one passed to install, only the MPI implementations all set some
+additional properties on it to help you out.  E.g., in mvapich2, you'll
+find this:
+
+.. code-block:: python
+
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        # … etc …
+
+That code allows the mvapich2 package to associate an ``mpicc`` property
+with the ``mvapich2`` node in the DAG, so that dependents can access it.
+``openmpi`` and ``mpich`` do similar things.  So, no matter what MPI
+you're using, spec['mpi'].mpicc gets you the location of the MPI
+compilers. This allows us to have a fairly simple polymorphic interface
+for information about virtual dependencies like MPI.
+
+^^^^^^^^^^^^^^^^^^^^^
+Wrapping wrappers
+^^^^^^^^^^^^^^^^^^^^^
+
+Spack likes to use its own compiler wrappers to make it easy to add
+``RPATHs`` to builds, and to try hard to ensure that your builds use the
+right dependencies.  This doesn't play nicely by default with MPI, so we
+have to do a couple tricks.
+
+  1. If we build MPI with Spack's wrappers, mpicc and friends will be
+     installed with hard-coded paths to Spack's wrappers, and using them
+     from outside of Spack will fail because they only work within Spack.
+     To fix this, we patch mpicc and friends to use the regular
+     compilers.  Look at the filter_compilers method in mpich, openmpi,
+     or mvapich2 for details.
+
+  2. We still want to use the Spack compiler wrappers when Spack is
+     calling mpicc. Luckily, wrappers in all mainstream MPI
+     implementations provide environment variables that allow us to
+     dynamically set the compiler to be used by mpicc, mpicxx, etc.
+     Denis pasted some code from this below – Spack's build environment
+     sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and
+     ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI. This makes the MPI
+     compiler wrappers use the Spack compiler wrappers so that your
+     dependencies still get proper RPATHs even if you use the MPI
+     wrappers.
+
+^^^^^^^^^^^^^^^^^^^^^
+MPI on Cray machines
+^^^^^^^^^^^^^^^^^^^^^
+
+The Cray programming environment notably uses ITS OWN compiler wrappers,
+which function like MPI wrappers.  On Cray systems, the ``CC``, ``cc``,
+and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that
+you'll use them for all of your builds.  So on Cray we don't bother with
+``mpicc``, ``mpicxx``, etc, Spack MPI implementations set
+``spec['mpi'].mpicc`` to point to Spack's wrappers, which wrap the Cray
+wrappers, which wrap the regular compilers and include MPI flags.  That
+may seem complicated, but for packagers, that means the same code for
+using MPI wrappers will work, even on even on a Cray:
+
+.. code-block:: python
+
+   env['CC'] = spec['mpi'].mpicc
+
+This is because on Cray, ``spec['mpi'].mpicc`` is just ``spack_cc``.
 
 .. _sanity-checks:
 
@@ -2963,9 +3127,9 @@ File functions
 
 .. _package-lifecycle:
 
------------------------
-Coding Style Guidelines
------------------------
+-----------------------------
+Style guidelines for packages
+-----------------------------
 
 The following guidelines are provided, in the interests of making
 Spack packages work in a consistent manner:
