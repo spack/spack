@@ -307,8 +307,9 @@ def parse_version(path):
     :param str path: The filename or URL for the package
 
     :return: The version of the package
-
     :rtype: spack.version.Version
+
+    :raises UndetectableVersionError: If the URL does not match any regexes
     """
     version, start, length, i, regex = parse_version_offset(path)
     return Version(version)
@@ -411,6 +412,8 @@ def parse_name(path, ver=None):
 
     :return: The name of the package
     :rtype: str
+
+    :raises UndetectableNameError: If the URL does not match any regexes
     """
     name, start, length, i, regex = parse_name_offset(path, ver)
     return name
