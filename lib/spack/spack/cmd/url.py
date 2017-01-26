@@ -73,9 +73,15 @@ def setup_parser(subparser):
     test_parser = sp.add_parser(
         'test', help='print a summary of how well we are parsing package urls')
 
-    #test_parser.add_argument(
-    #    'package', nargs='*',
-    #    help="package(s) to parse url(s) from [default: all]")
+
+def url(parser, args):
+    action = {
+        'parse': url_parse,
+        'list':  url_list,
+        'test':  url_test
+    }
+
+    action[args.subcommand](args)
 
 
 def url_parse(args):
@@ -122,47 +128,11 @@ def url_list(args):
     # Gather set of URLs from all packages
     for pkg in spack.repo.all_packages():
         url = getattr(pkg.__class__, 'url', None)
-        if url:
-            if args.incorrect_name:
-                # Only add URLs whose name was parsed incorrectly
-                try:
-                    name = parse_name(url)
-                    if not name_parsed_correctly(pkg, name):
-                        urls.add(url)
-                except UndetectableNameError:
-                    urls.add(url)
-            elif args.incorrect_version:
-                # Only add URLs whose version was parsed incorrectly
-                try:
-                    version = parse_version(url)
-                    if not version_parsed_correctly(pkg, version):
-                        urls.add(url)
-                except UndetectableVersionError:
-                    urls.add(url)
-            else:
-                urls.add(url)
+        urls = url_list_parsing(args, urls, url, pkg)
 
         for params in pkg.versions.values():
             url = params.get('url', None)
-            if url:
-                if args.incorrect_name:
-                    # Only add URLs whose name was parsed incorrectly
-                    try:
-                        name = parse_name(url)
-                        if not name_parsed_correctly(pkg, name):
-                            urls.add(url)
-                    except UndetectableNameError:
-                        urls.add(url)
-                elif args.incorrect_version:
-                    # Only add URLs whose version was parsed incorrectly
-                    try:
-                        version = parse_version(url)
-                        if not version_parsed_correctly(pkg, version):
-                            urls.add(url)
-                    except UndetectableVersionError:
-                        urls.add(url)
-                else:
-                    urls.add(url)
+            urls = url_list_parsing(args, urls, url, pkg)
 
     # Print URLs
     for url in sorted(urls):
@@ -187,9 +157,21 @@ def url_test(args):
 
     tty.msg('Generating a summary of URL parsing in Spack...')
 
+    # Loop through all packages
     for pkg in spack.repo.all_packages():
+        urls = set()
+
         url = getattr(pkg.__class__, 'url', None)
         if url:
+            urls.add(url)
+
+        for params in pkg.versions.values():
+            url = params.get('url', None)
+            if url:
+                urls.add(url)
+
+        # Calculate statistics
+        for url in urls:
             total_urls += 1
 
             # Parse names
@@ -211,31 +193,6 @@ def url_test(args):
                     correct_versions += 1
             except UndetectableVersionError:
                 pass
-
-        for params in pkg.versions.values():
-            url = params.get('url', None)
-            if url:
-                total_urls += 1
-
-                # Parse names
-                try:
-                    name, ns, nl, ni, nregex = parse_name_offset(url)
-                    name_regex_dict[ni] = nregex
-                    name_count_dict[ni] += 1
-                    if name_parsed_correctly(pkg, name):
-                        correct_names += 1
-                except UndetectableNameError:
-                    pass
-
-                # Parse versions
-                try:
-                    version, vs, vl, vi, vregex = parse_version_offset(url)
-                    version_regex_dict[vi] = vregex
-                    version_count_dict[vi] += 1
-                    if version_parsed_correctly(pkg, version):
-                        correct_versions += 1
-                except UndetectableVersionError:
-                    pass
 
     print()
     print('    Total URLs found:          {0}'.format(total_urls))
@@ -264,16 +221,6 @@ def url_test(args):
     print()
 
 
-def url(parser, args):
-    action = {
-        'parse': url_parse,
-        'list':  url_list,
-        'test':  url_test
-    }
-
-    action[args.subcommand](args)
-
-
 def print_name_and_version(url):
     name, ns, nl, ntup, ver, vs, vl, vtup = substitution_offsets(url)
     underlines = [' '] * max(ns + nl, vs + vl)
@@ -286,10 +233,45 @@ def print_name_and_version(url):
     print('    {0}'.format(''.join(underlines)))
 
 
+def url_list_parsing(args, urls, url, pkg):
+    """Helper function for :func:`url_list`.
+
+    :param argparse.Namespace args: The arguments given to ``spack url list``
+    :param set urls: List of URLs that have already been added
+    :param url: A URL to potentially add to ``urls`` depending on ``args``
+    :type url: str or None
+    :param spack.package.PackageBase pkg: The package in Spack
+    :returns: The updated ``urls`` list
+    :rtype: set
+    """
+
+    if url:
+        if args.incorrect_name:
+            # Only add URLs whose name was parsed incorrectly
+            try:
+                name = parse_name(url)
+                if not name_parsed_correctly(pkg, name):
+                    urls.add(url)
+            except UndetectableNameError:
+                urls.add(url)
+        elif args.incorrect_version:
+            # Only add URLs whose version was parsed incorrectly
+            try:
+                version = parse_version(url)
+                if not version_parsed_correctly(pkg, version):
+                    urls.add(url)
+            except UndetectableVersionError:
+                urls.add(url)
+        else:
+            urls.add(url)
+
+    return urls
+
+
 def name_parsed_correctly(pkg, name):
     """Determine if the name of a package was correctly parsed.
 
-    :param Package pkg: The package in Spack
+    :param spack.package.PackageBase pkg: The package in Spack
     :param str name: The name that was extracted from the URL
     :returns: True if the name was correctly parsed, else False
     :rtype: bool
@@ -313,7 +295,7 @@ def name_parsed_correctly(pkg, name):
 def version_parsed_correctly(pkg, version):
     """Determine if the version of a package was correctly parsed.
 
-    :param Package pkg: The package in Spack
+    :param spack.package.PackageBase pkg: The package in Spack
     :param str name: The version that was extracted from the URL
     :returns: True if the name was correctly parsed, else False
     :rtype: bool
@@ -321,6 +303,6 @@ def version_parsed_correctly(pkg, version):
     # If the version parsed from the URL is listed in a version()
     # directive, we assume it was correctly parsed
     for pkg_version in pkg.versions:
-        if str(pkg_version) == version:
+        if str(pkg_version) == str(version):
             return True
     return False
