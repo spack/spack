@@ -173,17 +173,8 @@ def url_test(args):
         for url in urls:
             total_urls += 1
 
-            # Parse names
-            try:
-                name, ns, nl, ni, nregex = parse_name_offset(url)
-                name_regex_dict[ni] = nregex
-                name_count_dict[ni] += 1
-                if name_parsed_correctly(pkg, name):
-                    correct_names += 1
-            except UndetectableNameError:
-                pass
-
             # Parse versions
+            version = None
             try:
                 version, vs, vl, vi, vregex = parse_version_offset(url)
                 version_regex_dict[vi] = vregex
@@ -191,6 +182,16 @@ def url_test(args):
                 if version_parsed_correctly(pkg, version):
                     correct_versions += 1
             except UndetectableVersionError:
+                pass
+
+            # Parse names
+            try:
+                name, ns, nl, ni, nregex = parse_name_offset(url, version)
+                name_regex_dict[ni] = nregex
+                name_count_dict[ni] += 1
+                if name_parsed_correctly(pkg, name):
+                    correct_names += 1
+            except UndetectableNameError:
                 pass
 
     print()
