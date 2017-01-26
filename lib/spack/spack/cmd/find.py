@@ -29,7 +29,7 @@ import spack.cmd.common.arguments as arguments
 
 from spack.cmd import display_specs
 
-description = "Find installed spack packages"
+description = "find installed spack packages"
 
 
 def setup_parser(subparser):
@@ -39,56 +39,56 @@ def setup_parser(subparser):
                               dest='mode',
                               const='short',
                               default='short',
-                              help='Show only specs (default)')
+                              help='show only specs (default)')
     format_group.add_argument('-p', '--paths',
                               action='store_const',
                               dest='mode',
                               const='paths',
-                              help='Show paths to package install directories')
+                              help='show paths to package install directories')
     format_group.add_argument(
         '-d', '--deps',
         action='store_const',
         dest='mode',
         const='deps',
-        help='Show full dependency DAG of installed packages')
+        help='show full dependency DAG of installed packages')
 
     arguments.add_common_arguments(subparser, ['long', 'very_long'])
 
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',
                            dest='show_flags',
-                           help='Show spec compiler flags.')
+                           help='show spec compiler flags')
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
         '-e', '--explicit',
         action='store_true',
-        help='Show only specs that were installed explicitly')
+        help='show only specs that were installed explicitly')
     implicit_explicit.add_argument(
         '-E', '--implicit',
         action='store_true',
-        help='Show only specs that were installed as dependencies')
+        help='show only specs that were installed as dependencies')
     subparser.add_argument(
         '-u', '--unknown',
         action='store_true',
         dest='unknown',
-        help='Show only specs Spack does not have a package for.')
+        help='show only specs Spack does not have a package for')
     subparser.add_argument(
         '-m', '--missing',
         action='store_true',
         dest='missing',
-        help='Show missing dependencies as well as installed specs.')
+        help='show missing dependencies as well as installed specs')
     subparser.add_argument(
         '-v', '--variants',
         action='store_true',
         dest='variants',
-        help='Show variants in output (can be long)')
+        help='show variants in output (can be long)')
     subparser.add_argument('-M', '--only-missing',
                            action='store_true',
                            dest='only_missing',
-                           help='Show only missing dependencies.')
+                           help='show only missing dependencies')
     subparser.add_argument('-N', '--namespace',
                            action='store_true',
-                           help='Show fully qualified package names.')
+                           help='show fully qualified package names')
 
     arguments.add_common_arguments(subparser, ['constraint'])
 

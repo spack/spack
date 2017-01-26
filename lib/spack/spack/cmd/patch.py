@@ -29,13 +29,13 @@ import spack.cmd
 import spack
 
 
-description = "Patch expanded archive sources in preparation for install"
+description = "patch expanded archive sources in preparation for install"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check downloaded packages against checksum")
+        help="do not check downloaded packages against checksum")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to stage")

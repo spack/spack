@@ -25,7 +25,7 @@
 import argparse
 import spack.modules
 
-description = "Add package to environment using modules."
+description = "add package to environment using modules"
 
 
 def setup_parser(subparser):
@@ -33,8 +33,8 @@ def setup_parser(subparser):
        message with -h. """
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="Spec of package to load with modules. "
-             "(If -, read specs from STDIN)")
+        help="spec of package to load with modules "
+             "(if -, read specs from STDIN)")
 
 
 def load(parser, args):

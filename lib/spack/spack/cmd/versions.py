@@ -26,12 +26,12 @@ from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
 import spack
 
-description = "List available versions of a package"
+description = "list available versions of a package"
 
 
 def setup_parser(subparser):
     subparser.add_argument('package', metavar='PACKAGE',
-                           help='Package to list versions for')
+                           help='package to list versions for')
 
 
 def versions(parser, args):

@@ -24,14 +24,14 @@
 ##############################################################################
 import spack.architecture as architecture
 
-description = "Print architecture information about this machine."
+description = "print architecture information about this machine"
 
 
 def setup_parser(subparser):
     parts = subparser.add_mutually_exclusive_group()
     parts.add_argument(
         '-p', '--platform', action='store_true', default=False,
-        help="Print only the platform.")
+        help="print only the platform")
 
 
 def arch(parser, args):

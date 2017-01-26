@@ -28,16 +28,16 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description = "Expand downloaded archive in preparation for install"
+description = "expand downloaded archive in preparation for install"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check downloaded packages against checksum")
+        help="do not check downloaded packages against checksum")
     subparser.add_argument(
         '-p', '--path', dest='path',
-        help="Path to stage package, does not add to spack tree")
+        help="path to stage package, does not add to spack tree")
 
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")

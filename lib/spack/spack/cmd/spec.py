@@ -28,29 +28,29 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
-description = "print out abstract and concrete versions of a spec."
+description = "print out abstract and concrete versions of a spec"
 
 
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['long', 'very_long'])
     subparser.add_argument(
         '-y', '--yaml', action='store_true', default=False,
-        help='Print concrete spec as YAML.')
+        help='print concrete spec as YAML')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
-        help='How extensively to traverse the DAG. (default: nodes).')
+        help='how extensively to traverse the DAG (default: nodes)')
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
-        help='Show fully qualified package names.')
+        help='show fully qualified package names')
     subparser.add_argument(
         '-I', '--install-status', action='store_true', default=False,
-        help='Show install status of packages.  Packages can be: '
+        help='show install status of packages. packages can be: '
              'installed [+], missing and needed by an installed package [-], '
-             'or not installed (no annotation).')
+             'or not installed (no annotation)')
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
-        help='Show dependency types.')
+        help='show dependency types')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
