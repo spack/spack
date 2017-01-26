@@ -1,0 +1,10 @@
+coverage:
+  precision: 2
+  round: nearest
+  range: 60...100
+
+ignore:
+  - lib/spack/spack/test/.*
+  - lib/spack/env/.*
+  - lib/spack/docs/.*
+  - lib/spack/external/.*
