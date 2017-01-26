@@ -40,12 +40,15 @@ class CBlosc(Package):
     version('1.8.1',  'd73d5be01359cf271e9386c90dcf5b05')
     version('1.8.0',  '5b92ecb287695ba20cc33d30bf221c4f')
 
+    variant('avx2', default=True, description='Enable AVX2 support')
+
     depends_on("cmake", type='build')
     depends_on("snappy")
     depends_on("zlib")
 
     def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
+        avx2 = '-DDEACTIVATE_AVX2=%s' % ('ON' if '~avx2' in spec else 'OFF')
+        cmake('.', avx2, *std_cmake_args)
 
         make()
         make("install")
