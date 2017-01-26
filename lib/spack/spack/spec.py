@@ -2529,7 +2529,7 @@ class Spec(object):
                         hashlen = int(hashlen)
                     else:
                         hashlen = None
-                    out.write(fmt % (self.dag_hash(hashlen)))
+                    out.write('/' + fmt % (self.dag_hash(hashlen)))
 
                 named = False
 
