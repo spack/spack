@@ -72,6 +72,7 @@ class MakefilePackage(PackageBase):
     #: phase
     install_targets = ['install']
 
+    @property
     def build_directory(self):
         """Returns the directory containing the main Makefile
 
@@ -89,14 +90,14 @@ class MakefilePackage(PackageBase):
         """Calls make, passing :py:attr:`~.MakefilePackage.build_targets`
         as targets.
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
         """Calls make, passing :py:attr:`~.MakefilePackage.install_targets`
         as targets.
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
 
     # Check that self.prefix is there after installation

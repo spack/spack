@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Libquo(Package):
+class Libquo(AutotoolsPackage):
 
     """QUO (as in "status quo") is a runtime library that aids in accommodating
     thread-level heterogeneity in dynamic, phased MPI+X applications comprising
@@ -42,25 +41,8 @@ class Libquo(Package):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
-    def install(self, spec, prefix):
-        autoreconf_options = [
-            '--install',
-            '--verbose',
-            '--force',
-            '-I', 'config',
-            '-I', os.path.join(spec['automake'].prefix,
-                               'share', 'aclocal'),
-            '-I', os.path.join(spec['libtool'].prefix,
-                               'share', 'aclocal')
+    def configure_args(self):
+        return [
+            'CC={0}'.format(self.spec['mpi'].mpicc),
+            'FC={0}'.format(self.spec['mpi'].mpifc)
         ]
-        autoreconf(*autoreconf_options)
-
-        configure_options = [
-            '--prefix={0}'.format(prefix),
-            'CC=%s' % join_path(spec['mpi'].prefix.bin, "mpicc"),
-            'FC=%s' % join_path(spec['mpi'].prefix.bin, "mpif90")
-        ]
-        configure(*configure_options)
-
-        make()
-        make('install')

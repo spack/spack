@@ -41,6 +41,8 @@ class M4(AutotoolsPackage):
 
     depends_on('libsigsegv', when='+sigsegv')
 
+    build_directory = 'spack-build'
+
     def configure_args(self):
         spec = self.spec
         args = ['--enable-c++']

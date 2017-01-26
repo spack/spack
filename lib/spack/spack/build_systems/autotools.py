@@ -30,8 +30,10 @@ import shutil
 from subprocess import PIPE
 from subprocess import check_call
 
-from llnl.util.filesystem import working_dir
-from spack.package import PackageBase, run_after
+import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir, join_path, force_remove
+from spack.package import PackageBase, run_after, run_before
+from spack.util.executable import Executable
 
 
 class AutotoolsPackage(PackageBase):
@@ -79,7 +81,13 @@ class AutotoolsPackage(PackageBase):
     #: phase
     install_targets = ['install']
 
+    #: Callback names for build-time test
     build_time_test_callbacks = ['check']
+
+    #: Set to true to force the autoreconf step even if configure is present
+    force_autoreconf = False
+    #: Options to be passed to autoreconf when using the default implementation
+    autoreconf_extra_args = []
 
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
@@ -147,9 +155,26 @@ class AutotoolsPackage(PackageBase):
 
         return False
 
+    @property
+    def configure_directory(self):
+        """Returns the directory where 'configure' resides.
+
+        :return: directory where to find configure
+        """
+        return self.stage.source_path
+
+    @property
+    def configure_abs_path(self):
+        # Absolute path to configure
+        configure_abs_path = join_path(
+            os.path.abspath(self.configure_directory), 'configure'
+        )
+        return configure_abs_path
+
+    @property
     def build_directory(self):
         """Override to provide another place to build the package"""
-        return self.stage.source_path
+        return self.configure_directory
 
     def patch(self):
         """Patches config.guess if
@@ -165,21 +190,62 @@ class AutotoolsPackage(PackageBase):
             if not self._do_patch_config_guess():
                 raise RuntimeError('Failed to find suitable config.guess')
 
+    @run_before('autoreconf')
+    def delete_configure_to_force_update(self):
+        if self.force_autoreconf:
+            force_remove(self.configure_abs_path)
+
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
-        pass
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else try to regenerate it
+        autotools = ['m4', 'autoconf', 'automake', 'libtool']
+        missing = [x for x in autotools if x not in spec]
+        if missing:
+            msg = 'Cannot generate configure: missing dependencies {0}'
+            raise RuntimeError(msg.format(missing))
+        tty.msg('Configure script not found: trying to generate it')
+        tty.warn('*********************************************************')
+        tty.warn('* If the default procedure fails, consider implementing *')
+        tty.warn('*        a custom AUTORECONF phase in the package       *')
+        tty.warn('*********************************************************')
+        with working_dir(self.configure_directory):
+            m = inspect.getmodule(self)
+            # This part should be redundant in principle, but
+            # won't hurt
+            m.libtoolize()
+            m.aclocal()
+            # This line is what is needed most of the time
+            # --install, --verbose, --force
+            autoreconf_args = ['-ivf']
+            if 'pkg-config' in spec:
+                autoreconf_args += [
+                    '-I',
+                    join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
+                ]
+            autoreconf_args += self.autoreconf_extra_args
+            m.autoreconf(*autoreconf_args)
 
     @run_after('autoreconf')
-    def is_configure_or_die(self):
-        """Checks the presence of a `configure` file after the
-        :py:meth:`.autoreconf` phase.
+    def set_configure_or_die(self):
+        """Checks the presence of a ``configure`` file after the
+        autoreconf phase. If it is found sets a module attribute
+        appropriately, otherwise raises an error.
 
-        :raise RuntimeError: if the ``configure`` script does not exist.
+        :raises RuntimeError: if a configure script is not found in
+            :py:meth:`~.configure_directory`
         """
-        with working_dir(self.build_directory()):
-            if not os.path.exists('configure'):
-                raise RuntimeError(
-                    'configure script not found in {0}'.format(os.getcwd()))
+        # Check if a configure script is there. If not raise a RuntimeError.
+        if not os.path.exists(self.configure_abs_path):
+            msg = 'configure script not found in {0}'
+            raise RuntimeError(msg.format(self.configure_directory))
+
+        # Monkey-patch the configure script in the corresponding module
+        inspect.getmodule(self).configure = Executable(
+            self.configure_abs_path
+        )
 
     def configure_args(self):
         """Produces a list containing all the arguments that must be passed to
@@ -195,21 +261,21 @@ class AutotoolsPackage(PackageBase):
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
 
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
         """Makes the install targets specified by
         :py:attr:``~.AutotoolsPackage.install_targets``
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
@@ -218,7 +284,7 @@ class AutotoolsPackage(PackageBase):
         """Searches the Makefile for targets ``test`` and ``check``
         and runs them if found.
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 

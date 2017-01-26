@@ -53,22 +53,9 @@ class Glib(AutotoolsPackage):
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
 
+    force_autoreconf = True
+
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-        autoreconf("--install", "--verbose", "--force",
-                   "-I", "config",
-                   "-I", join_path(spec['pkg-config'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['automake'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['libtool'].prefix,
-                                   "share", "aclocal"),
-                   )
-
-    def install(self, spec, prefix):
-        make("install", parallel=False)
