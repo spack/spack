@@ -30,7 +30,7 @@ import spack.spec
 import spack.config
 from spack.repository import *
 
-description = "Manage package source repositories."
+description = "manage package source repositories"
 
 
 def setup_parser(subparser):
@@ -40,34 +40,34 @@ def setup_parser(subparser):
     # Create
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
     create_parser.add_argument(
-        'directory', help="Directory to create the repo in.")
+        'directory', help="directory to create the repo in")
     create_parser.add_argument(
-        'namespace', help="Namespace to identify packages in the repository. "
-        "Defaults to the directory name.", nargs='?')
+        'namespace', help="namespace to identify packages in the repository. "
+        "defaults to the directory name", nargs='?')
 
     # List
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
     list_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_list_scope,
-        help="Configuration scope to read from.")
+        help="configuration scope to read from")
 
     # Add
     add_parser = sp.add_parser('add', help=repo_add.__doc__)
     add_parser.add_argument(
-        'path', help="Path to a Spack package repository directory.")
+        'path', help="path to a Spack package repository directory")
     add_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        help="configuration scope to modify")
 
     # Remove
     remove_parser = sp.add_parser(
         'remove', help=repo_remove.__doc__, aliases=['rm'])
     remove_parser.add_argument(
         'path_or_namespace',
-        help="Path or namespace of a Spack package repository.")
+        help="path or namespace of a Spack package repository")
     remove_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        help="configuration scope to modify")
 
 
 def repo_create(args):

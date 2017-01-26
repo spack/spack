@@ -35,19 +35,19 @@ from spack.stage import Stage, FailedDownloadError
 from spack.util.naming import *
 from spack.version import *
 
-description = "Checksum available versions of a package."
+description = "checksum available versions of a package"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         'package',
-        help='Package to checksum versions for')
+        help='package to checksum versions for')
     subparser.add_argument(
         '--keep-stage', action='store_true',
-        help="Don't clean up staging area when command completes.")
+        help="don't clean up staging area when command completes")
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
-        help='Versions to generate checksums for')
+        help='versions to generate checksums for')
 
 
 def get_checksums(url_dict, name, **kwargs):
