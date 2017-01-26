@@ -81,7 +81,7 @@ class Mumps(Package):
 
         lapack_blas = (self.spec['lapack'].lapack_libs +
                        self.spec['blas'].blas_libs)
-        makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
+        makefile_conf = ["LIBBLAS = %s" % lapack_blas.ld_flags]
 
         orderings = ['-Dpord']
 
