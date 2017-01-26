@@ -75,10 +75,56 @@ class PyNumpy(PythonPackage):
             lapackblas += spec['blas'].blas_libs
 
         if '+blas' in spec or '+lapack' in spec:
+            # note that one should not use [blas_opt] and [lapack_opt], see
+            # https://github.com/numpy/numpy/commit/ffd4332262ee0295cb942c94ed124f043d801eb6
             with open('site.cfg', 'w') as f:
-                f.write('[DEFAULT]\n')
-                f.write('libraries=%s\n'    % ','.join(lapackblas.names))
-                f.write('library_dirs=%s\n' % ':'.join(lapackblas.directories))
+                # Unfortunately, numpy prefers to provide each BLAS/LAPACK
+                # differently.
+                names  = ','.join(lapackblas.names)
+                dirs   = ':'.join(lapackblas.directories)
+                # First, workout the defaults.
+                # The section title for the defaults changed in @1.10, see
+                # https://github.com/numpy/numpy/blob/master/site.cfg.example
+                if spec.satisfies('@:1.9.2'):
+                    f.write('[DEFAULT]\n')
+                else:
+                    f.write('[ALL]\n')
+                if not ('^openblas' in spec or
+                        '^mkl' in spec or
+                        '^atlas' in spec):
+                    f.write('libraries=%s\n'    % names)
+                    f.write('library_dirs=%s\n' % dirs)
+
                 if not ((platform.system() == "Darwin") and
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
+
+                # Now special treatment for some (!) BLAS/LAPACK. Note that
+                # in this case library_dirs can not be specified within [ALL].
+                if '^openblas' in spec:
+                    f.write('[openblas]\n')
+                    f.write('libraries=%s\n'    % names)
+                    f.write('library_dirs=%s\n' % dirs)
+                elif '^mkl' in spec:
+                    # numpy does not expect system libraries needed for MKL
+                    # here.
+                    # names = [x for x in names if x.startswith('mkl')]
+                    # FIXME: as of @1.11.2, numpy does not work with separately
+                    # specified threading and interface layers. A workaround is
+                    # a terribly bad idea to use mkl_rt. In this case Spack
+                    # won't no longer be able to guarantee that one and the
+                    # same variant of Blas/Lapack (32/64bit, threaded/serial)
+                    # is used within the DAG. This may lead to a lot of
+                    # hard-to-debug segmentation faults on user's side. Users
+                    # may also break working installation by (unconciously)
+                    # setting environment variable to switch between different
+                    # interface and threading layers dynamically. From this
+                    # perspective it is no different from throwing away RPATH's
+                    # and using LD_LIBRARY_PATH throughout Spack.
+                    f.write('[mkl]\n')
+                    f.write('mkl_libs=%s\n'     % 'mkl_rt')
+                    f.write('library_dirs=%s\n' % dirs)
+                elif '^atlas' in spec:
+                    f.write('[atlas]\n')
+                    f.write('atlas_libs=%s\n'   % names)
+                    f.write('library_dirs=%s\n' % dirs)
