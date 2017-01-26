@@ -8,3 +8,5 @@ ignore:
   - lib/spack/env/.*
   - lib/spack/docs/.*
   - lib/spack/external/.*
+
+comment: off
