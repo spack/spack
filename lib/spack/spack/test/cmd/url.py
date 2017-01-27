@@ -78,6 +78,13 @@ def test_url_parse(parser):
     url(parser, args)
 
 
+@pytest.mark.xfail
+def test_url_parse_xfail(parser):
+    # No version in URL
+    args = parser.parse_args(['parse', 'http://www.netlib.org/voronoi/triangle.zip'])
+    url(parser, args)
+
+
 def test_url_list(parser):
     args = parser.parse_args(['list'])
     total_urls = url(parser, args)
