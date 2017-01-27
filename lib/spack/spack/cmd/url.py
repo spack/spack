@@ -81,7 +81,7 @@ def url(parser, args):
         'test':  url_test
     }
 
-    action[args.subcommand](args)
+    return action[args.subcommand](args)
 
 
 def url_parse(args):
@@ -140,6 +140,9 @@ def url_list(args):
             print(color_url(url, subs=args.extrapolation, errors=True))
         else:
             print(url)
+
+    # Return the number of URLs that were printed, only for testing purposes
+    return len(urls)
 
 
 def url_test(args):

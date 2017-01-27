@@ -68,3 +68,27 @@ def test_version_parsed_correctly():
 def test_url_parse(parser):
     args = parser.parse_args(['parse', 'http://zlib.net/fossils/zlib-1.2.10.tar.gz'])
     url(parser, args)
+
+
+def test_url_list(parser):
+    args = parser.parse_args(['list'])
+    total_urls = url(parser, args)
+
+    # The following two options should not change the number of URLs printed.
+    args = parser.parse_args(['list', '--color'])
+    colored_urls = url(parser, args)
+    assert colored_urls == total_urls
+
+    args = parser.parse_args(['list', '--extrapolation'])
+    extrapolated_urls = url(parser, args)
+    assert extrapolated_urls == total_urls
+
+    # The following two options should print fewer URLs than the default.
+    # If they print the same number of URLs, something is broken.
+    args = parser.parse_args(['list', '--incorrect-name'])
+    incorrect_name_urls = url(parser, args)
+    assert incorrect_name_urls < total_urls
+
+    args = parser.parse_args(['list', '--incorrect-version'])
+    incorrect_version_urls = url(parser, args)
+    assert incorrect_version_urls < total_urls
