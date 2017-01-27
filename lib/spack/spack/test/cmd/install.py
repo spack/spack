@@ -199,6 +199,17 @@ class InstallTestJunitLog(unittest.TestCase):
             self.assertTrue('failures="0"' in content)
             self.assertTrue('errors="0"' in content)
 
+    def test_install_with_run_tests(self):
+        parser = argparse.ArgumentParser()
+        install.setup_parser(parser)
+        args = parser.parse_args(['--log-format=junit', '--run-tests', 'X'])
+        install.install(parser, args)
+        self.assertEqual(len(FILE_REGISTRY), 1)
+        for _, content in FILE_REGISTRY.items():
+            self.assertTrue('tests="2"' in content)
+            self.assertTrue('failures="0"' in content)
+            self.assertTrue('errors="0"' in content)
+
     def test_dependency_already_installed(self):
         pkgX.installed = True
         pkgY.installed = True
