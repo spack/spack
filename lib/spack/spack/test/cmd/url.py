@@ -30,7 +30,7 @@ from spack.cmd.url import *
 # def parser():
 #     """Returns the parser for the ``url`` command"""
 #     parser = argparse.ArgumentParser()
-#     spack.cmd.url.setup_parser(parser)
+#     setup_parser(parser)
 #     return parser
 
 
