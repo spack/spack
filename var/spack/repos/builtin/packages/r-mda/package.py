@@ -25,14 +25,16 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RMda(Package):
+    """Mixture and flexible discriminant analysis, multivariate adaptive
+    regression splines (MARS), BRUTO."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=mda"
+    url      = "https://cran.r-project.org/src/contrib/mda_0.4-9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mda"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('0.4-9', '2ce1446c4a013e0ebcc1099a00269ad9')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@1.9.0:')
+
+    depends_on('r-class', type=('build', 'run'))

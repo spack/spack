@@ -25,14 +25,11 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RModeltools(Package):
+    """A collection of tools to deal with statistical models."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=modeltools"
+    url      = "https://cran.r-project.org/src/contrib/modeltools_0.2-21.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/modeltools"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
-
-    depends_on('r-lattice', type=('build', 'run'))
+    version('0.2-21', '3bf56b2e7bf78981444385d87eeccdd7')

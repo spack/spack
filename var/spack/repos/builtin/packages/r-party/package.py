@@ -25,14 +25,21 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RParty(Package):
+    """A computational toolbox for recursive partitioning."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/web/packages/party/index.html"
+    url      = "https://cran.r-project.org/src/contrib/party_1.1-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/party"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.1-2', '40a00336cf8418042d2ab616675c8ddf')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.14.0:')
+
+    depends_on('r-mvtnorm@1.0-2:', type=('build', 'run'))
+    depends_on('r-modeltools@0.1-21:', type=('build', 'run'))
+    depends_on('r-strucchange', type=('build', 'run'))
+    depends_on('r-survival@2.37-7:', type=('build', 'run'))
+    depends_on('r-coin@1.1-0:', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))
+    depends_on('r-sandwich@1.1-1:', type=('build', 'run'))

@@ -25,14 +25,17 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RKknn(Package):
+    """Weighted k-Nearest Neighbors for Classification, Regression and
+    Clustering."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=kknn"
+    url      = "https://cran.r-project.org/src/contrib/kknn_1.3.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/kknn"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.3.1', '372cd84f618cd5005f8c4c5721755117')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.10:')
+
+    depends_on('r-igraph@1.0:', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))

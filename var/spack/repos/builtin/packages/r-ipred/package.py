@@ -25,14 +25,22 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RIpred(Package):
+    """Improved predictive models by indirect classification and bagging for
+    classification, regression and survival problems as well as resampling
+    based estimators of prediction error."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=ipred"
+    url      = "https://cran.r-project.org/src/contrib/ipred_0.9-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ipred"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('0.9-5', 'ce8768547a7aa9554ad3650b18ea3cbd')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.10:')
+
+    depends_on('r-rpart@3.1-8:', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))
+    depends_on('r-class', type=('build', 'run'))
+    depends_on('r-prodlim', type=('build', 'run'))

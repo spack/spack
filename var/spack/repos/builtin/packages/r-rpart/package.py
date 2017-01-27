@@ -25,14 +25,14 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RRpart(Package):
+    """Recursive partitioning for classification, regression and
+    survival trees."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=rpart"
+    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.15.0:')

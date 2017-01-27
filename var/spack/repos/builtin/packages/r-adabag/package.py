@@ -25,14 +25,15 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RAdabag(Package):
+    """Applies Multiclass AdaBoost.M1, SAMME and Bagging."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=adabag"
+    url      = "https://cran.r-project.org/src/contrib/adabag_4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/adabag"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('4.1', '2e019f053d49f62ebb3b1697bbb50afa')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-rpart', type=('build', 'run'))
+    depends_on('r-mlbench', type=('build', 'run'))
+    depends_on('r-caret', type=('build', 'run'))

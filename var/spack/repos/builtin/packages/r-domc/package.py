@@ -25,14 +25,17 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RDomc(Package):
+    """Provides a parallel backend for the %dopar% function using
+    the multicore functionality of the parallel package."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=doMC"
+    url      = "https://cran.r-project.org/src/contrib/doMC_1.3.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/doMC"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.3.4', 'f965b09add9056e84f99a831dc3af7d1')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.14.0:')
+
+    depends_on('r-foreach@1.2.0:', type=('build', 'run'))
+    depends_on('r-iterators@1.0.0:', type=('build', 'run'))

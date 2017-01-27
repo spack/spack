@@ -25,14 +25,14 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RCubist(RPackage):
+    """Regression modeling using rules with added instance-based corrections"""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=Cubist"
+    url      = "https://cran.r-project.org/src/contrib/Cubist_0.0.19.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/Cubist"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('0.0.19', 'bf9364f655536ec03717fd2ad6223a47')
 
     depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))

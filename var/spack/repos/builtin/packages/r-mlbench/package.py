@@ -25,14 +25,16 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RMlbench(Package):
+    """A collection of artificial and real-world machine learning benchmark
+    problems, including, e.g., several data sets from the UCI repository."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/web/packages/mlbench/index.html"
+    url      = "https://cran.r-project.org/src/contrib/mlbench_2.1-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mlbench"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('2.1-1', '9f06848b8e137b8a37417c92d8e57f3b')
+
+    depends_on('r@2.10:')
 
     depends_on('r-lattice', type=('build', 'run'))

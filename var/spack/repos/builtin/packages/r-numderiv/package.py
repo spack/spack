@@ -25,14 +25,14 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RNumderiv(Package):
+    """Methods for calculating (usually) accurate numerical first and
+    second order derivatives."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=numDeriv"
+    url      = "https://cran.r-project.org/src/contrib/numDeriv_2016.8-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/numDeriv"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('2016.8-1', '30e486298d5126d86560095be8e8aac1')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.11.1:')

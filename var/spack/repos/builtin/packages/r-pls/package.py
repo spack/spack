@@ -25,14 +25,15 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RPls(Package):
+    """Multivariate regression methods Partial Least Squares Regression (PLSR),
+    Principal Component Regression (PCR) and Canonical Powered Partial Least
+    Squares (CPPLS)."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=pls"
+    url      = "https://cran.r-project.org/src/contrib/pls_2.6-0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pls"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('2.6-0', '04e02e8e46d983c5ed53c1f952b329df')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.10:')

@@ -25,14 +25,20 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RCoin(Package):
+    """Conditional inference procedures for the general independence problem
+    including two-sample, K-sample (non-parametric ANOVA), correlation,
+    censored, ordered and multivariate problems."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://cran.r-project.org/package=coin"
+    url      = "https://cran.r-project.org/src/contrib/coin_1.1-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/coin"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.1-3', '97d3d21f1e4a5762e36dd718dd2d0661')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.14.0:')
+
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-modeltools@0.2-9:', type=('build', 'run'))
+    depends_on('r-mvtnorm@1.0-5:', type=('build', 'run'))
+    depends_on('r-multcomp', type=('build', 'run'))

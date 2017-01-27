@@ -25,14 +25,30 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RRminer(Package):
+    """Facilitates the use of data mining algorithms in classification and
+    regression (including time series forecasting) tasks by presenting a short
+    and coherent set of functions."""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "http://www3.dsi.uminho.pt/pcortez/rminer.html"
+    url      = "https://cran.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rminer"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.4.2', '7d5d90f4ae030cf647d67aa962412c05')
 
+    depends_on('r-plotrix', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))
+    depends_on('r-kknn', type=('build', 'run'))
+    depends_on('r-pls', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-mda', type=('build', 'run'))
+    depends_on('r-rpart', type=('build', 'run'))
+    depends_on('r-randomforest', type=('build', 'run'))
+    depends_on('r-adabag', type=('build', 'run'))
+    depends_on('r-party', type=('build', 'run'))
+    depends_on('r-cubist', type=('build', 'run'))
+    depends_on('r-kernlab', type=('build', 'run'))
+    depends_on('r-e1071', type=('build', 'run'))
+    depends_on('r-glmnet', type=('build', 'run'))
+    depends_on('r-xgboost', type=('build', 'run'))
