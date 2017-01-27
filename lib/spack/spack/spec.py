@@ -3152,8 +3152,9 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
         specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$#')
-                                for spec in specs)
+                                         for spec in specs)
         super(AmbiguousHashError, self).__init__(msg + specs_str)
+
 
 class InvalidHashError(SpecError):
     def __init__(self, spec, hash):
