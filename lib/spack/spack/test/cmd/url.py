@@ -34,7 +34,7 @@ from spack.cmd.url import *
 #     return parser
 
 
-class Package:
+class MyPackage:
     def __init__(self, name, versions):
         self.name = name
         self.versions = versions
@@ -42,17 +42,17 @@ class Package:
 
 def test_name_parsed_correctly():
     # Expected True
-    assert name_parsed_correctly(Package('netcdf',         []), 'netcdf')
-    assert name_parsed_correctly(Package('r-devtools',     []), 'devtools')
-    assert name_parsed_correctly(Package('py-numpy',       []), 'numpy')
-    assert name_parsed_correctly(Package('octave-splines', []), 'splines')
+    assert name_parsed_correctly(MyPackage('netcdf',         []), 'netcdf')
+    assert name_parsed_correctly(MyPackage('r-devtools',     []), 'devtools')
+    assert name_parsed_correctly(MyPackage('py-numpy',       []), 'numpy')
+    assert name_parsed_correctly(MyPackage('octave-splines', []), 'splines')
 
     # Expected False
-    assert not name_parsed_correctly(Package('imagemagick', []), 'ImageMagick')
-    assert not name_parsed_correctly(Package('yaml-cpp',    []), 'yamlcpp')
-    assert not name_parsed_correctly(Package('yamlcpp',     []), 'yaml-cpp')
-    assert not name_parsed_correctly(Package('r-py-parser', []), 'parser')
-    assert not name_parsed_correctly(Package('oce',         []), 'oce-0.18.0')
+    assert not name_parsed_correctly(MyPackage('imagemagick', []), 'ImageMagick')  # noqa
+    assert not name_parsed_correctly(MyPackage('yaml-cpp',    []), 'yamlcpp')
+    assert not name_parsed_correctly(MyPackage('yamlcpp',     []), 'yaml-cpp')
+    assert not name_parsed_correctly(MyPackage('r-py-parser', []), 'parser')
+    assert not name_parsed_correctly(MyPackage('oce',         []), 'oce-0.18.0')   # noqa
 
 
 def test_version_parsed_correctly():
