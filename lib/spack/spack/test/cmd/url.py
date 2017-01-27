@@ -22,16 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-# import pytest
+import argparse
+import pytest
 from spack.cmd.url import *
 
 
-# @pytest.fixture(scope='url')
-# def parser():
-#     """Returns the parser for the ``url`` command"""
-#     parser = argparse.ArgumentParser()
-#     setup_parser(parser)
-#     return parser
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the ``url`` command"""
+    parser = argparse.ArgumentParser()
+    setup_parser(parser)
+    return parser
 
 
 class MyPackage:
@@ -57,13 +58,13 @@ def test_name_parsed_correctly():
 
 def test_version_parsed_correctly():
     # Expected True
-    assert version_parsed_correctly(Package('', ['1.2.3']),        '1.2.3')
-    assert version_parsed_correctly(Package('', ['5.4a', '5.4b']), '5.4a')
+    assert version_parsed_correctly(MyPackage('', ['1.2.3']),        '1.2.3')
+    assert version_parsed_correctly(MyPackage('', ['5.4a', '5.4b']), '5.4a')
 
     # Expected False
-    assert not version_parsed_correctly(Package('', ['0.18.0']), 'oce-0.18.0')
+    assert not version_parsed_correctly(MyPackage('', ['0.18.0']), 'oce-0.18.0')   # noqa
 
 
-# def test_url_parse(parser):
-#     args = parser.parse_args(['parse', 'http://zlib.net/fossils/zlib-1.2.10.tar.gz'])
-#     spack.cmd.url.url(parser, args)
+def test_url_parse(parser):
+    args = parser.parse_args(['parse', 'http://zlib.net/fossils/zlib-1.2.10.tar.gz'])
+    url(parser, args)
