@@ -2796,7 +2796,7 @@ class SpecParser(spack.parse.Parser):
 
         if len(matches) != 1:
             raise AmbiguousHashError(
-                "Multiple packages specify hash beginning %s."
+                "Multiple packages specify hash beginning '%s'."
                 % self.token.value, *matches)
 
         return matches[0]
@@ -3151,9 +3151,9 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
-        super(AmbiguousHashError, self).__init__(msg)
-        for spec in specs:
-            print('    ', spec.format('$.$@$%@+$+$=$#'))
+        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$#')
+                                         for spec in specs)
+        super(AmbiguousHashError, self).__init__(msg + specs_str)
 
 
 class InvalidHashError(SpecError):
