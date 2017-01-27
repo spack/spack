@@ -1587,7 +1587,8 @@ class Spec(object):
 
                 s.external = get_path_from_module(s.external_module)
 
-        self.check_and_get_deps_for_build()
+        for s in self.traverse():
+            s.check_and_get_deps_for_build()
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()

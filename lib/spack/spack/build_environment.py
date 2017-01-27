@@ -338,10 +338,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
-    build_only_deps_transitive = list(itertools.chain.from_iterable(
-        dep.traverse(deptype=('run', 'link')) for dep in
-        pkg.spec.build_only_deps.itervalues()))
-    dep_prefixes.extend(d.prefix for d in build_only_deps_transitive)
+    dep_prefixes.extend(
+        d.prefix for d in pkg.spec.build_only_deps.itervalues())
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     for pre in dep_prefixes:
         for directory in ('lib', 'lib64', 'share'):
