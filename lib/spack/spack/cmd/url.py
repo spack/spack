@@ -223,6 +223,10 @@ def url_test(args):
             vi, version_count_dict[vi], version_regex_dict[vi]))
     print()
 
+    # Return statistics, only for testing purposes
+    return (total_urls, correct_names, correct_versions,
+            name_count_dict, version_count_dict)
+
 
 def print_name_and_version(url):
     """Prints a URL. Underlines the detected name with dashes and
