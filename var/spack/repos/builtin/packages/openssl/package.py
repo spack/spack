@@ -52,8 +52,10 @@ class Openssl(Package):
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
-    depends_on("zlib")
-    depends_on("perl", type='build')
+    depends_on('zlib')
+
+    # 'make test' requires Test::More version 0.96
+    depends_on('perl@5.14.0:', type='build')
 
     parallel = False
 
@@ -88,5 +90,6 @@ class Openssl(Package):
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
-        make('test')            # 'VERBOSE=1'
+        if self.run_tests:
+            make('test')            # 'VERBOSE=1'
         make('install')
