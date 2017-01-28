@@ -33,7 +33,7 @@ class Openssl(Package):
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
        It is also a general-purpose cryptography library."""
     homepage = "http://www.openssl.org"
-    url = "ftp://openssl.org/source/openssl-1.0.1h.tar.gz"
+    url = "http://openssl.org/source/openssl-1.0.1h.tar.gz"
 
     # Note: Version 1.0.2 is the "long-term support" version that will
     # remain supported until 2019. We could thus make this version the
