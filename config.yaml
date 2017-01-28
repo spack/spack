@@ -1,0 +1,13 @@
+config:
+  build_stage:
+  - /tmp/pytest-of-rpm/pytest-4/test_fetch0/tmp
+  checksum: true
+  dirty: false
+  install_tree: /lustre/spack/tools
+  misc_cache: ~/.spack/cache
+  module_roots:
+    dotkit: $spack/share/spack/dotkit
+    lmod: $spack/share/spack/lmod
+    tcl: $spack/share/spack/modules
+  source_cache: $spack/var/spack/cache
+  verify_ssl: true
