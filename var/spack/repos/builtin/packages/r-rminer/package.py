@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRminer(Package):
+class RRminer(RPackage):
     """Facilitates the use of data mining algorithms in classification and
     regression (including time series forecasting) tasks by presenting a short
     and coherent set of functions."""

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRpartPlot(Package):
+class RRpartPlot(RPackage):
     """Plot 'rpart' models. Extends plot.rpart() and text.rpart() in the
     'rpart' package."""
 

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRpart(Package):
+class RRpart(RPackage):
     """Recursive partitioning for classification, regression and
     survival trees."""
 

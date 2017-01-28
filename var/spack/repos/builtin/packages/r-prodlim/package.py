@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RProdlim(Package):
+class RProdlim(RPackage):
     """Product-Limit Estimation for Censored Event History Analysis. Fast and
     user friendly implementation of nonparametric estimators for censored event
     history (survival) analysis. Kaplan-Meier and Aalen-Johansen method."""

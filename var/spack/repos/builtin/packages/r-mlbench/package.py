@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMlbench(Package):
+class RMlbench(RPackage):
     """A collection of artificial and real-world machine learning benchmark
     problems, including, e.g., several data sets from the UCI repository."""
 

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCorrplot(Package):
+class RCorrplot(RPackage):
     """A graphical display of a correlation matrix or general matrix.
     It also contains some algorithms to do matrix reordering."""
 

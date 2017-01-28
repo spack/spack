@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMda(Package):
+class RMda(RPackage):
     """Mixture and flexible discriminant analysis, multivariate adaptive
     regression splines (MARS), BRUTO."""
 

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RParty(Package):
+class RParty(RPackage):
     """A computational toolbox for recursive partitioning."""
 
     homepage = "https://cran.r-project.org/web/packages/party/index.html"

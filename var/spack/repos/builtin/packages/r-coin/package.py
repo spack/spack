@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCoin(Package):
+class RCoin(RPackage):
     """Conditional inference procedures for the general independence problem
     including two-sample, K-sample (non-parametric ANOVA), correlation,
     censored, ordered and multivariate problems."""

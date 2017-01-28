@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RKknn(Package):
+class RKknn(RPackage):
     """Weighted k-Nearest Neighbors for Classification, Regression and
     Clustering."""
 

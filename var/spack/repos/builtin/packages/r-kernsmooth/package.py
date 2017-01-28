@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RKernsmooth(Package):
+class RKernsmooth(RPackage):
     """Functions for kernel smoothing (and density estimation)."""
 
     homepage = "https://cran.r-project.org/package=KernSmooth"

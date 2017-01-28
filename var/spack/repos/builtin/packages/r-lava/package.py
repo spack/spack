@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLava(Package):
+class RLava(RPackage):
     """Estimation and simulation of latent variable models."""
 
     homepage = "https://cran.r-project.org/package=lava"

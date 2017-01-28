@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDomc(Package):
+class RDomc(RPackage):
     """Provides a parallel backend for the %dopar% function using
     the multicore functionality of the parallel package."""
 

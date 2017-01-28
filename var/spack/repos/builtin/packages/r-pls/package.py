@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPls(Package):
+class RPls(RPackage):
     """Multivariate regression methods Partial Least Squares Regression (PLSR),
     Principal Component Regression (PCR) and Canonical Powered Partial Least
     Squares (CPPLS)."""

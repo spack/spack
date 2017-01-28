@@ -25,7 +25,7 @@
 from spack import *
 
 
-class REllipse(Package):
+class REllipse(RPackage):
     """This package contains various routines for drawing ellipses and
     ellipse-like confidence regions."""
 

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNumderiv(Package):
+class RNumderiv(RPackage):
     """Methods for calculating (usually) accurate numerical first and
     second order derivatives."""
 

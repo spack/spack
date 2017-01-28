@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RIpred(Package):
+class RIpred(RPackage):
     """Improved predictive models by indirect classification and bagging for
     classification, regression and survival problems as well as resampling
     based estimators of prediction error."""

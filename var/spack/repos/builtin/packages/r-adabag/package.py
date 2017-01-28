@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RAdabag(Package):
+class RAdabag(RPackage):
     """Applies Multiclass AdaBoost.M1, SAMME and Bagging."""
 
     homepage = "https://cran.r-project.org/package=adabag"

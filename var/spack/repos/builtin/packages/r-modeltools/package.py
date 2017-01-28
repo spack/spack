@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RModeltools(Package):
+class RModeltools(RPackage):
     """A collection of tools to deal with statistical models."""
 
     homepage = "https://cran.r-project.org/package=modeltools"

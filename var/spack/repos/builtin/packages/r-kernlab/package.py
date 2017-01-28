@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RKernlab(Package):
+class RKernlab(RPackage):
     """Kernel-based machine learning methods for classification, regression,
     clustering, novelty detection, quantile regression and dimensionality
     reduction. Among other methods 'kernlab' includes Support Vector Machines,

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RStrucchange(Package):
+class RStrucchange(RPackage):
     """Testing, monitoring and dating structural changes in (linear)
     regression models."""
 
