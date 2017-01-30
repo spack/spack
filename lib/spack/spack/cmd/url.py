@@ -81,7 +81,7 @@ def url(parser, args):
         'test':  url_test
     }
 
-    return action[args.subcommand](args)
+    action[args.subcommand](args)
 
 
 def url_parse(args):

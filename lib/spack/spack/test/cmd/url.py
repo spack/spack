@@ -88,29 +88,29 @@ def test_url_parse_xfail(parser):
 
 def test_url_list(parser):
     args = parser.parse_args(['list'])
-    total_urls = url(parser, args)
+    total_urls = url_list(args)
 
     # The following two options should not change the number of URLs printed.
     args = parser.parse_args(['list', '--color', '--extrapolation'])
-    colored_urls = url(parser, args)
+    colored_urls = url_list(args)
     assert colored_urls == total_urls
 
     # The following two options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
     # If they say we missed 0 URLs, something is probably broken too.
     args = parser.parse_args(['list', '--incorrect-name'])
-    incorrect_name_urls = url(parser, args)
+    incorrect_name_urls = url_list(args)
     assert 0 < incorrect_name_urls < total_urls
 
     args = parser.parse_args(['list', '--incorrect-version'])
-    incorrect_version_urls = url(parser, args)
+    incorrect_version_urls = url_list(args)
     assert 0 < incorrect_version_urls < total_urls
 
 
 def test_url_test(parser):
     args = parser.parse_args(['test'])
     (total_urls, correct_names, correct_versions,
-     name_count_dict, version_count_dict) = url(parser, args)
+     name_count_dict, version_count_dict) = url_test(args)
 
     assert 0 < correct_names    <= sum(name_count_dict.values())    <= total_urls  # noqa
     assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa

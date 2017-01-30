@@ -348,19 +348,19 @@ Unit testing
 Developer commands
 ------------------
 
-.. _cmd_spack_doc:
+.. _cmd-spack-doc:
 
 ^^^^^^^^^^^^^
 ``spack doc``
 ^^^^^^^^^^^^^
 
-.. _cmd_spack_test:
+.. _cmd-spack-test:
 
 ^^^^^^^^^^^^^^
 ``spack test``
 ^^^^^^^^^^^^^^
 
-.. _cmd_spack_url:
+.. _cmd-spack-url:
 
 ^^^^^^^^^^^^^
 ``spack url``
