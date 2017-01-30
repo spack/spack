@@ -29,7 +29,7 @@ class Gconf(AutotoolsPackage):
     """GConf is a system for storing application preferences."""
 
     homepage = "https://projects.gnome.org/gconf/"
-    url      = "ftp://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
 
     version('3.2.6', '2b16996d0e4b112856ee5c59130e822c')
 

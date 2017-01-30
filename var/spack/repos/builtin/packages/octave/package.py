@@ -34,7 +34,7 @@ class Octave(AutotoolsPackage):
     Matlab. It may also be used as a batch-oriented language."""
 
     homepage = "https://www.gnu.org/software/octave/"
-    url      = "ftp://ftp.gnu.org/gnu/octave/octave-4.0.0.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/octave/octave-4.0.0.tar.gz"
 
     extendable = True
 
