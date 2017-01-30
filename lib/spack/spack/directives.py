@@ -295,7 +295,8 @@ def extends(spec, **kwargs):
         #     raise DirectiveError(directive, msg)
 
         when = kwargs.pop('when', pkg.name)
-        _depends_on(pkg, spec, when=when)
+        type = kwargs.pop('type', None)
+        _depends_on(pkg, spec, when=when, type=type)
         pkg.extendees[spec] = (Spec(spec), kwargs)
     return _execute
 

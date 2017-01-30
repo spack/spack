@@ -1588,12 +1588,12 @@ class Spec(object):
                 s.external = get_path_from_module(s.external_module)
 
         for s in self.traverse():
-            s.check_and_get_deps_for_build()
+            s.check_and_get_run_deps_for_build()
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
-    def check_and_get_deps_for_build(self):
+    def check_and_get_run_deps_for_build(self):
         """When a package builds, all of its build dependencies, and all of the
            run dependencies of its build dependencies must be available in the
            binary search path; this likewise holds for the build-only
@@ -1601,14 +1601,10 @@ class Spec(object):
            sets, where two differing instances of the same package are
            required.
         """
-        transitive_build = set(
-            itertools.chain.from_iterable(
-                s.traverse(deptype='run') for s in
-                self.dependencies(deptype='build')))
-        transitive_build_only = set(
-            itertools.chain.from_iterable(
-                s.traverse(deptype='run') for s in
-                self.build_only_deps.itervalues()))
+        transitive_build = set(traverse_each(
+            self.dependencies(deptype='build'), deptype='run'))
+        transitive_build_only = set(traverse_each(
+            self.build_only_deps.itervalues(), deptype='run'))
         transitive_build = dict((s.name, s) for s in transitive_build)
         transitive_build_only = dict(
             (s.name, s) for s in transitive_build_only)
@@ -2765,6 +2761,18 @@ class Spec(object):
 
     def __repr__(self):
         return str(self)
+
+
+def traverse_each(specs, **kwargs):
+    visited = set()
+    results = list()
+    for x in itertools.chain.from_iterable(
+        y.traverse(**kwargs) for y in specs):
+
+        if x not in visited:
+            visited.add(x)
+            results.append(x)
+    return results
 
 
 #

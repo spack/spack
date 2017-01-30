@@ -323,11 +323,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
-    build_deps = itertools.chain(
-        pkg.spec.dependencies(deptype='build'),
-        pkg.spec.build_only_deps.itervalues())
     bin_dirs = reversed(filter(os.path.isdir, [
-        '%s/bin' % d.prefix for d in build_deps]))
+        '%s/bin' % d.prefix for d in
+        pkg.spec.check_and_get_run_deps_for_build()]))
     bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)
@@ -506,17 +504,7 @@ def setup_package(pkg, dirty=False):
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    build_only_deps_transitive = list(itertools.chain.from_iterable(
-        dep.traverse(deptype=('run', 'link')) for dep in
-        pkg.spec.build_only_deps.itervalues()))
-    build_deps_transitive = set(itertools.chain.from_iterable(
-        dep.traverse(deptype=('run', 'link')) for dep in
-        pkg.spec.dependencies(deptype=('build'))))
-    ordered_build_deps_transitive = list(
-        s for s in pkg.spec.traverse(order='post')
-        if s in build_deps_transitive)
-    for dspec in itertools.chain(
-            ordered_build_deps_transitive, build_only_deps_transitive):
+    for dspec in deps_to_set_up(spec):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,
@@ -539,6 +527,19 @@ def setup_package(pkg, dirty=False):
     # Make sure nothing's strange about the Spack environment.
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
+
+
+def deps_to_set_up(spec):
+    from_build_deps = traverse_each(
+        itertools.chain(
+            spec.dependencies(deptype='build'),
+            spec.build_only_deps.itervalues()),
+        deptype='run', order='post')
+    #from_link_deps = traverse_each(
+    #    spec.dependencies(deptype='link'), deptype=('run','link'),
+    #    order='post')
+
+    return from_build_deps
 
 
 def fork(pkg, function, dirty=False):

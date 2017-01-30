@@ -35,7 +35,7 @@ class XcbProto(Package):
     version('1.12', '5ee1ec124ea8d56bd9e83b8e9e0b84c4')
     version('1.11', 'c8c6cb72c84f58270f4db1f39607f66a')
 
-    extends('python')
+    extends('python', type=('build', 'run'))
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
