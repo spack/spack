@@ -25,18 +25,18 @@
 import spack
 import spack.url
 
-description = "Inspect urls used by packages in spack."
+description = "inspect urls used by packages in spack"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-c', '--color', action='store_true',
-        help="Color the parsed version and name in the urls shown.  "
-             "Version will be cyan, name red.")
+        help="color the parsed version and name in the urls shown. "
+             "version will be cyan, name red")
     subparser.add_argument(
         '-e', '--extrapolation', action='store_true',
-        help="Color the versions used for extrapolation as well."
-             "Additional versions are green, names magenta.")
+        help="color the versions used for extrapolation as well. "
+             "additional versions are green, names magenta")
 
 
 def urls(parser, args):

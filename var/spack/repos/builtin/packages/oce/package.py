@@ -32,7 +32,6 @@ class Oce(Package):
     Open CASCADE library.
     """
     homepage = "https://github.com/tpaviot/oce"
-    url      = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
@@ -46,6 +45,10 @@ class Oce(Package):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')
+
+    def url_for_version(self, version):
+        return 'https://github.com/tpaviot/oce/archive/OCE-%s.tar.gz' % (
+            version.dotted)
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
@@ -87,7 +90,11 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+            # use @rpath on Sierra due to limit of dynamic loader
+            options.append('-DCMAKE_MACOSX_RPATH=ON')
+        else:
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         cmake('.', *options)
         make("install/strip")

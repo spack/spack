@@ -31,7 +31,7 @@ import spack.cmd.install as inst
 
 from spack import *
 
-description = 'Stops at configuration stage when installing a package, if possible'  # NOQA: ignore=E501
+description = 'stops at configuration stage when installing a package, if possible'  # NOQA: ignore=E501
 
 
 build_system_to_phase = {
@@ -49,7 +49,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose',
         action='store_true',
-        help="Print additional output during builds"
+        help="print additional output during builds"
     )
 
 
