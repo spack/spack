@@ -2767,7 +2767,7 @@ def traverse_each(specs, **kwargs):
     visited = set()
     results = list()
     for x in itertools.chain.from_iterable(
-        y.traverse(**kwargs) for y in specs):
+            y.traverse(**kwargs) for y in specs):
 
         if x not in visited:
             visited.add(x)

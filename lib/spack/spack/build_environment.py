@@ -535,7 +535,7 @@ def deps_to_set_up(spec):
             spec.dependencies(deptype='build'),
             spec.build_only_deps.itervalues()),
         deptype='run', order='post')
-    #from_link_deps = traverse_each(
+    # from_link_deps = traverse_each(
     #    spec.dependencies(deptype='link'), deptype=('run','link'),
     #    order='post')
 
