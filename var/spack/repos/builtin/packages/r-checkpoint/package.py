@@ -39,7 +39,3 @@ class RCheckpoint(RPackage):
     version('0.3.15', 'a4aa8320338f1434a330d984e97981ea')
 
     depends_on('r@3.0.0:')
-
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-testthat@0.9:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))

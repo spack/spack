@@ -37,6 +37,6 @@ class RPacman(RPackage):
 
     version('0.4.1', 'bf18fe6d1407d31e00b337d9b07fb648')
 
-    depends_on('r@3.0.2')
+    depends_on('r@3.0.2:')
 
     depends_on('r-devtools', type=('build', 'run'))
