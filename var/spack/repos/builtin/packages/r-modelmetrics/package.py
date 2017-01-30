@@ -25,17 +25,16 @@
 from spack import *
 
 
-class RWithr(RPackage):
-    """A set of functions to run code 'with' safely and temporarily modified
-    global state. Many of these functions were originally a part of the
-    'devtools' package, this provides a simple package with limited
-    dependencies to provide access to these functions."""
+class RModelmetrics(RPackage):
+    """Collection of metrics for evaluating models written in C++ using
+    'Rcpp'."""
 
-    homepage = "http://github.com/jimhester/withr"
-    url      = "https://cran.r-project.org/src/contrib/withr_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/withr"
+    homepage = "https://cran.r-project.org/package=ModelMetrics"
+    url      = "https://cran.r-project.org/src/contrib/ModelMetrics_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ModelMetrics"
 
-    version('1.0.2', 'ca52b729af9bbaa14fc8b7bafe38663c')
-    version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
+    version('1.1.0', 'd43175001f0531b8810d2802d76b7b44')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.2.2:')
+
+    depends_on('r-rcpp', type=('build', 'run'))

@@ -25,17 +25,21 @@
 from spack import *
 
 
-class RWithr(RPackage):
-    """A set of functions to run code 'with' safely and temporarily modified
-    global state. Many of these functions were originally a part of the
-    'devtools' package, this provides a simple package with limited
-    dependencies to provide access to these functions."""
+class RCheckpoint(RPackage):
+    """The goal of checkpoint is to solve the problem of package
+    reproducibility in R. Specifically, checkpoint allows you to
+    install packages as they existed on CRAN on a specific snapshot
+    date as if you had a CRAN time machine."""
 
-    homepage = "http://github.com/jimhester/withr"
-    url      = "https://cran.r-project.org/src/contrib/withr_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/withr"
+    homepage = "https://cran.r-project.org/package=checkpoint"
+    url      = "https://cran.r-project.org/src/contrib/checkpoint_0.3.18.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/checkpoint"
 
-    version('1.0.2', 'ca52b729af9bbaa14fc8b7bafe38663c')
-    version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
+    version('0.3.18', '021d7faeb72c36167951e103b2b065ea')
+    version('0.3.15', 'a4aa8320338f1434a330d984e97981ea')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.0:')
+
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-testthat@0.9:', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))

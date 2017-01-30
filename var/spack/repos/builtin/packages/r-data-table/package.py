@@ -25,17 +25,17 @@
 from spack import *
 
 
-class RWithr(RPackage):
-    """A set of functions to run code 'with' safely and temporarily modified
-    global state. Many of these functions were originally a part of the
-    'devtools' package, this provides a simple package with limited
-    dependencies to provide access to these functions."""
+class RDataTable(RPackage):
+    """Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
+    fast add/modify/delete of columns by group using no copies at all, list
+    columns and a fast file reader (fread). Offers a natural and flexible
+    syntax, for faster development."""
 
-    homepage = "http://github.com/jimhester/withr"
-    url      = "https://cran.r-project.org/src/contrib/withr_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/withr"
+    homepage = "https://github.com/Rdatatable/data.table/wiki"
+    url      = "https://cran.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
 
-    version('1.0.2', 'ca52b729af9bbaa14fc8b7bafe38663c')
-    version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
+    version('1.10.0', 'f0e08dd5ba1b3f46c59dd1574fe497c1')
+    version('1.9.6',  'b1c0c7cce490bdf42ab288541cc55372')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.0:')

@@ -25,16 +25,18 @@
 from spack import *
 
 
-class RDatatable(RPackage):
-    """Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
-    fast add/modify/delete of columns by group using no copies at all, list
-    columns and a fast file reader (fread). Offers a natural and flexible
-    syntax, for faster development."""
+class RPacman(RPackage):
+    """Tools to more conveniently perform tasks associated with add-on
+    packages. pacman conveniently wraps library and package related functions
+    and names them in an intuitive and consistent fashion. It seeks to combine
+    functionality from lower level functions which can speed up workflow."""
 
-    homepage = "https://github.com/Rdatatable/data.table/wiki"
-    url      = "https://cran.r-project.org/src/contrib/data.table_1.9.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
+    homepage = "https://cran.r-project.org/package=pacman"
+    url      = "https://cran.r-project.org/src/contrib/pacman_0.4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pacman"
 
-    version('1.9.6', 'b1c0c7cce490bdf42ab288541cc55372')
+    version('0.4.1', 'bf18fe6d1407d31e00b337d9b07fb648')
 
-    depends_on('r-chron', type=('build', 'run'))
+    depends_on('r@3.0.2')
+
+    depends_on('r-devtools', type=('build', 'run'))
