@@ -70,6 +70,7 @@ def test_version_parsed_correctly():
     assert not version_parsed_correctly(MyPackage('', ['1.2.3']),  '')
     assert not version_parsed_correctly(MyPackage('', ['1.2.3']),  '1.2.4')
     assert not version_parsed_correctly(MyPackage('', ['3.4a']),   '3.4')
+    assert not version_parsed_correctly(MyPackage('', ['3.4']),    '3.4b')
     assert not version_parsed_correctly(MyPackage('', ['0.18.0']), 'oce-0.18.0')   # noqa
 
 
@@ -90,23 +91,20 @@ def test_url_list(parser):
     total_urls = url(parser, args)
 
     # The following two options should not change the number of URLs printed.
-    args = parser.parse_args(['list', '--color'])
+    args = parser.parse_args(['list', '--color', '--extrapolation'])
     colored_urls = url(parser, args)
     assert colored_urls == total_urls
 
-    args = parser.parse_args(['list', '--extrapolation'])
-    extrapolated_urls = url(parser, args)
-    assert extrapolated_urls == total_urls
-
     # The following two options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
+    # If they say we missed 0 URLs, something is probably broken too.
     args = parser.parse_args(['list', '--incorrect-name'])
     incorrect_name_urls = url(parser, args)
-    assert incorrect_name_urls < total_urls
+    assert 0 < incorrect_name_urls < total_urls
 
     args = parser.parse_args(['list', '--incorrect-version'])
     incorrect_version_urls = url(parser, args)
-    assert incorrect_version_urls < total_urls
+    assert 0 < incorrect_version_urls < total_urls
 
 
 def test_url_test(parser):
@@ -114,11 +112,5 @@ def test_url_test(parser):
     (total_urls, correct_names, correct_versions,
      name_count_dict, version_count_dict) = url(parser, args)
 
-    assert 0 < correct_names    <= total_urls
-    assert 0 < correct_versions <= total_urls
-
-    for count in name_count_dict.values():
-        assert 0 < count <= total_urls
-
-    for count in version_count_dict.values():
-        assert 0 < count <= total_urls
+    assert 0 < correct_names    <= sum(name_count_dict.values())    <= total_urls  # noqa
+    assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa
