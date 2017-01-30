@@ -89,14 +89,20 @@ class Fftw(Package):
             autoreconf = which('autoreconf')
             autoreconf('-ifv')
 
-        configure(*options)
+        float_options = []
+        double_options = []
+        if 'x86_64' in spec.architecture:
+            float_options.append('--enable-sse2')
+            double_options.append('--enable-sse2')
+
+        configure(*(options + double_options))
         make()
         if self.run_tests:
             make("check")
         make("install")
 
         if '+float' in spec:
-            configure('--enable-float', *options)
+            configure('--enable-float', *(options + float_options))
             make()
             if self.run_tests:
                 make("check")
