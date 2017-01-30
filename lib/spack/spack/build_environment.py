@@ -530,7 +530,7 @@ def setup_package(pkg, dirty=False):
 
 
 def deps_to_set_up(spec):
-    from_build_deps = traverse_each(
+    from_build_deps = spack.spec.traverse_each(
         itertools.chain(
             spec.dependencies(deptype='build'),
             spec.build_only_deps.itervalues()),
