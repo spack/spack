@@ -28,6 +28,6 @@ packages:
     compiler: [gcc@5, intel@16]
     providers:
       mpi: [openmpi, mvapich2, mpich]
-      blas: [openblas]
-      lapack: [openblas]
-    variants: +debug
+      blas: [openblas, mkl]
+      lapack: [openblas, mkl]
+    variants: +debug +verbs

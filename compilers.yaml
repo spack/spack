@@ -13,50 +13,6 @@ compilers:
     spec: gcc@4.8.5
     target: x86_64
 - compiler:
-    environment: []
-    extra_rpaths: []
-    flags: {}
-    modules:
-    - icc/14.0
-    operating_system: centos7
-    paths:
-      cc: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/icc
-      cxx: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/icpc
-      f77: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/ifort
-      fc: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/ifort
-    spec: icc@14.0
-    target: x86_64
-- compiler:
-    environment: []
-    extra_rpaths: []
-    flags: {}
-    modules:
-    - gcc/4.9
-    - icc/15.0
-    operating_system: centos7
-    paths:
-      cc: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icc
-      cxx: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icpc
-      f77: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
-      fc: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
-    spec: icc@15.0
-    target: x86_64
-- compiler:
-    environment: []
-    extra_rpaths: []
-    flags: {}
-    modules:
-    - gcc/5.4
-    - icc/16.0
-    operating_system: centos7
-    paths:
-      cc: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/icc
-      cxx: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/icpc
-      f77: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
-      fc: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
-    spec: icc@16.0
-    target: x86_64
-- compiler:
     environment: {}
     extra_rpaths: []
     flags: {}
@@ -94,4 +50,46 @@ compilers:
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-efraxgis7lclbos3isrihle7vglggvby/bin/gfortran
       fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-efraxgis7lclbos3isrihle7vglggvby/bin/gfortran
     spec: gcc@6.3.0
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules:
+    - icc/14.0
+    operating_system: centos7
+    paths:
+      cc: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/icc
+      cxx: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/icpc
+      f77: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/ifort
+      fc: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/ifort
+    spec: intel@14.0.2
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules:
+      - icc/15.0 
+    operating_system: centos7
+    paths:
+      cc: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icc
+      cxx: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icpc
+      f77: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
+      fc: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
+    spec: intel@15.0.2
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules:
+      - icc/16.0 
+    operating_system: centos7
+    paths:
+      cc: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/icc
+      cxx: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/icpc
+      f77: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
+      fc: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
+    spec: intel@16.0.3
     target: x86_64
