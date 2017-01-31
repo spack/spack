@@ -112,7 +112,7 @@ class PythonPackage(PackageBase):
     def setup_py(self, *args):
         setup = self.setup_file()
 
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             self.python(setup, '--no-user-cfg', *args)
 
     # The following phases and their descriptions come from:
