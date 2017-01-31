@@ -493,9 +493,7 @@ def setup_package(pkg, dirty=False):
     for s in pkg.spec.traverse():
         s.package.spec = s
 
-    for dep in itertools.chain.from_iterable(
-            build_dep.traverse() for build_dep in
-            pkg.spec.build_only_deps.itervalues()):
+    for dep in spack.spec.traverse_each(pkg.spec.build_only_deps.itervalues()):
         dep.package.spec = dep
 
     set_compiler_environment_variables(pkg, spack_env)
