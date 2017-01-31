@@ -28,7 +28,7 @@ from spack import *
 class Mrnet(AutotoolsPackage):
     """The MRNet Multi-Cast Reduction Network."""
     homepage = "http://paradyn.org/mrnet"
-    url      = "ftp://ftp.cs.wisc.edu/paradyn/mrnet/mrnet_5.0.1.tar.gz"
+    url      = "http://ftp.cs.wisc.edu/pub/paradyn/mrnet/mrnet_5.0.1.tar.gz"
     list_url = "http://ftp.cs.wisc.edu/paradyn/mrnet"
 
     version('5.0.1-2', git='https://github.com/dyninst/mrnet.git',
