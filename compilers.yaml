@@ -54,21 +54,20 @@ compilers:
 - compiler:
     environment: {}
     extra_rpaths: []
-    flags: {}
     modules:
-    - icc/14.0
+      - icc/14.0
     operating_system: centos7
     paths:
       cc: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/icc
       cxx: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/icpc
       f77: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/ifort
       fc: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/bin/intel64/ifort
+    flags: {}
     spec: intel@14.0.2
     target: x86_64
 - compiler:
     environment: {}
     extra_rpaths: []
-    flags: {}
     modules:
       - icc/15.0 
     operating_system: centos7
@@ -77,12 +76,13 @@ compilers:
       cxx: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icpc
       f77: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
       fc: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
+    flags: {}
     spec: intel@15.0.2
     target: x86_64
 - compiler:
     environment: {}
-    extra_rpaths: []
     flags: {}
+    extra_rpaths: []
     modules:
       - icc/16.0 
     operating_system: centos7

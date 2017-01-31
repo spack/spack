@@ -1,11 +1,8 @@
 #!/bin/sh
 
+
 # Configuration
 
-mkdir -p ~/.spack/linux; cd ~/.spack
-ln -sf ~/spack/config.yaml ./ 
-ln -sf ~/spack/packages.yaml ./ 
-cd linux && ln -sf ~/spack/compilers.yaml ./
 
 # Compilers
 
@@ -16,14 +13,13 @@ compilers=(
 
 # GCC (install GCC only once)
 
-spack install gcc@4.9.4 %gcc@4.8.5
-spack install gcc@5.4.0 %gcc@4.8.5
-spack install gcc@6.3.0 %gcc@4.8.5
+# spack install gcc@4.9.4
+# spack install gcc@5.4.0
+# spack install gcc@6.3.0
 
 # Tools: git, emacs
 
-spack install git 	%gcc@4.8.5
-spack install emacs 	%gcc@4.8.5
+spack install git %gcc@4.8.5
 
 # JDK
 
@@ -32,7 +28,6 @@ spack install jdk
 # Perl
 
 spack install perl@5.24.0 %gcc@5.4.0
-spack install perl@5.24.0 %intel@16.0.3 cflags="-fPIC"
 
 # LuaJIT
 
@@ -40,6 +35,12 @@ for compiler in "${compilers[@]}"
 do
 	spack install lua-jit $compiler
 done
+
+# Python
+
+#spack install python@2.7.13 	%gcc@5.4.0
+#spack install python@2.7.13 	%intel@16.0.3
+#spack install python@3.6.0 	%gcc@5.4.0
 
 # MPI 
 
@@ -56,7 +57,11 @@ done
 spack install bazel	%gcc@5.4.0
 
 # CUDA
-spack install cuda@8.0.44 %gcc@5
-spack install cuda@8.0.44 %intel@16
-spack install cuda@7.5.18 %gcc@4.8.5
-spack install cuda@7.5.18 %intel@15
+for compiler in "${compilers[@]}"
+do
+	spack install cuda@8.0.44 $compiler
+	spack install cuda@7.5.18 $compiler
+done
+
+# R
+# spack install r@3.3.2 %gcc@5.4.0
