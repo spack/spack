@@ -1,7 +1,15 @@
 #!/bin/sh
 
+
 # Configuration
 
+
+# Compilers
+
+compilers=(
+    %gcc@5.4.0
+    %intel@16.0.3
+)
 
 # GCC (install GCC only once)
 
@@ -23,8 +31,10 @@ spack install perl@5.24.0 %gcc@5.4.0
 
 # LuaJIT
 
-spack install lua-jit %gcc@5.4.0
-spack install lua-jit %intel@16.0.3
+for compiler in "${compilers[@]}"
+do
+	spack install lua-jit $compiler
+done
 
 # Python
 
@@ -34,18 +44,24 @@ spack install lua-jit %intel@16.0.3
 
 # MPI 
 
-spack install openmpi	%gcc@5.4.0
-spack install mvapich2	%gcc@5.4.0
-spack install mpich	%gcc@5.4.0
-spack install openmpi	%intel@16.0.3
+for compiler in "${compilers[@]}"
+do
+	spack install openmpi@2.0.1 	$compiler
+	spack install openmpi@1.10.3 	$compiler
+	spack install openmpi@1.6.5 	$compiler
+	spack install mvapich2		$compiler
+	spack install mpich		$compiler
+done
 
 # Bazel
 spack install bazel	%gcc@5.4.0
 
 # CUDA
-spack install cuda@8.0.44 %gcc@5.4.0
-spack install cuda@7.5.18 %gcc@5.4.0
-spack install cuda@6.5.14 %gcc@4.8.5
+for compiler in "${compilers[@]}"
+do
+	spack install cuda@8.0.44 $compiler
+	spack install cuda@7.5.18 $compiler
+done
 
 # R
 # spack install r@3.3.2 %gcc@5.4.0
