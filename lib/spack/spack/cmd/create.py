@@ -249,6 +249,7 @@ class PythonPackageTemplate(PackageTemplate):
 
 class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
+    base_class_name = 'RPackage'
 
     dependencies = """\
     # FIXME: Add dependencies if required.

@@ -38,9 +38,10 @@ class ROpenssl(RPackage):
     calculations on large multibyte integers."""
 
     homepage = "https://github.com/jeroenooms/openssl#readme"
-    url      = "https://cran.r-project.org/src/contrib/openssl_0.9.4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/openssl_0.9.6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/openssl"
 
+    version('0.9.6', '7ef137929d9dd07db690d35db242ba4b')
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
-    depends_on('openssl')
+    depends_on('openssl@1.0.1:')
