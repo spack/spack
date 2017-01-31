@@ -535,9 +535,9 @@ These links currently redirect back to `pypi.python.org
 Skipping the expand step
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack normally expands archives automatically after downloading
-them. If you want to skip this step (e.g., for self-extracting
-executables and other custom archive types), you can add
+Spack normally expands archives (e.g. `*.tar.gz` and `*.zip`) automatically
+after downloading them. If you want to skip this step (e.g., for
+self-extracting executables and other custom archive types), you can add
 ``expand=False`` to a ``version`` directive.
 
 .. code-block:: python
