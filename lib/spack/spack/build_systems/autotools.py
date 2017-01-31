@@ -84,6 +84,9 @@ class AutotoolsPackage(PackageBase):
     #: Callback names for build-time test
     build_time_test_callbacks = ['check']
 
+    #: Callback names for install-time test
+    install_time_test_callbacks = ['installcheck']
+
     #: Set to true to force the autoreconf step even if configure is present
     force_autoreconf = False
     #: Options to be passed to autoreconf when using the default implementation
@@ -287,6 +290,15 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
+
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+
+    def installcheck(self):
+        """Searches the Makefile for an ``installcheck`` target
+        and runs it if found.
+        """
+        with working_dir(self.build_directory):
+            self._if_make_target_execute('installcheck')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

@@ -1733,6 +1733,27 @@ class PackageBase(object):
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
 
+    install_time_test_callbacks = None
+
+    @on_package_attributes(run_tests=True)
+    def _run_default_install_time_test_callbacks(self):
+        """Tries to call all the methods that are listed in the attribute
+        ``install_time_test_callbacks`` if ``self.run_tests is True``.
+
+        If ``install_time_test_callbacks is None`` returns immediately.
+        """
+        if self.install_time_test_callbacks is None:
+            return
+
+        for name in self.install_time_test_callbacks:
+            try:
+                fn = getattr(self, name)
+                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                fn()
+            except AttributeError:
+                msg = 'RUN-TESTS: method not implemented [{0}]'
+                tty.warn(msg.format(name))
+
 
 class Package(PackageBase):
     """General purpose class with a single ``install``
