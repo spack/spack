@@ -29,7 +29,7 @@ class Bash(Package):
     """The GNU Project's Bourne Again SHell."""
 
     homepage = "https://www.gnu.org/software/bash/"
-    url      = "ftp://ftp.gnu.org/gnu/bash/bash-4.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/bash/bash-4.3.tar.gz"
 
     version('4.3', '81348932d5da294953e15d4814c74dd1')
 
