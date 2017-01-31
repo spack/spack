@@ -30,7 +30,7 @@ class Mpc(AutotoolsPackage):
        with arbitrarily high precision and correct rounding of the
        result."""
     homepage = "http://www.multiprecision.org"
-    url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
 
     version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
     version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
@@ -42,4 +42,4 @@ class Mpc(AutotoolsPackage):
         if version < Version("1.0.1"):
             return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version
         else:
-            return "ftp://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
+            return "https://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version

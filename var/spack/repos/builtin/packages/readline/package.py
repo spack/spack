@@ -34,7 +34,7 @@ class Readline(AutotoolsPackage):
        recall and perhaps reedit those lines, and perform csh-like
        history expansion on previous commands."""
     homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
-    url      = "ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz"
 
     version('6.3', '33c8fb279e981274f485fd91da77e94a')
 
