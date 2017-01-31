@@ -336,10 +336,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
-    dep_prefixes.extend(
-        d.prefix for d in pkg.spec.build_only_deps.itervalues())
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for pre in dep_prefixes:
+    for dep in pkg.spec.check_and_get_pkg_config_deps():
+        pre = dep.prefix
         for directory in ('lib', 'lib64', 'share'):
             pcdir = join_path(pre, directory, 'pkgconfig')
             if os.path.isdir(pcdir):

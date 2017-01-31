@@ -1589,6 +1589,7 @@ class Spec(object):
 
         for s in self.traverse():
             s.check_and_get_run_deps_for_build()
+            s.check_and_get_pkg_config_deps()
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -1613,10 +1614,27 @@ class Spec(object):
             if transitive_build[name] != transitive_build_only[name]:
                 raise SpecError(
                     "Separate concretization of {0}".format(name) +
-                    "produced build-time conflict")
+                    " produced build-time conflict")
         required_for_build = set(transitive_build.itervalues())
         required_for_build.update(s for s in transitive_build_only.itervalues()
                                   if s.name not in common)
+        return required_for_build
+
+    def check_and_get_pkg_config_deps(self):
+        link_deps = dict(
+            (s.name, s) for s in self.traverse(
+                root=False, deptype=('link', 'include')))
+        common = set(self.build_only_deps) & set(link_deps)
+        for name in common:
+            if link_deps[name] != self.build_only_deps[name]:
+                raise SpecError(
+                    "Separate concretization of {0}".format(name) +
+                    " produced build-time conflict for PKG_CONFIG_PATH" +
+                    " for {0}".format(self.name))
+        required_for_build = set(link_deps.itervalues())
+        required_for_build.update(
+            spec for (name, spec) in self.build_only_deps.iteritems()
+            if name not in common)
         return required_for_build
 
     def identify_build_only_deps(self):
