@@ -25,14 +25,13 @@
 from spack import *
 
 
-class RThdata(RPackage):
-    """Contains data sets used in other packages Torsten Hothorn maintains."""
+class RKernsmooth(RPackage):
+    """Functions for kernel smoothing (and density estimation)."""
 
-    homepage = "https://cran.r-project.org/package=TH.data"
-    url      = "https://cran.r-project.org/src/contrib/TH.data_1.0-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/TH.data"
+    homepage = "https://cran.r-project.org/package=KernSmooth"
+    url      = "https://cran.r-project.org/src/contrib/KernSmooth_2.23-15.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/KernSmooth"
 
-    version('1.0-7', '3e8b6b1a4699544f175215aed7039a94')
+    version('2.23-15', '746cdf26dec72004cf19978e87dcc982')
 
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r@2.5.0:')
