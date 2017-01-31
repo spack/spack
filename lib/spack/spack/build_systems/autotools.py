@@ -297,7 +297,7 @@ class AutotoolsPackage(PackageBase):
         """Searches the Makefile for an ``installcheck`` target
         and runs it if found.
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             self._if_make_target_execute('installcheck')
 
     # Check that self.prefix is there after installation
