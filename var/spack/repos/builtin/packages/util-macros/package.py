@@ -31,6 +31,7 @@ class UtilMacros(AutotoolsPackage):
     of their configure scripts with autoconf."""
 
     homepage = "http://cgit.freedesktop.org/xorg/util/macros/"
-    url = "https://www.x.org/archive/individual/util/util-macros-1.19.0.tar.bz2"
+    url = "https://www.x.org/archive/individual/util/util-macros-1.19.1.tar.bz2"
 
+    version('1.19.1', '6e76e546a4e580f15cebaf8019ef1625')
     version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
