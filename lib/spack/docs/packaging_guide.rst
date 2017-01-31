@@ -712,8 +712,8 @@ is at ``http://example.com/downloads/foo-1.0.tar.gz``, Spack will look
 in ``http://example.com/downloads/`` for links to additional versions.
 If you need to search another path for download links, you can supply
 some extra attributes that control how your package finds new
-versions. See the documentation on `attribute_list_url`_ and
-`attribute_list_depth`_.
+versions. See the documentation on :ref:`attribute_list_url` and
+:ref:`attribute_list_depth`.
 
 .. note::
 
@@ -728,6 +728,102 @@ versions. See the documentation on `attribute_list_url`_ and
     syntax errors, or the ``import`` will fail.  Use this once you've
     got your package in working order.
 
+--------------------
+Finding new versions
+--------------------
+
+You've already seen the ``homepage`` and ``url`` package attributes:
+
+.. code-block:: python
+   :linenos:
+
+   from spack import *
+
+
+   class Mpich(Package):
+      """MPICH is a high performance and widely portable implementation of
+         the Message Passing Interface (MPI) standard."""
+      homepage = "http://www.mpich.org"
+      url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+
+These are class-level attributes used by Spack to show users
+information about the package, and to determine where to download its
+source code.
+
+Spack uses the tarball URL to extrapolate where to find other tarballs
+of the same package (e.g. in :ref:`cmd-spack-checksum`, but
+this does not always work.  This section covers ways you can tell
+Spack to find tarballs elsewhere.
+
+.. _attribute_list_url:
+
+^^^^^^^^^^^^
+``list_url``
+^^^^^^^^^^^^
+
+When spack tries to find available versions of packages (e.g. with
+:ref:`cmd-spack-checksum`), it spiders the parent directory
+of the tarball in the ``url`` attribute.  For example, for libelf, the
+url is:
+
+.. code-block:: python
+
+   url = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+
+Here, Spack spiders ``http://www.mr511.de/software/`` to find similar
+tarball links and ultimately to make a list of available versions of
+``libelf``.
+
+For many packages, the tarball's parent directory may be unlistable,
+or it may not contain any links to source code archives.  In fact,
+many times additional package downloads aren't even available in the
+same directory as the download URL.
+
+For these, you can specify a separate ``list_url`` indicating the page
+to search for tarballs.  For example, ``libdwarf`` has the homepage as
+the ``list_url``, because that is where links to old versions are:
+
+.. code-block:: python
+   :linenos:
+
+   class Libdwarf(Package):
+       homepage = "http://www.prevanders.net/dwarf.html"
+       url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
+       list_url = homepage
+
+.. _attribute_list_depth:
+
+^^^^^^^^^^^^^^
+``list_depth``
+^^^^^^^^^^^^^^
+
+``libdwarf`` and many other packages have a listing of available
+versions on a single webpage, but not all do.  For example, ``mpich``
+has a tarball URL that looks like this:
+
+.. code-block:: python
+
+   url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+
+But its downloads are in many different subdirectories of
+``http://www.mpich.org/static/downloads/``.  So, we need to add a
+``list_url`` *and* a ``list_depth`` attribute:
+
+.. code-block:: python
+   :linenos:
+
+   class Mpich(Package):
+       homepage   = "http://www.mpich.org"
+       url        = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+       list_url   = "http://www.mpich.org/static/downloads/"
+       list_depth = 2
+
+By default, Spack only looks at the top-level page available at
+``list_url``.  ``list_depth`` tells it to follow up to 2 levels of
+links from the top-level page.  Note that here, this implies two
+levels of subdirectories, as the ``mpich`` website is structured much
+like a filesystem.  But ``list_depth`` really refers to link depth
+when spidering the page.
 
 .. _vcs-fetch:
 
@@ -1240,103 +1336,6 @@ RPATHs in Spack are handled in one of three ways:
    return a list of all the RPATHs that Spack will use when it
    links.  You can see this how this is used in the :ref:`PySide
    example <pyside-patch>` above.
-
---------------------
-Finding new versions
---------------------
-
-You've already seen the ``homepage`` and ``url`` package attributes:
-
-.. code-block:: python
-   :linenos:
-
-   from spack import *
-
-
-   class Mpich(Package):
-      """MPICH is a high performance and widely portable implementation of
-         the Message Passing Interface (MPI) standard."""
-      homepage = "http://www.mpich.org"
-      url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-
-These are class-level attributes used by Spack to show users
-information about the package, and to determine where to download its
-source code.
-
-Spack uses the tarball URL to extrapolate where to find other tarballs
-of the same package (e.g. in :ref:`cmd-spack-checksum`, but
-this does not always work.  This section covers ways you can tell
-Spack to find tarballs elsewhere.
-
-.. _attribute_list_url:
-
-^^^^^^^^^^^^
-``list_url``
-^^^^^^^^^^^^
-
-When spack tries to find available versions of packages (e.g. with
-:ref:`cmd-spack-checksum`), it spiders the parent directory
-of the tarball in the ``url`` attribute.  For example, for libelf, the
-url is:
-
-.. code-block:: python
-
-   url = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
-
-Here, Spack spiders ``http://www.mr511.de/software/`` to find similar
-tarball links and ultimately to make a list of available versions of
-``libelf``.
-
-For many packages, the tarball's parent directory may be unlistable,
-or it may not contain any links to source code archives.  In fact,
-many times additional package downloads aren't even available in the
-same directory as the download URL.
-
-For these, you can specify a separate ``list_url`` indicating the page
-to search for tarballs.  For example, ``libdwarf`` has the homepage as
-the ``list_url``, because that is where links to old versions are:
-
-.. code-block:: python
-   :linenos:
-
-   class Libdwarf(Package):
-       homepage = "http://www.prevanders.net/dwarf.html"
-       url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
-       list_url = homepage
-
-.. _attribute_list_depth:
-
-^^^^^^^^^^^^^^
-``list_depth``
-^^^^^^^^^^^^^^
-
-``libdwarf`` and many other packages have a listing of available
-versions on a single webpage, but not all do.  For example, ``mpich``
-has a tarball URL that looks like this:
-
-.. code-block:: python
-
-   url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-
-But its downloads are in many different subdirectories of
-``http://www.mpich.org/static/downloads/``.  So, we need to add a
-``list_url`` *and* a ``list_depth`` attribute:
-
-.. code-block:: python
-   :linenos:
-
-   class Mpich(Package):
-       homepage   = "http://www.mpich.org"
-       url        = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-       list_url   = "http://www.mpich.org/static/downloads/"
-       list_depth = 2
-
-By default, Spack only looks at the top-level page available at
-``list_url``.  ``list_depth`` tells it to follow up to 2 levels of
-links from the top-level page.  Note that here, this implies two
-levels of subdirectories, as the ``mpich`` website is structured much
-like a filesystem.  But ``list_depth`` really refers to link depth
-when spidering the page.
 
 .. _attribute_parallel:
 
