@@ -2718,7 +2718,9 @@ class Spec(object):
         TODO: allow, e.g., ``$6#`` to customize short hash length
         TODO: allow, e.g., ``$//`` for full hash.
         """
-        color = kwargs.get('color', False)
+        color = kwargs.get('color', None)
+        if color is None:
+            color = spack.tty.get_color()
         length = len(format_string)
         out = StringIO()
         named = escape = compiler = False
@@ -2882,7 +2884,9 @@ class Spec(object):
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
-        color = kwargs.pop('color', False)
+        color = kwargs.pop('color', None)
+        if color is None:
+            color = spack.tty.get_color()
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)

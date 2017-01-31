@@ -154,9 +154,8 @@ def disambiguate_spec(spec):
     elif len(matching_specs) > 1:
         args = ["%s matches multiple packages." % spec,
                 "Matching packages:"]
-        color = sys.stdout.isatty()
-        args += [colorize("  @K{%s} " % s.dag_hash(7), color=color) +
-                 s.format('$_$@$%@$=', color=color) for s in matching_specs]
+        args += [colorize("  @K{%s} " % s.dag_hash(7)) +
+                 s.format('$_$@$%@$=') for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)
 
@@ -200,7 +199,7 @@ def display_specs(specs, **kwargs):
         specs = index[(architecture, compiler)]
         specs.sort()
 
-        abbreviated = [s.format(format_string, color=True) for s in specs]
+        abbreviated = [s.format(format_string) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -215,7 +214,6 @@ def display_specs(specs, **kwargs):
             for spec in specs:
                 print(spec.tree(
                     format=format_string,
-                    color=True,
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
 
@@ -227,7 +225,7 @@ def display_specs(specs, **kwargs):
                     string = ""
                     if hashes:
                         string += gray_hash(s, hlen) + ' '
-                    string += s.format('$-%s$@%s' % (nfmt, vfmt), color=True)
+                    string += s.format('$-%s$@%s' % (nfmt, vfmt))
 
                     return string
 
@@ -237,7 +235,7 @@ def display_specs(specs, **kwargs):
                 for spec in specs:
                     # Print the hash if necessary
                     hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
-                    print(hsh + spec.format(format_string, color=True) + '\n')
+                    print(hsh + spec.format(format_string) + '\n')
 
         else:
             raise ValueError(

@@ -58,7 +58,7 @@ intro_by_level = {
 
 # control top-level spack options shown in basic vs. advanced help
 options_by_level = {
-    'short': 'hkV',
+    'short': ['h', 'k', 'V', 'color'],
     'long': 'all'
 }
 
@@ -86,6 +86,13 @@ section_order = {
 
 # Properties that commands are required to set.
 required_command_properties = ['level', 'section', 'description']
+
+# Mapping from color arguments to values for tty.set_color
+color_type = {
+    'always': True,
+    'auto': None,
+    'never': False
+}
 
 
 def set_working_dir():
@@ -280,6 +287,9 @@ def make_argument_parser():
 
     parser.add_argument('-h', '--help', action='store_true',
                         help="show this help message and exit")
+    parser.add_argument('--color', action='store', default='auto',
+                        choices=('always', 'never', 'auto'),
+                        help="when to colorize output; default is auto")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="write out debug logs during compile")
     parser.add_argument('-D', '--pdb', action='store_true',
@@ -324,6 +334,9 @@ def setup_main_options(args):
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.insecure = True
+
+    # when to use color
+    tty.set_color(color_type[args.color])
 
 
 def allows_unknown_args(command):

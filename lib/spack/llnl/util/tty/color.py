@@ -108,8 +108,20 @@ colors = {'k': 30, 'K': 90,  # black
 color_re = r'@(?:@|\.|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)'
 
 
-# Force color even if stdout is not a tty.
-_force_color = False
+# Force color; None: Only color if stdout is a tty
+# True: Always colorize output, False: Never colorize output
+_force_color = None
+
+
+def get_color():
+    if _force_color in [True, False]:
+        return _force_color
+    return sys.stdout.isatty()
+
+
+def set_color(flag):
+    global _force_color
+    _force_color = flag
 
 
 class match_to_ansi(object):
@@ -166,7 +178,9 @@ def colorize(string, **kwargs):
         color (bool): If False, output will be plain text without control
             codes, for output to non-console devices.
     """
-    color = kwargs.get('color', True)
+    color = kwargs.get('color', None)
+    if color is None:
+        color = get_color()
     return re.sub(color_re, match_to_ansi(color), string)
 
 
@@ -188,7 +202,7 @@ def cwrite(string, stream=sys.stdout, color=None):
        then it will be set based on stream.isatty().
     """
     if color is None:
-        color = stream.isatty() or _force_color
+        color = get_color()
     stream.write(colorize(string, color=color))
 
 
@@ -217,7 +231,7 @@ class ColorStream(object):
             if raw:
                 color = True
             else:
-                color = self._stream.isatty() or _force_color
+                color = get_color()
         raw_write(colorize(string, color=color))
 
     def writelines(self, sequence, **kwargs):
