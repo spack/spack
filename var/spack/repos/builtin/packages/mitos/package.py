@@ -30,7 +30,6 @@ class Mitos(Package):
     performance data to view with MemAxes"""
 
     homepage = "https://github.com/llnl/Mitos"
-    url = "https://github.com/llnl/Mitos"
 
     version('0.9.2',
             git='https://github.com/llnl/Mitos.git',

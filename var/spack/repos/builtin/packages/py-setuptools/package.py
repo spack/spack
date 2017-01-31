@@ -30,7 +30,7 @@ class PySetuptools(PythonPackage):
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://pypi.python.org/pypi/setuptools"
-    url      = "https://pypi.python.org/packages/source/s/setuptools/setuptools-11.3.tar.gz"
+    url      = "https://pypi.python.org/packages/source/s/setuptools/setuptools-20.7.0.tar.gz"
 
     version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c',
             url="https://pypi.python.org/packages/9f/32/81c324675725d78e7f6da777483a3453611a427db0145dfb878940469692/setuptools-25.2.0.tar.gz")

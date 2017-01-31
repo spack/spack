@@ -29,7 +29,7 @@ class Prank(Package):
     """A powerful multiple sequence alignment browser."""
 
     homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.140603.tgz"
+    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
 
     version('150803', '71ac2659e91c385c96473712c0a23e8a')
 

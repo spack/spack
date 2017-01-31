@@ -42,7 +42,6 @@ class Exodusii(Package):
     """
 
     homepage = "https://github.com/gsjaardema/seacas"
-    url      = "https://github.com/gsjaardema/seacas/archive/master.zip"
 
     version('2016-08-09', git='https://github.com/gsjaardema/seacas.git', commit='2ffeb1b')
 

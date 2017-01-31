@@ -29,7 +29,6 @@ class Cityhash(AutotoolsPackage):
     """CityHash, a family of hash functions for strings."""
 
     homepage = "https://github.com/google/cityhash"
-    url      = "https://github.com/google/cityhash"
 
     version('2013-07-31', git='https://github.com/google/cityhash.git',
             commit='8af9b8c2b889d80c22d6bc26ba0df1afb79a30db')

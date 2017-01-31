@@ -60,7 +60,7 @@ class Openspeedshop(Package):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url	= "https://github.com/OpenSpeedShop"
+
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
     version('2.3', branch='master',

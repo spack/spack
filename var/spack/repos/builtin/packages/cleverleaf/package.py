@@ -35,7 +35,6 @@ class Cleverleaf(Package):
     """
 
     homepage = "http://uk-mac.github.io/CleverLeaf/"
-    url      = "https://github.com/UK-MAC/CleverLeaf/tarball/master"
 
     version('develop', git='https://github.com/UK-MAC/CleverLeaf_ref.git',
             branch='develop')

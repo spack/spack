@@ -31,9 +31,9 @@ class Libxstream(Package):
     conditions.'''
 
     homepage = 'https://github.com/hfp/libxstream'
-    url      = 'https://github.com/hfp/libxstream.git'
+    url      = 'https://github.com/hfp/libxstream/archive/0.9.0.tar.gz'
 
-    version('0.9.0', git='https://github.com/hfp/libxstream.git')
+    version('0.9.0', 'fd74b7cf5f145ff4925d91be2809571c')
 
     def patch(self):
         kwargs = {'ignore_absent': False, 'backup': True, 'string': True}

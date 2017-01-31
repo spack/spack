@@ -29,14 +29,17 @@ from spack import *
 class Panda(Package):
     """PANDA: Parallel AdjaceNcy Decomposition Algorithm"""
     homepage = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/index.html"
-    url      = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/current_panda.tar"
+    url      = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-2016-03-07.tar"
 
-    version('current', 'b06dc312ee56e13eefea9c915b70fcef')
+    version('2016-03-07', 'b06dc312ee56e13eefea9c915b70fcef')
 
     # Note: Panda can also be built without MPI support
 
     depends_on("cmake", type="build")
     depends_on("mpi")
+
+    def url_for_version(self, version):
+        return "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-{0}.tar".format(version)
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

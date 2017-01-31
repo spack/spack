@@ -34,7 +34,6 @@ def get_submodules():
 class Rust(Package):
     """The rust programming language toolchain"""
     homepage = "http://www.rust-lang.org"
-    url = "https://github.com/rust-lang/rust"
 
     version('1.8.0', tag='1.8.0', git="https://github.com/rust-lang/rust")
 

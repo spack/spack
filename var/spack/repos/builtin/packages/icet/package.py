@@ -30,7 +30,6 @@ class Icet(CMakePackage):
        sort-last parallel rendering library."""
 
     homepage = "http://icet.sandia.gov"
-    url = "https://example.com/icet-1.2.3.tar.gz"
 
     version('develop', branch='master',
             git='https://gitlab.kitware.com/icet/icet.git')

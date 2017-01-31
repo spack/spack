@@ -27,8 +27,7 @@ from spack import *
 
 class Paraview(Package):
     homepage = 'http://www.paraview.org'
-    url      = 'http://www.paraview.org/files/v5.0/ParaView-v'
-    _url_str = 'http://www.paraview.org/files/v%s/ParaView-v%s-source.tar.gz'
+    url      = 'http://www.paraview.org/files/v5.0/ParaView-v5.0.0-source.tar.gz'
 
     version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378')
     version('5.0.0', '4598f0b421460c8bbc635c9a1c3bdbee')
@@ -67,7 +66,8 @@ class Paraview(Package):
 
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
-        return self._url_str % (version.up_to(2), version)
+        url = 'http://www.paraview.org/files/v%s/ParaView-v%s-source.tar.gz'
+        return url % (version.up_to(2), version)
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

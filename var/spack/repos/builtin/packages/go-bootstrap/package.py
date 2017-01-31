@@ -37,7 +37,6 @@ from spack import *
 class GoBootstrap(Package):
     """Old C-bootstrapped go to bootstrap real go"""
     homepage = "https://golang.org"
-    url = "https://go.googlesource.com/go"
 
     extendable = True
 
