@@ -75,6 +75,7 @@ class Openmpi(AutotoolsPackage):
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.0:1.10.1")
+    patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
     # Fabrics
     variant('psm', default=False, description='Build support for the PSM library')
