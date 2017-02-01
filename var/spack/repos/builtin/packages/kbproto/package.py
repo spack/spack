@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Kbproto(Package):
+class Kbproto(AutotoolsPackage):
     """X Keyboard Extension.
 
     This extension defines a protcol to provide a number of new capabilities
@@ -38,8 +38,3 @@ class Kbproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

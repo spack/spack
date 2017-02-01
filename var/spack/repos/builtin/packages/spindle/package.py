@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Spindle(Package):
+class Spindle(AutotoolsPackage):
     """Spindle improves the library-loading performance of dynamically
        linked HPC applications.  Without Spindle large MPI jobs can
        overload on a shared file system when loading dynamically
@@ -38,8 +38,3 @@ class Spindle(Package):
     version('0.8.1', 'f11793a6b9d8df2cd231fccb2857d912')
 
     depends_on("launchmon")
-
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")

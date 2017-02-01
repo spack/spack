@@ -45,7 +45,7 @@ Add a new compiler
 ^^^^^^^^^^^^^^^^^^
 
 Spack automatically scans the environment to search for available
-compilers on first use. On a Ubuntu 14.04 a fresh clone will show
+compilers on first use. On Ubuntu 14.04, a fresh clone will show
 something like this:
 
 .. code-block:: console
@@ -58,9 +58,10 @@ something like this:
   -- gcc ----------------------------------------------------------
   gcc@4.8
 
-For the purpose of building a limited set of packages with some features
-that will help showcasing the capabilities of
-module customization the first thing we need is to build a new compiler:
+In order to showcase the capabilities of module customization, we will want to
+build a limited set of packages with multiple compilers. If you do not already
+have multiple compilers listed by ``spack compilers``, you should build one
+with Spack:
 
 .. code-block:: console
 
@@ -85,7 +86,7 @@ Then we can use shell support for modules to add it to the list of known compile
   -- gcc ----------------------------------------------------------
   gcc@6.2.0  gcc@4.8
 
-Note that the final 7 digits hash at the end of the generated module may vary depending
+Note that the 7-digit hash at the end of the generated module may vary depending
 on architecture or package version.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -96,16 +97,11 @@ Next you should install a few modules that will be used in the tutorial:
 
 .. code-block:: console
 
-  $ spack install netlib-scalapack ^openmpi ^openblas
-  # ...
-
-The packages you need to install are:
-
-- ``netlib-scalapack ^openmpi ^openblas``
-- ``netlib-scalapack ^mpich ^openblas``
-- ``netlib-scalapack ^openmpi ^netlib-lapack``
-- ``netlib-scalapack ^mpich ^netlib-lapack``
-- ``py-scipy ^openblas``
+   $ spack install netlib-scalapack ^openmpi ^openblas
+   $ spack install netlib-scalapack ^mpich ^openblas
+   $ spack install netlib-scalapack ^openmpi ^netlib-lapack
+   $ spack install netlib-scalapack ^mpich ^netlib-lapack
+   $ spack install py-scipy ^openblas
 
 In the end your environment should look something like:
 
@@ -500,7 +496,7 @@ Regenerating the module files should result in something like:
   Fortran, and Java.
   ]])
 
-As you see the ``gcc`` module has the environment variable ``GCC_ROOT`` set.
+As you can see, the ``gcc`` module has the environment variable ``GCC_ROOT`` set.
 
 Sometimes it's also useful to apply environment modifications selectively and target
 only certain packages. You can, for instance set the common variables ``CC``, ``CXX``,
@@ -727,7 +723,7 @@ Core/Compiler/MPI
 
 The most common hierarchy is the so called ``Core/Compiler/MPI``. To have an idea
 how a hierarchy is organized you may refer to the
-`Lmod guide <https://www.tacc.utexas.edu/research-development/tacc-projects/lmod/user-guide/module-hierarchy>`_.
+`Lmod guide <http://lmod.readthedocs.io/en/latest/080_hierarchy.html>`_.
 Since ``lmod`` is not enabled by default, you need to add it to the list of
 enabled module file generators. The other things you need to do are:
 
@@ -782,9 +778,10 @@ After modifications the configuration file will be:
     purpose of overriding the default list of enabled generators so
     that only ``lmod`` will be active (see :ref:`the reference
     manual <config-overrides>` for a more detailed explanation of
-    config scopes).
+    config scopes). If a single colon is used, it will append instead
+    of override.
 
-The directive ``core_compilers`` accepts a list of compilers : everything built
+The directive ``core_compilers`` accepts a list of compilers; everything built
 using these compilers will create a module in the ``Core`` part of the hierarchy. It is
 common practice to put the OS provided compilers in the list and only build common utilities
 and other compilers in ``Core``.

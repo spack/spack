@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libsm(Package):
+class Libsm(AutotoolsPackage):
     """libSM - X Session Management Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libSM"
@@ -39,9 +39,3 @@ class Libsm(Package):
     depends_on('xtrans', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

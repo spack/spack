@@ -39,7 +39,7 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url = 'ftp://ftp.gromacs.org/pub/gromacs/gromacs-5.1.2.tar.gz'
+    url = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
 
     version('5.1.2', '614d0be372f1a6f1f36382b7a6fcab98')
 

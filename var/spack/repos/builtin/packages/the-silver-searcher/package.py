@@ -25,7 +25,7 @@
 from spack import *
 
 
-class TheSilverSearcher(Package):
+class TheSilverSearcher(AutotoolsPackage):
     """Fast recursive grep alternative"""
     homepage = "http://geoff.greer.fm/ag/"
     url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
@@ -36,9 +36,3 @@ class TheSilverSearcher(Package):
     depends_on('pcre')
     depends_on('xz')
     depends_on('pkg-config', type='build')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

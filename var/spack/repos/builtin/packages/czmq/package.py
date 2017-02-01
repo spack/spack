@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Czmq(Package):
+class Czmq(AutotoolsPackage):
     """ A C interface to the ZMQ library """
     homepage = "http://czmq.zeromq.org"
     url      = "https://github.com/zeromq/czmq/archive/v3.0.2.tar.gz"
@@ -39,23 +38,3 @@ class Czmq(Package):
     depends_on('autoconf', type='build')
     depends_on('pkg-config', type='build')
     depends_on('zeromq')
-
-    def install(self, spec, prefix):
-        # Work around autogen.sh oddities
-        # bash = which("bash")
-        # bash("./autogen.sh")
-        mkdirp("config")
-        autoreconf = which("autoreconf")
-        autoreconf("--install", "--verbose", "--force",
-                   "-I", "config",
-                   "-I", os.path.join(spec['pkg-config'].prefix,
-                                      "share", "aclocal"),
-                   "-I", os.path.join(spec['automake'].prefix,
-                                      "share", "aclocal"),
-                   "-I", os.path.join(spec['libtool'].prefix,
-                                      "share", "aclocal"),
-                   )
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

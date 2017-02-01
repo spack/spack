@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Heppdt(Package):
+class Heppdt(AutotoolsPackage):
     """The HepPID library contains translation methods for particle ID's
     to and from various Monte Carlo generators and the PDG standard
     numbering scheme. We realize that the generators adhere closely
@@ -40,9 +40,3 @@ class Heppdt(Package):
     version('3.03.01', 'd411f3bfdf9c4350d802241ba2629cc2')
     version('3.03.00', 'cd84d0a0454be982dcd8c285e060a7b3')
     version('2.06.01', '5688b4bdbd84b48ed5dd2545a3dc33c0')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

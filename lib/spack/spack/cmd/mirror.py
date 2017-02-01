@@ -37,13 +37,13 @@ from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
-description = "Manage mirrors."
+description = "manage mirrors"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check fetched packages against checksum")
+        help="do not check fetched packages against checksum")
 
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
@@ -51,30 +51,30 @@ def setup_parser(subparser):
     # Create
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
-                               help="Directory in which to create mirror.")
+                               help="directory in which to create mirror")
     create_parser.add_argument(
         'specs', nargs=argparse.REMAINDER,
-        help="Specs of packages to put in mirror")
+        help="specs of packages to put in mirror")
     create_parser.add_argument(
-        '-f', '--file', help="File with specs of packages to put in mirror.")
+        '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
-        help="Also fetch all dependencies")
+        help="also fetch all dependencies")
     create_parser.add_argument(
         '-o', '--one-version-per-spec', action='store_const',
         const=1, default=0,
-        help="Only fetch one 'preferred' version per spec, not all known.")
+        help="only fetch one 'preferred' version per spec, not all known")
 
     scopes = spack.config.config_scopes
 
     # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
-    add_parser.add_argument('name', help="Mnemonic name for mirror.")
+    add_parser.add_argument('name', help="mnemonic name for mirror")
     add_parser.add_argument(
-        'url', help="URL of mirror directory from 'spack mirror create'.")
+        'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        help="configuration scope to modify")
 
     # Remove
     remove_parser = sp.add_parser('remove', aliases=['rm'],
@@ -82,13 +82,13 @@ def setup_parser(subparser):
     remove_parser.add_argument('name')
     remove_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
     list_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_list_scope,
-        help="Configuration scope to read from.")
+        help="configuration scope to read from")
 
 
 def mirror_add(args):
