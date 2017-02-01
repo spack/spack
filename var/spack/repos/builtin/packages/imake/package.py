@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Imake(Package):
+class Imake(AutotoolsPackage):
     """The imake build system."""
 
     homepage = "http://www.snake.net/software/imake-stuff/"
@@ -35,9 +35,3 @@ class Imake(Package):
 
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

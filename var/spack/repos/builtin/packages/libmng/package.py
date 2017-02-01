@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libmng(Package):
+class Libmng(AutotoolsPackage):
     """libmng -THE reference library for reading, displaying, writing
        and examining Multiple-Image Network Graphics.  MNG is the animation
        extension to the popular PNG image-format."""
@@ -43,7 +43,6 @@ class Libmng(Package):
         filter_file(r'^(\#include \<jpeglib\.h\>)',
                     '#include<stdio.h>\n\\1', 'libmng_types.h')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+    @run_before('configure')
+    def clean_configure_directory(self):
+        make('distclean')

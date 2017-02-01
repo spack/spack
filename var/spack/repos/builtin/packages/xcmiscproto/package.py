@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xcmiscproto(Package):
+class Xcmiscproto(AutotoolsPackage):
     """XC-MISC Extension.
 
     This extension defines a protocol that provides Xlib two ways to query
@@ -38,8 +38,3 @@ class Xcmiscproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XorgDocs(Package):
+class XorgDocs(AutotoolsPackage):
     """This package provides miscellaneous documentation for the X Window
     System that doesn't better fit into other packages.
 
@@ -40,9 +40,3 @@ class XorgDocs(Package):
     depends_on('util-macros', type='build')
     depends_on('xorg-sgml-doctools@1.8:', type='build')
     depends_on('xmlto', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

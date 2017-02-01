@@ -49,7 +49,7 @@ class Cmor(AutotoolsPackage):
     depends_on('python@:2.7', when='+python')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
 
-    @AutotoolsPackage.precondition('configure')
+    @run_before('configure')
     def validate(self):
         if '+fortran' in self.spec and not self.compiler.fc:
             msg = 'cannot build a fortran variant without a fortran compiler'

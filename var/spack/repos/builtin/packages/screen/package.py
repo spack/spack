@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Screen(Package):
+class Screen(AutotoolsPackage):
     """Screen is a full-screen window manager that multiplexes a physical
     terminal between several processes, typically interactive shells.
     """
@@ -51,8 +51,3 @@ class Screen(Package):
     version('3.7.1', '27cdd29318446561ef7c966041cbd2c9')
 
     depends_on('ncurses')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")

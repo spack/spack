@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gperf(Package):
+class Gperf(AutotoolsPackage):
     """GNU gperf is a perfect hash function generator. For a given
     list of strings, it produces a hash function and hash table, in
     form of C or C++ code, for looking up a value depending on the
@@ -38,9 +38,4 @@ class Gperf(Package):
 
     version('3.0.4', 'c1f1db32fb6598d6a93e6e88796a8632')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        # make('check')  # fails tests
-        make('install')
+    # NOTE: `make check` is known to fail tests
