@@ -42,6 +42,9 @@ class Mpileaks(Package):
     depends_on("mpi")
     depends_on("callpath")
 
+    # Will be used to try raising an exception
+    libs = None
+
     def install(self, spec, prefix):
         pass
 

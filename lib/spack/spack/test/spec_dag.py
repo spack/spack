@@ -722,3 +722,10 @@ class TestSpecDag(object):
         assert 'cxx' in query.extra_parameters
         assert 'fortran' in query.extra_parameters
         assert query.isvirtual
+
+    def test_getitem_exceptional_paths(self):
+        s = Spec('mpileaks')
+        s.concretize()
+
+        with pytest.raises(AttributeError):
+            s.libs

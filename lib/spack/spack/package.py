@@ -1053,6 +1053,9 @@ class PackageBase(object):
         touch(join_path(self.prefix.bin, 'fake'))
         mkdirp(self.prefix.include)
         mkdirp(self.prefix.lib)
+        library_name = 'lib' + self.name
+        touch(join_path(self.prefix.lib, library_name + '.so'))
+        touch(join_path(self.prefix.lib, library_name + '.a'))
         mkdirp(self.prefix.man1)
 
     def _if_make_target_execute(self, target):
