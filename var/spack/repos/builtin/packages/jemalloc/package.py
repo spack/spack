@@ -49,14 +49,7 @@ class Jemalloc(Package):
         if '+prof' in spec:
             configure_args.append('--enable-prof')
 
-        # master install fails due to incorrect installation of html files
-        if spec.satisfies('@master:'):
-            autoconf = Executable('./autogen.sh')
-            autoconf(*configure_args)
-            filter_file(r'install_doc: install_doc_html install_doc_man',
-                        '', 'Makefile')
-        else:
-            configure(*configure_args)
+        configure(*configure_args)
 
         # Don't use -Werror
         filter_file(r'-Werror=\S*', '', 'Makefile')

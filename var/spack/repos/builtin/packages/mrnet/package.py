@@ -42,7 +42,6 @@ class Mrnet(AutotoolsPackage):
     parallel = False
 
     depends_on("boost")
-    depends_on("bison")
 
     def configure_args(self):
         spec = self.spec

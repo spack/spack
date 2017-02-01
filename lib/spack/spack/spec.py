@@ -197,6 +197,9 @@ special_types = {
 
 legal_deps = tuple(special_types) + alldeps
 
+"""Max integer helps avoid passing too large a value to cyaml."""
+maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
+
 
 def validate_deptype(deptype):
     if isinstance(deptype, str):
@@ -1160,7 +1163,7 @@ class Spec(object):
             return self._hash[:length]
         else:
             yaml_text = syaml.dump(
-                self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+                self.to_node_dict(), default_flow_style=True, width=maxint)
             sha = hashlib.sha1(yaml_text)
             b32_hash = base64.b32encode(sha.digest()).lower()
             if self.concrete:
