@@ -33,34 +33,51 @@ class Elemental(CMakePackage):
 
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('hybrid', default=True, description='Elemental: make use of OpenMP within MPI packing/unpacking')
-    variant('c_interface', default=False, description='Elemental: build C interface')
-    variant('python_package', default=False, description='Elemental: install Python interface')
-    variant('disable_parmetis', default=True, description='Elemental: disable ParMETIS')
-    variant('disable_quad', default=True, description='Elemental: disable quad precision')
-    variant('use_64bit_ints', default=False, description='Elemental: use 64bit integers')
-    variant('use_64bit_blas_ints', default=False, description='Elemental: use 64bit integers for BLAS')
+    variant('shared', default=True, 
+            description='Enables the build of shared libraries')
+    variant('hybrid', default=True, 
+            description='Elemental: make use of OpenMP within MPI packing/unpacking')
+    variant('c_interface', default=False, 
+            description='Elemental: build C interface')
+    variant('python_package', default=False, 
+            description='Elemental: install Python interface')
+    variant('disable_parmetis', default=True, 
+            description='Elemental: disable ParMETIS')
+    variant('disable_quad', default=True, 
+            description='Elemental: disable quad precision')
+    variant('int64', default=False, 
+            description='Elemental: use 64bit integers')
+    variant('int64_blas', default=False, 
+            description='Elemental: use 64bit integers for BLAS')
 
     depends_on('cmake', type='build')
     depends_on('openblas +openmp')
-    depends_on('metis')
+    depends_on('metis +int64', when='+int64')
+    depends_on('metis', when='~int64')
     depends_on('mpi')
     depends_on('netlib-scalapack')
-
     def cmake_args(self):
         args = ['-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
                 '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
                 '-DEL_DISABLE_SCALAPACK:BOOL=OFF',
-                '-DMATH_PATHS:STRING=-L{0}/lib -L{1}/lib'.format(self.spec['openblas'].prefix, self.spec['netlib-scalapack'].prefix),
+                '-DMATH_PATHS:STRING=-L{0}/lib -L{1}/lib'.format(
+                    self.spec['openblas'].prefix, self.spec['netlib-scalapack'].prefix),
                 '-DMATH_LIBS:STRING=-lopenblas -lscalapack',
                 '-DGFORTRAN_LIB=libgfortran.so',
-                '-DBUILD_SHARED_LIBS:BOOL={0}'.format(('ON' if '+shared' in self.spec else 'OFF')),
-                '-DEL_HYBRID:BOOL={0}'.format(('ON' if '+hybrid' in self.spec else 'OFF')),
-                '-DEL_C_INTERFACE:BOOL={0}'.format(('ON' if '+c_interface' in self.spec else 'OFF')),
-                '-DINSTALL_PYTHON_PACKAGE:BOOL={0}'.format(('ON' if '+python_package' in self.spec else 'OFF')),
-                '-DEL_DISABLE_PARMETIS:BOOL={0}'.format(('ON' if '+disable_parmetis' in self.spec else 'OFF')),
-                '-DEL_DISABLE_QUAD:BOOL={0}'.format(('ON' if '+disable_quad' in self.spec else 'OFF')),
-                '-DEL_USE_64BIT_INTS:BOOL={0}'.format(('ON' if '+use_64bit_ints' in self.spec else 'OFF')),
-                '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format(('ON' if '+use_64bit_blas_ints' in self.spec else 'OFF'))]
+                '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
+                    'ON' if '+shared' in self.spec else 'OFF')),
+                '-DEL_HYBRID:BOOL={0}'.format((
+                    'ON' if '+hybrid' in self.spec else 'OFF')),
+                '-DEL_C_INTERFACE:BOOL={0}'.format((
+                    'ON' if '+c_interface' in self.spec else 'OFF')),
+                '-DINSTALL_PYTHON_PACKAGE:BOOL={0}'.format((
+                    'ON' if '+python_package' in self.spec else 'OFF')),
+                '-DEL_DISABLE_PARMETIS:BOOL={0}'.format((
+                    'ON' if '+disable_parmetis' in self.spec else 'OFF')),
+                '-DEL_DISABLE_QUAD:BOOL={0}'.format((
+                    'ON' if '+disable_quad' in self.spec else 'OFF')),
+                '-DEL_USE_64BIT_INTS:BOOL={0}'.format((
+                    'ON' if '+int64' in self.spec else 'OFF')),
+                '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format((
+                    'ON' if '+int64_blas' in self.spec else 'OFF'))]
         return args
