@@ -38,21 +38,21 @@ class Elemental(CMakePackage):
     variant('shared', default=True, 
             description='Enables the build of shared libraries')
     variant('hybrid', default=True, 
-            description='Elemental: make use of OpenMP within MPI packing/unpacking')
+            description='Make use of OpenMP within MPI packing/unpacking')
     variant('c_interface', default=False, 
-            description='Elemental: build C interface')
+            description='Build C interface')
     variant('python_package', default=False, 
-            description='Elemental: install Python interface')
-    variant('disable_parmetis', default=True, 
-            description='Elemental: disable ParMETIS')
-    variant('disable_quad', default=True, 
-            description='Elemental: disable quad precision')
+            description='Install Python interface')
+    variant('parmetis', default=False, 
+            description='Enable ParMETIS')
+    variant('quad', default=False, 
+            description='Enable quad precision')
     variant('int64', default=False, 
-            description='Elemental: use 64bit integers')
+            description='Use 64bit integers')
     variant('int64_blas', default=False, 
-            description='Elemental: use 64bit integers for BLAS')
+            description='Use 64bit integers for BLAS')
     variant('scalapack', default=False,
-            description='Elemental: build with ScaLAPACK library')
+            description='Build with ScaLAPACK library')
 
     depends_on('cmake', type='build')
     depends_on('openblas +openmp', when='~int64_blas')
@@ -85,9 +85,9 @@ class Elemental(CMakePackage):
                 '-DINSTALL_PYTHON_PACKAGE:BOOL={0}'.format((
                     'ON' if '+python_package' in self.spec else 'OFF')),
                 '-DEL_DISABLE_PARMETIS:BOOL={0}'.format((
-                    'ON' if '+disable_parmetis' in self.spec else 'OFF')),
+                    'OFF' if '+parmetis' in self.spec else 'ON')),
                 '-DEL_DISABLE_QUAD:BOOL={0}'.format((
-                    'ON' if '+disable_quad' in self.spec else 'OFF')),
+                    'OFF' if '+quad' in self.spec else 'ON')),
                 '-DEL_USE_64BIT_INTS:BOOL={0}'.format((
                     'ON' if '+int64' in self.spec else 'OFF')),
                 '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format((
