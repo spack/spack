@@ -33,6 +33,8 @@ class Elemental(CMakePackage):
 
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
+    variant('debug', default=False, 
+            description='Builds a debug version of the libraries')
     variant('shared', default=True, 
             description='Enables the build of shared libraries')
     variant('hybrid', default=True, 
@@ -49,20 +51,30 @@ class Elemental(CMakePackage):
             description='Elemental: use 64bit integers')
     variant('int64_blas', default=False, 
             description='Elemental: use 64bit integers for BLAS')
+    variant('scalapack', default=False,
+            description='Elemental: build with ScaLAPACK library')
 
     depends_on('cmake', type='build')
-    depends_on('openblas +openmp')
+    depends_on('openblas +openmp', when='~int64_blas')
+    depends_on('metis')
     depends_on('metis +int64', when='+int64')
-    depends_on('metis', when='~int64')
     depends_on('mpi')
-    depends_on('netlib-scalapack')
+    depends_on('netlib-scalapack', when='+scalapack ~int64_blas')
+
+    def build_type(self):
+        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
+        :return: value for ``CMAKE_BUILD_TYPE``
+        """
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
     def cmake_args(self):
         args = ['-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
                 '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
-                '-DEL_DISABLE_SCALAPACK:BOOL=OFF',
-                '-DMATH_PATHS:STRING=-L{0}/lib -L{1}/lib'.format(
-                    self.spec['openblas'].prefix, self.spec['netlib-scalapack'].prefix),
-                '-DMATH_LIBS:STRING=-lopenblas -lscalapack',
+                '-DEL_DISABLE_SCALAPACK:BOOL={0}'.format((
+                    'ON' if '+scalapack' in self.spec else 'OFF')),
                 '-DGFORTRAN_LIB=libgfortran.so',
                 '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
                     'ON' if '+shared' in self.spec else 'OFF')),
@@ -80,4 +92,21 @@ class Elemental(CMakePackage):
                     'ON' if '+int64' in self.spec else 'OFF')),
                 '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format((
                     'ON' if '+int64_blas' in self.spec else 'OFF'))]
+        if '+int64_blas' in self.spec:
+            args.extend(['-DEL_BLAS_SUFFIX:STRING={0}'.format((
+                '_64_' if '+int64_blas' in self.spec else '_')),
+                         '-DCUSTOM_BLAS_SUFFIX:BOOL=TRUE']),
+            if '+scalapack' in self.spec:
+                args.extend(['-DEL_LAPACK_SUFFIX:STRING={0}'.format((
+                    '_64_' if '+int64_blas' in self.spec else '_')),
+                             '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
+        else:
+            if '+scalapack' in self.spec:
+                args.extend(['-DMATH_PATHS:STRING=-L{0}/lib -L{1}/lib'.format(
+                    self.spec['openblas'].prefix, self.spec['netlib-scalapack'].prefix),
+                             '-DMATH_LIBS:STRING=-lopenblas -lscalapack'])
+            else:
+                args.extend(['-DMATH_PATHS:STRING=-L{0}/lib'.format(
+                    self.spec['openblas'].prefix),
+                             '-DMATH_LIBS:STRING=-lopenblas'])
         return args
