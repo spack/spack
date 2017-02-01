@@ -383,3 +383,17 @@ class IntelParallelStudio(IntelInstaller):
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'ipp', 'lib', 'mic'))
             run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+
+    def setup_dependent_package(self, module, dep_spec):
+        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')):
+            # Check for presence of bin64 or bin directory
+            if os.path.isdir(self.prefix.bin):
+                bindir = self.prefix.bin
+            elif os.path.isdir(join_path(self.prefix, 'bin64')):
+                bindir = join_path(self.prefix, 'bin64')
+            else:
+                raise "No suitable bindir found"
+            self.spec.mpicc = join_path(bindir, 'mpiicc')
+            self.spec.mpicxx = join_path(bindir, 'mpiicpc')
+            self.spec.mpifc = join_path(bindir, 'mpiifort')
+            self.spec.mpif77 = join_path(bindir, 'mpif77')
