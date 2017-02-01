@@ -190,7 +190,6 @@ def parse_version_offset(path):
 
     # stem:   Everything from path after the final '/'
     stem = os.path.basename(path)
-    offset = len(path) - len(stem)
 
     # List of the following format:
     #
@@ -292,9 +291,15 @@ def parse_version_offset(path):
             version = match.group(1)
             start   = match.start(1)
 
-            # if we matched from the basename, then add offset in.
+            # If we matched from the stem or suffix, we need to add offset
+            offset = 0
             if match_string is stem:
-                start += offset
+                offset = len(path) - len(stem)
+            elif match_string is suffix:
+                offset = len(path)
+                if ext:
+                    offset += len(ext) + 1  # .tar.gz is converted to tar.gz
+            start += offset
 
             return version, start, len(version), i, regex
 
@@ -351,7 +356,6 @@ def parse_name_offset(path, v=None):
 
     # stem:   Everything from path after the final '/'
     stem = os.path.basename(path)
-    offset = len(path) - len(stem)
 
     # List of the following format:
     #
@@ -391,9 +395,15 @@ def parse_name_offset(path, v=None):
             name  = match.group(1)
             start = match.start(1)
 
-            # if we matched from the basename, then add offset in.
+            # If we matched from the stem or suffix, we need to add offset
+            offset = 0
             if match_string is stem:
-                start += offset
+                offset = len(path) - len(stem)
+            elif match_string is suffix:
+                offset = len(path)
+                if ext:
+                    offset += len(ext) + 1  # .tar.gz is converted to tar.gz
+            start += offset
 
             # package names should be lowercase and separated by dashes.
             name = name.lower()
