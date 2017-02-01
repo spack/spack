@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxfont2(Package):
+class Libxfont2(AutotoolsPackage):
     """libXfont provides the core of the legacy X11 font system, handling the
     index files (fonts.dir, fonts.alias, fonts.scale), the various font file
     formats, and rasterizing them.   It is used by the X servers, the
@@ -46,9 +46,3 @@ class Libxfont2(Package):
     depends_on('fontsproto@2.1.3:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

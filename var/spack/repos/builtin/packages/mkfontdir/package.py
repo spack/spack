@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mkfontdir(Package):
+class Mkfontdir(AutotoolsPackage):
     """mkfontdir creates the fonts.dir files needed by the legacy X server
     core font system.   The current implementation is a simple wrapper script
     around the mkfontscale program, which must be built and installed first."""
@@ -39,9 +39,3 @@ class Mkfontdir(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

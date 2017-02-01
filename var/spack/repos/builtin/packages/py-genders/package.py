@@ -36,6 +36,9 @@ class PyGenders(Package):
             url='https://github.com/chaos/genders/releases/download/genders-1-22-1/genders-1.22.tar.gz')
     extends('python')
 
+    # FIXME: Missing a dependency on genders
+    # #include <genders.h>
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make(parallel=False)

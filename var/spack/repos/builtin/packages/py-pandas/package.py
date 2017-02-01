@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPandas(Package):
+class PyPandas(PythonPackage):
     """pandas is a Python package providing fast, flexible, and expressive
        data structures designed to make working with relational or
        labeled data both easy and intuitive. It aims to be the
@@ -42,13 +42,9 @@ class PyPandas(Package):
     version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
     version('0.18.0', 'f143762cd7a59815e348adf4308d2cf6')
 
-    extends('python')
     depends_on('py-dateutil', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-numexpr', type=('build', 'run'))
     depends_on('py-bottleneck', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

@@ -24,48 +24,78 @@
 ##############################################################################
 
 import inspect
-import os
 import platform
 
-import llnl.util.tty as tty
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
 from spack.directives import depends_on
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 
 class CMakePackage(PackageBase):
-    """Specialized class for packages that are built using cmake
+    """Specialized class for packages built using CMake
 
     This class provides three phases that can be overridden:
-    - cmake
-    - build
-    - install
+
+        1. :py:meth:`~.CMakePackage.cmake`
+        2. :py:meth:`~.CMakePackage.build`
+        3. :py:meth:`~.CMakePackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override `cmake_args`
+    necessary will be to override :py:meth:`~.CMakePackage.cmake_args`.
+    For a finer tuning you may also override:
+
+        +-----------------------------------------------+--------------------+
+        | **Method**                                    | **Purpose**        |
+        +===============================================+====================+
+        | :py:meth:`~.CMakePackage.build_type`          | Specify the value  |
+        |                                               | for the            |
+        |                                               | CMAKE_BUILD_TYPE   |
+        |                                               | variable           |
+        +-----------------------------------------------+--------------------+
+        | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Location of the    |
+        |                                               | root CMakeLists.txt|
+        +-----------------------------------------------+--------------------+
+        | :py:meth:`~.CMakePackage.build_directory`     | Directory where to |
+        |                                               | build the package  |
+        +-----------------------------------------------+--------------------+
+
+
     """
+    #: Phases of a CMake package
     phases = ['cmake', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'CMakePackage'
+
+    build_targets = []
+    install_targets = ['install']
+
+    build_time_test_callbacks = ['check']
 
     depends_on('cmake', type='build')
 
     def build_type(self):
-        """Override to provide the correct build_type in case a complex
-        logic is needed
+        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
+
+        :return: value for ``CMAKE_BUILD_TYPE``
         """
         return 'RelWithDebInfo'
 
+    @property
     def root_cmakelists_dir(self):
-        """Directory where to find the root CMakeLists.txt"""
+        """Returns the location of the root CMakeLists.txt
+
+        :return: directory containing the root CMakeLists.txt
+        """
         return self.stage.source_path
 
     @property
     def std_cmake_args(self):
         """Standard cmake arguments provided as a property for
         convenience of package writers
+
+        :return: standard cmake arguments
         """
         # standard CMake arguments
         return CMakePackage._std_args(self)
@@ -90,57 +120,52 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
         return args
 
+    @property
     def build_directory(self):
-        """Override to provide another place to build the package"""
+        """Returns the directory to use when building the package
+
+        :return: directory where to build the package
+        """
         return join_path(self.stage.source_path, 'spack-build')
 
     def cmake_args(self):
-        """Method to be overridden. Should return an iterable containing
-        all the arguments that must be passed to configure, except:
-        - CMAKE_INSTALL_PREFIX
-        - CMAKE_BUILD_TYPE
+        """Produces a list containing all the arguments that must be passed to
+        cmake, except:
+
+            * CMAKE_INSTALL_PREFIX
+            * CMAKE_BUILD_TYPE
+
+        which will be set automatically.
+
+        :return: list of arguments for cmake
         """
         return []
 
     def cmake(self, spec, prefix):
-        """Run cmake in the build directory"""
-        options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
+        """Runs ``cmake`` in the build directory"""
+        options = [self.root_cmakelists_dir] + self.std_cmake_args + \
             self.cmake_args()
-        create = not os.path.exists(self.build_directory())
-        with working_dir(self.build_directory(), create=create):
+        with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
 
     def build(self, spec, prefix):
-        """The usual `make` after cmake"""
-        with working_dir(self.build_directory()):
-            inspect.getmodule(self).make()
+        """Make the build targets"""
+        with working_dir(self.build_directory):
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """...and the final `make install` after cmake"""
-        with working_dir(self.build_directory()):
-            inspect.getmodule(self).make('install')
+        """Make the install targets"""
+        with working_dir(self.build_directory):
+            inspect.getmodule(self).make(*self.install_targets)
 
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def _run_default_function(self):
-        """This function is run after build if self.run_tests == True
-
-        It will search for a method named `check` and run it. A sensible
-        default is provided in the base class.
-        """
-        try:
-            fn = getattr(self, 'check')
-            tty.msg('Trying default build sanity checks [check]')
-            fn()
-        except AttributeError:
-            tty.msg('Skipping default build sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
-        """Default test : search the Makefile for the target `test`
-        and run them if found.
+        """Searches the CMake-generated Makefile for the target ``test``
+        and runs it if found.
         """
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             self._if_make_target_execute('test')
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class PyShiboken(Package):
+class PyShiboken(PythonPackage):
     """Shiboken generates bindings for C++ libraries using CPython."""
     homepage = "https://shiboken.readthedocs.org/"
     url      = "https://pypi.python.org/packages/source/S/Shiboken/Shiboken-1.2.2.tar.gz"
@@ -35,8 +35,8 @@ class PyShiboken(Package):
 
     depends_on('cmake', type='build')
 
-    extends('python')
     depends_on("py-setuptools", type='build')
+    depends_on("py-sphinx", type=('build', 'run'))
     depends_on("libxml2")
     depends_on("qt@:4.8")
 
@@ -63,5 +63,5 @@ class PyShiboken(Package):
             r'#rpath_cmd(shiboken_path, srcpath)',
             'shiboken_postinstall.py')
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix, '--jobs=%s' % make_jobs)
+    def build_args(self, spec, prefix):
+        return ['--jobs={0}'.format(make_jobs)]

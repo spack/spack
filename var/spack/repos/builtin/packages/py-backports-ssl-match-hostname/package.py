@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyBackportsSslMatchHostname(Package):
+class PyBackportsSslMatchHostname(PythonPackage):
     """The ssl.match_hostname() function from Python 3.5"""
 
     homepage = "https://pypi.python.org/pypi/backports.ssl_match_hostname"
@@ -33,9 +33,4 @@ class PyBackportsSslMatchHostname(Package):
 
     version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

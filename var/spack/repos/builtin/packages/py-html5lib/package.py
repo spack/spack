@@ -22,38 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.url
-
-description = "Inspect urls used by packages in spack."
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-c', '--color', action='store_true',
-        help="Color the parsed version and name in the urls shown.  "
-             "Version will be cyan, name red.")
-    subparser.add_argument(
-        '-e', '--extrapolation', action='store_true',
-        help="Color the versions used for extrapolation as well."
-             "Additional versions are green, names magenta.")
+class PyHtml5lib(PythonPackage):
+    """HTML parser based on the WHATWG HTML specification."""
 
+    homepage = "https://github.com/html5lib/html5lib-python"
+    url      = "https://pypi.python.org/packages/ae/ae/bcb60402c60932b32dfaf19bb53870b29eda2cd17551ba5639219fb5ebf9/html5lib-0.9999999.tar.gz"
 
-def urls(parser, args):
-    urls = set()
-    for pkg in spack.repo.all_packages():
-        url = getattr(pkg.__class__, 'url', None)
-        if url:
-            urls.add(url)
+    version('0.9999999', 'ef43cb05e9e799f25d65d1135838a96f')
 
-        for params in pkg.versions.values():
-            url = params.get('url', None)
-            if url:
-                urls.add(url)
-
-    for url in sorted(urls):
-        if args.color or args.extrapolation:
-            print spack.url.color_url(
-                url, subs=args.extrapolation, errors=True)
-        else:
-            print url
+    depends_on('python@2.6:2.7,3.2:3.4')
+    depends_on('py-six', type=('build', 'run'))

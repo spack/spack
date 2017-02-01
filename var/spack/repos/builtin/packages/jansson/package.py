@@ -33,5 +33,3 @@ class Jansson(CMakePackage):
     url      = "https://github.com/akheron/jansson/archive/v2.9.tar.gz"
 
     version('2.9', 'd2db25c437b359fc5a065ed938962237')
-
-    depends_on('cmake', type='build')

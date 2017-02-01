@@ -30,7 +30,7 @@ import sys
 from os.path import isfile
 
 
-class Gcc(Package):
+class Gcc(AutotoolsPackage):
     """The GNU Compiler Collection includes front ends for C, C++,
        Objective-C, Fortran, and Java."""
     homepage = "https://gcc.gnu.org"
@@ -85,7 +85,9 @@ class Gcc(Package):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.spec.prefix
         # libjava/configure needs a minor fix to install into spack paths.
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
                     string=True)
@@ -138,18 +140,15 @@ class Gcc(Package):
             darwin_options = ["--with-build-config=bootstrap-debug"]
             options.extend(darwin_options)
 
-        build_dir = join_path(self.stage.path, 'spack-build')
-        configure = Executable(join_path(self.stage.source_path, 'configure'))
-        with working_dir(build_dir, create=True):
-            # Rest of install is straightforward.
-            configure(*options)
-            if sys.platform == 'darwin':
-                make("bootstrap")
-            else:
-                make()
-            make("install")
+        return options
 
-        self.write_rpath_specs()
+    build_directory = 'spack-build'
+
+    @property
+    def build_targets(self):
+        if sys.platform == 'darwin':
+            return ['bootstrap']
+        return []
 
     @property
     def spec_dir(self):
@@ -157,6 +156,7 @@ class Gcc(Package):
         spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
         return spec_dir[0] if spec_dir else None
 
+    @run_after('install')
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""

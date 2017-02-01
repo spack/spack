@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mxml(Package):
+class Mxml(AutotoolsPackage):
     """Mini-XML is a small XML library that you can use to read and write XML
     and XML-like data files in your application without requiring large
     non-standard libraries.
@@ -44,7 +44,5 @@ class Mxml(Package):
     # (Can use whatever compiler you want to use)
     # Case statement to change CC and CXX flags
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix, "--disable-shared", 'CFLAGS=-static')
-        make()
-        make("install")
+    def configure_args(self):
+        return ['--disable-shared', 'CFLAGS=-static']

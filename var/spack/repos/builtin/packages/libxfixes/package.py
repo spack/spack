@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxfixes(Package):
+class Libxfixes(AutotoolsPackage):
     """This package contains header files and documentation for the XFIXES
     extension.  Library and server implementations are separate."""
 
@@ -41,9 +41,3 @@ class Libxfixes(Package):
     depends_on('xextproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

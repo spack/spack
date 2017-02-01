@@ -55,7 +55,7 @@ class Mumps(Package):
             description='Activate the compilation of smumps')
     variant('complex', default=True,
             description='Activate the compilation of cmumps and/or zmumps')
-    variant('idx64', default=False,
+    variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
 
@@ -81,7 +81,7 @@ class Mumps(Package):
 
         lapack_blas = (self.spec['lapack'].lapack_libs +
                        self.spec['blas'].blas_libs)
-        makefile_conf = ["LIBBLAS = %s" % lapack_blas.joined()]
+        makefile_conf = ["LIBBLAS = %s" % lapack_blas.ld_flags]
 
         orderings = ['-Dpord']
 
@@ -125,7 +125,7 @@ class Mumps(Package):
         fpic = '-fPIC' if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
-        if '+idx64' in self.spec:
+        if '+int64' in self.spec:
             makefile_conf.extend(
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is

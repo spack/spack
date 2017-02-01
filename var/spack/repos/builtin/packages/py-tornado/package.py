@@ -25,25 +25,24 @@
 from spack import *
 
 
-class PyTornado(Package):
+class PyTornado(PythonPackage):
     """Tornado is a Python web framework and asynchronous networking
     library."""
     homepage = "https://github.com/tornadoweb/tornado"
-    # base https://pypi.python.org/pypi/tornado/
     url      = "https://github.com/tornadoweb/tornado/archive/v4.4.0.tar.gz"
 
     version('4.4.0', 'c28675e944f364ee96dda3a8d2527a87ed28cfa3')
-    
-    extends('python')
-    
+
     depends_on('py-setuptools', type='build')
-    
+
     # requirements from setup.py
-    depends_on('py-backports-ssl-match-hostname', when='^python@:2.7.8')
-    depends_on('py-singledispatch', when='^python@:3.3')
-    depends_on('py-certifi', when='^python@:3.3')
-    depends_on('py-backports-abc@0.4:', when='^python@:3.4')
-    
-    def install(self, spec, prefix):
-        setup_py('build')
-        setup_py('install', '--prefix={0}'.format(prefix))
+    # These dependencies breaks concretization
+    # See https://github.com/LLNL/spack/issues/2793
+    # depends_on('py-backports-ssl-match-hostname', when='^python@:2.7.8', type=('build', 'run'))  # noqa
+    # depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))  # noqa
+    # depends_on('py-certifi', when='^python@:3.3', type=('build', 'run'))
+    # depends_on('py-backports-abc@0.4:', when='^python@:3.4', type=('build', 'run'))  # noqa
+    depends_on('py-backports-ssl-match-hostname', type=('build', 'run'))
+    depends_on('py-singledispatch', type=('build', 'run'))
+    depends_on('py-certifi', type=('build', 'run'))
+    depends_on('py-backports-abc@0.4:', type=('build', 'run'))

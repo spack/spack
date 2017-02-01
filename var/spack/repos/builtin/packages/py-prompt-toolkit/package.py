@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPromptToolkit(Package):
+class PyPromptToolkit(PythonPackage):
     """Library for building powerful interactive command lines in Python"""
 
     homepage = "https://pypi.python.org/pypi/prompt_toolkit"
@@ -33,11 +33,6 @@ class PyPromptToolkit(Package):
 
     version('1.0.9', 'a39f91a54308fb7446b1a421c11f227c')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.9.0:')
-    depends_on('py-wcwidth')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-wcwidth', type=('build', 'run'))

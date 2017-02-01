@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyTerminado(Package):
+class PyTerminado(PythonPackage):
     """Terminals served to term.js using Tornado websockets"""
 
     homepage = "https://pypi.python.org/pypi/terminado"
@@ -33,11 +33,6 @@ class PyTerminado(Package):
 
     version('0.6', '5b6c65da27fe1ed07a9f80f0588cdaba')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-    depends_on('py-tornado@4:')
-    depends_on('py-ptyprocess')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-tornado@4:', type=('build', 'run'))
+    depends_on('py-ptyprocess', type=('build', 'run'))

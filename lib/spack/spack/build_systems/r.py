@@ -26,32 +26,33 @@
 import inspect
 
 from spack.directives import extends
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 
 class RPackage(PackageBase):
     """Specialized class for packages that are built using R
 
     This class provides a single phase that can be overridden:
-    * install
 
-    It has sensible defaults and for many packages the only thing
+        1. :py:meth:`~.RPackage.install`
+
+    It has sensible defaults, and for many packages the only thing
     necessary will be to add dependencies
     """
     phases = ['install']
 
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'RPackage'
 
     extends('r')
 
     def install(self, spec, prefix):
-        """Install the R package"""
+        """Installs an R package."""
         inspect.getmodule(self).R(
             'CMD', 'INSTALL',
             '--library={0}'.format(self.module.r_lib_dir),
             self.stage.source_path)
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

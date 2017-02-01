@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xtrap(Package):
+class Xtrap(AutotoolsPackage):
     """XTrap sample clients."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xtrap"
@@ -38,9 +38,3 @@ class Xtrap(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

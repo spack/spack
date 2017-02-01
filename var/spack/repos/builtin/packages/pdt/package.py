@@ -26,7 +26,7 @@ from spack import *
 import sys
 
 
-class Pdt(Package):
+class Pdt(AutotoolsPackage):
     """Program Database Toolkit (PDT) is a framework for analyzing source
        code written in several programming languages and for making rich
        program knowledge accessible to developers of static and dynamic

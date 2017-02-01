@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyEmcee(Package):
+class PyEmcee(PythonPackage):
     """emcee is an MIT licensed pure-Python implementation of Goodman & Weare's
     Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler."""
 
@@ -34,8 +34,4 @@ class PyEmcee(Package):
 
     version('2.1.0', 'c6b6fad05c824d40671d4a4fc58dfff7')
 
-    extends('python')
     depends_on('py-numpy', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

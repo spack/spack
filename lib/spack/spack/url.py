@@ -28,17 +28,17 @@ The idea is to allow package creators to supply nothing more than the
 download location of the package, and figure out version and name information
 from there.
 
-Example: when spack is given the following URL:
+**Example:** when spack is given the following URL:
 
-    ftp://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.1-p243.tar.gz
+    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
 
-It can figure out that the package name is ruby, and that it is at version
-1.9.1-p243.  This is useful for making the creation of packages simple: a user
+It can figure out that the package name is ``hdf``, and that it is at version
+``4.2.12``. This is useful for making the creation of packages simple: a user
 just supplies a URL and skeleton code is generated automatically.
 
-Spack can also figure out that it can most likely download 1.8.1 at this URL:
+Spack can also figure out that it can most likely download 4.2.6 at this URL:
 
-    ftp://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.8.1.tar.gz
+    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.6/src/hdf-4.2.6.tar.gz
 
 This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
@@ -104,24 +104,23 @@ def strip_query_and_fragment(path):
 def split_url_extension(path):
     """Some URLs have a query string, e.g.:
 
-          1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
-          2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
-          3. https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
+    1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
+    2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
+    3. https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
 
-       In (1), the query string needs to be stripped to get at the
-       extension, but in (2) & (3), the filename is IN a single final query
-       argument.
+    In (1), the query string needs to be stripped to get at the
+    extension, but in (2) & (3), the filename is IN a single final query
+    argument.
 
-       This strips the URL into three pieces: prefix, ext, and suffix.
-       The suffix contains anything that was stripped off the URL to
-       get at the file extension.  In (1), it will be '?raw=true', but
-       in (2), it will be empty. In (3) the suffix is a parameter that follows
-       after the file extension, e.g.:
+    This strips the URL into three pieces: ``prefix``, ``ext``, and ``suffix``.
+    The suffix contains anything that was stripped off the URL to
+    get at the file extension.  In (1), it will be ``'?raw=true'``, but
+    in (2), it will be empty. In (3) the suffix is a parameter that follows
+    after the file extension, e.g.:
 
-           1. ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')
-           2. ('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin',
-               '.tar.gz', None)
-           3. ('https://gitlab.kitware.com/vtk/vtk/repository/archive', '.tar.bz2', '?ref=v7.0.0')
+    1. ``('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')``
+    2. ``('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin', '.tar.gz', None)``
+    3. ``('https://gitlab.kitware.com/vtk/vtk/repository/archive', '.tar.bz2', '?ref=v7.0.0')``
     """
     prefix, ext, suffix = path, '', ''
 
@@ -149,7 +148,7 @@ def determine_url_file_extension(path):
     """This returns the type of archive a URL refers to.  This is
        sometimes confusing because of URLs like:
 
-           (1) https://github.com/petdance/ack/tarball/1.93_02
+       (1) https://github.com/petdance/ack/tarball/1.93_02
 
        Where the URL doesn't actually contain the filename.  We need
        to know what type it is so that we can appropriately name files
@@ -166,19 +165,44 @@ def determine_url_file_extension(path):
     return ext
 
 
-def parse_version_offset(path, debug=False):
-    """Try to extract a version string from a filename or URL.  This is taken
-       largely from Homebrew's Version class."""
+def parse_version_offset(path):
+    """Try to extract a version string from a filename or URL.
+
+    :param str path: The filename or URL for the package
+
+    :return: A tuple containing:
+        version of the package,
+        first index of version,
+        length of version string,
+        the index of the matching regex
+        the matching regex
+
+    :rtype: tuple
+
+    :raises UndetectableVersionError: If the URL does not match any regexes
+    """
     original_path = path
 
+    # path:   The prefix of the URL, everything before the ext and suffix
+    # ext:    The file extension
+    # suffix: Any kind of query string that begins with a '?'
     path, ext, suffix = split_url_extension(path)
 
-    # Allow matches against the basename, to avoid including parent
-    # dirs in version name Remember the offset of the stem in the path
+    # stem:   Everything from path after the final '/'
     stem = os.path.basename(path)
     offset = len(path) - len(stem)
 
-    version_types = [
+    # List of the following format:
+    #
+    # [
+    #     (regex, string),
+    #     ...
+    # ]
+    #
+    # The first regex that matches string will be used to determine
+    # the version of the package. Thefore, hyperspecific regexes should
+    # come first while generic, catch-all regexes should come last.
+    version_regexes = [
         # GitHub tarballs, e.g. v1.2.3
         (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+)$', path),
 
@@ -213,7 +237,9 @@ def parse_version_offset(path, debug=False):
         # Search dotted versions:
         #   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
         #   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
+        #   e.g., http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+        (r'\?version=((\d+\.)+\d+)', suffix),
 
         # e.g. boost_1_39_0
         (r'((\d+_)+\d+)$', stem),
@@ -256,16 +282,13 @@ def parse_version_offset(path, debug=False):
         (r'\/(\d\.\d+)\/', path),
 
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
-        (r'\.v(\d+[a-z]?)', stem)]
+        (r'\.v(\d+[a-z]?)', stem)
+    ]
 
-    for i, vtype in enumerate(version_types):
-        regex, match_string = vtype
+    for i, version_regex in enumerate(version_regexes):
+        regex, match_string = version_regex
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
-            if debug:
-                tty.msg("Parsing URL: %s" % path,
-                        "  Matched regex %d: r'%s'" % (i, regex))
-
             version = match.group(1)
             start   = match.start(1)
 
@@ -273,30 +296,74 @@ def parse_version_offset(path, debug=False):
             if match_string is stem:
                 start += offset
 
-            return version, start, len(version)
+            return version, start, len(version), i, regex
 
     raise UndetectableVersionError(original_path)
 
 
-def parse_version(path, debug=False):
-    """Given a URL or archive name, extract a version from it and return
-       a version object.
+def parse_version(path):
+    """Try to extract a version string from a filename or URL.
+
+    :param str path: The filename or URL for the package
+
+    :return: The version of the package
+    :rtype: spack.version.Version
+
+    :raises UndetectableVersionError: If the URL does not match any regexes
     """
-    ver, start, l = parse_version_offset(path, debug=debug)
-    return Version(ver)
+    version, start, length, i, regex = parse_version_offset(path)
+    return Version(version)
 
 
-def parse_name_offset(path, v=None, debug=False):
+def parse_name_offset(path, v=None):
+    """Try to determine the name of a package from its filename or URL.
+
+    :param str path: The filename or URL for the package
+    :param str v: The version of the package
+
+    :return: A tuple containing:
+        name of the package,
+        first index of name,
+        length of name,
+        the index of the matching regex
+        the matching regex
+
+    :rtype: tuple
+
+    :raises UndetectableNameError: If the URL does not match any regexes
+    """
+    original_path = path
+
+    # We really need to know the version of the package
+    # This helps us prevent collisions between the name and version
     if v is None:
-        v = parse_version(path, debug=debug)
+        try:
+            v = parse_version(path)
+        except UndetectableVersionError:
+            # Not all URLs contain a version. We still want to be able
+            # to determine a name if possible.
+            v = ''
 
+    # path:   The prefix of the URL, everything before the ext and suffix
+    # ext:    The file extension
+    # suffix: Any kind of query string that begins with a '?'
     path, ext, suffix = split_url_extension(path)
 
-    # Allow matching with either path or stem, as with the version.
+    # stem:   Everything from path after the final '/'
     stem = os.path.basename(path)
     offset = len(path) - len(stem)
 
-    name_types = [
+    # List of the following format:
+    #
+    # [
+    #     (regex, string),
+    #     ...
+    # ]
+    #
+    # The first regex that matches string will be used to determine
+    # the name of the package. Thefore, hyperspecific regexes should
+    # come first while generic, catch-all regexes should come last.
+    name_regexes = [
         (r'/sourceforge/([^/]+)/', path),
         (r'github.com/[^/]+/[^/]+/releases/download/%s/(.*)-%s$' %
          (v, v), path),
@@ -304,6 +371,7 @@ def parse_name_offset(path, v=None, debug=False):
         (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
         (r'github.com/[^/]+/([^/]+)/archive', path),
         (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
+        (r'([^/]+)/download.php', path),
 
         (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
         (r'([^/]+)%s' % v, stem),
@@ -313,10 +381,11 @@ def parse_name_offset(path, v=None, debug=False):
         (r'/([^/]+)%s' % v, path),
 
         (r'^([^/]+)[_.-]v?%s' % v, path),
-        (r'^([^/]+)%s' % v, path)]
+        (r'^([^/]+)%s' % v, path)
+    ]
 
-    for i, name_type in enumerate(name_types):
-        regex, match_string = name_type
+    for i, name_regex in enumerate(name_regexes):
+        regex, match_string = name_regex
         match = re.search(regex, match_string)
         if match:
             name  = match.group(1)
@@ -330,17 +399,38 @@ def parse_name_offset(path, v=None, debug=False):
             name = name.lower()
             name = re.sub('[_.]', '-', name)
 
-            return name, start, len(name)
+            return name, start, len(name), i, regex
 
-    raise UndetectableNameError(path)
+    raise UndetectableNameError(original_path)
 
 
 def parse_name(path, ver=None):
-    name, start, l = parse_name_offset(path, ver)
+    """Try to determine the name of a package from its filename or URL.
+
+    :param str path: The filename or URL for the package
+    :param str ver: The version of the package
+
+    :return: The name of the package
+    :rtype: str
+
+    :raises UndetectableNameError: If the URL does not match any regexes
+    """
+    name, start, length, i, regex = parse_name_offset(path, ver)
     return name
 
 
 def parse_name_and_version(path):
+    """Try to determine the name of a package and extract its version
+    from its filename or URL.
+
+    :param str path: The filename or URL for the package
+
+    :return: A tuple containing:
+        The name of the package
+        The version of the package
+
+    :rtype: tuple
+    """
     ver = parse_version(path)
     name = parse_name(path, ver)
     return (name, ver)
@@ -368,12 +458,12 @@ def cumsum(elts, init=0, fn=lambda x: x):
 
 def substitution_offsets(path):
     """This returns offsets for substituting versions and names in the
-       provided path.  It is a helper for substitute_version().
+       provided path.  It is a helper for :func:`substitute_version`.
     """
     # Get name and version offsets
     try:
-        ver,  vs, vl = parse_version_offset(path)
-        name, ns, nl = parse_name_offset(path, ver)
+        ver,  vs, vl, vi, vregex = parse_version_offset(path)
+        name, ns, nl, ni, nregex = parse_name_offset(path, ver)
     except UndetectableNameError:
         return (None, -1, -1, (), ver, vs, vl, (vs,))
     except UndetectableVersionError:
@@ -441,21 +531,22 @@ def wildcard_version(path):
 
 def substitute_version(path, new_version):
     """Given a URL or archive name, find the version in the path and
-       substitute the new version for it.  Replace all occurrences of
-       the version *if* they don't overlap with the package name.
+    substitute the new version for it.  Replace all occurrences of
+    the version *if* they don't overlap with the package name.
 
-       Simple example::
-         substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
-         ->'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
+    Simple example:
 
-       Complex examples::
-         substitute_version('http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz', 2.1)
-         -> 'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.1.tar.gz'
+    .. code-block:: python
 
-         # In this string, the "2" in mvapich2 is NOT replaced.
-         substitute_version('http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.tar.gz', 2.1)
-         -> 'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.1.tar.gz'
+       substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
+       >>> 'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
 
+    Complex example:
+
+    .. code-block:: python
+
+       substitute_version('https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz', '2.3')
+       >>> 'https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz'
     """
     (name, ns, nl, noffs,
      ver,  vs, vl, voffs) = substitution_offsets(path)
@@ -474,17 +565,16 @@ def substitute_version(path, new_version):
 def color_url(path, **kwargs):
     """Color the parts of the url according to Spack's parsing.
 
-       Colors are:
-          Cyan: The version found by parse_version_offset().
-          Red:  The name found by parse_name_offset().
+    Colors are:
+       | Cyan: The version found by :func:`parse_version_offset`.
+       | Red:  The name found by :func:`parse_name_offset`.
 
-          Green:   Instances of version string from substitute_version().
-          Magenta: Instances of the name (protected from substitution).
+       | Green:   Instances of version string from :func:`substitute_version`.
+       | Magenta: Instances of the name (protected from substitution).
 
-       Optional args:
-          errors=True    Append parse errors at end of string.
-          subs=True      Color substitutions as well as parsed name/version.
-
+    :param str path: The filename or URL for the package
+    :keyword bool errors: Append parse errors at end of string.
+    :keyword bool subs: Color substitutions as well as parsed name/version.
     """
     errors = kwargs.get('errors', False)
     subs   = kwargs.get('subs', False)

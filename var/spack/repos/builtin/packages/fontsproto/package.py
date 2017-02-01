@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fontsproto(Package):
+class Fontsproto(AutotoolsPackage):
     """X Fonts Extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/fontsproto"
@@ -35,8 +35,3 @@ class Fontsproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

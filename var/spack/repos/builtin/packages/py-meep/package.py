@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMeep(Package):
+class PyMeep(PythonPackage):
     """Python-meep is a wrapper around libmeep. It allows the scripting of
     Meep-simulations with Python"""
 
@@ -36,7 +36,6 @@ class PyMeep(Package):
 
     variant('mpi', default=True, description='Enable MPI support')
 
-    extends('python')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
@@ -50,9 +49,12 @@ class PyMeep(Package):
     # or else it can't handle newer C++ compilers and flags.
     depends_on('swig@1.3.39:3.0.2')
 
-    def install(self, spec, prefix):
-        setup = 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
+    phases = ['clean', 'build_ext', 'install', 'bdist']
 
+    def setup_file(self):
+        return 'setup-mpi.py' if '+mpi' in self.spec else 'setup.py'
+
+    def common_args(self, spec, prefix):
         include_dirs = [
             spec['meep'].prefix.include,
             spec['py-numpy'].include
@@ -69,7 +71,19 @@ class PyMeep(Package):
         include_flags = '-I{0}'.format(','.join(include_dirs))
         library_flags = '-L{0}'.format(','.join(library_dirs))
 
-        python(setup, 'clean', '--all')
-        python(setup, 'build_ext', include_flags, library_flags)
-        python(setup, 'install', '--prefix={0}'.format(prefix))
-        python(setup, 'bdist', include_flags, library_flags)
+        # FIXME: For some reason, this stopped working.
+        # The -I and -L are no longer being properly forwarded to setup.py:
+        # meep_common.i:87: Error: Unable to find 'meep/mympi.hpp'
+        # meep_common.i:88: Error: Unable to find 'meep/vec.hpp'
+        # meep_common.i:89: Error: Unable to find 'meep.hpp'
+
+        return [include_flags, library_flags]
+
+    def clean_args(self, spec, prefix):
+        return ['--all']
+
+    def build_ext_args(self, spec, prefix):
+        return self.common_args(spec, prefix)
+
+    def bdist_args(self, spec, prefix):
+        return self.common_args(spec, prefix)

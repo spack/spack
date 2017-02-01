@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Readline(Package):
+class Readline(AutotoolsPackage):
     """The GNU Readline library provides a set of functions for use by
        applications that allow users to edit command lines as they
        are typed in. Both Emacs and vi editing modes are
@@ -34,13 +34,11 @@ class Readline(Package):
        recall and perhaps reedit those lines, and perform csh-like
        history expansion on previous commands."""
     homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
-    url      = "ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz"
 
     version('6.3', '33c8fb279e981274f485fd91da77e94a')
 
     depends_on("ncurses")
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    def build(self, spec, prefix):
         make("SHLIB_LIBS=-lncurses")
-        make("install")

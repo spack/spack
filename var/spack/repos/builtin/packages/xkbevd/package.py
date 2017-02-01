@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xkbevd(Package):
+class Xkbevd(AutotoolsPackage):
     """XKB event daemon demo."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xkbevd"
@@ -39,9 +39,3 @@ class Xkbevd(Package):
     depends_on('bison', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

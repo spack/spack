@@ -25,17 +25,12 @@
 from spack import *
 
 
-class PyVcversioner(Package):
+class PyVcversioner(PythonPackage):
     """Vcversioner: Take version numbers from version control."""
 
     homepage = "https://github.com/habnabit/vcversioner"
-    # base https://pypi.python.org/pypi/vcversioner/
     url      = "https://pypi.python.org/packages/source/v/vcversioner/vcversioner-2.16.0.0.tar.gz"
 
     version('2.16.0.0', 'aab6ef5e0cf8614a1b1140ed5b7f107d')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

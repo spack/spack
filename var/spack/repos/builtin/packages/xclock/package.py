@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xclock(Package):
+class Xclock(AutotoolsPackage):
     """xclock is the classic X Window System clock utility.  It displays
     the time in analog or digital form, continuously updated at a
     frequency which may be specified by the user."""
@@ -46,9 +46,3 @@ class Xclock(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

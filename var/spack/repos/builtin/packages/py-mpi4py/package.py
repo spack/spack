@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMpi4py(Package):
+class PyMpi4py(PythonPackage):
     """This package provides Python bindings for the Message Passing
        Interface (MPI) standard. It is implemented on top of the
        MPI-1/MPI-2 specification and exposes an API which grounds on the
@@ -38,9 +38,5 @@ class PyMpi4py(Package):
     version('2.0.0', '4f7d8126d7367c239fd67615680990e3')
     version('1.3.1', 'dbe9d22bdc8ed965c23a7ceb6f32fc3c')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
