@@ -101,6 +101,55 @@ def strip_query_and_fragment(path):
         return (path, '')  # Ignore URL parse errors here
 
 
+def strip_version_suffixes(path):
+    """Some tarballs contain extraneous information after the version:
+
+    * ``bowtie2-2.2.5-source``
+    * ``libevent-2.0.21-stable``
+    * ``cuda_8.0.44_linux.run``
+
+    These strings are not part of the version number and should be ignored.
+    This function strips those suffixes off and returns the remaining string.
+    The goal is that the version is always the last thing in ``path``.
+
+    :param str path: The filename or URL for the package
+    :return: The ``path`` with any extraneous suffixes removed
+    :rtype: str
+    """
+    # NOTE: This could be done with complicated regexes in parse_version_offset
+    # NOTE: The problem is that we would have to add these regexes to the end
+    # NOTE: of every single version regex. Easier to just strip them off
+    # NOTE: permanently
+
+    suffix_regexes = [
+        'src',
+        '[Ss]ources?',
+        'file',
+        'stable',
+        'full',
+        'single',
+        'public',
+        'final',
+        'rel',
+        'with[A-Za-z_-]+',
+        'bin',
+        '[Ii]nstall',
+        'orig',
+        'run',
+        'x64',
+        'x86_64',
+        '[Ll]inux(_64)?',
+        '[Uu]ni?x',
+    ]
+
+    for regex in suffix_regexes:
+        # Remove the suffix from the end of the path
+        # This may be done multiple times
+        path = re.sub(r'[\._-]?' + regex + '$', '', path)
+
+    return path
+
+
 def split_url_extension(path):
     """Some URLs have a query string, e.g.:
 
@@ -189,8 +238,17 @@ def parse_version_offset(path):
     path, ext, suffix = split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
-    stem = os.path.basename(path)
-    offset = len(path) - len(stem)
+    original_stem = os.path.basename(path)
+
+    # Try to strip off anything after the version number
+    stem = strip_version_suffixes(original_stem)
+
+    #print('')
+    #print('url:    {0}'.format(original_path))
+    #print('path:   {0}'.format(path))
+    #print('ext:    {0}'.format(ext))
+    #print('suffix: {0}'.format(suffix))
+    #print('stem:   {0}'.format(stem))
 
     # List of the following format:
     #
@@ -203,32 +261,60 @@ def parse_version_offset(path):
     # the version of the package. Thefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     version_regexes = [
-        # GitHub tarballs, e.g. v1.2.3
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+)$', path),
+        # Version only
 
-        # e.g. https://github.com/sam-github/libnet/tarball/libnet-1.1.4
-        (r'github.com/.+/(?:zip|tar)ball/.*-((\d+\.)+\d+)$', path),
+        # ver, vver
+        # e.g. 1.0.0, 7.0.2-7, v3.3.0
+        (r'^v?(\d[\d\._-]*)$', stem),
 
-        # e.g. https://github.com/isaacs/npm/tarball/v0.2.5-1
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+-(\d+))$', path),
+        # Version separated by dashes
 
-        # e.g. https://github.com/petdance/ack/tarball/1.93_02
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
+        # name-name-ver-ver
+        # e.g. panda-2016-03-07
+        (r'^[A-Za-z-]+-([\d-]+)$', stem),
 
-        # Yorick is very special.
-        # e.g. https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz
-        (r'github.com/[^/]+/yorick/archive/y_(\d+(?:_\d+)*)$', path),
+        # Version separated by underscores
 
-        # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
-        (r'github.com/[^/]+/[^/]+/archive/(?:release-)?v?(\w+(?:[.-]\w+)*)$', path),  # noqa
+        # name_name_ver_ver
+        (r'^[A-Za-z_]+_([\d_]+)$', stem),
 
-        # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
-        (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
+        # name-name-ver_ver
+        (r'^[A-Za-z\d-]+-([\d_]+)$', stem),
 
-        # e.g., https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz
-        # e.g.,
-        # https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-        (r'github.com/[^/]+/[^/]+/releases/download/v?([^/]+)/.*$', path),
+        # Version separated by dots
+
+        # name-name-ver.ver
+        (r'^[A-Za-z\d\+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
+
+        # name_name-ver.ver
+        (r'^[A-Za-z\d_]+-(\d[A-Za-z\d\.]*)$', stem),
+
+        # name_name_ver.ver
+        (r'^[A-Za-z\d_]+_([\d\.]+)$', stem),
+
+        # name_name.ver.ver
+        # e.g. fer_source.v696
+        (r'^[A-Za-z_]+\.v?([\d\.]+)$', stem),
+
+        # name.name.ver.ver
+        (r'^[A-Za-z\.]+\.([\d\.]+)$', stem),
+
+        # namever.ver
+        (r'^[A-Za-z]+(\d[A-Za-z\d\.]*)$', stem),
+
+        # name.name_ver.ver-ver.ver
+        (r'^[A-Za-z\d\.]+_([\d\.-]+)$', stem),
+
+        # name.name_name-ver.ver
+        # e.g. backports.ssl_match_hostname-3.5.0.1
+        (r'^[A-Za-z\._]+-([\d\.]+)$', stem),
+
+        # name-name-ver.ver_ver.ver
+        # name-name-ver.ver-ver.ver
+        (r'^[A-Za-z-]+-([\d\.]+[_-][\d\.]+)$', stem),
+
+
+        # Suffix queries
 
         # GitLab syntax:
         #   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
@@ -237,52 +323,39 @@ def parse_version_offset(path):
         # Search dotted versions:
         #   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
         #   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
-        #   e.g., http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        #   e.g., http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
         (r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+
+        # http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'\?version=((\d+\.)+\d+)', suffix),
 
-        # e.g. boost_1_39_0
-        (r'((\d+_)+\d+)$', stem),
+        # Stem queries
 
-        # e.g. foobar-4.5.1-1
-        # e.g. ruby-1.9.1-p243
-        (r'-((\d+\.)*\d\.\d+-(p|rc|RC)?\d+)(?:[-._](?:bin|dist|stable|src|sources))?$', stem),  # noqa
+        # download.php?filename=slepc-3.6.2
+        (r'\?filename=[A-Za-z]+-(\d[A-Za-z\d\.]+)$', stem),
 
-        # e.g. lame-398-1
-        (r'-((\d)+-\d)', stem),
+        #   e.g., http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
 
         # e.g. foobar_1.2-3 or 3.98-1.4
-        (r'_((\d+\.)+\d+(-(\d+(\.\d+)?))?[a-z]?)', stem),
-
-        # e.g. foobar-4.5.1
-        (r'-((\d+\.)*\d+)$', stem),
+        #(r'_((\d+\.)+\d+(-(\d+(\.\d+)?))?[a-z]?)', stem),
 
         # e.g. foobar-4.5.1b, foobar4.5RC, foobar.v4.5.1b
-        (r'[-._]?v?((\d+\.)*\d+[-._]?([a-z]|rc|RC|tp|TP?)\d*)$', stem),
+        #(r'[-._]?v?((\d+\.)*\d+[-._]?([a-z]|rc|RC|tp|TP?)\d*)$', stem),
 
         # e.g. foobar-4.5.0-beta1, or foobar-4.50-beta
-        (r'-((\d+\.)*\d+-beta(\d+)?)$', stem),
-
-        # e.g. foobar4.5.1
-        (r'((\d+\.)*\d+)$', stem),
-
-        # e.g. foobar-4.5.0-bin
-        (r'-((\d+\.)+\d+[a-z]?)[-._](bin|dist|stable|src|sources?)$', stem),
-
-        # e.g. dash_0.5.5.1.orig.tar.gz (Debian style)
-        (r'_((\d+\.)+\d+[a-z]?)[.]orig$', stem),
+        #(r'-((\d+\.)*\d+-beta(\d+)?)$', stem),
 
         # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        (r'-v?([^-]+(-alpha|-beta)?)', stem),
+        #(r'-v?([^-]+(-alpha|-beta)?)', stem),
 
         # e.g. astyle_1.23_macosx.tar.gz
-        (r'_([^_]+(_alpha|_beta)?)', stem),
+        #(r'_([^_]+(_alpha|_beta)?)', stem),
 
         # e.g. http://mirrors.jenkins-ci.org/war/1.486/jenkins.war
-        (r'\/(\d\.\d+)\/', path),
+        #(r'\/(\d\.\d+)\/', path),
 
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
-        (r'\.v(\d+[a-z]?)', stem)
+        #(r'\.v(\d+[a-z]?)', stem)
     ]
 
     for i, version_regex in enumerate(version_regexes):
@@ -292,9 +365,15 @@ def parse_version_offset(path):
             version = match.group(1)
             start   = match.start(1)
 
-            # if we matched from the basename, then add offset in.
+            # If we matched from the stem or suffix, we need to add offset
+            offset = 0
             if match_string is stem:
-                start += offset
+                offset = len(path) - len(original_stem)
+            elif match_string is suffix:
+                offset = len(path)
+                if ext:
+                    offset += len(ext) + 1  # .tar.gz is converted to tar.gz
+            start += offset
 
             return version, start, len(version), i, regex
 
@@ -351,7 +430,6 @@ def parse_name_offset(path, v=None):
 
     # stem:   Everything from path after the final '/'
     stem = os.path.basename(path)
-    offset = len(path) - len(stem)
 
     # List of the following format:
     #
@@ -391,9 +469,15 @@ def parse_name_offset(path, v=None):
             name  = match.group(1)
             start = match.start(1)
 
-            # if we matched from the basename, then add offset in.
+            # If we matched from the stem or suffix, we need to add offset
+            offset = 0
             if match_string is stem:
-                start += offset
+                offset = len(path) - len(stem)
+            elif match_string is suffix:
+                offset = len(path)
+                if ext:
+                    offset += len(ext) + 1  # .tar.gz is converted to tar.gz
+            start += offset
 
             # package names should be lowercase and separated by dashes.
             name = name.lower()

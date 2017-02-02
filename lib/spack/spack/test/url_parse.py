@@ -28,20 +28,140 @@ detection in Homebrew.
 """
 import unittest
 
-import spack.url as url
+from spack.url import *
 
 
-class UrlParseTest(unittest.TestCase):
+class UrlStripVersionSuffixesTest(unittest.TestCase):
+
+    def check(self, before, after):
+        stripped = strip_version_suffixes(before)
+        self.assertEqual(stripped, after)
+
+    def test_no_suffix(self):
+        self.check('rgb-1.0.6', 'rgb-1.0.6')
+
+    def test_misleading_prefix(self):
+        self.check('jpegsrc.v9b', 'jpegsrc.v9b')
+        self.check('turbolinux702', 'turbolinux702')
+        self.check('converge_install_2.3.16', 'converge_install_2.3.16')
+
+    def test_src(self):
+        self.check('apache-ant-1.9.7-src', 'apache-ant-1.9.7')
+        self.check('go1.7.4.src', 'go1.7.4')
+
+    def test_source(self):
+        self.check('bowtie2-2.2.5-source', 'bowtie2-2.2.5')
+        self.check('grib_api-1.17.0-Source', 'grib_api-1.17.0')
+
+    def test_bin(self):
+        self.check('apache-maven-3.3.9-bin', 'apache-maven-3.3.9')
+
+    def test_full(self):
+        self.check('julia-0.4.3-full', 'julia-0.4.3')
+
+    def test_stable(self):
+        self.check('libevent-2.0.21-stable', 'libevent-2.0.21')
+
+    def test_final(self):
+        self.check('2.6.7-final', '2.6.7')
+
+    def test_rel(self):
+        self.check('v1.9.5.1rel', 'v1.9.5.1')
+
+    def test_linux(self):
+        self.check('astyle_2.04_linux', 'astyle_2.04')
+
+    def test_unix(self):
+        self.check('install-tl-unx', 'install-tl')
+
+    def test_orig(self):
+        self.check('dash_0.5.5.1.orig', 'dash_0.5.5.1')
+
+    def test_complex_run(self):
+        self.check('cuda_8.0.44_linux.run', 'cuda_8.0.44')
+
+    def test_complex_file(self):
+        self.check('ack-2.14-single-file', 'ack-2.14')
+
+    def test_complex_arch(self):
+        self.check('VizGlow_v2.2alpha17-R21November2016-Linux-x86_64-Install',
+                   'VizGlow_v2.2alpha17-R21November2016')
+        self.check('jdk-8u92-linux-x64', 'jdk-8u92')
+        self.check('cuda_6.5.14_linux_64.run', 'cuda_6.5.14')
+
+    def test_complex_with(self):
+        self.check('mafft-7.221-with-extensions-src', 'mafft-7.221')
+        self.check('spark-2.0.0-bin-without-hadoop', 'spark-2.0.0')
+
+    def test_complex_public(self):
+        self.check('dakota-6.3-public.src', 'dakota-6.3')
+
+class UrlParseOffsetTest(unittest.TestCase):
+
+    def check(self, name, noffset, ver, voffset, path):
+        # Make sure parse_name_offset and parse_name_version are working
+        v, vstart, vlen, vi, vre = parse_version_offset(path)
+        n, nstart, nlen, ni, nre = parse_name_offset(path, v)
+
+        self.assertEqual(n, name)
+        self.assertEqual(v, ver)
+        self.assertEqual(nstart, noffset)
+        self.assertEqual(vstart, voffset)
+
+    def test_name_in_path(self):
+        self.check(
+            'antlr', 25, '2.7.7', 40,
+            'https://github.com/antlr/antlr/tarball/v2.7.7')
+
+    def test_name_in_stem(self):
+        self.check(
+            'gmp', 32, '6.0.0a', 36,
+            'https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2')
+
+    def test_name_in_suffix(self):
+        # Don't think I've ever seen one of these before
+        # We don't look for it, so it would probably fail anyway
+        pass
+
+    def test_version_in_path(self):
+        self.check(
+            'nextflow', 31, '0.20.1', 59,
+            'https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow')
+
+    def test_version_in_stem(self):
+        self.check(
+            'zlib', 24, '1.2.10', 29,
+            'http://zlib.net/fossils/zlib-1.2.10.tar.gz')
+        self.check(
+            'slepc', 51, '3.6.2', 57,
+            'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz')
+        self.check(
+            'cloog', 61, '0.18.1', 67,
+            'http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.1.tar.gz')
+        self.check(
+            'libxc', 58, '2.2.2', 64,
+            'http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz')
+
+    def test_version_in_suffix(self):
+        self.check(
+            'swiftsim', 36, '0.3.0', 76,
+            'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0')
+        self.check(
+            'sionlib', 30, '1.7.1', 59,
+            'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')
+
+
+class UrlParseNameAndVersionTest(unittest.TestCase):
 
     def assert_not_detected(self, string):
         self.assertRaises(
-            url.UndetectableVersionError, url.parse_name_and_version, string)
+            UndetectableVersionError, parse_name_and_version, string)
 
     def check(self, name, v, string, **kwargs):
         # Make sure correct name and version are extracted.
-        parsed_name, parsed_v = url.parse_name_and_version(string)
+        parsed_name, parsed_v = parse_name_and_version(string)
         self.assertEqual(parsed_name, name)
-        self.assertEqual(parsed_v, url.Version(v))
+        self.assertEqual(parsed_v, Version(v))
 
         # Some URLs (like boost) are special and need to override the
         # built-in functionality.
@@ -50,7 +170,7 @@ class UrlParseTest(unittest.TestCase):
 
         # Make sure Spack formulates the right URL when we try to
         # build one with a specific version.
-        self.assertEqual(string, url.substitute_version(string, v))
+        self.assertEqual(string, substitute_version(string, v))
 
     def test_wwwoffle_version(self):
         self.check(

@@ -66,8 +66,14 @@ def setup_parser(subparser):
         '-n', '--incorrect-name', action='store_true',
         help='only list urls for which the name was incorrectly parsed')
     excl_args.add_argument(
+        '-N', '--correct-name', action='store_true',
+        help='only list urls for which the name was correctly parsed')
+    excl_args.add_argument(
         '-v', '--incorrect-version', action='store_true',
         help='only list urls for which the version was incorrectly parsed')
+    excl_args.add_argument(
+        '-V', '--correct-version', action='store_true',
+        help='only list urls for which the version was correctly parsed')
 
     # Test
     sp.add_parser(
@@ -136,6 +142,10 @@ def url_list(args):
 
     # Print URLs
     for url in sorted(urls):
+        path, ext, suffix = split_url_extension(url)
+
+        # stem:   Everything from path after the final '/'
+        stem = os.path.basename(path)
         if args.color or args.extrapolation:
             print(color_url(url, subs=args.extrapolation, errors=True))
         else:
@@ -257,22 +267,38 @@ def url_list_parsing(args, urls, url, pkg):
     :rtype: set
     """
     if url:
-        if args.incorrect_name:
-            # Only add URLs whose name was incorrectly parsed
+        if args.correct_name or args.incorrect_name:
+            # Attempt to parse the name
             try:
                 name = parse_name(url)
-                if not name_parsed_correctly(pkg, name):
+                if (args.correct_name and
+                    name_parsed_correctly(pkg, name)):
+                    # Add correctly parsed URLs
+                    urls.add(url)
+                elif (args.incorrect_name and
+                      not name_parsed_correctly(pkg, name)):
+                    # Add incorrectly parsed URLs
                     urls.add(url)
             except UndetectableNameError:
-                urls.add(url)
-        elif args.incorrect_version:
-            # Only add URLs whose version was incorrectly parsed
+                if args.incorrect_name:
+                    # Add incorrectly parsed URLs
+                    urls.add(url)
+        elif args.correct_version or args.incorrect_version:
+            # Attempt to parse the version
             try:
                 version = parse_version(url)
-                if not version_parsed_correctly(pkg, version):
+                if (args.correct_version and
+                    version_parsed_correctly(pkg, version)):
+                    # Add correctly parsed URLs
+                    urls.add(url)
+                elif (args.incorrect_version and
+                      not version_parsed_correctly(pkg, version)):
+                    # Add incorrectly parsed URLs
                     urls.add(url)
             except UndetectableVersionError:
-                urls.add(url)
+                if args.incorrect_version:
+                    # Add incorrectly parsed URLs
+                    urls.add(url)
         else:
             urls.add(url)
 
