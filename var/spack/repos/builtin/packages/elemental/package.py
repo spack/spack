@@ -72,7 +72,8 @@ class Elemental(CMakePackage):
     depends_on('mpi')
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('scalapack', when='+scalapack ~int64_blas')
-    depends_on('python', when='+python')
+    extends('python', when="+python')
+    depends_on('python@:2.8', when='+python')
 
     def build_type(self):
         """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
