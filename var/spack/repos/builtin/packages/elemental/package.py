@@ -41,7 +41,7 @@ class Elemental(CMakePackage):
             description='Make use of OpenMP within MPI packing/unpacking')
     variant('openmp_blas', default=False,
             description='Use OpenMP for threading in the BLAS library')
-    variant('c_interface', default=False, 
+    variant('c', default=False, 
             description='Build C interface')
     variant('python', default=False, 
             description='Install Python interface')
@@ -94,7 +94,7 @@ class Elemental(CMakePackage):
                 '-DEL_HYBRID:BOOL={0}'.format((
                     'ON' if '+hybrid' in self.spec else 'OFF')),
                 '-DEL_C_INTERFACE:BOOL={0}'.format((
-                    'ON' if '+c_interface' in self.spec else 'OFF')),
+                    'ON' if '+c' in self.spec else 'OFF')),
                 '-DINSTALL_PYTHON_PACKAGE:BOOL={0}'.format((
                     'ON' if '+python' in self.spec else 'OFF')),
                 '-DEL_DISABLE_PARMETIS:BOOL={0}'.format((
