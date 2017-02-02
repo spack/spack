@@ -74,7 +74,7 @@ class Elemental(CMakePackage):
         args = ['-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
                 '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
                 '-DEL_DISABLE_SCALAPACK:BOOL={0}'.format((
-                    'ON' if '+scalapack' in self.spec else 'OFF')),
+                    'OFF' if '+scalapack' in self.spec else 'ON')),
                 '-DGFORTRAN_LIB=libgfortran.so',
                 '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
                     'ON' if '+shared' in self.spec else 'OFF')),
