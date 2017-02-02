@@ -341,6 +341,13 @@ class IntelParallelStudio(IntelInstaller):
             # MPI. It is also possible to set the variables in the modules.yaml
             # file if Intel MPI is the dominant, or only, MPI on a system.
             run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
+            # Set mpi environment variables
+            spack_env.set('I_MPI_CC', spack_cc)
+            spack_env.set('I_MPI_CXX', spack_cxx)
+            spack_env.set('I_MPI_F77', spack_f77)
+            spack_env.set('I_MPI_F90', spack_fc)
+            spack_env.set('I_MPI_FC', spack_fc)
+
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
             spack_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
@@ -393,7 +400,7 @@ class IntelParallelStudio(IntelInstaller):
                 bindir = join_path(self.prefix, 'bin64')
             else:
                 raise "No suitable bindir found"
-            self.spec.mpicc = join_path(bindir, 'mpiicc')
-            self.spec.mpicxx = join_path(bindir, 'mpiicpc')
-            self.spec.mpifc = join_path(bindir, 'mpiifort')
+            self.spec.mpicc = join_path(bindir, 'mpicc')
+            self.spec.mpicxx = join_path(bindir, 'mpic++')
+            self.spec.mpifc = join_path(bindir, 'mpif90')
             self.spec.mpif77 = join_path(bindir, 'mpif77')
