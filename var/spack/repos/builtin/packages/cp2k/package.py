@@ -162,7 +162,7 @@ class Cp2k(Package):
                     # spec[pexsi:fortran].cppflags
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
-                scalapack = spec['scalapack'].scalapack_libs
+                scalapack = spec['scalapack'].libs
                 ldflags.append(scalapack.search_flags)
                 libs.extend([
                     join_path(spec['elpa'].prefix.lib,
@@ -184,8 +184,8 @@ class Cp2k(Package):
                 libs.extend(self.spec['mpi'].mpicxx_shared_libs)
                 libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
-            lapack = spec['lapack'].lapack_libs
-            blas = spec['blas'].blas_libs
+            lapack = spec['lapack'].libs
+            blas = spec['blas'].libs
 
             ldflags.append((lapack + blas).search_flags)
             libs.extend([str(x) for x in (fftw, lapack, blas)])

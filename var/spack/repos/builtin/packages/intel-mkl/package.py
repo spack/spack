@@ -83,7 +83,7 @@ class IntelMkl(IntelInstaller):
 
     @property
     def lapack_libs(self):
-        return self.blas_libs
+        return self.libs
 
     @property
     def scalapack_libs(self):

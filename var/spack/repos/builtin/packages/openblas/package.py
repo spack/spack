@@ -59,17 +59,6 @@ class Openblas(MakefilePackage):
 
     parallel = False
 
-    @property
-    def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        return find_libraries(
-            ['libopenblas'], root=self.prefix, shared=shared, recurse=True
-        )
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
-
     @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which

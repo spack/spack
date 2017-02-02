@@ -101,8 +101,8 @@ class SuiteSparse(Package):
 
         # Make sure Spack's Blas/Lapack is used. Otherwise System's
         # Blas/Lapack might be picked up.
-        blas = spec['blas'].blas_libs.ld_flags
-        lapack = spec['lapack'].lapack_libs.ld_flags
+        blas = spec['blas'].libs.ld_flags
+        lapack = spec['lapack'].libs.ld_flags
         if '@4.5.1' in spec:
             # adding -lstdc++ is clearly an ugly way to do this, but it follows
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk

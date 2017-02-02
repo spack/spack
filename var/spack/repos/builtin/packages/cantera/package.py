@@ -85,7 +85,7 @@ class Cantera(Package):
 
         # BLAS/LAPACK support
         if '+lapack' in spec:
-            lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+            lapack_blas = spec['lapack'].libs + spec['blas'].libs
             options.extend([
                 'blas_lapack_libs={0}'.format(','.join(lapack_blas.names)),
                 'blas_lapack_dir={0}'.format(spec['lapack'].prefix.lib)
