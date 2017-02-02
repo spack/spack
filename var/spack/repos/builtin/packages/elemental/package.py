@@ -105,6 +105,8 @@ class Elemental(CMakePackage):
                     'ON' if '+int64' in self.spec else 'OFF')),
                 '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format((
                     'ON' if '+int64_blas' in self.spec else 'OFF'))]
+
+        # If using 64bit int BLAS libraries, elemental has to build them internally
         if '+int64_blas' in self.spec:
             args.extend(['-DEL_BLAS_SUFFIX:STRING={0}'.format((
                 '_64_' if '+int64_blas' in self.spec else '_')),
@@ -114,18 +116,21 @@ class Elemental(CMakePackage):
                     '_64_' if '+int64_blas' in self.spec else '_')),
                              '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
-            lapack = self.spec['lapack'].lapack_libs
-            blas = self.spec['blas'].blas_libs
+            lapack_blas = self.spec['lapack'].lapack_libs + self.spec['blas'].blas_libs
 
             if '+scalapack' in self.spec:
                 scalapack = self.spec['scalapack'].scalapack_libs
                 args.extend(['-DMATH_LIBS:STRING={0} {1}'.format(
-                    (lapack + blas).search_flags, scalapack.search_flags),
+                    scalapack.search_flags, lapack_blas.search_flags),
                              '-DMATH_LIBS:STRING={0} {1}'.format(
-                    (lapack + blas).ld_flags.split()[1], scalapack.ld_flags.split()[1])])
+                    scalapack.link_flags, lapack_blas.link_flags)])
             else:
                 args.extend(['-DMATH_LIBS:STRING={0}'.format(
-                    (lapack + blas).search_flags),
+                    lapack_blas.search_flags),
                              '-DMATH_LIBS:STRING={0}'.format(
-                    (lapack + blas).ld_flags.split()[1])])
+                    lapack_blas.link_flags)])
+
+#        if '+python' in self.spec:
+#            args.extend(['-DPYTHON_SITE_PACKAGES:STRING={0}'.format(())]
+
         return args
