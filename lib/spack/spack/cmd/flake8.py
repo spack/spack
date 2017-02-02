@@ -67,7 +67,7 @@ exemptions = {
     # exemptions applied to all files.
     r'.py$': {
         # Exempt lines with URLs from overlong line errors.
-        501: [r'(https?|file)\:']
+        501: [r'(https?|ftp|file)\:']
     },
 }
 
