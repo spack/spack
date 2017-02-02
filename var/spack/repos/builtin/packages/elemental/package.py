@@ -39,11 +39,11 @@ class Elemental(CMakePackage):
             description='Enables the build of shared libraries')
     variant('hybrid', default=True, 
             description='Make use of OpenMP within MPI packing/unpacking')
-    variant('openmp', default=False,
-            description='Enable OpenMP threading')
+    variant('openmp_blas', default=False,
+            description='Use OpenMP for threading in the BLAS library')
     variant('c_interface', default=False, 
             description='Build C interface')
-    variant('python_package', default=False, 
+    variant('python', default=False, 
             description='Install Python interface')
     variant('parmetis', default=False, 
             description='Enable ParMETIS')
@@ -61,15 +61,18 @@ class Elemental(CMakePackage):
 
     depends_on('cmake', type='build')
     # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('blas', when='-openmp ~int64_blas') # Hack until issue #1712 is fixed
+    depends_on('blas', when='~openmp_blas ~int64_blas') # Hack until issue #1712 is fixed
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
-    depends_on('openblas +openmp', when='+openmp ~int64_blas')
+    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+    # Note that this forces us to use OpenBLAS until #1712 is fixed
+    depends_on('lapack', when='~openmp_blas')
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('scalapack', when='+scalapack ~int64_blas')
+    depends_on('python', when='+python')
 
     def build_type(self):
         """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
@@ -93,7 +96,7 @@ class Elemental(CMakePackage):
                 '-DEL_C_INTERFACE:BOOL={0}'.format((
                     'ON' if '+c_interface' in self.spec else 'OFF')),
                 '-DINSTALL_PYTHON_PACKAGE:BOOL={0}'.format((
-                    'ON' if '+python_package' in self.spec else 'OFF')),
+                    'ON' if '+python' in self.spec else 'OFF')),
                 '-DEL_DISABLE_PARMETIS:BOOL={0}'.format((
                     'OFF' if '+parmetis' in self.spec else 'ON')),
                 '-DEL_DISABLE_QUAD:BOOL={0}'.format((
