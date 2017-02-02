@@ -39,6 +39,8 @@ class Elemental(CMakePackage):
             description='Enables the build of shared libraries')
     variant('hybrid', default=True, 
             description='Make use of OpenMP within MPI packing/unpacking')
+    variant('openmp', default=False,
+            description='Enable OpenMP threading')
     variant('c_interface', default=False, 
             description='Build C interface')
     variant('python_package', default=False, 
@@ -49,17 +51,25 @@ class Elemental(CMakePackage):
             description='Enable quad precision')
     variant('int64', default=False, 
             description='Use 64bit integers')
+    # When this variant is set remove the normal dependencies since
+    # Elemental has to build BLAS and ScaLAPACK internally
     variant('int64_blas', default=False, 
-            description='Use 64bit integers for BLAS')
+            description='Use 64bit integers for BLAS.' 
+            ' Requires local build of BLAS library.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
 
     depends_on('cmake', type='build')
-    depends_on('openblas +openmp', when='~int64_blas')
+    # Note that this forces us to use OpenBLAS until #1712 is fixed
+    depends_on('blas', when='-openmp ~int64_blas') # Hack until issue #1712 is fixed
+    # Hack to forward variant to openblas package
+    # Allow Elemental to build internally when using 8-byte ints
+    depends_on('openblas +openmp', when='+openmp ~int64_blas')
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
-    depends_on('netlib-scalapack', when='+scalapack ~int64_blas')
+    # Allow Elemental to build internally when using 8-byte ints
+    depends_on('scalapack', when='+scalapack ~int64_blas')
 
     def build_type(self):
         """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
@@ -101,12 +111,18 @@ class Elemental(CMakePackage):
                     '_64_' if '+int64_blas' in self.spec else '_')),
                              '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
+            lapack = self.spec['lapack'].lapack_libs
+            blas = self.spec['blas'].blas_libs
+
             if '+scalapack' in self.spec:
-                args.extend(['-DMATH_PATHS:STRING=-L{0}/lib -L{1}/lib'.format(
-                    self.spec['openblas'].prefix, self.spec['netlib-scalapack'].prefix),
-                             '-DMATH_LIBS:STRING=-lopenblas -lscalapack'])
+                scalapack = self.spec['scalapack'].scalapack_libs
+                args.extend(['-DMATH_LIBS:STRING={0} {1}'.format(
+                    (lapack + blas).search_flags, scalapack.search_flags),
+                             '-DMATH_LIBS:STRING={0} {1}'.format(
+                    (lapack + blas).ld_flags.split()[1], scalapack.ld_flags.split()[1])])
             else:
-                args.extend(['-DMATH_PATHS:STRING=-L{0}/lib'.format(
-                    self.spec['openblas'].prefix),
-                             '-DMATH_LIBS:STRING=-lopenblas'])
+                args.extend(['-DMATH_LIBS:STRING={0}'.format(
+                    (lapack + blas).search_flags),
+                             '-DMATH_LIBS:STRING={0}'.format(
+                    (lapack + blas).ld_flags.split()[1])])
         return args
