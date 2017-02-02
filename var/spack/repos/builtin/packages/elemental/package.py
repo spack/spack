@@ -116,21 +116,17 @@ class Elemental(CMakePackage):
                     '_64_' if '+int64_blas' in self.spec else '_')),
                              '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
-            lapack_blas = self.spec['lapack'].lapack_libs + self.spec['blas'].blas_libs
+            math_libs = self.spec['lapack'].lapack_libs + self.spec['blas'].blas_libs
 
             if '+scalapack' in self.spec:
-                scalapack = self.spec['scalapack'].scalapack_libs
-                args.extend(['-DMATH_LIBS:STRING={0} {1}'.format(
-                    scalapack.search_flags, lapack_blas.search_flags),
-                             '-DMATH_LIBS:STRING={0} {1}'.format(
-                    scalapack.link_flags, lapack_blas.link_flags)])
-            else:
-                args.extend(['-DMATH_LIBS:STRING={0}'.format(
-                    lapack_blas.search_flags),
-                             '-DMATH_LIBS:STRING={0}'.format(
-                    lapack_blas.link_flags)])
+                math_libs = self.spec['scalapack'].scalapack_libs + math_libs
 
-#        if '+python' in self.spec:
-#            args.extend(['-DPYTHON_SITE_PACKAGES:STRING={0}'.format(())]
+            args.extend(['-DMATH_LIBS:STRING={0}'.format(
+                math_libs.search_flags),
+                         '-DMATH_LIBS:STRING={0}'.format(
+                math_libs.link_flags)])
+
+        if '+python' in self.spec:
+            args.extend(['-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
 
         return args
