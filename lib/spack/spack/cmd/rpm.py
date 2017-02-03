@@ -674,17 +674,14 @@ class DependencyConfig(object):
             if pkg_name in ignore_deps:
                 dep = pkg_spec[pkg_name]
                 path_entries = info.get('paths', {})
-                for spec, path in path_entries.iteritems():
-                    if spack.spec.Spec(spec).satisfies(dep):
-                        externals[str(pkg_name)] = {
-                            'paths': {str(spec): str(path)},
-                            'buildable': False}
-                        break
-
                 replace_entries = info.get('rpms', {})
-                for spec, rpms in replace_entries.iteritems():
-                    if spack.spec.Spec(spec).satisfies(dep):
-                        replace[pkg_name] = rpms
+                for spec_str, path in path_entries.iteritems():
+                    if dep.satisfies(spack.spec.Spec(spec_str)):
+                        externals[str(pkg_name)] = {
+                            'paths': {str(spec_str): str(path)},
+                            'buildable': False}
+                        if spec_str in replace_entries:
+                            replace[str(pkg_name)] = replace_entries[spec_str]
                         break
         return externals, replace
 
