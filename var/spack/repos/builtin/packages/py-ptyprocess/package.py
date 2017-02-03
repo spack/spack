@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPtyprocess(Package):
+class PyPtyprocess(PythonPackage):
     """Run a subprocess in a pseudo terminal"""
 
     homepage = "https://pypi.python.org/pypi/ptyprocess"
@@ -33,9 +33,4 @@ class PyPtyprocess(Package):
 
     version('0.5.1', '94e537122914cc9ec9c1eadcd36e73a1')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

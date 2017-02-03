@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gts(Package):
+class Gts(AutotoolsPackage):
     """GTS stands for the GNU Triangulated Surface Library.
 
     It is an Open Source Free Software Library intended to provide a set of
@@ -46,8 +46,3 @@ class Gts(Package):
     version('121130', '023ebb6b13b8707534182a3ef0d12908')
 
     depends_on('glib')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')

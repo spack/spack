@@ -115,11 +115,19 @@ class Dealii(CMakePackage):
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi~int64')
     depends_on("trilinos",         when='+trilinos+mpi')
 
+    # check that the combination of variants makes sense
+    def variants_check(self):
+        for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+                  '+slepc', '+trilinos']:
+            if p in self.spec and '+mpi' not in self.spec:
+                raise RuntimeError('The ' + p + ' variant requires +mpi')
+
     def build_type(self):
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         return 'DebugRelease'
 
     def cmake_args(self):
+        self.variants_check()
         spec = self.spec
         options = []
 
@@ -192,7 +200,7 @@ class Dealii(CMakePackage):
         ])
 
         # arpack
-        if '+arpack' in spec:
+        if '+arpack' in spec and '+mpi' in spec:
             options.extend([
                 '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
                 '-DDEAL_II_WITH_ARPACK=ON',
@@ -204,7 +212,7 @@ class Dealii(CMakePackage):
             ])
 
         # since Netcdf is spread among two, need to do it by hand:
-        if '+netcdf' in spec:
+        if '+netcdf' in spec and '+mpi' in spec:
             # take care of lib64 vs lib installed lib locations:
             if os.path.isdir(spec['netcdf-cxx'].prefix.lib):
                 netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxp(Package):
+class Libxp(AutotoolsPackage):
     """libXp - X Print Client Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXp"
@@ -41,9 +41,3 @@ class Libxp(Package):
     depends_on('printproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

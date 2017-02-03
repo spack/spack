@@ -25,15 +25,10 @@
 from spack import *
 
 
-class Libepoxy(Package):
+class Libepoxy(AutotoolsPackage):
     """Epoxy is a library for handling OpenGL function pointer management for
     you."""
     homepage = "https://github.com/anholt/libepoxy"
     url      = "https://github.com/anholt/libepoxy/releases/download/v1.3.1/libepoxy-1.3.1.tar.bz2"
 
     version('1.3.1', '96f6620a9b005a503e7b44b0b528287d')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')

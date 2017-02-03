@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyIpythonGenutils(Package):
+class PyIpythonGenutils(PythonPackage):
     """Vestigial utilities from IPython"""
 
     homepage = "https://pypi.python.org/pypi/ipython_genutils"
@@ -33,10 +33,5 @@ class PyIpythonGenutils(Package):
 
     version('0.1.0', '9a8afbe0978adbcbfcb3b35b2d015a56')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.7.999,3.3:')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

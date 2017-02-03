@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class PyMatplotlib(Package):
+class PyMatplotlib(PythonPackage):
     """matplotlib is a python 2D plotting library which produces publication
     quality figures in a variety of hardcopy formats and interactive
     environments across platforms."""
@@ -80,7 +80,7 @@ class PyMatplotlib(Package):
 
     # --------- Optional dependencies
     depends_on('pkg-config', type='build')    # why not...
-    depends_on('py-pillow', when='+image', type=('build', 'run'))
+    depends_on('pil', when='+image', type=('build', 'run'))
     depends_on('py-ipython', when='+ipython')
     depends_on('ghostscript', when='+latex', type='run')
     depends_on('texlive', when='+latex', type='run')
@@ -95,9 +95,10 @@ class PyMatplotlib(Package):
     # depends_on('ttconv')
     depends_on('py-six@1.9.0:', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        setup_py('build')
-        setup_py('install', '--prefix={0}'.format(prefix))
+    @run_after('install')
+    def set_backend(self):
+        spec = self.spec
+        prefix = self.prefix
 
         if '+qt' in spec or '+tk' in spec:
             # Set backend in matplotlib configuration file

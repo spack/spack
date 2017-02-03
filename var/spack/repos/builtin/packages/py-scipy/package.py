@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyScipy(Package):
+class PyScipy(PythonPackage):
     """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
     It provides many user-friendly and efficient numerical routines such
     as routines for numerical integration and optimization."""
@@ -39,16 +39,13 @@ class PyScipy(Package):
     version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
-    extends('python')
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-nose', type='build')
     # Known not to work with 2.23, 2.25
     depends_on('binutils@2.26:', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
+
+    # NOTE: scipy picks up Blas/Lapack from numpy, see
+    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
     depends_on('blas')
     depends_on('lapack')
-
-    def install(self, spec, prefix):
-        # NOTE: scipy picks up Blas/Lapack from numpy, see
-        # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
-        setup_py('install', '--prefix={0}'.format(prefix))

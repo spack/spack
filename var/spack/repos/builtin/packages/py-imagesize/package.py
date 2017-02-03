@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyImagesize(Package):
+class PyImagesize(PythonPackage):
     """Parses image file headers and returns image size. Supports PNG, JPEG,
     JPEG2000, and GIF image file formats."""
 
@@ -35,9 +35,4 @@ class PyImagesize(Package):
     version('0.7.1', '976148283286a6ba5f69b0f81aef8052',
             url="https://pypi.python.org/packages/53/72/6c6f1e787d9cab2cc733cf042f125abec07209a58308831c9f292504e826/imagesize-0.7.1.tar.gz")
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

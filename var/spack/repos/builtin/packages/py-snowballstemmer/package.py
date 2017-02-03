@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySnowballstemmer(Package):
+class PySnowballstemmer(PythonPackage):
     """This package provides 16 stemmer algorithms (15 + Poerter
     English stemmer) generated from Snowball algorithms."""
 
@@ -33,8 +33,3 @@ class PySnowballstemmer(Package):
     url      = "https://pypi.python.org/packages/source/s/snowballstemmer/snowballstemmer-1.2.1.tar.gz"
 
     version('1.2.1', '643b019667a708a922172e33a99bf2fa')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -68,7 +68,7 @@ class Openblas(MakefilePackage):
     def lapack_libs(self):
         return self.blas_libs
 
-    @MakefilePackage.precondition('edit')
+    @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
@@ -126,7 +126,7 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
-    @MakefilePackage.sanity_check('build')
+    @run_after('build')
     def check_build(self):
         make('tests', *self.make_defs)
 
@@ -138,7 +138,7 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
-    @MakefilePackage.sanity_check('install')
+    @run_after('install')
     def check_install(self):
         spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack

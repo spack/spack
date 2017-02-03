@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyJupyterCore(Package):
+class PyJupyterCore(PythonPackage):
     """Core Jupyter functionality"""
 
     homepage = "http://jupyter-core.readthedocs.io/"
@@ -40,13 +40,8 @@ class PyJupyterCore(Package):
     version('4.0.3', 'f2608f6e92f992ec8e37646b52c922a6')
     version('4.0.2', 'ae0d0197c4febf43c050a97ac6277263')
     version('4.0.1', 'f849136b2badaaba2a8a3b397bf04639')
-    version('4.0'  , 'b6b37cb4f40bd0fcd20433cb2cc7a4c1')
-
-    extends('python')
+    version('4.0',   'b6b37cb4f40bd0fcd20433cb2cc7a4c1')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.7.999,3.3:')
-    depends_on('py-traitlets')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-traitlets', type=('build', 'run'))

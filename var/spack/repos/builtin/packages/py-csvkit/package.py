@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyCsvkit(Package):
+class PyCsvkit(PythonPackage):
     """A library of utilities for working with CSV, the king of tabular file
     formats"""
 
@@ -34,14 +34,9 @@ class PyCsvkit(Package):
 
     version('0.9.1', '48d78920019d18846933ee969502fff6')
 
-    extends('python')
-
     depends_on('py-dateutil', type=('build', 'run'))
     depends_on('py-dbf', type=('build', 'run'))
     depends_on('py-xlrd', type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-openpyxl', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

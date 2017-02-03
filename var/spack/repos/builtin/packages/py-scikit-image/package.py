@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyScikitImage(Package):
+class PyScikitImage(PythonPackage):
     """Image processing algorithms for SciPy, including IO, morphology,
     filtering, warping, color manipulation, object detection, etc."""
 
@@ -43,6 +43,3 @@ class PyScikitImage(Package):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

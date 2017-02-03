@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyUnittest2py3k(Package):
+class PyUnittest2py3k(PythonPackage):
     """unittest2 is a backport of the new features added to the unittest
     testing framework in Python 2.7 and 3.2. This is a Python 3 compatible
     version of unittest2."""
@@ -35,8 +35,5 @@ class PyUnittest2py3k(Package):
 
     version('0.5.1', '8824ff92044310d9365f90d892bf0f09')
 
-    extends('python')
+    depends_on('python@3:')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

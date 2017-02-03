@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPytest(Package):
+class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
     homepage = "http://doc.pytest.org/en/latest/"
@@ -34,10 +34,5 @@ class PyPytest(Package):
     version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5',
             url="https://pypi.python.org/packages/2b/05/e20806c99afaff43331f5fd8770bb346145303882f98ef3275fa1dd66f6d/pytest-3.0.2.tar.gz")
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('py-py@1.4.29:', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

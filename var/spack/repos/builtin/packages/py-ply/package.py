@@ -25,14 +25,9 @@
 from spack import *
 
 
-class PyPly(Package):
+class PyPly(PythonPackage):
     """PLY is nothing more than a straightforward lex/yacc implementation."""
     homepage = "http://www.dabeaz.com/ply"
     url      = "http://www.dabeaz.com/ply/ply-3.8.tar.gz"
 
     version('3.8', '94726411496c52c87c2b9429b12d5c50')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

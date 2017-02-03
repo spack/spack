@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class PyBasemap(Package):
+class PyBasemap(PythonPackage):
     """The matplotlib basemap toolkit is a library for plotting
     2D data on maps in Python."""
 
@@ -35,17 +35,18 @@ class PyBasemap(Package):
 
     version('1.0.7', '48c0557ced9e2c6e440b28b3caff2de8')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
-    depends_on("geos")
+    depends_on('geos')
 
-    def install(self, spec, prefix):
-        env['GEOS_DIR'] = spec['geos'].prefix
-        setup_py('install', '--prefix=%s' % prefix)
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('GEOS_DIR', self.spec['geos'].prefix)
 
+    @run_after('install')
+    def post_install_patch(self):
+        spec = self.spec
         # We are not sure if this fix is needed before Python 3.5.2.
         # If it is needed, this test should be changed.
         # See: https://github.com/LLNL/spack/pull/1964

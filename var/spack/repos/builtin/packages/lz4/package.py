@@ -31,12 +31,21 @@ class Lz4(Package):
     an extremely fast decoder, with speed in multiple GB/s per core,
     typically reaching RAM speed limits on multi-core systems."""
 
-    homepage = "http://cyan4973.github.io/lz4/"
-    url      = "https://github.com/Cyan4973/lz4/archive/r131.tar.gz"
+    homepage = "http://lz4.github.io/lz4/"
+    url      = "https://github.com/lz4/lz4/archive/v1.7.5.tar.gz"
 
-    version('131', '42b09fab42331da9d3fb33bd5c560de9')
+    version('1.7.5', 'c9610c5ce97eb431dddddf0073d919b9')
+    version('1.3.1', '42b09fab42331da9d3fb33bd5c560de9')
 
     # depends_on('valgrind', type='test')
+
+    def url_for_version(self, version):
+        url = "https://github.com/lz4/lz4/archive"
+
+        if version > Version('1.3.1'):
+            return "{0}/v{1}.tar.gz".format(url, version)
+        else:
+            return "{0}/r{1}.tar.gz".format(url, version.joined)
 
     def install(self, spec, prefix):
         make()

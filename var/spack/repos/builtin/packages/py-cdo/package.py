@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyCdo(Package):
+class PyCdo(PythonPackage):
     """The cdo package provides an interface to the Climate Data
     Operators from Python."""
 
@@ -35,13 +35,8 @@ class PyCdo(Package):
     version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
             url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
 
-    extends('python')
-
     depends_on('cdo')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf', type=('build', 'run'))   
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-netcdf', type=('build', 'run'))

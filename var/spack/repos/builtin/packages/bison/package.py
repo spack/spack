@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bison(Package):
+class Bison(AutotoolsPackage):
     """Bison is a general-purpose parser generator that converts
     an annotated context-free grammar into a deterministic LR or
     generalized LR (GLR) parser employing LALR(1) parser tables."""
@@ -37,8 +37,4 @@ class Bison(Package):
 
     depends_on("m4", type='build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")
+    build_directory = 'spack-build'

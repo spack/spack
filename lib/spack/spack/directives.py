@@ -289,9 +289,10 @@ def extends(spec, **kwargs):
 
     """
     def _execute(pkg):
-        if pkg.extendees:
-            msg = 'Packages can extend at most one other package.'
-            raise DirectiveError(msg)
+        # if pkg.extendees:
+        #     directive = 'extends'
+        #     msg = 'Packages can extend at most one other package.'
+        #     raise DirectiveError(directive, msg)
 
         when = kwargs.pop('when', pkg.name)
         _depends_on(pkg, spec, when=when)
@@ -344,8 +345,9 @@ def variant(name, default=False, description=""):
 
     def _execute(pkg):
         if not re.match(spack.spec.identifier_re, name):
-            msg = 'Invalid variant name in {0}: \'{1}\''
-            raise DirectiveError(msg.format(pkg.name, name))
+            directive = 'variant'
+            msg = "Invalid variant name in {0}: '{1}'"
+            raise DirectiveError(directive, msg.format(pkg.name, name))
 
         pkg.variants[name] = Variant(default, description)
     return _execute

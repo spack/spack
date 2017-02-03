@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xdriinfo(Package):
+class Xdriinfo(AutotoolsPackage):
     """xdriinfo - query configuration information of X11 DRI drivers."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xdriinfo"
@@ -44,9 +44,3 @@ class Xdriinfo(Package):
     depends_on('glproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
