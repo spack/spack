@@ -264,12 +264,12 @@ def parse_version_offset(path):
         # 1st Pass: Version only
 
         # ver
-        # e.g. 1.0.0, 7.0.2-7
-        (r'^([\d\._-]+)$', stem),
+        # e.g. 1.0.0, 7.0.2-7, 1.2.3b
+        (r'^(\d[A-Za-z\d\._-]*)$', stem),
 
         # vver
-        # e.g. v3.3.0
-        (r'^v(\d[\d\._-]*)$', stem),
+        # e.g. v3.3.0, v1.2.3b
+        (r'^v(\d[A-Za-z\d\._-]*)$', stem),
 
         # 2nd Pass: A single separator character is used
 
