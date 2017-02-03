@@ -264,43 +264,44 @@ def parse_version_offset(path):
         # 1st Pass: Version only
 
         # ver
-        # e.g. 1.0.0, 7.0.2-7, 1.2.3b
-        (r'^(\d[A-Za-z\d\._-]*)$', stem),
+        # e.g. 1.0.0, 7.0.2-7
+        (r'^(\d[\d\._-]*)$', stem),
 
         # vver
-        # e.g. v3.3.0, v1.2.3b
-        (r'^v(\d[A-Za-z\d\._-]*)$', stem),
+        # e.g. v3.3.0
+        (r'^v(\d[\d\._-]*)$', stem),
 
         # 2nd Pass: A single separator character is used
 
         # name-name-ver-ver
-        # e.g. panda-2016-03-07
+        # e.g. panda-2016-03-07, gts-snapshot-121130
         (r'^[A-Za-z-]+-([\d-]+)$', stem),
 
         # name_name_ver_ver
+        # e.g. tinyxml_2_6_2, boost_1_55_0
         (r'^[A-Za-z_]+_([\d_]+)$', stem),
 
-        # namever.ver
-        (r'^[A-Za-z]+(\d[A-Za-z\d\.]*)$', stem),
-
         # name.name.ver.ver
+        # e.g. prank.source.150803
         (r'^[A-Za-z\.]+\.([\d\.]+)$', stem),
 
-        # 3rd Pass: Mixed separators, but name and version always have
-        # a single separator character
+        # namever.ver
+        # e.g. atlas3.10.3, visit2.10.1
+        (r'^[A-Za-z]+(\d[\d\.]*)$', stem),
+
+        # 3rd Pass: Multiple separator characters are used
 
         # name-name-ver.ver
-        (r'^[A-Za-z-]+-([\d\.]+)$', stem),
-
-        #(r'^[A-Za-z0-9\._-]*([\d\.]+)$', stem),
+        # e.g. m4-1.4.17, cmake-3.4.3
+        (r'^[A-Za-z\d-]+-(\d[A-Za-z\d\.]*)$', stem),
 
         # name.name_ver.ver-ver.ver
-        # Common for R packages
-        (r'^[A-Za-z\.]+_([\d\.-]+)$', stem),
-
-        # 4th Pass: Mixed separators throughout
+        # e.g. superlu_5.2.1, TH.data_1.0-8
+        (r'^[A-Za-z\d\.]+_(\d[A-Za-z\d\.-]*)$', stem),
 
 
+
+        #(r'^[A-Za-z0-9\._-]*([\d\.]+)$', stem),
 
         ## Version separated by underscores
 
