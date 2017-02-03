@@ -374,9 +374,9 @@ class CompilerDuplicateError(spack.error.SpackError):
             lambda cfgfile, count: "{0}: {1} {2}".format(
                 cfgfile, str(count), descriptor(count)))
         msg = (
-            "Compiler {0} for architecture {1}".format(
-                compiler_spec, arch_spec) +
-            " is duplicated in the following config files:\n\t" +
+            "Compiler configuration contains entries with duplicate" +
+            " specification ({0}, {1})".format(compiler_spec, arch_spec) +
+            " in the following files:\n\t" +
             '\n\t'.join(duplicate_msg(x, y) for x, y in duplicate_table))
         super(CompilerDuplicateError, self).__init__(msg)
 
