@@ -2596,6 +2596,16 @@ class Spec(object):
         except KeyError:
             return None
 
+    def _installed_explicitly(self):
+        """Helper for tree to print DB install status."""
+        if not self.concrete:
+            return None
+        try:
+            record = spack.store.db.get_record(self)
+            return record.explicit
+        except KeyError:
+            return None
+
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
