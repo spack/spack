@@ -169,7 +169,7 @@ class Mvapich2(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-    @AutotoolsPackage.precondition('configure')
+    @run_before('configure')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
@@ -206,7 +206,7 @@ class Mvapich2(AutotoolsPackage):
         args.extend(self.network_options)
         return args
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.
