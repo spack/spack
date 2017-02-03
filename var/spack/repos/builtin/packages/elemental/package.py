@@ -26,7 +26,8 @@ from spack import *
 
 
 class Elemental(CMakePackage):
-    """Elemental: Distributed-memory dense and sparse-direct linear algebra and optimization library."""
+    """Elemental: Distributed-memory dense and sparse-direct linear algebra 
+       and optimization library."""
 
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
@@ -61,7 +62,7 @@ class Elemental(CMakePackage):
 
     depends_on('cmake', type='build')
     # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('blas', when='~openmp_blas ~int64_blas') # Hack until issue #1712 is fixed
+    depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
@@ -74,6 +75,13 @@ class Elemental(CMakePackage):
     depends_on('scalapack', when='+scalapack ~int64_blas')
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
+
+    @property
+    def elemental_libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            ['libEl'], root=self.prefix, shared=shared, recurse=True
+        )
 
     def build_type(self):
         """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
@@ -107,17 +115,19 @@ class Elemental(CMakePackage):
                 '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format((
                     'ON' if '+int64_blas' in self.spec else 'OFF'))]
 
-        # If using 64bit int BLAS libraries, elemental has to build them internally
+        # If using 64bit int BLAS libraries, elemental has to build 
+        # them internally
         if '+int64_blas' in self.spec:
             args.extend(['-DEL_BLAS_SUFFIX:STRING={0}'.format((
                 '_64_' if '+int64_blas' in self.spec else '_')),
-                         '-DCUSTOM_BLAS_SUFFIX:BOOL=TRUE']),
+                '-DCUSTOM_BLAS_SUFFIX:BOOL=TRUE']),
             if '+scalapack' in self.spec:
                 args.extend(['-DEL_LAPACK_SUFFIX:STRING={0}'.format((
                     '_64_' if '+int64_blas' in self.spec else '_')),
-                             '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
+                    '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
-            math_libs = self.spec['lapack'].lapack_libs + self.spec['blas'].blas_libs
+            math_libs = (self.spec['lapack'].lapack_libs 
+                         + self.spec['blas'].blas_libs)
 
             if '+scalapack' in self.spec:
                 math_libs = self.spec['scalapack'].scalapack_libs + math_libs
@@ -128,6 +138,7 @@ class Elemental(CMakePackage):
                 math_libs.link_flags)])
 
         if '+python' in self.spec:
-            args.extend(['-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
+            args.extend(['-DPYTHON_SITE_PACKAGES:STRING={0}'.format(
+                site_packages_dir)])
 
         return args
