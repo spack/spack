@@ -261,78 +261,98 @@ def parse_version_offset(path):
     # the version of the package. Thefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     version_regexes = [
-        # Version only
+        # 1st Pass: Version only
 
-        # ver, vver
-        # e.g. 1.0.0, 7.0.2-7, v3.3.0
-        (r'^v?(\d[\d\._-]*)$', stem),
+        # ver
+        # e.g. 1.0.0, 7.0.2-7
+        (r'^([\d\._-]+)$', stem),
 
-        # Version separated by dashes
+        # vver
+        # e.g. v3.3.0
+        (r'^v(\d[\d\._-]*)$', stem),
+
+        # 2nd Pass: A single separator character is used
 
         # name-name-ver-ver
         # e.g. panda-2016-03-07
         (r'^[A-Za-z-]+-([\d-]+)$', stem),
 
-        # Version separated by underscores
-
         # name_name_ver_ver
         (r'^[A-Za-z_]+_([\d_]+)$', stem),
-
-        # name-name-ver_ver
-        (r'^[A-Za-z\d-]+-([\d_]+)$', stem),
-
-        # Version separated by dots
-
-        # name-name-ver.ver
-        (r'^[A-Za-z\d\+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
-
-        # name_name-ver.ver
-        (r'^[A-Za-z\d_]+-(\d[A-Za-z\d\.]*)$', stem),
-
-        # name_name_ver.ver
-        (r'^[A-Za-z\d_]+_([\d\.]+)$', stem),
-
-        # name_name.ver.ver
-        # e.g. fer_source.v696
-        (r'^[A-Za-z_]+\.v?([\d\.]+)$', stem),
-
-        # name.name.ver.ver
-        (r'^[A-Za-z\.]+\.([\d\.]+)$', stem),
 
         # namever.ver
         (r'^[A-Za-z]+(\d[A-Za-z\d\.]*)$', stem),
 
+        # name.name.ver.ver
+        (r'^[A-Za-z\.]+\.([\d\.]+)$', stem),
+
+        # 3rd Pass: Mixed separators, but name and version always have
+        # a single separator character
+
+        # name-name-ver.ver
+        (r'^[A-Za-z-]+-([\d\.]+)$', stem),
+
+        #(r'^[A-Za-z0-9\._-]*([\d\.]+)$', stem),
+
         # name.name_ver.ver-ver.ver
-        (r'^[A-Za-z\d\.]+_([\d\.-]+)$', stem),
+        # Common for R packages
+        (r'^[A-Za-z\.]+_([\d\.-]+)$', stem),
 
-        # name.name_name-ver.ver
-        # e.g. backports.ssl_match_hostname-3.5.0.1
-        (r'^[A-Za-z\._]+-([\d\.]+)$', stem),
-
-        # name-name-ver.ver_ver.ver
-        # name-name-ver.ver-ver.ver
-        (r'^[A-Za-z-]+-([\d\.]+[_-][\d\.]+)$', stem),
+        # 4th Pass: Mixed separators throughout
 
 
-        # Suffix queries
 
-        # GitLab syntax:
-        #   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
-        #   as with github releases, we hope a version can be found in the
-        #   git tag
-        # Search dotted versions:
-        #   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
-        #   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
-        #   e.g., http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        (r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+        ## Version separated by underscores
 
-        # http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
-        (r'\?version=((\d+\.)+\d+)', suffix),
+        ## name-name-ver_ver
+        #(r'^[A-Za-z\d-]+-([\d_]+)$', stem),
 
-        # Stem queries
+        ## Version separated by dots
 
-        # download.php?filename=slepc-3.6.2
-        (r'\?filename=[A-Za-z]+-(\d[A-Za-z\d\.]+)$', stem),
+        ## name-name-ver.ver
+        #(r'^[A-Za-z\d\+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
+
+        ## name_name-ver.ver
+        #(r'^[A-Za-z\d_]+-(\d[A-Za-z\d\.]*)$', stem),
+
+        ## name_name_ver.ver
+        #(r'^[A-Za-z\d_]+_([\d\.]+)$', stem),
+
+        ## name_name.ver.ver
+        ## e.g. fer_source.v696
+        #(r'^[A-Za-z_]+\.v?([\d\.]+)$', stem),
+
+        ## name.name_ver.ver-ver.ver
+        #(r'^[A-Za-z\d\.]+_([\d\.-]+)$', stem),
+
+        ## name.name_name-ver.ver
+        ## e.g. backports.ssl_match_hostname-3.5.0.1
+        #(r'^[A-Za-z\._]+-([\d\.]+)$', stem),
+
+        ## name-name-ver.ver_ver.ver
+        ## name-name-ver.ver-ver.ver
+        #(r'^[A-Za-z-]+-([\d\.]+[_-][\d\.]+)$', stem),
+
+
+        ## Suffix queries
+
+        ## GitLab syntax:
+        ##   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
+        ##   as with github releases, we hope a version can be found in the
+        ##   git tag
+        ## Search dotted versions:
+        ##   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
+        ##   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
+        ##   e.g., http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
+        #(r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+
+        ## http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        #(r'\?version=((\d+\.)+\d+)', suffix),
+
+        ## Stem queries
+
+        ## download.php?filename=slepc-3.6.2
+        #(r'\?filename=[A-Za-z]+-(\d[A-Za-z\d\.]+)$', stem),
 
         #   e.g., http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
 
