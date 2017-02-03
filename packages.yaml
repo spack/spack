@@ -24,10 +24,26 @@ packages:
   mpich:
     variants: +pmi +romio +verbs
 
+  intel-mkl:
+    version: [11.1,11.2,11.3]
+    paths:
+      mkl@11.1%intel@14.0.2: /lustre/usr/intel_cluster_studio/composer_xe_2013_sp1.2.144/mkl
+      mkl@11.2%intel@15.0.2: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/mkl
+      mkl@11.3%intel@16.0.3: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/mkl
+    buildable: False
+
+  impi:
+    version: [4.1.3.048,5.1.3.210]
+    paths:
+      impi@4.1.3.048%intel@14.0.2: /lustre/usr/intel_cluster_studio/impi/4.1.3.048
+      impi@5.0.3.048%intel@15.0.2: /lustre/usr/intel_cluster_studio/impi/5.0.3.048
+      impi@5.1.3.210%intel@16.0.3: /lustre/usr/intel_cluster_studio/impi/5.1.3.210
+    buildable: False
+
   all:
     compiler: [gcc@5, intel@16]
     providers:
-      mpi: [openmpi, mvapich2, mpich]
+      mpi: [openmpi, mvapich2, mpich, impi]
       blas: [openblas, mkl]
       lapack: [openblas, mkl]
     variants: +debug +verbs
