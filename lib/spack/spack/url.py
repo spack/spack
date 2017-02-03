@@ -129,7 +129,7 @@ def strip_version_suffixes(path):
         'full',
         'single',
         'public',
-        'final',
+        '[Ff]inal',
         'rel',
         'with[A-Za-z_-]+',
         'bin',
