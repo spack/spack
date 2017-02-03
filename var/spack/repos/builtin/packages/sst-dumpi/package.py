@@ -40,7 +40,6 @@ class SstDumpi(AutotoolsPackage):
     homepage = "http://sst.sandia.gov/about_dumpi.html"
     url      = "https://github.com/sstsimulator/sst-dumpi.git"
 
-    depends_on('boost@1.59:', type='build')
     depends_on('autoconf@1.68:', type='build')
     depends_on('automake@1.11.1:', type='build')
     depends_on('libtool@1.2.4:', type='build')
