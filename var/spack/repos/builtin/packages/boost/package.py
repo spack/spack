@@ -130,6 +130,9 @@ class Boost(Package):
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
+    patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
+
     def url_for_version(self, version):
         """
         Handle Boost's weird URLs,
@@ -250,6 +253,13 @@ class Boost(Package):
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
+
+        # clang is not officially supported for pre-compiled headers
+        # and at least in clang 3.9 still fails to build
+        #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
+        #   https://svn.boost.org/trac/boost/ticket/12496
+        if spec.satisfies('%clang'):
+            options.extend(['pch=off'])
 
         return threadingOpts
 

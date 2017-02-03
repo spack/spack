@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyFutures(Package):
+class PyFutures(PythonPackage):
     """Backport of the concurrent.futures package from Python 3.2"""
 
     homepage = "https://pypi.python.org/pypi/futures"
@@ -33,9 +33,4 @@ class PyFutures(Package):
 
     version('3.0.5', 'ced2c365e518242512d7a398b515ff95')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

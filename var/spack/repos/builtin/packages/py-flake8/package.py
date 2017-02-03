@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyFlake8(Package):
+class PyFlake8(PythonPackage):
     """Flake8 is a wrapper around PyFlakes, pep8 and Ned Batchelder's
     McCabe script."""
 
@@ -43,7 +43,7 @@ class PyFlake8(Package):
     depends_on('py-setuptools', type=('build', 'run'))
 
     # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
-    depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=('build', 'run'))  # noqa
+    depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=('build', 'run'))
     # pyflakes >= 0.8.1, < 1.1
     depends_on('py-pyflakes@0.8.1:1.0.0', when='@2.5.4', type=('build', 'run'))
 
@@ -57,11 +57,12 @@ class PyFlake8(Package):
     # mccabe >= 0.2.1, < 0.5
     depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=('build', 'run'))
 
-    depends_on('py-configparser', when='^python@:3.3.999', type=('build', 'run'))
-    depends_on('py-enum34', when='^python@:3.1.999', type=('build', 'run'))
+    # These dependencies breaks concretization
+    # See https://github.com/LLNL/spack/issues/2793
+    # depends_on('py-configparser', when='^python@:3.3.999', type=('build', 'run'))  # noqa
+    # depends_on('py-enum34', when='^python@:3.1.999', type=('build', 'run'))
+    depends_on('py-configparser', type=('build', 'run'))
+    depends_on('py-enum34', type=('build', 'run'))
 
     # TODO: Add test dependencies
     # depends_on('py-nose', type='test')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

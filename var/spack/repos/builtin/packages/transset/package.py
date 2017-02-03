@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Transset(Package):
+class Transset(AutotoolsPackage):
     """transset is an utility for setting opacity property."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/transset"
@@ -38,9 +38,3 @@ class Transset(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

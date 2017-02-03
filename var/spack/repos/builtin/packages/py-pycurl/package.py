@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPycurl(Package):
+class PyPycurl(PythonPackage):
     """PycURL is a Python interface to libcurl. PycURL can be used to fetch
     objects identified by a URL from a Python program."""
 
@@ -34,10 +34,6 @@ class PyPycurl(Package):
 
     version('7.43.0', 'c94bdba01da6004fa38325e9bd6b9760')
 
-    extends('python')
     depends_on('python@2.6:')
     depends_on('py-setuptools', type='build')
     depends_on('curl@7.19.0:')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

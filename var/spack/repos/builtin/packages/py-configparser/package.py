@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyConfigparser(Package):
+class PyConfigparser(PythonPackage):
     """This library brings the updated configparser from Python 3.5 to
     Python 2.6-3.5."""
 
@@ -35,12 +35,10 @@ class PyConfigparser(Package):
     version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538',
             url="https://pypi.python.org/packages/7c/69/c2ce7e91c89dc073eb1aa74c0621c3eefbffe8216b3f9af9d3885265c01c/configparser-3.5.0.tar.gz")
 
-    extends('python')
     depends_on('python@2.6:2.7,3.4:')
 
-    depends_on('py-ordereddict', when='^python@2.6:2.6.999', type=('build', 'run'))
+    # This dependency breaks concretization
+    # See https://github.com/LLNL/spack/issues/2793
+    # depends_on('py-ordereddict', when='^python@2.6:2.6.999', type=('build', 'run'))  # noqa
 
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

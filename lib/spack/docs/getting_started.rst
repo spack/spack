@@ -632,7 +632,7 @@ the command line:
 
 .. code-block:: console
 
-   $ spack install openmpi fflags=\"-mismatch\"
+   $ spack install openmpi fflags="-mismatch"
 
 Or it can be set permanently in your ``compilers.yaml``:
 

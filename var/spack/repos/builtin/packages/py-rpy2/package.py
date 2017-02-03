@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyRpy2(Package):
+class PyRpy2(PythonPackage):
     """rpy2 is a redesign and rewrite of rpy. It is providing a low-level
        interface to R from Python, a proposed high-level interface,
        including wrappers to graphical libraries, as well as R-like
@@ -38,11 +38,11 @@ class PyRpy2(Package):
     version('2.5.4', '115a20ac30883f096da2bdfcab55196d')
     version('2.5.6', 'a36e758b633ce6aec6a5f450bfee980f')
 
-    extends('python')
+    # FIXME: Missing dependencies:
+    # ld: cannot find -licuuc
+    # ld: cannot find -licui18
+
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    depends_on('R')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on('r')

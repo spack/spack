@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxext(Package):
+class Libxext(AutotoolsPackage):
     """libXext - library for common extensions to the X11 protocol."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXext"
@@ -39,9 +39,3 @@ class Libxext(Package):
     depends_on('xextproto@7.1.99:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

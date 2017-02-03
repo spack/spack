@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMako(Package):
+class PyMako(PythonPackage):
     """A super-fast templating language that borrows the best
        ideas from the existing templating languages."""
 
@@ -35,12 +35,7 @@ class PyMako(Package):
     version('1.0.4', 'c5fc31a323dd4990683d2f2da02d4e20')
     version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     # depends_on('py-mock',   type='test')  # TODO: Add test deptype
     # depends_on('py-pytest', type='test')  # TODO: Add test deptype
     depends_on('py-markupsafe@0.9.2:', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

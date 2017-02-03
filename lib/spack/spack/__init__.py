@@ -46,6 +46,7 @@ build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 platform_path  = join_path(module_path, 'platforms')
 compilers_path = join_path(module_path, "compilers")
+build_systems_path = join_path(module_path, 'build_systems')
 operating_system_path = join_path(module_path, 'operating_systems')
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
@@ -88,7 +89,7 @@ from spack.util.path import canonicalize_path
 # Initialize various data structures & objects at the core of Spack.
 #-----------------------------------------------------------------------------
 # Version information
-spack_version = Version("0.9.1")
+spack_version = Version("0.10.0")
 
 
 # Set up the default packages database.
@@ -155,13 +156,24 @@ dirty = _config.get('dirty', False)
 #-----------------------------------------------------------------------------
 __all__ = []
 
-from spack.package import Package
+from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
-__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
-            'RPackage']
+
+__all__ += [
+    'run_before',
+    'run_after',
+    'on_package_attributes',
+    'Package',
+    'CMakePackage',
+    'AutotoolsPackage',
+    'MakefilePackage',
+    'PythonPackage',
+    'RPackage'
+]
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']

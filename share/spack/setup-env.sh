@@ -167,6 +167,11 @@ function _spack_pathadd {
     fi
 }
 
+# Export spack function so it is available in subshells (only works with bash)
+if [ -n "${BASH_VERSION:-}" ]; then
+	export -f spack
+fi
+
 #
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.

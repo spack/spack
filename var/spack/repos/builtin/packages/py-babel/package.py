@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyBabel(Package):
+class PyBabel(PythonPackage):
     """Babel is an integrated collection of utilities that assist in
     internationalizing and localizing Python applications, with an
     emphasis on web-based applications."""
@@ -36,10 +36,5 @@ class PyBabel(Package):
     version('2.3.4', 'afa20bc55b0e991833030129ad498f35',
             url="https://pypi.python.org/packages/6e/96/ba2a2462ed25ca0e651fb7b66e7080f5315f91425a07ea5b34d7c870c114/Babel-2.3.4.tar.gz")
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('py-pytz',       type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

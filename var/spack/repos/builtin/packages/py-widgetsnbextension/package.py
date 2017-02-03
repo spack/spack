@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyWidgetsnbextension(Package):
+class PyWidgetsnbextension(PythonPackage):
     """IPython HTML widgets for Jupyter"""
 
     homepage = "https://pypi.python.org/pypi/widgetsnbextension"
@@ -33,11 +33,6 @@ class PyWidgetsnbextension(Package):
 
     version('1.2.6', '0aa4e152c9ba2d704389dc2453f448c7')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.7.999,3.3:')
-    depends_on('py-jupyter-notebook@4.2.0:')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-jupyter-notebook@4.2.0:', type=('build', 'run'))

@@ -25,8 +25,8 @@
 from spack import *
 
 
-class PyPyflakes(Package):
-    """A simple program which checks Python source files for errors.."""
+class PyPyflakes(PythonPackage):
+    """A simple program which checks Python source files for errors."""
 
     homepage = "https://github.com/PyCQA/pyflakes"
     url      = "https://github.com/PyCQA/pyflakes/archive/1.3.0.tar.gz"
@@ -42,11 +42,6 @@ class PyPyflakes(Package):
     version('0.9.1', '8108d2248e93ca6a315fa2dd31ee9bb1')
     version('0.9.0', '43c2bcee88606bde55dbf25a253ef886')
 
-    extends('python')
-
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pyflakes requires py-setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ico(Package):
+class Ico(AutotoolsPackage):
     """ico is a simple animation program that may be used for testing various
     X11 operations and extensions.  It displays a wire-frame rotating
     polyhedron, with hidden lines removed, or a solid-fill polyhedron with
@@ -41,9 +41,3 @@ class Ico(Package):
     depends_on('xproto@7.0.22:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

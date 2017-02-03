@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Recordproto(Package):
+class Recordproto(AutotoolsPackage):
     """X Record Extension.
 
     This extension defines a protocol for the recording and playback of user
@@ -38,8 +38,3 @@ class Recordproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

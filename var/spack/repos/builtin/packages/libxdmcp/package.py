@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxdmcp(Package):
+class Libxdmcp(AutotoolsPackage):
     """libXdmcp - X Display Manager Control Protocol library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXdmcp"
@@ -36,10 +36,3 @@ class Libxdmcp(Package):
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

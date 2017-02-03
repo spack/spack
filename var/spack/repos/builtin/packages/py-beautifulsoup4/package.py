@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyBeautifulsoup4(Package):
+class PyBeautifulsoup4(PythonPackage):
     """Beautiful Soup is a Python library for pulling data out of HTML and
     XML files. It works with your favorite parser to provide idiomatic ways
     of navigating, searching, and modifying the parse tree."""
@@ -38,9 +38,4 @@ class PyBeautifulsoup4(Package):
             'download/4.5/beautifulsoup4-4.5.1.tar.gz')
     version('4.4.1', '8fbd9a7cac0704645fa20d1419036815')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

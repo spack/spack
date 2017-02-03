@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPythonDaemon(Package):
+class PyPythonDaemon(PythonPackage):
     """Library to implement a well-behaved Unix daemon process.
 
        This library implements the well-behaved daemon specification of
@@ -42,9 +42,5 @@ class PyPythonDaemon(Package):
 
     version('2.0.5', '73e7f49f525c51fa4a995aea4d80de41')
 
-    extends("python")
     depends_on("py-setuptools", type='build')
     depends_on("py-lockfile", type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

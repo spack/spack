@@ -25,19 +25,18 @@
 from spack import *
 
 
-class PyJsonschema(Package):
+class PyJsonschema(PythonPackage):
     """Jsonschema: An(other) implementation of JSON Schema for Python."""
 
     homepage = "http://github.com/Julian/jsonschema"
-    # base https://pypi.python.org/pypi/jsonschema
     url      = "https://pypi.python.org/packages/source/j/jsonschema/jsonschema-2.5.1.tar.gz"
 
     version('2.5.1', '374e848fdb69a3ce8b7e778b47c30640')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('py-vcversioner')
-    depends_on('py-functools32', when="^python@2.7")
+    depends_on('py-vcversioner', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    # This dependency breaks concretization
+    # See https://github.com/LLNL/spack/issues/2793
+    # depends_on('py-functools32', when="^python@2.7", type=('build', 'run'))
+    depends_on('py-functools32', type=('build', 'run'))

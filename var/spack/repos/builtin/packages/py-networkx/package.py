@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyNetworkx(Package):
+class PyNetworkx(PythonPackage):
     """NetworkX is a Python package for the creation, manipulation, and study
     of the structure, dynamics, and functions of complex networks."""
     homepage = "http://networkx.github.io/"
@@ -33,10 +33,5 @@ class PyNetworkx(Package):
 
     version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
 
-    extends('python')
-
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

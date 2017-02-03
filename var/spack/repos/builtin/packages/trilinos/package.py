@@ -25,6 +25,7 @@
 from spack import *
 import os
 import sys
+import platform
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -89,8 +90,6 @@ class Trilinos(CMakePackage):
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
-
-    depends_on('cmake', type='build')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -159,6 +158,10 @@ class Trilinos(CMakePackage):
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DTPL_FIND_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DTrilinos_LINK_SEARCH_START_STATIC:BOOL=%s' % (
+                'OFF' if '+shared' in spec else 'ON'),
             '-DTPL_ENABLE_MPI:BOOL=ON',
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_BLAS=ON',
@@ -169,9 +172,14 @@ class Trilinos(CMakePackage):
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
+            '-DTPL_ENABLE_Netcdf:BOOL=ON'
         ])
+
+        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+            # use @rpath on Sierra due to limit of dynamic loader
+            options.append('-DCMAKE_MACOSX_RPATH=ON')
+        else:
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Force Trilinos to use the MPI wrappers instead of raw compilers
         # this is needed on Apple systems that require full resolution of
@@ -371,7 +379,7 @@ class Trilinos(CMakePackage):
             ])
         return options
 
-    @CMakePackage.sanity_check('install')
+    @run_after('install')
     def filter_python(self):
         # When trilinos is built with Python, libpytrilinos is included
         # through cmake configure files. Namely, Trilinos_LIBRARIES in

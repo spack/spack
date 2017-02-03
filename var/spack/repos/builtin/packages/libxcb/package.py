@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxcb(Package):
+class Libxcb(AutotoolsPackage):
     """The X protocol C-language Binding (XCB) is a replacement
     for Xlib featuring a small footprint, latency hiding, direct
     access to the protocol, improved threading support, and
@@ -52,10 +52,3 @@ class Libxcb(Package):
             'typedef struct xcb_auth_info_t {',
             'typedef struct {',
             'src/xcb.h')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

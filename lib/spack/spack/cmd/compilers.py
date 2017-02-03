@@ -25,12 +25,12 @@
 import spack
 from spack.cmd.compiler import compiler_list
 
-description = "List available compilers. Same as 'spack compiler list'."
+description = "list available compilers, same as 'spack compiler list'"
 
 
 def setup_parser(subparser):
     subparser.add_argument('--scope', choices=spack.config.config_scopes,
-                           help="Configuration scope to read/modify.")
+                           help="configuration scope to read/modify")
 
 
 def compilers(parser, args):

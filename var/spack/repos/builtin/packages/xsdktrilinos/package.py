@@ -28,7 +28,7 @@ import os
 
 class Xsdktrilinos(CMakePackage):
     """xSDKTrilinos contains the portions of Trilinos that depend on PETSc
-    because they would cause a circular dependency if built as part of 
+    because they would cause a circular dependency if built as part of
     Trilinos.
     """
     homepage = "https://trilinos.org/"
@@ -50,8 +50,6 @@ class Xsdktrilinos(CMakePackage):
             description='Enables the build of shared libraries')
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
-
-    depends_on('cmake', type='build')
 
     # MPI related dependencies
     depends_on('mpi')

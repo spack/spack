@@ -29,7 +29,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description = "Print out locations of various directories used by Spack"
+description = "print out locations of various directories used by Spack"
 
 
 def setup_parser(subparser):
@@ -38,34 +38,34 @@ def setup_parser(subparser):
 
     directories.add_argument(
         '-m', '--module-dir', action='store_true',
-        help="Spack python module directory.")
+        help="spack python module directory")
     directories.add_argument(
         '-r', '--spack-root', action='store_true',
-        help="Spack installation root.")
+        help="spack installation root")
 
     directories.add_argument(
         '-i', '--install-dir', action='store_true',
-        help="Install prefix for spec (spec need not be installed).")
+        help="install prefix for spec (spec need not be installed)")
     directories.add_argument(
         '-p', '--package-dir', action='store_true',
-        help="Directory enclosing a spec's package.py file.")
+        help="directory enclosing a spec's package.py file")
     directories.add_argument(
         '-P', '--packages', action='store_true',
-        help="Top-level packages directory for Spack.")
+        help="top-level packages directory for Spack")
     directories.add_argument(
         '-s', '--stage-dir', action='store_true',
-        help="Stage directory for a spec.")
+        help="stage directory for a spec")
     directories.add_argument(
         '-S', '--stages', action='store_true',
-        help="Top level Stage directory.")
+        help="top level stage directory")
     directories.add_argument(
         '-b', '--build-dir', action='store_true',
-        help="Checked out or expanded source directory for a spec "
-             "(requires it to be staged first).")
+        help="checked out or expanded source directory for a spec "
+             "(requires it to be staged first)")
 
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="spec of package to fetch directory for.")
+        help="spec of package to fetch directory for")
 
 
 def location(parser, args):

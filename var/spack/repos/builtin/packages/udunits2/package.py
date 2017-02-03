@@ -29,11 +29,34 @@ class Udunits2(AutotoolsPackage):
     """Automated units conversion"""
 
     homepage = "http://www.unidata.ucar.edu/software/udunits"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.20.tar.gz"
+    url      = "https://github.com/Unidata/UDUNITS-2/archive/v2.2.23.tar.gz"
 
-    version('2.2.20', '1586b70a49dfe05da5fcc29ef239dce0')
+    version('2.2.25', '373106a0fcd20c40fc53a975c9fa4fca')
+    version('2.2.24', '316911493e3b5c28ff7019223b4e27ea')
+    version('2.2.23', '0c0d9b1ebd7ad066233bedf40e66f1ba')
+    version('2.2.21', '167738b3ec886da1b92239de9cbbbc39')
 
     depends_on('expat')
 
     depends_on('bison', type='build')
     depends_on('flex',  type='build')
+    depends_on('libtool', type='build')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('pkg-config', type='build')
+
+    def autoreconf(self, spec, prefix):
+        # Work around autogen.sh oddities
+        # bash = which("bash")
+        # bash("./autogen.sh")
+        mkdirp("config")
+        autoreconf = which("autoreconf")
+        autoreconf("--install", "--verbose", "--force",
+                   "-I", "config",
+                   "-I", join_path(spec['pkg-config'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['automake'].prefix,
+                                   "share", "aclocal"),
+                   "-I", join_path(spec['libtool'].prefix,
+                                   "share", "aclocal"),
+                   )
