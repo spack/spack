@@ -207,11 +207,15 @@ def find(compiler_spec, scope=None):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
+def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
+                       use_cache=True):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    config = all_compilers_config(scope)
+    if use_cache:
+        config = all_compilers_config(scope)
+    else:
+        config = get_compiler_config(scope)
 
     def get_compilers(cspec):
         compilers = []
@@ -283,8 +287,26 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
     if len(compilers) > 1:
-        raise CompilerSpecInsufficientlySpecificError(compiler_spec)
+        raise CompilerDuplicateError(compiler_spec, arch_spec)
     return compilers[0]
+
+
+@_auto_compiler_spec
+def get_compiler_duplicates(compiler_spec, arch_spec):
+    config_scopes = spack.config.config_scopes
+    scope_to_compilers = dict()
+    for scope in config_scopes:
+        compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec,
+                                       scope=scope, use_cache=False)
+        if compilers:
+            scope_to_compilers[scope] = compilers
+
+    cfg_file_to_duplicates = dict()
+    for scope, compilers in scope_to_compilers.iteritems():
+        config_file = config_scopes[scope].get_section_filename('compilers')
+        cfg_file_to_duplicates[config_file] = compilers
+
+    return cfg_file_to_duplicates
 
 
 def class_for_compiler_name(compiler_name):
@@ -339,6 +361,24 @@ class NoCompilerForSpecError(spack.error.SpackError):
         super(NoCompilerForSpecError, self).__init__(
             "No compilers for operating system %s satisfy spec %s"
             % (target, compiler_spec))
+
+
+class CompilerDuplicateError(spack.error.SpackError):
+    def __init__(self, compiler_spec, arch_spec):
+        config_file_to_duplicates = get_compiler_duplicates(
+            compiler_spec, arch_spec)
+        duplicate_table = list(
+            (x, len(y)) for x, y in config_file_to_duplicates.iteritems())
+        descriptor = lambda num: 'time' if num == 1 else 'times'
+        duplicate_msg = (
+            lambda cfgfile, count: "{0}: {1} {2}".format(
+                cfgfile, str(count), descriptor(count)))
+        msg = (
+            "Compiler {0} for architecture {1}".format(
+                compiler_spec, arch_spec) +
+            " is duplicated in the following config files:\n\t" +
+            '\n\t'.join(duplicate_msg(x, y) for x, y in duplicate_table))
+        super(CompilerDuplicateError, self).__init__(msg)
 
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
