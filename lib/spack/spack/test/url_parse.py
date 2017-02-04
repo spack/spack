@@ -172,6 +172,92 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         # build one with a specific version.
         self.assertEqual(string, substitute_version(string, v))
 
+    def test_github_downloads(self):
+        # archive/ver.ver
+        self.check(
+            'nco', '4.6.2',
+            'https://github.com/nco/nco/archive/4.6.2.tar.gz')
+        # archive/vver.ver
+        self.check(
+            'vim', '8.0.0134',
+            'https://github.com/vim/vim/archive/v8.0.0134.tar.gz')
+        # archive/name-ver.ver
+        self.check(
+            'oce', '0.18',
+            'https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz')
+        # releases/download/vver/name-ver.ver
+        self.check(
+            'libmesh', '1.0.0',
+            'https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2')
+        # tarball/vver.ver
+        self.check(
+            'git', '2.7.1',
+            'https://github.com/git/git/tarball/v2.7.1')
+        # zipball/vver.ver
+        self.check(
+            'git', '2.7.1',
+            'https://github.com/git/git/zipball/v2.7.1')
+
+    def test_gitlab_downloads(self):
+        # ?ref=vver.ver
+        self.check(
+            'swiftsim', '0.3.0',
+            'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0')
+
+    def test_bitbucket_downloads(self):
+        # get/ver.ver
+        self.check(
+            'eigen', '3.2.7',
+            'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
+        # get/vver.ver
+        self.check(
+            'hoomd-blue', '1.3.3',
+            'https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2')
+        # downloads/name-ver.ver
+        self.check(
+            'dolfin', '2016.1.0',
+            'https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2016.1.0.tar.gz')
+
+    def test_sourceforge_downloads(self):
+        self.check(
+            'libpng', '1.6.27',
+            'http://download.sourceforge.net/libpng/libpng-1.6.27.tar.gz')
+        self.check(
+            'lcms2', '2.6',
+            'http://downloads.sourceforge.net/project/lcms/lcms/2.6/lcms2-2.6.tar.gz')
+        self.check(
+            'modules', '3.2.10',
+            'http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz')
+        # name-ver.ver.ext/download
+        self.check(
+            'glew', '2.0.0',
+            'https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download')
+
+    def test_cran_downloads(self):
+        self.check(
+            'th-data', '1.0-8',
+            'https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz')
+        self.check(
+            'knitr', '1.14',
+            'https://cran.rstudio.com/src/contrib/knitr_1.14.tar.gz')
+        self.check(
+            'r', '3.3.2',
+            'https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz')
+
+    def test_pypi_downloads(self):
+        self.check(
+            '3to2', '1.1.1',
+            'https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip')
+        self.check(
+            'pandas', '0.16.0',
+            'https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73')
+        self.check(
+            'sphinx-rtd-theme', '0.1.10a0',
+            'https://pypi.python.org/packages/da/6b/1b75f13d8aa3333f19c6cdf1f0bc9f52ea739cae464fbee050307c121857/sphinx_rtd_theme-0.1.10a0.tar.gz')
+        self.check(
+            'backports-ssl-match-hostname', '3.5.0.1',
+            'https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz')
+
     def test_wwwoffle_version(self):
         self.check(
             'wwwoffle', '2.9h',
@@ -351,7 +437,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_imagemagick_style(self):
         self.check(
             'imagemagick', '6.7.5-7',
-
             'http://downloads.sf.net/project/machomebrew/mirror/ImageMagick-6.7.5-7.tar.bz2')
 
     def test_dash_version_dash_style(self):
