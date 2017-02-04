@@ -773,6 +773,7 @@ def resolve_autoname(
                    ignore_deps)
     externals, replace = dependency_cfg.external_pkg_cfg(pkg_spec, ignore_deps)
     build_norpm_deps = set(pkg_spec.dependencies_dict()) & build_norpm_deps
+    build_norpm_deps -= ignore_deps
 
     direct_deps = dependency_cfg.direct_deps(pkg_spec)
     direct_rpm_deps = set(
