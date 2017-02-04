@@ -571,7 +571,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
 
         else:
             def key_label(s):
-                return s.dag_hash(), "%s-%s" % (s.name, s.dag_hash(7))
+                return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
 
             for s in spec.traverse(deptype=deptype):
                 skey, slabel = key_label(s)
