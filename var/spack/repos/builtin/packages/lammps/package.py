@@ -147,8 +147,8 @@ class Lammps(Package):
                         'Makefile.icc')
 
             mpi_include = self.spec['mpi'].prefix.include
-            if 'intelmpi' in self.spec:
-                mpi_include = self.spec['mpi'].prefix.include + '64'
+#            if 'intelmpi' in self.spec:
+#                mpi_include = self.spec['mpi'].prefix.include + '64'
             filter_file(r'CCFLAGS = *',
                         'CCFLAGS = -I{0} '.format(mpi_include),
                         'Makefile.icc')
@@ -159,9 +159,11 @@ class Lammps(Package):
 
             make('lib', '-f', 'Makefile.icc')
             with open('Makefile.lammps', 'w') as fh:
+                lapack_blas = (self.spec['lapack'].lapack_libs +
+                               self.spec['blas'].blas_libs)
                 makefile = ['user-atc_SYSINC =',
-                            'user-atc_SYSLIB = {0}'.format(self.spec['lapack'].lapack_ld_flags),
-                            'user-atc_SYSPATH =']
+                            'user-atc_SYSLIB = {0}'.format(lapack_blas.ld_flags),
+                            'user-atc_SYSPATH = ']
                 fh.write('\n'.join(makefile))
 
     def build_voronoi(self):
