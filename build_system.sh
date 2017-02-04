@@ -23,11 +23,6 @@ spack install emacs 	%gcc@4.8.5
 
 spack install jdk
 
-# Perl
-
-spack install perl@5.24.0 %gcc@5.4.0
-spack install perl@5.24.0 %intel@16.0.3 cflags="-fPIC"
-
 # LuaJIT
 
 for compiler in "${compilers[@]}"
