@@ -37,5 +37,4 @@ class RThreejs(RPackage):
 
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))

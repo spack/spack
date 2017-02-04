@@ -45,7 +45,6 @@ class RXgboost(RPackage):
 
     depends_on('r@3.3.0:')
 
-    depends_on('r-matrix@1.1-0:', type=('build', 'run'))
     depends_on('r-data-table@1.9.6:', type=('build', 'run'))
     depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-stringi@0.5.2:', type=('build', 'run'))

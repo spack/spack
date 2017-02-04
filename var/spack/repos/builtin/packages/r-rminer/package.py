@@ -37,13 +37,9 @@ class RRminer(RPackage):
     version('1.4.2', '7d5d90f4ae030cf647d67aa962412c05')
 
     depends_on('r-plotrix', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-nnet', type=('build', 'run'))
     depends_on('r-kknn', type=('build', 'run'))
     depends_on('r-pls', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
     depends_on('r-mda', type=('build', 'run'))
-    depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-randomforest', type=('build', 'run'))
     depends_on('r-adabag', type=('build', 'run'))
     depends_on('r-party', type=('build', 'run'))

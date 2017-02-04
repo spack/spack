@@ -34,5 +34,3 @@ class RRpartPlot(RPackage):
     list_url = "https://cran.r-project.org/src/contrib/Archive/rpart.plot"
 
     version('2.1.0', 'fb0f8edfe22c464683ee82aa429136f9')
-
-    depends_on('r-rpart@4.1-0:', type=('build', 'run'))

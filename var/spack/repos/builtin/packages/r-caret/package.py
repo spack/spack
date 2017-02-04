@@ -38,11 +38,9 @@ class RCaret(RPackage):
 
     depends_on('r@2.10:')
 
-    depends_on('r-lattice@0.20:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-car', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-modelmetrics@1.1.0:', type=('build', 'run'))
-    depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))

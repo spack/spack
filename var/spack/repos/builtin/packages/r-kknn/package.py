@@ -38,4 +38,3 @@ class RKknn(RPackage):
     depends_on('r@2.10:')
 
     depends_on('r-igraph@1.0:', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))

@@ -37,4 +37,3 @@ class RLava(RPackage):
     depends_on('r@3.0:')
 
     depends_on('r-numderiv', type=('build', 'run'))
-    depends_on('r-survival', type=('build', 'run'))

@@ -40,5 +40,4 @@ class RNp(RPackage):
 
     version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
 
-    depends_on('r-boot', type=('build', 'run'))
     depends_on('r-cubature', type=('build', 'run'))

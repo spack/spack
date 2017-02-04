@@ -34,5 +34,4 @@ class RCubist(RPackage):
 
     version('0.0.19', 'bf9364f655536ec03717fd2ad6223a47')
 
-    depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
