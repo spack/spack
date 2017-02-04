@@ -55,8 +55,8 @@ class IntelMkl(IntelInstaller):
     # virtual dependency
     provides('blas')
     provides('lapack')
+    provides('scalapack')
     provides('mkl')
-    # TODO: MKL also provides implementation of Scalapack.
 
     @property
     def blas_libs(self):
@@ -82,6 +82,34 @@ class IntelMkl(IntelInstaller):
     @property
     def lapack_libs(self):
         return self.blas_libs
+
+    @property
+    def scalapack_libs(self):
+        libnames = ['libmkl_scalapack']
+        if self.spec.satisfies('^openmpi'):
+            libnames.append('libmkl_blacs_openmpi')
+        elif self.spec.satisfies('^mpich@1'):
+            libnames.append('libmkl_blacs')
+        elif self.spec.satisfies('^mpich@2:'):
+            libnames.append('libmkl_blacs_intelmpi')
+        elif self.spec.satisfies('^mvapich2'):
+            libnames.append('libmkl_blacs_intelmpi')
+        elif self.spec.satisfies('^mpt'):
+            libnames.append('libmkl_blacs_sgimpt')
+        # TODO: ^intel-parallel-studio can mean intel mpi, a compiler or a lib
+        # elif self.spec.satisfies('^intel-parallel-studio'):
+        #     libnames.append('libmkl_blacs_intelmpi')
+        else:
+            raise InstallError("No MPI found for scalapack")
+
+        shared = True if '+shared' in self.spec else False
+        integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
+        libs = find_libraries(
+            ['{0}_{1}'.format(l, integer) for l in libnames],
+            root=join_path(self.prefix.lib, 'intel64'),
+            shared=shared
+        )
+        return libs
 
     def install(self, spec, prefix):
         self.intel_prefix = os.path.join(prefix, "pkg")
