@@ -262,62 +262,55 @@ def parse_version_offset(path):
     # come first while generic, catch-all regexes should come last.
     version_regexes = [
         # 1st Pass: Version only
+        # Assume version only contains digits
 
-        # ver
-        # e.g. 1.0.0, 7.0.2-7
-        (r'^(\d[\d\._-]*)$', stem),
-
-        # vver
-        # e.g. v3.3.0
-        (r'^v(\d[\d\._-]*)$', stem),
+        # ver, vver
+        # e.g. 3.2.7, 7.0.2-7, v3.3.0, v1_6_3
+        (r'^v?(\d[\d\._-]*)$', stem),
 
         # 2nd Pass: A single separator character is used
+        # Assume name only contains letters and version only contains digits
 
         # name-name-ver-ver
         # e.g. panda-2016-03-07, gts-snapshot-121130
-        (r'^[A-Za-z-]+-([\d-]+)$', stem),
+        (r'^[A-Za-z-]+-v?(\d[\d-]*)$', stem),
 
         # name_name_ver_ver
         # e.g. tinyxml_2_6_2, boost_1_55_0
-        (r'^[A-Za-z_]+_([\d_]+)$', stem),
+        (r'^[A-Za-z_]+_v?(\d[\d_]*)$', stem),
 
         # name.name.ver.ver
         # e.g. prank.source.150803
-        (r'^[A-Za-z\.]+\.([\d\.]+)$', stem),
+        (r'^[A-Za-z\.]+\.v?(\d[\d\.]*)$', stem),
 
-        # namever.ver
-        # e.g. atlas3.10.3, visit2.10.1
-        (r'^[A-Za-z]+(\d[\d\.]*)$', stem),
+        # name.namever.ver
+        # e.g. atlas3.11.34, visit2.10.1
+        (r'^[A-Za-z\.]+v?(\d[\d\.]*)$', stem),
 
-        # 3rd Pass: Multiple separator characters are used
+        # 3rd Pass: Two separator characters are used
+        # Names may contain digits, versions may contain letters
 
         # name-name-ver.ver
-        # e.g. m4-1.4.17, cmake-3.4.3
-        (r'^[A-Za-z\d-]+-(\d[A-Za-z\d\.]*)$', stem),
+        # e.g. m4-1.4.17, gmp-6.0.0a, launchmon-v1.0.2
+        (r'^[A-Za-z\d-]+-v?(\d[A-Za-z\d\.]*)$', stem),
 
-        # name.name_ver.ver-ver.ver
-        # e.g. superlu_5.2.1, TH.data_1.0-8
-        (r'^[A-Za-z\d\.]+_(\d[A-Za-z\d\.-]*)$', stem),
+        # name-name-ver_ver
+        # e.g. icu4c-57_1
+        (r'^[A-za-z\d-]+-v?(\d[A-Za-z\d_]*)$', stem),
 
+        # name_name_ver.ver
+        # e.g. superlu_dist_4.1, pexsi_v0.9.0
+        (r'^[A-Za-z\d_]+_v?(\d[A-Za-z\d\.]*)$', stem),
 
+        # 4th Pass: Three separator characters are used
 
-        #(r'^[A-Za-z0-9\._-]*([\d\.]+)$', stem),
-
-        ## Version separated by underscores
-
-        ## name-name-ver_ver
-        #(r'^[A-Za-z\d-]+-([\d_]+)$', stem),
-
-        ## Version separated by dots
-
-        ## name-name-ver.ver
-        #(r'^[A-Za-z\d\+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
-
-        ## name_name-ver.ver
+        # name_name-ver.ver
+        # e.g. etsf_io-1.0.4, sphinx_rtd_theme-0.1.10a0
         #(r'^[A-Za-z\d_]+-(\d[A-Za-z\d\.]*)$', stem),
 
-        ## name_name_ver.ver
-        #(r'^[A-Za-z\d_]+_([\d\.]+)$', stem),
+        # name.name_ver.ver-ver.ver
+        # e.g. superlu_5.2.1, TH.data_1.0-8, XML_3.98-1.4
+        #(r'^[A-Za-z\d\.]+_(\d[A-Za-z\d\.-]*)$', stem),
 
         ## name_name.ver.ver
         ## e.g. fer_source.v696

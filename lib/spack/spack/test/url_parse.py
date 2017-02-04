@@ -172,6 +172,8 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         # build one with a specific version.
         self.assertEqual(string, substitute_version(string, v))
 
+    # Common Repositories
+
     def test_github_downloads(self):
         # archive/ver.ver
         self.check(
@@ -257,6 +259,92 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'backports-ssl-match-hostname', '3.5.0.1',
             'https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz')
+
+    # Common Tarball Formats
+
+    def test_version_only(self):
+        # ver
+        self.check(
+            'eigen', '3.2.7',
+            'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
+        self.check(
+            'imagemagick', '7.0.2-7',
+            'https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz')
+        # vver
+        self.check(
+            'cgns', '3.3.0',
+            'https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz')
+        self.check(
+            'luafilesystem', '1_6_3',
+            'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz')
+
+    def test_dashes_only(self):
+        # name-name-ver-ver
+        self.check(
+            'panda', '2016-03-07',
+            'http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-2016-03-07.tar')
+        self.check(
+            'gts-snapshot', '121130',
+            'http://gts.sourceforge.net/tarballs/gts-snapshot-121130.tar.gz')
+
+    def test_underscores_only(self):
+        # name_name_ver_ver
+        self.check(
+            'tinyxml', '2_6_2',
+            'https://sourceforge.net/projects/tinyxml/files/tinyxml/2.6.2/tinyxml_2_6_2.tar.gz')
+        self.check(
+            'boost', '1_55_0',
+            'http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2')
+
+    def test_dots_only(self):
+        # name.name.ver.ver
+        self.check(
+            'prank', '150803',
+            'http://wasabiapp.org/download/prank/prank.source.150803.tgz')
+        # name.namever.ver
+        self.check(
+            'atlas', '3.11.34',
+            'http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
+        self.check(
+            'visit', '2.10.1',
+            'http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz')
+
+    def test_dash_dot(self):
+        # name-name-ver.ver
+        # digit in name
+        self.check(
+            'm4', '1.4.17',
+            'https://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz')
+        # letter in version
+        self.check(
+            'gmp', '6.0.0a',
+            'https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2')
+        # version starts with 'v'
+        self.check(
+            'launchmon', '1.0.2',
+            'https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz')
+
+    def test_dash_underscore(self):
+        # name-name-ver_ver
+        self.check(
+            'icu4c', '57_1',
+            'http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz')
+
+    def test_underscore_dot(self):
+        # name_name_ver.ver
+        self.check(
+            'superlu-dist', '4.1',
+            'http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz')
+        self.check(
+            'pexsi', '0.9.0',
+            'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz')
+
+
+    # Weird URLS
+
+    def single_character_name(self):
+        self.check(
+            '
 
     def test_wwwoffle_version(self):
         self.check(

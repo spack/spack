@@ -30,7 +30,7 @@ import sys
 class Root(Package):
     """ROOT is a data analysis framework."""
     homepage = "https://root.cern.ch"
-    url      = "https://root.cern.ch/download/root_v6.07.02.source.tar.gz"
+    url      = "https://root.cern.ch/download/root_v6.06.06.source.tar.gz"
 
     version('6.06.06', '4308449892210c8d36e36924261fea26')
     version('6.06.04', '55a2f98dd4cea79c9c4e32407c2d6d17')
