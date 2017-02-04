@@ -26,7 +26,7 @@ from spack import *
 
 
 class Elemental(CMakePackage):
-    """Elemental: Distributed-memory dense and sparse-direct linear algebra 
+    """Elemental: Distributed-memory dense and sparse-direct linear algebra
        and optimization library."""
 
     homepage = "http://libelemental.org"
@@ -34,29 +34,20 @@ class Elemental(CMakePackage):
 
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
-    variant('debug', default=False, 
-            description='Builds a debug version of the libraries')
-    variant('shared', default=True, 
-            description='Enables the build of shared libraries')
-    variant('hybrid', default=True, 
-            description='Make use of OpenMP within MPI packing/unpacking')
-    variant('openmp_blas', default=False,
-            description='Use OpenMP for threading in the BLAS library')
-    variant('c', default=False, 
-            description='Build C interface')
-    variant('python', default=False, 
-            description='Install Python interface')
-    variant('parmetis', default=False, 
-            description='Enable ParMETIS')
-    variant('quad', default=False, 
-            description='Enable quad precision')
-    variant('int64', default=False, 
-            description='Use 64bit integers')
+    variant('debug',       default=False, description='Builds a debug version of the libraries')
+    variant('shared',      default=True,  description='Enables the build of shared libraries')
+    variant('hybrid',      default=True,  description='Make use of OpenMP within MPI packing/unpacking')
+    variant('openmp_blas', default=False, description='Use OpenMP for threading in the BLAS library')
+    variant('c',           default=False, description='Build C interface')
+    variant('python',      default=False, description='Install Python interface')
+    variant('parmetis',    default=False, description='Enable ParMETIS')
+    variant('quad',        default=False, description='Enable quad precision')
+    variant('int64',       default=False, description='Use 64bit integers')
+
     # When this variant is set remove the normal dependencies since
     # Elemental has to build BLAS and ScaLAPACK internally
-    variant('int64_blas', default=False, 
-            description='Use 64bit integers for BLAS.' 
-            ' Requires local build of BLAS library.')
+    variant('int64_blas', default=False,
+            description='Use 64bit ints for BLAS. Requires local BLAS build.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
 
@@ -93,52 +84,44 @@ class Elemental(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        args = ['-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
-                '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
-                '-DEL_DISABLE_SCALAPACK:BOOL={0}'.format((
-                    'OFF' if '+scalapack' in self.spec else 'ON')),
-                '-DGFORTRAN_LIB=libgfortran.so',
-                '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
-                    'ON' if '+shared' in self.spec else 'OFF')),
-                '-DEL_HYBRID:BOOL={0}'.format((
-                    'ON' if '+hybrid' in self.spec else 'OFF')),
-                '-DEL_C_INTERFACE:BOOL={0}'.format((
-                    'ON' if '+c' in self.spec else 'OFF')),
-                '-DINSTALL_PYTHON_PACKAGE:BOOL={0}'.format((
-                    'ON' if '+python' in self.spec else 'OFF')),
-                '-DEL_DISABLE_PARMETIS:BOOL={0}'.format((
-                    'OFF' if '+parmetis' in self.spec else 'ON')),
-                '-DEL_DISABLE_QUAD:BOOL={0}'.format((
-                    'OFF' if '+quad' in self.spec else 'ON')),
-                '-DEL_USE_64BIT_INTS:BOOL={0}'.format((
-                    'ON' if '+int64' in self.spec else 'OFF')),
-                '-DEL_USE_64BIT_BLAS_INTS:BOOL={0}'.format((
-                    'ON' if '+int64_blas' in self.spec else 'OFF'))]
+        spec = self.spec
+        args = [
+            '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
+            '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
+            '-DEL_DISABLE_SCALAPACK:BOOL=%s'   % ('~scalapack' in spec),
+            '-DGFORTRAN_LIB=libgfortran.so',
+            '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
+            '-DEL_HYBRID:BOOL=%s'              % ('+hybrid' in spec),
+            '-DEL_C_INTERFACE:BOOL=%s'         % ('+c' in spec),
+            '-DINSTALL_PYTHON_PACKAGE:BOOL=%s' % ('+python' in spec),
+            '-DEL_DISABLE_PARMETIS:BOOL=%s'    % ('~parmetis' in spec),
+            '-DEL_DISABLE_QUAD:BOOL=%s'        % ('~quad' in spec),
+            '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
+            '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec)]
 
-        # If using 64bit int BLAS libraries, elemental has to build 
+        # If using 64bit int BLAS libraries, elemental has to build
         # them internally
-        if '+int64_blas' in self.spec:
+        if '+int64_blas' in spec:
             args.extend(['-DEL_BLAS_SUFFIX:STRING={0}'.format((
-                '_64_' if '+int64_blas' in self.spec else '_')),
+                '_64_' if '+int64_blas' in spec else '_')),
                 '-DCUSTOM_BLAS_SUFFIX:BOOL=TRUE']),
-            if '+scalapack' in self.spec:
+            if '+scalapack' in spec:
                 args.extend(['-DEL_LAPACK_SUFFIX:STRING={0}'.format((
-                    '_64_' if '+int64_blas' in self.spec else '_')),
+                    '_64_' if '+int64_blas' in spec else '_')),
                     '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
-            math_libs = (self.spec['lapack'].lapack_libs 
-                         + self.spec['blas'].blas_libs)
+            math_libs = (spec['lapack'].lapack_libs +
+                         spec['blas'].blas_libs)
 
-            if '+scalapack' in self.spec:
-                math_libs = self.spec['scalapack'].scalapack_libs + math_libs
+            if '+scalapack' in spec:
+                math_libs = spec['scalapack'].scalapack_libs + math_libs
 
-            args.extend(['-DMATH_LIBS:STRING={0}'.format(
-                math_libs.search_flags),
-                         '-DMATH_LIBS:STRING={0}'.format(
-                math_libs.link_flags)])
+            args.extend([
+                '-DMATH_LIBS:STRING={0}'.format(math_libs.search_flags),
+                '-DMATH_LIBS:STRING={0}'.format(math_libs.link_flags)])
 
-        if '+python' in self.spec:
-            args.extend(['-DPYTHON_SITE_PACKAGES:STRING={0}'.format(
-                site_packages_dir)])
+        if '+python' in spec:
+            args.extend([
+                '-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
 
         return args
