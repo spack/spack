@@ -38,7 +38,7 @@ class SstDumpi(AutotoolsPackage):
     """
 
     homepage = "http://sst.sandia.gov/about_dumpi.html"
-    url      = "https://github.com/sstsimulator/sst-dumpi.git"
+    url      = "https://github.com/sstsimulator/sst-dumpi/archive/6.1.tar.gz"
 
     depends_on('autoconf@1.68:', type='build')
     depends_on('automake@1.11.1:', type='build')
@@ -51,7 +51,3 @@ class SstDumpi(AutotoolsPackage):
 
     version('6.1.0', '1493d38842940125bbbc9f3b75a6f8c8',
           url='https://github.com/sstsimulator/sst-dumpi/archive/6.1.tar.gz')
-
-    def configure_args(self):
-        args = []
-        return args
