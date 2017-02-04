@@ -44,7 +44,7 @@ class Flex(AutotoolsPackage):
     depends_on('help2man',      type='build')
 
     # Older tarballs don't come with a configure script
-    depends_on('m4',       type='build', when='@:2.6.0')
+    depends_on('m4',       type='build')
     depends_on('autoconf', type='build', when='@:2.6.0')
     depends_on('automake', type='build', when='@:2.6.0')
     depends_on('libtool',  type='build', when='@:2.6.0')
