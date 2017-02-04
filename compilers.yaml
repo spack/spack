@@ -32,6 +32,19 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
+      cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.0-2dewhophltycmtvq3hwihjxbpdi5rytz/bin/clang
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.0-2dewhophltycmtvq3hwihjxbpdi5rytz/bin/clang++
+      f77: None
+      fc: None
+    spec: clang@3.9.0
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
       cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-66o72l5drxzzfs4o6nt2olm276vdtiv3/bin/gcc
       cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-66o72l5drxzzfs4o6nt2olm276vdtiv3/bin/g++
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-66o72l5drxzzfs4o6nt2olm276vdtiv3/bin/gfortran

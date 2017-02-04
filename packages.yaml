@@ -40,6 +40,9 @@ packages:
       impi@5.1.3.210%intel@16.0.3: /lustre/usr/intel_cluster_studio/impi/5.1.3.210
     buildable: False
 
+  llvm:
+    variants: -debug
+
   all:
     compiler: [gcc@5, intel@16]
     providers:

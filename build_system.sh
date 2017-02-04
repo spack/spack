@@ -12,6 +12,7 @@ compilers=(
 spack install gcc@4.9.4 %gcc@4.8.5
 spack install gcc@5.4.0 %gcc@4.8.5
 spack install gcc@6.3.0 %gcc@4.8.5
+spack install llvm 	%gcc@4.8.5
 
 # Tools: git, emacs
 
