@@ -44,7 +44,7 @@ class Lammps(Package):
     depends_on('mpi')
     depends_on('fftw')
     depends_on('voropp', when='+voronoi')
-    depends_on('netcdf+mpi', when='+nc-dump')
+    depends_on('netcdf+mpi', when='+user-nc-dump')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
 
