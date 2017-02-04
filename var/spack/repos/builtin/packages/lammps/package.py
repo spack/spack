@@ -28,25 +28,29 @@ import string
 
 
 class Lammps(Package):
-    """LAMMPS stands for Large-scale Atomic/Molecular Massively Parallel Simulator."""
+    """LAMMPS stands for Large-scale Atomic/Molecular Massively
+    Parallel Simulator."""
     homepage = "http://www.example.com"
     url      = "https://github.com/lammps/lammps/archive/stable_17Nov2016.tar.gz"
 
     version('17Nov2016', '8aecc58a39f9775203517c62a592d13b',
             url="https://github.com/lammps/lammps/archive/stable_17Nov2016.tar.gz")
 
-    supported_packages = ['voronoi', 'rigid', 'user-nc-dump', 'user-atc', 'meam', 'manybody']
+    supported_packages = ['voronoi', 'rigid', 'user-nc-dump',
+                          'user-atc', 'meam', 'manybody']
 
     for pkg in supported_packages:
-        variant(pkg, default=False, description='Activate the {0} package'.format(pkg))
-    variant('lib', default=True, description='Build the liblammps in addition to the lammps executable')
+        variant(pkg, default=False,
+                description='Activate the {0} package'.format(pkg))
+    variant('lib', default=True,
+            description='Build the liblammps in addition to the executable')
 
     depends_on('mpi')
     depends_on('fftw')
     depends_on('voropp', when='+voronoi')
     depends_on('netcdf+mpi', when='+user-nc-dump')
     depends_on('blas', when='+user-atc')
-    depends_on('lapack', when='+user-atc')
+    depends_on('lapack', when='+user-atc')7
 
     def setup_environment(self, spack_env, run_env):
         self.target_name = self.compiler.name
@@ -57,8 +61,8 @@ class Lammps(Package):
         config.append('CC = c++')
         if self.compiler.name == 'intel':
             # This is taken from MAKE/OPTIONS/Makefile.intel_cpu_intelmpi
-            config.append('OPTFLAGS = -xHost -O2 -fp-model fast=2 -no-prec-div -qoverride-limits')
-            config.append('CCFLAGS = -g -qopenmp -DLAMMPS_MEMALIGN=64 -no-offload -fno-alias -ansi-alias -restrict $(OPTFLAGS)')
+            config.append('OPTFLAGS = -xHost -O2 -fp-model fast=2 -no-prec-div -qoverride-limits')  # noqa: E501
+            config.append('CCFLAGS = -g -qopenmp -DLAMMPS_MEMALIGN=64 -no-offload -fno-alias -ansi-alias -restrict $(OPTFLAGS)')  # noqa: E501
             config.append('LINKFLAGS = -qopenmp $(OPTFLAGS)')
         else:
             # This is taken from MAKE/OPTIONS/Makefile.g++
@@ -79,14 +83,8 @@ class Lammps(Package):
 
         config.append('LMP_INC = -DLAMMPS_GZIP')
 
-
         mpi_path = self.spec['mpi'].prefix.lib
         mpi_inc = self.spec['mpi'].prefix.include
-
-        # specific to EPFL installation, remove before PR upstream
-        if 'intelmpi' in self.spec:
-            mpi_path = self.spec['mpi'].prefix.lib64
-            mpi_inc = self.spec['mpi'].prefix.include + '64'
 
         config.append(
             'MPI_INC = -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX=1 -I{0}'.format(
@@ -130,7 +128,6 @@ class Lammps(Package):
                     syslib = '-lgfortran'
                 elif self.compiler.name == 'intel':
                     syslib = '-lifcore'
-                    #syspath = '-L{0}'.format(self.spec['intel'].prefix.lib)
 
                 makefile = ['meam_SYSINC =',
                             'meam_SYSLIB = {0}'.format(syslib),
@@ -147,8 +144,7 @@ class Lammps(Package):
                         'Makefile.icc')
 
             mpi_include = self.spec['mpi'].prefix.include
-#            if 'intelmpi' in self.spec:
-#                mpi_include = self.spec['mpi'].prefix.include + '64'
+
             filter_file(r'CCFLAGS = *',
                         'CCFLAGS = -I{0} '.format(mpi_include),
                         'Makefile.icc')
@@ -161,9 +157,10 @@ class Lammps(Package):
             with open('Makefile.lammps', 'w') as fh:
                 lapack_blas = (self.spec['lapack'].lapack_libs +
                                self.spec['blas'].blas_libs)
-                makefile = ['user-atc_SYSINC =',
-                            'user-atc_SYSLIB = {0}'.format(lapack_blas.ld_flags),
-                            'user-atc_SYSPATH = ']
+                makefile = [
+                    'user-atc_SYSINC =',
+                    'user-atc_SYSLIB = {0}'.format(lapack_blas.ld_flags),
+                    'user-atc_SYSPATH = ']
                 fh.write('\n'.join(makefile))
 
     def build_voronoi(self):
