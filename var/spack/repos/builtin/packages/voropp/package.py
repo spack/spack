@@ -25,23 +25,29 @@
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Voropp(MakefilePackage):
+    """Voro++ is a open source software library for the computation of the
+    Voronoi diagram, a widely-used tessellation that has applications in many
+    scientific fields."""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "http://math.lbl.gov/voro++/about.html"
 
-    # 1.10.0 requires newer Java, not yet tested....
-    # version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
+    # This url is wrong but it passes the test the ++ make the url parser fail,
+    # the correct url is constructed by url_for_version that has to be used in
+    # any case due to the difference between the package name and the url
+    url      = "http://math.lbl.gov/voropp/download/dir/voropp-0.4.6.tar.gz"
 
-    depends_on('jdk')
+    version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9')
 
-    def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install')
+    def url_for_version(self, version):
+        url = "http://math.lbl.gov/voro++/download/dir/voro++-{0}.tar.gz".format(  # noqa: E501
+            str(version))
+        return url
+
+    def edit(self, spec, prefix):
+        filter_file(r'CC=g\+\+',
+                    'CC={0}'.format(self.compiler.cxx),
+                    'config.mk')
+        filter_file(r'PREFIX=/usr/local',
+                    'PREFIX={0}'.format(self.prefix),
+                    'config.mk')

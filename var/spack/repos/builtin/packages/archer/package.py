@@ -22,26 +22,35 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Archer(Package):
+    """ARCHER, a data race detection tool for large OpenMP applications."""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "https://github.com/PRUNERS/ARCHER"
 
-    # 1.10.0 requires newer Java, not yet tested....
-    # version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
+    version('1.0.0b', git='https://github.com/PRUNERS/ARCHER.git',
+            commit='2cf7ead36358842871d5bd9c33d499f62bf8dd38')
 
-    depends_on('jdk')
+    depends_on('cmake', type='build')
+    depends_on('llvm+clang~gold')
+    depends_on('ninja', type='build')
+    depends_on('llvm-openmp-ompt')
 
     def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install')
+
+        with working_dir('spack-build', create=True):
+            cmake_args = std_cmake_args[:]
+            cmake_args.extend([
+                '-G', 'Ninja',
+                '-DCMAKE_C_COMPILER=clang',
+                '-DCMAKE_CXX_COMPILER=clang++',
+                '-DOMP_PREFIX:PATH=%s' % spec['llvm-openmp-ompt'].prefix,
+            ])
+
+            cmake('..', *cmake_args)
+            ninja = Executable('ninja')
+            ninja()
+            ninja('install')

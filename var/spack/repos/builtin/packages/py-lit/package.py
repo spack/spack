@@ -25,23 +25,15 @@
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class PyLit(PythonPackage):
+    """lit is a portable tool for executing LLVM and Clang style test suites,
+       summarizing their results, and providing indication of failures. lit is
+       designed to be a lightweight testing tool with as simple a user
+       interface as possible."""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "https://pypi.python.org/pypi/lit"
+    url      = "https://pypi.python.org/packages/5b/a0/dbed2c8dfb220eb9a5a893257223cd0ff791c0fbc34ce2f1a957fa4b6c6f/lit-0.5.0.tar.gz"
 
-    # 1.10.0 requires newer Java, not yet tested....
-    # version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
+    version('0.5.0',  '8144660cc692be8fb903395a5f06564d')
 
-    depends_on('jdk')
-
-    def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install')
+    depends_on('py-setuptools', type='build')
