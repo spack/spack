@@ -82,6 +82,13 @@ class PyNumpy(PythonPackage):
                 # differently.
                 names  = ','.join(lapackblas.names)
                 dirs   = ':'.join(lapackblas.directories)
+
+                if ((platform.system() == "Darwin") and
+                    (platform.mac_ver()[0] == '10.12')):
+                    mac_cond = True
+                else:
+                    mac_cond = False
+
                 # First, workout the defaults.
                 # The section title for the defaults changed in @1.10, see
                 # https://github.com/numpy/numpy/blob/master/site.cfg.example
@@ -94,6 +101,8 @@ class PyNumpy(PythonPackage):
                         '^atlas' in spec):
                     f.write('libraries=%s\n'    % names)
                     f.write('library_dirs=%s\n' % dirs)
+                    if not mac_cond:
+                        f.write('rpath=%s\n' % dirs)
 
                 # Now special treatment for some (!) BLAS/LAPACK. Note that
                 # in this case library_dirs can not be specified within [ALL].
@@ -101,7 +110,8 @@ class PyNumpy(PythonPackage):
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
                     f.write('library_dirs=%s\n' % dirs)
-                    f.write('rpath=%s\n' % dirs)
+                    if not mac_cond:
+                        f.write('rpath=%s\n' % dirs)
                 elif '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
@@ -121,9 +131,11 @@ class PyNumpy(PythonPackage):
                     f.write('[mkl]\n')
                     f.write('mkl_libs=%s\n'     % 'mkl_rt')
                     f.write('library_dirs=%s\n' % dirs)
-                    f.write('rpath=%s\n' % dirs)
+                    if not mac_cond:
+                        f.write('rpath=%s\n' % dirs)
                 elif '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n'   % names)
                     f.write('library_dirs=%s\n' % dirs)
-                    f.write('rpath=%s\n' % dirs)
+                    if not mac_cond:
+                        f.write('rpath=%s\n' % dirs)
