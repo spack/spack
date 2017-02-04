@@ -41,6 +41,7 @@ class Glib(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on('pkg-config+internal_glib', type='build')
     depends_on('libffi')
     depends_on('zlib')
