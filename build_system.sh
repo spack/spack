@@ -21,7 +21,10 @@ spack install emacs 	%gcc@4.8.5
 
 # JDK
 
-spack install jdk
+for compiler in "${compilers[@]}"
+do
+	spack install jdk $compiler
+done
 
 # LuaJIT
 
