@@ -13,6 +13,7 @@ spack install gcc@6.3.0 %gcc@4.8.5
 spack install llvm 	%gcc@4.8.5
 spack install jdk 	%gcc@4.8.5
 spack install bazel	%gcc@4.8.5
+spack install maven	%gcc@4.8.5
 spack install lua-jit	%gcc@4.8.5
 
 # Tools: git, emacs
