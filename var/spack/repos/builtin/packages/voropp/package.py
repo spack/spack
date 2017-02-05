@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Voropp(Package):
+class Voropp(MakefilePackage):
     """Voro++ is a open source software library for the computation of the
     Voronoi diagram, a widely-used tessellation that has applications in many
     scientific fields."""
@@ -35,14 +35,10 @@ class Voropp(Package):
     version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9',
             url="http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz")
 
-    def patch(self):
+    def edit(self, spec, prefix):
         filter_file(r'CC=g\+\+',
                     'CC={0}'.format(self.compiler.cxx),
                     'config.mk')
         filter_file(r'PREFIX=/usr/local',
                     'PREFIX={0}'.format(self.prefix),
                     'config.mk')
-
-    def install(self, spec, prefix):
-        make()
-        make("install")

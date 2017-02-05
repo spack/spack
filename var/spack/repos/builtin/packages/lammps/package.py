@@ -25,16 +25,21 @@
 from spack import *
 import os
 import string
+import datetime as dt
 
 
-class Lammps(Package):
+class Lammps(MakefilePackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator."""
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/stable_17Nov2016.tar.gz"
 
-    version('17Nov2016', '8aecc58a39f9775203517c62a592d13b',
-            url="https://github.com/lammps/lammps/archive/stable_17Nov2016.tar.gz")
+    version('2016.11.17', '8aecc58a39f9775203517c62a592d13b')
+
+    def url_for_version(self, version):
+        vdate = dt.datetime.strptime(str(version), "%Y.%m.%d")
+        return "https://github.com/lammps/lammps/archive/stable_{0}.tar.gz".format(
+            vdate.strftime("%d%b%Y"))
 
     supported_packages = ['voronoi', 'rigid', 'user-nc-dump',
                           'user-atc', 'meam', 'manybody']
@@ -55,7 +60,7 @@ class Lammps(Package):
     def setup_environment(self, spack_env, run_env):
         self.target_name = self.compiler.name
 
-    def patch(self):
+    def edit(self, spec, prefix):
         config = []
 
         config.append('CC = c++')
@@ -171,22 +176,28 @@ class Lammps(Package):
                         '#include <voro++/voro++.hh>',
                         'compute_voronoi_atom.h')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         for pkg in self.supported_packages:
             _build_pkg_name = string.replace('build_{0}'.format(pkg), '-', '_')
             if hasattr(self, _build_pkg_name):
                 _build_pkg = getattr(self, _build_pkg_name)
                 _build_pkg()
 
-        print(os.getcwd())
         with working_dir('src'):
             for pkg in self.supported_packages:
                 if '+{0}'.format(pkg) in spec:
                     make('yes-{0}'.format(pkg))
 
             make(self.target_name)
+
+            if '+lib' in spec:
+                make('mode=shlib', self.target_name)
+
+    def install(self, spec, prefix):
+        with working_dir('src'):
             mkdirp(prefix.bin)
             install('lmp_{0}'.format(self.target_name), prefix.bin)
+
 
             if '+lib' in spec:
                 mkdirp(prefix.lib)
