@@ -30,7 +30,7 @@ class Maven(Package):
     """Apache Maven is a software project management and comprehension tool."""
 
     homepage = "https://maven.apache.org/index.html"
-    url = "http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz"
+    url = "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
 
     version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
 
