@@ -1041,7 +1041,10 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
-            self.variants[name] = VariantSpec(name, value)
+            if str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
+                self.variants[name] = BoolValuedVariant(name, value)
+            else:
+                self.variants[name] = MultiValuedVariant(name, value)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -1411,12 +1414,14 @@ class Spec(object):
                 if name in _valid_compiler_flags:
                     spec.compiler_flags[name] = value
                 else:
-                    spec.variants[name] = VariantSpec.from_node_dict(
+                    spec.variants[name] = MultiValuedVariant.from_node_dict(
                         name, value
                     )
         elif 'variants' in node:
             for name, value in node['variants'].items():
-                spec.variants[name] = VariantSpec(name, value)
+                spec.variants[name] = MultiValuedVariant.from_node_dict(
+                    name, value
+                )
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
 
@@ -2061,6 +2066,9 @@ class Spec(object):
                     # FIXME:
                     pkg_variant = pkg_variants[name]
                     pkg_variant.validate_or_raise(v, pkg_cls)
+                    spec.variants.substitute(
+                        name, pkg_variant.make_variant(v._original_value)
+                    )
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -3051,11 +3059,11 @@ class SpecParser(spack.parse.Parser):
 
             elif self.accept(ON):
                 name = self.variant()
-                spec.variants[name] = VariantSpec(name, True)
+                spec.variants[name] = BoolValuedVariant(name, True)
 
             elif self.accept(OFF):
                 name = self.variant()
-                spec.variants[name] = VariantSpec(name, False)
+                spec.variants[name] = BoolValuedVariant(name, False)
 
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())

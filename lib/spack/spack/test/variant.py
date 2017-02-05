@@ -501,65 +501,6 @@ def test_from_node_dict():
     assert type(a) == BoolValuedVariant
 
 
-
-class TestVariantSpec(object):
-
-    def test_value_property(self):
-        # Multiple values
-        a = VariantSpec('foo', 'bar,baz')
-
-        # Spaces are trimmed
-        b = VariantSpec('foo', 'bar, baz')
-        assert a.value == ('bar', 'baz')
-        assert a == b
-        assert 'bar' in a and 'baz' in a
-
-        # Boolean - True
-        for x in (True, 'True', 'TRUE', 'TrUe'):
-            a.value = x
-            assert a.value is True
-            assert True in a
-
-        # Boolean - False
-        for x in (False, 'False', 'FALSE', 'FaLsE'):
-            a.value = x
-            assert a.value is False
-            assert False in a
-
-    def test_copy(self):
-        a = VariantSpec('foo', 'bar,baz')
-        b = a.copy()
-        assert a == b and a is not b
-
-    def test_empty_string(self):
-        # Tests that an empty string will be
-        # transformed in a tuple containing
-        # an empty string
-        a = VariantSpec('foo', '')
-        assert a._value == tuple()
-
-    def test_repr_and_str(self):
-        a = VariantSpec('foo', 'bar,baz')
-        b = eval(repr(a))
-        assert a == b
-        assert str(a) == 'foo=bar,baz'
-
-        b = VariantSpec('foo', True)
-        assert str(b) == '+foo'
-
-        b.value = False
-        assert str(b) == '~foo'
-
-    def test_hash(self):
-        # Check that hashing does not depend on the order
-        # of the values given
-        a = VariantSpec('foo', 'bar,baz,bac')
-        b = VariantSpec('foo', 'bar,bac,baz')
-        c = VariantSpec('foo', 'baz,bac,bar')
-        assert hash(a) == hash(b)
-        assert hash(a) == hash(c)
-
-
 class TestVariant(object):
 
     def test_validation(self):
@@ -571,13 +512,12 @@ class TestVariant(object):
             exclusive=True
         )
         # Valid vspec, shouldn't raise
-        vspec = VariantSpec('foo', 'bar')
+        vspec = a.make_variant('bar')
         a.validate_or_raise(vspec)
 
         # Multiple values are not allowed
-        vspec.value = 'bar,baz'
         with pytest.raises(MultipleValuesInExclusiveVariantError):
-            a.validate_or_raise(vspec)
+            vspec.value = 'bar,baz'
 
         # Inconsistent vspec
         vspec.name = 'FOO'
@@ -586,7 +526,7 @@ class TestVariant(object):
 
         # Valid multi-value vspec
         a.exclusive = False
-        vspec.name = 'foo'
+        vspec = a.make_variant('bar,baz')
         a.validate_or_raise(vspec)
         # Add an invalid value
         vspec.value = 'bar,baz,barbaz'
@@ -608,7 +548,7 @@ class TestVariant(object):
             values=validator,
             exclusive=True
         )
-        vspec = VariantSpec('foo', a.default)
+        vspec = a.make_default()
         a.validate_or_raise(vspec)
         vspec.value = 2056
         a.validate_or_raise(vspec)
@@ -636,10 +576,10 @@ class TestVariantMapTest(object):
             a.__setitem__('foo', 2)
 
         # Duplicate variant
-        a['foo'] = VariantSpec('foo', 'bar,baz')
+        a['foo'] = MultiValuedVariant('foo', 'bar,baz')
         with pytest.raises(DuplicateVariantError):
-            a.__setitem__('foo', VariantSpec('foo', 'bar'))
+            a.__setitem__('foo', MultiValuedVariant('foo', 'bar'))
 
         # Non matching names between key and vspec.name
         with pytest.raises(KeyError):
-            a.__setitem__('bar', VariantSpec('foo', 'bar'))
+            a.__setitem__('bar', MultiValuedVariant('foo', 'bar'))

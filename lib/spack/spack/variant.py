@@ -99,7 +99,7 @@ class Variant(object):
 
         # Check the values of the variant spec
         value = vspec.value
-        if isinstance(vspec.value, bool):
+        if isinstance(vspec.value, (bool, str)):
             value = (vspec.value,)
 
         # If the value is exclusive there must be at most one
@@ -136,11 +136,18 @@ class Variant(object):
         return v
 
     def make_default(self):
+        return self.make_variant(self.default)
+
+    def make_variant(self, value):
+        return self.variant_cls(self.name, value)
+
+    @property
+    def variant_cls(self):
         if self.exclusive is False:
-            return MultiValuedVariant(self.name, self.default)
+            return MultiValuedVariant
         elif self.values == (True, False):
-            return BoolValuedVariant(self.name, self.default)
-        return SingleValuedVariant(self.name, self.default)
+            return BoolValuedVariant
+        return SingleValuedVariant
 
 
 @lang.key_ordering
@@ -305,7 +312,7 @@ class SingleValuedVariant(MultiValuedVariant):
 
         # Then check if there's only a single value
         if len(self._value) != 1:
-            raise ValueError('a SingleValuedVariant accepts only one value')
+            raise MultipleValuesInExclusiveVariantError(self, None)
         self._value = str(self._value[0])
 
     def __str__(self):
@@ -372,164 +379,6 @@ class BoolValuedVariant(SingleValuedVariant):
         return '{0}{1}'.format('+' if self.value else '~', self.name)
 
 
-@lang.key_ordering
-class VariantSpec(object):
-    """Variants are named, build-time options for a package. Names depend
-    on the particular package being built, and each named variant can have
-    different (and possibly multiple) values.
-    """
-
-    @staticmethod
-    def from_node_dict(name, value):
-        if isinstance(value, list):
-            value = ','.join(value)
-        return VariantSpec(name, value)
-
-    def __init__(self, name, value):
-        self.name = name
-
-        # Stores 'value' after a bit of massaging
-        # done by the property setter
-        self._value = None
-        self._original_value = None
-
-        # Invokes property setter
-        self.value = value
-
-    @property
-    def value(self):
-        """Returns either a boolean or a tuple of strings
-
-        :return: either a boolean or a tuple of strings
-        :rtype: bool or tuple
-        """
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        # Store the original value
-        self._original_value = value
-
-        # If value is a string representation of a boolean, turn
-        # it to a boolean
-        if str(value).upper() == 'TRUE':
-            self._value = True
-        elif str(value).upper() == 'FALSE':
-            self._value = False
-
-        # Otherwise store a tuple of CSV string representations
-        # Tuple is necessary here instead of list because the
-        # values need to be hashed
-        else:
-            f = cStringIO.StringIO(str(value))
-            try:
-                t = next(csv.reader(f, skipinitialspace=True))
-            except StopIteration:
-                t = []
-
-            # With multi-value variants it is necessary
-            # to remove duplicates and give an order
-            # to a set
-            self._value = tuple(sorted(set(t)))
-
-    def _cmp_key(self):
-        return self.name, self.value
-
-    def copy(self):
-        """Returns an instance of VariantSpec equivalent to self
-
-        :return: a copy of self
-        :rtype: VariantSpec
-
-        >>> a = VariantSpec('foo', True)
-        >>> b = a.copy()
-        >>> assert a == b
-        >>> assert a is not b
-        """
-        return VariantSpec(self.name, self._original_value)
-
-    def satisfies(self, other):
-        """Returns true if the other.value is a strict subset of self.
-        Does not try to validate.
-
-        :param VariantSpec other: constraint to be met for the method to
-            return True
-        :return: True or False
-        :rtype: bool
-        """
-        if isinstance(other.value, bool):
-            return self.value == other.value
-        elif isinstance(self.value, bool):
-            return False
-        else:
-            return all(v in self.value for v in other.value)
-
-    def compatible(self, other):
-        """Returns True if self and other are compatible, False otherwise.
-        As there is no semantic check, two VariantSpec are compatible if
-        either they contain the same value or they are both multi-valued.
-
-        :param VariantSpec other: instance against which we test compatibility
-        :return: True or False
-        :rtype: bool
-        """
-        single_value_compatible = self.value == other.value
-        multi_value_compatible = True
-        for x in (self.value, other.value):
-            multi_value_compatible &= isinstance(x, tuple)
-        return single_value_compatible or multi_value_compatible
-
-    def constrain(self, other):
-        """Modify self to match all the constraints for other if both
-        instances are multi-valued. Returns True if self changed,
-        False otherwise.
-
-        :param VariantSpec other: instance against which we constrain self
-        :return: True or False
-        :rtype: bool
-        """
-        UVSE = UnsatisfiableVariantSpecError
-        if isinstance(other.value, bool):
-            if not isinstance(self.value, bool) or self.value != other.value:
-                raise UVSE(other.value, self.value)
-            return False
-        elif isinstance(self.value, bool):
-            raise UVSE(other.value, self.value)
-        else:
-            old_value = self.value
-            self.value = ','.join(self.value + other.value)
-            return old_value != self.value
-
-    def yaml_entry(self):
-        """Returns a key, value tuple suitable to be an entry in a yaml dict
-
-        :return: (name, value_representation)
-        :rtype: tuple
-        """
-        v = self.value
-        if isinstance(self.value, tuple):
-            v = list(self.value)
-        return self.name, v
-
-    def __contains__(self, item):
-        if isinstance(self._value, bool):
-            return item is self._value
-        return item in self._value
-
-    def __repr__(self):
-        cls = type(self)
-        return '{0.__name__}({1}, {2})'.format(
-            cls, repr(self.name), repr(self._original_value)
-        )
-
-    def __str__(self):
-        if isinstance(self.value, bool):
-            return '{0}{1}'.format('+' if self.value else '~', self.name)
-        else:
-            return '{0}={1}'.format(
-                self.name, ','.join(str(x) for x in self.value))
-
-
 class VariantMap(lang.HashableMap):
     """Map containing VariantSpec instances. New values can be added only
     if the key is not already present.
@@ -541,7 +390,7 @@ class VariantMap(lang.HashableMap):
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, VariantSpec):
+        if not isinstance(vspec, MultiValuedVariant):
             msg = 'VariantMap accepts only values of type VariantSpec'
             raise TypeError(msg)
 
@@ -554,6 +403,14 @@ class VariantMap(lang.HashableMap):
         if name != vspec.name:
             msg = 'Inconsistent key "{0}", must be "{1}" to match VariantSpec'
             raise KeyError(msg.format(name, vspec.name))
+
+        # Set the item
+        super(VariantMap, self).__setitem__(name, vspec)
+
+    def substitute(self, name, vspec):
+        if name not in self:
+            msg = 'cannot substitute a key that does not exist [{0}]'
+            raise KeyError(msg.format(name))
 
         # Set the item
         super(VariantMap, self).__setitem__(name, vspec)
@@ -684,7 +541,7 @@ class InconsistentValidationError(error.SpecError):
         )
 
 
-class MultipleValuesInExclusiveVariantError(error.SpecError):
+class MultipleValuesInExclusiveVariantError(error.SpecError, ValueError):
 
     def __init__(self, variant, pkg):
         msg = 'multiple values are not allowed for variant "{0.name}"{1}'
