@@ -140,6 +140,7 @@ def strip_version_suffixes(path):
         'x86_64',
         '[Ll]inux(_64)?',
         '[Uu]ni?x',
+        'py2.py3-none-any.whl',
     ]
 
     for regex in suffix_regexes:
@@ -243,12 +244,15 @@ def parse_version_offset(path):
     # Try to strip off anything after the version number
     stem = strip_version_suffixes(original_stem)
 
-    #print('')
-    #print('url:    {0}'.format(original_path))
-    #print('path:   {0}'.format(path))
-    #print('ext:    {0}'.format(ext))
-    #print('suffix: {0}'.format(suffix))
-    #print('stem:   {0}'.format(stem))
+    # General rules of thumb:
+    #
+    # 1. version always comes after the name
+    # 2. separators include '-', '_', and '.'
+    # 3. names can contain A-Z, a-z, 0-9, '+', separators
+    # 4. versions can contain A-Z, a-z, 0-9, separators
+    # 5. versions always start with a digit
+    # 6. versions are often prefixed by a 'v' character
+    # 7. separators are most reliable to determine name/version boundaries
 
     # List of the following format:
     #
@@ -260,7 +264,16 @@ def parse_version_offset(path):
     # The first regex that matches string will be used to determine
     # the version of the package. Thefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
+    # With that said, regular expressions are slow, so if possible, put
+    # ones that only catch one or two URLs at the bottom.
     version_regexes = [
+        # 0th Pass: No separator characters used
+        # Assume name only contains letters
+
+        # namever
+        # turbolinux702, nauty26r7
+        (r'^[A-Za-z+]+v?(\d[A-Za-z\d]*)$', stem),
+
         # 1st Pass: Version only
         # Assume version only contains digits
 
@@ -269,107 +282,96 @@ def parse_version_offset(path):
         (r'^v?(\d[\d\._-]*)$', stem),
 
         # 2nd Pass: A single separator character is used
-        # Assume name only contains letters and version only contains digits
+        # Assume name only contains letters
 
         # name-name-ver-ver
         # e.g. panda-2016-03-07, gts-snapshot-121130
-        (r'^[A-Za-z-]+-v?(\d[\d-]*)$', stem),
+        (r'^[A-Za-z+-]+-v?(\d[\d-]*)$', stem),
 
         # name_name_ver_ver
         # e.g. tinyxml_2_6_2, boost_1_55_0
-        (r'^[A-Za-z_]+_v?(\d[\d_]*)$', stem),
+        (r'^[A-Za-z+_]+_v?(\d[\d_]*)$', stem),
 
         # name.name.ver.ver
-        # e.g. prank.source.150803
-        (r'^[A-Za-z\.]+\.v?(\d[\d\.]*)$', stem),
+        # e.g. prank.source.150803, jpegsrc.v9b
+        (r'^[A-Za-z+\.]+\.v?(\d[A-Za-z\d\.]*)$', stem),
 
         # name.namever.ver
-        # e.g. atlas3.11.34, visit2.10.1
-        (r'^[A-Za-z\.]+v?(\d[\d\.]*)$', stem),
+        # e.g. atlas3.11.34, visit2.10.1, geant4.10.01.p03
+        (r'^[A-Za-z+\.]+v?(\d[A-Za-z\d\.]*)$', stem),
 
         # 3rd Pass: Two separator characters are used
         # Names may contain digits, versions may contain letters
 
         # name-name-ver.ver
         # e.g. m4-1.4.17, gmp-6.0.0a, launchmon-v1.0.2
-        (r'^[A-Za-z\d-]+-v?(\d[A-Za-z\d\.]*)$', stem),
+        (r'^[A-Za-z\d+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
 
         # name-name-ver_ver
         # e.g. icu4c-57_1
-        (r'^[A-za-z\d-]+-v?(\d[A-Za-z\d_]*)$', stem),
+        (r'^[A-Za-z\d+-]+-v?(\d[A-Za-z\d_]*)$', stem),
 
         # name_name_ver.ver
         # e.g. superlu_dist_4.1, pexsi_v0.9.0
-        (r'^[A-Za-z\d_]+_v?(\d[A-Za-z\d\.]*)$', stem),
+        (r'^[A-Za-z\d+_]+_v?(\d[A-Za-z\d\.]*)$', stem),
 
-        # 4th Pass: Three separator characters are used
+        # name_name.ver.ver
+        # e.g. fer_source.v696
+        (r'^[A-Za-z\d+_]+\.v?(\d[A-Za-z\d\.]*)$', stem),
+
+        # name-name-ver.ver-ver.ver
+        # e.g. sowing-1.1.23-p1, bib2xhtml-v3.0-15-gf506
+        (r'^[A-Za-z\d+-]+-v?(\d[A-Za-z\d\.-]*)$', stem),
+
+        # namever.ver-ver.ver
+        # e.g. go1.4-bootstrap-20161024
+        (r'^[A-Za-z+]+v?(\d[A-Za-z\d\.-]*)$', stem),
+
+        # 4th Pass: All three separator characters are used
 
         # name_name-ver.ver
-        # e.g. etsf_io-1.0.4, sphinx_rtd_theme-0.1.10a0
-        #(r'^[A-Za-z\d_]+-(\d[A-Za-z\d\.]*)$', stem),
+        # e.g. the_silver_searcher-0.32.0, sphinx_rtd_theme-0.1.10a0
+        (r'^[A-Za-z\d+_]+-v?(\d[A-Za-z\d\.]*)$', stem),
 
         # name.name_ver.ver-ver.ver
-        # e.g. superlu_5.2.1, TH.data_1.0-8, XML_3.98-1.4
-        #(r'^[A-Za-z\d\.]+_(\d[A-Za-z\d\.-]*)$', stem),
+        # e.g. TH.data_1.0-8, XML_3.98-1.4
+        (r'^[A-Za-z\d+\.]+_v?(\d[A-Za-z\d\.-]*)$', stem),
 
-        ## name_name.ver.ver
-        ## e.g. fer_source.v696
-        #(r'^[A-Za-z_]+\.v?([\d\.]+)$', stem),
+        # name-name-ver.ver_ver.ver
+        # e.g. pypar-2.1.5_108
+        (r'^[A-Za-z\d+-]+-v?(\d[A-Za-z\d\._]*)$', stem),
 
-        ## name.name_ver.ver-ver.ver
-        #(r'^[A-Za-z\d\.]+_([\d\.-]+)$', stem),
+        # name.name_name-ver.ver
+        # e.g. tap.py-1.6, backports.ssl_match_hostname-3.5.0.1
+        (r'^[A-Za-z\d+\._]+-v?(\d[A-Za-z\d\.]*)$', stem),
 
-        ## name.name_name-ver.ver
-        ## e.g. backports.ssl_match_hostname-3.5.0.1
-        #(r'^[A-Za-z\._]+-([\d\.]+)$', stem),
+        # Specific VCS
 
-        ## name-name-ver.ver_ver.ver
-        ## name-name-ver.ver-ver.ver
-        #(r'^[A-Za-z-]+-([\d\.]+[_-][\d\.]+)$', stem),
+        # bazaar
+        # e.g. libvterm-0+bzr681
+        (r'bzr(\d[A-Za-z\d\._-]*)$', stem),
 
+        # Version in path
 
-        ## Suffix queries
+        # github.com/repo/name/releases/download/vver/name
+        # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
+        (r'github\.com/[^/]+/[^/]+/releases/download/[A-Za-z+\._-]*v?(\d[A-Za-z\d\._-]*)/', path),  # noqa
 
-        ## GitLab syntax:
-        ##   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
-        ##   as with github releases, we hope a version can be found in the
-        ##   git tag
-        ## Search dotted versions:
-        ##   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
-        ##   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
-        ##   e.g., http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        #(r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+        # Suffix queries
 
-        ## http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
-        #(r'\?version=((\d+\.)+\d+)', suffix),
+        # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
+        (r'\?ref=[A-Za-z+\._-]*v?(\d[A-Za-z\d\._-]*)$', suffix),
 
-        ## Stem queries
+        # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        (r'\?version=v?(\d[A-Za-z\d\._-]*)$', suffix),
 
-        ## download.php?filename=slepc-3.6.2
-        #(r'\?filename=[A-Za-z]+-(\d[A-Za-z\d\.]+)$', stem),
+        # Stem queries
 
-        #   e.g., http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
+        (r'\?filename=[A-Za-z\d+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
 
-        # e.g. foobar_1.2-3 or 3.98-1.4
-        #(r'_((\d+\.)+\d+(-(\d+(\.\d+)?))?[a-z]?)', stem),
-
-        # e.g. foobar-4.5.1b, foobar4.5RC, foobar.v4.5.1b
-        #(r'[-._]?v?((\d+\.)*\d+[-._]?([a-z]|rc|RC|tp|TP?)\d*)$', stem),
-
-        # e.g. foobar-4.5.0-beta1, or foobar-4.50-beta
-        #(r'-((\d+\.)*\d+-beta(\d+)?)$', stem),
-
-        # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        #(r'-v?([^-]+(-alpha|-beta)?)', stem),
-
-        # e.g. astyle_1.23_macosx.tar.gz
-        #(r'_([^_]+(_alpha|_beta)?)', stem),
-
-        # e.g. http://mirrors.jenkins-ci.org/war/1.486/jenkins.war
-        #(r'\/(\d\.\d+)\/', path),
-
-        # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
-        #(r'\.v(\d+[a-z]?)', stem)
+        # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
+        (r'\?package=[A-Za-z\d+-]+&get=[A-Za-z\d+-]+-v?(\d[A-Za-z\d\.]*)$', stem),  # noqa
     ]
 
     for i, version_regex in enumerate(version_regexes):

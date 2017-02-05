@@ -31,7 +31,7 @@ import glob
 class Yorick(Package):
     """Yorick is an interpreted programming language for scientific simulations
        or calculations, postprocessing or steering large simulation codes,
-       interactive scientific graphics, and reading, writing, or translating 
+       interactive scientific graphics, and reading, writing, or translating
        files of numbers. Yorick includes an interactive graphics package, and a
        binary file package capable of translating to and from the raw numeric
        formats of all modern computers. Yorick is written in ANSI C and runs on
@@ -39,9 +39,9 @@ class Yorick(Package):
     """
 
     homepage = "http://dhmunro.github.io/yorick-doc/"
-    url =  "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
+    url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
 
-    version('2.2.04', md5='1b5b0da6ad81b2d9dba64d991ec17939')
+    version('2_2_04', '1b5b0da6ad81b2d9dba64d991ec17939')
     version('master', branch='master',
             git='https://github.com/dhmunro/yorick.git')
     version('f90-plugin', branch='f90-plugin',

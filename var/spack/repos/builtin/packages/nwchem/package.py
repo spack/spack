@@ -33,8 +33,7 @@ class Nwchem(Package):
     homepage = "http://www.nwchem-sw.org"
     url      = "http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz"
 
-    version('6.6', 'c581001c004ea5e5dfacb783385825e3',
-            url='http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz')
+    version('6.6.revision27746-src.2015-10-20', 'c581001c004ea5e5dfacb783385825e3')
 
     depends_on('blas')
     depends_on('lapack')
@@ -45,7 +44,7 @@ class Nwchem(Package):
 
     # patches for 6.6-27746:
     urls_for_patches = {
-        '@6.6': [
+        '@6.6.revision27746-src.2015-10-20': [
             ('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz', 'f91c6a04df56e228fe946291d2f38c9a'),
             ('http://www.nwchem-sw.org/images/Tools_lib64.patch.gz', 'b71e8dbad27f1c97b60a53ec34d3f6e0'),
             ('http://www.nwchem-sw.org/images/Config_libs66.patch.gz', 'cc4be792e7b5128c3f9b7b1167ade2cf'),

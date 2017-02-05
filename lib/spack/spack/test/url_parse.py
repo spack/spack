@@ -26,6 +26,7 @@
 This file has a bunch of versions tests taken from the excellent version
 detection in Homebrew.
 """
+import os
 import unittest
 
 from spack.url import *
@@ -38,63 +39,91 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.assertEqual(stripped, after)
 
     def test_no_suffix(self):
-        self.check('rgb-1.0.6', 'rgb-1.0.6')
+        self.check('rgb-1.0.6',
+                   'rgb-1.0.6')
 
     def test_misleading_prefix(self):
-        self.check('jpegsrc.v9b', 'jpegsrc.v9b')
-        self.check('turbolinux702', 'turbolinux702')
-        self.check('converge_install_2.3.16', 'converge_install_2.3.16')
+        self.check('jpegsrc.v9b',
+                   'jpegsrc.v9b')
+        self.check('turbolinux702',
+                   'turbolinux702')
+        self.check('converge_install_2.3.16',
+                   'converge_install_2.3.16')
 
     def test_src(self):
-        self.check('apache-ant-1.9.7-src', 'apache-ant-1.9.7')
-        self.check('go1.7.4.src', 'go1.7.4')
+        self.check('apache-ant-1.9.7-src',
+                   'apache-ant-1.9.7')
+        self.check('go1.7.4.src',
+                   'go1.7.4')
 
     def test_source(self):
-        self.check('bowtie2-2.2.5-source', 'bowtie2-2.2.5')
-        self.check('grib_api-1.17.0-Source', 'grib_api-1.17.0')
+        self.check('bowtie2-2.2.5-source',
+                   'bowtie2-2.2.5')
+        self.check('grib_api-1.17.0-Source',
+                   'grib_api-1.17.0')
 
     def test_bin(self):
-        self.check('apache-maven-3.3.9-bin', 'apache-maven-3.3.9')
+        self.check('apache-maven-3.3.9-bin',
+                   'apache-maven-3.3.9')
 
     def test_full(self):
-        self.check('julia-0.4.3-full', 'julia-0.4.3')
+        self.check('julia-0.4.3-full',
+                   'julia-0.4.3')
 
     def test_stable(self):
-        self.check('libevent-2.0.21-stable', 'libevent-2.0.21')
+        self.check('libevent-2.0.21-stable',
+                   'libevent-2.0.21')
 
     def test_final(self):
-        self.check('2.6.7-final', '2.6.7')
+        self.check('2.6.7-final',
+                   '2.6.7')
 
     def test_rel(self):
-        self.check('v1.9.5.1rel', 'v1.9.5.1')
+        self.check('v1.9.5.1rel',
+                   'v1.9.5.1')
 
     def test_linux(self):
-        self.check('astyle_2.04_linux', 'astyle_2.04')
+        self.check('astyle_2.04_linux',
+                   'astyle_2.04')
 
     def test_unix(self):
-        self.check('install-tl-unx', 'install-tl')
+        self.check('install-tl-unx',
+                   'install-tl')
 
     def test_orig(self):
-        self.check('dash_0.5.5.1.orig', 'dash_0.5.5.1')
+        self.check('dash_0.5.5.1.orig',
+                   'dash_0.5.5.1')
+
+    def test_wheel(sefl):
+        self.check('entrypoints-0.2.2-py2.py3-none-any.whl',
+                   'entrypoints-0.2.2')
 
     def test_complex_run(self):
-        self.check('cuda_8.0.44_linux.run', 'cuda_8.0.44')
+        self.check('cuda_8.0.44_linux.run',
+                   'cuda_8.0.44')
 
     def test_complex_file(self):
-        self.check('ack-2.14-single-file', 'ack-2.14')
+        self.check('ack-2.14-single-file',
+                   'ack-2.14')
 
     def test_complex_arch(self):
         self.check('VizGlow_v2.2alpha17-R21November2016-Linux-x86_64-Install',
                    'VizGlow_v2.2alpha17-R21November2016')
-        self.check('jdk-8u92-linux-x64', 'jdk-8u92')
-        self.check('cuda_6.5.14_linux_64.run', 'cuda_6.5.14')
+        self.check('jdk-8u92-linux-x64',
+                   'jdk-8u92')
+        self.check('cuda_6.5.14_linux_64.run',
+                   'cuda_6.5.14')
 
     def test_complex_with(self):
-        self.check('mafft-7.221-with-extensions-src', 'mafft-7.221')
-        self.check('spark-2.0.0-bin-without-hadoop', 'spark-2.0.0')
+        self.check('mafft-7.221-with-extensions-src',
+                   'mafft-7.221')
+        self.check('spark-2.0.0-bin-without-hadoop',
+                   'spark-2.0.0')
 
     def test_complex_public(self):
-        self.check('dakota-6.3-public.src', 'dakota-6.3')
+        self.check('dakota-6.3-public.src',
+                   'dakota-6.3')
+
 
 class UrlParseOffsetTest(unittest.TestCase):
 
@@ -175,52 +204,57 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     # Common Repositories
 
     def test_github_downloads(self):
-        # archive/ver.ver
+        # name/archive/ver.ver
         self.check(
             'nco', '4.6.2',
             'https://github.com/nco/nco/archive/4.6.2.tar.gz')
-        # archive/vver.ver
+        # name/archive/vver.ver
         self.check(
             'vim', '8.0.0134',
             'https://github.com/vim/vim/archive/v8.0.0134.tar.gz')
-        # archive/name-ver.ver
+        # name/archive/name-ver.ver
         self.check(
             'oce', '0.18',
             'https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz')
-        # releases/download/vver/name-ver.ver
+        # name/releases/download/vver/name-ver.ver
         self.check(
             'libmesh', '1.0.0',
             'https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2')
-        # tarball/vver.ver
+        # name/tarball/vver.ver
         self.check(
             'git', '2.7.1',
             'https://github.com/git/git/tarball/v2.7.1')
-        # zipball/vver.ver
+        # name/zipball/vver.ver
         self.check(
             'git', '2.7.1',
             'https://github.com/git/git/zipball/v2.7.1')
 
     def test_gitlab_downloads(self):
-        # ?ref=vver.ver
+        # name/repository/archive.ext?ref=vver.ver
         self.check(
             'swiftsim', '0.3.0',
             'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0')
+        # name/repository/archive.ext?ref=name-ver.ver
+        self.check(
+             'icet', '1.2.3',
+             'https://gitlab.kitware.com/icet/icet/repository/archive.tar.gz?ref=IceT-1.2.3')
 
     def test_bitbucket_downloads(self):
-        # get/ver.ver
+        # name/get/ver.ver
         self.check(
             'eigen', '3.2.7',
             'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
-        # get/vver.ver
+        # name/get/vver.ver
         self.check(
             'hoomd-blue', '1.3.3',
             'https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2')
-        # downloads/name-ver.ver
+        # name/downloads/name-ver.ver
         self.check(
             'dolfin', '2016.1.0',
             'https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2016.1.0.tar.gz')
 
     def test_sourceforge_downloads(self):
+        # name-ver.ver
         self.check(
             'libpng', '1.6.27',
             'http://download.sourceforge.net/libpng/libpng-1.6.27.tar.gz')
@@ -236,6 +270,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download')
 
     def test_cran_downloads(self):
+        # name.name_ver.ver-ver.ver
         self.check(
             'th-data', '1.0-8',
             'https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz')
@@ -243,10 +278,11 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'knitr', '1.14',
             'https://cran.rstudio.com/src/contrib/knitr_1.14.tar.gz')
         self.check(
-            'r', '3.3.2',
-            'https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz')
+            'devtools', '1.12.0',
+            'https://cloud.r-project.org/src/contrib/devtools_1.12.0.tar.gz')
 
     def test_pypi_downloads(self):
+        # name.name_name-ver.ver
         self.check(
             '3to2', '1.1.1',
             'https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip')
@@ -260,20 +296,36 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'backports-ssl-match-hostname', '3.5.0.1',
             'https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz')
 
+    def test_bazaar_downloads(self):
+        self.check(
+            'libvterm', '681',
+            'http://www.leonerd.org.uk/code/libvterm/libvterm-0+bzr681.tar.gz')
+
     # Common Tarball Formats
 
+    def test_no_separators(self):
+        # namever
+        self.check(
+            'turbo', '702',
+            'file://{0}/turbolinux702.tar.gz'.format(os.getcwd()))
+        self.check(
+            'nauty', '26r7',
+            'http://pallini.di.uniroma1.it/nauty26r7.tar.gz')
+
     def test_version_only(self):
-        # ver
+        # ver.ver
         self.check(
             'eigen', '3.2.7',
             'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
+        # ver.ver-ver
         self.check(
             'imagemagick', '7.0.2-7',
             'https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz')
-        # vver
+        # vver.ver
         self.check(
             'cgns', '3.3.0',
             'https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz')
+        # vver_ver
         self.check(
             'luafilesystem', '1_6_3',
             'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz')
@@ -301,6 +353,9 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'prank', '150803',
             'http://wasabiapp.org/download/prank/prank.source.150803.tgz')
+        self.check(
+            'jpeg', '9b',
+            'http://www.ijg.org/files/jpegsrc.v9b.tar.gz')
         # name.namever.ver
         self.check(
             'atlas', '3.11.34',
@@ -308,6 +363,9 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'visit', '2.10.1',
             'http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz')
+        self.check(
+            'geant', '4.10.01.p03',
+            'http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz')
 
     def test_dash_dot(self):
         # name-name-ver.ver
@@ -338,45 +396,89 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'pexsi', '0.9.0',
             'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz')
+        # name_name.ver.ver
+        self.check(
+            'fer', '696',
+            'ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz')
 
+    def test_dash_dot_dash_dot(self):
+        # name-name-ver.ver-ver.ver
+        self.check(
+            'sowing', '1.1.23-p1',
+            'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/sowing-1.1.23-p1.tar.gz')
+        self.check(
+            'bib2xhtml', '3.0-15-gf506',
+            'http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-15-gf506.tar.gz')
+        # namever.ver-ver.ver
+        self.check(
+            'go', '1.4-bootstrap-20161024',
+            'https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz')
+
+    def test_underscore_dash_dot(self):
+        # name_name-ver.ver
+        self.check(
+            'the-silver-searcher', '0.32.0',
+            'http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz')
+        self.check(
+            'sphinx-rtd-theme', '0.1.10a0',
+            'https://pypi.python.org/packages/source/s/sphinx_rtd_theme/sphinx_rtd_theme-0.1.10a0.tar.gz')
+
+    def test_dot_underscore_dot_dash_dot(self):
+        # name.name_ver.ver-ver.ver
+        self.check(
+            'th-data', '1.0-8',
+            'https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz')
+        self.check(
+            'xml', '3.98-1.4',
+            'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz')
+
+    def test_dash_dot_underscore_dot(self):
+        # name-name-ver.ver_ver.ver
+        self.check(
+            'pypar', '2.1.5_108',
+            'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz')
 
     # Weird URLS
 
-    def single_character_name(self):
+    def test_version_in_path(self):
+        # github.com/repo/name/releases/download/name-vver/name
         self.check(
-            '
+            'nextflow', '0.20.1',
+            'https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow')
 
-    def test_wwwoffle_version(self):
+    def test_suffix_queries(self):
         self.check(
-            'wwwoffle', '2.9h',
-            'http://www.gedanken.demon.co.uk/download-wwwoffle/wwwoffle-2.9h.tgz')
+            'swiftsim', '0.3.0',
+            'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0')
+        self.check(
+            'sionlib', '1.7.1',
+            'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')
 
-    def test_version_sourceforge_download(self):
+    def test_stem_queries(self):
         self.check(
-            'foo-bar', '1.21',
-            'http://sourceforge.net/foo_bar-1.21.tar.gz/download')
+            'slepc', '3.6.2',
+            'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz')
         self.check(
-            'foo-bar', '1.21',
-            'http://sf.net/foo_bar-1.21.tar.gz/download')
+            'otf', '1.12.5salmon',
+            'http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz')
+
+    def test_single_character_name(self):
+        self.check(
+            'r', '3.3.2',
+            'https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz')
+
+    def test_single_digit_version(self):
+        pass
+
+    def plus_in_name(self):
+        self.check(
+            # FIXME: We should probably auto-convert this to 'plus'
+            'gtk+', '2.24.31',
+            'http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.31.tar.xz')
 
     def test_no_version(self):
-        self.assert_not_detected('http://example.com/blah.tar')
-        self.assert_not_detected('foo')
-
-    def test_version_all_dots(self):
-        self.check(
-            'foo-bar-la', '1.14', 'http://example.com/foo.bar.la.1.14.zip')
-
-    def test_version_underscore_separator(self):
-        self.check(
-            'grc', '1.1',
-            'http://example.com/grc_1.1.tar.gz')
-
-    def test_boost_version_style(self):
-        self.check(
-            'boost', '1.39.0',
-            'http://example.com/boost_1_39_0.tar.bz2',
-            no_check_url=True)
+        self.assert_not_detected('http://www.netlib.org/blas/blast-forum/cblas.tgz')
+        self.assert_not_detected('http://www.netlib.org/voronoi/triangle.zip')
 
     def test_erlang_version_style(self):
         self.check(
@@ -398,11 +500,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'p7zip', '9.04',
             'http://kent.dl.sourceforge.net/sourceforge/p7zip/p7zip_9.04_src_all.tar.bz2')
 
-    def test_new_github_style(self):
-        self.check(
-            'libnet', '1.1.4',
-            'https://github.com/sam-github/libnet/tarball/libnet-1.1.4')
-
     def test_gloox_beta_style(self):
         self.check(
             'gloox', '1.0-beta7',
@@ -418,79 +515,10 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'astyle', '1.23',
             'http://kent.dl.sourceforge.net/sourceforge/astyle/astyle_1.23_macosx.tar.gz')
 
-    def test_version_dos2unix(self):
-        self.check(
-            'dos2unix', '3.1',
-            'http://www.sfr-fresh.com/linux/misc/dos2unix-3.1.tar.gz')
-
-    def test_version_internal_dash(self):
-        self.check(
-            'foo-arse', '1.1-2',
-            'http://example.com/foo-arse-1.1-2.tar.gz')
-
-    def test_version_single_digit(self):
-        self.check(
-            'foo-bar', '45',
-            'http://example.com/foo_bar.45.tar.gz')
-
-    def test_noseparator_single_digit(self):
-        self.check(
-            'foo-bar', '45',
-            'http://example.com/foo_bar45.tar.gz')
-
-    def test_version_developer_that_hates_us_format(self):
-        self.check(
-            'foo-bar-la', '1.2.3',
-            'http://example.com/foo-bar-la.1.2.3.tar.gz')
-
-    def test_version_regular(self):
-        self.check(
-            'foo-bar', '1.21',
-            'http://example.com/foo_bar-1.21.tar.gz')
-
-    def test_version_gitlab(self):
-        self.check(
-             'vtk', '7.0.0',
-             'https://gitlab.kitware.com/vtk/vtk/repository/'
-             'archive.tar.bz2?ref=v7.0.0')
-        self.check(
-             'icet', '1.2.3',
-             'https://gitlab.kitware.com/icet/icet/repository/'
-             'archive.tar.gz?ref=IceT-1.2.3')
-        self.check(
-             'foo', '42.1337',
-             'http://example.com/org/foo/repository/'
-             'archive.zip?ref=42.1337bar')
-
-    def test_version_github(self):
-        self.check(
-            'yajl', '1.0.5',
-            'http://github.com/lloyd/yajl/tarball/1.0.5')
-
-    def test_version_github_with_high_patch_number(self):
-        self.check(
-            'yajl', '1.2.34',
-            'http://github.com/lloyd/yajl/tarball/v1.2.34')
-
-    def test_yet_another_version(self):
-        self.check(
-            'mad', '0.15.1b',
-            'http://example.com/mad-0.15.1b.tar.gz')
-
-    def test_lame_version_style(self):
-        self.check(
-            'lame', '398-2',
-            'http://kent.dl.sourceforge.net/sourceforge/lame/lame-398-2.tar.gz')
-
     def test_ruby_version_style(self):
         self.check(
             'ruby', '1.9.1-p243',
             'ftp://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.1-p243.tar.gz')
-
-    def test_omega_version_style(self):
-        self.check(
-            'omega', '0.80.2',
-            'http://www.alcyone.com/binaries/omega/omega-0.80.2-src.tar.gz')
 
     def test_rc_style(self):
         self.check(
@@ -501,26 +529,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'js', '1.8.0-rc1',
             'http://ftp.mozilla.org/pub/mozilla.org/js/js-1.8.0-rc1.tar.gz')
-
-    def test_angband_version_style(self):
-        self.check(
-            'angband', '3.0.9b',
-            'http://rephial.org/downloads/3.0/angband-3.0.9b-src.tar.gz')
-
-    def test_stable_suffix(self):
-        self.check(
-            'libevent', '1.4.14b',
-            'http://www.monkey.org/~provos/libevent-1.4.14b-stable.tar.gz')
-
-    def test_debian_style_1(self):
-        self.check(
-            'sl', '3.03',
-            'http://ftp.de.debian.org/debian/pool/main/s/sl/sl_3.03.orig.tar.gz')
-
-    def test_debian_style_2(self):
-        self.check(
-            'mmv', '1.01b',
-            'http://ftp.de.debian.org/debian/pool/main/m/mmv/mmv_1.01b.orig.tar.gz')
 
     def test_imagemagick_style(self):
         self.check(
@@ -537,20 +545,10 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'apache-cassandra', '1.2.0-rc2',
             'http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz')
 
-    def test_jpeg_style(self):
-        self.check(
-            'jpegsrc', '8d',
-            'http://www.ijg.org/files/jpegsrc.v8d.tar.gz')
-
     def test_pypy_version(self):
         self.check(
             'pypy', '1.4.1',
             'http://pypy.org/download/pypy-1.4.1-osx.tar.bz2')
-
-    def test_openssl_version(self):
-        self.check(
-            'openssl', '0.9.8s',
-            'http://www.openssl.org/source/openssl-0.9.8s.tar.gz')
 
     def test_xaw3d_version(self):
         self.check(
@@ -587,21 +585,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'synergy', '1.3.6p2',
             'http://synergy.googlecode.com/files/synergy-1.3.6p2-MacOSX-Universal.zip')
 
-    def test_mvapich2_19_version(self):
-        self.check(
-            'mvapich2', '1.9',
-            'http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz')
-
-    def test_mvapich2_20_version(self):
-        self.check(
-            'mvapich2', '2.0',
-            'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz')
-
-    def test_hdf5_version(self):
-        self.check(
-            'hdf5', '1.8.13',
-            'http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.13.tar.bz2')
-
     def test_scalasca_version(self):
         self.check(
             'cube', '4.2.3',
@@ -610,34 +593,10 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'cube', '4.3-TP1',
             'http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3-TP1.tar.gz')
 
-    def test_mpileaks_version(self):
-        self.check(
-            'mpileaks', '1.0',
-            'https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz')
-        self.check(
-            'mpileaks', '1.0',
-            'https://github.com/hpc/mpileaks/releases/download/1.0/mpileaks-1.0.tar.gz')
-
-    def test_gcc_version(self):
-        self.check(
-            'gcc', '4.4.7',
-            'http://open-source-box.org/gcc/gcc-4.4.7/gcc-4.4.7.tar.bz2')
-
-    def test_gcc_version_precedence(self):
-        # prefer the version in the tarball, not in the url prefix.
-        self.check(
-            'gcc', '4.4.7',
-            'http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.4.7.tar.bz2')
-
     def test_github_raw_url(self):
         self.check(
             'powerparser', '2.0.7',
             'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')
-
-    def test_r_xml_version(self):
-        self.check(
-            'xml', '3.98-1.4',
-            'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz')
 
     def test_nco_version(self):
         self.check(
@@ -648,17 +607,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'nco', '4.6.3-alpha04',
             'https://github.com/nco/nco/archive/4.6.3-alpha04.tar.gz')
 
-    def test_yorick_version(self):
-        self.check(
-            'yorick', '2_2_04',
-            'https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz')
-
     def test_luaposix_version(self):
         self.check(
             'luaposix', '33.4.0',
             'https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz')
-
-    def test_sionlib_version(self):
-        self.check(
-            'sionlib', '1.7.1',
-            'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')

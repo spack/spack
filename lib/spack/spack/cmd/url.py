@@ -142,10 +142,6 @@ def url_list(args):
 
     # Print URLs
     for url in sorted(urls):
-        path, ext, suffix = split_url_extension(url)
-
-        # stem:   Everything from path after the final '/'
-        stem = os.path.basename(path)
         if args.color or args.extrapolation:
             print(color_url(url, subs=args.extrapolation, errors=True))
         else:

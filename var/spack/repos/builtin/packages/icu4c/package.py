@@ -33,12 +33,12 @@ class Icu4c(Package):
     homepage = "http://site.icu-project.org/"
     url      = "http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz"
 
-    version('57.1', '976734806026a4ef8bdd17937c8898b9')
+    version('57_1', '976734806026a4ef8bdd17937c8898b9')
 
     def url_for_version(self, version):
         base_url = "http://download.icu-project.org/files/icu4c"
         return "{0}/{1}/icu4c-{2}-src.tgz".format(
-            base_url, version, version.underscored)
+            base_url, version.dotted, version.underscored)
 
     def install(self, spec, prefix):
         with working_dir('source'):

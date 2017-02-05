@@ -34,7 +34,7 @@ class Ferret(Package):
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
     url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
 
-    version('6.96', '51722027c864369f41bab5751dfff8cc')
+    version('696', '51722027c864369f41bab5751dfff8cc')
 
     depends_on("hdf5~mpi~fortran")
     depends_on("netcdf~mpi")

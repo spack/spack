@@ -40,7 +40,7 @@ class Turbomole(Package):
 
     homepage = "http://www.turbomole-gmbh.com/"
 
-    version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
+    version('702', '92b97e1e52e8dcf02a4d9ac0147c09d6',
             url="file://%s/turbolinux702.tar.gz" % os.getcwd())
 
     variant('mpi', default=True, description='Set up MPI environment')
