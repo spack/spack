@@ -75,16 +75,16 @@ def setup_parser(subparser):
         '-V', '--correct-version', action='store_true',
         help='only list urls for which the version was correctly parsed')
 
-    # Test
+    # Summary
     sp.add_parser(
-        'test', help='print a summary of how well we are parsing package urls')
+        'summary', help='print a summary of how well we are parsing package urls')
 
 
 def url(parser, args):
     action = {
-        'parse': url_parse,
-        'list':  url_list,
-        'test':  url_test
+        'parse':   url_parse,
+        'list':    url_list,
+        'summary': url_summary
     }
 
     action[args.subcommand](args)
@@ -151,7 +151,7 @@ def url_list(args):
     return len(urls)
 
 
-def url_test(args):
+def url_summary(args):
     # Collect statistics on how many URLs were correctly parsed
     total_urls       = 0
     correct_names    = 0
