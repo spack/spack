@@ -135,6 +135,242 @@ class Variant(object):
         v = docstring if docstring else ''
         return v
 
+    def make_default(self):
+        if self.exclusive is False:
+            return MultiValuedVariant(self.name, self.default)
+        elif self.values == (True, False):
+            return BoolValuedVariant(self.name, self.default)
+        return SingleValuedVariant(self.name, self.default)
+
+
+@lang.key_ordering
+class MultiValuedVariant(object):
+
+    @staticmethod
+    def from_node_dict(name, value):
+        if isinstance(value, list):
+            value = ','.join(value)
+            return MultiValuedVariant(name, value)
+        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
+            return BoolValuedVariant(name, value)
+        return SingleValuedVariant(name, value)
+
+    def __init__(self, name, value):
+        self.name = name
+
+        # Stores 'value' after a bit of massaging
+        # done by the property setter
+        self._value = None
+        self._original_value = None
+
+        # Invokes property setter
+        self.value = value
+
+    @property
+    def value(self):
+        """Returns a tuple of strings containing the values stored in
+        the variant.
+
+        :return: a tuple of strings
+        :rtype: tuple
+        """
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value_setter(value)
+
+    def _value_setter(self, value):
+        # Store the original value
+        self._original_value = value
+
+        # Store a tuple of CSV string representations
+        # Tuple is necessary here instead of list because the
+        # values need to be hashed
+        f = cStringIO.StringIO(str(value))
+        try:
+            t = next(csv.reader(f, skipinitialspace=True))
+        except StopIteration:
+            t = []
+
+        # With multi-value variants it is necessary
+        # to remove duplicates and give an order
+        # to a set
+        self._value = tuple(sorted(set(t)))
+
+    def _cmp_key(self):
+        return self.name, self.value
+
+    def copy(self):
+        """Returns an instance of a variant equivalent to self
+
+        :return: a copy of self
+        :rtype: any variant
+
+        >>> a = MultiValuedVariant('foo', True)
+        >>> b = a.copy()
+        >>> assert a == b
+        >>> assert a is not b
+        """
+        return type(self)(self.name, self._original_value)
+
+    def satisfies(self, other):
+        """Returns true if other.name == self.name and other.value is
+        a strict subset of self. Does not try to validate.
+
+        :param variant other: constraint to be met for the method to
+            return True
+        :return: True or False
+        :rtype: bool
+        """
+        # If types are different the constraint is not satisfied
+        if type(other) != type(self):
+            return False
+
+        # If names are different then `self` does not satisfy `other`
+        # (`foo=bar` does not satisfy `baz=bar`)
+        if other.name != self.name:
+            return False
+
+        # Otherwise we want all the values in `other` to be also in `self`
+        return all(v in self.value for v in other.value)
+
+    def compatible(self, other):
+        """Returns True if self and other are compatible, False otherwise.
+        As there is no semantic check, two VariantSpec are compatible if
+        either they contain the same value or they are both multi-valued.
+
+        :param VariantSpec other: instance against which we test compatibility
+        :return: True or False
+        :rtype: bool
+        """
+        # If types are different they are not compatible
+        if type(other) != type(self):
+            return False
+
+        # If names are different then they are not compatible
+        if other.name != self.name:
+            return False
+
+        return True
+
+    def constrain(self, other):
+        """Modify self to match all the constraints for other if both
+        instances are multi-valued. Returns True if self changed,
+        False otherwise.
+
+        :param VariantSpec other: instance against which we constrain self
+        :return: True or False
+        :rtype: bool
+        """
+        # If types are different they are not compatible
+        if type(other) != type(self):
+            msg = 'other must be of type \'{0.__name__}\''
+            raise TypeError(msg.format(type(self)))
+
+        if self.name != other.name:
+            raise ValueError('variants must have the same name')
+        old_value = self.value
+        self.value = ','.join(self.value + other.value)
+        return old_value != self.value
+
+    def yaml_entry(self):
+        """Returns a key, value tuple suitable to be an entry in a yaml dict
+
+        :return: (name, value_representation)
+        :rtype: tuple
+        """
+        return self.name, list(self.value)
+
+    def __contains__(self, item):
+        return item in self._value
+
+    def __repr__(self):
+        cls = type(self)
+        return '{0.__name__}({1}, {2})'.format(
+            cls, repr(self.name), repr(self._original_value)
+        )
+
+    def __str__(self):
+        return '{0}={1}'.format(
+            self.name, ','.join(str(x) for x in self.value)
+        )
+
+
+class SingleValuedVariant(MultiValuedVariant):
+
+    def _value_setter(self, value):
+        # Treat the value as a multi-valued variant
+        super(SingleValuedVariant, self)._value_setter(value)
+
+        # Then check if there's only a single value
+        if len(self._value) != 1:
+            raise ValueError('a SingleValuedVariant accepts only one value')
+        self._value = str(self._value[0])
+
+    def __str__(self):
+        return '{0}={1}'.format(self.name, self.value)
+
+    def satisfies(self, other):
+        # If types are different the constraint is not satisfied
+        if type(other) != type(self):
+            return False
+
+        # If names are different then `self` does not satisfy `other`
+        # (`foo=bar` does not satisfy `baz=bar`)
+        if other.name != self.name:
+            return False
+
+        return self.value == other.value
+
+    def compatible(self, other):
+        return self.satisfies(other)
+
+    def constrain(self, other):
+        if type(other) != type(self):
+            msg = 'other must be of type \'{0.__name__}\''
+            raise TypeError(msg.format(type(self)))
+
+        if self.name != other.name:
+            raise ValueError('variants must have the same name')
+
+        if self.value != other.value:
+            raise UnsatisfiableVariantSpecError(other.value, self.value)
+        return False
+
+    def __contains__(self, item):
+        return item == self.value
+
+    def yaml_entry(self):
+        """Returns a key, value tuple suitable to be an entry in a yaml dict
+
+        :return: (name, value_representation)
+        :rtype: tuple
+        """
+        return self.name, self.value
+
+
+class BoolValuedVariant(SingleValuedVariant):
+    def _value_setter(self, value):
+        # Check the string representation of the value and turn
+        # it to a boolean
+        if str(value).upper() == 'TRUE':
+            self._original_value = value
+            self._value = True
+        elif str(value).upper() == 'FALSE':
+            self._original_value = value
+            self._value = False
+        else:
+            msg = 'cannot construct a BoolValuedVariant from '
+            msg += 'a value that does not represent a bool'
+            raise ValueError(msg)
+
+    def __contains__(self, item):
+        return item is self.value
+
+    def __str__(self):
+        return '{0}{1}'.format('+' if self.value else '~', self.name)
+
 
 @lang.key_ordering
 class VariantSpec(object):
@@ -155,6 +391,7 @@ class VariantSpec(object):
         # Stores 'value' after a bit of massaging
         # done by the property setter
         self._value = None
+        self._original_value = None
 
         # Invokes property setter
         self.value = value
@@ -196,7 +433,7 @@ class VariantSpec(object):
             self._value = tuple(sorted(set(t)))
 
     def _cmp_key(self):
-        return (self.name, self.value)
+        return self.name, self.value
 
     def copy(self):
         """Returns an instance of VariantSpec equivalent to self

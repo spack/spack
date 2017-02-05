@@ -23,54 +23,532 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import unittest
+import pytest
 import numbers
 
 from spack.variant import *
 
 
-class VariantSpecTest(unittest.TestCase):
+class TestMultiValuedVariant(object):
+
+    def test_initialization(self):
+
+        # Basic properties
+        a = MultiValuedVariant('foo', 'bar,baz')
+        assert repr(a) == "MultiValuedVariant('foo', 'bar,baz')"
+        assert str(a) == 'foo=bar,baz'
+        assert a.value == ('bar', 'baz')
+        assert 'bar' in a
+        assert 'baz' in a
+        assert eval(repr(a)) == a
+
+        # Spaces are trimmed
+        b = MultiValuedVariant('foo', 'bar, baz')
+        assert repr(b) == "MultiValuedVariant('foo', 'bar, baz')"
+        assert str(b) == 'foo=bar,baz'
+        assert b.value == ('bar', 'baz')
+        assert 'bar' in b
+        assert 'baz' in b
+        assert a == b
+        assert hash(a) == hash(b)
+        assert eval(repr(b)) == a
+
+        # Order is not important
+        c = MultiValuedVariant('foo', 'baz, bar')
+        assert repr(c) == "MultiValuedVariant('foo', 'baz, bar')"
+        assert str(c) == 'foo=bar,baz'
+        assert c.value == ('bar', 'baz')
+        assert 'bar' in c
+        assert 'baz' in c
+        assert a == c
+        assert hash(a) == hash(c)
+        assert eval(repr(c)) == a
+
+        # Check the copy
+        d = a.copy()
+        assert repr(a) == repr(d)
+        assert str(a) == str(d)
+        assert d.value == ('bar', 'baz')
+        assert 'bar' in d
+        assert 'baz' in d
+        assert a == d
+        assert a is not d
+        assert hash(a) == hash(d)
+        assert eval(repr(d)) == a
+
+    def test_satisfies(self):
+
+        a = MultiValuedVariant('foo', 'bar,baz')
+        b = MultiValuedVariant('foo', 'bar')
+        c = MultiValuedVariant('fee', 'bar,baz')
+        d = MultiValuedVariant('foo', 'True')
+
+        # 'foo=bar,baz' satisfies 'foo=bar'
+        assert a.satisfies(b)
+
+        # 'foo=bar' does not satisfy 'foo=bar,baz'
+        assert not b.satisfies(a)
+
+        # 'foo=bar,baz' does not satisfy 'foo=bar,baz' and vice-versa
+        assert not a.satisfies(c)
+        assert not c.satisfies(a)
+
+        # Cannot satisfy the constraint with an object of
+        # another type
+        b_sv = SingleValuedVariant('foo', 'bar')
+        assert not b.satisfies(b_sv)
+
+        d_bv = BoolValuedVariant('foo', 'True')
+        assert not d.satisfies(d_bv)
+
+    def test_compatible(self):
+
+        a = MultiValuedVariant('foo', 'bar,baz')
+        b = MultiValuedVariant('foo', 'True')
+        c = MultiValuedVariant('fee', 'bar,baz')
+        d = MultiValuedVariant('foo', 'bar,barbaz')
+
+        # If the name of two multi-valued variants is the same,
+        # they are compatible
+        assert a.compatible(b)
+        assert not a.compatible(c)
+        assert a.compatible(d)
+
+        assert b.compatible(a)
+        assert not b.compatible(c)
+        assert b.compatible(d)
+
+        assert not c.compatible(a)
+        assert not c.compatible(b)
+        assert not c.compatible(d)
+
+        assert d.compatible(a)
+        assert d.compatible(b)
+        assert not d.compatible(c)
+
+        # Can't be compatible with other types
+        b_bv = BoolValuedVariant('foo', 'True')
+        assert not b.compatible(b_bv)
+
+        b_sv = SingleValuedVariant('foo', 'True')
+        assert not b.compatible(b_sv)
+
+    def test_constrain(self):
+
+        # Try to constrain on a value with less constraints than self
+        a = MultiValuedVariant('foo', 'bar,baz')
+        b = MultiValuedVariant('foo', 'bar')
+
+        changed = a.constrain(b)
+        assert not changed
+        t = MultiValuedVariant('foo', 'bar,baz')
+        assert a == t
+
+        # Try to constrain on a value with more constraints than self
+        a = MultiValuedVariant('foo', 'bar,baz')
+        b = MultiValuedVariant('foo', 'bar')
+
+        changed = b.constrain(a)
+        assert changed
+        t = MultiValuedVariant('foo', 'bar,baz')
+        assert a == t
+
+        # Try to constrain on the same value
+        a = MultiValuedVariant('foo', 'bar,baz')
+        b = a.copy()
+
+        changed = a.constrain(b)
+        assert not changed
+        t = MultiValuedVariant('foo', 'bar,baz')
+        assert a == t
+
+        # Try to constrain on a different name
+        a = MultiValuedVariant('foo', 'bar,baz')
+        b = MultiValuedVariant('fee', 'bar')
+
+        with pytest.raises(ValueError):
+            a.constrain(b)
+
+        # Try to constrain on other types
+        a = MultiValuedVariant('foo', 'bar,baz')
+        sv = SingleValuedVariant('foo', 'bar')
+        bv = BoolValuedVariant('foo', 'True')
+        for v in (sv, bv):
+            with pytest.raises(TypeError):
+                a.constrain(v)
+
+    def test_yaml_entry(self):
+
+        a = MultiValuedVariant('foo', 'bar,baz,barbaz')
+        b = MultiValuedVariant('foo', 'bar, baz,  barbaz')
+        expected = ('foo', sorted(['bar', 'baz', 'barbaz']))
+
+        assert a.yaml_entry() == expected
+        assert b.yaml_entry() == expected
+
+        a = MultiValuedVariant('foo', 'bar')
+        expected = ('foo', sorted(['bar']))
+
+        assert a.yaml_entry() == expected
+
+
+class TestSingleValuedVariant(object):
+
+    def test_initialization(self):
+
+        # Basic properties
+        a = SingleValuedVariant('foo', 'bar')
+        assert repr(a) == "SingleValuedVariant('foo', 'bar')"
+        assert str(a) == 'foo=bar'
+        assert a.value == 'bar'
+        assert 'bar' in a
+        assert eval(repr(a)) == a
+
+        # Raise if multiple values are passed
+        with pytest.raises(ValueError):
+            SingleValuedVariant('foo', 'bar, baz')
+
+        # Check the copy
+        b = a.copy()
+        assert repr(a) == repr(b)
+        assert str(a) == str(b)
+        assert b.value == 'bar'
+        assert 'bar' in b
+        assert a == b
+        assert a is not b
+        assert hash(a) == hash(b)
+        assert eval(repr(b)) == a
+
+    def test_satisfies(self):
+        a = SingleValuedVariant('foo', 'bar')
+        b = SingleValuedVariant('foo', 'bar')
+        c = SingleValuedVariant('foo', 'baz')
+        d = SingleValuedVariant('fee', 'bar')
+        e = SingleValuedVariant('foo', 'True')
+
+        # 'foo=bar' can only satisfy 'foo=bar'
+        assert a.satisfies(b)
+        assert not a.satisfies(c)
+        assert not a.satisfies(d)
+
+        assert b.satisfies(a)
+        assert not b.satisfies(c)
+        assert not b.satisfies(d)
+
+        assert not c.satisfies(a)
+        assert not c.satisfies(b)
+        assert not c.satisfies(d)
+
+        # Cannot satisfy the constraint with an object of
+        # another type
+        a_mv = MultiValuedVariant('foo', 'bar')
+        assert not a.satisfies(a_mv)
+
+        e_bv = BoolValuedVariant('foo', 'True')
+        assert not e.satisfies(e_bv)
+
+    def test_compatible(self):
+
+        a = SingleValuedVariant('foo', 'bar')
+        b = SingleValuedVariant('fee', 'bar')
+        c = SingleValuedVariant('foo', 'baz')
+        d = SingleValuedVariant('foo', 'bar')
+
+        # If the name of two multi-valued variants is the same,
+        # they are compatible
+        assert not a.compatible(b)
+        assert not a.compatible(c)
+        assert a.compatible(d)
+
+        assert not b.compatible(a)
+        assert not b.compatible(c)
+        assert not b.compatible(d)
+
+        assert not c.compatible(a)
+        assert not c.compatible(b)
+        assert not c.compatible(d)
+
+        assert d.compatible(a)
+        assert not d.compatible(b)
+        assert not d.compatible(c)
+
+        # Can't be compatible with other types
+        a_mv = MultiValuedVariant('foo', 'bar')
+        assert not a.compatible(a_mv)
+
+        e = SingleValuedVariant('foo', 'True')
+        e_bv = BoolValuedVariant('foo', 'True')
+        assert not e.compatible(e_bv)
+
+    def test_constrain(self):
+
+        # Try to constrain on a value equal to self
+        a = SingleValuedVariant('foo', 'bar')
+        b = SingleValuedVariant('foo', 'bar')
+
+        changed = a.constrain(b)
+        assert not changed
+        t = SingleValuedVariant('foo', 'bar')
+        assert a == t
+
+        # Try to constrain on a value with a different value
+        a = SingleValuedVariant('foo', 'bar')
+        b = SingleValuedVariant('foo', 'baz')
+
+        with pytest.raises(UnsatisfiableVariantSpecError):
+            b.constrain(a)
+
+        # Try to constrain on a value with a different value
+        a = SingleValuedVariant('foo', 'bar')
+        b = SingleValuedVariant('fee', 'bar')
+
+        with pytest.raises(ValueError):
+            b.constrain(a)
+
+        # Try to constrain on the same value
+        a = SingleValuedVariant('foo', 'bar')
+        b = a.copy()
+
+        changed = a.constrain(b)
+        assert not changed
+        t = SingleValuedVariant('foo', 'bar')
+        assert a == t
+
+        # Try to constrain on other values
+        a = SingleValuedVariant('foo', 'True')
+        mv = MultiValuedVariant('foo', 'True')
+        bv = BoolValuedVariant('foo', 'True')
+        for v in (mv, bv):
+            with pytest.raises(TypeError):
+                a.constrain(v)
+
+    def test_yaml_entry(self):
+        a = SingleValuedVariant('foo', 'bar')
+        expected = ('foo', 'bar')
+
+        assert a.yaml_entry() == expected
+
+
+class TestBoolValuedVariant(object):
+
+    def test_initialization(self):
+        # Basic properties - True value
+        for v in (True, 'True', 'TRUE', 'TrUe'):
+            a = BoolValuedVariant('foo', v)
+            assert repr(a) == "BoolValuedVariant('foo', {0})".format(repr(v))
+            assert str(a) == '+foo'
+            assert a.value is True
+            assert True in a
+            assert eval(repr(a)) == a
+
+        # Copy - True value
+        b = a.copy()
+        assert repr(a) == repr(b)
+        assert str(a) == str(b)
+        assert b.value is True
+        assert True in b
+        assert a == b
+        assert a is not b
+        assert hash(a) == hash(b)
+        assert eval(repr(b)) == a
+
+        # Basic properties - False value
+        for v in (False, 'False', 'FALSE', 'FaLsE'):
+            a = BoolValuedVariant('foo', v)
+            assert repr(a) == "BoolValuedVariant('foo', {0})".format(repr(v))
+            assert str(a) == '~foo'
+            assert a.value is False
+            assert False in a
+            assert eval(repr(a)) == a
+
+        # Copy - True value
+        b = a.copy()
+        assert repr(a) == repr(b)
+        assert str(a) == str(b)
+        assert b.value is False
+        assert False in b
+        assert a == b
+        assert a is not b
+        assert eval(repr(b)) == a
+
+        # Invalid values
+        for v in ('bar', 'bar,baz'):
+            with pytest.raises(ValueError):
+                BoolValuedVariant('foo', v)
+
+    def test_satisfies(self):
+        a = BoolValuedVariant('foo', True)
+        b = BoolValuedVariant('foo', False)
+        c = BoolValuedVariant('fee', False)
+        d = BoolValuedVariant('foo', 'True')
+
+        assert not a.satisfies(b)
+        assert not a.satisfies(c)
+        assert a.satisfies(d)
+
+        assert not b.satisfies(a)
+        assert not b.satisfies(c)
+        assert not b.satisfies(d)
+
+        assert not c.satisfies(a)
+        assert not c.satisfies(b)
+        assert not c.satisfies(d)
+
+        assert d.satisfies(a)
+        assert not d.satisfies(b)
+        assert not d.satisfies(c)
+
+        # Cannot satisfy the constraint with an object of
+        # another type
+        d_mv = MultiValuedVariant('foo', 'True')
+        assert not d.satisfies(d_mv)
+
+        d_sv = SingleValuedVariant('foo', 'True')
+        assert not d.satisfies(d_sv)
+
+    def test_compatible(self):
+
+        a = BoolValuedVariant('foo', True)
+        b = BoolValuedVariant('fee', True)
+        c = BoolValuedVariant('foo', False)
+        d = BoolValuedVariant('foo', 'True')
+
+        # If the name of two multi-valued variants is the same,
+        # they are compatible
+        assert not a.compatible(b)
+        assert not a.compatible(c)
+        assert a.compatible(d)
+
+        assert not b.compatible(a)
+        assert not b.compatible(c)
+        assert not b.compatible(d)
+
+        assert not c.compatible(a)
+        assert not c.compatible(b)
+        assert not c.compatible(d)
+
+        assert d.compatible(a)
+        assert not d.compatible(b)
+        assert not d.compatible(c)
+
+        # Can't be compatible with other types
+        d_mv = MultiValuedVariant('foo', 'True')
+        assert not d.compatible(d_mv)
+
+        d_sv = SingleValuedVariant('foo', 'True')
+        assert not d.compatible(d_sv)
+
+    def test_constrain(self):
+        # Try to constrain on a value equal to self
+        a = BoolValuedVariant('foo', 'True')
+        b = BoolValuedVariant('foo', True)
+
+        changed = a.constrain(b)
+        assert not changed
+        t = BoolValuedVariant('foo', True)
+        assert a == t
+
+        # Try to constrain on a value with a different value
+        a = BoolValuedVariant('foo', True)
+        b = BoolValuedVariant('foo', False)
+
+        with pytest.raises(UnsatisfiableVariantSpecError):
+            b.constrain(a)
+
+        # Try to constrain on a value with a different value
+        a = BoolValuedVariant('foo', True)
+        b = BoolValuedVariant('fee', True)
+
+        with pytest.raises(ValueError):
+            b.constrain(a)
+
+        # Try to constrain on the same value
+        a = BoolValuedVariant('foo', True)
+        b = a.copy()
+
+        changed = a.constrain(b)
+        assert not changed
+        t = BoolValuedVariant('foo', True)
+        assert a == t
+
+        # Try to constrain on other values
+        a = BoolValuedVariant('foo', 'True')
+        sv = SingleValuedVariant('foo', 'True')
+        mv = MultiValuedVariant('foo', 'True')
+        for v in (sv, mv):
+            with pytest.raises(TypeError):
+                a.constrain(v)
+
+    def test_yaml_entry(self):
+
+        a = BoolValuedVariant('foo', 'True')
+        expected = ('foo', True)
+        assert a.yaml_entry() == expected
+
+        a = BoolValuedVariant('foo', 'False')
+        expected = ('foo', False)
+        assert a.yaml_entry() == expected
+
+
+def test_from_node_dict():
+    a = MultiValuedVariant.from_node_dict('foo', ['bar'])
+    assert type(a) == MultiValuedVariant
+
+    a = MultiValuedVariant.from_node_dict('foo', 'bar')
+    assert type(a) == SingleValuedVariant
+
+    a = MultiValuedVariant.from_node_dict('foo', 'true')
+    assert type(a) == BoolValuedVariant
+
+
+
+class TestVariantSpec(object):
 
     def test_value_property(self):
         # Multiple values
         a = VariantSpec('foo', 'bar,baz')
+
         # Spaces are trimmed
         b = VariantSpec('foo', 'bar, baz')
-        self.assertEqual(a.value, ('bar', 'baz'))
-        self.assertEqual(a, b)
-        self.assertTrue('bar' in a and 'baz' in a)
+        assert a.value == ('bar', 'baz')
+        assert a == b
+        assert 'bar' in a and 'baz' in a
+
         # Boolean - True
         for x in (True, 'True', 'TRUE', 'TrUe'):
             a.value = x
-            self.assertEqual(a.value, True)
-            self.assertTrue(True in a)
+            assert a.value is True
+            assert True in a
+
         # Boolean - False
         for x in (False, 'False', 'FALSE', 'FaLsE'):
             a.value = x
-            self.assertEqual(a.value, False)
-            self.assertTrue(False in a)
+            assert a.value is False
+            assert False in a
 
     def test_copy(self):
         a = VariantSpec('foo', 'bar,baz')
         b = a.copy()
-        self.assertTrue(a == b and a is not b)
+        assert a == b and a is not b
 
     def test_empty_string(self):
         # Tests that an empty string will be
         # transformed in a tuple containing
         # an empty string
         a = VariantSpec('foo', '')
-        self.assertEqual(a._value, tuple())
+        assert a._value == tuple()
 
     def test_repr_and_str(self):
         a = VariantSpec('foo', 'bar,baz')
         b = eval(repr(a))
-        self.assertEqual(a, b)
-        self.assertEqual(str(a), 'foo=bar,baz')
+        assert a == b
+        assert str(a) == 'foo=bar,baz'
+
         b = VariantSpec('foo', True)
-        self.assertEqual(str(b), '+foo')
+        assert str(b) == '+foo'
+
         b.value = False
-        self.assertEqual(str(b), '~foo')
+        assert str(b) == '~foo'
 
     def test_hash(self):
         # Check that hashing does not depend on the order
@@ -78,11 +556,11 @@ class VariantSpecTest(unittest.TestCase):
         a = VariantSpec('foo', 'bar,baz,bac')
         b = VariantSpec('foo', 'bar,bac,baz')
         c = VariantSpec('foo', 'baz,bac,bar')
-        self.assertEqual(hash(a), hash(b))
-        self.assertEqual(hash(a), hash(c))
+        assert hash(a) == hash(b)
+        assert hash(a) == hash(c)
 
 
-class VariantTest(unittest.TestCase):
+class TestVariant(object):
 
     def test_validation(self):
         a = Variant(
@@ -95,31 +573,25 @@ class VariantTest(unittest.TestCase):
         # Valid vspec, shouldn't raise
         vspec = VariantSpec('foo', 'bar')
         a.validate_or_raise(vspec)
+
         # Multiple values are not allowed
         vspec.value = 'bar,baz'
-        self.assertRaises(
-            MultipleValuesInExclusiveVariantError,
-            a.validate_or_raise,
-            vspec
-        )
+        with pytest.raises(MultipleValuesInExclusiveVariantError):
+            a.validate_or_raise(vspec)
+
         # Inconsistent vspec
         vspec.name = 'FOO'
-        self.assertRaises(
-            InconsistentValidationError,
-            a.validate_or_raise,
-            vspec
-        )
+        with pytest.raises(InconsistentValidationError):
+            a.validate_or_raise(vspec)
+
         # Valid multi-value vspec
         a.exclusive = False
         vspec.name = 'foo'
         a.validate_or_raise(vspec)
         # Add an invalid value
         vspec.value = 'bar,baz,barbaz'
-        self.assertRaises(
-            InvalidVariantValueError,
-            a.validate_or_raise,
-            vspec
-        )
+        with pytest.raises(InvalidVariantValueError):
+            a.validate_or_raise(vspec)
 
     def test_callable_validator(self):
 
@@ -141,7 +613,8 @@ class VariantTest(unittest.TestCase):
         vspec.value = 2056
         a.validate_or_raise(vspec)
         vspec.value = 'foo'
-        self.assertRaises(InvalidVariantValueError, a.validate_or_raise, vspec)
+        with pytest.raises(InvalidVariantValueError):
+            a.validate_or_raise(vspec)
 
     def test_representation(self):
         a = Variant(
@@ -151,27 +624,22 @@ class VariantTest(unittest.TestCase):
             values=('bar', 'baz', 'foobar'),
             exclusive=True
         )
-        self.assertEqual(a.allowed_values, 'bar, baz, foobar')
+        assert a.allowed_values == 'bar, baz, foobar'
 
 
-class VariantMapTest(unittest.TestCase):
+class TestVariantMapTest(object):
 
     def test_invalid_values(self):
         # Value with invalid type
         a = VariantMap(None)
-        self.assertRaises(TypeError, a.__setitem__, 'foo', 2)
+        with pytest.raises(TypeError):
+            a.__setitem__('foo', 2)
+
         # Duplicate variant
         a['foo'] = VariantSpec('foo', 'bar,baz')
-        self.assertRaises(
-            DuplicateVariantError,
-            a.__setitem__,
-            'foo',
-            VariantSpec('foo', 'bar')
-        )
+        with pytest.raises(DuplicateVariantError):
+            a.__setitem__('foo', VariantSpec('foo', 'bar'))
+
         # Non matching names between key and vspec.name
-        self.assertRaises(
-            KeyError,
-            a.__setitem__,
-            'bar',
-            VariantSpec('foo', 'bar')
-        )
+        with pytest.raises(KeyError):
+            a.__setitem__('bar', VariantSpec('foo', 'bar'))

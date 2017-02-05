@@ -2058,6 +2058,7 @@ class Spec(object):
                     raise UnknownVariantError(spec.name, not_existing)
 
                 for name, v in [(x, y) for (x, y) in spec.variants.items()]:
+                    # FIXME:
                     pkg_variant = pkg_variants[name]
                     pkg_variant.validate_or_raise(v, pkg_cls)
 

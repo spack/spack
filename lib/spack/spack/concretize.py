@@ -251,6 +251,7 @@ class DefaultConcretizer(object):
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
+                    # FIXME: check here
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = VariantSpec(
