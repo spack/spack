@@ -50,6 +50,8 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('converge_install_2.3.16',
                    'converge_install_2.3.16')
 
+    # Download type
+
     def test_src(self):
         self.check('apache-ant-1.9.7-src',
                    'apache-ant-1.9.7')
@@ -62,13 +64,15 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('grib_api-1.17.0-Source',
                    'grib_api-1.17.0')
 
+    def test_full(self):
+        self.check('julia-0.4.3-full',
+                   'julia-0.4.3')
+
     def test_bin(self):
         self.check('apache-maven-3.3.9-bin',
                    'apache-maven-3.3.9')
 
-    def test_full(self):
-        self.check('julia-0.4.3-full',
-                   'julia-0.4.3')
+    # Download version
 
     def test_stable(self):
         self.check('libevent-2.0.21-stable',
@@ -82,6 +86,12 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('v1.9.5.1rel',
                    'v1.9.5.1')
 
+    def test_orig(self):
+        self.check('dash_0.5.5.1.orig',
+                   'dash_0.5.5.1')
+
+    # OS
+
     def test_linux(self):
         self.check('astyle_2.04_linux',
                    'astyle_2.04')
@@ -90,13 +100,23 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('install-tl-unx',
                    'install-tl')
 
-    def test_orig(self):
-        self.check('dash_0.5.5.1.orig',
-                   'dash_0.5.5.1')
+    def test_macos(self):
+        self.check('astyle_1.23_macosx',
+                   'astyle_1.23')
+        self.check('haxe-2.08-osx',
+                   'haxe-2.08')
 
-    def test_wheel(sefl):
+    # PyPI
+
+    def test_wheel(self):
         self.check('entrypoints-0.2.2-py2.py3-none-any.whl',
                    'entrypoints-0.2.2')
+
+    # Combinations of multiple patterns
+
+    def test_complex_all(self):
+        self.check('p7zip_9.04_src_all',
+                   'p7zip_9.04')
 
     def test_complex_run(self):
         self.check('cuda_8.0.44_linux.run',
@@ -124,6 +144,9 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('dakota-6.3-public.src',
                    'dakota-6.3')
 
+    def test_complex_universal(self):
+        self.check('synergy-1.3.6p2-MacOSX-Universal',
+                   'synergy-1.3.6p2')
 
 class UrlParseOffsetTest(unittest.TestCase):
 
@@ -471,10 +494,13 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         pass
 
     def plus_in_name(self):
+        # FIXME: We should probably auto-convert these to 'plus'
         self.check(
-            # FIXME: We should probably auto-convert this to 'plus'
             'gtk+', '2.24.31',
             'http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.31.tar.xz')
+        self.check(
+            'voro++', '0.4.6',
+            'http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz')
 
     def test_no_version(self):
         self.assert_not_detected('http://www.netlib.org/blas/blast-forum/cblas.tgz')
@@ -495,11 +521,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'otp', 'R15B03-1',
             'https://github.com/erlang/otp/tarball/OTP_R15B03-1')
 
-    def test_p7zip_version_style(self):
-        self.check(
-            'p7zip', '9.04',
-            'http://kent.dl.sourceforge.net/sourceforge/p7zip/p7zip_9.04_src_all.tar.bz2')
-
     def test_gloox_beta_style(self):
         self.check(
             'gloox', '1.0-beta7',
@@ -509,11 +530,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'sphinx', '1.10-beta',
             'http://sphinxsearch.com/downloads/sphinx-1.10-beta.tar.gz')
-
-    def test_astyle_verson_style(self):
-        self.check(
-            'astyle', '1.23',
-            'http://kent.dl.sourceforge.net/sourceforge/astyle/astyle_1.23_macosx.tar.gz')
 
     def test_ruby_version_style(self):
         self.check(
@@ -545,11 +561,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'apache-cassandra', '1.2.0-rc2',
             'http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz')
 
-    def test_pypy_version(self):
-        self.check(
-            'pypy', '1.4.1',
-            'http://pypy.org/download/pypy-1.4.1-osx.tar.bz2')
-
     def test_xaw3d_version(self):
         self.check(
             'xaw3d', '1.5E',
@@ -565,11 +576,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'grads', '2.0.1',
             'ftp://iges.org/grads/2.0/grads-2.0.1-bin-darwin9.8-intel.tar.gz')
 
-    def test_haxe_version(self):
-        self.check(
-            'haxe', '2.08',
-            'http://haxe.org/file/haxe-2.08-osx.tar.gz')
-
     def test_imap_version(self):
         self.check(
             'imap', '2007f',
@@ -579,11 +585,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'suite3270', '3.3.12ga7',
             'http://sourceforge.net/projects/x3270/files/x3270/3.3.12ga7/suite3270-3.3.12ga7-src.tgz')
-
-    def test_synergy_version(self):
-        self.check(
-            'synergy', '1.3.6p2',
-            'http://synergy.googlecode.com/files/synergy-1.3.6p2-MacOSX-Universal.zip')
 
     def test_scalasca_version(self):
         self.check(

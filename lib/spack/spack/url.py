@@ -122,24 +122,43 @@ def strip_version_suffixes(path):
     # NOTE: permanently
 
     suffix_regexes = [
+        # Download type
+        '[Ii]nstall',
+        'all',
         'src',
         '[Ss]ources?',
         'file',
-        'stable',
         'full',
         'single',
         'public',
-        '[Ff]inal',
-        'rel',
         'with[A-Za-z_-]+',
         'bin',
-        '[Ii]nstall',
-        'orig',
         'run',
+        '[Uu]niversal',
+        'jar',
+        'complete',
+
+        # Download version
+        'stable',
+        '[Ff]inal',
+        'rel',
+        'orig',
+
+        # Compiler
+        'intel',
+
+        # Arch
         'x64',
         'x86_64',
+
+        # OS
         '[Ll]inux(_64)?',
         '[Uu]ni?x',
+        '([Mm]ac)?[Oo][Ss][Xx]?',
+        '[Dd]arwin',
+
+        # PyPI
+        # FIXME: Probably need to add more to this
         'py2.py3-none-any.whl',
     ]
 
