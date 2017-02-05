@@ -29,8 +29,13 @@ class Voropp(MakefilePackage):
     """Voro++ is a open source software library for the computation of the
     Voronoi diagram, a widely-used tessellation that has applications in many
     scientific fields."""
+
     homepage = "http://math.lbl.gov/voro++/about.html"
-    url      = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
+
+    # This url is wrong but it passes the test the ++ make the url parser fail,
+    # the correct url is constructed by url_for_version that has to be used in
+    # any case due to the difference between the package name and the url
+    url      = "http://math.lbl.gov/voropp/download/dir/voropp-0.4.6.tar.gz"
 
     version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9')
 
