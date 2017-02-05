@@ -506,6 +506,19 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.assert_not_detected('http://www.netlib.org/blas/blast-forum/cblas.tgz')
         self.assert_not_detected('http://www.netlib.org/voronoi/triangle.zip')
 
+    def test_download_php(self):
+        # Name comes before download.php
+        self.check(
+            'sionlib', 30, '1.7.1', 59,
+            'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')
+        # Ignore download.php
+        self.check(
+            'slepc', 51, '3.6.2', 57,
+            'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz')
+        self.check(
+            'scientificpython', '2.8.1',
+            'https://sourcesup.renater.fr/frs/download.php/file/4411/ScientificPython-2.8.1.tar.gz')
+
     def test_erlang_version_style(self):
         self.check(
             'otp', 'R13B',

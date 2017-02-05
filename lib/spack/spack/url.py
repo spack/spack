@@ -298,7 +298,7 @@ def parse_version_offset(path):
 
         # namever
         # turbolinux702, nauty26r7
-        (r'^[A-Za-z+]+v?(\d[A-Za-z\d]*)$', stem),
+        (r'^[A-Za-z+]+(\d[A-Za-z\d]*)$', stem),
 
         # 3rd Pass: A single separator character is used
         # Assume name only contains letters
@@ -317,7 +317,7 @@ def parse_version_offset(path):
 
         # name.namever.ver
         # e.g. atlas3.11.34, visit2.10.1, geant4.10.01.p03
-        (r'^[A-Za-z+\.]+v?(\d[A-Za-z\d\.]*)$', stem),
+        (r'^[A-Za-z+\.]+(\d[A-Za-z\d\.]*)$', stem),
 
         # 4th Pass: Two separator characters are used
         # Names may contain digits, versions may contain letters
@@ -376,15 +376,13 @@ def parse_version_offset(path):
         # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
         (r'github\.com/[^/]+/[^/]+/releases/download/[A-Za-z+\._-]*v?(\d[A-Za-z\d\._-]*)/', path),  # noqa
 
-        # 7th Pass: Suffix queries
+        # 7th Pass: Query strings
 
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
         (r'\?ref=[A-Za-z+\._-]*v?(\d[A-Za-z\d\._-]*)$', suffix),
 
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'\?version=v?(\d[A-Za-z\d\._-]*)$', suffix),
-
-        # 8th Pass: Stem queries
 
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         (r'\?filename=[A-Za-z\d+-]+-v?(\d[A-Za-z\d\.]*)$', stem),
@@ -477,24 +475,56 @@ def parse_name_offset(path, v=None):
     # the name of the package. Thefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     name_regexes = [
-        (r'/sourceforge/([^/]+)/', path),
-        (r'github.com/[^/]+/[^/]+/releases/download/%s/(.*)-%s$' %
-         (v, v), path),
-        (r'/([^/]+)/(tarball|zipball)/', path),
-        (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
-        (r'github.com/[^/]+/([^/]+)/archive', path),
-        (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
-        (r'([^/]+)/download.php', path),
+        # 1st Pass: Common repositories
 
-        (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
-        (r'([^/]+)%s' % v, stem),
+        # GitHub: github.com/repo/name/
+        # e.g. https://github.com/nco/nco/archive/4.6.2.tar.gz
+        (r'github.com/[^/]+/([^/]+)', path),
+
+        # GitLab: gitlab.*/repo/name/
+        # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
+        (r'gitlab[^/]+/[^/]+/([^/]+)', path),
+
+        # Bitbucket: bitbucket.org/repo/name/
+        # e.g. https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2
+        (r'bitbucket.org/[^/]+/([^/]+)', path),
+
+        # 2nd Pass: Name followed by version in archive
+
+        # name-ver
+        # name_ver
+        # name.ver
+        (r'^([A-Za-z\d+\._-]+?)[\._-]v?{0}'.format(v), stem),
+
+        # namever
+        (r'^([A-Za-z\d+\._-]+){0}'.format(v), stem),
+
+        #(r'/([^/]+)[_.-](bin|stable|src|sources)[_.-]%s' % v, path),
+
+        #(r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
+        #(r'([^/]+)%s' % v, stem),
 
         # accept the path if name is not in stem.
-        (r'/([^/]+)[_.-]v?%s' % v, path),
-        (r'/([^/]+)%s' % v, path),
+        #(r'/([^/]+)[_.-]v?%s' % v, path),
+        #(r'/([^/]+)%s' % v, path),
 
-        (r'^([^/]+)[_.-]v?%s' % v, path),
-        (r'^([^/]+)%s' % v, path)
+        #(r'^([^/]+)[_.-]v?%s' % v, path),
+        #(r'^([^/]+)%s' % v, path)
+
+
+        # 4th Pass: Query strings
+
+        # ?filename=name-ver.ver
+        # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
+        (r'\?filename=([A-Za-z\d+-]+)-v?{0}$'.format(v), stem),
+
+        # ?package=name
+        # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
+        (r'\?package=([A-Za-z\d+-]+)', stem),
+
+        # download.php
+        # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        (r'([^/]+)/download.php$', path),
     ]
 
     for i, name_regex in enumerate(name_regexes):
