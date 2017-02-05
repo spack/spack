@@ -198,7 +198,6 @@ class Lammps(MakefilePackage):
             mkdirp(prefix.bin)
             install('lmp_{0}'.format(self.target_name), prefix.bin)
 
-
             if '+lib' in spec:
                 mkdirp(prefix.lib)
                 install('liblammps_{0}.{1}'.format(self.target_name,
