@@ -30,6 +30,6 @@ class Pcre2(AutotoolsPackage):
        libraries. These are useful for implementing regular expression
        pattern matching using the same syntax and semantics as Perl 5."""
     homepage = "http://www.pcre.org"""
-    url      = "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre2-10.20.tar.bz2"
+    url      = "https://ftp.pcre.org/pub/pcre/pcre2-10.20.tar.bz2"
 
     version('10.20', 'dcd027c57ecfdc8a6c3af9d0acf5e3f7')

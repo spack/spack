@@ -25,7 +25,7 @@
 import argparse
 import spack.modules
 
-description = "Add package to environment using dotkit."
+description = "add package to environment using dotkit"
 
 
 def setup_parser(subparser):
@@ -33,7 +33,7 @@ def setup_parser(subparser):
        message with -h. """
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help='Spec of package to use with dotkit.')
+        help='spec of package to use with dotkit')
 
 
 def use(parser, args):

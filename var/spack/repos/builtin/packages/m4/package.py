@@ -29,7 +29,7 @@ class M4(AutotoolsPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"
-    url      = "ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz"
 
     version('1.4.18', 'a077779db287adf4e12a035029002d28')
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
@@ -40,6 +40,8 @@ class M4(AutotoolsPackage):
             description="Build the libsigsegv dependency")
 
     depends_on('libsigsegv', when='+sigsegv')
+
+    build_directory = 'spack-build'
 
     def configure_args(self):
         spec = self.spec

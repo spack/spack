@@ -25,16 +25,14 @@
 from spack import *
 
 
-class RDatatable(RPackage):
-    """Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
-    fast add/modify/delete of columns by group using no copies at all, list
-    columns and a fast file reader (fread). Offers a natural and flexible
-    syntax, for faster development."""
+class RNumderiv(RPackage):
+    """Methods for calculating (usually) accurate numerical first and
+    second order derivatives."""
 
-    homepage = "https://github.com/Rdatatable/data.table/wiki"
-    url      = "https://cran.r-project.org/src/contrib/data.table_1.9.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
+    homepage = "https://cran.r-project.org/package=numDeriv"
+    url      = "https://cran.r-project.org/src/contrib/numDeriv_2016.8-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/numDeriv"
 
-    version('1.9.6', 'b1c0c7cce490bdf42ab288541cc55372')
+    version('2016.8-1', '30e486298d5126d86560095be8e8aac1')
 
-    depends_on('r-chron', type=('build', 'run'))
+    depends_on('r@2.11.1:')

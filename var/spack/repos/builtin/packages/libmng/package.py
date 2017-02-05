@@ -42,3 +42,7 @@ class Libmng(AutotoolsPackage):
         # jpeg requires stdio to beincluded before its headrs.
         filter_file(r'^(\#include \<jpeglib\.h\>)',
                     '#include<stdio.h>\n\\1', 'libmng_types.h')
+
+    @run_before('configure')
+    def clean_configure_directory(self):
+        make('distclean')

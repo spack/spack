@@ -22,38 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.url
-
-description = "Inspect urls used by packages in spack."
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-c', '--color', action='store_true',
-        help="Color the parsed version and name in the urls shown.  "
-             "Version will be cyan, name red.")
-    subparser.add_argument(
-        '-e', '--extrapolation', action='store_true',
-        help="Color the versions used for extrapolation as well."
-             "Additional versions are green, names magenta.")
+class RDomc(RPackage):
+    """Provides a parallel backend for the %dopar% function using
+    the multicore functionality of the parallel package."""
 
+    homepage = "https://cran.r-project.org/package=doMC"
+    url      = "https://cran.r-project.org/src/contrib/doMC_1.3.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/doMC"
 
-def urls(parser, args):
-    urls = set()
-    for pkg in spack.repo.all_packages():
-        url = getattr(pkg.__class__, 'url', None)
-        if url:
-            urls.add(url)
+    version('1.3.4', 'f965b09add9056e84f99a831dc3af7d1')
 
-        for params in pkg.versions.values():
-            url = params.get('url', None)
-            if url:
-                urls.add(url)
+    depends_on('r@2.14.0:')
 
-    for url in sorted(urls):
-        if args.color or args.extrapolation:
-            print spack.url.color_url(
-                url, subs=args.extrapolation, errors=True)
-        else:
-            print url
+    depends_on('r-foreach@1.2.0:', type=('build', 'run'))
+    depends_on('r-iterators@1.0.0:', type=('build', 'run'))

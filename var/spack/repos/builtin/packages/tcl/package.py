@@ -35,12 +35,15 @@ class Tcl(AutotoolsPackage):
        extensible."""
     homepage = "http://www.tcl.tk"
 
+    version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
     version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
     version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f')
     version('8.5.19', '0e6426a4ca9401825fbc6ecf3d89a326')
 
     depends_on('zlib')
+
+    configure_directory = 'unix'
 
     def url_for_version(self, version):
         base_url = 'http://prdownloads.sourceforge.net/tcl'
@@ -51,9 +54,6 @@ class Tcl(AutotoolsPackage):
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
         env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
                 self.spec.version.up_to(2))))
-
-    def build_directory(self):
-        return 'unix'
 
     @run_after('install')
     def symlink_tclsh(self):

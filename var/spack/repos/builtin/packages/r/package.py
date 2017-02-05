@@ -36,7 +36,7 @@ class R(AutotoolsPackage):
     Please consult the R project homepage for further information."""
 
     homepage = "https://www.r-project.org"
-    url = "http://cran.cnr.berkeley.edu/src/base/R-3/R-3.1.2.tar.gz"
+    url = "https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz"
 
     extendable = True
 
