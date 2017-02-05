@@ -32,7 +32,8 @@ class Voropp(Package):
     homepage = "http://math.lbl.gov/voro++/about.html"
     url      = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
 
-    version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9', url="http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz")
+    version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9',
+            url="http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz")
 
     def patch(self):
         filter_file(r'CC=g\+\+',

@@ -30,7 +30,7 @@ import string
 class Lammps(Package):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator."""
-    homepage = "http://www.example.com"
+    homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/stable_17Nov2016.tar.gz"
 
     version('17Nov2016', '8aecc58a39f9775203517c62a592d13b',
@@ -50,7 +50,7 @@ class Lammps(Package):
     depends_on('voropp', when='+voronoi')
     depends_on('netcdf+mpi', when='+user-nc-dump')
     depends_on('blas', when='+user-atc')
-    depends_on('lapack', when='+user-atc')7
+    depends_on('lapack', when='+user-atc')
 
     def setup_environment(self, spack_env, run_env):
         self.target_name = self.compiler.name
