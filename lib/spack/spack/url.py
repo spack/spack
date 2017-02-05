@@ -267,21 +267,21 @@ def parse_version_offset(path):
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
     version_regexes = [
-        # 0th Pass: No separator characters used
+        # 1st Pass: Version only
+        # Assume version only contains digits
+
+        # ver
+        # e.g. 3.2.7, 7.0.2-7, v3.3.0, v1_6_3
+        (r'^v?(\d[\d\._-]*)$', stem),
+
+        # 2nd Pass: No separator characters are used
         # Assume name only contains letters
 
         # namever
         # turbolinux702, nauty26r7
         (r'^[A-Za-z+]+v?(\d[A-Za-z\d]*)$', stem),
 
-        # 1st Pass: Version only
-        # Assume version only contains digits
-
-        # ver, vver
-        # e.g. 3.2.7, 7.0.2-7, v3.3.0, v1_6_3
-        (r'^v?(\d[\d\._-]*)$', stem),
-
-        # 2nd Pass: A single separator character is used
+        # 3rd Pass: A single separator character is used
         # Assume name only contains letters
 
         # name-name-ver-ver
@@ -300,7 +300,7 @@ def parse_version_offset(path):
         # e.g. atlas3.11.34, visit2.10.1, geant4.10.01.p03
         (r'^[A-Za-z+\.]+v?(\d[A-Za-z\d\.]*)$', stem),
 
-        # 3rd Pass: Two separator characters are used
+        # 4th Pass: Two separator characters are used
         # Names may contain digits, versions may contain letters
 
         # name-name-ver.ver
@@ -345,19 +345,19 @@ def parse_version_offset(path):
         # e.g. tap.py-1.6, backports.ssl_match_hostname-3.5.0.1
         (r'^[A-Za-z\d+\._]+-v?(\d[A-Za-z\d\.]*)$', stem),
 
-        # Specific VCS
+        # 5th Pass: Specific VCS
 
         # bazaar
         # e.g. libvterm-0+bzr681
         (r'bzr(\d[A-Za-z\d\._-]*)$', stem),
 
-        # Version in path
+        # 6th Pass: Version in path
 
         # github.com/repo/name/releases/download/vver/name
         # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
         (r'github\.com/[^/]+/[^/]+/releases/download/[A-Za-z+\._-]*v?(\d[A-Za-z\d\._-]*)/', path),  # noqa
 
-        # Suffix queries
+        # 7th Pass: Suffix queries
 
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
         (r'\?ref=[A-Za-z+\._-]*v?(\d[A-Za-z\d\._-]*)$', suffix),
@@ -365,7 +365,7 @@ def parse_version_offset(path):
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'\?version=v?(\d[A-Za-z\d\._-]*)$', suffix),
 
-        # Stem queries
+        # 8th Pass: Stem queries
 
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         (r'\?filename=[A-Za-z\d+-]+-v?(\d[A-Za-z\d\.]*)$', stem),

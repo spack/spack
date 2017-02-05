@@ -38,9 +38,6 @@ class Panda(Package):
     depends_on("cmake", type="build")
     depends_on("mpi")
 
-    def url_for_version(self, version):
-        return "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-{0}.tar".format(version)
-
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake("..", *std_cmake_args)

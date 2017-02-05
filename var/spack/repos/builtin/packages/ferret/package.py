@@ -42,10 +42,6 @@ class Ferret(Package):
     depends_on("readline")
     depends_on("zlib")
 
-    def url_for_version(self, version):
-        return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
-            version.joined)
-
     def patch(self):
         hdf5_prefix = self.spec['hdf5'].prefix
         netcdff_prefix = self.spec['netcdf-fortran'].prefix
