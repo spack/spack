@@ -34,6 +34,8 @@ import spack.repository
 from llnl.util import tty
 
 description = "remove an installed package"
+section = "basic"
+level = "short"
 
 error_message = """You can either:
     a) use a more specific spec, or

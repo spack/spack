@@ -22,16 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
+
 description = "get help on spack and its commands"
+section = "help"
+level = "short"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('help_command', nargs='?', default=None,
-                           help='command to get help on')
+    help_cmd_group = subparser.add_mutually_exclusive_group()
+    help_cmd_group.add_argument('help_command', nargs='?', default=None,
+                                help='command to get help on')
+
+    help_all_group = subparser.add_mutually_exclusive_group()
+    help_all_group.add_argument(
+        '-a', '--all', action='store_const', const='long', default='short',
+        help='print all available commands')
 
 
 def help(parser, args):
     if args.help_command:
+        parser.add_command(args.help_command)
         parser.parse_args([args.help_command, '-h'])
     else:
-        parser.print_help()
+        sys.stdout.write(parser.format_help(level=args.all))

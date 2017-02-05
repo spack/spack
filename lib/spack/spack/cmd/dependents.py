@@ -31,6 +31,8 @@ import spack.store
 import spack.cmd
 
 description = "show installed packages that depend on another"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):

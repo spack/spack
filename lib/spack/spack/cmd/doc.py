@@ -24,6 +24,8 @@
 ##############################################################################
 
 description = "run pydoc from within spack"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

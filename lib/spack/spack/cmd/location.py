@@ -31,6 +31,8 @@ import spack
 import spack.cmd
 
 description = "print out locations of various directories used by Spack"
+section = "environment"
+level = "long"
 
 
 def setup_parser(subparser):
