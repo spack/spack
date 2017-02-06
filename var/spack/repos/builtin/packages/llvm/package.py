@@ -402,7 +402,16 @@ class Llvm(CMakePackage):
 
         return cmake_args
 
+<<<<<<< 5d055301c35add4aa3cb39cc736297c48f440b92
     @run_after('install')
     def post_install(self):
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
+=======
+        with working_dir('spack-build', create=True):
+            # NOT NEEDED os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
+            cmake(*cmake_args)
+            make()
+            make("install")
+            install_tree("bin", join_path(prefix, "libexec", "llvm"))
+>>>>>>> fix flake8 errors

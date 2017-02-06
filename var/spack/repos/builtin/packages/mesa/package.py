@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
 
 
 class Mesa(AutotoolsPackage):
@@ -39,7 +38,6 @@ class Mesa(AutotoolsPackage):
     version('13.0.1', '8415d4bb7837e6cfb0c819fdd19a643b')
     version('13.0.0', '7205edb90d0396dc26d049fa495f6fd1')
    
-
     # General dependencies
     depends_on('python@2.6.4:')
     depends_on('py-mako@0.3.4:', type=('build', 'run'))
@@ -52,7 +50,7 @@ class Mesa(AutotoolsPackage):
     depends_on("llvm@3.0", when='@8.0.5~gallium')
     depends_on("libxml2+python", when='@8.0.5~gallium') #
     depends_on("llvm+link_dylib+utils", when='@9:+gallium')
-    #depends_on("llvm+shared_libs", when='@9:+gallium')
+    # depends_on("llvm+shared_libs", when='@9:+gallium')
 
     # For DRI and hardware acceleration
     depends_on('libpthread-stubs')
@@ -81,21 +79,22 @@ class Mesa(AutotoolsPackage):
         latest_mver = '11'
 
         if version < Version(latest_mver):
-            base = Mesa.base_url +"/older-versions/%s.x" % ( version.up_to(1) )
+            base = Mesa.base_url + "/older-versions/%s.x" % (version.up_to(1))
         else:
-            base=Mesa.base_url 
-        if version > Version('10.4') :
-            name='mesa'
+            base = Mesa.base_url 
+        if version > Version('10.4'):
+            name = 'mesa'
         else:
-            name='MesaLib'
-        ret=base + "/%s/%s-%s.tar.gz" % ( version,name,version)
+            name = 'MesaLib'
+        ret = base + "/%s/%s-%s.tar.gz" % (version, name, version)
         return ret
 
-    def check_variants(self,var='',ver='',ref=''):
-        if var and ver :
-            error = "to be safe avoid '{variant}' with version '{version}' see:\n {reference}"
+    def check_variants(self, var='', ver='', ref=''):
+        if var and ver:
+            error = "to be safe avoid '{variant}' with version '{version}' see:\n {reference}" # noqa
             if var in self.spec and self.spec.satisfies(ver):
-                raise RuntimeError(error.format(variant=var,version=ver,reference=ref))
+                raise RuntimeError(
+                    error.format(variant=var, version=ver, reference=ref))
 
 #    def install(self, spec, prefix):
 #        configure('--prefix={0}'.format(prefix))
@@ -117,13 +116,12 @@ class Mesa(AutotoolsPackage):
                     '--with-gallium-drivers=swrast,swr',
                     '--disable-dri', '--with-dri-drivers=',
                     '--disable-egl', '--with-egl-platforms=', '--disable-gb',
-                    '--disable-osmesa', '--enable-gallium-osmesa' 
-            ]
-            if '+shared_libs' in self.spec['llvm'] :
+                    '--disable-osmesa', '--enable-gallium-osmesa']
+            if '+shared_libs' in self.spec['llvm']:
                 args.append('--enable-llvm-shared-libs')
             else:
                 args.append('--disable-llvm-shared-libs')
-            args.append('--with-llvm-prefix='+self.spec['llvm'].prefix)
+            args.append('--with-llvm-prefix=' + self.spec['llvm'].prefix)
         return args
 
     def setup_environment(self, spack_env, run_env):
@@ -137,12 +135,8 @@ class Mesa(AutotoolsPackage):
                                  join_path(self.prefix, 'lib'))
             run_env.set('GALLIUM_DRIVER', 'swr')
 
-
       
 #        options = ['-prefix=%s' % prefix]
-
 #        configure(*options)
-
 #        make()
 #        make('install')
-
