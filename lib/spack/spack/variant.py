@@ -225,7 +225,7 @@ class MultiValuedVariant(object):
         """Returns true if other.name == self.name and other.value is
         a strict subset of self. Does not try to validate.
 
-        :param variant other: constraint to be met for the method to
+        :param other: constraint to be met for the method to
             return True
         :return: True or False
         :rtype: bool
@@ -247,7 +247,7 @@ class MultiValuedVariant(object):
         As there is no semantic check, two VariantSpec are compatible if
         either they contain the same value or they are both multi-valued.
 
-        :param VariantSpec other: instance against which we test compatibility
+        :param other: instance against which we test compatibility
         :return: True or False
         :rtype: bool
         """
@@ -266,7 +266,7 @@ class MultiValuedVariant(object):
         instances are multi-valued. Returns True if self changed,
         False otherwise.
 
-        :param VariantSpec other: instance against which we constrain self
+        :param other: instance against which we constrain self
         :return: True or False
         :rtype: bool
         """
@@ -278,7 +278,7 @@ class MultiValuedVariant(object):
         if self.name != other.name:
             raise ValueError('variants must have the same name')
         old_value = self.value
-        self.value = ','.join(self.value + other.value)
+        self.value = ','.join(sorted(set(self.value + other.value)))
         return old_value != self.value
 
     def yaml_entry(self):

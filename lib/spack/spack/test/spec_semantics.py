@@ -24,7 +24,9 @@
 ##############################################################################
 import spack.architecture
 import pytest
+
 from spack.spec import *
+from spack.variant import InvalidVariantValueError
 
 
 def check_satisfies(spec, anon_spec, concrete=False):
@@ -264,22 +266,63 @@ class TestSpecSematics(object):
                         'foo="bar"')
 
     def test_unsatisfiable_multi_value_variant(self):
-        # these should fail for concrete specs
-        check_unsatisfiable('multivalue_variant foo="bar"',
-                            'multivalue_variant foo="bar,baz"',
-                            concrete=True)
 
-        check_unsatisfiable('multivalue_variant foo="bar,baz"',
-                            'multivalue_variant foo="bar,baz,quux"',
-                            concrete=True)
+        # Semantics for a multi-valued variant is different
+        # Depending on whether the spec is concrete or not
+
+        a = Spec('multivalue_variant foo="bar"', concrete=True)
+        spec_str = 'multivalue_variant foo="bar,baz"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # A concrete spec cannot be constrained further
+        with pytest.raises(UnsatisfiableSpecError):
+            a.constrain(b)
+
+        a = Spec('multivalue_variant foo="bar"')
+        spec_str = 'multivalue_variant foo="bar,baz"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # An abstract spec can instead be constrained
+        assert a.constrain(b)
+
+        a = Spec('multivalue_variant foo="bar,baz"', concrete=True)
+        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # A concrete spec cannot be constrained further
+        with pytest.raises(UnsatisfiableSpecError):
+            a.constrain(b)
+
+        a = Spec('multivalue_variant foo="bar,baz"')
+        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # An abstract spec can instead be constrained
+        assert a.constrain(b)
+        # ...but will fail during concretization if there are
+        # values in the variant that are not allowed
+        with pytest.raises(InvalidVariantValueError):
+            a.concretize()
+
+        # FIXME: remove after having checked the correctness of the semantics
+        # check_unsatisfiable('multivalue_variant foo="bar,baz"',
+        #                     'multivalue_variant foo="bar,baz,quux"',
+        #                     concrete=True)
+        # check_unsatisfiable('multivalue_variant foo="bar,baz"',
+        #                     'multivalue_variant foo="bar,baz,quux"',
+        #                     concrete=True)
 
         # but succeed for abstract ones (b/c they COULD satisfy the
         # constraint if constrained)
-        check_satisfiable('multivalue_variant foo="bar"',
-                          'multivalue_variant foo="bar,baz"')
+        # check_satisfies('multivalue_variant foo="bar"',
+        #                 'multivalue_variant foo="bar,baz"')
 
-        check_satisfiable('multivalue_variant foo="bar,baz"',
-                          'multivalue_variant foo="bar,baz,quux"')
+        # check_satisfies('multivalue_variant foo="bar,baz"',
+        #                 'multivalue_variant foo="bar,baz,quux"')
 
     def test_unsatisfiable_variant_types(self):
         # These should fail due to incompatible types

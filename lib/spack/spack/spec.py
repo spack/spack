@@ -2075,6 +2075,17 @@ class Spec(object):
 
         Returns True if the spec changed as a result, False if not.
         """
+        # If we are trying to constrain a concrete spec, either the spec
+        # already satisfies the constraint (and the method returns False)
+        # or it raises an exception
+        if self.concrete:
+            if self.satisfies(other):
+                return False
+            else:
+                raise UnsatisfiableSpecError(
+                    self, other, 'constrain a concrete spec'
+                )
+
         other = self._autospec(other)
 
         if not (self.name == other.name or
