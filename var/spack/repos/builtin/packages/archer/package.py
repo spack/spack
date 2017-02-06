@@ -48,7 +48,6 @@ class Archer(Package):
                 '-DCMAKE_C_COMPILER=clang',
                 '-DCMAKE_CXX_COMPILER=clang++',
                 '-DOMP_PREFIX:PATH=%s' % spec['llvm-openmp-ompt'].prefix,
-                '-DLIBOMP_TSAN_SUPPORT=TRUE',
             ])
 
             cmake('..', *cmake_args)
