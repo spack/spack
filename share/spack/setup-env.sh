@@ -198,3 +198,10 @@ _sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack
 _sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+
+#
+# Add programmable tab completion for Bash
+#
+if [ -n "${BASH_VERSION:-}" ]; then
+    source $_sp_share_dir/spack-completion.bash
+fi
