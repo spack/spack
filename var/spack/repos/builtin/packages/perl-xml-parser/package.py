@@ -44,22 +44,22 @@ import os
 class PerlXmlParser(Package):
     """Perl xml parser module reported from linux from scratch"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.linuxfromscratch.org/blfs/view/7.5/general/perl-modules.html#perl-xml-parser"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/XML-Parser-2.41.tar.gz"
 
-    #version('44_01', '223f524d4ab3896e5149ec656f8561cd')
-    #version('2.44' , 'af4813fe3952362451201ced6fbce379')
     version('2.41' , 'c320d2ffa459e6cdc6f9f59c1185855e')
 
-    # FIXME: Add dependencies if required.
     depends_on('perl', type='build')
     depends_on('expat')
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
+        # FIXME: Here we rely on default perl extension install that installs
+        # within perl installation prefix, this is a hidden install side effect
+        # and does not allow to uninstall the extension
         perl = which('perl')
         perl('Makefile.PL')
         make()
         make('install')
-        touch(os.path.join(prefix,'nothin.installed.here-void.file.to.fool.install.check.txt'))
+        # HACK we have to touch a file in order to fool check on void prefix
+        touch(os.path.join(prefix,
+              'nothin.installed.here-void.file.to.fool.install.check.txt'))
