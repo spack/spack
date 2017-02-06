@@ -51,7 +51,9 @@ class LlvmOpenmpOmpt(Package):
                 '-DCMAKE_C_COMPILER=clang',
                 '-DCMAKE_CXX_COMPILER=clang++',
                 '-DCMAKE_BUILD_TYPE=Release',
-                '-DLIBOMP_TSAN_SUPPORT=TRUE'
+                '-DLIBOMP_OMPT_SUPPORT=on',
+                '-DLIBOMP_OMPT_BLAME=on',
+                '-DLIBOMP_OMPT_TRACE=on'
             ])
 
             cmake('..', *cmake_args)
