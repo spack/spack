@@ -24,11 +24,12 @@
 ##############################################################################
 from spack import *
 
+
 class Turbovnc(Package):
     """TurboVNC is a derivative of VNC (Virtual Network Computing) 
  that is tuned to provide peak performance for 3D and video workloads.
- TurboVNC was originally a fork of TightVNC 1.3.x, 
- on the surface, the X server and Windows viewer still behave similarly to their parents."""
+ TurboVNC was originally a fork of TightVNC 1.3.x, on the surface, 
+ the X server and Windows viewer still behave similarly to their parents."""
     # FIXME: add a proper url for your package's homepage here.
     homepage = "http://www.turbovnc.org/"
     url      = "http://downloads.sourceforge.net/project/turbovnc/2.0.1/turbovnc-2.0.1.tar.gz"
@@ -46,7 +47,6 @@ class Turbovnc(Package):
    
     depends_on('cmake', type='build')
     depends_on("libjpeg-turbo")
-    #depends_on("libjpeg-turbo@1.5.1", when='@2.1')
     depends_on("openssl")
     depends_on("pam")
     depends_on("libx11")
@@ -69,9 +69,10 @@ class Turbovnc(Package):
             msg = 'turbovnc does not compile with openssl 1.1 '
             raise RuntimeError(msg)
 
-
     def install(self, spec, prefix):
+        
         self.validate(spec)
+
         def feature_to_bool(feature, on='ON', off='OFF'):
             if feature in spec:
                 return on
@@ -80,12 +81,13 @@ class Turbovnc(Package):
 #        rel_path=layout.relative_path_for_spec(spec)
         feature_args = []
         # FIXME: Modify the configure line to suit your build system here.
-        if not '+java' in spec:
-            feature_args.append('-DTVNC_BUILDJAVA=%s' % feature_to_bool('+java'))
-            feature_args.append('-DTVNC_BUILDNATIVE=%s' % feature_to_bool('+java'))
+        if '+java' not in spec:
+            feature_args.append(
+                '-DTVNC_BUILDJAVA=%s' % feature_to_bool('+java'))
+            feature_args.append(
+                '-DTVNC_BUILDNATIVE=%s' % feature_to_bool('+java'))
         feature_args.append('-DCMAKE_VERBOSE_MAKEFILE=ON')
         feature_args.extend(std_cmake_args)
-        print ("------------feature_args-->" , feature_args)
         cmake('.', *feature_args)
 
         # FIXME: Add logic to build and install here
