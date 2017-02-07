@@ -26,7 +26,7 @@ import spack.architecture
 import pytest
 
 from spack.spec import *
-from spack.variant import InvalidVariantValueError
+from spack.variant import *
 
 
 def check_satisfies(spec, anon_spec, concrete=False):
@@ -306,6 +306,20 @@ class TestSpecSematics(object):
         # ...but will fail during concretization if there are
         # values in the variant that are not allowed
         with pytest.raises(InvalidVariantValueError):
+            a.concretize()
+
+        # This time we'll try to set a single-valued variant
+        a = Spec('multivalue_variant fee="bar"')
+        spec_str = 'multivalue_variant fee="baz"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # A variant cannot be parsed as single-valued until we try to
+        # concretize. This means that we can constrain the variant above
+        assert a.constrain(b)
+        # ...but will fail during concretization if there are
+        # multiple values set
+        with pytest.raises(MultipleValuesInExclusiveVariantError):
             a.concretize()
 
         # FIXME: remove after having checked the correctness of the semantics

@@ -37,9 +37,17 @@ class MultivalueVariant(Package):
     variant('debug', default=False, description='Debug variant')
     variant(
         'foo',
-        description='Muti-value non-exclusive variant',
+        description='Multi-valued variant',
         values=('bar', 'baz', 'barbaz'),
         exclusive=False
+    )
+
+    variant(
+        'fee',
+        description='Single-valued variant',
+        default='bar',
+        values=('bar', 'baz', 'barbaz'),
+        exclusive=True
     )
 
     depends_on('mpi')
