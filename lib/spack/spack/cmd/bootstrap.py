@@ -22,86 +22,65 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
-
 import spack
-from spack.util.executable import ProcessError, which
+import spack.cmd
+import spack.cmd.common.arguments as arguments
 
-_SPACK_UPSTREAM = 'https://github.com/llnl/spack'
-
-description = "create a new installation of spack in another prefix"
-section = "admin"
-level = "long"
+description = "Bootstrap packages needed for spack to run smoothly"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-r', '--remote', action='store', dest='remote',
-        help="name of the remote to bootstrap from", default='origin')
+        '-j', '--jobs', action='store', type=int,
+        help="explicitly set number of make jobs. default is #cpus")
     subparser.add_argument(
-        'prefix',
-        help="names of prefix where we should install spack")
+        '--keep-prefix', action='store_true', dest='keep_prefix',
+        help="don't remove the install prefix if installation fails")
+    subparser.add_argument(
+        '--keep-stage', action='store_true', dest='keep_stage',
+        help="don't remove the build stage if installation succeeds")
+    subparser.add_argument(
+        '-n', '--no-checksum', action='store_true', dest='no_checksum',
+        help="do not check packages against checksum")
+    subparser.add_argument(
+        '-v', '--verbose', action='store_true', dest='verbose',
+        help="display verbose build output while installing")
+
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
+
+    subparser.add_argument(
+        '--run-tests', action='store_true', dest='run_tests',
+        help="run package level tests during installation"
+    )
 
 
-def get_origin_info(remote):
-    git_dir = join_path(spack.prefix, '.git')
-    git = which('git', required=True)
-    try:
-        branch = git('symbolic-ref', '--short', 'HEAD', output=str)
-    except ProcessError:
-        branch = 'develop'
-        tty.warn('No branch found; using default branch: %s' % branch)
-    if remote == 'origin' and \
-       branch not in ('master', 'develop'):
-        branch = 'develop'
-        tty.warn('Unknown branch found; using default branch: %s' % branch)
-    try:
-        origin_url = git(
-            '--git-dir=%s' % git_dir,
-            'config', '--get', 'remote.%s.url' % remote,
-            output=str)
-    except ProcessError:
-        origin_url = _SPACK_UPSTREAM
-        tty.warn('No git repository found; '
-                 'using default upstream URL: %s' % origin_url)
-    return (origin_url.strip(), branch.strip())
+def bootstrap(parser, args, **kwargs):
+    kwargs.update({
+        'keep_prefix': args.keep_prefix,
+        'keep_stage': args.keep_stage,
+        'install_deps': 'dependencies',
+        'make_jobs': args.jobs,
+        'run_tests': args.run_tests,
+        'verbose': args.verbose,
+        'dirty': args.dirty
+    })
 
+    # Define list of specs which need to be installed
+    needed_specs = ['environment-modules~X']
 
-def bootstrap(parser, args):
-    origin_url, branch = get_origin_info(args.remote)
-    prefix = args.prefix
-
-    tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
-
-    if os.path.isfile(prefix):
-        tty.die("There is already a file at %s" % prefix)
-
-    mkdirp(prefix)
-
-    if os.path.exists(join_path(prefix, '.git')):
-        tty.die("There already seems to be a git repository in %s" % prefix)
-
-    files_in_the_way = os.listdir(prefix)
-    if files_in_the_way:
-        tty.die("There are already files there! "
-                "Delete these files before boostrapping spack.",
-                *files_in_the_way)
-
-    tty.msg("Installing:",
-            "%s/bin/spack" % prefix,
-            "%s/lib/spack/..." % prefix)
-
-    os.chdir(prefix)
-    git = which('git', required=True)
-    git('init', '--shared', '-q')
-    git('remote', 'add', 'origin', origin_url)
-    git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
-                           '-n', '-q')
-    git('reset', '--hard', 'origin/%s' % branch, '-q')
-    git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
-
-    tty.msg("Successfully created a new spack in %s" % prefix,
-            "Run %s/bin/spack to use this installation." % prefix)
+    for needed_spec in needed_specs:
+        tty.msg("Need %s" % needed_spec)
+        installed_specs = spack.store.db.query(needed_spec)
+        if(len(installed_specs) == 0):
+            possible_specs = spack.cmd.parse_specs(needed_spec,
+                                                   concretize=True)
+            spec = possible_specs[0]
+            tty.msg("Installing %s to satisfy need for %s" %
+                    (spec, needed_spec))
+            kwargs['explicit'] = True
+            package = spack.repo.get(spec)
+            package.do_install(**kwargs)
+        else:
+            tty.msg("%s Already Installed" % needed_spec)
