@@ -47,6 +47,7 @@ class PyGiss(Package):
     depends_on('py-proj')
     depends_on('py-scipy')
     depends_on('py-six')
+    depends_on('py-udunits')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix=%s' % prefix)
