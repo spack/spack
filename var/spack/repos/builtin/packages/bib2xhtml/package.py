@@ -33,9 +33,6 @@ class Bib2xhtml(Package):
 
     version('3.0-15-gf506', 'a26ba02fe0053bbbf2277bdf0acf8645')
 
-    def url_for_version(self, v):
-        return ('http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v%s.tar.gz' % v)
-
     def install(self, spec, prefix):
         # Add the bst include files to the install directory
         bst_include = join_path(prefix.share, 'bib2xhtml')

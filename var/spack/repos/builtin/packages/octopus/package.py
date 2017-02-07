@@ -30,16 +30,10 @@ class Octopus(Package):
     theory code."""
 
     homepage = "http://www.tddft.org/programs/octopus/"
-    base_url = "http://www.tddft.org/programs/octopus/down.php?file="
+    url      = "http://www.tddft.org/programs/octopus/down.php?file=6.0/octopus-6.0.tar.gz"
 
     version('6.0', '5d1168c2a8d7fd9cb9492eaebaa7182e')
     version('5.0.1', '2b6392ab67b843f9d4ca7413fc07e822')
-
-    # Sample url is:
-    # "http://www.tddft.org/programs/octopus/down.php?file=5.0.1/octopus-5.0.1.tar.gz"
-    def url_for_version(self, version):
-        return '{0}/{1}/octopus-{1}.tar.gz'.format(Octopus.base_url, 
-                                                   version.dotted)
 
     variant('scalapack', default=False,
             description='Compile with Scalapack')
@@ -96,12 +90,12 @@ class Octopus(Package):
         if '+netcdf' in spec:
             args.extend([
                 '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
-                '--with-netcdf-include=%s' % 
+                '--with-netcdf-include=%s' %
                 spec['netcdf-fortran'].prefix.include,
             ])
         if '+arpack-ng' in spec:
             args.extend([
-                '--with-arpack={0}'.format(arpack.joined()), 
+                '--with-arpack={0}'.format(arpack.joined()),
             ])
         if '+scalapack' in spec:
             args.extend([

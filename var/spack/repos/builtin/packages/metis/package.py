@@ -37,7 +37,8 @@ class Metis(Package):
        partitioning schemes."""
 
     homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
-    base_url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
+    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
+    list_url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD"
 
     version('5.1.0', '5465e67079419a69e0116de24fce58fe')
     version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
@@ -55,8 +56,11 @@ class Metis(Package):
     patch('install_gklib_defs_rename.patch', when='@5:')
 
     def url_for_version(self, version):
-        verdir = 'OLD/' if version < Version('4.0.3') else ''
-        return '%s/%smetis-%s.tar.gz' % (Metis.base_url, verdir, version)
+        url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
+        if version < Version('4.0.3'):
+            url += "/OLD"
+        url += "/metis-{0}.tar.gz".format(version)
+        return url
 
     @when('@:4')
     def patch(self):
@@ -187,7 +191,7 @@ class Metis(Package):
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
         else:
-            # Remove all RPATH options 
+            # Remove all RPATH options
             # (RPATHxxx options somehow trigger cmake to link dynamically)
             rpath_options = []
             for o in options:

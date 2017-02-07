@@ -29,15 +29,12 @@ class Cppad(CMakePackage):
     """A Package for Differentiation of C++ Algorithms."""
 
     homepage = "https://www.coin-or.org/CppAD/"
+    url      = "http://www.coin-or.org/download/source/CppAD/cppad-20170114.gpl.tgz"
 
     version('20170114', '565a534dc813fa1289764222cd8c11ea')
     version('develop', git='https://github.com/coin-or/CppAD.git')
 
     depends_on('cmake', type='build')
-
-    def url_for_version(self, version):
-        """Handle version-based custom URLs."""
-        return "http://www.coin-or.org/download/source/CppAD/cppad-%s.gpl.tgz" % (version)
 
     def cmake_args(self):
         # This package does not obey CMAKE_INSTALL_PREFIX

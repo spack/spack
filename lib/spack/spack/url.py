@@ -144,10 +144,12 @@ def strip_version_suffixes(path):
         'rel',
         'orig',
 
-        # Compiler
-        'intel',
+        # License
+        'gpl',
 
         # Arch
+        'intel',
+        'amd64',
         'x64',
         'x86_64',
 

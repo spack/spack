@@ -52,10 +52,6 @@ class Gource(AutotoolsPackage):
     parallel = False
     force_autoreconf = True
 
-    def url_for_version(self, version):
-        tmp = 'https://github.com/acaudwell/Gource/releases/download/gource-{0}/gource-{0}.tar.gz'  # NOQA: ignore=E501
-        return tmp.format(version.dotted)
-
     def configure_args(self):
         spec = self.spec
         return [

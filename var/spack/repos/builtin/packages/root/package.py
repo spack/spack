@@ -83,7 +83,3 @@ class Root(Package):
         spack_env.set('ROOTSYS', self.prefix)
         spack_env.set('ROOT_VERSION', 'v6')
         spack_env.prepend_path('PYTHONPATH', self.prefix.lib)
-
-    def url_for_version(self, version):
-        """Handle ROOT's unusual version string."""
-        return "https://root.cern.ch/download/root_v%s.source.tar.gz" % version

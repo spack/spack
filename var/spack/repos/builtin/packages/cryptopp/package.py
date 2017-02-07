@@ -36,14 +36,11 @@ class Cryptopp(Package):
     """
 
     homepage = "http://www.cryptopp.com"
+    url      = "http://www.cryptopp.com/cryptopp563.zip"
 
-    version('5.6.3', '3c5b70e2ec98b7a24988734446242d07')
-    version('5.6.2', '7ed022585698df48e65ce9218f6c6a67')
-    version('5.6.1', '96cbeba0907562b077e26bcffb483828')
-
-    def url_for_version(self, version):
-        url = "{0}/{1}{2}.zip"
-        return url.format(self.homepage, self.name, version.joined)
+    version('563', '3c5b70e2ec98b7a24988734446242d07')
+    version('562', '7ed022585698df48e65ce9218f6c6a67')
+    version('561', '96cbeba0907562b077e26bcffb483828')
 
     def install(self, spec, prefix):
         make()

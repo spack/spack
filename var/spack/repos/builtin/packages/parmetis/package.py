@@ -33,7 +33,8 @@ class Parmetis(Package):
        computing fill-reducing orderings of sparse matrices."""
 
     homepage = 'http://glaros.dtc.umn.edu/gkhome/metis/parmetis/overview'
-    base_url = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis'
+    url      = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz'
+    list_url = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD'
 
     version('4.0.3', 'f69c479586bf6bb7aff6a9bc0c739628')
     version('4.0.2', '0912a953da5bb9b5e5e10542298ffdce')
@@ -54,8 +55,11 @@ class Parmetis(Package):
     patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
 
     def url_for_version(self, version):
-        verdir = 'OLD/' if version < Version('3.2.0') else ''
-        return '%s/%sparmetis-%s.tar.gz' % (Parmetis.base_url, verdir, version)
+        url = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis'
+        if version < Version('3.2.0'):
+            url += '/OLD'
+        url += '/parmetis-{0}.tar.gz'.format(version)
+        return url
 
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
@@ -72,7 +76,7 @@ class Parmetis(Package):
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
         else:
-            # Remove all RPATH options 
+            # Remove all RPATH options
             # (RPATHxxx options somehow trigger cmake to link dynamically)
             rpath_options = []
             for o in options:

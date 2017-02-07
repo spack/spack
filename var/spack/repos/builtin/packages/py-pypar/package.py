@@ -38,6 +38,3 @@ class PyPypar(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
 
     build_directory = 'source'
-
-    def url_for_version(self, version):
-        return "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-%s.tgz" % version

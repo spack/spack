@@ -30,7 +30,7 @@ class Silo(Package):
        data to binary, disk files."""
 
     homepage = "http://wci.llnl.gov/simulation/computer-codes/silo"
-    base_url = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo"
+    url      = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz"
 
     version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8')
     version('4.9', 'a83eda4f06761a86726e918fc55e782a')
@@ -66,6 +66,3 @@ class Silo(Package):
 
         make()
         make('install')
-
-    def url_for_version(self, version):
-        return '%s/silo-%s/silo-%s.tar.gz' % (Silo.base_url, version, version)

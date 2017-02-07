@@ -44,28 +44,24 @@ class Trilinos(CMakePackage):
     A unique design feature of Trilinos is its focus on packages.
     """
     homepage = "https://trilinos.org/"
-    base_url = "https://github.com/trilinos/Trilinos/archive"
+    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
     version('develop',
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
             git='https://github.com/trilinos/Trilinos.git', tag='master')
-    version('12.10.1', '40f28628b63310f9bd17c26d9ebe32b1')
-    version('12.8.1', '01c0026f1e2050842857db941060ecd5')
-    version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
-    version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
-    version('12.6.2', 'dc7f9924872778798149ecadd81605a5')
-    version('12.6.1', '8aecea78546e7558f63ecc9a3b2949da')
-    version('12.4.2', '4c25a757d86bde3531090bd900a2cea8')
-    version('12.2.1', '85d011f7f99a776a9c6c2625e8cb721c')
-    version('12.0.1', 'bcb3fdefd14d05dd6aa65ba4c5b9aa0e')
-    version('11.14.3', 'dea62e57ebe51a886bee0b10a2176969')
-    version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
-    version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
-
-    def url_for_version(self, version):
-        return '%s/trilinos-release-%s.tar.gz' % \
-            (Trilinos.base_url, version.dashed)
+    version('12-10-1', '40f28628b63310f9bd17c26d9ebe32b1')
+    version('12-8-1',  '01c0026f1e2050842857db941060ecd5')
+    version('12-6-4',  'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
+    version('12-6-3',  '8de5cc00981a0ca0defea6199b2fe4c1')
+    version('12-6-2',  'dc7f9924872778798149ecadd81605a5')
+    version('12-6-1',  '8aecea78546e7558f63ecc9a3b2949da')
+    version('12-4-2',  '4c25a757d86bde3531090bd900a2cea8')
+    version('12-2-1',  '85d011f7f99a776a9c6c2625e8cb721c')
+    version('12-0-1',  'bcb3fdefd14d05dd6aa65ba4c5b9aa0e')
+    version('11-14-3', 'dea62e57ebe51a886bee0b10a2176969')
+    version('11-14-2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
+    version('11-14-1', 'b7760b142eef66c79ed13de7c9560f81')
 
     variant('xsdkflags',        default=False,
             description='Compile using the default xSDK configuration')

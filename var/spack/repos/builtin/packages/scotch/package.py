@@ -32,7 +32,6 @@ class Scotch(Package):
 
     homepage = "http://www.labri.fr/perso/pelegrin/scotch/"
     url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.3.tar.gz"
-    base_url = "http://gforge.inria.fr/frs/download.php/latestfile/298"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
     version('6.0.4', 'd58b825eb95e1db77efe8c6ff42d329f')
@@ -67,7 +66,8 @@ class Scotch(Package):
 
     @when('@:6.0.0')
     def url_for_version(self, version):
-        return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
+        base_url = "http://gforge.inria.fr/frs/download.php/latestfile/298"
+        return '%s/scotch_%s_esmumps.tar.gz' % (base_url, version)
 
     def patch(self):
         self.configure()

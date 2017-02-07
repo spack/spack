@@ -32,7 +32,8 @@ class Vtk(Package):
     processing and visualization. """
 
     homepage = "http://www.vtk.org"
-    base_url = "http://www.vtk.org/files/release"
+    url      = "http://www.vtk.org/files/release/7.0/VTK-7.0.0.tar.gz"
+    list_url = "http://www.vtk.org/download/"
 
     version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
     version('6.3.0', '0231ca4840408e9dd60af48b314c5b6d')
@@ -51,7 +52,8 @@ class Vtk(Package):
     depends_on('python', when='+python')
 
     def url_for_version(self, ver):
-        return '{0}/{1}/VTK-{2}.tar.gz'.format(Vtk.base_url, ver.up_to(2), ver)
+        base_url = "http://www.vtk.org/files/release"
+        return '{0}/{1}/VTK-{2}.tar.gz'.format(base_url, ver.up_to(2), ver)
 
     def install(self, spec, prefix):
         def feature_to_bool(feature, on='ON', off='OFF'):

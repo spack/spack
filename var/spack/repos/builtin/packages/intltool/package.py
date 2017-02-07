@@ -31,12 +31,9 @@ class Intltool(Package):
 
     """
     homepage  = 'https://freedesktop.org/wiki/Software/intltool/'
+    url       = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
 
     version('0.51.0',    '12e517cac2b57a0121cda351570f1e63')
-
-    def url_for_version(self, version):
-        """Handle version-based custom URLs."""
-        return 'https://launchpad.net/intltool/trunk/%s/+download/intltool-%s.tar.gz' % (version, version)
 
     def install(self, spec, prefix):
 

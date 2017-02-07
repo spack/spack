@@ -90,6 +90,12 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('dash_0.5.5.1.orig',
                    'dash_0.5.5.1')
 
+    # License
+
+    def test_gpl(self):
+        self.check('cppad-20170114.gpl',
+                   'cppad-20170114')
+
     # OS
 
     def test_linux(self):
