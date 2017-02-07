@@ -1145,13 +1145,13 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
            instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$#')
+        return self.format('$_$@$%@$+$=$/')
 
     @property
     def cshort_spec(self):
         """Returns a version of the spec with the dependencies hashed
            instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$#', color=True)
+        return self.format('$_$@$%@$+$=$/', color=True)
 
     @property
     def prefix(self):
@@ -2374,7 +2374,7 @@ class Spec(object):
                  prefixes as above
             $+   Options
             $=   Architecture prefixed by 'arch='
-            $#   7-char prefix of DAG hash with '-' prefix
+            $/   7-char prefix of DAG hash with '-' prefix
             $$   $
 
         You can also use full-string versions, which elide the prefixes::
@@ -2411,7 +2411,7 @@ class Spec(object):
         of the package, but no dependencies, arch, or compiler.
 
         TODO: allow, e.g., ``$6#`` to customize short hash length
-        TODO: allow, e.g., ``$##`` for full hash.
+        TODO: allow, e.g., ``$//`` for full hash.
         """
         color = kwargs.get('color', False)
         length = len(format_string)
@@ -2458,8 +2458,8 @@ class Spec(object):
                     if self.architecture and str(self.architecture):
                         a_str = ' arch' + c + str(self.architecture) + ' '
                         write(fmt % (a_str), c)
-                elif c == '#':
-                    out.write('-' + fmt % (self.dag_hash(7)))
+                elif c == '/':
+                    out.write('/' + fmt % (self.dag_hash(7)))
                 elif c == '$':
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
@@ -2560,7 +2560,7 @@ class Spec(object):
                         hashlen = int(hashlen)
                     else:
                         hashlen = None
-                    out.write(fmt % (self.dag_hash(hashlen)))
+                    out.write('/' + fmt % (self.dag_hash(hashlen)))
 
                 named = False
 
@@ -2624,6 +2624,16 @@ class Spec(object):
         try:
             record = spack.store.db.get_record(self)
             return record.installed
+        except KeyError:
+            return None
+
+    def _installed_explicitly(self):
+        """Helper for tree to print DB install status."""
+        if not self.concrete:
+            return None
+        try:
+            record = spack.store.db.get_record(self)
+            return record.explicit
         except KeyError:
             return None
 
@@ -3182,7 +3192,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
-        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$#')
+        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$/')
                                          for spec in specs)
         super(AmbiguousHashError, self).__init__(msg + specs_str)
 

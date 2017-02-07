@@ -25,23 +25,15 @@
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Hunspell(AutotoolsPackage):
+    """The most popular spellchecking library (sez the author...)."""
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    homepage = "http://hunspell.github.io/"
+    url      = "https://github.com/hunspell/hunspell/archive/v1.6.0.tar.gz"
 
-    # 1.10.0 requires newer Java, not yet tested....
-    # version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
+    version('1.6.0', '047c3feb121261b76dc16cdb62f54483')
 
-    depends_on('jdk')
-
-    def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')

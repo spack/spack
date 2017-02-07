@@ -25,23 +25,15 @@
 from spack import *
 
 
-class Ant(Package):
-    """Apache Ant is a Java library and command-line tool whose mission is to
-       drive processes described in build files as targets and extension points
-       dependent upon each other
-    """
+class Es(AutotoolsPackage):
 
-    homepage = "http://ant.apache.org/"
-    url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
+    """Es is an extensible shell. The language was derived from the Plan 9
+    shell, rc, and was influenced by functional programming languages,
+    such as Scheme, and the Tcl embeddable programming language. This
+    implementation is derived from Byron Rakitzis's public domain
+    implementation of rc."""
 
-    # 1.10.0 requires newer Java, not yet tested....
-    # version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
+    homepage = "http://wryun.github.io/es-shell/"
+    url      = "https://github.com/wryun/es-shell/releases/download/v0.9.1/es-0.9.1.tar.gz"
 
-    depends_on('jdk')
-
-    def install(self, spec, prefix):
-        env['ANT_HOME'] = self.prefix
-        bash = which('bash')
-        bash('./build.sh', 'install')
+    version('0.9.1', 'bf4db55b47bcc99892468b2e0aec0c9e')
