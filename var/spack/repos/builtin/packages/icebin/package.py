@@ -45,8 +45,9 @@ class Icebin(CMakePackage):
     variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
     variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
-    variant('coupler', default=False, description='Build the GCM coupler (requires MPI)')
+    variant('coupler', default=False, description='Build the GCM couplers (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
+    variant('modele', default=False, description='Build coupling link with ModelE (no exta requirements')
     variant('doc', default=False, description='Build documentation')
 
     extends('python', when='+python')
@@ -82,6 +83,7 @@ class Icebin(CMakePackage):
             '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
             '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
+            '-DBUILD_MODELE=%s' % ('YES' if '+modele' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO'),
             '-DBUILD_DOCS=%s' % ('YES' if '+doc' in spec else 'NO')]
 
