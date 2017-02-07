@@ -106,6 +106,11 @@ def loads_env(env_name, src_dir=None, env_dir=None):
     with open(os.path.join(env_dir, env_name), 'w') as fout:
         for (install_args,loads_args),(spec,installed) in zip(installs,log):
             for hash in installed:
+                # Get around Spack bug:
+                # https://github.com/LLNL/spack/issues/1377
+                slash = hash.find('/')
+                hash = hash[slash:]
+
                 cmd = spack_cmd + ['module', 'loads'] + loads_args + [hash]
                 print(' '.join(cmd))
 
