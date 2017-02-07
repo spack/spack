@@ -43,8 +43,8 @@ class Lbann(CMakePackage):
     variant('opencv', default=True,
             description='Builds with support for image processing routines with OpenCV')
 
-    depends_on('elemental +openmp_blas +scalapack +shared')
-    depends_on('elemental +openmp_blas +scalapack +shared +debug', when='+debug')
+    depends_on('elemental +openmp_blas +scalapack +shared +int64')
+    depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@2.4.13', when='+opencv')
