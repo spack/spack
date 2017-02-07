@@ -51,9 +51,6 @@ class Lbann(CMakePackage):
     depends_on('protobuf@3.0.2')
 
     def build_type(self):
-        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
-        :return: value for ``CMAKE_BUILD_TYPE``
-        """
         if '+debug' in self.spec:
             return 'Debug'
         else:
