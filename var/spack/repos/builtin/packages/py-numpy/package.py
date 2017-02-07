@@ -82,29 +82,12 @@ class PyNumpy(PythonPackage):
                 # differently.
                 names  = ','.join(lapackblas.names)
                 dirs   = ':'.join(lapackblas.directories)
-                # First, workout the defaults.
-                # The section title for the defaults changed in @1.10, see
-                # https://github.com/numpy/numpy/blob/master/site.cfg.example
-                if spec.satisfies('@:1.9.2'):
-                    f.write('[DEFAULT]\n')
-                else:
-                    f.write('[ALL]\n')
-                if not ('^openblas' in spec or
-                        '^mkl' in spec or
-                        '^atlas' in spec):
-                    f.write('libraries=%s\n'    % names)
-                    f.write('library_dirs=%s\n' % dirs)
 
-                if not ((platform.system() == "Darwin") and
-                        (platform.mac_ver()[0] == '10.12')):
-                    f.write('rpath=%s\n' % ':'.join(lapackblas.directories))
-
-                # Now special treatment for some (!) BLAS/LAPACK. Note that
+                # Special treatment for some (!) BLAS/LAPACK. Note that
                 # in this case library_dirs can not be specified within [ALL].
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n'    % names)
-                    f.write('library_dirs=%s\n' % dirs)
                 elif '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
@@ -123,8 +106,19 @@ class PyNumpy(PythonPackage):
                     # and using LD_LIBRARY_PATH throughout Spack.
                     f.write('[mkl]\n')
                     f.write('mkl_libs=%s\n'     % 'mkl_rt')
-                    f.write('library_dirs=%s\n' % dirs)
                 elif '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n'   % names)
-                    f.write('library_dirs=%s\n' % dirs)
+                else:
+                    # The section title for the defaults changed in @1.10, see
+                    # https://github.com/numpy/numpy/blob/master/site.cfg.example
+                    if spec.satisfies('@:1.9.2'):
+                        f.write('[DEFAULT]\n')
+                    else:
+                        f.write('[ALL]\n')
+                    f.write('libraries=%s\n'    % names)
+
+                f.write('library_dirs=%s\n' % dirs)
+                if not ((platform.system() == "Darwin") and
+                        (platform.mac_ver()[0] == '10.12')):
+                    f.write('rpath=%s\n' % dirs)
