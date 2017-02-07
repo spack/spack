@@ -26,7 +26,9 @@ from spack import *
 
 
 class Lbann(CMakePackage):
-    """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed memory, HPC-optimized, model and data parallel training toolkit for deep neural networks."""
+    """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed 
+    memory, HPC-optimized, model and data parallel training toolkit for deep 
+    neural networks."""
 
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
@@ -41,24 +43,8 @@ class Lbann(CMakePackage):
     variant('opencv', default=True,
             description='Builds with support for image processing routines with OpenCV')
 
-    variant('shared', default=True,
-            description='Enables the build of shared libraries')
-    variant('int64', default=False,
-            description='Elemental: use 64bit integers')
-    variant('int64_blas', default=False,
-            description='Elemental: use 64bit integers for BLAS')
-
-    depends_on('cmake', type='build')
-
-    # Currently required to allow lbann to specify a specific BLAS library
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('scalapack')
-
-    depends_on('elemental +openmp_blas +scalapack')
-    depends_on('elemental +openmp_blas +scalapack +int64', when='+int64')
-    depends_on('elemental +openmp_blas +scalapack +debug', when='+debug')
-    depends_on('elemental +openmp_blas +scalapack +int64 +debug', when='+debug +int64')
+    depends_on('elemental +openmp_blas +scalapack +shared')
+    depends_on('elemental +openmp_blas +scalapack +shared +debug', when='+debug')
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@2.4.13', when='+opencv')
