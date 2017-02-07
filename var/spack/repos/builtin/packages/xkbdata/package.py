@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xkbdata(Package):
+class Xkbdata(AutotoolsPackage):
     """The XKB data files for the various keyboard models, layouts,
     and locales."""
 
@@ -35,9 +35,3 @@ class Xkbdata(Package):
     version('1.0.1', 'a7e0fbc9cc84c621243c777694388064')
 
     depends_on('xkbcomp', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

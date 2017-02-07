@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xeyes(Package):
+class Xeyes(AutotoolsPackage):
     """xeyes - a follow the mouse X demo, using the X SHAPE extension"""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xeyes"
@@ -41,9 +41,3 @@ class Xeyes(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

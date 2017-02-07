@@ -25,16 +25,16 @@
 from spack import *
 
 
-class Protobuf(Package):
+class Protobuf(AutotoolsPackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
     url      = "https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.bz2"
 
+    version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb', url='https://github.com/google/protobuf/archive/v3.0.2.tar.gz')
     version('2.5.0', 'a72001a9067a4c2c4e0e836d0f92ece4')
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("check")
-        make("install")
+    depends_on('m4', when='@3.0.2:')
+    depends_on('autoconf', when='@3.0.2:')
+    depends_on('automake', when='@3.0.2:')
+    depends_on('libtool', when='@3.0.2:')

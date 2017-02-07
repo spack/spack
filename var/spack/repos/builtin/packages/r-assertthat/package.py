@@ -31,7 +31,8 @@ class RAssertthat(RPackage):
     producing friendly error messages so that your users know what they've done
     wrong."""
 
-    homepage = "https://cran.r-project.org/web/packages/assertthat/index.html"
+    homepage = "https://cran.r-project.org/package=assertthat"
     url      = "https://cran.r-project.org/src/contrib/assertthat_0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/assertthat"
 
     version('0.1', '59f9d7f7c00077ea54d763b78eeb5798')

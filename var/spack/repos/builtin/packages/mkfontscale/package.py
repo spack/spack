@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mkfontscale(Package):
+class Mkfontscale(AutotoolsPackage):
     """mkfontscale creates the fonts.scale and fonts.dir index files used by the
     legacy X11 font system."""
 
@@ -40,9 +40,3 @@ class Mkfontscale(Package):
     depends_on('xproto@7.0.25:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

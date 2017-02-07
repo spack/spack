@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxml2(Package):
+class Libxml2(AutotoolsPackage):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
        project (but usable outside of the Gnome platform), it is free
        software available under the MIT License."""
@@ -45,7 +45,8 @@ class Libxml2(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         if '+python' in spec:
             python_args = [
                 '--with-python={0}'.format(spec['python'].prefix),
@@ -54,9 +55,4 @@ class Libxml2(Package):
         else:
             python_args = ['--without-python']
 
-        configure('--prefix={0}'.format(prefix), *python_args)
-
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+        return python_args

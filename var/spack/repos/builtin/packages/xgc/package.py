@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xgc(Package):
+class Xgc(AutotoolsPackage):
     """xgc is an X11 graphics demo that shows various features of the X11
     core protocol graphics primitives."""
 
@@ -41,9 +41,3 @@ class Xgc(Package):
     depends_on('bison', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

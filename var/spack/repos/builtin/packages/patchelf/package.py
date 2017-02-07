@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Patchelf(Package):
+class Patchelf(AutotoolsPackage):
     """PatchELF is a small utility to modify the dynamic linker and RPATH of
        ELF executables."""
 
@@ -37,8 +37,3 @@ class Patchelf(Package):
 
     version('0.9', '3c265508526760f233620f35d79c79fc')
     version('0.8', '407b229e6a681ffb0e2cdd5915cb2d01')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")

@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.util.environment import *
 
 
-class Cityhash(Package):
+class Cityhash(AutotoolsPackage):
     """CityHash, a family of hash functions for strings."""
 
     homepage = "https://github.com/google/cityhash"
@@ -37,8 +36,5 @@ class Cityhash(Package):
     version('master', branch='master',
             git='https://github.com/google/cityhash.git')
 
-    def install(self, spec, prefix):
-        configure('--enable-sse4.2', '--prefix=%s' % prefix)
-
-        make()
-        make("install")
+    def configure_args(self):
+        return ['--enable-sse4.2']
