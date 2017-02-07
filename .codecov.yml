@@ -1,7 +1,19 @@
 coverage:
   precision: 2
   round: nearest
-  range: 60...100
+  range: 60...90
+  status:
+    project:
+      llnl:
+        paths:
+          - lib/spack/llnl
+      commands:
+        paths:
+          - lib/spack/spack/cmd
+      core:
+        paths:
+          - "!lib/spack/llnl"
+          - "!lib/spack/spack/cmd"
 
 ignore:
   - lib/spack/spack/test/.*
