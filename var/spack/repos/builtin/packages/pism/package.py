@@ -64,6 +64,8 @@ class Pism(CMakePackage):
     #         description='Use TAO in inverse solvers.')
     variant('doc', default=False, description=
             'Build PISM documentation (requires LaTeX and Doxygen)')
+    variant('examples', default=False, description=
+            'Install examples directory')
 
     # CMake build options not transferred to Spack variants
     # (except from CMakeLists.txt)
@@ -123,12 +125,22 @@ class Pism(CMakePackage):
             '-DPism_USE_PARALLEL_HDF5=%s' %
             ('YES' if '+parallel-hdf5' in spec else 'NO'),
             '-DPism_BUILD_PDFS=%s' %
-            ('YES' if '+doc' in spec else 'NO')]
+            ('YES' if '+doc' in spec else 'NO'),
+            '-DPism_INSTALL_EXAMPLES=%s' %
+            ('YES' if '+examples' in spec else 'NO')]
 
     def install_install(self):
         make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make('install')
+
+    def setup_environment(self, spack_env, env):
+        """Add <prefix>/bin to the module; this is not the default if we
+        extend python."""
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+        env.set('PISM_PREFIX', self.prefix)
+        env.set('PISM_BIN', join_path(self.prefix, 'bin'))
+
 
 # From email correspondence with Constantine Khroulev:
 #
