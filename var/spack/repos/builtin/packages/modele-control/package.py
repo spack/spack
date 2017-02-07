@@ -10,6 +10,7 @@ class ModeleControl(Package):
 
     extends('python')
     depends_on('python@3:')
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-giss', type=('build','run'))
     depends_on('netcdf', type='run')        # ncdump executable
 
