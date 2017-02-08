@@ -340,6 +340,7 @@ class Database(object):
         # cached prematurely.
         for hash_key, rec in data.items():
             rec.spec._mark_concrete()
+            rec.spec.package.spec._mark_concrete()
 
         self._data = data
 
