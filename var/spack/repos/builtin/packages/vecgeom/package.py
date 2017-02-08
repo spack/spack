@@ -29,7 +29,8 @@ import platform
 
 class Vecgeom(CMakePackage):
     """
-    The vectorized geometry library for particle-detector simulation (toolkits).
+    The vectorized geometry library for particle-detector simulation
+    (toolkits).
     """
 
     homepage = "https://gitlab.cern.ch/VecGeom/VecGeom"
