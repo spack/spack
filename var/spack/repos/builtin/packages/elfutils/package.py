@@ -40,10 +40,11 @@ class Elfutils(AutotoolsPackage):
     depends_on('autoconf', type='build')
 
     version('0.163',
-            git='git://git.fedorahosted.org/git/elfutils.git',
+            git='http://git.fedorahosted.org/git/elfutils.git',
             tag='elfutils-0.163')
 
     provides('elf')
+    depends_on('flex')  # needed in maintainer mode
 
     def configure_args(self):
         return ['--enable-maintainer-mode']
