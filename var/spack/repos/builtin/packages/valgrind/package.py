@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import sys
 
 
 class Valgrind(Package):
@@ -44,17 +44,35 @@ class Valgrind(Package):
     version('3.11.0', '4ea62074da73ae82e0162d6550d3f129')
     version('3.10.1', '60ddae962bc79e7c95cfc4667245707f')
     version('3.10.0', '7c311a72a20388aceced1aa5573ce970')
+    version('develop', svn='svn://svn.valgrind.org/valgrind/trunk')
 
-    variant('mpi', default=True, description='Activates MPI support for valgrind')
+    variant('mpi', default=True,
+            description='Activates MPI support for valgrind')
     variant('boost', default=True,
             description='Activates boost support for valgrind')
 
     depends_on('mpi', when='+mpi')
     depends_on('boost', when='+boost')
 
+    depends_on("autoconf", type='build', when='@develop')
+    depends_on("automake", type='build', when='@develop')
+    depends_on("libtool", type='build', when='@develop')
+
     def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix,
-                   '--enable-ubsan']
+        if spec.satisfies('@develop'):
+            Executable('./autogen.sh')()
+
+        options = ['--prefix=%s' % prefix]
+        if not (spec.satisfies('%clang') and sys.platform == 'darwin'):
+            # Otherwise with (Apple's) clang there is a linker error:
+            # clang: error: unknown argument: '-static-libubsan'
+            options.append('--enable-ubsan')
+
+        if sys.platform == 'darwin':
+            options.extend([
+                '--build=amd64-darwin',
+                '--enable-only64bit'
+            ])
         configure(*options)
         make()
         make("install")
