@@ -41,6 +41,7 @@ class Geant4(CMakePackage):
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
     variant('qt', default=True, description='Enable Qt support')
+    variant('debug', default=False, description='Build debug version')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -48,6 +49,7 @@ class Geant4(CMakePackage):
     depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01")
     depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03")
     depends_on("expat")
+    depends_on("zlib")
     depends_on("vecgeom")
     depends_on("xerces-c")
     depends_on("qt@4.8:", when="+qt")
@@ -70,7 +72,8 @@ class Geant4(CMakePackage):
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
             '-DGEANT4_BUILD_MULTITHREADED=ON',
             '-DGEANT4_USE_USOLIDS=ON',
-            '-DGEANT4_USE_SYSTEM_EXPAT=OFF',
+            '-DGEANT4_USE_SYSTEM_EXPAT=ON',
+            '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
             spec['xerces-c'].prefix,
             '-DUSolids_DIR=%s' %
@@ -98,6 +101,4 @@ class Geant4(CMakePackage):
 
     def url_for_version(self, version):
         """Handle Geant4's unusual version string."""
-        return (
-            "http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version
-        )
+        return ("http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version)
