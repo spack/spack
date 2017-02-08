@@ -239,7 +239,7 @@ class Database(object):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
-                                 spec.format('$_$#'), dname, dhash[:7]))
+                                 spec.format('$_$/'), dname, dhash[:7]))
                     continue
 
                 child = data[dhash].spec
@@ -340,6 +340,7 @@ class Database(object):
         # cached prematurely.
         for hash_key, rec in data.items():
             rec.spec._mark_concrete()
+            rec.spec.package.spec._mark_concrete()
 
         self._data = data
 

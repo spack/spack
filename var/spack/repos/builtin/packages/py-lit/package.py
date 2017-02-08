@@ -25,15 +25,15 @@
 from spack import *
 
 
-class Mpfr(AutotoolsPackage):
-    """The MPFR library is a C library for multiple-precision
-       floating-point computations with correct rounding."""
-    homepage = "http://www.mpfr.org"
-    url      = "https://gforge.inria.fr/frs/download.php/latestfile/159/mpfr-3.1.2.tar.bz2"
+class PyLit(PythonPackage):
+    """lit is a portable tool for executing LLVM and Clang style test suites,
+       summarizing their results, and providing indication of failures. lit is
+       designed to be a lightweight testing tool with as simple a user
+       interface as possible."""
 
-    version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
-    version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
-    version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    homepage = "https://pypi.python.org/pypi/lit"
+    url      = "https://pypi.python.org/packages/5b/a0/dbed2c8dfb220eb9a5a893257223cd0ff791c0fbc34ce2f1a957fa4b6c6f/lit-0.5.0.tar.gz"
 
-    depends_on('gmp')  # mpir is a drop-in replacement for this
+    version('0.5.0',  '8144660cc692be8fb903395a5f06564d')
+
+    depends_on('py-setuptools', type='build')

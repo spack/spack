@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ocaml(AutotoolsPackage):
+class Ocaml(Package):
     """OCaml is an industrial strength programming language supporting
        functional, imperative and object-oriented styles"""
 
@@ -36,4 +36,8 @@ class Ocaml(AutotoolsPackage):
 
     depends_on('ncurses')
 
-    build_targets = ['world.opt']
+    def install(self, spec, prefix):
+        configure('-prefix', '{0}'.format(prefix))
+        
+        make('world.opt')
+        make('install')

@@ -22,18 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Mpfr(AutotoolsPackage):
-    """The MPFR library is a C library for multiple-precision
-       floating-point computations with correct rounding."""
-    homepage = "http://www.mpfr.org"
-    url      = "https://gforge.inria.fr/frs/download.php/latestfile/159/mpfr-3.1.2.tar.bz2"
+class LlvmOpenmpOmpt(Package):
+    """The OpenMP subproject provides an OpenMP runtime for use with the
+       OpenMP implementation in Clang. This branch includes experimental
+       changes for OMPT, the OpenMP Tools interface"""
 
-    version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
-    version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
-    version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
 
-    depends_on('gmp')  # mpir is a drop-in replacement for this
+    # align-to-tr-rebased branch
+    version('3.9.2b',
+            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
+            commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3') 
+
+    depends_on('cmake', type='build')
+    depends_on('llvm+clang~gold')
+    depends_on('ninja', type='build')
+
+    def install(self, spec, prefix):
+
+        with working_dir('spack-build', create=True):
+            cmake_args = std_cmake_args[:]
+            cmake_args.extend([
+                '-G', 'Ninja',
+                '-DCMAKE_C_COMPILER=clang',
+                '-DCMAKE_CXX_COMPILER=clang++',
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DLIBOMP_OMPT_SUPPORT=on',
+                '-DLIBOMP_OMPT_BLAME=on',
+                '-DLIBOMP_OMPT_TRACE=on'
+            ])
+
+            cmake('..', *cmake_args)
+            ninja = Executable('ninja')
+            ninja()
+            ninja('install')

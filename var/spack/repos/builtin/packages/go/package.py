@@ -42,6 +42,11 @@ from spack import *
 #
 # - on CentOS 7 systems (and possibly others) you need to have the
 #   glibc package installed or various static cgo tests fail.
+#
+# - When building on a *large* machine (144 cores, 1.5TB RAM) I need
+#   to run `ulimit -u 8192` to bump up the max number of user processes.
+#   Failure to do so results in an explosion in one of the tests and an
+#   epic stack trace....
 
 
 class Go(Package):
@@ -51,6 +56,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
     version('1.7.4', '49c1076428a5d3b5ad7ac65233fcca2f')
     version('1.6.4', 'b023240be707b34059d2c114d3465c92')
 
@@ -67,7 +73,8 @@ class Go(Package):
     patch('time_test.patch', when='@1.6.4:1.7.4')
 
     # https://github.com/golang/go/issues/17986
-    patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.4')
+    # The fix for this issue has been merged into the 1.8 tree.
+    patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.5')
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the

@@ -25,15 +25,29 @@
 from spack import *
 
 
-class Mpfr(AutotoolsPackage):
-    """The MPFR library is a C library for multiple-precision
-       floating-point computations with correct rounding."""
-    homepage = "http://www.mpfr.org"
-    url      = "https://gforge.inria.fr/frs/download.php/latestfile/159/mpfr-3.1.2.tar.bz2"
+class Voropp(MakefilePackage):
+    """Voro++ is a open source software library for the computation of the
+    Voronoi diagram, a widely-used tessellation that has applications in many
+    scientific fields."""
 
-    version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
-    version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
-    version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    homepage = "http://math.lbl.gov/voro++/about.html"
 
-    depends_on('gmp')  # mpir is a drop-in replacement for this
+    # This url is wrong but it passes the test the ++ make the url parser fail,
+    # the correct url is constructed by url_for_version that has to be used in
+    # any case due to the difference between the package name and the url
+    url      = "http://math.lbl.gov/voropp/download/dir/voropp-0.4.6.tar.gz"
+
+    version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9')
+
+    def url_for_version(self, version):
+        url = "http://math.lbl.gov/voro++/download/dir/voro++-{0}.tar.gz".format(  # noqa: E501
+            str(version))
+        return url
+
+    def edit(self, spec, prefix):
+        filter_file(r'CC=g\+\+',
+                    'CC={0}'.format(self.compiler.cxx),
+                    'config.mk')
+        filter_file(r'PREFIX=/usr/local',
+                    'PREFIX={0}'.format(self.prefix),
+                    'config.mk')

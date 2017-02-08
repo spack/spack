@@ -35,6 +35,7 @@ class Tcl(AutotoolsPackage):
        extensible."""
     homepage = "http://www.tcl.tk"
 
+    version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
     version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
     version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f')

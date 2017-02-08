@@ -35,8 +35,9 @@ class Perl(Package):
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
     homepage = "http://www.perl.org"
-    url      = "http://www.cpan.org/src/5.0/perl-5.22.2.tar.gz"
+    url      = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
+    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
     version('5.24.0', 'c5bf7f3285439a2d3b6a488e14503701')
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
     version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
