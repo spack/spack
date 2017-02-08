@@ -44,7 +44,7 @@ class Doxygen(Package):
             description='Build with dot command support from Graphviz.')
 
     depends_on("cmake@2.8.12:", type='build')
-    depends_on("flex", type='build')
+    depends_on("flex@:2.6.0", type='build')
     depends_on("bison", type='build')
 
     # optional dependencies
