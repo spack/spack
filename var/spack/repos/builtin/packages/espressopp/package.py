@@ -72,7 +72,7 @@ class Espressopp(CMakePackage):
         return ['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON']
 
     def build(self, spec, prefix):
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             make()
             if '+ug' in spec:
                 make("ug", parallel=False)
