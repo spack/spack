@@ -26,7 +26,7 @@ from spack import *
 import sys
 
 
-class Valgrind(Package):
+class Valgrind(AutotoolsPackage):
     """An instrumentation framework for building dynamic analysis.
 
     There are Valgrind tools that can automatically detect many memory
@@ -58,11 +58,13 @@ class Valgrind(Package):
     depends_on("automake", type='build', when='@develop')
     depends_on("libtool", type='build', when='@develop')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         if spec.satisfies('@develop'):
             Executable('./autogen.sh')()
 
-        options = ['--prefix=%s' % prefix]
+    def configure_args(self):
+        spec = self.spec
+        options = []
         if not (spec.satisfies('%clang') and sys.platform == 'darwin'):
             # Otherwise with (Apple's) clang there is a linker error:
             # clang: error: unknown argument: '-static-libubsan'
@@ -73,6 +75,4 @@ class Valgrind(Package):
                 '--build=amd64-darwin',
                 '--enable-only64bit'
             ])
-        configure(*options)
-        make()
-        make("install")
+        return options
