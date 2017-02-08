@@ -42,7 +42,6 @@ import re
 import sys
 import textwrap
 import time
-from StringIO import StringIO
 
 import llnl.util.lock
 import llnl.util.tty as tty
@@ -57,6 +56,7 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
@@ -1054,7 +1054,8 @@ class PackageBase(object):
         mkdirp(self.prefix.include)
         mkdirp(self.prefix.lib)
         library_name = 'lib' + self.name
-        touch(join_path(self.prefix.lib, library_name + '.so'))
+        dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
         mkdirp(self.prefix.man1)
 
