@@ -552,6 +552,8 @@ def parse_name_offset(path, v=None):
     # The first regex that matches string will be used to determine
     # the name of the package. Thefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
+    # With that said, regular expressions are slow, so if possible, put
+    # ones that only catch one or two URLs at the bottom.
     name_regexes = [
         # 1st Pass: Common repositories
 

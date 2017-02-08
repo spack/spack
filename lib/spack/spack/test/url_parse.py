@@ -502,6 +502,11 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_single_digit_version(self):
         pass
 
+    def test_name_starts_with_digit(self):
+        self.check(
+            '3to2', '1.1.1',
+            'https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip')
+
     def plus_in_name(self):
         # FIXME: We should probably auto-convert these to 'plus'
         self.check(
