@@ -219,14 +219,13 @@ fi;
 #
 if [ "${need_module}" = "yes" ]; then
 	#check if environment-modules~X is installed
-	spack location -i environment-modules~X >& /dev/null
-	if [ $? -eq 1 ]; then
-		#install it!
-		spack install environment-modules~X
+	module_prefix=`spack location -i environment-modules~X 2>&1`
+	if [ $? -eq 0 ]; then
+		#activate it!
+		export MODULE_PREFIX=${module_prefix}
+		module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
 	fi;
-	export MODULE_PREFIX=`spack location -i environment-modules~X`
 
-	module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
 fi;
 
 #
