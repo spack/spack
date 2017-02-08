@@ -58,10 +58,6 @@ class Valgrind(AutotoolsPackage):
     depends_on("automake", type='build', when='@develop')
     depends_on("libtool", type='build', when='@develop')
 
-    def autoreconf(self, spec, prefix):
-        if spec.satisfies('@develop'):
-            Executable('./autogen.sh')()
-
     def configure_args(self):
         spec = self.spec
         options = []
