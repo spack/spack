@@ -414,6 +414,11 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'launchmon', '1.0.2',
             'https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz')
 
+        # name-ver-ver.ver
+        self.check(
+            'libedit', '20150325-3.1',
+            'http://thrysoee.dk/editline/libedit-20150325-3.1.tar.gz')
+
     def test_dash_underscore(self):
         # name-name-ver_ver
         self.check(
