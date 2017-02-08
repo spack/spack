@@ -110,7 +110,11 @@ def strip_version_suffixes(path):
 
     These strings are not part of the version number and should be ignored.
     This function strips those suffixes off and returns the remaining string.
-    The goal is that the version is always the last thing in ``path``.
+    The goal is that the version is always the last thing in ``path``:
+
+    * ``bowtie2-2.2.5``
+    * ``libevent-2.0.21``
+    * ``cuda_8.0.44``
 
     :param str path: The filename or URL for the package
     :return: The ``path`` with any extraneous suffixes removed
@@ -156,7 +160,8 @@ def strip_version_suffixes(path):
         # OS
         '[Ll]inux(_64)?',
         '[Uu]ni?x',
-        '([Mm]ac)?[Oo][Ss][Xx]?',
+        '[Mm]ac[Oo][Ss][Xx]?',
+        '[Oo][Ss][Xx]',
         '[Dd]arwin',
 
         # PyPI
@@ -168,6 +173,66 @@ def strip_version_suffixes(path):
         # Remove the suffix from the end of the path
         # This may be done multiple times
         path = re.sub(r'[\._-]?' + regex + '$', '', path)
+
+    return path
+
+
+def strip_name_suffixes(path, version):
+    """Most tarballs contain a package name followed by a version number.
+    However, some also contain extraneous information inbetween the name
+    and version:
+
+    * ``FIXME``
+    * ``FIXME``
+    * ``FIXME``
+
+    These strings are not part of the package name and should be ignored.
+    This function strips the version number and any extraneous suffixes
+    off and returns the remaining string. The goal is that the name is
+    always the last thing in ``path``:
+
+    * ``FIXME``
+    * ``FIXME``
+    * ``FIXME``
+
+    :param str path: The filename or URL for the package
+    :param str version: The version detected for this URL
+    :return: The ``path`` with any extraneous suffixes removed
+    :rtype: str
+    """
+    # NOTE: This could be done with complicated regexes in parse_name_offset
+    # NOTE: The problem is that we would have to add these regexes to ever
+    # NOTE: single name regex. Easier to just strip them off permanently
+
+    suffix_regexes = [
+        # Strip off the version and anything after it
+
+        # name-ver
+        # name_ver
+        # name.ver
+        r'[\._-]v?' + str(version) + '.*',
+
+        # namever
+        str(version) + '.*',
+
+        # Download type
+        'install',
+        'src',
+        '(open)?[Ss]ources?',
+
+        # Download version
+        'snapshot',
+        'distrib',
+        'build',
+
+        # License
+        'gpl',
+    ]
+
+    for regex in suffix_regexes:
+        # Remove the suffix from the end of the path
+        # This may be done multiple times
+        path = re.sub('[\._-]?' + regex + '$', '', path)
 
     return path
 
@@ -288,6 +353,11 @@ def parse_version_offset(path):
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
     version_regexes = [
+        # 1st Pass: Simplest case
+        # Assumes name only contains letters and version only contains digits
+        # e.g. libpng-1.6.27
+        (r'^[A-Za-z+\._-]+[\._-]v?([\d\._-]+)$', stem),
+
         # 1st Pass: Version only
         # Assume version only contains digits
 
@@ -323,6 +393,9 @@ def parse_version_offset(path):
 
         # 4th Pass: Two separator characters are used
         # Names may contain digits, versions may contain letters
+
+        # name-ver-ver.ver
+        # e.g. libedit-20150325-3.1
 
         # name-name-ver.ver
         # e.g. m4-1.4.17, gmp-6.0.0a, launchmon-v1.0.2
@@ -456,7 +529,7 @@ def parse_name_offset(path, v=None):
         except UndetectableVersionError:
             # Not all URLs contain a version. We still want to be able
             # to determine a name if possible.
-            v = ''
+            v = 'unknown'
 
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
@@ -464,7 +537,10 @@ def parse_name_offset(path, v=None):
     path, ext, suffix = split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
-    stem = os.path.basename(path)
+    original_stem = os.path.basename(path)
+
+    # Try to strip off anything after the package name
+    stem = strip_name_suffixes(original_stem, v)
 
     # List of the following format:
     #
@@ -481,7 +557,7 @@ def parse_name_offset(path, v=None):
 
         # GitHub: github.com/repo/name/
         # e.g. https://github.com/nco/nco/archive/4.6.2.tar.gz
-        (r'github.com/[^/]+/([^/]+)', path),
+        (r'github\.com/[^/]+/([^/]+)', path),
 
         # GitLab: gitlab.*/repo/name/
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
@@ -489,36 +565,22 @@ def parse_name_offset(path, v=None):
 
         # Bitbucket: bitbucket.org/repo/name/
         # e.g. https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2
-        (r'bitbucket.org/[^/]+/([^/]+)', path),
+        (r'bitbucket\.org/[^/]+/([^/]+)', path),
+
+        # PyPI: pypi.(python.org|io)/packages/source/first-letter/name/
+        # e.g. https://pypi.python.org/packages/source/m/mpmath/mpmath-all-0.19.tar.gz
+        # e.g. https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz
+        (r'pypi\.(?:python\.org|io)/packages/source/[A-Za-z\d]/([^/]+)', path),
 
         # 2nd Pass: Name followed by version in archive
 
-        # name-ver
-        # name_ver
-        # name.ver
-        (r'^([A-Za-z\d+\._-]+?)[\._-]v?{0}'.format(v), stem),
-
-        # namever
-        (r'^([A-Za-z\d+\._-]+){0}'.format(v), stem),
-
-        #(r'/([^/]+)[_.-](bin|stable|src|sources)[_.-]%s' % v, path),
-
-        #(r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
-        #(r'([^/]+)%s' % v, stem),
-
-        # accept the path if name is not in stem.
-        #(r'/([^/]+)[_.-]v?%s' % v, path),
-        #(r'/([^/]+)%s' % v, path),
-
-        #(r'^([^/]+)[_.-]v?%s' % v, path),
-        #(r'^([^/]+)%s' % v, path)
-
+        (r'^([A-Za-z\d+\._-]+)$', stem),
 
         # 4th Pass: Query strings
 
         # ?filename=name-ver.ver
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
-        (r'\?filename=([A-Za-z\d+-]+)-v?{0}$'.format(v), stem),
+        (r'\?filename=([A-Za-z\d+-]+)$', stem),
 
         # ?package=name
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
@@ -539,7 +601,7 @@ def parse_name_offset(path, v=None):
             # If we matched from the stem or suffix, we need to add offset
             offset = 0
             if match_string is stem:
-                offset = len(path) - len(stem)
+                offset = len(path) - len(original_stem)
             elif match_string is suffix:
                 offset = len(path)
                 if ext:

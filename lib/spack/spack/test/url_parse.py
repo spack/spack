@@ -316,6 +316,9 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             '3to2', '1.1.1',
             'https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip')
         self.check(
+            'mpmath', '0.19',
+            'https://pypi.python.org/packages/source/m/mpmath/mpmath-all-0.19.tar.gz')
+        self.check(
             'pandas', '0.16.0',
             'https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73')
         self.check(
