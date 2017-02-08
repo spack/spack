@@ -73,6 +73,7 @@ class Go(Package):
     patch('time_test.patch', when='@1.6.4:1.7.4')
 
     # https://github.com/golang/go/issues/17986
+    # The fix for this issue has been merged into the 1.8 tree.
     patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.5')
 
     # NOTE: Older versions of Go attempt to download external files that have
