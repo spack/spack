@@ -35,9 +35,8 @@ class Vecgeom(CMakePackage):
 
     homepage = "https://gitlab.cern.ch/VecGeom/VecGeom"
 
-    version('v0.3.rc', git='https://gitlab.cern.ch/VecGeom/VecGeom.git')
-    version('0.22', git='https://gitlab.cern.ch/VecGeom/VecGeom.git',
-            tag='0.22')
+    version('0.3.rc', git='https://gitlab.cern.ch/VecGeom/VecGeom.git',
+            tag='v0.3.rc')
 
     depends_on('cmake@3.5:', type='build')
 
