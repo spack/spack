@@ -39,9 +39,10 @@ class Gtkplus(AutotoolsPackage):
     depends_on("atk")
     depends_on("gdk-pixbuf")
     depends_on("glib")
-    depends_on("pango")
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
+    depends_on("python", when='+X')
+    depends_on('gobject-introspection', when='+X')
 
     def patch(self):
         # remove disable deprecated flag.

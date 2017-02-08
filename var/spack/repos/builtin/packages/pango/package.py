@@ -43,7 +43,6 @@ class Pango(AutotoolsPackage):
 
     depends_on("pkg-config", type="build")
     depends_on("harfbuzz")
-    depends_on("cairo")
     depends_on("cairo~X", when='~X')
     depends_on("cairo+X", when='+X')
     depends_on("glib")

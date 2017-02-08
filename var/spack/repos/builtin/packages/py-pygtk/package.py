@@ -36,8 +36,8 @@ class PyPygtk(AutotoolsPackage):
     depends_on("libffi")
     depends_on('cairo')
     depends_on('glib')
-    depends_on('gtkplus')
-    depends_on('py-pygobject')
+    depends_on('gtkplus@2.24:2.99')
+    depends_on('py-pygobject@2.28:2.99')
     depends_on('py-py2cairo')
 
     def install(self, spec, prefix):
