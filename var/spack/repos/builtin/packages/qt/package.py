@@ -227,12 +227,10 @@ class Qt(Package):
     @when('@3')
     def configure(self):
         # A user reported that this was necessary to link Qt3 on ubuntu
-        # However, if LD_LIBRARY_PATH is not set the qt build fails, so check
-        # and set LD_LIBRARY_PATH if not set, update if it is set.
-        if not os.environ.get('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] = os.pathsep + os.getcwd() + '/lib'
-        else:
-            os.environ['LD_LIBRARY_PATH'] += os.pathsep + os.getcwd() + '/lib'
+        # The previous change tried to append to LD_LIBRARY_PATH, but since 
+        # spack clears LD_LIBRARY_PATH do not append to the LD_LIBRARY_PATH
+        # instead set LD_LIBRARY_PATH.
+        os.environ['LD_LIBRARY_PATH'] = os.pathsep + os.getcwd() + '/lib'
 
         configure('-prefix', self.prefix,
                   '-v',
