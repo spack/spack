@@ -30,8 +30,9 @@ class Nco(AutotoolsPackage):
     netCDF-accessible formats"""
 
     homepage = "http://nco.sourceforge.net/"
-    url      = "https://github.com/nco/nco/archive/4.6.2.tar.gz"
+    url      = "https://github.com/nco/nco/archive/4.6.4.tar.gz"
 
+    version('4.6.4', '22f4e779d0011a9c0db90fda416c8e45')
     version('4.6.3', '0e1d6616c65ed3a30c54cc776da4f987')
     version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
