@@ -61,6 +61,10 @@ from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
+from spack.directives import variant
+
+"""Allowed URL schemes for spack packages."""
+_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
 # Filename for the Spack build/install log.
@@ -503,6 +507,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
+
+    # Add the universal variant "tuning" with values generic | specific
+    variant('tuning', values=('generic', 'specific'), default='generic',
+            description='Set compiler tuning generic or to target')
 
     def __init__(self, spec):
         # this determines how the package should be built.

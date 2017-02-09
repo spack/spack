@@ -32,6 +32,7 @@ parameters=(
     SPACK_CXX_RPATH_ARG
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
+    SPACK_TARGET_ARGS
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
 )
@@ -78,7 +79,7 @@ function system_dir {
 }
 
 for param in "${parameters[@]}"; do
-    if [[ -z ${!param} ]]; then
+    if [[ -z ${!param+x} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
 done
@@ -373,6 +374,7 @@ case "$mode" in
             CXX)
                 flags=("${flags[@]}" "${SPACK_CXXFLAGS[@]}") ;;
         esac
+        args=(${SPACK_TARGET_ARGS[@]} "${args[@]}")
         ;;
 esac
 
