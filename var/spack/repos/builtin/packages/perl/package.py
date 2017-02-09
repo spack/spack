@@ -52,6 +52,9 @@ class Perl(Package):
     variant('cpanm', default=True,
             description='Optionally install cpanm with the core packages.')
 
+    variant('pic', default=True,
+            description='Compile with position independent code.')
+
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
@@ -62,7 +65,10 @@ class Perl(Package):
 
     def install(self, spec, prefix):
         configure = Executable('./Configure')
-        configure("-des", "-Dprefix=" + prefix)
+        configure_args = ["-des", "-Dprefix=" + prefix]
+        if '+pic' in spec:
+            configure_args.append("-Accflags=" + self.compiler.pic_flag)
+        configure(*configure_args)
         make()
         if self.run_tests:
             make("test")
