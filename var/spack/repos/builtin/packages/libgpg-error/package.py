@@ -33,6 +33,8 @@ class LibgpgError(AutotoolsPackage):
 
     homepage = "https://www.gnupg.org/related_software/libgpg-error"
     url      = "https://ftp.heanet.ie/disk1/gnupg/libgpg-error/libgpg-error-1.18.tar.bz2"
+    url_list = "http://gd.tuwien.ac.at/pub/gnupg/libgpg-error/libgpg-error-1.18.tar.bz2"
+    list_depth = 2
 
     version('1.21', 'ab0b5aba6d0a185b41d07bda804fd8b2')
     version('1.18', '12312802d2065774b787cbfc22cc04e9')
