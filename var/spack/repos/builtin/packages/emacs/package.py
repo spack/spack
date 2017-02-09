@@ -66,7 +66,7 @@ class Emacs(AutotoolsPackage):
                     '--with-tiff=no',
                     '--with-xpm=no',
                     '--with-x-toolkit=no',
-            ]
+                    ]
             if '+gtkplus' in spec:
                 tty.warn('The variant +gtkplus is ignored if ~X is selected.')
 
