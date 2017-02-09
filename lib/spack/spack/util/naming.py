@@ -39,6 +39,7 @@ __all__ = [
     'validate_fully_qualified_module_name',
     'validate_module_name',
     'possible_spack_module_names',
+    'simplify_name',
     'NamespaceTrie']
 
 # Valid module names can contain '-' but can't start with it.
@@ -106,6 +107,44 @@ def possible_spack_module_names(python_mod_name):
         results.append(''.join(s))
 
     return results
+
+
+def simplify_name(name, build_system='generic'):
+    """Simplifies a name which may include uppercase letters, periods,
+    underscores, and pluses. In general, we want our package names to
+    only contain lowercase letters, digits, and dashes.
+
+    :param str name: The original name of the package
+    :param str build_system: The build system used by the package
+    :return: The new name of the package
+    :rtype: str
+    """
+    # Convert CamelCase to Dashed-Names
+    # e.g. ImageMagick -> Image-Magick
+    # e.g. SuiteSparse -> Suite-Sparse
+    # name = re.sub('([a-z])([A-Z])', r'\1-\2', name)
+
+    # Rename Intel downloads
+    # e.g. l_daal, l_ipp, l_mkl -> daal, ipp, mkl
+    if name.startswith('l_'):
+        name = name[2:]
+
+    # Convert UPPERCASE to lowercase
+    # e.g. SAMRAI -> samrai
+    name = name.lower()
+
+    # Replace '_' and '.' with '-'
+    # e.g. backports.ssl_match_hostname -> backports-ssl-match-hostname
+    name = name.replace('_', '-')
+    name = name.replace('.', '-')
+
+    # Replace "++" with "pp" and "+" with "-plus"
+    # e.g. gtk+   -> gtk-plus
+    # e.g. voro++ -> voropp
+    name = name.replace('++', 'pp')
+    name = name.replace('+', '-plus')
+
+    return name
 
 
 def valid_module_name(mod_name):

@@ -31,6 +31,7 @@ import spack
 from llnl.util import tty
 from spack.url import *
 from spack.util.web import find_versions_of_archive
+from spack.util.naming import simplify_name
 
 description = "debugging tool for url parsing"
 
@@ -310,6 +311,8 @@ def name_parsed_correctly(pkg, name):
     :rtype: bool
     """
     pkg_name = pkg.name
+
+    name = simplify_name(name)
 
     # After determining a name, `spack create` determines a build system.
     # Some build systems prepend a special string to the front of the name.

@@ -220,11 +220,15 @@ def strip_name_suffixes(path, version):
         'install',
         'src',
         '(open)?[Ss]ources?',
+        '[._-]std',
 
         # Download version
         'snapshot',
         'distrib',
         'build',
+
+        # VCS
+        '0\+bzr',
 
         # License
         'gpl',
@@ -572,11 +576,7 @@ def parse_name_offset(path, v=None):
         # e.g. https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz
         (r'pypi\.(?:python\.org|io)/packages/source/[A-Za-z\d]/([^/]+)', path),
 
-        # 2nd Pass: Name followed by version in archive
-
-        (r'^([A-Za-z\d+\._-]+)$', stem),
-
-        # 4th Pass: Query strings
+        # 2nd Pass: Query strings
 
         # ?filename=name-ver.ver
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
@@ -589,6 +589,10 @@ def parse_name_offset(path, v=None):
         # download.php
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         (r'([^/]+)/download.php$', path),
+
+        # 3rd Pass: Name followed by version in archive
+
+        (r'^([A-Za-z\d+\._-]+)$', stem),
     ]
 
     for i, name_regex in enumerate(name_regexes):
@@ -607,10 +611,6 @@ def parse_name_offset(path, v=None):
                 if ext:
                     offset += len(ext) + 1  # .tar.gz is converted to tar.gz
             start += offset
-
-            # package names should be lowercase and separated by dashes.
-            name = name.lower()
-            name = re.sub('[_.]', '-', name)
 
             return name, start, len(name), i, regex
 

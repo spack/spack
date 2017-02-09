@@ -301,7 +301,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_cran_downloads(self):
         # name.name_ver.ver-ver.ver
         self.check(
-            'th-data', '1.0-8',
+            'TH.data', '1.0-8',
             'https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz')
         self.check(
             'knitr', '1.14',
@@ -322,10 +322,10 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'pandas', '0.16.0',
             'https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73')
         self.check(
-            'sphinx-rtd-theme', '0.1.10a0',
+            'sphinx_rtd_theme', '0.1.10a0',
             'https://pypi.python.org/packages/da/6b/1b75f13d8aa3333f19c6cdf1f0bc9f52ea739cae464fbee050307c121857/sphinx_rtd_theme-0.1.10a0.tar.gz')
         self.check(
-            'backports-ssl-match-hostname', '3.5.0.1',
+            'backports.ssl_match_hostname', '3.5.0.1',
             'https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz')
 
     def test_bazaar_downloads(self):
@@ -338,7 +338,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_no_separators(self):
         # namever
         self.check(
-            'turbo', '702',
+            'turbolinux', '702',
             'file://{0}/turbolinux702.tar.gz'.format(os.getcwd()))
         self.check(
             'nauty', '26r7',
@@ -351,11 +351,11 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
         # ver.ver-ver
         self.check(
-            'imagemagick', '7.0.2-7',
+            'ImageMagick', '7.0.2-7',
             'https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz')
         # vver.ver
         self.check(
-            'cgns', '3.3.0',
+            'CGNS', '3.3.0',
             'https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz')
         # vver_ver
         self.check(
@@ -368,7 +368,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'panda', '2016-03-07',
             'http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-2016-03-07.tar')
         self.check(
-            'gts-snapshot', '121130',
+            'gts', '121130',
             'http://gts.sourceforge.net/tarballs/gts-snapshot-121130.tar.gz')
 
     def test_underscores_only(self):
@@ -411,7 +411,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2')
         # version starts with 'v'
         self.check(
-            'launchmon', '1.0.2',
+            'LaunchMON', '1.0.2',
             'https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz')
 
         # name-ver-ver.ver
@@ -428,7 +428,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_underscore_dot(self):
         # name_name_ver.ver
         self.check(
-            'superlu-dist', '4.1',
+            'superlu_dist', '4.1',
             'http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz')
         self.check(
             'pexsi', '0.9.0',
@@ -454,19 +454,19 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_underscore_dash_dot(self):
         # name_name-ver.ver
         self.check(
-            'the-silver-searcher', '0.32.0',
+            'the_silver_searcher', '0.32.0',
             'http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz')
         self.check(
-            'sphinx-rtd-theme', '0.1.10a0',
+            'sphinx_rtd_theme', '0.1.10a0',
             'https://pypi.python.org/packages/source/s/sphinx_rtd_theme/sphinx_rtd_theme-0.1.10a0.tar.gz')
 
     def test_dot_underscore_dot_dash_dot(self):
         # name.name_ver.ver-ver.ver
         self.check(
-            'th-data', '1.0-8',
+            'TH.data', '1.0-8',
             'https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz')
         self.check(
-            'xml', '3.98-1.4',
+            'XML', '3.98-1.4',
             'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz')
 
     def test_dash_dot_underscore_dot(self):
@@ -501,7 +501,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
 
     def test_single_character_name(self):
         self.check(
-            'r', '3.3.2',
+            'R', '3.3.2',
             'https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz')
 
     def test_single_digit_version(self):
@@ -528,30 +528,15 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
     def test_download_php(self):
         # Name comes before download.php
         self.check(
-            'sionlib', 30, '1.7.1', 59,
+            'sionlib', '1.7.1',
             'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')
         # Ignore download.php
         self.check(
-            'slepc', 51, '3.6.2', 57,
+            'slepc', '3.6.2',
             'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz')
         self.check(
-            'scientificpython', '2.8.1',
+            'ScientificPython', '2.8.1',
             'https://sourcesup.renater.fr/frs/download.php/file/4411/ScientificPython-2.8.1.tar.gz')
-
-    def test_erlang_version_style(self):
-        self.check(
-            'otp', 'R13B',
-            'http://erlang.org/download/otp_src_R13B.tar.gz')
-
-    def test_another_erlang_version_style(self):
-        self.check(
-            'otp', 'R15B01',
-            'https://github.com/erlang/otp/tarball/OTP_R15B01')
-
-    def test_yet_another_erlang_version_style(self):
-        self.check(
-            'otp', 'R15B03-1',
-            'https://github.com/erlang/otp/tarball/OTP_R15B03-1')
 
     def test_gloox_beta_style(self):
         self.check(
@@ -580,7 +565,7 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
 
     def test_imagemagick_style(self):
         self.check(
-            'imagemagick', '6.7.5-7',
+            'ImageMagick', '6.7.5-7',
             'http://downloads.sf.net/project/machomebrew/mirror/ImageMagick-6.7.5-7.tar.bz2')
 
     def test_dash_version_dash_style(self):
@@ -595,18 +580,13 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
 
     def test_xaw3d_version(self):
         self.check(
-            'xaw3d', '1.5E',
+            'Xaw3d', '1.5E',
             'ftp://ftp.visi.com/users/hawkeyd/X/Xaw3d-1.5E.tar.gz')
 
     def test_fann_version(self):
         self.check(
             'fann', '2.1.0beta',
             'http://downloads.sourceforge.net/project/fann/fann/2.1.0beta/fann-2.1.0beta.zip')
-
-    def test_iges_version(self):
-        self.check(
-            'grads', '2.0.1',
-            'ftp://iges.org/grads/2.0/grads-2.0.1-bin-darwin9.8-intel.tar.gz')
 
     def test_imap_version(self):
         self.check(
@@ -628,17 +608,8 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
 
     def test_github_raw_url(self):
         self.check(
-            'powerparser', '2.0.7',
+            'CLAMR', '2.0.7',
             'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')
-
-    def test_nco_version(self):
-        self.check(
-            'nco', '4.6.2-beta03',
-            'https://github.com/nco/nco/archive/4.6.2-beta03.tar.gz')
-
-        self.check(
-            'nco', '4.6.3-alpha04',
-            'https://github.com/nco/nco/archive/4.6.3-alpha04.tar.gz')
 
     def test_luaposix_version(self):
         self.check(

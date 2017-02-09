@@ -568,6 +568,7 @@ def create(parser, args):
     url = get_url(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
+    name = simplify_name(name, build_system)
 
     # Create the package template object
     PackageClass = templates[build_system]

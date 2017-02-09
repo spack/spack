@@ -48,11 +48,12 @@ def test_name_parsed_correctly():
     assert name_parsed_correctly(MyPackage('r-devtools',     []), 'devtools')
     assert name_parsed_correctly(MyPackage('py-numpy',       []), 'numpy')
     assert name_parsed_correctly(MyPackage('octave-splines', []), 'splines')
+    assert name_parsed_correctly(MyPackage('imagemagick',    []), 'ImageMagick')  # noqa
+    assert name_parsed_correctly(MyPackage('th-data',        []), 'TH.data')
 
     # Expected False
     assert not name_parsed_correctly(MyPackage('',            []), 'hdf5')
     assert not name_parsed_correctly(MyPackage('hdf5',        []), '')
-    assert not name_parsed_correctly(MyPackage('imagemagick', []), 'ImageMagick')  # noqa
     assert not name_parsed_correctly(MyPackage('yaml-cpp',    []), 'yamlcpp')
     assert not name_parsed_correctly(MyPackage('yamlcpp',     []), 'yaml-cpp')
     assert not name_parsed_correctly(MyPackage('r-py-parser', []), 'parser')
