@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Nodejs(Package):
+class Nodejs(AutotoolsPackage):
     """Node.js JavaScript runtime"""
 
     homepage = "https://nodejs.org/"
