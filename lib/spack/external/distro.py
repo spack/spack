@@ -1002,6 +1002,8 @@ class LinuxDistribution(object):
                             distro_info['id'] = match.group(1)
                             return distro_info
                     except IOError:
+                        # We found a file we do not have permission to read
+                        # Continue checking candidate files for distro file.
                         continue
             return {}
 
