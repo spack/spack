@@ -719,7 +719,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
         tty.msg("Trying to check out svn repository: %s" % self.url)
 
-        args = ['checkout', '--force']
+        args = ['checkout', '--force', '--quiet']
         if self.revision:
             args += ['-r', self.revision]
         args.append(self.url)
