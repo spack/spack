@@ -132,7 +132,8 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get('tests', False)
 
     try:
-        specs = spack.spec.parse(args)
+        sargs = args if isinstance(args, basestring) else ' '.join(args)
+        specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize
