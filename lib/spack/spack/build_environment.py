@@ -294,6 +294,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.unset('CPATH')
         env.unset('LD_RUN_PATH')
         env.unset('DYLD_LIBRARY_PATH')
+        env.unset("CRAY_LD_LIBRARY_PATH")
 
         # Remove any macports installs from the PATH.  The macports ld can
         # cause conflicts with the built-in linker on el capitan.  Solves
