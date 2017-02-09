@@ -40,9 +40,10 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
-    version('16.5', 'a40e8852071b5d600cb42f31631b3de1')
-    version('16.3', '618cb7ddbc57d4e4ed1f21a0ab25f427')
-    version('15.7', '84a689217b17cdaf78c39270c70bea5d')
+    version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')
+    version('16.5',  'a40e8852071b5d600cb42f31631b3de1')
+    version('16.3',  '618cb7ddbc57d4e4ed1f21a0ab25f427')
+    version('15.7',  '84a689217b17cdaf78c39270c70bea5d')
 
     variant('network', default=True,
             description="Perform a network install")
