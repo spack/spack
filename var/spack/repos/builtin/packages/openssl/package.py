@@ -36,6 +36,7 @@ class Openssl(Package):
     homepage = "http://www.openssl.org"
     url = "ftp://openssl.org/source/openssl-1.0.1h.tar.gz"
 
+    version('1.0.2k', 'f965fc0bf01bf882b31314b61391ae65')
     version('1.0.2j', '96322138f0b69e61b7212bc53d5e912b')
     version('1.0.2i', '678374e63f8df456a697d3e5e5a931fb')
     version('1.0.2h', '9392e65072ce4b614c1392eefc1f23d0')
