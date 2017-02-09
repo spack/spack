@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Adlbx(AutotoolsPackage):
     """ADLB/X: Scalable master-worker library with work stealing and data dependencies"""
 
@@ -32,9 +33,9 @@ class Adlbx(AutotoolsPackage):
     url      = "http://swift-lang.github.io/swift-t-downloads/adlbx-0.8.0.tar.gz"
     version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
 
-    depends_on('exmcutils', type=("build","link"))
+    depends_on('exmcutils')
     depends_on('mpi')
 
     def configure_args(self):
-        args = [ "--with-c-utils="+self.spec['exmcutils'].prefix ]
+        args = [ "--with-c-utils=" + self.spec['exmcutils'].prefix ]
         return args
