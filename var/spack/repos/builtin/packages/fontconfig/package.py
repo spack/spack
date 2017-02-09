@@ -51,5 +51,5 @@ class Fontconfig(AutotoolsPackage):
         # gtk applications were failing to display text without this
         config_file = join_path(self.prefix, 'etc', 'fonts', 'fonts.conf')
         filter_file('<dir prefix="xdg">fonts</dir>',
-                    '<dir prefix="xdg">fonts</dir> <dir>/usr/share/fonts</dir>',
+                    '<dir prefix="xdg">fonts</dir><dir>/usr/share/fonts</dir>',
                     config_file)

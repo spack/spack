@@ -45,9 +45,7 @@ class PyPygobject(AutotoolsPackage):
 
     patch('pygobject-2.28.6-introspection-1.patch', when='@2.28.3:2.28.6')
 
-    # patch from https://raw.githubusercontent.com/NixOS/nixpkgs/master/
-    #                   pkgs/development/python-modules/pygobject/
-    #                   pygobject-2.28.6-gio-types-2.32.patch
+    # patch from https://raw.githubusercontent.com/NixOS/nixpkgs/master/pkgs/development/python-modules/pygobject/pygobject-2.28.6-gio-types-2.32.patch
     # for https://bugzilla.gnome.org/show_bug.cgi?id=668522
     patch('pygobject-2.28.6-gio-types-2.32.patch', when='@2.28.6')
 
