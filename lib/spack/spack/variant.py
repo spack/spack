@@ -419,9 +419,6 @@ class VariantMap(lang.HashableMap):
         """Returns True if this VariantMap is more constrained than other,
         False otherwise.
 
-        TODO: how does this deal with exclusive-valued variants?  These
-        TODO: should be evaluated differently from multi-valued variants.
-
         :param VariantMap other: VariantMap to satisfy
         :param bool strict: if True return False if a key is in other and
             not in self, otherwise discard that key and proceed with evaluation
@@ -441,9 +438,6 @@ class VariantMap(lang.HashableMap):
         """Add all variants in other that aren't in self to self. Also
         constrain all multi-valued variants that are already present.
         Return True if self changed, False otherwise
-
-        TODO: how does this deal with exclusive-valued variants?  These
-        TODO: should be evaluated differently from multi-valued variants.
 
         :param VariantMap other: instance against which we constrain self
         :return: True or False

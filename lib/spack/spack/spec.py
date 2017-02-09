@@ -1041,6 +1041,9 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
+            # All other flags represent variants. 'foo=true' and 'foo=false'
+            # map to '+foo' and '~foo' respectively. As such they need a
+            # BoolValuedVariant instance.
             if str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
                 self.variants[name] = BoolValuedVariant(name, value)
             else:
@@ -2063,7 +2066,12 @@ class Spec(object):
                     raise UnknownVariantError(spec.name, not_existing)
 
                 for name, v in [(x, y) for (x, y) in spec.variants.items()]:
-                    # FIXME:
+                    # When parsing a spec every variant of the form
+                    # 'foo=value' will be interpreted by default as a
+                    # multi-valued variant. During validation of the
+                    # variants we use the information in the package
+                    # to turn any variant that needs it to a single-valued
+                    # variant.
                     pkg_variant = pkg_variants[name]
                     pkg_variant.validate_or_raise(v, pkg_cls)
                     spec.variants.substitute(
