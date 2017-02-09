@@ -25,27 +25,28 @@
 from spack import *
 import os
 
+
 class GitReview(Package):
-    """git-review is a tool that helps submitting git branches to gerrit for review"""
+    """git-review is a tool that helps submitting git branches to gerrit"""
 
     homepage = "http://docs.openstack.org/infra/git-review"
-    #url      = "https://github.com/openstack-infra/git-review/archive/1.25.0.tar.gz"
+    # url      = "https://github.com/openstack-infra/git-review/archive/1.25.0.tar.gz"
     url      = "https://pypi.python.org/packages/92/38/b97fee6752540a92f44e405a51c53d3c36b5d57e139683862597b09a5c6c/git-review-1.25.0.tar.gz"
 
     version('1.25.0', '0a061d0e23ee9b93c6212a3fe68fb7ab')
-    version('1.24'  , '145116fe58a3487c3ad1bf55538fd741')
-    version('1.23'  , 'b0023ad8c037ab710da81412194c6a3a')
-    version('1.22'  , 'e889df5838c059362e5e0d411bde9c48')
-    version('1.21'  , 'eee88bdef1aa37a55cc8becd48c6aba9')
+    version('1.24',   '145116fe58a3487c3ad1bf55538fd741')
+    version('1.23',   'b0023ad8c037ab710da81412194c6a3a')
+    version('1.22',   'e889df5838c059362e5e0d411bde9c48')
+    version('1.21',   'eee88bdef1aa37a55cc8becd48c6aba9')
 
     extends('python')
 
-    depends_on('py-setuptools',    type=('build', 'run')) # also needed during runtime
+    depends_on('py-setuptools',    type=('build', 'run'))
     depends_on('py-pbr',           type=('build', 'run'))
     depends_on('py-requests@1.1:', type=('build', 'run'))
     depends_on('git',              type=('build', 'run'))
     depends_on('tk',               type=('build', 'run'))
 
     def install(self, spec, prefix):
-	os.environ['PBR_VERSION'] = str(spec.version)
+        os.environ['PBR_VERSION'] = str(spec.version)
         setup_py('install', '--prefix={0}'.format(prefix))
