@@ -573,13 +573,84 @@ class TestVariantMapTest(object):
         # Value with invalid type
         a = VariantMap(None)
         with pytest.raises(TypeError):
-            a.__setitem__('foo', 2)
+            a['foo'] = 2
 
         # Duplicate variant
         a['foo'] = MultiValuedVariant('foo', 'bar,baz')
         with pytest.raises(DuplicateVariantError):
-            a.__setitem__('foo', MultiValuedVariant('foo', 'bar'))
+            a['foo'] = MultiValuedVariant('foo', 'bar')
+
+        with pytest.raises(DuplicateVariantError):
+            a['foo'] = SingleValuedVariant('foo', 'bar')
+
+        with pytest.raises(DuplicateVariantError):
+            a['foo'] = BoolValuedVariant('foo', True)
 
         # Non matching names between key and vspec.name
         with pytest.raises(KeyError):
-            a.__setitem__('bar', MultiValuedVariant('foo', 'bar'))
+            a['bar'] = MultiValuedVariant('foo', 'bar')
+
+    def test_set_item(self):
+        # Check that all the three types of variants are accepted
+        a = VariantMap(None)
+
+        a['foo'] = BoolValuedVariant('foo', True)
+        a['bar'] = SingleValuedVariant('bar', 'baz')
+        a['foobar'] = MultiValuedVariant('foobar', 'a, b, c, d, e')
+
+    def test_substitute(self):
+        # Check substitution of a key that exists
+        a = VariantMap(None)
+        a['foo'] = BoolValuedVariant('foo', True)
+        a.substitute(SingleValuedVariant('foo', 'bar'))
+
+        # Trying to substitute something that is not
+        # in the map will raise a KeyError
+        with pytest.raises(KeyError):
+            a.substitute(BoolValuedVariant('bar', True))
+
+    def test_satisfies_and_constrain(self):
+        # foo=bar foobar=fee feebar=foo
+        a = VariantMap(None)
+        a['foo'] = MultiValuedVariant('foo', 'bar')
+        a['foobar'] = SingleValuedVariant('foobar', 'fee')
+        a['feebar'] = SingleValuedVariant('feebar', 'foo')
+
+        # foo=bar,baz foobar=fee shared=True
+        b = VariantMap(None)
+        b['foo'] = MultiValuedVariant('foo', 'bar, baz')
+        b['foobar'] = SingleValuedVariant('foobar', 'fee')
+        b['shared'] = BoolValuedVariant('shared', True)
+
+        assert not a.satisfies(b)
+        assert b.satisfies(a)
+
+        assert not a.satisfies(b, strict=True)
+        assert not b.satisfies(a, strict=True)
+
+        # foo=bar,baz foobar=fee feebar=foo shared=True
+        c = VariantMap(None)
+        c['foo'] = MultiValuedVariant('foo', 'bar, baz')
+        c['foobar'] = SingleValuedVariant('foobar', 'fee')
+        c['feebar'] = SingleValuedVariant('feebar', 'foo')
+        c['shared'] = BoolValuedVariant('shared', True)
+
+        assert a.constrain(b)
+        assert a == c
+
+    def test_copy(self):
+        a = VariantMap(None)
+        a['foo'] = BoolValuedVariant('foo', True)
+        a['bar'] = SingleValuedVariant('bar', 'baz')
+        a['foobar'] = MultiValuedVariant('foobar', 'a, b, c, d, e')
+
+        c = a.copy()
+        assert a == c
+
+    def test_str(self):
+        c = VariantMap(None)
+        c['foo'] = MultiValuedVariant('foo', 'bar, baz')
+        c['foobar'] = SingleValuedVariant('foobar', 'fee')
+        c['feebar'] = SingleValuedVariant('feebar', 'foo')
+        c['shared'] = BoolValuedVariant('shared', True)
+        assert str(c) == ' feebar=foo foo=bar,baz foobar=fee +shared'

@@ -407,13 +407,13 @@ class VariantMap(lang.HashableMap):
         # Set the item
         super(VariantMap, self).__setitem__(name, vspec)
 
-    def substitute(self, name, vspec):
-        if name not in self:
+    def substitute(self, vspec):
+        if vspec.name not in self:
             msg = 'cannot substitute a key that does not exist [{0}]'
-            raise KeyError(msg.format(name))
+            raise KeyError(msg.format(vspec.name))
 
         # Set the item
-        super(VariantMap, self).__setitem__(name, vspec)
+        super(VariantMap, self).__setitem__(vspec.name, vspec)
 
     def satisfies(self, other, strict=False):
         """Returns True if this VariantMap is more constrained than other,
@@ -428,7 +428,12 @@ class VariantMap(lang.HashableMap):
 
         """
         to_be_checked = [k for k in other]
-        if not (strict or self.spec._concrete):
+
+        strict_or_concrete = strict
+        if self.spec is not None:
+            strict_or_concrete |= self.spec._concrete
+
+        if not strict_or_concrete:
             to_be_checked = filter(lambda x: x in self, to_be_checked)
 
         return all(k in self and self[k].satisfies(other[k])
@@ -443,7 +448,7 @@ class VariantMap(lang.HashableMap):
         :return: True or False
         :rtype: bool
         """
-        if other.spec._concrete:
+        if other.spec is not None and other.spec._concrete:
             for k in self:
                 if k not in other:
                     raise UnsatisfiableVariantSpecError(self[k], '<absent>')
