@@ -27,6 +27,7 @@ import re
 from spack.architecture import OperatingSystem
 from spack.util.executable import *
 import spack.spec
+import spack.version
 from spack.util.multiproc import parmap
 import spack.compilers
 
@@ -39,13 +40,22 @@ class Cnl(OperatingSystem):
     updated to indicate that OS has been upgraded (or downgraded)
     """
 
+    def detect_crayos_version(self):
+        modulecmd = which("modulecmd")
+        modulecmd.add_default_arg("python")
+        output = modulecmd("avail", "PrgEnv-intel", output=str, error=str)
+        matches = re.findall(r'PrgEnv-intel/(\d+).\d+.\d+', output)
+        version_set = set(matches) # 
+        recent_version = max(version_set)
+        return spack.version.Version(recent_version)
+
     def __init__(self):
-        name = 'CNL'
-        version = '10'
+        name = 'cnl'
+        version = self.detect_crayos_version()
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
-        return self.name
+        return self.name + str(self.version)
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()
