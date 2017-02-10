@@ -29,7 +29,7 @@ from spack import *
 class Turbine(AutotoolsPackage):
 
     homepage = "http://swift-lang.org/Swift-T"
-    url      = "http://www.mcs.anl.gov/~wozniak/turbine-1.0.0.tar.gz"
+    url      = "http://swift-lang.github.io/swift-t-downloads/turbine-1.0.0.tar.gz"
 
     version('1.0.0', '7ed56d65d6db0bfe15a439d818b4259e')
 
@@ -38,9 +38,8 @@ class Turbine(AutotoolsPackage):
     depends_on('zsh')
 
     def configure_args(self):
-
-        args = [ "--with-c-utils=" + self.spec['exmcutils'].prefix,
-                 "--with-adlbx="   + self.spec['adlbx'].prefix,
-                 "--with-tcl="     + self.spec['tcl'].prefix
-        ]
+        args = ["--with-c-utils=" + self.spec['exmcutils'].prefix,
+                "--with-adlb="    + self.spec['adlbx'].prefix,
+                "--with-tcl="     + self.spec['tcl'].prefix,
+                "--with-mpi="     + self.spec['mpi'].prefix]
         return args
