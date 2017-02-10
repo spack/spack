@@ -43,6 +43,8 @@ class IntelMkl(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
+            url="file://%s/l_mkl_2017.0.098.tgz" % os.getcwd())
     version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
             url="file://%s/l_mkl_11.3.2.181.tgz" % os.getcwd())
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
