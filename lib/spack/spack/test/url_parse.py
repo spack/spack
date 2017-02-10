@@ -475,6 +475,10 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'pypar', '2.1.5_108',
             'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz')
+        # name-namever.ver_ver.ver
+        self.check(
+            'STAR-CCM+', '11.06.010_02',
+            'file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz'.format(os.getcwd()))
 
     # Weird URLS
 

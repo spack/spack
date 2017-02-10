@@ -129,7 +129,7 @@ def strip_version_suffixes(path):
         # Download type
         '[Ii]nstall',
         'all',
-        'src',
+        'src(_0)?',
         '[Ss]ources?',
         'file',
         'full',
@@ -141,6 +141,7 @@ def strip_version_suffixes(path):
         '[Uu]niversal',
         'jar',
         'complete',
+        'oss',
 
         # Download version
         'stable',
@@ -440,6 +441,10 @@ def parse_version_offset(path):
         # name.name_name-ver.ver
         # e.g. tap.py-1.6, backports.ssl_match_hostname-3.5.0.1
         (r'^[a-zA-Z\d+._]+-v?(\d[\da-zA-Z.]*)$', stem),
+
+        # name-namever.ver_ver.ver
+        # e.g. STAR-CCM+11.06.010_02
+        (r'^[a-zA-Z+-]+(\d[\da-zA-Z._]*)$', stem),
 
         # 7th Pass: Specific VCS
 

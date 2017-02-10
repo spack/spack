@@ -144,6 +144,26 @@ def simplify_name(name, build_system='generic'):
     name = name.replace('++', 'pp')
     name = name.replace('+', '-plus')
 
+    # Simplify Python package names
+    # We don't want "py" or "python" to occur multiple times in the name
+    # e.g. netcdf4-python -> py-netcdf4
+    # e.g. python-certifi -> py-certifi
+    # e.g. pyzmq          -> py-zmq
+    # e.g. tap.py         -> py-tap
+    # e.g. py             -> py-py        # don't rename
+    # e.g. numpy          -> py-numpy     # don't rename
+    # e.g. py2cairo       -> py-py2cairo  # don't rename
+    if build_system == 'python':
+        name = re.sub('^py(?:thon)?[-]?([a-zA-Z])', r'\1', name)
+        name = re.sub('-py(thon)?', '', name)
+
+    # Simplify Lua package names
+    # We don't want "lua" to occur multiple times in the name
+    name = re.sub('^(lua)([^-])', r'\1-\2', name)
+
+    # Simplify Bio++ package names
+    name = re.sub('^(bpp)([^-])', r'\1-\2', name)
+
     return name
 
 
