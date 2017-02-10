@@ -41,7 +41,7 @@ class Yorick(Package):
     homepage = "http://dhmunro.github.io/yorick-doc/"
     url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
 
-    version('2_2_04', '1b5b0da6ad81b2d9dba64d991ec17939')
+    version('2.2.04', '1b5b0da6ad81b2d9dba64d991ec17939')
     version('master', branch='master',
             git='https://github.com/dhmunro/yorick.git')
     version('f90-plugin', branch='f90-plugin',
@@ -50,6 +50,10 @@ class Yorick(Package):
     variant('X', default=False, description='Enable X11 support')
 
     depends_on('libx11', when='+X')
+
+    def url_for_version(self, version):
+        url = "https://github.com/dhmunro/yorick/archive/y_{0}.tar.gz"
+        return url.format(version.underscored)
 
     def install(self, spec, prefix):
         os.environ['FORTRAN_LINKAGE'] = '-Df_linkage'

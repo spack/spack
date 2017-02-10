@@ -32,7 +32,7 @@ class Tinyxml(CMakePackage):
     homepage = "http://grinninglizard.com/tinyxml/"
     url = "https://sourceforge.net/projects/tinyxml/files/tinyxml/2.6.2/tinyxml_2_6_2.tar.gz"
 
-    version('2_6_2', 'cba3f50dd657cb1434674a03b21394df9913d764')
+    version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764')
 
     def url_for_version(self, version):
         return "https://sourceforge.net/projects/tinyxml/files/tinyxml/{0}/tinyxml_{1}.tar.gz".format(

@@ -341,9 +341,33 @@ def version_parsed_correctly(pkg, version):
     :returns: True if the name was correctly parsed, else False
     :rtype: bool
     """
+    version = remove_separators(version)
+
     # If the version parsed from the URL is listed in a version()
     # directive, we assume it was correctly parsed
     for pkg_version in pkg.versions:
-        if str(pkg_version) == str(version):
+        pkg_version = remove_separators(pkg_version)
+        if pkg_version == version:
             return True
     return False
+
+
+def remove_separators(version):
+    """Removes separator characters ('.', '_', and '-') from a version.
+
+    A version like 1.2.3 may be displayed as 1_2_3 in the URL.
+    Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are consider equal.
+    Unfortunately, this also means that 1.23 and 12.3 are equal.
+
+    :param version: A version
+    :type version: str or Version
+    :returns: The version with all separator characters removed
+    :rtype: str
+    """
+    version = str(version)
+
+    version = version.replace('.', '')
+    version = version.replace('_', '')
+    version = version.replace('-', '')
+
+    return version

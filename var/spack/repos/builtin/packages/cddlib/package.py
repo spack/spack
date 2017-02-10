@@ -35,9 +35,13 @@ class Cddlib(AutotoolsPackage):
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
     url      = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-094h.tar.gz"
 
-    version('094h', '1467d270860bbcb26d3ebae424690e7c')
+    version('0.94h', '1467d270860bbcb26d3ebae424690e7c')
 
     # Note: It should be possible to build cddlib also without gmp
 
     depends_on("gmp")
     depends_on("libtool", type="build")
+
+    def url_for_version(self, version):
+        url = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-{0}.tar.gz"
+        return url.format(version.joined)

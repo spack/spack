@@ -34,13 +34,17 @@ class Ferret(Package):
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
     url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
 
-    version('696', '51722027c864369f41bab5751dfff8cc')
+    version('6.96', '51722027c864369f41bab5751dfff8cc')
 
     depends_on("hdf5~mpi~fortran")
     depends_on("netcdf~mpi")
     depends_on("netcdf-fortran")
     depends_on("readline")
     depends_on("zlib")
+
+    def url_for_version(self, version):
+        return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
+            version.joined)
 
     def patch(self):
         hdf5_prefix = self.spec['hdf5'].prefix

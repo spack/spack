@@ -35,11 +35,15 @@ class Cdd(Package):
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
     url      = "http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
 
-    version('061a', '22c24a7a9349dd7ec0e24531925a02d9')
+    version('0.61a', '22c24a7a9349dd7ec0e24531925a02d9')
 
     depends_on("libtool", type="build")
 
     patch("Makefile.spack.patch")
+
+    def url_for_version(self, version):
+        url = "http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-{0}.tar.gz"
+        return url.format(version.joined)
 
     def install(self, spec, prefix):
         # The Makefile isn't portable; use our own instead

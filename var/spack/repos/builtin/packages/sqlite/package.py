@@ -32,9 +32,9 @@ class Sqlite(Package):
        running a separate RDBMS process.
     """
     homepage = "www.sqlite.org"
-    url      = "https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz"
 
-    version('3080500', '0544ef6d7afd8ca797935ccc2685a9ed')
+    version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
+            url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
 
     def get_arch(self):
         arch = architecture.Arch()
