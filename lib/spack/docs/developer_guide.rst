@@ -447,9 +447,9 @@ the string that it detected to be the name and version. The
 ``--incorrect-name`` and ``--incorrect-version`` flags can be used to
 print URLs that were not being parsed correctly.
 
-""""""""""""""""""
+"""""""""""""""""""""
 ``spack url summary``
-""""""""""""""""""
+"""""""""""""""""""""
 
 This command attempts to parse every URL for every package in Spack
 and prints a summary of how many of them are being correctly parsed.

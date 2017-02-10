@@ -78,7 +78,8 @@ def setup_parser(subparser):
 
     # Summary
     sp.add_parser(
-        'summary', help='print a summary of how well we are parsing package urls')
+        'summary',
+        help='print a summary of how well we are parsing package urls')
 
 
 def url(parser, args):

@@ -154,6 +154,7 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('synergy-1.3.6p2-MacOSX-Universal',
                    'synergy-1.3.6p2')
 
+
 class UrlParseOffsetTest(unittest.TestCase):
 
     def check(self, name, noffset, ver, voffset, path):
