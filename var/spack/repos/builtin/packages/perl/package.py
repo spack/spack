@@ -79,3 +79,5 @@ class Perl(Package):
                 perl('Makefile.PL')
                 make()
                 make('install')
+
+# Perl does not use Autotools, it should subclass from Package
