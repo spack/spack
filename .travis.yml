@@ -103,12 +103,3 @@ script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
   - codecov --env PY_VERSION
-
-#=============================================================================
-# Notifications
-#=============================================================================
-notifications:
-  email:
-    recipients: tgamblin@llnl.gov
-    on_success: change
-    on_failure: always
