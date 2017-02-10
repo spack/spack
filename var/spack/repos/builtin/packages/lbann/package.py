@@ -26,8 +26,8 @@ from spack import *
 
 
 class Lbann(CMakePackage):
-    """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed 
-    memory, HPC-optimized, model and data parallel training toolkit for deep 
+    """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed
+    memory, HPC-optimized, model and data parallel training toolkit for deep
     neural networks."""
 
     homepage = "http://software.llnl.gov/lbann/"
@@ -36,14 +36,10 @@ class Lbann(CMakePackage):
     version('develop', git='https://github.com/LLNL/lbann.git', branch="develop")
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
 
-    variant('debug', default=False,
-            description='Builds a debug version of the libraries')
-    variant('gpu', default=False,
-            description='Builds with support for GPUs via CUDA and cuDNN')
-    variant('opencv', default=True,
-            description='Builds with support for image processing routines with OpenCV')
-    variant('seq_init', default=False,
-            description='Force serial initialization of weight matrices.')
+    variant('debug', default=False, description='Builds a debug version of the libraries')
+    variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
+    variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
+    variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
 
     depends_on('elemental +openmp_blas +scalapack +shared +int64')
     depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
