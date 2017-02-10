@@ -29,8 +29,8 @@ import shutil
 
 class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
-    homepage = "http://www.graphviz.org"
-    url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
+    homepage = 'http://www.graphviz.org'
+    url      = 'http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz'
 
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
@@ -67,14 +67,15 @@ class Graphviz(AutotoolsPackage):
 
     parallel = False
 
-    depends_on("swig", when='+swig')
-    # Graphviz does not work with Python3
-    depends_on("python@2:2.8", when='+python')
-    depends_on("ghostscript")
-    depends_on("freetype")
-    depends_on("expat")
-    depends_on("libtool")
-    depends_on("pkg-config", type='build')
+    depends_on('swig', when='+swig')
+    depends_on('ghostscript')
+    depends_on('freetype')
+    depends_on('expat')
+    depends_on('libtool')
+    depends_on('pkg-config', type='build')
+
+    depends_on('jdk', when='+java')
+    depends_on('python@2:2.8', when='+python')
 
     def configure_args(self):
         options = []
