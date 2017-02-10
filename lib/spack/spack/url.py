@@ -389,6 +389,10 @@ def parse_version_offset(path):
         # e.g. tinyxml_2_6_2, boost_1_55_0
         (r'^[a-zA-Z+_]+_v?(\d[\da-zA-Z_]*)$', stem),
 
+        # name_namever_ver
+        # e.g. tbb2017_20161128
+        (r'^[a-zA-Z+_]+(\d[\da-zA-Z_]*)$', stem),
+
         # name.name.ver.ver
         # e.g. prank.source.150803, jpegsrc.v9b
         (r'^[a-zA-Z+.]+\.v?(\d[\da-zA-Z.]*)$', stem),
