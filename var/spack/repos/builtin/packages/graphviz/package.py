@@ -80,11 +80,29 @@ class Graphviz(AutotoolsPackage):
     def configure_args(self):
         options = []
 
-        vars = ('+swig', '+sharp', '+go', '+guile', '+io',
-            '+java', '+lua', '+ocaml', '+perl', '+php',
+        # These language bindings have been tested, we know they work.
+        tested_bindings = ('+java', '+perl')
+
+        # These language bindings have not yet been tested.  They
+        # likely need additional dependencies to get working.
+        untested_bindings = ('+swig', '+sharp', '+go', '+guile', '+io',
+            '+lua', '+ocaml', '+php',
             '+python', '+r', '+ruby', '+tcl')
 
-        for var in vars:
+
+        for var in untested_bindings:
+            if var in spec:
+                raise SpackException(
+                    "The variant {0} for language bindings has not been "
+                    "tested.  It might or might not work.  To try it "
+                    "out, run `spack edit graphviz`, and then move '{0}' "
+                    "from the `untested_bindings` list to the "
+                    "`tested_bindings` list.  Be prepared to add "
+                    "required dependencies.  "
+                    "Please then submit a pull request to "
+                    "http://github.com/llnl/spack")
+
+        for var in tested_bindings:
             enable = 'enable' if (var in spec) else 'disable'
             options.append('--%s-%s' % (enable, var[1:]))
 
