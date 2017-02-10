@@ -141,12 +141,14 @@ def load_module(mod):
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
 
+
 def get_argument_from_module_line(line):
     if '(' in line and ')' in line:
         words_and_symbols = line.split('"')
         return words_and_symbols[-2]
     else:
         return line.split()[2]
+
 
 def get_path_from_module(mod):
     """Inspects a TCL module for entries that indicate the absolute path
