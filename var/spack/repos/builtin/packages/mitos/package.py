@@ -30,12 +30,12 @@ class Mitos(Package):
     performance data to view with MemAxes"""
 
     homepage = "https://github.com/llnl/Mitos"
+    url      = "https://github.com/LLNL/Mitos/archive/v0.9.1.tar.gz"
 
     version('0.9.2',
             git='https://github.com/llnl/Mitos.git',
             commit='8cb143a2e8c00353ff531a781a9ca0992b0aaa3d')
-
-    version('0.9.1', git='https://github.com/llnl/Mitos.git', tag='v0.9.1')
+    version('0.9.1', 'c6cb57f3cae54f5157affd97ef7ef79e')
 
     depends_on('dyninst@8.2.1:')
     depends_on('hwloc')
