@@ -34,6 +34,7 @@ class Glib(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
 
+    version('2.49.7', '397ead3fcf325cb921d54e2c9e7dfd7a')
     version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
     version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
