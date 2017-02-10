@@ -141,6 +141,12 @@ def load_module(mod):
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
 
+def get_argument_from_module_line(line):
+    if '(' in line and ')' in line:
+        words_and_symbols = line.split('"')
+        return words_and_symbols[-2]
+    else:
+        return line.split()[2]
 
 def get_path_from_module(mod):
     """Inspects a TCL module for entries that indicate the absolute path
@@ -155,8 +161,7 @@ def get_path_from_module(mod):
     # If it lists its package directory, return that
     for line in text:
         if line.find(mod.upper() + '_DIR') >= 0:
-            words = line.split()
-            return words[2]
+            return get_argument_from_module_line(line)
 
     # If it lists a -rpath instruction, use that
     for line in text:
@@ -173,8 +178,7 @@ def get_path_from_module(mod):
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
         if line.find('LD_LIBRARY_PATH') >= 0:
-            words = line.split()
-            path = words[2]
+            path = get_argument_from_module_line(line)
             return path[:path.find('/lib')]
     # Unable to find module path
     return None
