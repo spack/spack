@@ -37,8 +37,6 @@ class RubyOpen4(RubyPackage):
 
     version('1.3.4', '24c0bb0abdbf098ad116c1bb5a6a1905', expand=False)
 
-    extends('ruby')
-
     def install(self, spec, prefix):
         gem('install', '--local', 'open4-{0}.gem'.format(self.version))
 

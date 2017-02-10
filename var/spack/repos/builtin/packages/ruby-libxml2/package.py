@@ -35,7 +35,6 @@ class RubyLibxml2(RubyPackage):
 
     version('2.9.0', 'ff7a9da1b1450720d7d1ec9276db25ef', expand=False)
 
-    extends('ruby')
     depends_on('libxml2')
 
     def install(self, spec, prefix):

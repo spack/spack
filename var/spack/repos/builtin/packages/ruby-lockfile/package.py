@@ -36,8 +36,6 @@ class RubyLockfile(RubyPackage):
 
     version('2.1.3', '9c04b0815f48d1cd5d5a96ff2fb6076b', expand=False)
 
-    extends('ruby')
-
     def install(self, spec, prefix):
         gem('install', '--local', 'lockfile-{0}.gem'.format(self.version))
 

@@ -35,16 +35,9 @@ class RubyslParsedate(RubyPackage):
 
     version('1.0.1', 'd5d3751cd9d1aa778d088bbb1aa0cf8d', expand=False)
 
-    extends('ruby')
-    #depends_on('rubysl-date')
     depends_on('rubysl-date',  type=("build", "run"))
-    #depends_on('ruby-bundler', type=("build", "run"))
-    #depends_on('ruby-rank',    type=("build", "run"))
-    #depends_on('ruby-mspec',   type=("build", "run"))
 
     def install(self, spec, prefix):
-        gem('environment')
-        gem('list')
         gem('install', '--force', '--local', '{0}-{1}.gem'.format(self.name, self.version))
 
 

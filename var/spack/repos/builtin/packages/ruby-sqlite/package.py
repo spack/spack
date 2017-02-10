@@ -36,8 +36,7 @@ class RubySqlite(RubyPackage):
 
     version('1.3.13', '96151574f04ca86a96b6ebe6dece9494', expand=False)
 
-    extends('ruby')
     depends_on('sqlite')
 
     def install(self, spec, prefix):
-	gem('install', '--local', 'sqlite3-{0}.gem'.format(self.version))
+        gem('install', '--local', 'sqlite3-{0}.gem'.format(self.version))
