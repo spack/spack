@@ -142,6 +142,7 @@ def strip_version_suffixes(path):
         'jar',
         'complete',
         'oss',
+        'gem',
 
         # Download version
         'stable',
