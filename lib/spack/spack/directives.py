@@ -263,6 +263,24 @@ def _depends_on(pkg, spec, when=None, type=None):
         conditions[when_spec] = dep_spec
 
 
+@directive('conflicts')
+def conflicts(conflict_spec, when=None):
+    """
+
+    :param conflict_spec:
+    :param when:
+    :return:
+    """
+    def _execute(pkg):
+        # If when is not specified the conflict always holds
+        condition = pkg.name if when is None else when
+        when_spec = parse_anonymous_spec(condition, pkg.name)
+
+        when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
+        when_spec_list.append(when_spec)
+    return _execute
+
+
 @directive(('dependencies', 'dependency_types'))
 def depends_on(spec, when=None, type=None):
     """Creates a dict of deps with specs defining when they apply.
