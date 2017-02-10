@@ -162,6 +162,7 @@ from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
+from spack.build_systems.ruby import RubyPackage
 
 __all__ += [
     'run_before',
@@ -172,7 +173,8 @@ __all__ += [
     'AutotoolsPackage',
     'MakefilePackage',
     'PythonPackage',
-    'RPackage'
+    'RPackage',
+    'RubyPackage'
 ]
 
 from spack.version import Version, ver

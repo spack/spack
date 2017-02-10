@@ -29,7 +29,7 @@ from spack.util.executable import which
 
 # Supported archive extensions.
 PRE_EXTS = ["tar"]
-EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
+EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz", "gem"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
 ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(

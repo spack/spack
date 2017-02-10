@@ -268,6 +268,27 @@ class RPackageTemplate(PackageTemplate):
         super(RPackageTemplate, self).__init__(name, *args)
 
 
+class RubyPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for ruby extensions"""
+    base_class_name = 'RubyPackage'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required.
+    # depends_on('r-foo', type=('build', 'run'))"""
+
+    body = """\
+    # FIXME: Override install() if necessary."""
+
+    def __init__(self, name, *args):
+        # If the user provided `--name ruby-date`, don't rename it ruby-ruby-date
+        if not name.startswith('ruby-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to ruby-{0}".format(name))
+            name = 'ruby-{0}'.format(name)
+
+        super(RubyPackageTemplate, self).__init__(name, *args)
+
+
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
@@ -305,6 +326,7 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
+    'ruby':       RubyPackageTemplate,
     'octave':     OctavePackageTemplate,
     'generic':    PackageTemplate
 }
@@ -351,6 +373,14 @@ class BuildSystemGuesser:
         if 'downloads.sourceforge.net/octave/' in url:
             self.build_system = 'octave'
             return
+
+        # Most ruby extensions are hosted on Ruby Gems:
+        #     https://rubygems.org/gems
+        # They all have the same base URL.
+        if 'rubygems.org/downloads' in url:
+            self.build_system = 'ruby'
+            return
+
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the

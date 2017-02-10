@@ -49,8 +49,9 @@ def mirror_archive_filename(spec, fetcher, resourceId=None):
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
 
+    name = None
     if isinstance(fetcher, fs.URLFetchStrategy):
-        if fetcher.expand_archive:
+        if fetcher.fetch:
             # If we fetch with a URLFetchStrategy, use URL's archive type
             ext = url.determine_url_file_extension(fetcher.url)
             ext = ext or spec.package.versions[spec.package.version].get(
@@ -60,6 +61,9 @@ def mirror_archive_filename(spec, fetcher, resourceId=None):
                 raise MirrorError(
                     "%s version does not specify an extension" % spec.name +
                     " and could not parse extension from %s" % fetcher.url)
+            # If the archive name is different to the package name
+            if spec.package.name != url.parse_name(fetcher.url):
+                name = url.parse_name(fetcher.url)
         else:
             # If the archive shouldn't be expanded, don't check extension.
             ext = None
@@ -67,10 +71,17 @@ def mirror_archive_filename(spec, fetcher, resourceId=None):
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    if resourceId:
-        filename = "%s-%s" % (resourceId, spec.version) + ".%s" % ext
+    if ext:
+        ext = '.' + ext
     else:
-        filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
+        ext = ''
+
+    if resourceId:
+        filename = "%s-%s%s" % (resourceId, spec.version, ext)
+    elif name:
+        filename = "%s-%s%s" % (name, spec.version, ext)
+    else:
+        filename = "%s-%s%s" % (spec.package.name, spec.version, ext)
 
     return filename
 

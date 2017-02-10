@@ -230,6 +230,9 @@ def parse_version_offset(path):
         # https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
         (r'github.com/[^/]+/[^/]+/releases/download/v?([^/]+)/.*$', path),
 
+        # e.g., https://rubygems.org/downloads/rubysl-date-2.0.9.gem
+        (r'rubygems.org/.+/.*-((\d+\.)+\d+).gem$', path),
+
         # GitLab syntax:
         #   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
         #   as with github releases, we hope a version can be found in the
