@@ -37,33 +37,45 @@ class Graphviz(AutotoolsPackage):
     # We try to leave language bindings enabled if they don't cause build issues
     # or add dependencies.
     variant('swig', default=False,
-            description='Enable for optional swig language bindings.')
+            description='Enable for optional swig language bindings'
+            ' (not yet functional)')
     variant('sharp', default=False,
-            description='Enable for optional sharp language bindings.')
+            description='Enable for optional sharp language bindings'
+            ' (not yet functional)')
     variant('go', default=False,
-            description='Enable for optional go language bindings.')
+            description='Enable for optional go language bindings'
+            ' (not yet functional)')
     variant('guile', default=False,
-            description='Enable for optional guile language bindings.')
+            description='Enable for optional guile language bindings'
+            ' (not yet functional)')
     variant('io', default=False,
-            description='Enable for optional io language bindings.')
+            description='Enable for optional io language bindings'
+            ' (not yet functional)')
     variant('java', default=False,  # Spack has no Java support
-            description='Enable for optional java language bindings.')
+            description='Enable for optional java language bindings')
     variant('lua', default=False,
-            description='Enable for optional lua language bindings.')
+            description='Enable for optional lua language bindings'
+            ' (not yet functional)')
     variant('ocaml', default=False,
-            description='Enable for optional ocaml language bindings.')
+            description='Enable for optional ocaml language bindings'
+            ' (not yet functional)')
     variant('perl', default=False,    # Spack has no Perl support
-            description='Enable for optional perl language bindings.')
+            description='Enable for optional perl language bindings')
     variant('php', default=False,
-            description='Enable for optional php language bindings.')
+            description='Enable for optional php language bindings'
+            ' (not yet functional)')
     variant('python', default=False,    # Build issues with Python 2/3
-            description='Enable for optional python language bindings.')
+            description='Enable for optional python language bindings'
+            ' (not yet functional)')
     variant('r', default=False,
-            description='Enable for optional r language bindings.')
+            description='Enable for optional r language bindings'
+            ' (not yet functional)')
     variant('ruby', default=False,
-            description='Enable for optional ruby language bindings.')
+            description='Enable for optional ruby language bindings'
+            ' (not yet functional)')
     variant('tcl', default=False,
-            description='Enable for optional tcl language bindings.')
+            description='Enable for optional tcl language bindings'
+            ' (not yet functional)')
 
     parallel = False
 
