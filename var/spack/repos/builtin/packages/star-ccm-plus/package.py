@@ -41,10 +41,6 @@ class StarCcmPlus(Package):
     license_required = True
     license_vars = ['CDLMD_LICENSE_FILE', 'LM_LICENSE_FILE']
 
-    def url_for_version(self, version):
-        return "file://{0}/STAR-CCM+{1}_linux-x86_64.tar.gz".format(
-            os.getcwd(), version)
-
     def install(self, spec, prefix):
         # There is a known issue with the LaunchAnywhere application.
         # Specifically, it cannot handle long prompts or prompts
