@@ -33,9 +33,6 @@ class Log4cxx(Package):
 
     version('0.10.0', 'b30ffb8da3665178e68940ff7a61084c')
 
-
-    depends_on('autoconf', type="build")
-    depends_on('automake', type="build")
     depends_on('libxml2')
     depends_on('apr-util')
 
