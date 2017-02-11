@@ -1452,7 +1452,7 @@ class PackageBase(object):
         This is useful if there are some common steps to installing
         all extensions for a certain package.
         """
-        self.setup_environment(spack_env, run_env)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
