@@ -37,6 +37,8 @@ class Ipp(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2017.0.098', 'e7be757ebe351d9f9beed7efdc7b7118',
+            url="file://%s/l_ipp_2017.0.098.tgz" % os.getcwd())
     version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
             url="file://%s/l_ipp_9.0.3.210.tgz" % os.getcwd())
 
