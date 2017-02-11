@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.spec import UnsupportedCompilerError
 
 
 class Elemental(CMakePackage):
@@ -95,6 +96,12 @@ class Elemental(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+
+        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
+            raise UnsupportedCompilerError(
+                "Elemental {0} has a known bug with compiler: {1} {2}".format(
+                    spec.version, spec.compiler.name, spec.compiler.version))
+
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
