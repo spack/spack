@@ -40,3 +40,6 @@ class Callpath(Package):
         configure("--prefix=%s" % prefix)
         make()
         make("install")
+
+    def setup_environment(self, senv, renv):
+        renv.set('FOOBAR', self.name)

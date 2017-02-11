@@ -389,7 +389,6 @@ class EnvModule(object):
             for mod in modules:
                 set_module_variables_for_package(package, mod)
             set_module_variables_for_package(package, package.module)
-            package.setup_environment(spack_env, env)
             package.setup_dependent_package(self.pkg.module, self.spec)
             package.setup_dependent_environment(spack_env, env, self.spec)
 
