@@ -55,6 +55,4 @@ class Libpsf(Package):
         else:
             configure("--prefix=%s" % prefix)
         make()
-        # FIXME: Add logic to build and install here.
-        # FIXME: Add logic to build and install here.
         make("install")
