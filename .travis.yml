@@ -12,6 +12,7 @@ branches:
 # Build matrix
 #=============================================================================
 matrix:
+  fast_finish: true
   include:
     - python: '2.6'
       os: linux
