@@ -70,7 +70,8 @@ class Lbann(CMakePackage):
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
-            '-DELEMENTAL_MATH_LIBS={0}'.format(self.spec['elemental'].elemental_libs),
+            '-DELEMENTAL_MATH_LIBS={0}'.format(
+                self.spec['elemental'].elemental_libs),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']
