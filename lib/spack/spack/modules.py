@@ -136,14 +136,14 @@ def dependencies(spec, request='all'):
     # FIXME : to get a unique list of spec anyhow. Do we miss a merge
     # FIXME : step among nodes that refer to the same package?
     seen = set()
-    seen_add = seen.add
     l = sorted(
         spec.traverse(order='post',
                       cover='nodes',
                       deptype=('link', 'run'),
                       root=False),
         reverse=True)
-    return [x for x in l if not (x in seen or seen_add(x))]
+    # TODO: Isn't this just the same as return l?
+    return [x for x in l if not (x in seen or seen.add(x))]
 
 
 def update_dictionary_extending_lists(target, update):
@@ -198,8 +198,20 @@ def parse_config_options(module_generator):
     # Automatic loading loads
     module_file_actions['hash_length'] = module_configuration.get(
         'hash_length', 7)
-    module_file_actions['autoload'] = dependencies(
+
+    # -------------
+    # Autoloads from modules.yaml
+    autoloads1 = dependencies(
         module_generator.spec, module_file_actions.get('autoload', 'none'))
+    # Autoloads from the packages
+    autoloads2 = list(module_generator.spec.autoloads())
+
+    seen = set()
+    autoloads = [x for x in autoloads2 + autoloads1
+        if not (x in seen or seen.add(x))]
+
+    module_file_actions['autoload'] = autoloads
+
     # Prerequisites
     module_file_actions['prerequisites'] = dependencies(
         module_generator.spec, module_file_actions.get('prerequisites',
@@ -403,8 +415,15 @@ class EnvModule(object):
             'environment_blacklist', {})
         # Build up the module file content
         module_file_content = self.header
-        for x in filter_blacklisted(
-                module_configuration.pop('autoload', []), self.name):
+
+        autoloads = module_configuration.pop('autoload', [])
+
+        if len(autoloads) > 0:
+            print 'Gxenerating autoloads for {0}:'.format(self.spec.name)
+            for spec in autoloads:
+                print '    ',spec.name
+
+        for x in filter_blacklisted(autoloads, self.name):
             module_file_content += self.autoload(x)
         for x in module_configuration.pop('load', []):
             module_file_content += self.autoload(x)

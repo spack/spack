@@ -95,6 +95,7 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
+from __future__ import print_function
 import base64
 import hashlib
 import ctypes
@@ -835,9 +836,8 @@ class Spec(object):
 
     def _find_deps(self, where, deptype):
         deptype = canonical_deptype(deptype)
-
         return [dep for dep in where.values()
-                if deptype and (not dep.deptypes or
+                if deptype and ((not dep.deptypes) or
                                 any(d in deptype for d in dep.deptypes))]
 
     def dependencies(self, deptype=None):
@@ -1022,6 +1022,12 @@ class Spec(object):
         else:
             for dspec in self.traverse_edges(**kwargs):
                 yield get_spec(dspec)
+
+    def autoloads(self):
+        for dep in self.dependencies(deptype=('run',)):
+            if self.package.autoloads.get(dep.package.name,False):
+                dep.autoloads()
+                yield dep
 
     def traverse_edges(self, visited=None, d=0, deptype=None,
                        deptype_query=None, dep_spec=None, **kwargs):

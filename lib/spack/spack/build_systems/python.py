@@ -88,6 +88,11 @@ class PythonPackage(PackageBase):
        def configure(self, spec, prefix):
            self.setup_py('configure')
     """
+
+    # Packages that depend on this should autoload its module.
+    # Because we don't have RPATHs in Python...
+    autoload = True
+
     # Default phases
     phases = ['build', 'install']
 
