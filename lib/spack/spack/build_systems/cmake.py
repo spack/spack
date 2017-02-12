@@ -22,11 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
 
 import inspect
 import platform
 import sys
 import string
+import os
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
@@ -181,9 +183,21 @@ class CMakePackage(PackageBase):
     run_after('install')(PackageBase.sanity_check_prefix)
 
     def write_spconfig(self, spconfig_fname):
-        # Set-up the environment
+        """Writes the spconfig.py (CMake setup file) to a file."""
+        print('BEGIN write_spconfig')
         spack.build_environment.setup_package(self)
+        write_exception = None
+        with open(spconfig_fname, 'w') as fout:
+            self._write_spconfig(fout)
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
 
+        set_executable(spconfig_fname)
+        return spconfig_fname
+
+    def _write_spconfig(self, fout):
+        """Writes the spconfig.py file to a stream."""
+
+        # Set-up the environment
         _cmd = [str(spack.which('cmake'))] + \
             self.std_cmake_args + self.cmake_args()
 
@@ -197,13 +211,16 @@ class CMakePackage(PackageBase):
         env['PATH'] = ':'.join(paths)
         env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
         env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
-        env['CC'] = os.environ['SPACK_CC']
-        env['CXX'] = os.environ['SPACK_CXX']
-        env['FC'] = os.environ['SPACK_FC']
 
-        with open(spconfig_fname, 'w') as fout:
-            fout.write(
-                r"""#!%s
+        if 'SPACK_CC' in os.environ:
+            env['CC'] = os.environ['SPACK_CC']
+        if 'SPACK_CXX' in os.environ:
+            env['CXX'] = os.environ['SPACK_CXX']
+        if 'SPACK_FC' in os.environ:
+            env['FC'] = os.environ['SPACK_FC']
+
+        fout.write(
+            r"""#!%s
 #
 # %s
 
@@ -216,29 +233,25 @@ def cmdlist(str):
 env = dict(os.environ)
 """ % (sys.executable, ' '.join(sys.argv)))
 
-            env_vars = sorted(list(env.keys()))
-            for name in env_vars:
-                val = env[name]
-                if string.find(name, 'PATH') < 0:
-                    fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
+        env_vars = sorted(list(env.keys()))
+        for name in env_vars:
+            val = env[name]
+            if string.find(name, 'PATH') < 0:
+                fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
+            else:
+                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+                    sep = ';'
                 else:
-                    if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
-                        sep = ';'
-                    else:
-                        sep = ':'
+                    sep = ':'
 
-                    fout.write(
-                        'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
-                    for part in string.split(val, sep):
-                        fout.write('    %s\n' % part)
-                    fout.write('"""))\n')
+                fout.write(
+                    'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
+                for part in string.split(val, sep):
+                    fout.write('    %s\n' % part)
+                fout.write('"""))\n')
 
-            fout.write('\ncmd = cmdlist("""\n')
-            fout.write('%s\n' % cmd[0])
-            for arg in cmd[1:]:
-                fout.write('    %s\n' % arg)
-            fout.write('""") + sys.argv[1:]\n')
-            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
-            set_executable(spconfig_fname)
-            return spconfig_fname
-
+        fout.write('\ncmd = cmdlist("""\n')
+        fout.write('%s\n' % cmd[0])
+        for arg in cmd[1:]:
+            fout.write('    %s\n' % arg)
+        fout.write('""") + sys.argv[1:]\n')

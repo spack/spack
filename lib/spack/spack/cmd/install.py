@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#from __future__ import print_function
+from __future__ import print_function
 import contextlib
 import collections
 import argparse
@@ -362,9 +362,6 @@ def top_install(
     spconfig_fname_fn=get_spconfig_fname,
     **kwargs):
 
-    if report:
-        print 'SPACKENV BEGIN %s' % spec.name
-
     """Top-level install method."""
     if not install_package:
         if install_dependencies:
@@ -379,7 +376,7 @@ def top_install(
         else:
             # Nothing to install!
             tty.die("Nothing to install, due to the --only flag")
-    else:    // install_package = True, install_dependencies=?
+    else:    # install_package = True, install_dependencies=?
         package = spack.repo.get(spec)
         package.do_install(
             install_dependencies=install_dependencies,
@@ -387,16 +384,17 @@ def top_install(
             spconfig_fname_fn=spconfig_fname_fn,
             **kwargs)
 
+
 def show_spec(spec, args):
     """Print the concretized spec for the user before installing."""
     if args.install_status:
-        print spec.tree(
+        print(spec.tree(
             color=True,
             cover='nodes',
             format = '$_' + '$@$%@+$+$=',
             hashes = True,
             hashlen = 7,
-            install_status = True)
+            install_status = True))
 
 def install(parser, args):
     kwargs = validate_args(args)
