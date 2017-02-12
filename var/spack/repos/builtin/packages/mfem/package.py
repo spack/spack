@@ -29,10 +29,30 @@ class Mfem(Package):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
     homepage = 'http://www.mfem.org'
-    url      = 'http://mfem.github.io/releases/mfem-3.2.tgz'
 
-    version('3.2', '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340')
-    version('3.1', '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57')
+    # mfem is downloaded from a URL shortener at request of upstream
+    # author Tzanio Kolev <tzanio@llnl.gov>.  See here:
+    #     https://github.com/mfem/mfem/issues/53
+    #
+    # The following procedure should be used to verify security when a
+    # new verison is added:
+    #
+    # 1. Verify that no checksums on old versions have changed.
+    # 
+    # 2. Use http://getlinkinfo.com or similar to verify that the
+    #    underling download link for the latest version comes has the
+    #    prefix: http://mfem.github.io/releases
+    #
+    # If this quick verification procedure fails, additional discussion
+    # will be required to verify the new version.
+
+    version('3.2',
+            '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
+            url='http://goo.gl/Y9T75B', preferred=True, extension='.tar.gz')
+
+    version('3.1',
+            '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
+            url='http://goo.gl/xrScXn', extension='.tar.gz')
 
     variant('metis', default=False, description='Activate support for metis')
     variant('hypre', default=False, description='Activate support for hypre')
