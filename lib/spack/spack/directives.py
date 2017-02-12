@@ -265,7 +265,7 @@ def _depends_on(pkg, spec, when=None, type=None, autoload=None):
     if autoload is not None:
         _autoload = autoload
     else:
-        try :
+        try:
             _autoload = dep_spec.package.autoload
         except:
             # Exception if dep_spec is virtual.
@@ -276,6 +276,7 @@ def _depends_on(pkg, spec, when=None, type=None, autoload=None):
 
     if _autoload:
         pkg.autoloads[dep_spec.name] = True
+
 
 @directive(('dependencies', 'dependency_types', 'autoloads'))
 def depends_on(spec, when=None, type=None, autoload=None):
