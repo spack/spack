@@ -149,7 +149,8 @@ class InstallTestJunitLog(unittest.TestCase):
                 ret = [specX]
             elif x == ['Y']:
                 ret = [specY]
-            ret = []
+            else:
+                ret = []
 
             if allow_multi:
                 return ret
