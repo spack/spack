@@ -207,7 +207,8 @@ def parse_config_options(module_generator):
     autoloads2 = list(module_generator.spec.autoloads())
 
     seen = set()
-    autoloads = [x for x in autoloads2 + autoloads1
+    autoloads = [
+        x for x in autoloads2 + autoloads1
         if not (x in seen or seen.add(x))]
 
     module_file_actions['autoload'] = autoloads
@@ -419,9 +420,9 @@ class EnvModule(object):
         autoloads = module_configuration.pop('autoload', [])
 
         if len(autoloads) > 0:
-            print 'Gxenerating autoloads for {0}:'.format(self.spec.name)
+            print 'Generating autoloads for {0}:'.format(self.spec.name)
             for spec in autoloads:
-                print '    ',spec.name
+                print '    ', spec.name
 
         for x in filter_blacklisted(autoloads, self.name):
             module_file_content += self.autoload(x)

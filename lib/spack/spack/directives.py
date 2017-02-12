@@ -266,7 +266,7 @@ def _depends_on(pkg, spec, when=None, type=None, autoload=None):
         _autoload = autoload
     else:
         try :
-            _autoload = dep_spec.package.autoload if autoload is None else autoload
+            _autoload = dep_spec.package.autoload
         except:
             # Exception if dep_spec is virtual.
             # So... we can't have virtual packages with an autoload attribute.

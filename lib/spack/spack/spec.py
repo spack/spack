@@ -1025,7 +1025,7 @@ class Spec(object):
 
     def autoloads(self):
         for dep in self.dependencies(deptype=('run',)):
-            if self.package.autoloads.get(dep.package.name,False):
+            if self.package.autoloads.get(dep.package.name, False):
                 dep.autoloads()
                 yield dep
 
