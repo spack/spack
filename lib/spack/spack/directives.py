@@ -224,13 +224,12 @@ def version(ver, checksum=None, **kwargs):
 
 
 def _depends_on(pkg, spec, when=None, type=None, autoload=None):
-
     # If when is False do nothing
     if when is False:
         return
 
     # If when is None or True make sure the condition is always satisfied
-    if when is None or when:
+    if when is None or when is True:
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
 
@@ -263,7 +262,18 @@ def _depends_on(pkg, spec, when=None, type=None, autoload=None):
     else:
         conditions[when_spec] = dep_spec
 
-    _autoload = dep_spec.package.autoload if autoload is None else autoload
+    if autoload is not None:
+        _autoload = autoload
+    else:
+        try :
+            _autoload = dep_spec.package.autoload if autoload is None else autoload
+        except:
+            # Exception if dep_spec is virtual.
+            # So... we can't have virtual packages with an autoload attribute.
+            # That is not a big problem.  Things that depend on virtual
+            # packages will need to use `depends_on(..., autoload=...)`
+            _autoload = False
+
     if _autoload:
         pkg.autoloads[dep_spec.name] = True
 
