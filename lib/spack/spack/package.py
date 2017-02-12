@@ -553,16 +553,7 @@ class PackageBase(object):
         self._fetcher = None
         self.url = getattr(self.__class__, 'url', None)
 
-        # Fix up self.url if this package fetches with a URLFetchStrategy.
-        # This makes self.url behave sanely.
-        if self.spec.versions.concrete:
-            # TODO: this is a really roundabout way of determining the type
-            # TODO: of fetch to do. figure out a more sane fetch
-            # TODO: strategy/package init order (right now it's conflated with
-            # TODO: stage, package, and the tests make assumptions)
-            f = fs.for_package_version(self, self.version)
-            if isinstance(f, fs.URLFetchStrategy):
-                self.url = self.url_for_version(self.spec.version)
+        self._fixup_url()
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -595,6 +586,18 @@ class PackageBase(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
         self.extra_args = {}
+
+    def _fixup_url(self):
+        # Fix up self.url if this package fetches with a URLFetchStrategy.
+        # This makes self.url behave sanely.
+        if self.spec.versions.concrete:
+            # TODO: this is a really roundabout way of determining the type
+            # TODO: of fetch to do. figure out a more sane fetch
+            # TODO: strategy/package init order (right now it's conflated with
+            # TODO: stage, package, and the tests make assumptions)
+            f = fs.for_package_version(self, self.version)
+            if isinstance(f, fs.URLFetchStrategy):
+                self.url = self.url_for_version(self.spec.version)
 
     def possible_dependencies(self, visited=None):
         """Return set of possible transitive dependencies of this package."""
