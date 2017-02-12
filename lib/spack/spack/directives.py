@@ -265,11 +265,20 @@ def _depends_on(pkg, spec, when=None, type=None):
 
 @directive('conflicts')
 def conflicts(conflict_spec, when=None):
-    """
+    """Allows a package to define a conflict, i.e. a concretized configuration
+    that is known to be non-valid.
 
-    :param conflict_spec:
-    :param when:
-    :return:
+    For example a package that is known not to be buildable with intel
+    compilers can declare:
+
+    conflicts('%intel')
+
+    To express the same constraint only when the 'foo' variant is activated:
+
+    conflicts('%intel', when='+foo')
+
+    :param conflict_spec: constraint defining the known conflict
+    :param when: optional constraint that triggers the conflict
     """
     def _execute(pkg):
         # If when is not specified the conflict always holds

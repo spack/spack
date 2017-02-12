@@ -59,7 +59,7 @@ class Openblas(MakefilePackage):
 
     parallel = False
 
-    conflicts('%intel@16')
+    conflicts('%intel@16', when='@0.2.15:0.2.19')
 
     @run_before('edit')
     def check_compilers(self):
