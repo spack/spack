@@ -1560,6 +1560,28 @@ Python's ``setup_dependent_environment`` method also sets up some
 other variables, creates a directory, and sets up the ``PYTHONPATH``
 so that dependent packages can find their dependencies at build time.
 
+.. _packaging_conflicts:
+
+---------
+Conflicts
+---------
+
+Sometimes packages have known bugs, or limitations, that would prevent them
+to build e.g. against other dependencies or with certain compilers. Spack
+makes it possible to express such constraints with the ``conflicts`` directive.
+
+Adding the following to a package:
+
+.. code-block:: python
+
+    conflicts('%intel', when='@1.2')
+
+we express the fact that the current package *cannot be built* with the Intel
+compiler when we are trying to install version "1.2". The ``when`` argument can
+be omitted, in which case the conflict will always be active.
+Conflicts are always evaluated after the concretization step has been performed,
+and if any match is found a detailed error message is shown to the user.
+
 .. _packaging_extensions:
 
 ----------
