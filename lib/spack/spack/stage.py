@@ -662,7 +662,6 @@ class BundleStage(object):
     """Dummy stage for BundlePackage instances, which don't have a
     tarball."""
 
-
     def __init__(self):
         self.archive_file = None
         self.path = None
@@ -701,7 +700,6 @@ class BundleStage(object):
         tty.msg("Sources for BundleStage are not cached")
 
 
-
 def _get_mirrors():
     """Get mirrors from spack configuration."""
     config = spack.config.get_config('mirrors')
@@ -732,6 +730,7 @@ class RestageError(StageError):
 
 class ChdirError(StageError):
     """Raised when Spack can't change directories."""
+
 
 # Keep this in namespace for convenience
 FailedDownloadError = fs.FailedDownloadError

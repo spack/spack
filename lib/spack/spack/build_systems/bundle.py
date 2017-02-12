@@ -23,13 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import inspect
-
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-from spack.package import PackageBase, run_after
+from spack.package import PackageBase
 from spack.stage import BundleStage
 from spack.fetch_strategy import BundleFetchStrategy
+
 
 class BundlePackage(PackageBase):
     phases = ['build', 'install']

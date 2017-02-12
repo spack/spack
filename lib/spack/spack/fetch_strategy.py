@@ -993,8 +993,6 @@ class NoStageError(FetchError):
             method.__name__)
 
 
-
-
 class BundleFetchStrategy(FetchStrategy):
 
     # Subclasses need to implement these methods

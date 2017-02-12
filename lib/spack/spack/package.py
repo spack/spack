@@ -598,7 +598,6 @@ class PackageBase(object):
             if isinstance(f, fs.URLFetchStrategy):
                 self.url = self.url_for_version(self.spec.version)
 
-
     def possible_dependencies(self, visited=None):
         """Return set of possible transitive dependencies of this package."""
         if visited is None:
