@@ -22,38 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.url
-
-description = "Inspect urls used by packages in spack."
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-c', '--color', action='store_true',
-        help="Color the parsed version and name in the urls shown.  "
-             "Version will be cyan, name red.")
-    subparser.add_argument(
-        '-e', '--extrapolation', action='store_true',
-        help="Color the versions used for extrapolation as well."
-             "Additional versions are green, names magenta.")
+class RKernsmooth(RPackage):
+    """Functions for kernel smoothing (and density estimation)."""
 
+    homepage = "https://cran.r-project.org/package=KernSmooth"
+    url      = "https://cran.r-project.org/src/contrib/KernSmooth_2.23-15.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/KernSmooth"
 
-def urls(parser, args):
-    urls = set()
-    for pkg in spack.repo.all_packages():
-        url = getattr(pkg.__class__, 'url', None)
-        if url:
-            urls.add(url)
+    version('2.23-15', '746cdf26dec72004cf19978e87dcc982')
 
-        for params in pkg.versions.values():
-            url = params.get('url', None)
-            if url:
-                urls.add(url)
-
-    for url in sorted(urls):
-        if args.color or args.extrapolation:
-            print spack.url.color_url(
-                url, subs=args.extrapolation, errors=True)
-        else:
-            print url
+    depends_on('r@2.5.0:')

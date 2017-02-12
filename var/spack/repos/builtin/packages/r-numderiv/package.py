@@ -25,14 +25,14 @@
 from spack import *
 
 
-class RThdata(RPackage):
-    """Contains data sets used in other packages Torsten Hothorn maintains."""
+class RNumderiv(RPackage):
+    """Methods for calculating (usually) accurate numerical first and
+    second order derivatives."""
 
-    homepage = "https://cran.r-project.org/package=TH.data"
-    url      = "https://cran.r-project.org/src/contrib/TH.data_1.0-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/TH.data"
+    homepage = "https://cran.r-project.org/package=numDeriv"
+    url      = "https://cran.r-project.org/src/contrib/numDeriv_2016.8-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/numDeriv"
 
-    version('1.0-7', '3e8b6b1a4699544f175215aed7039a94')
+    version('2016.8-1', '30e486298d5126d86560095be8e8aac1')
 
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r@2.11.1:')

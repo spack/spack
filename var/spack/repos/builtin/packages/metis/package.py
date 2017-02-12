@@ -186,6 +186,15 @@ class Metis(Package):
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
+        else:
+            # Remove all RPATH options 
+            # (RPATHxxx options somehow trigger cmake to link dynamically)
+            rpath_options = []
+            for o in options:
+                if o.find('RPATH') >= 0:
+                    rpath_options.append(o)
+            for o in rpath_options:
+                options.remove(o)
         if '+debug' in spec:
             options.extend(['-DDEBUG:BOOL=ON',
                             '-DCMAKE_BUILD_TYPE:STRING=Debug'])

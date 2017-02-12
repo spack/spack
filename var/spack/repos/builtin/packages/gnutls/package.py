@@ -35,7 +35,7 @@ class Gnutls(AutotoolsPackage):
        with focus on security and interoperability."""
 
     homepage = "http://www.gnutls.org"
-    url      = "ftp://ftp.gnutls.org/gcrypt/gnutls/v3.3/gnutls-3.3.9.tar.xz"
+    url      = "http://www.ring.gr.jp/pub/net/gnupg/gnutls/v3.3/gnutls-3.3.9.tar.xz"
 
     version('3.3.9', 'ff61b77e39d09f1140ab5a9cf52c58b6')
 

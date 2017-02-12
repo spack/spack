@@ -32,7 +32,7 @@ import spack.cmd
 import spack.store
 import spack.repository
 
-description = "Remove an installed package"
+description = "remove an installed package"
 
 error_message = """You can either:
     a) Use a more specific spec, or
@@ -50,24 +50,24 @@ display_args = {
 def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
-        help="Remove regardless of whether other packages depend on this one.")
+        help="remove regardless of whether other packages depend on this one")
 
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
-        help="USE CAREFULLY. Remove ALL installed packages that match each "
+        help="USE CAREFULLY. remove ALL installed packages that match each "
              "supplied spec. i.e., if you say uninstall `libelf`,"
-             " ALL versions of `libelf` are uninstalled. If no spec is "
-             "supplied all installed software will be uninstalled. This "
-             "is both useful and dangerous, like rm -r.")
+             " ALL versions of `libelf` are uninstalled. if no spec is "
+             "supplied all installed software will be uninstalled. this "
+             "is both useful and dangerous, like rm -r")
 
     subparser.add_argument(
         '-d', '--dependents', action='store_true', dest='dependents',
-        help='Also uninstall any packages that depend on the ones given '
-             'via command line.')
+        help='also uninstall any packages that depend on the ones given '
+             'via command line')
 
     subparser.add_argument(
         '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='Assume "yes" is the answer to every confirmation requested')
+        help='assume "yes" is the answer to every confirmation requested')
 
     subparser.add_argument(
         'packages',
@@ -177,7 +177,7 @@ def get_uninstall_list(args):
     if dependent_list and not args.dependents and not args.force:
         for spec, lst in dependent_list.items():
             tty.error("Will not uninstall %s" %
-                      spec.format("$_$@$%@$#", color=True))
+                      spec.format("$_$@$%@$/", color=True))
             print('')
             print("The following packages depend on it:")
             spack.cmd.display_specs(lst, **display_args)

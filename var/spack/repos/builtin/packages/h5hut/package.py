@@ -47,7 +47,7 @@ class H5hut(AutotoolsPackage):
     # install: .libs/libH5hut.a: No such file or directory
     parallel = False
 
-    @AutotoolsPackage.precondition('configure')
+    @run_before('configure')
     def validate(self):
         """Checks if Fortran compiler is available."""
 

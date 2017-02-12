@@ -58,13 +58,6 @@ class Swiftsim(AutotoolsPackage):
         tty.warn('This is needed to clone SWIFT repository')
         spack_env.set('GIT_SSL_NO_VERIFY', 1)
 
-    def autoreconf(self, spec, prefix):
-        libtoolize()
-        aclocal()
-        autoconf()
-        autogen = Executable('./autogen.sh')
-        autogen()
-
     def configure_args(self):
         return ['--prefix=%s' % self.prefix,
                 '--enable-mpi' if '+mpi' in self.spec else '--disable-mpi',

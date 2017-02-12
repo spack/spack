@@ -43,6 +43,8 @@ class IntelMkl(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
+            url="file://%s/l_mkl_2017.0.098.tgz" % os.getcwd())
     version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
             url="file://%s/l_mkl_11.3.2.181.tgz" % os.getcwd())
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
@@ -55,8 +57,8 @@ class IntelMkl(IntelInstaller):
     # virtual dependency
     provides('blas')
     provides('lapack')
+    provides('scalapack')
     provides('mkl')
-    # TODO: MKL also provides implementation of Scalapack.
 
     @property
     def blas_libs(self):
@@ -82,6 +84,34 @@ class IntelMkl(IntelInstaller):
     @property
     def lapack_libs(self):
         return self.blas_libs
+
+    @property
+    def scalapack_libs(self):
+        libnames = ['libmkl_scalapack']
+        if self.spec.satisfies('^openmpi'):
+            libnames.append('libmkl_blacs_openmpi')
+        elif self.spec.satisfies('^mpich@1'):
+            libnames.append('libmkl_blacs')
+        elif self.spec.satisfies('^mpich@2:'):
+            libnames.append('libmkl_blacs_intelmpi')
+        elif self.spec.satisfies('^mvapich2'):
+            libnames.append('libmkl_blacs_intelmpi')
+        elif self.spec.satisfies('^mpt'):
+            libnames.append('libmkl_blacs_sgimpt')
+        # TODO: ^intel-parallel-studio can mean intel mpi, a compiler or a lib
+        # elif self.spec.satisfies('^intel-parallel-studio'):
+        #     libnames.append('libmkl_blacs_intelmpi')
+        else:
+            raise InstallError("No MPI found for scalapack")
+
+        shared = True if '+shared' in self.spec else False
+        integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
+        libs = find_libraries(
+            ['{0}_{1}'.format(l, integer) for l in libnames],
+            root=join_path(self.prefix.lib, 'intel64'),
+            shared=shared
+        )
+        return libs
 
     def install(self, spec, prefix):
         self.intel_prefix = os.path.join(prefix, "pkg")

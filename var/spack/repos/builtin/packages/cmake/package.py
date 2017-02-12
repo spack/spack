@@ -63,7 +63,8 @@ class Cmake(Package):
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl',        when='+openssl')
+    depends_on("openssl", when='+openssl')
+    depends_on("openssl@:1.0.99", when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
