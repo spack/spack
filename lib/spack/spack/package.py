@@ -500,6 +500,10 @@ class PackageBase(object):
        for immediate dependencies."""
     transitive_rpaths = True
 
+    """When True, This package's module will be autoloaded by packages
+    that depend on it.  Can be overridden by depends_on(..., autoload=)."""
+    autoload = False
+
     """List of prefix-relative file paths (or a single path). If these do
        not exist after install, or if they exist but are not files,
        sanity checks fail.
