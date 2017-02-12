@@ -22,20 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version, nolink
-from spack import Package
+from spack import *
 
 
-class PyLogilabCommon(Package):
+class PyLogilabCommon(PythonPackage):
     """Common modules used by Logilab projects"""
     homepage = "https://www.logilab.org/project/logilab-common"
     url      = "https://pypi.python.org/packages/a7/31/1650d23e44794d46935d82b86e73454cc83b814cbe1365260ccce8a2f4c6/logilab-common-1.2.0.tar.gz"
 
     version('1.2.0', 'f7b51351b7bfe052746fa04c03253c0b')
 
-    extends("python")
+    extends('python', ignore=r'bin/pytest')
     depends_on("py-setuptools", type='build')
-    depends_on("py-six", type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on("py-six", type=('build', 'run'))

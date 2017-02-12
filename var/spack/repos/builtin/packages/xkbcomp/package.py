@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xkbcomp(Package):
+class Xkbcomp(AutotoolsPackage):
     """The X Keyboard (XKB) Extension essentially replaces the core protocol
     definition of a keyboard. The extension makes it possible to specify
     clearly and explicitly most aspects of keyboard behaviour on a per-key
@@ -45,9 +45,3 @@ class Xkbcomp(Package):
     depends_on('bison', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

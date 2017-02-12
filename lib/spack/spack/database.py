@@ -68,7 +68,7 @@ _db_version = Version('0.9.2')
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
-_tracked_deps = 'nobuild'
+_tracked_deps = ('link', 'run')
 
 
 def _autospec(function):
@@ -239,7 +239,7 @@ class Database(object):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
-                                 spec.format('$_$#'), dname, dhash[:7]))
+                                 spec.format('$_$/'), dname, dhash[:7]))
                     continue
 
                 child = data[dhash].spec

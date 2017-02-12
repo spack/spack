@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RRsnns(Package):
+class RRsnns(RPackage):
     """The Stuttgart Neural Network Simulator (SNNS) is a library containing
     many standard implementations of neural networks. This package wraps the
     SNNS functionality to make it available from within R. Using the RSNNS
@@ -41,10 +41,4 @@ class RRsnns(Package):
 
     version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
 
-    extends('R')
-
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rcpp', type=('build', 'run'))

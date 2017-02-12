@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RForeach(Package):
+class RForeach(RPackage):
     """Support for the foreach looping construct. Foreach is an idiom that
     allows for iterating over elements in a collection, without the use of an
     explicit loop counter. This package in particular is intended to be used
@@ -40,11 +40,5 @@ class RForeach(Package):
 
     version('1.4.3', 'ef45768126661b259f9b8994462c49a0')
 
-    extends('R')
-
-    depends_on('r-codetools', type=nolink)
-    depends_on('r-iterators', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-codetools', type=('build', 'run'))
+    depends_on('r-iterators', type=('build', 'run'))

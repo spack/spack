@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRgooglemaps(Package):
+class RRgooglemaps(RPackage):
     """This package serves two purposes: (i) Provide a comfortable R interface
     to query the Google server for static maps, and (ii) Use the map as a
     background image to overlay plots within R. This requires proper coordinate
@@ -37,11 +37,5 @@ class RRgooglemaps(Package):
 
     version('1.2.0.7', '2e1df804f0331b4122d841105f0c7ea5')
 
-    extends('R')
-
-    depends_on('r-png', type=nolink)
-    depends_on('r-rjsonio', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-png', type=('build', 'run'))
+    depends_on('r-rjsonio', type=('build', 'run'))

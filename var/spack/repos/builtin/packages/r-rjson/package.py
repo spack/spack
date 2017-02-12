@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRjson(Package):
+class RRjson(RPackage):
     """Converts R object into JSON objects and vice-versa."""
 
     homepage = "https://cran.r-project.org/package=rjson"
@@ -33,9 +33,3 @@ class RRjson(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/rjson"
 
     version('0.2.15', '87d0e29bc179c6aeaf312b138089f8e9')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

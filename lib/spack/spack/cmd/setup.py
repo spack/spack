@@ -39,10 +39,9 @@ import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
 from llnl.util.filesystem import set_executable
 from spack import which
-from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
 
-description = "Create a configuration script and module, but don't build."
+description = "create a configuration script and module, but don't build"
 
 setup_parser = install.setup_common_parser
 

@@ -25,19 +25,14 @@
 from spack import *
 
 
-class RCluster(Package):
+class RCluster(RPackage):
     """Methods for Cluster analysis. Much extended the original from Peter
     Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw
     (1990) "Finding Groups in Data"."""
 
     homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.r-project.org/src/contrib/cluster_2.0.4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/cluster_2.0.5.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
 
+    version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
     version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

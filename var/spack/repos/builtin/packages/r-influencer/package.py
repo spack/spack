@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RInfluencer(Package):
+class RInfluencer(RPackage):
     """Provides functionality to compute various node centrality measures on
     networks. Included are functions to compute betweenness centrality (by
     utilizing Madduri and Bader's SNAP library), implementations of Burt's
@@ -40,11 +40,5 @@ class RInfluencer(Package):
 
     version('0.1.0', '6c8b6decd78c341364b5811fb3050ba5')
 
-    extends('R')
-
-    depends_on('r-igraph', type=nolink)
-    depends_on('r-matrix', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-igraph', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))

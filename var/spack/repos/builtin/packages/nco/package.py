@@ -29,35 +29,28 @@ class Nco(AutotoolsPackage):
     """The NCO toolkit manipulates and analyzes data stored in
     netCDF-accessible formats"""
 
-    homepage = "https://sourceforge.net/projects/nco"
-    url      = "https://github.com/nco/nco/archive/4.6.2.tar.gz"
+    homepage = "http://nco.sourceforge.net/"
+    url      = "https://github.com/nco/nco/archive/4.6.4.tar.gz"
 
+    version('4.6.4', '22f4e779d0011a9c0db90fda416c8e45')
+    version('4.6.3', '0e1d6616c65ed3a30c54cc776da4f987')
     version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
 
+    variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
+
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
-    variant('mpi', default=True)
-
     depends_on('netcdf')
     depends_on('antlr@2.7.7+cxx')  # required for ncap2
     depends_on('gsl')              # desirable for ncap2
     depends_on('udunits2')         # allows dimensional unit transformations
-    # depends_on('opendap')        # enables network transparency
 
-    @AutotoolsPackage.precondition('configure')
-    def validate(self):
-        """Ensures that dependents were built with the right variants."""
-        # Workaround until variant forwarding works properly
-        spec = self.spec
-        if '+mpi' in spec and spec.satisfies('^netcdf~mpi'):
-            raise RuntimeError('Invalid spec. Package netcdf requires '
-                               'netcdf+mpi, but spec asked for netcdf~mpi.')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('texinfo@4.12:', type='build', when='+doc')
 
     def configure_args(self):
-        return [
-            '--disable-openmp',  # TODO: Make this a variant
-            '--disable-dap',     # TODO: Make this a variant
-            '--disable-esmf'
-        ]
+        spec = self.spec
+        return ['--{0}-doc'.format('enable' if '+doc' in spec else 'disable')]

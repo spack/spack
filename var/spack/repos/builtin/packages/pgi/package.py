@@ -39,10 +39,11 @@ class Pgi(Package):
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.pgroup.com/"
-    url = "file://%s/pgi-16.3.tar.gz" % os.getcwd()
 
-    version('16.5', 'a40e8852071b5d600cb42f31631b3de1')
-    version('16.3', '618cb7ddbc57d4e4ed1f21a0ab25f427')
+    version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')
+    version('16.5',  'a40e8852071b5d600cb42f31631b3de1')
+    version('16.3',  '618cb7ddbc57d4e4ed1f21a0ab25f427')
+    version('15.7',  '84a689217b17cdaf78c39270c70bea5d')
 
     variant('network', default=True,
             description="Perform a network install")
@@ -63,6 +64,10 @@ class Pgi(Package):
     license_files = ['license.dat']
     license_vars = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
     license_url = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+
+    def url_for_version(self, version):
+        return "file://{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
+            os.getcwd(), version.up_to(1), version.joined)
 
     def install(self, spec, prefix):
         # Enable the silent installation feature

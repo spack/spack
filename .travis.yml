@@ -1,40 +1,38 @@
 #=============================================================================
 # Project settings
 #=============================================================================
-language: python
-
 # Only build master and develop on push; do not build every branch.
 branches:
   only:
     - master
     - develop
+    - /^releases\/.*$/
 
 #=============================================================================
 # Build matrix
 #=============================================================================
-python:
-  - 2.6
-  - 2.7
-
-env:
-  - TEST_SUITE=unit
-  - TEST_SUITE=flake8
-  - TEST_SUITE=doc
-
 matrix:
-  # Flake8 and Sphinx no longer support Python 2.6, and one run is enough.
-  exclude:
-  - python: 2.6
-    env: TEST_SUITE=flake8
-  - python: 2.6
-    env: TEST_SUITE=doc
-  # Explicitly include an OS X build with homebrew's python.
-  # Works around Python issues on Travis for OSX, described here:
-  # http://blog.fizyk.net.pl/blog/running-python-tests-on-traviss-osx-workers.html
+  fast_finish: true
   include:
-  - os: osx
-    language: generic
-    env: TEST_SUITE=unit
+    - python: '2.6'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=flake8
+    - python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - os: osx
+      language: generic
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
 
 #=============================================================================
 # Environment
@@ -60,7 +58,7 @@ before_install:
 
 # Install various dependencies
 install:
-  - pip install --upgrade coveralls
+  - pip install --upgrade codecov
   - pip install --upgrade flake8
   - pip install --upgrade sphinx
   - pip install --upgrade mercurial
@@ -79,7 +77,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 && $TRAVIS_OS_NAME == "linux" ]]; then coveralls; fi
+  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 && $TRAVIS_OS_NAME == "linux" ]]; then codecov --env PY_VERSION; fi
 
 #=============================================================================
 # Notifications

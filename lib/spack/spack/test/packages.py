@@ -83,7 +83,7 @@ def test_import_package_as(builtin_mock):
 
 
 def test_inheritance_of_diretives():
-    p = spack.repo.get('simple_inheritance')
+    p = spack.repo.get('simple-inheritance')
 
     # Check dictionaries that should have been filled by directives
     assert len(p.dependencies) == 3
@@ -93,19 +93,26 @@ def test_inheritance_of_diretives():
     assert len(p.provided) == 2
 
     # Check that Spec instantiation behaves as we expect
-    s = Spec('simple_inheritance')
+    s = Spec('simple-inheritance')
     s.concretize()
     assert '^cmake' in s
     assert '^openblas' in s
     assert '+openblas' in s
     assert 'mpi' in s
 
-    s = Spec('simple_inheritance~openblas')
+    s = Spec('simple-inheritance~openblas')
     s.concretize()
     assert '^cmake' in s
     assert '^openblas' not in s
     assert '~openblas' in s
     assert 'mpi' in s
+
+
+def test_dependency_extensions():
+    s = Spec('extension2')
+    s.concretize()
+    deps = set(x.name for x in s.package.dependency_activations())
+    assert deps == set(['extension1'])
 
 
 def test_import_class_from_package(builtin_mock):

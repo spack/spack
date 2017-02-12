@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RHighr(Package):
+class RHighr(RPackage):
     """Provides syntax highlighting for R source code. Currently it supports
     LaTeX and HTML output. Source code of other languages is supported via
     Andre Simon's highlight package."""
@@ -36,9 +36,3 @@ class RHighr(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/highr"
 
     version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

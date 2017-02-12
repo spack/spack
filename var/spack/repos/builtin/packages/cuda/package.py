@@ -50,13 +50,15 @@ class Cuda(Package):
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
 
+    version('8.0.44', '6dca912f9b7e2b7569b0074a41713640', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_linux-run")
     version('7.5.18', '4b3bcecf0dfc35928a0898793cf3e4c6', expand=False,
-            url="file://%s/cuda_7.5.18_linux.run"    % os.getcwd())
+            url="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run")
     version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
-            url="file://%s/cuda_6.5.14_linux_64.run" % os.getcwd())
+            url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
     def install(self, spec, prefix):
-        runfile = glob(os.path.join(self.stage.path, 'cuda*.run'))[0]
+        runfile = glob(os.path.join(self.stage.path, 'cuda*run'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)

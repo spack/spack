@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGridbase(Package):
+class RGridbase(RPackage):
     """Integration of base and grid graphics."""
 
     homepage = "https://cran.r-project.org/web/packages/gridBase/index.html"
@@ -33,9 +33,3 @@ class RGridbase(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/gridBase"
 
     version('0.4-7', '6d5064a85f5c966a92ee468ae44c5f1f')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

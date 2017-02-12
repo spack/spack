@@ -353,9 +353,9 @@ and has similar effects on module file of dependees. Even in this case
 ``run_env`` must be filled with the desired list of environment modifications.
 
 .. note::
- The ``R`` package and callback APIs
+ The ``r`` package and callback APIs
   A typical example in which overriding both methods prove to be useful
-  is given by the ``R`` package. This package installs libraries and headers
+  is given by the ``r`` package. This package installs libraries and headers
   in non-standard locations and it is possible to prepend the appropriate directory
   to the corresponding environment variables:
 
@@ -367,14 +367,14 @@ and has similar effects on module file of dependees. Even in this case
 
   with the following snippet:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
+  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
      :pyobject: R.setup_environment
 
-  The ``R`` package also knows which environment variable should be modified
+  The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/R/package.py
+  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
      :lines: 128-129,146-151
 
 .. _modules-yaml:

@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Libgd(Package):
+class Libgd(AutotoolsPackage):
     """GD is an open source code library for the dynamic creation of images
        by programmers. GD is written in C, and "wrappers" are available
        for Perl, PHP and other languages. GD creates PNG, JPEG, GIF,
@@ -38,8 +38,9 @@ class Libgd(Package):
     """
 
     homepage = "https://github.com/libgd/libgd"
-    url      = "https://github.com/libgd/libgd/archive/gd-2.1.1.tar.gz"
+    url      = 'https://github.com/libgd/libgd/releases/download/gd-2.2.4/libgd-2.2.4.tar.gz'
 
+    version('2.2.4', '0a3c307b5075edbe1883543dd1153c02')
     version('2.2.3', 'a67bd15fa33d4aac0a1c7904aed19f49')
     version('2.1.1', 'e91a1a99903e460e7ba00a794e72cc1e')
 
@@ -54,19 +55,3 @@ class Libgd(Package):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('fontconfig')
-
-    def install(self, spec, prefix):
-        autoreconf("--install", "--force",
-                   "-I", "m4",
-                   "-I", join_path(spec['gettext'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['pkg-config'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['automake'].prefix,
-                                   "share", "aclocal"),
-                   "-I", join_path(spec['libtool'].prefix,
-                                   "share", "aclocal")
-                   )
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make("install")

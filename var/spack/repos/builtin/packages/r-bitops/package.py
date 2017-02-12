@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RBitops(Package):
+class RBitops(RPackage):
     """Functions for bitwise operations on integer vectors."""
 
     homepage = "https://cran.r-project.org/package=bitops"
@@ -34,9 +34,3 @@ class RBitops(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/bitops"
 
     version('1.0-6', 'fba16485a51b1ccd354abde5816b6bdd')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

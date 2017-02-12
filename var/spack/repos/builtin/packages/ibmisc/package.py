@@ -29,7 +29,7 @@ class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
 
     homepage = "https://github.com/citibeth/ibmisc"
-    url      = "https://github.com/citibeth/ibmisc/tarball/v0.1.3"
+    url      = "https://github.com/citibeth/ibmisc/tarball/123"
 
     version('0.1.3', 'bb1876a8d1f0710c1a031280c0fc3f2e')
 
@@ -66,12 +66,12 @@ class Ibmisc(CMakePackage):
     depends_on('netcdf-cxx4', when='+netcdf')
     depends_on('udunits2', when='+udunits2')
     depends_on('googletest', when='+googletest', type='build')
-    depends_on('py-cython', when='+python', type=nolink)
-    depends_on('py-numpy', when='+python')
+    depends_on('py-cython', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('boost', when='+boost')
 
     # Build dependencies
-    depends_on('cmake', type='build')
+    depends_on('doxygen', type='build')
     depends_on('doxygen', when='+doc', type='build')
 
     def cmake_args(self):

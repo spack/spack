@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGgmap(Package):
+class RGgmap(RPackage):
     """A collection of functions to visualize spatial data and models on top of
     static maps from various online sources (e.g Google Maps and Stamen Maps).
     It includes tools common to those tasks, including functions for
@@ -37,21 +37,15 @@ class RGgmap(Package):
 
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
 
-    extends('R')
-
-    depends_on('r-ggplot2', type=nolink)
-    depends_on('r-proto', type=nolink)
-    depends_on('r-rgooglemaps', type=nolink)
-    depends_on('r-png', type=nolink)
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-reshape2', type=nolink)
-    depends_on('r-rjson', type=nolink)
-    depends_on('r-mapproj', type=nolink)
-    depends_on('r-jpeg', type=nolink)
-    depends_on('r-geosphere', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-scales', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-proto', type=('build', 'run'))
+    depends_on('r-rgooglemaps', type=('build', 'run'))
+    depends_on('r-png', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-rjson', type=('build', 'run'))
+    depends_on('r-mapproj', type=('build', 'run'))
+    depends_on('r-jpeg', type=('build', 'run'))
+    depends_on('r-geosphere', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))

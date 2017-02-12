@@ -44,7 +44,6 @@ class Visit(Package):
 
     def install(self, spec, prefix):
         qt_bin = spec['qt'].prefix.bin
-        python_bin = spec['python'].prefix.bin
 
         with working_dir('spack-build', create=True):
             cmake_args = std_cmake_args[:]
@@ -53,7 +52,7 @@ class Visit(Package):
                 '-DVTK_MINOR_VERSION=1',
                 '-DVISIT_USE_GLEW=OFF',
                 '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
-                '-DPYTHON_EXECUTABLE:FILEPATH={0}/python'.format(python_bin),
+                '-DPYTHON_DIR:PATH={0}'.format(spec['python'].prefix),
                 '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
                 '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
                 '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),

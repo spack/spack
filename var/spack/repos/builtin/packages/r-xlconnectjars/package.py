@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXlconnectjars(Package):
+class RXlconnectjars(RPackage):
     """Provides external JAR dependencies for the XLConnect package."""
 
     homepage = "http://miraisolutions.wordpress.com/"
@@ -35,10 +35,4 @@ class RXlconnectjars(Package):
     version('0.2-12', '6984e5140cd1c887c017ef6f88cbba81')
     version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')
 
-    extends('R')
-
-    depends_on('r-rjava', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rjava', type=('build', 'run'))

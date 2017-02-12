@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPrettytable(Package):
+class PyPrettytable(PythonPackage):
     """PrettyTable is a simple Python library designed to make
     it quick and easy to represent tabular data in visually
     appealing ASCII tables.
@@ -36,8 +36,4 @@ class PyPrettytable(Package):
 
     version('0.7.2', 'a6b80afeef286ce66733d54a0296b13b')
 
-    extends("python")
     depends_on("py-setuptools", type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

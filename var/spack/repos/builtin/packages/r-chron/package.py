@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RChron(Package):
+class RChron(RPackage):
     """Chronological objects which can handle dates and times."""
 
     homepage = "https://cran.r-project.org/package=chron"
@@ -33,9 +33,3 @@ class RChron(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/chron"
 
     version('2.3-47', 'b8890cdc5f2337f8fd775b0becdcdd1f')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

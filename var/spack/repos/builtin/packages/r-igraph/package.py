@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RIgraph(Package):
+class RIgraph(RPackage):
     """Routines for simple graphs and network analysis. It can handle large
     graphs very well and provides functions for generating random and regular
     graphs, graph visualization, centrality methods and much more."""
@@ -36,15 +36,9 @@ class RIgraph(Package):
 
     version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-nmf', type=nolink)
-    depends_on('r-irlba', type=nolink)
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-nmf', type=('build', 'run'))
+    depends_on('r-irlba', type=('build', 'run'))
     depends_on('gmp')
     depends_on('libxml2')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

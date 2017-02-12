@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLmtest(Package):
+class RLmtest(RPackage):
     """A collection of tests, data sets, and examples for diagnostic checking
     in linear regression models. Furthermore, some generic tools for inference
     in parametric models are provided."""
@@ -36,10 +36,4 @@ class RLmtest(Package):
 
     version('0.9-34', 'fcdf7286bb5ccc2ca46be00bf25ac2fe')
 
-    extends('R')
-
-    depends_on('r-zoo', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-zoo', type=('build', 'run'))

@@ -25,23 +25,18 @@
 from spack import *
 
 
-class RMgcv(Package):
+class RMgcv(RPackage):
     """GAMs, GAMMs and other generalized ridge regression with multiple
     smoothing parameter estimation by GCV, REML or UBRE/AIC. Includes a gam()
     function, a wide variety of smoothers, JAGS support and distributions
     beyond the exponential family."""
 
     homepage = "https://cran.r-project.org/package=mgcv"
-    url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-13.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-16.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/mgcv"
 
+    version('1.8-16', '4c1d85e0f80b017bccb4b63395842911')
     version('1.8-13', '30607be3aaf44b13bd8c81fc32e8c984')
 
-    extends('R')
-
-    depends_on('r-nlme', type=nolink)
-    depends_on('r-matrix', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))

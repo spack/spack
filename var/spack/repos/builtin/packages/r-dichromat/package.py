@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDichromat(Package):
+class RDichromat(RPackage):
     """Collapse red-green or green-blue distinctions to simulate the effects of
     different types of color-blindness."""
 
@@ -34,9 +34,3 @@ class RDichromat(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/dichromat"
 
     version('2.0-0', '84e194ac95a69763d740947a7ee346a6')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

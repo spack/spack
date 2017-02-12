@@ -47,19 +47,8 @@ class Curl(AutotoolsPackage):
     version('7.44.0', '6b952ca00e5473b16a11f05f06aa8dae')
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
-    version('7.29.0', 'fa5f37f38a8042020e292ce7ec5341ce') # CentOS7
 
-    # `libcurl@1.48:` use the symbol libssh2_scp_recv2
-    #     https://curl.haxx.se/changes.html#7_49_1
-    # That needs `libssh2@1.7.0:`
-    #     https://www.libssh2.org/changes.html
-    #
-    # Curl cannot depend on libssh2 until #2321 is addressed.
-    # depends_on("libssh2@1.7.0:", when="@1.48:")
-    # depends_on("libssh2", when="@:1.47")
-
-    # This will be redundant if we can depend on libssh2
-    depends_on('openssl')
+    depends_on("openssl")
     depends_on("zlib")
 
     def configure_args(self):

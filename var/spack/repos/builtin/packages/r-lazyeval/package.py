@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLazyeval(Package):
+class RLazyeval(RPackage):
     """An alternative approach to non-standard evaluation using formulas.
     Provides a full implementation of LISP style 'quasiquotation', making it
     easier to generate code with other code."""
@@ -35,9 +35,3 @@ class RLazyeval(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/lazyeval"
 
     version('0.2.0', 'df1daac908dcf02ae7e12f4335b1b13b')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

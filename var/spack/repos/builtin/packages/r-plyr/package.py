@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPlyr(Package):
+class RPlyr(RPackage):
     """A set of tools that solves a common set of problems: you need to break a
     big problem down into manageable pieces, operate on each piece and then put
     all the pieces back together. For example, you might want to fit a model to
@@ -40,10 +40,4 @@ class RPlyr(Package):
 
     version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
 
-    extends('R')
-
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rcpp', type=('build', 'run'))

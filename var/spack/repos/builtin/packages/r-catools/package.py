@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RCatools(Package):
+class RCatools(RPackage):
     """Contains several basic utility functions including: moving (rolling,
     running) window statistic functions, read/write for GIF and ENVI binary
     files, fast calculation of AUC, LogitBoost classifier, base64
@@ -38,10 +38,4 @@ class RCatools(Package):
 
     version('1.17.1', '5c872bbc78b177b306f36709deb44498')
 
-    extends('R')
-
-    depends_on('r-bitops', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-bitops', type=('build','run'))

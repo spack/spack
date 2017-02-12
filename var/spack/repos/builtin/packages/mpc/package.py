@@ -25,26 +25,28 @@
 from spack import *
 
 
-class Mpc(Package):
+class Mpc(AutotoolsPackage):
     """Gnu Mpc is a C library for the arithmetic of complex numbers
        with arbitrarily high precision and correct rounding of the
        result."""
     homepage = "http://www.multiprecision.org"
-    url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
 
     version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
     version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
 
-    depends_on('gmp')   # mpir is a drop-in replacement for this
-    depends_on('mpfr')  # Could also be built against mpir
+    depends_on('gmp@4.3.2:')   # mpir is a drop-in replacement for this
+    depends_on('mpfr@2.4.2:')  # Could also be built against mpir
 
     def url_for_version(self, version):
         if version < Version("1.0.1"):
-            return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version  # NOQA
+            return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version
         else:
-            return "ftp://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
+            return "https://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+            '--with-gmp={0}'.format(spec['gmp'].prefix)
+        ]

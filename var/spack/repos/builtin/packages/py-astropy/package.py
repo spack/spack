@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyAstropy(Package):
+class PyAstropy(PythonPackage):
     """The Astropy Project is a community effort to develop a single core
     package for Astronomy in Python and foster interoperability between
     Python astronomy packages."""
@@ -37,24 +37,22 @@ class PyAstropy(Package):
     version('1.1.post1', 'b52919f657a37d45cc45f5cb0f58c44d')
 
     # Required dependencies
-    extends('python')
-    depends_on('py-numpy', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
 
     # Optional dependencies
-    depends_on('py-h5py', type=nolink)
-    depends_on('py-beautifulsoup4', type=nolink)
-    depends_on('py-pyyaml', type=nolink)
-    depends_on('py-scipy', type=nolink)
+    depends_on('py-h5py', type=('build', 'run'))
+    depends_on('py-beautifulsoup4', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
     depends_on('libxml2')
-    depends_on('py-matplotlib', type=nolink)
-    depends_on('py-pytz', type=nolink)
-    depends_on('py-scikit-image', type=nolink)
-    depends_on('py-pandas', type=nolink)
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-pytz', type=('build', 'run'))
+    depends_on('py-scikit-image', type=('build', 'run'))
+    depends_on('py-pandas', type=('build', 'run'))
 
     # System dependencies
     depends_on('cfitsio')
     depends_on('expat')
 
-    def install(self, spec, prefix):
-        setup_py('build', '--use-system-cfitsio', '--use-system-expat')
-        setup_py('install', '--prefix={0}'.format(prefix))
+    def build_args(self, spec, prefix):
+        return ['--use-system-cfitsio', '--use-system-expat']

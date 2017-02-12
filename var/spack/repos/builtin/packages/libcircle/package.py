@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libcircle(Package):
+class Libcircle(AutotoolsPackage):
     """libcircle provides an efficient distributed queue on a cluster,
        using self-stabilizing work stealing."""
 
@@ -35,8 +35,3 @@ class Libcircle(Package):
             url='https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz')
 
     depends_on('mpi')
-
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")

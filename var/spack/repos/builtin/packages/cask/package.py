@@ -41,7 +41,7 @@ class Cask(Package):
     # version 0.8.0 is broken
     version('0.7.4', 'c973a7db43bc980dd83759a5864a1260')
 
-    depends_on('emacs', type=nolink)
+    depends_on('emacs', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

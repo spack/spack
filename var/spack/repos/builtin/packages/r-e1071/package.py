@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RE1071(Package):
+class RE1071(RPackage):
     """Functions for latent class analysis, short time Fourier transform, fuzzy
     clustering, support vector machines, shortest path computation, bagged
     clustering, naive Bayes classifier, ..."""
@@ -36,10 +36,4 @@ class RE1071(Package):
 
     version('1.6-7', 'd109a7e3dd0c905d420e327a9a921f5a')
 
-    extends('R')
-
-    depends_on('r-class', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-class', type=('build', 'run'))

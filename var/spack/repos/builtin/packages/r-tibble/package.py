@@ -25,22 +25,19 @@
 from spack import *
 
 
-class RTibble(Package):
+class RTibble(RPackage):
     """Provides a 'tbl_df' class that offers better checking and printing
     capabilities than traditional data frames."""
 
     homepage = "https://github.com/hadley/tibble"
-    url      = "https://cran.r-project.org/src/contrib/tibble_1.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/tibble_1.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/tibble"
 
+    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    extends('R')
+    depends_on('r@3.1.2:')
 
-    depends_on('r-assertthat', type=nolink)
-    depends_on('r-lazyeval', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-assertthat', type=('build', 'run'))
+    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

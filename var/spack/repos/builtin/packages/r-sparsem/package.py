@@ -25,19 +25,14 @@
 from spack import *
 
 
-class RSparsem(Package):
+class RSparsem(RPackage):
     """Some basic linear algebra functionality for sparse matrices is provided:
         including Cholesky decomposition and backsolving as well as standard R
         subsetting and Kronecker products."""
 
     homepage = "http://www.econ.uiuc.edu/~roger/research/sparse/sparse.html"
-    url      = "https://cran.r-project.org/src/contrib/SparseM_1.7.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/SparseM_1.74.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/SparseM"
 
-    version('1.7', '7b5b0ab166a0929ef6dcfe1d97643601')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    version('1.74', 'a16c9b7db172dfd2b7b6508c48e81a5d')
+    version('1.7',  '7b5b0ab166a0929ef6dcfe1d97643601')

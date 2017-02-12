@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMaps(Package):
+class RMaps(RPackage):
     """Display of maps. Projection code and larger maps are in separate
     packages ('mapproj' and 'mapdata')."""
 
@@ -34,9 +34,3 @@ class RMaps(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/maps"
 
     version('3.1.1', 'ff045eccb6d5a658db5a539116ddf764')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

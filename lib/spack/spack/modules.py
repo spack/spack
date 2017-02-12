@@ -327,6 +327,10 @@ class EnvModule(object):
         blacklist_matches = [x
                              for x in configuration.get('blacklist', [])
                              if self.spec.satisfies(x)]
+        blacklist_implicits = configuration.get('blacklist_implicits')
+        installed_implicitly = not self.spec._installed_explicitly()
+        blacklisted_as_implicit = blacklist_implicits and installed_implicitly
+
         if whitelist_matches:
             message = '\tWHITELIST : %s [matches : ' % self.spec.cshort_spec
             for rule in whitelist_matches:
@@ -341,7 +345,13 @@ class EnvModule(object):
             message += ' ]'
             tty.debug(message)
 
-        if not whitelist_matches and blacklist_matches:
+        if blacklisted_as_implicit:
+            message = '\tBLACKLISTED_AS_IMPLICIT : %s' % \
+                      self.spec.cshort_spec
+            tty.debug(message)
+
+        is_blacklisted = blacklist_matches or blacklisted_as_implicit
+        if not whitelist_matches and is_blacklisted:
             return True
 
         return False
@@ -379,7 +389,6 @@ class EnvModule(object):
             for mod in modules:
                 set_module_variables_for_package(package, mod)
             set_module_variables_for_package(package, package.module)
-            package.setup_environment(spack_env, env)
             package.setup_dependent_package(self.pkg.module, self.spec)
             package.setup_dependent_environment(spack_env, env, self.spec)
 
@@ -428,13 +437,20 @@ class EnvModule(object):
     def module_specific_content(self, configuration):
         return tuple()
 
+    # Subclasses can return a fragment of module code that prints out
+    # a warning that modules are being autoloaded.
+    def autoload_warner(self):
+        return ''
+
     def autoload(self, spec):
         if not isinstance(spec, str):
             m = type(self)(spec)
             module_file = m.use_name
         else:
             module_file = spec
-        return self.autoload_format.format(module_file=module_file)
+        return self.autoload_format.format(
+            module_file=module_file,
+            warner=self.autoload_warner().format(module_file=module_file))
 
     def prerequisite(self, spec):
         m = type(self)(spec)
@@ -475,6 +491,10 @@ class EnvModule(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+    def verbose_autoload(self):
+        configuration = _module_config.get(self.name, {})
+        return configuration.get('verbose_autoload', True)
 
 
 class Dotkit(EnvModule):
@@ -527,8 +547,13 @@ class TclModule(EnvModule):
     path = canonicalize_path(
         _roots.get(name, join_path(spack.share_path, 'modules')))
 
+    def autoload_warner(self):
+        if self.verbose_autoload():
+            return 'puts stderr "Autoloading {module_file}"\n'
+        return ''
+
     autoload_format = ('if ![ is-loaded {module_file} ] {{\n'
-                       '    puts stderr "Autoloading {module_file}"\n'
+                       '    {warner}'
                        '    module load {module_file}\n'
                        '}}\n\n')
 
@@ -655,8 +680,13 @@ class LmodModule(EnvModule):
         UnsetEnv: 'unsetenv("{name}")\n'
     }
 
+    def autoload_warner(self):
+        if self.verbose_autoload():
+            return 'LmodMessage("Autoloading {module_file}")\n'
+        return ''
+
     autoload_format = ('if not isloaded("{module_file}") then\n'
-                       '    LmodMessage("Autoloading {module_file}")\n'
+                       '    {warner}'
                        '    load("{module_file}")\n'
                        'end\n\n')
 

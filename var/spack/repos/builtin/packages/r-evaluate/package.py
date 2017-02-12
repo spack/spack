@@ -27,7 +27,7 @@
 from spack import *
 
 
-class REvaluate(Package):
+class REvaluate(RPackage):
     """Parsing and evaluation tools that make it easy to recreate the command
     line behaviour of R."""
 
@@ -35,12 +35,9 @@ class REvaluate(Package):
     url      = "https://cran.rstudio.com/src/contrib/evaluate_0.9.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/evaluate"
 
-    version('0.9', '877d89ce8a9ef7f403b1089ca1021775')
+    version('0.10', 'c49326babf984a8b36e7e276da370ad2')
+    version('0.9',  '877d89ce8a9ef7f403b1089ca1021775')
 
-    extends('R')
+    depends_on('r@3.0.2:')
 
-    depends_on('r-stringr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-stringr@0.6.2:', type=('build', 'run'))

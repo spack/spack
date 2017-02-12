@@ -60,7 +60,7 @@ def fake_fetchify(url, pkg):
 @pytest.mark.usefixtures('install_mockery')
 def test_install_and_uninstall(mock_archive):
     # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial_install_test_package')
+    spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
 

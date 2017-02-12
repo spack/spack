@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RBh(Package):
+class RBh(RPackage):
     """Boost provides free peer-reviewed portable C++ source libraries. A large
     part of Boost is provided as C++ template code which is resolved entirely
     at compile-time without linking. This package aims to provide the most
@@ -46,9 +46,3 @@ class RBh(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
 
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

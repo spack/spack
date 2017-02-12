@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGtools(Package):
+class RGtools(RPackage):
     """Functions to assist in R programming, including: - assist in developing,
     updating, and maintaining R and R packages ('ask', 'checkRVersion',
     'getDependencies', 'keywords', 'scat'), - calculate the logit and inverse
@@ -52,9 +52,3 @@ class RGtools(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/gtools"
 
     version('3.5.0', '45f8800c0336d35046641fbacc56bdbb')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

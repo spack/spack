@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RHtmltools(Package):
+class RHtmltools(RPackage):
     """Tools for HTML generation and output."""
 
     homepage = "https://github.com/rstudio/htmltools"
@@ -34,11 +34,5 @@ class RHtmltools(Package):
 
     version('0.3.5', '5f001aff4a39e329f7342dcec5139724')
 
-    extends('R')
-
-    depends_on('r-digest', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

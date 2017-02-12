@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fish(Package):
+class Fish(AutotoolsPackage):
     """fish is a smart and user-friendly command line shell for OS X, Linux, and
     the rest of the family.
     """
@@ -35,9 +35,3 @@ class Fish(Package):
     list_url = "http://fishshell.com/"
 
     version('2.2.0', 'a76339fd14ce2ec229283c53e805faac48c3e99d9e3ede9d82c0554acfc7b77a')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

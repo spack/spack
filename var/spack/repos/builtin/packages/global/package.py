@@ -34,7 +34,7 @@ class Global(Package):
 
     version('6.5', 'dfec818b4f53d91721e247cf7b218078')
 
-    depends_on('exuberant-ctags', type=nolink)
+    depends_on('exuberant-ctags', type=('build', 'run'))
     depends_on('ncurses')
 
     def install(self, spec, prefix):

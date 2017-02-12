@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPil(Package):
+class PyPil(PythonPackage):
     """The Python Imaging Library (PIL) adds image processing capabilities
     to your Python interpreter. This library supports many file formats,
     and provides powerful image processing and graphics capabilities."""
@@ -39,8 +39,4 @@ class PyPil(Package):
 
     # py-pil currently only works with Python2.
     # If you are using Python 3, try using py-pillow instead.
-    extends('python')
     depends_on('python@1.5.2:2.8')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

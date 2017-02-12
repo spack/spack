@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libfs(Package):
+class Libfs(AutotoolsPackage):
     """libFS - X Font Service client library.
 
     This library is used by clients of X Font Servers (xfs), such as
@@ -41,9 +41,3 @@ class Libfs(Package):
     depends_on('xtrans', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -28,9 +28,12 @@ from spack import *
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
-    homepage  = 'https://www.cmake.org'
-    url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
+    homepage = 'https://www.cmake.org'
+    url      = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
+    list_url = 'https://cmake.org/files/'
+    list_depth = 2
 
+    version('3.7.2',    '79bd7e65cd81ea3aa2619484ad6ff25a')
     version('3.7.1',    'd031d5a06e9f1c5367cdfc56fbd2a1c8')
     version('3.6.1',    'd6dd661380adacdb12f41b926ec99545')
     version('3.6.0',    'aa40fbecf49d99c083415c2411d12db9')
@@ -60,7 +63,8 @@ class Cmake(Package):
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl',        when='+openssl')
+    depends_on("openssl", when='+openssl')
+    depends_on("openssl@:1.0.99", when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2

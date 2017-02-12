@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RPbdzmq(Package):
+class RPbdzmq(RPackage):
     """'ZeroMQ' is a well-known library for high-performance asynchronous
     messaging in scalable, distributed applications. This package provides
     high level R wrapper functions to easily utilize 'ZeroMQ'. We mainly focus
@@ -41,11 +41,5 @@ class RPbdzmq(Package):
 
     version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
 
-    extends('R')
-
-    depends_on('r-R6', type=nolink)
+    depends_on('r-r6', type=('build', 'run'))
     depends_on('zeromq')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

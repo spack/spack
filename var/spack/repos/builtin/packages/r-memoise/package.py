@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMemoise(Package):
+class RMemoise(RPackage):
     """Cache the results of a function so that when you call it again with the
     same arguments it returns the pre-computed value."""
 
@@ -35,10 +35,4 @@ class RMemoise(Package):
 
     version('1.0.0', 'd31145292e2a88ae9a504cab1602e4ac')
 
-    extends('R')
-
-    depends_on('r-digest', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-digest', type=('build', 'run'))
