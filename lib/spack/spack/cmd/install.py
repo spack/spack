@@ -324,8 +324,7 @@ def validate_args(args):
         'run_tests': args.run_tests,
         'install_status': args.install_status,
         'fake': args.fake,
-        'dirty': args.dirty,
-        'report' : args.report
+        'dirty': args.dirty
     }
     if hasattr(args, 'setup'):
         ret['setup'] = set(args.setup)
