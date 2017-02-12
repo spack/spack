@@ -27,6 +27,7 @@ from spack import *
 
 
 class Turbine(AutotoolsPackage):
+    """Turbine: The Swift/T runtime"""
 
     homepage = 'http://swift-lang.org/Swift-T'
     url      = 'http://swift-lang.github.io/swift-t-downloads/turbine-1.0.0.tar.gz'
@@ -35,7 +36,7 @@ class Turbine(AutotoolsPackage):
 
     depends_on('adlbx')
     depends_on('tcl')
-    depends_on('zsh')
+    depends_on('zsh', type='run')
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,
