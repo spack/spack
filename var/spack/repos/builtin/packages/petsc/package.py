@@ -140,11 +140,12 @@ class Petsc(Package):
                 '--with-mpi=1',
                 '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
             ]
-        if sys.platform != "darwin":
-            compiler_opts.extend([
-                '--with-cpp=cpp',
-                '--with-cxxcpp=cpp',
-            ])
+# this code breaks things at ALCF and OLCF            
+#        if sys.platform != "darwin":
+#            compiler_opts.extend([
+#                '--with-cpp=cpp',
+#                '--with-cxxcpp=cpp',
+#            ])
         return compiler_opts
 
     def install(self, spec, prefix):
