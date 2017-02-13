@@ -703,7 +703,11 @@ def substitution_offsets(path):
     except UndetectableNameError:
         return (None, -1, -1, (), ver, vs, vl, (vs,))
     except UndetectableVersionError:
-        return (None, -1, -1, (), None, -1, -1, ())
+        try:
+            name, ns, nl, ni, nregex = parse_name_offset(path)
+            return (name, ns, nl, (ns,), None, -1, -1, ())
+        except UndetectableNameError:
+            return (None, -1, -1, (), None, -1, -1, ())
 
     # protect extensions like bz2 from getting inadvertently
     # considered versions.
