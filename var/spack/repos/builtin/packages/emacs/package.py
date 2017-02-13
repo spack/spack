@@ -68,6 +68,7 @@ class Emacs(AutotoolsPackage):
                     '--with-x-toolkit=no',
                     ]
             if '+gtkplus' in spec:
-                raise InstallError('The variant +gtkplus is ignored if ~X is selected. Aborting.')
+                raise InstallError('The variant +gtkplus is ignored if ~X '
+                                   'is selected. Aborting.')
 
         return args
