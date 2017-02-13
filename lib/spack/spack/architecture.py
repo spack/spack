@@ -146,6 +146,7 @@ class Platform(object):
         self.targets = {}
         self.operating_sys = {}
         self.name = name
+        self.default = os.environ.get('SPACK_TARGET_TYPE', None)
 
     def add_target(self, name, target):
         """Used by the platform specific subclass to list available targets.
@@ -335,7 +336,10 @@ class OperatingSystem(object):
                 if newcount <= prevcount:
                     continue
 
-            compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
+            target = os.environ.get(
+                'SPACK_TARGET_TYPE', py_platform.machine()
+            )
+            compilers[ver] = cmp_cls(spec, self, target, paths)
 
         return list(compilers.values())
 
