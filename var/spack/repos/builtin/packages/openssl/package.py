@@ -37,6 +37,11 @@ class Openssl(Package):
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 2
 
+
+    # Note: Version 1.0.2 is the "long-term support" version that will
+    # remain supported until 2019. We could thus make this version the
+    # preferred version, if we find that many packages cannot handle
+    # version 1.1.
     version('1.1.0d', '711ce3cd5f53a99c0e12a7d5804f0f63')
     version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
     # Long term supported version (upto 2019)
