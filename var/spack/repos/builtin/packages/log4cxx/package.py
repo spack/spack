@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Log4cxx(Package):
+class Log4cxx(AutotoolsPackage):
     """A C++ port of Log4j"""
 
     homepage = "https://logging.apache.org/log4cxx/latest_stable/"
@@ -40,10 +40,6 @@ class Log4cxx(Package):
     patch('log4cxx-0.10.0-missing_includes.patch')
     patch('log4cxx-0.10.0-narrowing-fixes-from-upstream.patch')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix), '--disable-static')
-
-        make()
-        make('install')
-        make('check')
-        make('checkinstall')
+    def configure_args(self):
+        args = ['--disable-static']
+        return args
