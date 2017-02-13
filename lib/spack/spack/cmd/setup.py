@@ -23,30 +23,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from __future__ import print_function
-
-import argparse
-import copy
-import os
-import string
-import sys
-
-import llnl.util.tty as tty
 import spack
 import spack.store
 import spack.package
 import spack.cmd
 import spack.cmd.install as install
-import spack.cmd.common.arguments as arguments
-from llnl.util.filesystem import set_executable
-from spack import which
-from spack.stage import DIYStage
 
 description = "Create a configuration script and module, but don't build."
 
 setup_parser = install.setup_common_parser
 
+
 def get_spconfig_fname(package):
     return 'spconfig.py'
+
 
 def setup(self, args):
     kwargs = install.validate_args(args)

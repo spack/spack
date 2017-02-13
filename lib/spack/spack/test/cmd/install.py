@@ -144,7 +144,8 @@ class InstallTestJunitLog(unittest.TestCase):
         install.PackageBase = MockPackage
         # Monkey patch parse specs
 
-        def monkey_parse_specs(x, concretize=False, normalize=False, allow_multi=True):
+        def monkey_parse_specs(x, concretize=False, normalize=False,
+                               allow_multi=True):
             if x == ['X']:
                 ret = [specX]
             elif x == ['Y']:

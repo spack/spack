@@ -24,7 +24,6 @@
 ##############################################################################
 from __future__ import print_function
 import contextlib
-import collections
 import argparse
 import codecs
 import functools
@@ -101,11 +100,13 @@ the dependencies"""
         help="filename for the log file. if not passed a default will be used"
     )
 
+
 def setup_parser(subparser):
     setup_common_parser(subparser)
     subparser.add_argument(
         '-s', '--setup', dest='setup', action='append', default=[],
-        help="Generate <projectname>-setup.py for the given projects, instead of building and installing them for real")
+        help="Generate <projectname>-setup.py for the given projects, ' \
+        'instead of building and installing them for real")
 
 
 # Needed for test cases
@@ -318,8 +319,8 @@ def validate_args(args):
     ret = {
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
-        'install_dependencies' : ('dependencies' in only),
-        'install_package' : ('package' in only),
+        'install_dependencies': ('dependencies' in only),
+        'install_package': ('package' in only),
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
         'install_status': args.install_status,
@@ -329,6 +330,7 @@ def validate_args(args):
     if hasattr(args, 'setup'):
         ret['setup'] = set(args.setup)
     return ret
+
 
 @contextlib.contextmanager
 def setup_logging(spec, args):
@@ -351,8 +353,10 @@ def setup_logging(spec, args):
     if args.log_format is not None:
         test_suite.dump(log_filename)
 
+
 def get_spconfig_fname(package):
     return package.name + '-config.py'
+
 
 def top_install(
     spec, install_package=True,
@@ -390,16 +394,18 @@ def show_spec(spec, args):
         print(spec.tree(
             color=True,
             cover='nodes',
-            format = '$_' + '$@$%@+$+$=',
-            hashes = True,
-            hashlen = 7,
-            install_status = True))
+            format='$_' + '$@$%@+$+$=',
+            hashes=True,
+            hashlen=7,
+            install_status=True))
+
 
 def install(parser, args):
     kwargs = validate_args(args)
 
     # Spec from cli
-    specs = spack.cmd.parse_specs(args.package, concretize=True, allow_multi=True)
+    specs = spack.cmd.parse_specs(
+        args.package, concretize=True, allow_multi=True)
     for spec in specs:
         show_spec(spec, args)
 

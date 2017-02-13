@@ -1,8 +1,6 @@
-import collections
 import re
 import os
 import argparse
-from spack.cmd import setup
 import contextlib
 import imp
 import tempfile
@@ -13,8 +11,8 @@ import pytest
 import spack
 import spack.stage
 import spack.util.executable
-from llnl.util.filesystem import join_path
-from spack.stage import Stage
+from spack.cmd import setup
+
 
 @contextlib.contextmanager
 def prepend_path(path):
@@ -38,7 +36,8 @@ class TestSetup(unittest.TestCase):
         shutil.rmtree(self.dir)
 
     def test_setup_cmake(self):
-        """Generate an spconfig.py file from CMake and verify key parts of it."""
+        """Generate an spconfig.py file from CMake and verify key parts of
+        it."""
 
         # Spec from cli
         spec = spack.cmd.parse_specs(
@@ -50,7 +49,7 @@ class TestSetup(unittest.TestCase):
         os.environ['SPACK_CC'] = '/dummy/cc'
         os.environ['SPACK_CXX'] = '/dummy/cxx'
         try:
-            del os.environ['SPACK_FC' ] 
+            del os.environ['SPACK_FC']
         except:
             pass
 
@@ -59,12 +58,13 @@ class TestSetup(unittest.TestCase):
             spec.package._write_spconfig(fout)
         spconfig = imp.load_source('spconfig', fname)
 
-
         env = spconfig.env
         self.assertEqual('/dummy/cc', env['CC'])
         self.assertEqual('/dummy/cxx', env['CXX'])
         self.assertFalse('FC' in env)
-        self.assertEqual(env['SPACK_TRANSITIVE_INCLUDE_PATH'], os.path.join(env['CMAKE_PREFIX_PATH'], 'include'))
+        self.assertEqual(
+            env['SPACK_TRANSITIVE_INCLUDE_PATH'],
+            os.path.join(env['CMAKE_PREFIX_PATH'], 'include'))
 
         defs = dict()
         defre = re.compile('-D(.*?)(:(.*?))?=(.*)')
@@ -80,7 +80,6 @@ class TestSetup(unittest.TestCase):
         self.assertEqual('FALSE', defs['CMAKE_INSTALL_RPATH_USE_LINK_PATH'])
         self.assertEqual('NO', defs['USE_MPI'])
         self.assertEqual('NO', defs['USE_FORTRAN'])
-
 
     def xtest_setup(self):
         parser = argparse.ArgumentParser()

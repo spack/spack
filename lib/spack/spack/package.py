@@ -1111,7 +1111,8 @@ class PackageBase(object):
             self.prefix_lock.release_write()
 
     def write_spconfig(self):
-        tty.die('`spack install --setup` is not supported for packages of type {0}'.format(self.build_system_class))
+        tty.die('`spack install --setup` is not supported ' \
+            'for packages of type {0}'.format(self.build_system_class))
 
     def do_install(self,
                    keep_prefix=False,
@@ -1137,8 +1138,9 @@ class PackageBase(object):
         :param keep_stage: By default, stage is destroyed only if there are \
             no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param install_dependencies: Install dependencies before installing this \
-            package
+
+        :param install_dependencies: Install dependencies before
+            installing this package
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
         :param verbose: Display verbose build output (by default, suppresses \
@@ -1148,6 +1150,7 @@ class PackageBase(object):
             ncpus
         :param force: Install again, even if already installed.
         :param run_tests: Run tests within the package's install()
+
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -1165,7 +1168,8 @@ class PackageBase(object):
             with self._prefix_read_lock():
                 if layout.check_installed(self.spec):
                     tty.msg(
-                        "%s is already installed in %s" % (self.name, self.prefix))
+                        "%s is already installed in %s" %
+                        (self.name, self.prefix))
                     rec = spack.store.db.get_record(self.spec)
                     if (not rec.explicit) and explicit:
                         with spack.store.db.write_transaction():
@@ -1209,8 +1213,7 @@ class PackageBase(object):
             spconfig_fname = spconfig_fname_fn(self)
             tty.msg(
                 'Generating config file {0} [{1}]'.format(
-                spconfig_fname, self.spec.cshort_spec)
-            )
+                spconfig_fname, self.spec.cshort_spec))
 
             self.write_spconfig(spconfig_fname)
 
@@ -1303,12 +1306,12 @@ class PackageBase(object):
 
             if self.name in setup:
                 tty.msg("Successfully setup %s" % self.name,
-                    "Config file is %s" % spconfig_fname)
+                        "Config file is %s" % spconfig_fname)
             else:
                 tty.msg("Successfully installed %s" % self.name,
-                    "Fetch: %s.  Build: %s.  Total: %s." %
-                    (_hms(self._fetch_time), _hms(build_time),
-                     _hms(self._total_time)))
+                        "Fetch: %s.  Build: %s.  Total: %s." %
+                        (_hms(self._fetch_time), _hms(build_time),
+                        _hms(self._total_time)))
     
             print_pkg(self.prefix)
         # --------------------- end of def build_process

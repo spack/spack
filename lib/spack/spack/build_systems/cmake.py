@@ -186,10 +186,10 @@ class CMakePackage(PackageBase):
         """Writes the spconfig.py (CMake setup file) to a file."""
         print('BEGIN write_spconfig')
         spack.build_environment.setup_package(self)
-        write_exception = None
         with open(spconfig_fname, 'w') as fout:
             self._write_spconfig(fout)
-            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\n' \
+                'proc.wait()\n')
 
         set_executable(spconfig_fname)
         return spconfig_fname
