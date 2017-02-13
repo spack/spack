@@ -665,6 +665,7 @@ def parse_name_and_version(path):
 
     :rtype: tuple
 
+    :raises UndetectableVersionError: If the URL does not match any regexes
     :raises UndetectableNameError: If the URL does not match any regexes
     """
     ver = parse_version(path)

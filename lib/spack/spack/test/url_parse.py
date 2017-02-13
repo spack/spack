@@ -296,11 +296,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.assertEqual(parsed_name, name)
         self.assertEqual(parsed_v, Version(v))
 
-        # Some URLs (like boost) are special and need to override the
-        # built-in functionality.
-        if kwargs.get('no_check_url', False):
-            return
-
         # Make sure Spack formulates the right URL when we try to
         # build one with a specific version.
         self.assertEqual(string, substitute_version(string, v))
