@@ -1,6 +1,5 @@
 import re
 import os
-import argparse
 import contextlib
 import imp
 import tempfile
@@ -11,7 +10,6 @@ import pytest
 import spack
 import spack.stage
 import spack.util.executable
-from spack.cmd import setup
 
 
 @contextlib.contextmanager

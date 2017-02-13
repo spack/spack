@@ -358,11 +358,11 @@ def get_spconfig_fname(package):
     return package.name + '-config.py'
 
 
-def top_install(
-    spec, install_package=True,
-    install_dependencies=True,
-    report=False,
-    spconfig_fname_fn=get_spconfig_fname, **kwargs):
+def top_install(spec, install_package=True,
+                install_dependencies=True,
+                report=False,
+                spconfig_fname_fn=get_spconfig_fname,
+                **kwargs):
 
     """Top-level install method."""
     if not install_package:
