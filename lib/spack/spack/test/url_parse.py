@@ -72,6 +72,10 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('apache-maven-3.3.9-bin',
                    'apache-maven-3.3.9')
 
+    def test_binary(self):
+        self.check('Jmol-14.8.0-binary',
+                   'Jmol-14.8.0')
+
     def test_gem(self):
         self.check('rubysl-date-2.0.9.gem',
                    'rubysl-date-2.0.9')

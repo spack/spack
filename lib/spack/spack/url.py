@@ -137,6 +137,7 @@ def strip_version_suffixes(path):
         'public',
         'with[a-zA-Z_-]+',
         'bin',
+        'binary',
         'run',
         '[Uu]niversal',
         'jar',
