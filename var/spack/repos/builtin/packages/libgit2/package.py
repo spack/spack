@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libgit2(Package):
+class Libgit2(CMakePackage):
     """libgit2 is a portable, pure C implementation of the Git core
     methods provided as a re-entrant linkable library with a solid
     API, allowing you to write native speed custom Git applications in
@@ -39,9 +39,3 @@ class Libgit2(Package):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('libssh2')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make('install')
