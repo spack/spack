@@ -96,7 +96,7 @@ def test_url_list(parser):
     colored_urls = url_list(args)
     assert colored_urls == total_urls
 
-    # The following two options should print fewer URLs than the default.
+    # The following options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
     # If they say we missed 0 URLs, something is probably broken too.
     args = parser.parse_args(['list', '--incorrect-name'])
@@ -106,6 +106,14 @@ def test_url_list(parser):
     args = parser.parse_args(['list', '--incorrect-version'])
     incorrect_version_urls = url_list(args)
     assert 0 < incorrect_version_urls < total_urls
+
+    args = parser.parse_args(['list', '--correct-name'])
+    correct_name_urls = url_list(args)
+    assert 0 < correct_name_urls < total_urls
+
+    args = parser.parse_args(['list', '--correct-version'])
+    correct_version_urls = url_list(args)
+    assert 0 < correct_version_urls < total_urls
 
 
 def test_url_summary(parser):
