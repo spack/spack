@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.spec import UnsupportedCompilerError
 
 
 class Elemental(CMakePackage):
@@ -32,6 +33,7 @@ class Elemental(CMakePackage):
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
 
+    version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
     variant('debug', default=False, 
@@ -94,6 +96,12 @@ class Elemental(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+
+        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
+            raise UnsupportedCompilerError(
+                "Elemental {0} has a known bug with compiler: {1} {2}".format(
+                    spec.version, spec.compiler.name, spec.compiler.version))
+
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
