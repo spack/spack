@@ -39,7 +39,7 @@ class PyGit2(PythonPackage):
     depends_on('py-setuptools', type='build')
     # Version must match with libgit2
     # See: http://www.pygit2.org/install.html
-    depends_on('libgit2@0.24.:', when='0.24.:')
+    depends_on('libgit2@0.24:', when='@0.24:')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
 
