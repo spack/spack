@@ -33,8 +33,8 @@ class Openssl(Package):
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
        It is also a general-purpose cryptography library."""
     homepage = "http://www.openssl.org"
-    url = "https://www.openssl.org/source/openssl-1.0.1h.tar.gz"
-    list_url = "https://www.openssl.org/source/old/"
+    url = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
+    list_url = "http://www.openssl.org/source/old/"
     list_depth = 2
 
 
