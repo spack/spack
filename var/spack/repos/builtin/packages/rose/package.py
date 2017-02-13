@@ -47,7 +47,7 @@ class Rose(Package):
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
     depends_on("boost@1.54.0")
-    depends_on("jdk@8u25-linux-x64")
+    depends_on("jdk@8u25")
 
     def install(self, spec, prefix):
         # Bootstrap with autotools
