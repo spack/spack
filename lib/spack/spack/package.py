@@ -1111,8 +1111,8 @@ class PackageBase(object):
             self.prefix_lock.release_write()
 
     def write_spconfig(self):
-        tty.die('`spack install --setup` is not supported ' \
-            'for packages of type {0}'.format(self.build_system_class))
+        tty.die('`spack install --setup` is not supported '
+                'for packages of type {0}'.format(self.build_system_class))
 
     def do_install(self,
                    keep_prefix=False,
@@ -1213,7 +1213,7 @@ class PackageBase(object):
             spconfig_fname = spconfig_fname_fn(self)
             tty.msg(
                 'Generating config file {0} [{1}]'.format(
-                spconfig_fname, self.spec.cshort_spec))
+                    spconfig_fname, self.spec.cshort_spec))
 
             self.write_spconfig(spconfig_fname)
 
@@ -1311,7 +1311,7 @@ class PackageBase(object):
                 tty.msg("Successfully installed %s" % self.name,
                         "Fetch: %s.  Build: %s.  Total: %s." %
                         (_hms(self._fetch_time), _hms(build_time),
-                        _hms(self._total_time)))
+                         _hms(self._total_time)))
     
             print_pkg(self.prefix)
         # --------------------- end of def build_process

@@ -188,8 +188,8 @@ class CMakePackage(PackageBase):
         spack.build_environment.setup_package(self)
         with open(spconfig_fname, 'w') as fout:
             self._write_spconfig(fout)
-            fout.write('\nproc = subprocess.Popen(cmd, env=env)\n' \
-                'proc.wait()\n')
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\n'
+                       'proc.wait()\n')
 
         set_executable(spconfig_fname)
         return spconfig_fname

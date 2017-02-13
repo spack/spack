@@ -24,10 +24,12 @@
 ##############################################################################
 from spack import *
 
+
 def check(condition, msg):
     """Raise an install error if condition is False."""
     if not condition:
         raise InstallError(msg)
+
 
 class Everytrace(CMakePackage):
     """Get stack trace EVERY time a program exits."""

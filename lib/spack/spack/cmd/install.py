@@ -362,8 +362,7 @@ def top_install(
     spec, install_package=True,
     install_dependencies=True,
     report=False,
-    spconfig_fname_fn=get_spconfig_fname,
-    **kwargs):
+    spconfig_fname_fn=get_spconfig_fname, **kwargs):
 
     """Top-level install method."""
     if not install_package:

@@ -80,9 +80,3 @@ class TestSetup(unittest.TestCase):
         self.assertEqual('FALSE', defs['CMAKE_INSTALL_RPATH_USE_LINK_PATH'])
         self.assertEqual('NO', defs['USE_MPI'])
         self.assertEqual('NO', defs['USE_FORTRAN'])
-
-    def xtest_setup(self):
-        parser = argparse.ArgumentParser()
-        setup.setup_parser(parser)
-        args = parser.parse_args(['--log-format=junit', 'everytrace'])
-        setup.setup(parser, args)
