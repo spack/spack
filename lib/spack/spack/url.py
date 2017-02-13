@@ -154,6 +154,7 @@ def strip_version_suffixes(path):
         'gpl',
 
         # Arch
+        # Needs to come before and after OS, appears in both orders
         'intel',
         'amd64',
         'x64',
@@ -166,10 +167,20 @@ def strip_version_suffixes(path):
         '[Mm]ac[Oo][Ss][Xx]?',
         '[Oo][Ss][Xx]',
         '[Dd]arwin',
+        '[Aa]pple',
+
+        # Arch
+        # Needs to come before and after OS, appears in both orders
+        'intel',
+        'amd64',
+        'x64',
+        'x86_64',
+        'i[36]86',
 
         # PyPI
-        # FIXME: Probably need to add more to this
-        'py2\.py3-none-any\.whl',
+        '[._-]py[23].*\.whl',
+        '[._-]cp[23].*\.whl',
+        '[._-]win.*\.exe',
     ]
 
     for regex in suffix_regexes:
@@ -182,21 +193,21 @@ def strip_version_suffixes(path):
 
 def strip_name_suffixes(path, version):
     """Most tarballs contain a package name followed by a version number.
-    However, some also contain extraneous information inbetween the name
+    However, some also contain extraneous information in-between the name
     and version:
 
-    * ``FIXME``
-    * ``FIXME``
-    * ``FIXME``
+    * ``rgb-1.0.6``
+    * ``converge_install_2.3.16``
+    * ``jpegsrc.v9b``
 
     These strings are not part of the package name and should be ignored.
     This function strips the version number and any extraneous suffixes
     off and returns the remaining string. The goal is that the name is
     always the last thing in ``path``:
 
-    * ``FIXME``
-    * ``FIXME``
-    * ``FIXME``
+    * ``rgb``
+    * ``converge``
+    * ``jpeg``
 
     :param str path: The filename or URL for the package
     :param str version: The version detected for this URL
@@ -204,7 +215,7 @@ def strip_name_suffixes(path, version):
     :rtype: str
     """
     # NOTE: This could be done with complicated regexes in parse_name_offset
-    # NOTE: The problem is that we would have to add these regexes to ever
+    # NOTE: The problem is that we would have to add these regexes to every
     # NOTE: single name regex. Easier to just strip them off permanently
 
     suffix_regexes = [
@@ -227,7 +238,6 @@ def strip_name_suffixes(path, version):
         # Download version
         'snapshot',
         'distrib',
-        'build',
 
         # VCS
         '0\+bzr',

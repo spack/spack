@@ -22,10 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""\
-This file has a bunch of versions tests taken from the excellent version
-detection in Homebrew.
-"""
+"""Tests Spack's ability to parse the name and version of a package
+based on its URL."""
+
 import os
 import unittest
 
@@ -33,6 +32,7 @@ from spack.url import *
 
 
 class UrlStripVersionSuffixesTest(unittest.TestCase):
+    """Tests for spack.url.strip_version_suffixes"""
 
     def check(self, before, after):
         stripped = strip_version_suffixes(before)
@@ -71,6 +71,10 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
     def test_bin(self):
         self.check('apache-maven-3.3.9-bin',
                    'apache-maven-3.3.9')
+
+    def test_gem(self):
+        self.check('rubysl-date-2.0.9.gem',
+                   'rubysl-date-2.0.9')
 
     # Download version
 
@@ -117,6 +121,12 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
     def test_wheel(self):
         self.check('entrypoints-0.2.2-py2.py3-none-any.whl',
                    'entrypoints-0.2.2')
+        self.check('numpy-1.12.0-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl',  # noqa
+                   'numpy-1.12.0')
+
+    def test_exe(self):
+        self.check('PyYAML-3.12.win-amd64-py3.5.exe',
+                   'PyYAML-3.12')
 
     # Combinations of multiple patterns
 
@@ -131,6 +141,20 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
     def test_complex_file(self):
         self.check('ack-2.14-single-file',
                    'ack-2.14')
+
+    def test_complex_jar(self):
+        self.check('antlr-3.4-complete.jar',
+                   'antlr-3.4')
+
+    def test_complex_oss(self):
+        self.check('tbb44_20160128oss_src_0',
+                   'tbb44_20160128')
+
+    def test_complex_darwin(self):
+        self.check('ghc-7.0.4-x86_64-apple-darwin',
+                   'ghc-7.0.4')
+        self.check('ghc-7.0.4-i386-apple-darwin',
+                   'ghc-7.0.4')
 
     def test_complex_arch(self):
         self.check('VizGlow_v2.2alpha17-R21November2016-Linux-x86_64-Install',
@@ -153,6 +177,56 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
     def test_complex_universal(self):
         self.check('synergy-1.3.6p2-MacOSX-Universal',
                    'synergy-1.3.6p2')
+
+
+class UrlStripNameSuffixesTest(unittest.TestCase):
+    """Tests for spack.url.strip_name_suffixes"""
+
+    def check(self, before, version, after):
+        stripped = strip_name_suffixes(before, version)
+        self.assertEqual(stripped, after)
+
+    def test_no_suffix(self):
+        self.check('rgb-1.0.6', '1.0.6',
+                   'rgb')
+        self.check('nauty26r7', '26r7',
+                   'nauty')
+
+    # Download type
+
+    def test_install(self):
+        self.check('converge_install_2.3.16', '2.3.16',
+                   'converge')
+
+    def test_src(self):
+        self.check('jpegsrc.v9b', '9b',
+                   'jpeg')
+
+    def test_std(self):
+        self.check('ghostscript-fonts-std-8.11', '8.11',
+                   'ghostscript-fonts')
+
+    # Download version
+
+    def test_snapshot(self):
+        self.check('gts-snapshot-121130', '121130',
+                   'gts')
+
+    def test_distrib(self):
+        self.check('zoltan_distrib_v3.83', '3.83',
+                   'zoltan')
+
+    # VCS
+
+    def test_bazaar(self):
+        self.check('libvterm-0+bzr681', '681',
+                   'libvterm')
+
+    # License
+
+    def test_gpl(self):
+        self.check('PyQt-x11-gpl-4.11.3', '4.11.3',
+                   'PyQt-x11')
 
 
 class UrlParseOffsetTest(unittest.TestCase):
