@@ -312,14 +312,14 @@ templates = {
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'url', nargs='?',
+        'name', nargs='?',
+        help="name of the package to create")
+    subparser.add_argument(
+        '-u', '--url',
         help="url of package archive")
     subparser.add_argument(
         '--keep-stage', action='store_true',
         help="don't clean up staging area when command completes")
-    subparser.add_argument(
-        '-n', '--name',
-        help="name of the package to create")
     subparser.add_argument(
         '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
         help="build system template to use. options: %(choices)s")
