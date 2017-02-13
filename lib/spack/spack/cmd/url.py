@@ -213,19 +213,19 @@ def url_summary(args):
         correct_versions, total_urls, correct_versions / total_urls))
     print()
 
-    tty.msg('Statistics on name regular expresions:')
+    tty.msg('Statistics on name regular expressions:')
 
     print()
-    print('    Index  Count  Regular Expresion')
+    print('    Index  Count  Regular Expression')
     for ni in name_regex_dict:
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             ni, name_count_dict[ni], name_regex_dict[ni]))
     print()
 
-    tty.msg('Statistics on version regular expresions:')
+    tty.msg('Statistics on version regular expressions:')
 
     print()
-    print('    Index  Count  Regular Expresion')
+    print('    Index  Count  Regular Expression')
     for vi in version_regex_dict:
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             vi, version_count_dict[vi], version_regex_dict[vi]))
@@ -356,7 +356,7 @@ def remove_separators(version):
     """Removes separator characters ('.', '_', and '-') from a version.
 
     A version like 1.2.3 may be displayed as 1_2_3 in the URL.
-    Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are consider equal.
+    Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.
     Unfortunately, this also means that 1.23 and 12.3 are equal.
 
     :param version: A version
