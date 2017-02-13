@@ -34,8 +34,8 @@ class Graphviz(AutotoolsPackage):
 
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
-    # We try to leave language bindings enabled if they don't cause build issues
-    # or add dependencies.
+    # We try to leave language bindings enabled if they don't cause
+    # build issues or add dependencies.
     variant('swig', default=False,
             description='Enable for optional swig language bindings'
             ' (not yet functional)')
@@ -97,10 +97,10 @@ class Graphviz(AutotoolsPackage):
 
         # These language bindings have not yet been tested.  They
         # likely need additional dependencies to get working.
-        untested_bindings = ('+swig', '+sharp', '+go', '+guile', '+io',
+        untested_bindings = (
+            '+swig', '+sharp', '+go', '+guile', '+io',
             '+lua', '+ocaml', '+php',
             '+python', '+r', '+ruby', '+tcl')
-
 
         for var in untested_bindings:
             if var in spec:
