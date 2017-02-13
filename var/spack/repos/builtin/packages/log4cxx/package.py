@@ -36,6 +36,8 @@ class Log4cxx(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('apr-util')
 
+    build_directory = 'spack-build'
+
     # patches from https://aur.archlinux.org/packages/log4cxx/
     patch('log4cxx-0.10.0-missing_includes.patch')
     patch('log4cxx-0.10.0-narrowing-fixes-from-upstream.patch')
