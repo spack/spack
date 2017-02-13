@@ -22,21 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Bison(AutotoolsPackage):
-    """Bison is a general-purpose parser generator that converts
-    an annotated context-free grammar into a deterministic LR or
-    generalized LR (GLR) parser employing LALR(1) parser tables."""
+class Turbine(AutotoolsPackage):
 
-    homepage = "http://www.gnu.org/software/bison/"
-    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.tar.gz"
+    homepage = "http://swift-lang.org/Swift-T"
+    url      = "http://swift-lang.github.io/swift-t-downloads/turbine-1.0.0.tar.gz"
 
-    version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
+    version('1.0.0', '7ed56d65d6db0bfe15a439d818b4259e')
 
-    depends_on('m4', type='build')
+    depends_on('adlbx')
+    depends_on('tcl')
+    depends_on('zsh')
 
-    patch('pgi.patch', when='@3.0.4')
-
-    build_directory = 'spack-build'
+    def configure_args(self):
+        args = ["--with-c-utils=" + self.spec['exmcutils'].prefix,
+                "--with-adlb="    + self.spec['adlbx'].prefix,
+                "--with-tcl="     + self.spec['tcl'].prefix,
+                "--with-mpi="     + self.spec['mpi'].prefix]
+        return args

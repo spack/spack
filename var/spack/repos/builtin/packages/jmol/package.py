@@ -23,20 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class Bison(AutotoolsPackage):
-    """Bison is a general-purpose parser generator that converts
-    an annotated context-free grammar into a deterministic LR or
-    generalized LR (GLR) parser employing LALR(1) parser tables."""
+class Jmol(Package):
+    """Jmol: an open-source Java viewer for chemical structures in 3D
+    with features for chemicals, crystals, materials and biomolecules."""
 
-    homepage = "http://www.gnu.org/software/bison/"
-    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.tar.gz"
+    homepage = "http://jmol.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/jmol/files/Jmol/Version%2014.8/Jmol%2014.8.0/Jmol-14.8.0-binary.tar.gz"
 
-    version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
+    version('14.8.0', '3c9f4004b9e617ea3ea0b78ab32397ea')
 
-    depends_on('m4', type='build')
+    depends_on('jdk', type='run')
 
-    patch('pgi.patch', when='@3.0.4')
+    def install(self, spec, prefix):
+        copy_tree('jmol-{0}'.format(self.version), prefix)
 
-    build_directory = 'spack-build'
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.prefix)
+        run_env.set('JMOL_HOME', self.prefix)
