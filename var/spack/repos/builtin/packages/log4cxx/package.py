@@ -45,3 +45,5 @@ class Log4cxx(Package):
 
         make()
         make('install')
+        make('check')
+        make('checkinstall')
