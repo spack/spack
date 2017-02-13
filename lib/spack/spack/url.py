@@ -347,7 +347,7 @@ def parse_version_offset(path):
     # Try to strip off anything after the version number
     stem = strip_version_suffixes(original_stem)
 
-    # General rules of thumb:
+    # Assumptions:
     #
     # 1. version always comes after the name
     # 2. separators include '-', '_', and '.'
@@ -440,6 +440,7 @@ def parse_version_offset(path):
         (r'^[a-zA-Z+]+v?(\d[\da-zA-Z.-]*)$', stem),
 
         # 6th Pass: All three separator characters are used
+        # Name may contain digits, version may contain letters
 
         # name_name-ver.ver
         # e.g. the_silver_searcher-0.32.0, sphinx_rtd_theme-0.1.10a0
@@ -663,6 +664,8 @@ def parse_name_and_version(path):
         The version of the package
 
     :rtype: tuple
+
+    :raises UndetectableNameError: If the URL does not match any regexes
     """
     ver = parse_version(path)
     name = parse_name(path, ver)

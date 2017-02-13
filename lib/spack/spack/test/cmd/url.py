@@ -65,6 +65,8 @@ def test_version_parsed_correctly():
     assert version_parsed_correctly(MyPackage('', ['1.2.3']),        '1.2.3')
     assert version_parsed_correctly(MyPackage('', ['5.4a', '5.4b']), '5.4a')
     assert version_parsed_correctly(MyPackage('', ['5.4a', '5.4b']), '5.4b')
+    assert version_parsed_correctly(MyPackage('', ['1.63.0']),       '1_63_0')
+    assert version_parsed_correctly(MyPackage('', ['0.94h']),        '094h')
 
     # Expected False
     assert not version_parsed_correctly(MyPackage('', []),         '1.2.3')
