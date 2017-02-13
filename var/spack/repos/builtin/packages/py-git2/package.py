@@ -43,7 +43,6 @@ class PyGit2(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
 
-
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
         # http://www.pygit2.org/install.html
