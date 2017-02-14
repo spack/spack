@@ -35,7 +35,7 @@ class Fontconfig(AutotoolsPackage):
     depends_on('freetype')
     depends_on('libxml2')
     depends_on('pkg-config', type='build')
-    depends_on('font-util', type='build')
+    depends_on('font-util')
 
     def configure_args(self):
         font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')
@@ -44,3 +44,12 @@ class Fontconfig(AutotoolsPackage):
                 "--enable-libxml2",
                 "--disable-docs",
                 "--with-default-fonts={0}".format(font_path)]
+
+    @run_after('install')
+    def system_fonts(self):
+        # point configuration file to system-install fonts
+        # gtk applications were failing to display text without this
+        config_file = join_path(self.prefix, 'etc', 'fonts', 'fonts.conf')
+        filter_file('<dir prefix="xdg">fonts</dir>',
+                    '<dir prefix="xdg">fonts</dir><dir>/usr/share/fonts</dir>',
+                    config_file)

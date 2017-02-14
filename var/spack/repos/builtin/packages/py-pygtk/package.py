@@ -26,7 +26,8 @@ from spack import *
 
 
 class PyPygtk(AutotoolsPackage):
-    """bindings for the Gtk in Python"""
+    """bindings for the Gtk2 in Python.
+       use pygobject for Gtk3."""
     homepage = "http://www.pygtk.org/"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
 
@@ -36,8 +37,9 @@ class PyPygtk(AutotoolsPackage):
     depends_on("libffi")
     depends_on('cairo')
     depends_on('glib')
-    depends_on('gtkplus')
-    depends_on('py-pygobject')
+    # for GTK 3.X use pygobject 3.X instead of pygtk
+    depends_on('gtkplus+X@2.24:2.99')
+    depends_on('py-pygobject@2.28:2.99')
     depends_on('py-py2cairo')
 
     def install(self, spec, prefix):
