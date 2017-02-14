@@ -280,7 +280,8 @@ class RubyPackageTemplate(PackageTemplate):
     # FIXME: Override install() if necessary."""
 
     def __init__(self, name, *args):
-        # If the user provided `--name ruby-date`, don't rename it ruby-ruby-date
+        # If the user provided `--name ruby-date`,
+        # don't rename it ruby-ruby-date
         if not name.startswith('ruby-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to ruby-{0}".format(name))
@@ -380,7 +381,6 @@ class BuildSystemGuesser:
         if 'rubygems.org/downloads' in url:
             self.build_system = 'ruby'
             return
-
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the

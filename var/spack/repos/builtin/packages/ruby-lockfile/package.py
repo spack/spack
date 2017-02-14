@@ -38,4 +38,3 @@ class RubyLockfile(RubyPackage):
 
     def install(self, spec, prefix):
         gem('install', '--local', 'lockfile-{0}.gem'.format(self.version))
-

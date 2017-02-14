@@ -38,6 +38,5 @@ class RubyslParsedate(RubyPackage):
     depends_on('rubysl-date',  type=("build", "run"))
 
     def install(self, spec, prefix):
-        gem('install', '--force', '--local', '{0}-{1}.gem'.format(self.name, self.version))
-
-
+        gem('install', '--force', '--local',
+            '{0}-{1}.gem'.format(self.name, self.version))

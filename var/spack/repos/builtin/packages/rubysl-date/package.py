@@ -36,5 +36,5 @@ class RubyslDate(RubyPackage):
     version('2.0.9', 'ad6d9400139a58fb7f2a764a93282e69', expand=False)
 
     def install(self, spec, prefix):
-        gem('install', '--local', '{0}-{1}.gem'.format(self.name, self.version))
-
+        gem('install', '--local',
+            '{0}-{1}.gem'.format(self.name, self.version))

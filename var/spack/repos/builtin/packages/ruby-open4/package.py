@@ -39,4 +39,3 @@ class RubyOpen4(RubyPackage):
 
     def install(self, spec, prefix):
         gem('install', '--local', 'open4-{0}.gem'.format(self.version))
-

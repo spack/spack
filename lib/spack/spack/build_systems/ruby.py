@@ -55,4 +55,3 @@ class RubyPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
-

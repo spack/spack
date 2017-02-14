@@ -26,6 +26,7 @@
 
 from spack import *
 
+
 class RubyLibxml2(RubyPackage):
     """The Libxml-Ruby project provides Ruby language bindings for the GNOME
     Libxml2 XML toolkit."""
@@ -39,5 +40,3 @@ class RubyLibxml2(RubyPackage):
 
     def install(self, spec, prefix):
         gem('install', '--local', 'libxml-ruby-{0}.gem'.format(self.version))
-
-
