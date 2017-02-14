@@ -52,19 +52,20 @@ class BlastPlus(Package):
     depends_on("pcre", when="+pcre")
     depends_on("libpng", when="+libpng")
 
+
+    # Run patch to prevent make install from failing. 
+    # Patch and problem were solved in this thread:
+    # https://github.com/Homebrew/homebrew-science/pull/4740
+    patch('blast-plus-make-fix.patch', when="@2.5.0:")
+
     def install(self, spec, prefix):
-        gcc_switches = "-frecord-gcc-switches"
         config_args = ["--prefix=" + prefix,
-                       "--libdir=" + prefix.libexec,
                        "--with-bin-release",
                        "--with-mt",
                        "--with-64",
-                       "--with-debug",
+                       "--without-debug",
                        "--with-optimization",
-                       "--without-gcrypt",
-                       "--without-ncbi-crypt",
-                       "CFLAGS=%s" % gcc_switches,
-                       "CXXFLAGS=%s" % gcc_switches]
+                       "LDFLAGS=-static"]
 
         if "+static" in spec:
             config_args.append("--with-static")
@@ -88,7 +89,8 @@ class BlastPlus(Package):
         if "+python" in spec:
             config_args.append("--with-python=%s" % spec['python'].prefix)
 
+
         with working_dir("c++"):
             configure(*config_args)
-            make("-d")
+            make()
             make("install")
