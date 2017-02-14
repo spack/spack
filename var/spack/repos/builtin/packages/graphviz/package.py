@@ -41,9 +41,11 @@ class Graphviz(AutotoolsPackage):
     variant(
         'perl', default=False,
         description='Enable if you need the optional Perl language bindings.')
+    variant('java', default=False, description='Java language bindings')
 
     parallel = False
 
+    depends_on("jdk", when="+java")
     depends_on("swig")
     depends_on("python")
     depends_on("ghostscript")
@@ -56,6 +58,8 @@ class Graphviz(AutotoolsPackage):
         options = []
         if '+perl' not in self.spec:
             options.append('--disable-perl')
+        if '+java' not in self.spec:
+            options.append('--disable-java')
 
         # On OSX fix the compiler error:
         # In file included from tkStubLib.c:15:
