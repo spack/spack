@@ -40,7 +40,9 @@ filesystem.
 
 """
 import os
+import sys
 import socket
+import contextlib
 from six import string_types
 from six import iteritems
 
@@ -52,12 +54,13 @@ from llnl.util.lock import *
 
 import spack.store
 import spack.repository
-from spack.directory_layout import DirectoryLayoutError
-from spack.version import Version
 import spack.spec
-from spack.error import SpackError
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
+from spack.util.crypto import bit_length
+from spack.directory_layout import DirectoryLayoutError
+from spack.error import SpackError
+from spack.version import Version
 
 
 # DB goes in this directory underneath the root
@@ -127,6 +130,9 @@ class InstallRecord(object):
 
 class Database(object):
 
+    """Per-process lock objects for each install prefix."""
+    _prefix_locks = {}
+
     def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
@@ -184,6 +190,47 @@ class Database(object):
     def read_transaction(self, timeout=_db_lock_timeout):
         """Get a read lock context manager for use in a `with` block."""
         return ReadTransaction(self.lock, self._read, timeout=timeout)
+
+    def prefix_lock(self, spec):
+        """Get a lock on a particular spec's installation directory.
+
+        NOTE: The installation directory **does not** need to exist.
+
+        Prefix lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``spack.store.db.prefix_lock`` -- the DB
+        tells us what to call it and it lives alongside the install DB.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        likelihood of collision is very low AND it gives us
+        readers-writer lock semantics with just a single lockfile, so no
+        cleanup required.
+        """
+        prefix = spec.prefix
+        if prefix not in self._prefix_locks:
+            self._prefix_locks[prefix] = Lock(
+                self.prefix_lock_path,
+                spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
+
+        return self._prefix_locks[prefix]
+
+    @contextlib.contextmanager
+    def prefix_read_lock(self, spec):
+        prefix_lock = self.prefix_lock(spec)
+        try:
+            prefix_lock.acquire_read(60)
+            yield self
+        finally:
+            prefix_lock.release_read()
+
+    @contextlib.contextmanager
+    def prefix_write_lock(self, spec):
+        prefix_lock = self.prefix_lock(spec)
+        try:
+            prefix_lock.acquire_write(60)
+            yield self
+        finally:
+            prefix_lock.release_write()
 
     def _write_to_file(self, stream):
         """Write out the databsae to a JSON file.

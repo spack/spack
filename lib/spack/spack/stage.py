@@ -222,7 +222,8 @@ class Stage(object):
         self.keep = keep
 
         # File lock for the stage directory.  We use one file for all
-        # stage locks. See Spec.prefix_lock for details on this approach.
+        # stage locks. See spack.database.Database.prefix_lock for
+        # details on this approach.
         self._lock = None
         if lock:
             if self.name not in Stage.stage_locks:
