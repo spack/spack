@@ -500,17 +500,36 @@ def validate(env, errstream):
 
 
 def filter_environment_blacklist(env, variables):
-    """
-    Generator that filters out any change to environment variables present in
+    """Generator that filters out any change to environment variables present in
     the input list
 
-    Args:
-        env: list of environment modifications
-        variables: list of variable names to be filtered
+    :param env: list of environment modifications
+    :param variables: list of variable names to be filtered
 
-    Yields:
-        items in env if they are not in variables
+    :return: items in env if they are not in variables
     """
     for item in env:
         if item.name not in variables:
             yield item
+
+
+def inspect_path(root, inspections):
+    """Inspects a path to search for the subdirectories specified in the
+    inspection dictionary. Return a list of commands that will modify the
+    environment accordingly.
+
+    :param root: path where to search for subdirectories
+    :param inspections: dictionary that maps subdirectories to a list of
+        variables that we want to pre-pend with a path, if found
+
+    :return: instance of EnvironmentModifications containing the requested
+        modifications
+    """
+    env = EnvironmentModifications()
+    # Inspect the prefix to check for the existence of common directories
+    for relative_path, variables in inspections.items():
+        expected = os.path.join(root, relative_path)
+        if os.path.isdir(expected):
+            for variable in variables:
+                env.prepend_path(variable, expected)
+    return env

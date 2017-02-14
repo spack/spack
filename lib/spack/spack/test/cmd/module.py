@@ -31,7 +31,7 @@ import spack.modules as modules
 
 
 def _get_module_files(args):
-    return [modules.module_types[args.module_type](spec).file_name
+    return [modules.module_types[args.module_type](spec).layout.filename
             for spec in args.specs()]
 
 

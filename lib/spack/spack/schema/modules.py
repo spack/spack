@@ -105,6 +105,10 @@ schema = {
             'default': {},
             'anyOf': [
                 {'properties': {
+                    'verbose': {
+                        'type': 'boolean',
+                        'default': True
+                    },
                     'hash_length': {
                         'type': 'integer',
                         'minimum': 0,

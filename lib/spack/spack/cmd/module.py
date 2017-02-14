@@ -40,11 +40,12 @@ section = "environment"
 level = "short"
 
 
-# Dictionary that will be populated with the list of sub-commands
-# Each sub-command must be callable and accept 3 arguments :
-# - mtype : the type of the module file
-# - specs : the list of specs to be processed
-# - args : namespace containing the parsed command line arguments
+#: Dictionary that will be populated with the list of sub-commands
+#: Each sub-command must be callable and accept 3 arguments:
+#:
+#:   - mtype : the type of the module file
+#:   - specs : the list of specs to be processed
+#:   - args : namespace containing the parsed command line arguments
 callbacks = {}
 
 
@@ -130,8 +131,10 @@ def loads(mtype, specs, args):
             )
 
     module_cls = module_types[mtype]
-    modules = [(spec, module_cls(spec).use_name)
-               for spec in specs if os.path.exists(module_cls(spec).file_name)]
+    modules = [
+        (spec, module_cls(spec).use_name)
+        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
+    ]
 
     module_commands = {
         'tcl': 'module load ',
@@ -170,9 +173,9 @@ def find(mtype, specs, args):
 
     spec = specs.pop()
     mod = module_types[mtype](spec)
-    if not os.path.isfile(mod.file_name):
+    if not os.path.isfile(mod.layout.filename):
         tty.die('No {0} module is installed for {1}'.format(mtype, spec))
-    print(mod.use_name)
+    print(mod.layout.use_name)
 
 
 @subcommand('rm')
@@ -180,7 +183,9 @@ def rm(mtype, specs, args):
     """Deletes module files associated with items in specs"""
     module_cls = module_types[mtype]
     specs_with_modules = [
-        spec for spec in specs if os.path.exists(module_cls(spec).file_name)]
+        spec
+        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
+    ]
     modules = [module_cls(spec) for spec in specs_with_modules]
 
     if not modules:
@@ -205,7 +210,7 @@ def rm(mtype, specs, args):
 
 @subcommand('refresh')
 def refresh(mtype, specs, args):
-    """Regenerate module files for item in specs"""
+    """Regenerate module files for item in specs."""
     # Prompt a message to the user about what is going to change
     if not specs:
         tty.msg('No package matches your query')
@@ -228,7 +233,7 @@ def refresh(mtype, specs, args):
                if spack.repo.exists(spec.name)]  # skip unknown packages.
     file2writer = collections.defaultdict(list)
     for item in writers:
-        file2writer[item.file_name].append(item)
+        file2writer[item.layout.filename].append(item)
 
     if len(file2writer) != len(writers):
         message = 'Name clashes detected in module files:\n'
@@ -242,11 +247,13 @@ def refresh(mtype, specs, args):
         tty.error('Operation aborted')
         raise SystemExit(1)
 
+    # If we arrived here we have at least one writer
+    module_type_root = writers[0].layout.dirname()
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=mtype))
-    if os.path.isdir(cls.path) and args.delete_tree:
-        shutil.rmtree(cls.path, ignore_errors=False)
-    filesystem.mkdirp(cls.path)
+    if os.path.isdir(module_type_root) and args.delete_tree:
+        shutil.rmtree(module_type_root, ignore_errors=False)
+    filesystem.mkdirp(module_type_root)
     for x in writers:
         x.write(overwrite=True)
 
