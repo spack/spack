@@ -2630,7 +2630,7 @@ class Spec(object):
                         a_str = ' arch' + c + str(self.architecture) + ' '
                         write(fmt % (a_str), c)
                 elif c == '/':
-                    out.write('/' + fmt % (self.dag_hash(7)))
+                    out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
