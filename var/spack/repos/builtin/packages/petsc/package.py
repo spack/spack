@@ -136,10 +136,18 @@ class Petsc(Package):
                 errors = ['incompatible variants given'] + errors
                 raise RuntimeError('\n'.join(errors))
         else:
-            compiler_opts = [
-                '--with-mpi=1',
-                '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
+          compiler_opts = [
+                '--with-cc=%s' % self.spec['mpi'].mpicc,
+                '--with-cxx=%s' % self.spec['mpi'].mpicxx,
+                '--with-fc=%s' % self.spec['mpi'].mpifc
             ]
+#            os.environ['CC'] = 
+#            os.environ['CXX'] = spec['mpi'].mpicxx
+#            os.environ['F77'] = spec['mpi'].mpif90
+#            compiler_opts = [
+#                '--with-mpi=1',
+#                '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
+#            ]
 # this code breaks things at ALCF and OLCF            
 #        if sys.platform != "darwin":
 #            compiler_opts.extend([
