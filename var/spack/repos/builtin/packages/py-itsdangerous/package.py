@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyItsdangerous(PythonPackage):
-    """Various helpers to pass trusted data to untrusted environments and back."""
+    """Various helpers to pass trusted data to untrusted environments."""
 
     homepage = "http://github.com/mitsuhiko/itsdangerous"
     url = "https://github.com/pallets/itsdangerous/archive/0.24.tar.gz"

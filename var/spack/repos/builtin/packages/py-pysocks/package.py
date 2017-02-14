@@ -26,12 +26,12 @@ from spack import *
 
 
 class PyPysocks(PythonPackage):
-	"""A Python SOCKS client module."""
+    """A Python SOCKS client module."""
 
-	homepage = "https://github.com/Anorov/PySocks"
-	url      = "https://github.com/Anorov/PySocks/archive/1.6.6.tar.gz"
+    homepage = "https://github.com/Anorov/PySocks"
+    url      = "https://github.com/Anorov/PySocks/archive/1.6.6.tar.gz"
 
-	version('1.5.7', '68f4ad7a8d4fa725656ae3e9dd142d29',
-		url='https://pypi.python.org/packages/16/56/9b3513078f837fa8cb88ee01ec1cd805ed8104a37bc02ca8c2588ae8fe5a/PySocks-1.5.7.tar.gz')
+    version('1.5.7', '68f4ad7a8d4fa725656ae3e9dd142d29',
+        url='https://pypi.python.org/packages/16/56/9b3513078f837fa8cb88ee01ec1cd805ed8104a37bc02ca8c2588ae8fe5a/PySocks-1.5.7.tar.gz')
 
-	depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')

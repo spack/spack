@@ -31,7 +31,6 @@ class PyRequests(PythonPackage):
     homepage = "http://python-requests.org"
     url = "https://github.com/kennethreitz/requests/archive/v2.13.0.tar.gz"
 
-
     version('2.13.0', '94ad79c2e57917aca999308b1fb4cbb4')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
 
