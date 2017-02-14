@@ -25,17 +25,18 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyHttpbin(PythonPackage):
+    """HTTP Request and Response Service"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "https://github.com/Runscope/httpbin"
+    url      = "https://github.com/Runscope/httpbin/archive/v0.5.0.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
-            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
+    version('0.5.0', '923793df99156caa484975ade96ee115',
+        url='https://pypi.python.org/packages/61/8d/2e5b787a3381ff6c380cd05a0d0bc3d97888299704294ae198e90693c4cd/httpbin-0.5.0.tar.gz')
 
-    depends_on('python@2.4:2.8,3.3:')
-
-    # This dependency breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6.999', type=('build', 'run'))  # noqa
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',         type='build')
+    depends_on('py-decorator@3.4.0:',   type=('build', 'run'))
+    depends_on('py-flask@0.10.1:',      type=('build', 'run'))
+    depends_on('py-itsdangerous@0.24:', type=('build', 'run'))
+    depends_on('py-markupsafe@0.23:',   type=('build', 'run'))
+    depends_on('py-six@1.6.1:',         type=('build', 'run'))

@@ -34,3 +34,4 @@ class PyPbr(PythonPackage):
     version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-enum34', type='build')

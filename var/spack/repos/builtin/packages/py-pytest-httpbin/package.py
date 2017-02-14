@@ -25,17 +25,20 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyPytestHttpbin(PythonPackage):
+    """Easily test your HTTP library against a local copy of httpbin"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "https://github.com/kevin1024/pytest-httpbin"
+    url      = "https://github.com/kevin1024/pytest-httpbin/archive/v0.2.0.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
-            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
+    version('0.2.3', 'b8ebb8e2fbac1a445fb5d044f7fec556',
+        url='https://pypi.python.org/packages/12/12/5430600cb9417080b561237761ff2dffde520b664cc352433d2e57051222/pytest-httpbin-0.2.3.tar.gz')
 
-    depends_on('python@2.4:2.8,3.3:')
+    extends('python', ignore=r'bin/flask')
 
-    # This dependency breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6.999', type=('build', 'run'))  # noqa
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest',     type=('build', 'run'))
+    depends_on('py-flask',      type=('build', 'run'))
+    depends_on('py-decorator',  type=('build', 'run'))
+    depends_on('py-httpbin',    type=('build', 'run'))
+    depends_on('py-six',        type=('build', 'run'))

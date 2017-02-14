@@ -25,17 +25,13 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyWerkzeug(PythonPackage):
+    """The Swiss Army knife of Python web development"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "http://werkzeug.pocoo.org"
+    url      = "https://github.com/pallets/werkzeug/archive/0.11.15.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
-            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
+    version('0.11.11', '1d34afa1f19abcef4c0da51ebc2c4ea7',
+        url='https://pypi.python.org/packages/43/2e/d822b4a4216804519ace92e0368dcfc4b0b2887462d852fdd476b253ecc9/Werkzeug-0.11.11.tar.gz')
 
-    depends_on('python@2.4:2.8,3.3:')
-
-    # This dependency breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6.999', type=('build', 'run'))  # noqa
     depends_on('py-setuptools', type='build')

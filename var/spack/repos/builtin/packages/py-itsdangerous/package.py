@@ -25,17 +25,13 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyItsdangerous(PythonPackage):
+    """Various helpers to pass trusted data to untrusted environments and back."""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "http://github.com/mitsuhiko/itsdangerous"
+    url = "https://github.com/pallets/itsdangerous/archive/0.24.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
-            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
+    version('0.24', 'a3d55aa79369aef5345c036a8a26307f',
+        url='https://pypi.python.org/packages/dc/b4/a60bcdba945c00f6d608d8975131ab3f25b22f2bcfe1dab221165194b2d4/itsdangerous-0.24.tar.gz')
 
-    depends_on('python@2.4:2.8,3.3:')
-
-    # This dependency breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6.999', type=('build', 'run'))  # noqa
     depends_on('py-setuptools', type='build')

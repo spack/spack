@@ -25,17 +25,17 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyPytestMock(PythonPackage):
+    """Thin-wrapper around the mock package for easier use with py.test"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "https://github.com/pytest-dev/pytest-mock"
+    url      = "https://github.com/pytest-dev/pytest-mock/archive/v1.5.0.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
-            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
+    version('1.2', 'a7fa820f7bc71698660945836ff93c73',
+        url="https://pypi.python.org/packages/30/11/a5a8009eff04bc15c37e2f8e33d8ed99adf828ec8f551fb31d99f6c73b5b/pytest-mock-1.2.zip")
 
-    depends_on('python@2.4:2.8,3.3:')
+    extends('python', ignore=r'bin/*')
 
-    # This dependency breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6.999', type=('build', 'run'))  # noqa
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',  type='build')
+    depends_on('py-pytest@2.7:', type=('build', 'run'))
+    depends_on('py-mock',        type=('build', 'run'))

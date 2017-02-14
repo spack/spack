@@ -25,17 +25,17 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyFlask(PythonPackage):
+    """A microframework based on Werkzeug, Jinja2 and good intentions"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "http://github.com/pallets/flask"
+    url      = "https://github.com/pallets/flask/archive/0.12.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0',
-            url="https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz")
+    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08',
+        url='https://pypi.python.org/packages/55/8a/78e165d30f0c8bb5d57c429a30ee5749825ed461ad6c959688872643ffb3/Flask-0.11.1.tar.gz')
 
-    depends_on('python@2.4:2.8,3.3:')
-
-    # This dependency breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6.999', type=('build', 'run'))  # noqa
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',         type='build')
+    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
+    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
+    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
+    depends_on('py-click@2.0:',         type=('build', 'run'))
