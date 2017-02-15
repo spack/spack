@@ -100,9 +100,9 @@ compilers:
       - icc/16.0 
     operating_system: centos7
     paths:
-      cc: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/icc
-      cxx: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/icpc
-      f77: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
-      fc: /lustre/usr/intel_cluster_studio/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
-    spec: intel@16.0.3
+      cc: /lustre/usr/intel/16u4/compilers_and_libraries_2016.4.258/linux/bin/intel64/icc
+      cxx: /lustre/usr/intel/16u4/compilers_and_libraries_2016.4.258/linux/bin/intel64/icpc
+      f77: /lustre/usr/intel/16u4/compilers_and_libraries_2016.4.258/linux/bin/intel64/ifort
+      fc: /lustre/usr/intel/16u4/compilers_and_libraries_2016.4.258/linux/bin/intel64/ifort
+    spec: intel@16.0.4
     target: x86_64
