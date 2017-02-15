@@ -43,7 +43,7 @@ class Ncurses(Package):
     patch('patch_gcc_5.txt', when='%gcc@5.0:')
 
     variant('symlinks', default=False,
-        description='Enables symlinks. Needed on AFS filesystem.')
+            description='Enables symlinks. Needed on AFS filesystem.')
 
     def install(self, spec, prefix):
         opts = [
