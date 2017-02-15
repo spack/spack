@@ -45,7 +45,6 @@ class CrayLibsci(Package):
     numerical routines optimized for best performance on Cray systems."""
 
     homepage = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
-    url      = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
 
     version('16.07.1')
 
