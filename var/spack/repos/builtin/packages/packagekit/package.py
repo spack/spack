@@ -37,12 +37,8 @@ class Packagekit(AutotoolsPackage):
     variant('gtk', default=False, description='Build GTK+-3 module functionality')
 
     depends_on('glib@2.46.0:')
-    # depends_on('gmodule')
     depends_on('sqlite')
-
-    # Can't get mozjs to install, so can't get polkit to install
-    # depends_on('polkit@0.98:')
-
+    depends_on('polkit@0.98:')
     # depends_on('systemd')
     depends_on('gobject-introspection')
     depends_on('bash-completion@2.0:')

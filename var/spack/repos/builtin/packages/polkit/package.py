@@ -35,20 +35,9 @@ class Polkit(AutotoolsPackage):
     version('master', git='git://anongit.freedesktop.org/git/polkit')
     version('0.113', '4b77776c9e4f897dcfe03b2c34198edf')
 
-    # depends_on('gmodule')
     depends_on('expat')
     depends_on('mozjs@24.2.0', when='@master')
     depends_on('mozjs@1.8.5,17.0.0', when='@0.113')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('glib@2.30.0:', type='build')
-
-    #def configure_args(self):
-    #    spec = self.spec
-    #    args = []
-
-    #    if spec['mozjs'].version == Version('17.0.0'):
-    #        args.append('--with-mozjs=mozjs-17.0')
-    #    elif spec['mozjs'].version == Version('1.8.5'):
-    #        args.append('--with-mozjs=mozjs185')
-
-    #    return args
+    # depends_on('systemd')
