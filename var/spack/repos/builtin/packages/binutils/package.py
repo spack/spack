@@ -46,7 +46,8 @@ class Binutils(Package):
     # OpenSpeedShop and cbtf-krell
     variant('krellpatch', default=False,
             description="build with openspeedshop based patch.")
-    variant('plugins', default=False)
+    variant('plugins', default=False,
+            description="enable plugins, needed for gold linker")
     variant('gold', default=True, description="build the gold linker")
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
