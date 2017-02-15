@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Libpsf(Package):
@@ -31,17 +30,17 @@ class Libpsf(Package):
 
     homepage = "https://github.com/henjo/libpsf"
 
-    version('master', git='https://github.com/henjo/libpsf.git', branch='master')
+    version('develop', git='https://github.com/henjo/libpsf.git', branch='master')
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool",  type="build")
 
     variant('python', default=True, description='Build python wrappers')
-    extends('python',                         when='+python')
-    depends_on('py-setuptools', type='build', when='+python')
-    depends_on('boost+python',                when='+python')
-    depends_on('py-numpy',                    when='+python')
+    extends('python',                              when='+python')
+    depends_on('py-setuptools', type='build',      when='+python')
+    depends_on('boost+python',                     when='+python')
+    depends_on('py-numpy',  type=('build', 'run'), when='+python')
 
     patch('fix_link.patch', level=0)
     patch('fix_install.patch', level=0)
