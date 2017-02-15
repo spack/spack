@@ -50,12 +50,10 @@ class Mesa(AutotoolsPackage):
     depends_on('libxext')
     depends_on('libxdamage')
     depends_on('libxfixes')
+    depends_on('systemd')
 
     depends_on('glproto@1.4.14:', type='build')
     depends_on('dri2proto@2.6:', type='build')
     depends_on('dri3proto@1.0:', type='build')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
-
-    # TODO: Add package for systemd, provides libudev
-    # Using the system package manager to install systemd didn't work for me

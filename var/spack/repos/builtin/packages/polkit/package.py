@@ -40,4 +40,4 @@ class Polkit(AutotoolsPackage):
     depends_on('mozjs@1.8.5,17.0.0', when='@0.113')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('glib@2.30.0:', type='build')
-    # depends_on('systemd')
+    depends_on('systemd')

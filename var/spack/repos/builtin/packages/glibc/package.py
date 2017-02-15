@@ -25,40 +25,28 @@
 from spack import *
 
 
-class Packagekit(AutotoolsPackage):
-    """PackageKit is a system designed to make installing and updating
-    software on your computer easier."""
+class Glibc(AutotoolsPackage):
+    """The GNU C Library is the standard system C library for all GNU systems,
+    and is an important part of what makes up a GNU system.  It provides the
+    system API for all programs written in C and C-compatible languages such
+    as C++ and Objective C; the runtime facilities of other programming
+    languages use the C library to access the underlying operating system."""
 
-    homepage = "https://www.freedesktop.org/software/PackageKit/"
-    url      = "https://www.freedesktop.org/software/PackageKit/releases/PackageKit-1.1.4.tar.xz"
+    homepage = "https://www.gnu.org/software/libc/"
+    url      = "http://open-source-box.org/glibc/glibc-2.25.tar.gz"
 
-    version('1.1.4', 'd1a000a33c7c935522af7a01dea012bf')
+    # Requires kernel headers from Linux 3.2.0+
+    version('2.25',   '0c9f827298841dbf3bff3060f3d7f19c')
 
-    variant('gtk', default=False, description='Build GTK+-3 module functionality')
+    # Works with kernel headers provided on CentOS 6
+    version('2.16.0', 'b5f786fa7df4ff947bcd240c0e595f98')
+    version('2.12.2', '49a8a5a74b624dcd15ec1689ede7e062')
 
-    depends_on('glib@2.46.0:')
-    depends_on('sqlite')
-    depends_on('polkit@0.98:')
-    depends_on('systemd')
-    depends_on('gobject-introspection')
-    depends_on('bash-completion@2.0:')
-    depends_on('gtkplus', when='+gtk')
+    depends_on('binutils@2.22:')
 
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('intltool@0.35.0:', type='build')
-    depends_on('gettext', type='build')
-    depends_on('msgpack-c', type='build')
-    depends_on('python@2.7:', type='build')
+    # TODO: Add a 'test' deptype
+    # depends_on('python@2.7.6:2.8,3.4.3:', type='test')
+    # depends_on('py-pexpect@4.0', type='test')
+    # depends_on('gdb@7.8:', type='test')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
-
-    def configure_args(self):
-        args = []
-
-        if '+gtk' in self.spec:
-            args.append('--enable-gtk-module')
-        else:
-            args.append('--disable-gtk-module')
-
-        return args
+    build_directory = 'spack-build'
