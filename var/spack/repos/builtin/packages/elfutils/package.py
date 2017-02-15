@@ -38,10 +38,8 @@ class Elfutils(AutotoolsPackage):
 
     version('0.163', '77ce87f259987d2e54e4d87b86cbee41')
 
-    depends_on('libtool', type='build')
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
     depends_on('flex', type='build')  # needed in maintainer mode
+    depends_on('bison', type='build') # needed in maintainer mode
 
     provides('elf')
 
