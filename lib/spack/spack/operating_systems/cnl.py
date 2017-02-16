@@ -45,7 +45,7 @@ class Cnl(OperatingSystem):
         modulecmd.add_default_arg("python")
         output = modulecmd("avail", "PrgEnv-intel", output=str, error=str)
         matches = re.findall(r'PrgEnv-intel/(\d+).\d+.\d+', output)
-        version_set = set(matches) # 
+        version_set = set(matches)
         recent_version = max(version_set)
         return spack.version.Version(recent_version)
 
