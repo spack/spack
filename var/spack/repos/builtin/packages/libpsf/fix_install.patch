@@ -1,0 +1,12 @@
+diff -pu bindings/python/Makefile.am.orig bindings/python/Makefile.am
+--- bindings/python/Makefile.am.orig	2016-09-15 17:05:03.813139778 +0200
++++ bindings/python/Makefile.am	2016-09-15 17:05:24.888422055 +0200
+@@ -6,7 +6,7 @@ all-local:
+ 	$(PYTHON) setup.py build_ext --include-dirs=../../include:@BOOST_ROOT_PATH@/include --library-dirs=../../src/.libs:@BOOST_ROOT_PATH@/lib 
+ 
+ install-exec-local:
+-	$(PYTHON) setup.py install --prefix=$(prefix) --root=$(DESTDIR)
++	$(PYTHON) setup.py install --prefix=$(prefix)
+ 
+ uninstall-local:
+ 	rm -rf $(DESTDIR)$(libdir)/python*/*-packages/*libpsf*

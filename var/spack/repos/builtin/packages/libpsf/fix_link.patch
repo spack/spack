@@ -1,0 +1,12 @@
+diff -pu src/Makefile.am.orig src/Makefile.am
+--- src/Makefile.am.orig  2016-09-15 11:22:34.551188206 +0200
++++ src/Makefile.am       2016-09-15 11:22:58.651736743 +0200
+@@ -8,7 +8,7 @@ psftest_LDFLAGS = libpsf.la
+ libpsf_la_SOURCES = psf.cc psfdata.cc psfproperty.cc psfchunk.cc \
+ 	psfcontainer.cc psfindexedcontainer.cc psfgroup.cc psffile.cc \
+ 	psftype.cc psfstruct.cc psfsections.cc psftrace.cc \
+-	psfnonsweepvalue.cc psfsweepvalue.cc
++	psfnonsweepvalue.cc psfsweepvalue.cc psfpropertyblock.cc
+ 
+ libpsf_la_CXXFLAGS = \
+ 	-I../include ${BOOST_CPPFLAGS}
