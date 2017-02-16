@@ -23,17 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class Mpfr(AutotoolsPackage):
-    """The MPFR library is a C library for multiple-precision
-       floating-point computations with correct rounding."""
-    homepage = "http://www.mpfr.org"
-    url      = "https://gforge.inria.fr/frs/download.php/latestfile/159/mpfr-3.1.2.tar.bz2"
+class Jmol(Package):
+    """Jmol: an open-source Java viewer for chemical structures in 3D
+    with features for chemicals, crystals, materials and biomolecules."""
 
-    version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
-    version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
-    version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    homepage = "http://jmol.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/jmol/files/Jmol/Version%2014.8/Jmol%2014.8.0/Jmol-14.8.0-binary.tar.gz"
 
-    depends_on('gmp')  # mpir is a drop-in replacement for this
+    version('14.8.0', '3c9f4004b9e617ea3ea0b78ab32397ea')
+
+    depends_on('jdk', type='run')
+
+    def install(self, spec, prefix):
+        copy_tree('jmol-{0}'.format(self.version), prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.prefix)
+        run_env.set('JMOL_HOME', self.prefix)
