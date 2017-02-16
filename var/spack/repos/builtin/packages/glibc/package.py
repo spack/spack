@@ -46,3 +46,17 @@ class Glibc(AutotoolsPackage):
     # depends_on('gdb@7.8:', type='test')
 
     build_directory = 'spack-build'
+
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--disable-debug',
+            '--disable-dependency-tracking',
+            '--disable-silent-rules',
+            '--enable-obsolete-rpc',
+            # Fix error: selinux/selinux.h: No such file or directory
+            '--without-selinux',
+            '--enable-kernel={0}'.format(spec['linux-headers'].version),
+            '--with-binutils={0}'.format(spec['binutils'].prefix.bin),
+            '--with-headers={0}'.format(spec['linux-headers'].prefix.include),
+        ]
