@@ -31,6 +31,10 @@ class Libpsf(Package):
     homepage = "https://github.com/henjo/libpsf"
 
     version('develop', git='https://github.com/henjo/libpsf.git', branch='master')
+    # No official releases of libpsf yet exist. It is recommended
+    # that users use the latest @develop version.
+    version('0.0.0.1', git='https://github.com/henjo/libpsf.git',
+        commit='6efc14f7c5fa7e09a07e354cc54b9135ec353d70')
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
