@@ -27,65 +27,6 @@
 .. literalinclude:: ../spack/schema/test.py
    :lines: 32-
 
-
-{
-  "enable": [
-    "libelf",
-    "libdwarf"
-  ],
-  "packages": [
-    {
-      "libelf": [
-        {
-          "versions": [
-            "0.8.13",
-            "0.8.12"
-          ]
-        }
-      ]
-    },
-    {
-      "bzip2": [
-        {
-          "versions": [
-            "1.0.6"
-          ]
-        }
-      ]
-    }
-  ],
-  "compilers": [
-    {
-      "gcc": [
-        {
-          "versions": [
-            "4.9.0",
-            "4.2.1",
-            "4.1.2"
-          ]
-        }
-      ]
-    },
-    {
-      "clang": [
-        {
-          "versions": [
-            "7.3.0-apple",
-            3.3,
-            3.2,
-            3.1
-          ]
-        }
-      ]
-    }
-  ],
-  "exclusions": [
-
-  ],
-  "dashboard": [
-    "https://spack.io/cdash/submit.php?project=spack"
-  ]
-}
 """
 schema = {
     '$schema': 'http://json-schema.org/schema#',

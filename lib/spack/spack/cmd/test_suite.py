@@ -161,7 +161,7 @@ def test_suite(parser, args):
             enabledTests= data['enable']
             packages= data['packages'] # list of packages to test. Current libelf, libdwarf, bzip2
             compilers = data['compilers']
-
+            dashboards  = data['dashboard']
         except MarkedYAMLError as e:
             raise ConfigFileError(
                 "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
