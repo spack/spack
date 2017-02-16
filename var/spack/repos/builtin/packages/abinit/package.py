@@ -62,6 +62,9 @@ class Abinit(Package):
     # TODO: To be tested.
     # It was working before the last `git pull` but now all tests crash.
     # For the time being, the default is netcdf3 and the internal fallbacks
+    # FIXME: rename (trio?) and use multivalued variants to cover
+    # --with-trio-flavor={netcdf, none, netcdf+etsf_io, netcdf-fallback}
+    # add etsf_io package.
     variant('hdf5', default=False,
             description='Enables HDF5+Netcdf4 with MPI. WARNING: experimental')
 
