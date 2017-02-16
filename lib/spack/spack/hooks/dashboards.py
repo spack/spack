@@ -163,6 +163,7 @@ class CDashSimpleTestSuite(object):
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.filename = filename
 
+
     def create_filename(self, spec, subdir, step):
         if "build" in str(step):
             if self.filename is not None:
@@ -180,8 +181,8 @@ class CDashSimpleTestSuite(object):
         buildName = buildName.split('=')
         template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
-        template.set('CompilerName', self.spec.compiler.name)
-        template.set('CompilerVersion', self.spec.compiler.version)
+        template.set('CompilerName', str(self.spec.compiler.name)) 
+        template.set('CompilerVersion', str(self.spec.compiler.version))
         template.set('Name', platform.node())
         template.set('OSName', platform.system())
         template.set('Hostname', platform.node())
@@ -363,8 +364,8 @@ class CDashCompleteTestSuite(object):
         buildName = buildName.split('=')
         template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
-        template.set('CompilerName', self.spec.compiler.name)
-        template.set('CompilerVersion', self.spec.compiler.version)
+        template.set('CompilerName', str(self.spec.compiler.name)) 
+        template.set('CompilerVersion', str(self.spec.compiler.version))
         template.set('Name', platform.node())
         template.set('OSName', platform.system())
         template.set('Hostname', platform.node())
