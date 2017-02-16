@@ -25,7 +25,7 @@
 #
 # Author: Matteo Giantomassi <matteo.giantomassiNOSPAM AT uclouvain.be>
 # Date: October 11, 2016
-
+import sys
 from spack import *
 
 
@@ -164,8 +164,12 @@ class Abinit(Package):
                     spec["netcdf-fortran"].prefix.lib, hdf_libs),
             ])
         else:
-            # Use internal fallbacks (netcdf3)
-            oapp("--with-trio-flavor=netcdf-fallback")
+            if sys.platform == 'darwin':
+                # internal netcdf does not comile on macOS (Sierra)
+                oapp("--with-trio-flavor=none")
+            else:
+                # Use internal fallbacks (netcdf3)
+                oapp("--with-trio-flavor=netcdf-fallback")
 
         configure(*options)
         make()
