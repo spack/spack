@@ -35,13 +35,9 @@ class Glibc(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/libc/"
     url      = "http://open-source-box.org/glibc/glibc-2.25.tar.gz"
 
-    # Requires kernel headers from Linux 3.2.0+
     version('2.25',   '0c9f827298841dbf3bff3060f3d7f19c')
 
-    # Works with kernel headers provided on CentOS 6
-    version('2.16.0', 'b5f786fa7df4ff947bcd240c0e595f98')
-    version('2.12.2', '49a8a5a74b624dcd15ec1689ede7e062')
-
+    depends_on('linux-headers@3.2.0:')
     depends_on('binutils@2.22:')
 
     # TODO: Add a 'test' deptype
