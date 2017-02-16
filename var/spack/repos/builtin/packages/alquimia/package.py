@@ -31,7 +31,7 @@ class Alquimia(CMakePackage):
 
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
 
-    version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')
+    version('develop', git='https://github.com/ghammond86/alquimia-dev.git')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -42,6 +42,8 @@ class Alquimia(CMakePackage):
     depends_on('hdf5')
     depends_on('pflotran@develop')
     depends_on('petsc@develop')
+
+    patch('petsc_arch.patch')
 
     def cmake_args(self):
         spec = self.spec

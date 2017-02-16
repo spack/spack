@@ -1,0 +1,33 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 730f4d1..b33163d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -188,11 +188,11 @@ if (ALQUIMIA_NEED_PETSC)
+   if ($ENV{PETSC_DIR} STREQUAL "")
+     message(FATAL_ERROR "PETSC_DIR must be set for the requested engines to be enabled.")
+   endif()
+-  if ($ENV{PETSC_ARCH} STREQUAL "")
+-    message(FATAL_ERROR "PETSC_ARCH must be set for the requested engines to be enabled.")
+-  endif()
+   set(PETSC_DIR $ENV{PETSC_DIR})
+-  set(PETSC_ARCH $ENV{PETSC_ARCH})
++
++  if(DEFINED $ENV{PETSC_ARCH})
++    set(PETSC_ARCH $ENV{PETSC_ARCH})
++  endif()
+
+   # Do we have settings for PETSc's libraries/includes?
+   if (TPL_PETSC_INCLUDE_DIRS)
+@@ -228,7 +228,11 @@ if (ALQUIMIA_NEED_PETSC)
+   include_directories(${PETSC_INCLUDES})
+
+   # Include PETSc in the rpath.
+-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${PETSC_DIR}/${PETSC_ARCH}/lib")
++  if(DEFINED ${PETSC_ARCH})
++    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${PETSC_DIR}/${PETSC_ARCH}/lib")
++  else()
++    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${PETSC_DIR}/lib")
++  endif()
+ endif()
+
+ # Include the binary directory in the header file search path,
