@@ -41,7 +41,6 @@ class PyScipy(PythonPackage):
 
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-nose', type='build')
-    # Known not to work with 2.23, 2.25
     depends_on('binutils@2.26:', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 

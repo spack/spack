@@ -25,18 +25,22 @@
 from spack import *
 
 
-class Curl(Package):
+class Curl(AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
     homepage = "http://curl.haxx.se"
     url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
 
-    version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
-    version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
-    version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
-    version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
-    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
+    # Newer versions of curl require newer versions of libssh2
+    # But that introduces a circular dependency; see #2321
+    # These versions can be uncommented once the circular
+    # dependency is addressed.
+    # version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
+    # version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
+    # version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
+    # version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
+
     version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
     version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
     version('7.45.0', '62c1a352b28558f25ba6209214beadc8')
@@ -47,10 +51,8 @@ class Curl(Package):
     depends_on("openssl")
     depends_on("zlib")
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix,
-                  '--with-ssl=%s' % spec['openssl'].prefix)
-
-        make()
-        make("install")
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--with-zlib=%s' % spec['zlib'].prefix,
+            '--with-ssl=%s' % spec['openssl'].prefix]

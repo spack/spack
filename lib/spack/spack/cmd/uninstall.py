@@ -63,7 +63,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-d', '--dependents', action='store_true', dest='dependents',
         help='also uninstall any packages that depend on the ones given '
-             'via command line')
+             'via command line.')
 
     subparser.add_argument(
         '-y', '--yes-to-all', action='store_true', dest='yes_to_all',

@@ -104,9 +104,13 @@ class Openmpi(AutotoolsPackage):
 
     # TODO: support for CUDA is missing
 
-    provides('mpi@:2.2', when='@1.6.5')
-    provides('mpi@:3.0', when='@1.7.5:')
-    provides('mpi@:3.1', when='@2.0.0:')
+#    provides('mpi@3.1', when='@2.0.0')
+#    provides('mpi@3.0', when='@1.10.3')
+#    provides('mpi@3.0', when='@1.10.2')
+    provides('mpi@3.0', when='@1.10.1')
+#    provides('mpi@3.0', when='@1.10.0')
+#    provides('mpi@3.0', when='@1.8.8')
+#    provides('mpi@2.2', when='@1.6.5')
 
     depends_on('hwloc')
     depends_on('jdk', when='+java')
@@ -173,24 +177,18 @@ class Openmpi(AutotoolsPackage):
 
         # Intel PSM2 support
         if spec.satisfies('@1.10:'):
-            if '+psm2' in spec:
-                config_args.append('--with-psm2')
-            else:
-                config_args.append('--without-psm2')
+            config_args.append('--%s-psm2' %
+                ('with' if '+psm2' in spec else 'without'))
 
         # PMI support
         if spec.satisfies('@1.5.5:'):
-            if '+pmi' in spec:
-                config_args.append('--with-pmi')
-            else:
-                config_args.append('--without-pmi')
+            config_args.append('--%s-pmi' %
+                ('with' if '+pmi' in spec else 'without'))
 
         # Mellanox Messaging support
         if spec.satisfies('@1.5.4:'):
-            if '+mxm' in spec:
-                config_args.append('--with-mxm')
-            else:
-                config_args.append('--without-mxm')
+            config_args.append('--%s-mxm' %
+                ('with' if '+mxm' in spec else 'without'))
 
         # OpenFabrics verbs support
         if '+verbs' in spec:
@@ -204,7 +202,8 @@ class Openmpi(AutotoolsPackage):
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
-            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+            config_args.append(
+                '--with-hwloc={0}'.format(spec['hwloc'].prefix))
 
         # Java support
         if spec.satisfies('@1.7.4:'):
@@ -222,10 +221,8 @@ class Openmpi(AutotoolsPackage):
 
         # SQLite3 support
         if spec.satisfies('@1.7.3:1.999'):
-            if '+sqlite3' in spec:
-                config_args.append('--with-sqlite3')
-            else:
-                config_args.append('--without-sqlite3')
+            config_args.append('--%s-sqlite3' %
+                ('with' if '+sqlite3' in spec else 'without'))
 
         # VampirTrace support
         if spec.satisfies('@1.3:1.999'):
@@ -234,10 +231,8 @@ class Openmpi(AutotoolsPackage):
 
         # Multithreading support
         if spec.satisfies('@1.5.4:'):
-            if '+thread_multiple' in spec:
-                config_args.append('--enable-mpi-thread-multiple')
-            else:
-                config_args.append('--disable-mpi-thread-multiple')
+            config_args.append('--%s-mpi-thread-multipple' %
+                ('enable' if '+thread_multiple' in spec else 'disable'))
 
         return config_args
 

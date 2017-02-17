@@ -245,7 +245,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         prefix = self.check_installed(spec)
-        if prefix:
+        if prefix is not None:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
         mkdirp(self.metadata_path(spec))
@@ -260,9 +260,10 @@ class YamlDirectoryLayout(DirectoryLayout):
             return None
 
         if not os.path.isfile(spec_file_path):
-            raise InconsistentInstallDirectoryError(
-                'Install prefix exists but contains no spec.yaml:',
-                "  " + path)
+            return None
+#            raise InconsistentInstallDirectoryError(
+#                'Install prefix exists but contains no spec.yaml:',
+#                "  " + path)
 
         installed_spec = self.read_spec(spec_file_path)
         if installed_spec == spec:
@@ -440,7 +441,7 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
 
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
-            "Install path %s already exists!")
+            "Install path %s already exists!" % path)
 
 
 class SpecReadError(DirectoryLayoutError):

@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 """This module implements Spack's configuration file handling.
 
 This implements Spack's configuration system, which handles merging
@@ -52,6 +54,7 @@ import copy
 import os
 import re
 import sys
+import argparse
 
 import yaml
 import jsonschema
@@ -79,6 +82,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
+    'aliases': spack.schema.aliases.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -225,6 +229,25 @@ _user_path = spack.user_config_path
 ConfigScope('user', _user_path)
 ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
+# ----------------------------------------------------------------
+# Parse just the --config command line arguments; ignore the rest.
+# This cannot raise an error; if there are real errors in the command
+# line arguments, they will be caught later when the full parse is done.
+# But we need the --config flags NOW.
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument(
+    '-c', '--config', dest='configs', action='append', default=[],
+    help="Add project config scopes (highest precedence last)")
+
+# Parse args initially
+args0, _ = parser.parse_known_args()
+
+for config_path in args0.configs:
+    config_path = os.path.expandvars(os.path.expanduser(config_path))
+    _,config_name = os.path.split(config_path)
+    ConfigScope(config_name, config_path)
+# ----------------------------------------------------------------
+
 
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
@@ -343,19 +366,20 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        dest[:] = source + [x for x in dest if x not in source]
-        return dest
+        ret = source + [x for x in dest if x not in source]
+        return ret
 
     # Source dict is merged into dest.
     elif they_are(dict):
+        ret = copy.copy(dest)
         for sk, sv in source.iteritems():
             if override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
-                dest[sk] = copy.copy(sv)
+                ret[sk] = copy.copy(sv)
             else:
                 # otherwise, merge the YAML
-                dest[sk] = _merge_yaml(dest[sk], source[sk])
-        return dest
+                ret[sk] = _merge_yaml(dest[sk], source[sk])
+        return ret
 
     # In any other case, overwrite with a copy of the source value.
     else:
@@ -512,3 +536,5 @@ class ConfigFormatError(ConfigError):
 
 class ConfigSanityError(ConfigFormatError):
     """Same as ConfigFormatError, raised when config is written by Spack."""
+
+

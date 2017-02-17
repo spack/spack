@@ -36,7 +36,7 @@ from spack.util.environment import *
 import spack.util.spack_json as sjson
 
 
-class Python(Package):
+class Python(AutotoolsPackage):
     """The Python programming language."""
 
     homepage = "http://www.python.org"
@@ -58,6 +58,7 @@ class Python(Package):
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
+    version('2.7.5', 'b4f01a1d0ba0b46b05c73b2ac909b1df') # CentOS7
 
     extendable = True
 

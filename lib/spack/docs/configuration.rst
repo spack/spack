@@ -59,7 +59,13 @@ are three configuration scopes.  From lowest to highest:
    a common spack instance).
 
 3. **user**: Stored in the home directory: ``~/.spack/``. These settings
-   affect all instances of Spack and take the highest precedence.
+   affect all instances of Spack and take higher precedence than site or
+   default scopes.
+
+3. **command line**: Optionally specified by the user on the command
+   line.  These settings take the highest precedence.  If multiple
+   scopes are listed on the command line, they are ordered from lowest
+   to highest precedence.
 
 Each configuration directory may contain several configuration files,
 such as ``config.yaml``, ``compilers.yaml``, or ``mirrors.yaml``.  When
@@ -70,6 +76,116 @@ Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``,
 etc.) take a ``--scope=<name>`` parameter that you can use to control
 which scope is modified.  By default they modify the highest-precedence
 scope.
+
+.. _command-line-scopes:
+
+^^^^^^^^^^^^^^^^^^^
+Command Line Scopes
+^^^^^^^^^^^^^^^^^^^
+
+User-supplied configuration scopes are specified on the command line,
+*before* the Spack subcommand, with ``--config
+</path/to/config/dir>``.  The user may place configuration files
+inside that tree as needed (eg, ``packages.yaml``).  If multiple
+scopes are provided:
+
+1. Each one must be preceded with the ``--config`` flag.
+2. They must be ordered from lowest to highest precedence.
+3. Their directory paths must end in a different leaf name.
+
+""""""""""""""""""""""""""""""""
+Example: Two Command-Line Scopes
+""""""""""""""""""""""""""""""""
+
+The following adds two configuration scopes, named `scopea` and
+`scopeb`, to a `spack spec` command.  `scopeb` has higher precedence:
+
+.. code-block:: console
+
+   $ spack --config ~/myscopes/scopea --config ~/myscopes/scopeb spec ncurses
+
+
+"""""""""""""""""""""""""""""""""""""""""""""
+Example: Simultaneous Release and Development
+"""""""""""""""""""""""""""""""""""""""""""""
+
+For example, suppose that one needs to support simultaneous building
+of release and development versions of a `mypackage`, where
+`mypackage` -> `A` -> `B`.  The following files could be created:
+
+.. code-block:: yaml
+
+   ~/myscopes/release/packages.yaml
+   --------------------------------
+   packages:
+       mypackage:
+           version: [1.7]
+       A:
+           version: [2.3]
+       B:
+           version: [0.8]
+
+.. code-block:: yaml
+
+   ~/myscopes/develop/packages.yaml
+   --------------------------------
+   packages:
+       mypackage:
+           version: [develop]
+       A:
+           version: [develop]
+       B:
+           version: [develop]
+
+For convenience, the preferred configuration scope could then be set
+in Bash aliases:
+
+.. code-block:: console
+
+   alias spack-release='spack --config ~/myscopes/release'
+   alias spack-develop='spack --config ~/myscopes/develop'
+
+.. note::
+
+   This example would be difficult to handle without command-line
+   scopes: concretization of ``mypackage ^A@develop ^B@develop`` will
+   typically fail because ``mypackage`` does not depend (directly) on
+   ``B``.  The situation is worse if ``A`` is a virtual package.
+
+
+""""""""""""""""""""""""""""""
+Example: Incompatible Projects
+""""""""""""""""""""""""""""""
+
+Suppose that one needs to build two software packages, `packagea` and
+`packageb`.  PackageA is Python2-based and PackageB is Python3-based.
+Moreover, PackageA only builds with OpenMPI and PackageB only builds
+with MPICH.  This problem can be solved elegantly by creating
+different configuration scopes for use with Package A and B:
+
+.. code-block:: yaml
+
+   ~/myscopes/packgea/packages.yaml
+   --------------------------------
+   packages:
+       python:
+           version: [2.7.11]
+       all:
+           providers:
+               mpi: [openmpi]
+
+.. code-block:: yaml
+
+   ~/myscopes/packageb/packages.yaml
+   --------------------------------
+   packages:
+       python:
+           version: [3.5.2]
+       all:
+           providers:
+               mpi: [mpich]
+
+
 
 .. _platform-scopes:
 
@@ -91,6 +207,8 @@ full scope precedence is:
 4. ``site/<platform>``
 5. ``user``
 6. ``user/<platform>``
+7. ``command-line``
+8. ``command-line/<platform>``
 
 You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``.
@@ -251,3 +369,19 @@ The merged configuration would look like this:
        - /lustre-scratch/$user
        - ~/mystage
    $ _
+
+
+-----------------------
+Resulting Configuration
+-----------------------
+
+With so many scopes overriding each other, Spack provides a way to
+view the final "merged" version of any configuration file, with the
+``spack config get`` command.  For example, the following shows the
+resulting ``packages.yaml`` file, taking into account one command-line
+scope:
+
+.. code-block:: console
+
+   $ spack --config ~/myscopes/develop config get packages
+

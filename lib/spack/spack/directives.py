@@ -223,10 +223,11 @@ def version(ver, checksum=None, **kwargs):
     return _execute
 
 
-def _depends_on(pkg, spec, when=None, type=None):
+def _depends_on(pkg, spec, when=None, type=None, autoload=None):
     # If when is False do nothing
     if when is False:
         return
+
     # If when is None or True make sure the condition is always satisfied
     if when is None or when is True:
         when = pkg.name
@@ -261,15 +262,30 @@ def _depends_on(pkg, spec, when=None, type=None):
     else:
         conditions[when_spec] = dep_spec
 
+    if autoload is not None:
+        _autoload = autoload
+    else:
+        try:
+            _autoload = dep_spec.package.autoload
+        except:
+            # Exception if dep_spec is virtual.
+            # So... we can't have virtual packages with an autoload attribute.
+            # That is not a big problem.  Things that depend on virtual
+            # packages will need to use `depends_on(..., autoload=...)`
+            _autoload = False
 
-@directive(('dependencies', 'dependency_types'))
-def depends_on(spec, when=None, type=None):
+    if _autoload:
+        pkg.autoloads[dep_spec.name] = True
+
+
+@directive(('dependencies', 'dependency_types', 'autoloads'))
+def depends_on(spec, when=None, type=None, autoload=None):
     """Creates a dict of deps with specs defining when they apply.
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
     @see The section "Dependency specs" in the Spack Packaging Guide."""
     def _execute(pkg):
-        _depends_on(pkg, spec, when=when, type=type)
+        _depends_on(pkg, spec, when=when, type=type, autoload=autoload)
     return _execute
 
 

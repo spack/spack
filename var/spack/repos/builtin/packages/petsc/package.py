@@ -85,7 +85,8 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7', type='build')
+    # Build dependencies conflict even when they shouldn't; see #2098
+    # depends_on('python@2.6:2.7', type='build')
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
@@ -194,7 +195,10 @@ class Petsc(Package):
                 '--with-superlu_dist=0'
             )
 
-        configure('--prefix=%s' % prefix, *options)
+        # Hack: Get Python2 from the system, even if we're running
+        # a Python3-based build.
+        which('python2')('config/configure.py', '--prefix=%s' % prefix, *options)
+#        configure('--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)

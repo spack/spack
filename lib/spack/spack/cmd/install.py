@@ -22,6 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#from __future__ import print_function
+import contextlib
+import collections
 import argparse
 import codecs
 import functools
@@ -33,7 +36,9 @@ import xml.etree.ElementTree as ET
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import *
 import spack
+import spack.spec
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 from spack.build_environment import InstallError
@@ -43,11 +48,11 @@ from spack.package import PackageBase
 description = "build and install packages"
 
 
-def setup_parser(subparser):
+def setup_common_parser(subparser):
     subparser.add_argument(
         '--only',
         default='package,dependencies',
-        dest='things_to_install',
+        dest='only_str',
         choices=['package', 'dependencies'],
         help="""select the mode of installation.
 the default is to install the package along with all its dependencies.
@@ -71,7 +76,13 @@ the dependencies"""
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="fake install. just remove prefix and create a fake file")
+        help="fake install, just remove prefix and create a fake file.")
+    subparser.add_argument(
+        '--install-status', '-I', action='store_true', dest='install_status',
+        help="Show spec before installing.")
+    subparser.add_argument(
+        '--report', action='store_true', dest='report',
+        help="Report on installation when finished, for consumption by spackenv")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -96,6 +107,12 @@ the dependencies"""
         default=None,
         help="filename for the log file. if not passed a default will be used"
     )
+
+def setup_parser(subparser):
+    setup_common_parser(subparser)
+    subparser.add_argument(
+        '-s', '--setup', dest='setup', action='append', default=[],
+        help="Generate <projectname>-setup.py for the given projects, instead of building and installing them for real")
 
 
 # Needed for test cases
@@ -289,7 +306,8 @@ def default_log_file(spec):
     return fs.join_path(dirname, basename)
 
 
-def install(parser, args, **kwargs):
+def validate_args(args):
+    """Returns kwargs for install.top_install() or setup.top_install()"""
     if not args.package:
         tty.die("install requires at least one package argument")
 
@@ -300,51 +318,104 @@ def install(parser, args, **kwargs):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
+    only = set([x.strip() for x in args.only_str.split(',')])
+
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
-    kwargs.update({
+    ret = {
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
-        'install_deps': 'dependencies' in args.things_to_install,
+        'install_dependencies' : ('dependencies' in only),
+        'install_package' : ('package' in only),
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
-        'verbose': args.verbose,
+        'install_status': args.install_status,
         'fake': args.fake,
-        'dirty': args.dirty
-    })
+        'dirty': args.dirty,
+        'report' : args.report
+    }
+    if hasattr(args, 'setup'):
+        ret['setup'] = set(args.setup)
+    return ret
 
-    # Spec from cli
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
-    if len(specs) == 0:
-        tty.error('The `spack install` command requires a spec to install.')
+@contextlib.contextmanager
+def setup_logging(spec, args):
+    # Check if we were asked to produce some log for dashboards
+    if args.log_format is not None:
+        # Compute the filename for logging
+        log_filename = args.log_file
+        if not log_filename:
+            log_filename = default_log_file(spec)
+        # Create the test suite in which to log results
+        test_suite = TestSuite(spec)
+        # Decorate PackageBase.do_install to get installation status
+        PackageBase.do_install = junit_output(
+            spec, test_suite
+        )(PackageBase.do_install)
 
-    for spec in specs:
-        # Check if we were asked to produce some log for dashboards
-        if args.log_format is not None:
-            # Compute the filename for logging
-            log_filename = args.log_file
-            if not log_filename:
-                log_filename = default_log_file(spec)
-            # Create the test suite in which to log results
-            test_suite = TestSuite(spec)
-            # Decorate PackageBase.do_install to get installation status
-            PackageBase.do_install = junit_output(
-                spec, test_suite
-            )(PackageBase.do_install)
+    yield
 
-        # Do the actual installation
-        if args.things_to_install == 'dependencies':
+    # Dump log file if asked to
+    if args.log_format is not None:
+        test_suite.dump(log_filename)
+
+def get_spconfig_fname(package):
+    return package.name + '-config.py'
+
+def top_install(
+    spec, install_package=True,
+    install_dependencies=True,
+    report=False,
+    spconfig_fname_fn=get_spconfig_fname,
+    **kwargs):
+
+    if report:
+        print 'SPACKENV BEGIN %s' % spec.name
+
+    """Top-level install method."""
+    if not install_package:
+        if install_dependencies:
             # Install dependencies as-if they were installed
             # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
             for s in spec.dependencies():
                 p = spack.repo.get(s)
-                p.do_install(**kwargs)
+                p.do_install(
+                    install_dependencies=True,
+                    explicit=False,
+                    **kwargs)
+                if report:
+                    print 'SPACKENV INSTALLED %s/%s' % (s.name, s.dag_hash())
         else:
-            package = spack.repo.get(spec)
-            kwargs['explicit'] = True
-            package.do_install(**kwargs)
+            # Nothing to install!
+            tty.die("Nothing to install, due to the --only flag")
+    else:    # install_package = True, install_dependencies=?
+        package = spack.repo.get(spec)
+        package.do_install(
+            install_dependencies=install_dependencies,
+            explicit=True,
+            spconfig_fname_fn=spconfig_fname_fn,
+            **kwargs)
+        if report:
+            print 'SPACKENV INSTALLED %s/%s' % (spec.name, spec.dag_hash())
 
-        # Dump log file if asked to
-        if args.log_format is not None:
-            test_suite.dump(log_filename)
+def show_spec(spec, args):
+    """Print the concretized spec for the user before installing."""
+    if args.install_status:
+        print spec.tree(
+            color=True,
+            cover='nodes',
+            format = '$_' + '$@$%@+$+$=',
+            hashes = True,
+            hashlen = 7,
+            install_status = True)
+
+def install(parser, args):
+    kwargs = validate_args(args)
+
+    # Spec from cli
+    spec = spack.cmd.parse_specs(
+        args.package, concretize=True, allow_multi=False)
+    show_spec(spec, args)
+
+    with setup_logging(spec, args):
+        top_install(spec, **kwargs)

@@ -63,6 +63,7 @@ from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
+from spack.stage import DIYStage
 from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.version import *
@@ -499,6 +500,10 @@ class PackageBase(object):
        for immediate dependencies."""
     transitive_rpaths = True
 
+    """When True, This package's module will be autoloaded by packages
+    that depend on it.  Can be overridden by depends_on(..., autoload=)."""
+    autoload = False
+
     """List of prefix-relative file paths (or a single path). If these do
        not exist after install, or if they exist but are not files,
        sanity checks fail.
@@ -552,16 +557,7 @@ class PackageBase(object):
         self._fetcher = None
         self.url = getattr(self.__class__, 'url', None)
 
-        # Fix up self.url if this package fetches with a URLFetchStrategy.
-        # This makes self.url behave sanely.
-        if self.spec.versions.concrete:
-            # TODO: this is a really roundabout way of determining the type
-            # TODO: of fetch to do. figure out a more sane fetch
-            # TODO: strategy/package init order (right now it's conflated with
-            # TODO: stage, package, and the tests make assumptions)
-            f = fs.for_package_version(self, self.version)
-            if isinstance(f, fs.URLFetchStrategy):
-                self.url = self.url_for_version(self.spec.version)
+        self._fixup_url()
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -594,6 +590,18 @@ class PackageBase(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
         self.extra_args = {}
+
+    def _fixup_url(self):
+        # Fix up self.url if this package fetches with a URLFetchStrategy.
+        # This makes self.url behave sanely.
+        if self.spec.versions.concrete:
+            # TODO: this is a really roundabout way of determining the type
+            # TODO: of fetch to do. figure out a more sane fetch
+            # TODO: strategy/package init order (right now it's conflated with
+            # TODO: stage, package, and the tests make assumptions)
+            f = fs.for_package_version(self, self.version)
+            if isinstance(f, fs.URLFetchStrategy):
+                self.url = self.url_for_version(self.spec.version)
 
     def possible_dependencies(self, visited=None):
         """Return set of possible transitive dependencies of this package."""
@@ -1109,10 +1117,13 @@ class PackageBase(object):
         finally:
             self.prefix_lock.release_write()
 
+    def write_spconfig(self):
+        tty.die('`spack install --setup` is not supported for packages of type {0}'.format(self.build_system_class))
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
-                   install_deps=True,
+                   install_dependencies=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1120,6 +1131,8 @@ class PackageBase(object):
                    fake=False,
                    explicit=False,
                    dirty=None,
+                   setup=set(),
+                   spconfig_fname_fn=None,    # Must be set
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1131,7 +1144,7 @@ class PackageBase(object):
         :param keep_stage: By default, stage is destroyed only if there are \
             no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param install_deps: Install dependencies before installing this \
+        :param install_dependencies: Install dependencies before installing this \
             package
         :param fake: Don't really build; install fake stub files instead.
         :param skip_patch: Skip patch stage of build if True.
@@ -1153,18 +1166,19 @@ class PackageBase(object):
                     (self.name, self.spec.external))
             return
 
-        # Ensure package is not already installed
-        layout = spack.store.layout
-        with self._prefix_read_lock():
-            if layout.check_installed(self.spec):
-                tty.msg(
-                    "%s is already installed in %s" % (self.name, self.prefix))
-                rec = spack.store.db.get_record(self.spec)
-                if (not rec.explicit) and explicit:
-                    with spack.store.db.write_transaction():
-                        rec = spack.store.db.get_record(self.spec)
-                        rec.explicit = True
-                return
+        if self.name not in setup:
+            # Ensure package is not already installed
+            layout = spack.store.layout
+            with self._prefix_read_lock():
+                if layout.check_installed(self.spec):
+                    tty.msg(
+                        "%s is already installed in %s" % (self.name, self.prefix))
+                    rec = spack.store.db.get_record(self.spec)
+                    if (not rec.explicit) and explicit:
+                        with spack.store.db.write_transaction():
+                            rec = spack.store.db.get_record(self.spec)
+                            rec.explicit = True
+                    return
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
@@ -1175,20 +1189,37 @@ class PackageBase(object):
         tty.msg("Installing %s" % self.name)
 
         # First, install dependencies recursively.
-        if install_deps:
+        if install_dependencies:
             for dep in self.spec.dependencies():
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
-                    install_deps=install_deps,
+                    install_dependencies=install_dependencies,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
                     run_tests=run_tests,
                     dirty=dirty,
+                    setup=setup,
+                    spconfig_fname_fn=spconfig_fname_fn,
                     **kwargs
                 )
+
+        this_fake = fake
+        if self.name in setup:
+            this_fake = True
+            explicit = True
+            self.stage = DIYStage(os.getcwd())    # Force build in cwd
+
+            # --- Generate spconfig.py
+            spconfig_fname = spconfig_fname_fn(self)
+            tty.msg(
+                'Generating config file {0} [{1}]'.format(
+                spconfig_fname, self.spec.cshort_spec)
+            )
+
+            self.write_spconfig(spconfig_fname)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1215,7 +1246,7 @@ class PackageBase(object):
             sys.stdin = input_stream
 
             start_time = time.time()
-            if not fake:
+            if not this_fake:
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -1231,7 +1262,9 @@ class PackageBase(object):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
-                if fake:
+                if self.name in setup:
+                    pass    # Don't write any files in the install...
+                elif this_fake:
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.
@@ -1275,15 +1308,29 @@ class PackageBase(object):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
-            tty.msg("Successfully installed %s" % self.name,
+            if self.name in setup:
+                tty.msg("Successfully setup %s" % self.name,
+                    "Config file is %s" % spconfig_fname)
+            else:
+                tty.msg("Successfully installed %s" % self.name,
                     "Fetch: %s.  Build: %s.  Total: %s." %
                     (_hms(self._fetch_time), _hms(build_time),
                      _hms(self._total_time)))
+    
             print_pkg(self.prefix)
+        # --------------------- end of def build_process
 
         try:
-            # Create the install prefix and fork the build process.
             spack.store.layout.create_install_directory(self.spec)
+        except directory_layout.InstallDirectoryAlreadyExistsError:
+            # Abort install if install directory exists.
+            # But do NOT remove it (you'd be overwriting someone else's stuff)
+            tty.warn("Keeping existing install prefix in place.")
+            if self.name in setup:
+                keep_prefix = True
+            else:
+                raise
+        try:
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
             # If we installed then we should keep the prefix
@@ -1293,11 +1340,6 @@ class PackageBase(object):
             spack.store.db.add(
                 self.spec, spack.store.layout, explicit=explicit
             )
-        except directory_layout.InstallDirectoryAlreadyExistsError:
-            # Abort install if install directory exists.
-            # But do NOT remove it (you'd be overwriting someone else's stuff)
-            tty.warn("Keeping existing install prefix in place.")
-            raise
         except StopIteration as e:
             # A StopIteration exception means that do_install
             # was asked to stop early from clients
