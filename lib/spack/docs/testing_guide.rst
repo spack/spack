@@ -61,14 +61,20 @@ dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
 path: "~/home/username"
 
 ---exclusion examples---
- 	pkg%compiler
+ 	  pkg%compiler
     pkg@version
-    compiler@version
     pkg@version%compiler@version
     pkg@version%compiler
     pkg%compiler@version
     pkg
+
+If you would like to exclude compilers such as
+    compiler@version
     compiler
+
+you must include the % in front to indicate its a compiler. 
+Example:
+    %gcc@4.2.1
 
 Test-suite provides two outputs. One being a simple cdash output that only contains the build output.
 Complete contains all stages, configure, build and test. Using the -c or --complete flag will change the output mode.

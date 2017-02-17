@@ -16,6 +16,7 @@ import jsonschema
 from jsonschema import Draft4Validator, validators
 from spack.error import SpackError
 import re
+import sys
 
 description = "Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."
 
@@ -97,33 +98,6 @@ def validate_section(data, schema):
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
-
-def reduceCompilerList(masterList):
-    """
-    Get the list of compilers from spack found on the system. 
-    Compares the spack list to test file. If a compiler is 
-    found on both lists its returned.
-
-    Args:
-        masterList: list of all tests
-    
-    Return:
-        List of tests that match compilers available.
-    """
-    systemCompilers = []
-    newMaster = []
-    newList = []
-    for item in masterList:
-        newMaster.append(str(item))
-    
-    for compilers in spack.compilers.all_compilers(scope=None):
-        systemCompilers.append(str(compilers))
-
-    for compiler in systemCompilers:
-        if compiler in newMaster:
-            newList.append(compiler)
-    return newList
-
 def test_suite(parser, args):
     #pdb.set_trace()
     """Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."""
@@ -149,6 +123,12 @@ def test_suite(parser, args):
     dashboards = []
     data = ""
     schema = spack.schema.test.schema
+    spec = Spec("mpi@123%gcc@123")
+    print bool(spec.satisfies("mpi@123"))
+    print bool(spec.satisfies("mpi"))
+    print bool(spec.satisfies("mpi%gcc@123"))
+    print bool(spec.satisfies("mpi%gcc"))
+    all_specs = spack.store.layout.all_specs()
     #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
     for filename in args.yamlFile: #read yaml files which contains description of tests
         try:
@@ -158,10 +138,18 @@ def test_suite(parser, args):
 
             if data:
                 validate_section(data, schema)
-            enabledTests= data['enable']
-            packages= data['packages'] # list of packages to test. Current libelf, libdwarf, bzip2
-            compilers = data['compilers']
-            dashboards  = data['dashboard']
+            try:
+                enabledTests= data['enable']
+                packages= data['packages'] # list of packages to test. Current libelf, libdwarf, bzip2
+                compilers = data['compilers']
+            except:
+                tty.msg("Testing yaml files must contain atleast enable, packages and compilers to produce results.")
+                ssy.exit(1)
+            try:    
+                dashboards  = data['dashboard']
+            except:
+                tty.msg("dashboard tag not found. Results will be create in " + str(cdash_root))
+                pass
         except MarkedYAMLError as e:
             raise ConfigFileError(
                 "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
@@ -184,26 +172,35 @@ def test_suite(parser, args):
             versions = compiler[comp][0]['versions']
             for version in versions:
                 # producing compilers at available versions. Sample file contains only checksum'd
-                compilerVersion.append(str(comp)+"@"+str(version))
+                    if bool([s for s in all_specs if s.satisfies("%"+str(comp)+"@"+str(version))]):
+                        compilerVersion.append(str(comp)+"@"+str(version))
     #reducing compiler list to whats actually available on the system
-    compilerVersion = reduceCompilerList(compilerVersion)
+    
     #producing a list of tests with a combination of packages and compilers
     for pkg in packageVersion:
         for comp in compilerVersion:
             tests.append(str(pkg)+"%"+str(comp))
-            
-     #loading test excusions
+    print tests
+    print len(tests) 
+    #loading test excusions
+    removeTests = []
     exclusions = data['exclusions']
     if len(exclusions) != 0:
         #remove test that match the exclusion
         #setting up tests for contretizing
         for test in tests:
+            spec = Spec(test)
+            for exclusion in exclusions:
             #for exclusion in exclusions:
-            build_spec = test.Spec(exclusions)
-            if build_spec.satisfies(exclusion_spec):
-                removeTests.append(test)
+                if bool(spec.satisfies(exclusion)):
+                    removeTests.append(test)
         for test in removeTests:
             tests.remove(test)
+    print tests
+    print len(tests)   
+
+
+
     concreteTests = []
     #setting up tests for contretizing
     for test in tests:
@@ -233,22 +230,27 @@ def test_suite(parser, args):
     #Path contains xml files produced during the test run.
     if path is "": # if no path given in test yaml file. Uses default location.
         path = spack.prefix+cdash_root
-    for dashboard in dashboards:#allows for multiple dashboards
-        files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
-        for file in files:
-                if "dstore" not in file:
-                        with open(file) as fh:
-                                mydata = fh.read() #using a put request to send xml files to cdash.
-                                response = requests.put(dashboard,
-                                        data=mydata,
-                                        headers={'content-type':'text/plain'},
-                                        params={'file': path+file}
-                                        )
-                                tty.msg(file)
-                                tty.msg(response.status_code)
+    if len(dashboards) != 0:
+        for dashboard in dashboards:#allows for multiple dashboards
+            files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
+            for file in files:
+                    if "dstore" not in file:
+                            with open(file) as fh:
+                                    mydata = fh.read() #using a put request to send xml files to cdash.
+                                    response = requests.put(dashboard,
+                                            data=mydata,
+                                            headers={'content-type':'text/plain'},
+                                            params={'file': path+file}
+                                            )
+                                    tty.msg(file)
+                                    tty.msg(response.status_code)
 
 class ConfigError(SpackError):
     pass
+
+class ConfigFileError(ConfigError):
+    pass
+
     
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
