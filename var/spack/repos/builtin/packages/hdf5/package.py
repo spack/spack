@@ -126,7 +126,7 @@ class Hdf5(AutotoolsPackage):
         if '+pic' in spec:
             extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
             extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('FCFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
