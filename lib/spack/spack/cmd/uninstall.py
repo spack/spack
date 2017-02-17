@@ -61,7 +61,7 @@ def setup_parser(subparser):
              "is both useful and dangerous, like rm -r")
 
     subparser.add_argument(
-        '-d', '--dependents', action='store_true', dest='dependents',
+        '-R', '--dependents', action='store_true', dest='dependents',
         help='also uninstall any packages that depend on the ones given '
              'via command line')
 
