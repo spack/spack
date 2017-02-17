@@ -79,8 +79,10 @@ _arguments['constraint'] = Args(
     help='constraint to select a subset of installed packages')
 
 _arguments['module_type'] = Args(
-    '-m', '--module-type', help='type of module files',
-    default='tcl', choices=spack.modules.module_types)
+    '-m', '--module-type',
+    choices=spack.modules.module_types.keys(),
+    default=spack.modules.module_types.keys()[0],
+    help='type of module files [default: %(default)s]')
 
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
