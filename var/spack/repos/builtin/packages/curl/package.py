@@ -30,6 +30,7 @@ class Curl(Package):
     transferring data with URL syntax"""
 
     homepage = "http://curl.haxx.se"
+    # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
 
     version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')

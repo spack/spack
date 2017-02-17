@@ -25,26 +25,26 @@
 from spack import *
 
 
-class Gtkplus(AutotoolsPackage):
-    """The GTK+ 2 package contains libraries used for creating graphical user
-       interfaces for applications."""
-    homepage = "http://www.gtk.org"
-    url = "http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.31.tar.xz"
+class PyGit2(PythonPackage):
+    """Pygit2 is a set of Python bindings to the libgit2 shared library,
+    libgit2 implements the core of Git.
+    """
 
-    version('2.24.31', '68c1922732c7efc08df4656a5366dcc3afdc8791513400dac276009b40954658')
-    version('2.24.25', '38af1020cb8ff3d10dda2c8807f11e92af9d2fa4045de61c62eedb7fbc7ea5b3')
+    homepage = "http://www.pygit2.org/"
 
-    variant('X', default=False, description="Enable an X toolkit")
+    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545',
+        url="https://pypi.python.org/packages/aa/56/84dcce942a48d4b7b970cfb7a779b8db1d904e5ec5f71e7a67a63a23a4e2/pygit2-0.24.1.tar.gz")
 
-    depends_on("atk")
-    depends_on("gdk-pixbuf")
-    depends_on("glib")
-    depends_on("pango")
-    depends_on("pango~X", when='~X')
-    depends_on("pango+X", when='+X')
-    depends_on('gobject-introspection', when='+X')
+    extends('python')
+    depends_on('py-setuptools', type='build')
+    # Version must match with libgit2
+    # See: http://www.pygit2.org/install.html
+    depends_on('libgit2@0.24:', when='@0.24:')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-cffi', type=('build', 'run'))
 
-    def patch(self):
-        # remove disable deprecated flag.
-        filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
-                    '', 'configure', string=True)
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        # http://www.pygit2.org/install.html
+        spack_env.set('LIBGIT2', spec['libgit2'].prefix)
+        spack_env.set('LIBGIT2_LIB', spec['libgit2'].prefix.lib)

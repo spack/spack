@@ -25,26 +25,24 @@
 from spack import *
 
 
-class Gtkplus(AutotoolsPackage):
-    """The GTK+ 2 package contains libraries used for creating graphical user
-       interfaces for applications."""
-    homepage = "http://www.gtk.org"
-    url = "http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.31.tar.xz"
+class Libssh2(CMakePackage):
+    """libssh2 is a client-side C library implementing the SSH2 protocol"""
 
-    version('2.24.31', '68c1922732c7efc08df4656a5366dcc3afdc8791513400dac276009b40954658')
-    version('2.24.25', '38af1020cb8ff3d10dda2c8807f11e92af9d2fa4045de61c62eedb7fbc7ea5b3')
+    homepage = "https://www.libssh2.org/"
+    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
 
-    variant('X', default=False, description="Enable an X toolkit")
+    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
+    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b') # CentOS7
 
-    depends_on("atk")
-    depends_on("gdk-pixbuf")
-    depends_on("glib")
-    depends_on("pango")
-    depends_on("pango~X", when='~X')
-    depends_on("pango+X", when='+X')
-    depends_on('gobject-introspection', when='+X')
+    variant('shared', default=True,
+            description="Build shared libraries")
 
-    def patch(self):
-        # remove disable deprecated flag.
-        filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
-                    '', 'configure', string=True)
+    depends_on('cmake@2.8.11:', type='build')
+    depends_on('openssl')
+    depends_on('zlib')
+    depends_on('xz')
+
+    def cmake_args(self):
+        spec = self.spec
+        return [
+            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
