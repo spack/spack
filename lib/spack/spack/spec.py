@@ -2955,7 +2955,8 @@ class SpecParser(spack.parse.Parser):
         if not id:
             id = self.token.value
         if '.' in id:
-            self.last_token_error("Identifier cannot contain '.'")
+            self.last_token_error(
+                "{0}: Identifier cannot contain '.'".format(id))
 
 
 def parse(string):
