@@ -62,6 +62,9 @@ def python(parser, args):
         with open(python_args[0]) as file:
             console.runsource(file.read(), python_args[0], 'exec')
     else:
+        # Provides readline support, allowing user to use arrow keys
+        console.push('import readline')
+
         console.interact("Spack version %s\nPython %s, %s %s"""
                          % (spack.spack_version, platform.python_version(),
                             platform.system(), platform.machine()))
