@@ -29,10 +29,10 @@ import os
 import shutil
 import sys
 
-import llnl.util.filesystem as filesystem
-import llnl.util.tty as tty
 import spack.cmd
-import spack.cmd.common.arguments as arguments
+
+from llnl.util import filesystem, tty
+from spack.cmd.common import arguments
 from spack.modules import module_types
 
 description = "manipulate module files"
@@ -168,7 +168,7 @@ def find(mtype, specs, args):
     spec = specs.pop()
     mod = module_types[mtype](spec)
     if not os.path.isfile(mod.file_name):
-        tty.die("No %s module is installed for %s" % (mtype, spec))
+        tty.die('No {0} module is installed for {1}'.format(mtype, spec))
     print(mod.use_name)
 
 
@@ -191,7 +191,9 @@ def rm(mtype, specs, args):
             .format(mtype))
         spack.cmd.display_specs(specs_with_modules, long=True)
         print('')
-        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
+        answer = tty.get_yes_or_no('Do you want to proceed?')
+        if not answer:
+            tty.die('Will not remove any module files')
 
     # Remove the module files
     for s in modules:
@@ -212,7 +214,9 @@ def refresh(mtype, specs, args):
             .format(name=mtype))
         spack.cmd.display_specs(specs, long=True)
         print('')
-        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
+        answer = tty.get_yes_or_no('Do you want to proceed?')
+        if not answer:
+            tty.die('Will not regenerate any module files')
 
     cls = module_types[mtype]
 
@@ -227,9 +231,9 @@ def refresh(mtype, specs, args):
         message = 'Name clashes detected in module files:\n'
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
-                message += '\nfile : {0}\n'.format(filename)
+                message += '\nfile: {0}\n'.format(filename)
                 for x in writer_list:
-                    message += 'spec : {0}\n'.format(x.spec.format(color=True))
+                    message += 'spec: {0}\n'.format(x.spec.format(color=True))
         tty.error(message)
         tty.error('Operation aborted')
         raise SystemExit(1)
@@ -258,13 +262,13 @@ def module(parser, args):
     try:
         callbacks[args.subparser_name](module_type, specs, args)
     except MultipleMatches:
-        message = ('the constraint \'{query}\' matches multiple packages, '
-                   'and this is not allowed in this context')
+        message = ("the constraint '{query}' matches multiple packages, "
+                   "and this is not allowed in this context")
         tty.error(message.format(query=constraint))
         for s in specs:
             sys.stderr.write(s.format(color=True) + '\n')
         raise SystemExit(1)
     except NoMatch:
-        message = ('the constraint \'{query}\' match no package, '
-                   'and this is not allowed in this context')
+        message = ("the constraint '{query}' matches no package, "
+                   "and this is not allowed in this context")
         tty.die(message.format(query=constraint))
