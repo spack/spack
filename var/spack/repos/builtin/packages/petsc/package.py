@@ -24,7 +24,6 @@
 ##############################################################################
 
 import os
-import sys
 from spack import *
 
 
@@ -136,24 +135,11 @@ class Petsc(Package):
                 errors = ['incompatible variants given'] + errors
                 raise RuntimeError('\n'.join(errors))
         else:
-          compiler_opts = [
+            compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
                 '--with-fc=%s' % self.spec['mpi'].mpifc
             ]
-#            os.environ['CC'] = 
-#            os.environ['CXX'] = spec['mpi'].mpicxx
-#            os.environ['F77'] = spec['mpi'].mpif90
-#            compiler_opts = [
-#                '--with-mpi=1',
-#                '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
-#            ]
-# this code breaks things at ALCF and OLCF            
-#        if sys.platform != "darwin":
-#            compiler_opts.extend([
-#                '--with-cpp=cpp',
-#                '--with-cxxcpp=cpp',
-#            ])
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -180,7 +166,7 @@ class Petsc(Package):
         ])
 
         if 'trilinos' in spec:
-	    options.append('--with-cxx-dialect=C++11')
+            options.append('--with-cxx-dialect=C++11')
 	    
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',

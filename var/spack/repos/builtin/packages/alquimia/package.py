@@ -63,7 +63,8 @@ class Alquimia(CMakePackage):
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_HDF5:BOOL=ON',
             '-DXSDK_WITH_PFLOTRAN:BOOL=ON',
-            # This is not good.  It assumes that the .a file exists and is not a .so
+            # This is not good.
+            # It assumes that the .a file exists and is not a .so
             '-DTPL_PFLOTRAN_LIBRARIES=%s' % (
                 spec['pflotran'].prefix.lib + "/libpflotranchem.a"),
             '-DTPL_PFLOTRAN_INCLUDE_DIRS=%s' % spec['pflotran'].prefix.include,

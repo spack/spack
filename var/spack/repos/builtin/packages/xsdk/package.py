@@ -52,10 +52,12 @@ class Xsdk(Package):
     # depends_on('superlu-dist@5.0.0', when='@0.2.0')    
     depends_on('superlu-dist@develop')    
 
-    # depends_on('trilinos@12.6.2+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse', when='@0.2.0')
+    # depends_on('trilinos@12.6.2+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse',
+    #            when='@0.2.0')
     depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse')
 
-    # depends_on('petsc@3.7.4+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost', when='@0.2.0')
+    # depends_on('petsc@3.7.4+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
+    #            when='@0.2.0')
     depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost')
 
     # depends_on('pflotran@0.2.0', when='@0.2.0')    
