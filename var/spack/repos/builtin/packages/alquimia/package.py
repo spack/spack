@@ -48,7 +48,8 @@ class Alquimia(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        options = []
+        options = ['-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                   '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc]
 
         options.extend([
             '-DUSE_XSDK_DEFAULTS=YES',
