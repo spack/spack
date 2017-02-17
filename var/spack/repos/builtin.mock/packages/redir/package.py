@@ -40,3 +40,7 @@ class Redir(Package):
         with open('f2', 'w') as F:
             F.write('test2')
         install('f2', join_path(prefix, 'f2'))
+        with working_dir(prefix):
+            symlink(join_path(prefix, 'f1'), 'f3')
+            with open('f4', 'w') as F:
+                F.write('test4:' + pwd())
