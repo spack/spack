@@ -35,6 +35,7 @@ class Perl(Package):
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
     homepage = "http://www.perl.org"
+    # URL must remain http:// so Spack can bootstrap curl
     url      = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
     version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')

@@ -30,6 +30,7 @@ class Zlib(AutotoolsPackage):
        data-compression library."""
 
     homepage = "http://zlib.net"
+    # URL must remain http:// so Spack can bootstrap curl
     url = "http://zlib.net/fossils/zlib-1.2.10.tar.gz"
 
     version('1.2.11', '1c9f62f0778697a09d36121ead88e08e')
