@@ -1006,8 +1006,7 @@ We can uninstall packages by spec using the same syntax as install.
   w33hrej libelf@0.8.13%intel
 
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
   ==> Successfully uninstalled libelf@0.8.13%intel@15.0.4 arch=linux-redhat6-x86_64-w33hrej
 
 
@@ -1054,8 +1053,7 @@ remove packages that are required by another installed package.
   4blbe3q libelf@0.8.12%intel
 
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
   ==> Successfully uninstalled libdwarf@20160507%intel@16.0.3 arch=linux-redhat6-x86_64-csruprg
   ==> Successfully uninstalled libelf@0.8.12%intel@16.0.3 arch=linux-redhat6-x86_64-4blbe3q
 
@@ -1088,8 +1086,7 @@ packages at once.
   ffwrpxn trilinos@12.8.1%gcc+boost~debug+hdf5+hypre+metis+mumps~python+shared+suite-sparse+superlu-dist
 
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
   ==> Successfully uninstalled trilinos@12.8.1%gcc@4.4.7+boost~debug+hdf5+hypre+metis+mumps~python+shared+suite-sparse+superlu-dist arch=linux-redhat6-x86_64-ffwrpxn
 
 -----------------------------

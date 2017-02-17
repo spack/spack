@@ -159,17 +159,6 @@ def disambiguate_spec(spec):
     return matching_specs[0]
 
 
-def ask_for_confirmation(message):
-    while True:
-        tty.msg(message + '[y/n]')
-        choice = raw_input().lower()
-        if choice == 'y':
-            break
-        elif choice == 'n':
-            raise SystemExit('Operation aborted')
-        tty.warn('Please reply either "y" or "n"')
-
-
 def gray_hash(spec, length):
     return colorize('@K{%s}' % spec.dag_hash(length))
 
