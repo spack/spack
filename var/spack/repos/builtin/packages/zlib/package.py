@@ -32,10 +32,9 @@ class Zlib(AutotoolsPackage):
     homepage = "http://zlib.net"
     url = "http://zlib.net/fossils/zlib-1.2.10.tar.gz"
 
-    version('1.2.10', 'd9794246f853d15ce0fcbf79b9a3cf13')
-    # author had this to say about 1.2.9....
-    # Due to the bug fixes, any installations of 1.2.9 should be immediately
-    # replaced with 1.2.10.
+    version('1.2.11', '1c9f62f0778697a09d36121ead88e08e')
+    # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be
+    # immediately replaced with 1.2.11.
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
     variant('pic', default=True,
