@@ -242,6 +242,7 @@ def test_suite(parser, args):
                     removeTests.append(test)
         for test in removeTests:
             tests.remove(test)
+    concreteTests = []
     #setting up tests for contretizing
     for test in tests:
         spec = Spec(test)
