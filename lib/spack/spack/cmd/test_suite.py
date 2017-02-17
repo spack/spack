@@ -123,11 +123,6 @@ def test_suite(parser, args):
     dashboards = []
     data = ""
     schema = spack.schema.test.schema
-    spec = Spec("mpi@123%gcc@123")
-    print bool(spec.satisfies("mpi@123"))
-    print bool(spec.satisfies("mpi"))
-    print bool(spec.satisfies("mpi%gcc@123"))
-    print bool(spec.satisfies("mpi%gcc"))
     all_specs = spack.store.layout.all_specs()
     #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
     for filename in args.yamlFile: #read yaml files which contains description of tests
@@ -180,8 +175,6 @@ def test_suite(parser, args):
     for pkg in packageVersion:
         for comp in compilerVersion:
             tests.append(str(pkg)+"%"+str(comp))
-    print tests
-    print len(tests) 
     #loading test excusions
     removeTests = []
     exclusions = data['exclusions']
@@ -196,10 +189,6 @@ def test_suite(parser, args):
                     removeTests.append(test)
         for test in removeTests:
             tests.remove(test)
-    print tests
-    print len(tests)   
-
-
 
     concreteTests = []
     #setting up tests for contretizing
