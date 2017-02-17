@@ -50,7 +50,7 @@ class Openblas(MakefilePackage):
     provides('blas')
     provides('lapack')
 
-    patch('make.patch')
+    patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
