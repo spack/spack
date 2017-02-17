@@ -37,6 +37,7 @@ class Petsc(Package):
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
+    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
             commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
 
@@ -100,6 +101,10 @@ class Petsc(Package):
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
     depends_on('hypre~internal-superlu~int64', when='+hypre+mpi~complex~int64')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
+    depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
+    depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
     depends_on('hypre~internal-superlu+int64', when='+hypre+mpi~complex+int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
@@ -107,10 +112,16 @@ class Petsc(Package):
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:~int64', when='@for-pflotran-0.1.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.0.0:+int64', when='@for-pflotran-0.1.0+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
     depends_on('mumps+mpi', when='+mumps+mpi~int64')
     depends_on('scalapack', when='+mumps+mpi~int64')
     depends_on('scalapack', when='+mumps+mpi')
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
+    depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
+    depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')        
     
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:

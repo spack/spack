@@ -35,6 +35,7 @@ class Xsdktrilinos(CMakePackage):
     base_url = "https://github.com/trilinos/xSDKTrilinos/archive"
 
     version('develop', git='https://github.com/trilinos/xSDKTrilinos.git', tag='master')
+    version('xsdk-0.2.0', git='https://github.com/trilinos/xSDKTrilinos.git', tag='master')
     version('12.8.1', '9cc338ded17d1e10ea6c0dc18b22dcd4')
     version('12.6.4', '44c4c54ccbac73bb8939f68797b9454a')
 
@@ -53,11 +54,14 @@ class Xsdktrilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi')
-    depends_on('hypre~internal-superlu', when='+hypre')
-    depends_on('petsc+mpi~complex', when='+petsc')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
+    depends_on('hypre@develop~internal-superlu', when='@develop+hypre')    
+    depends_on('petsc@xsdk-0.2.0+mpi~complex', when='@xsdk-0.2.0+petsc')
+    depends_on('petsc@develop+mpi~complex', when='@develop+petsc')    
     depends_on('trilinos@12.6.4', when='@12.6.4')
     depends_on('trilinos@12.8.1', when='@12.8.1')
-    depends_on('trilinos@develop', when='@develop')
+    depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('trilinos@develop', when='@develop')    
 
     def cmake_args(self):
         spec = self.spec

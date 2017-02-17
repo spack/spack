@@ -44,31 +44,37 @@ class Xsdk(Package):
     # this is for testing with the master of each package
     version('develop', '941a541bdf625856be18c9752249146d')
     # this is for next planned release
-    # version('0.2.0', '941a541bdf625856be18c9752249146d')
+    version('xsdk-0.2.0', '941a541bdf625856be18c9752249146d')
 
-    # depends_on('hypre@2.11.1~internal-superlu', when='@0.2.0')
-    depends_on('hypre@develop~internal-superlu')    
+    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
+    depends_on('hypre@develop~internal-superlu', when='@develop')    
 
-    # depends_on('superlu-dist@5.0.0', when='@0.2.0')    
-    depends_on('superlu-dist@develop')    
+    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')    
+    depends_on('superlu-dist@develop', when='@develop')    
 
-    # depends_on('trilinos@12.6.2+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse',
-    #            when='@0.2.0')
-    depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse')
+    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse',
+               when='@xsdk-0.2.0')
+    depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse',
+               when='@develop')
 
-    # depends_on('petsc@3.7.4+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
-    #            when='@0.2.0')
-    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost')
+    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
+               when='@xsdk-0.2.0')
+    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
+               when='@develop')
 
-    # depends_on('pflotran@0.2.0', when='@0.2.0')    
-    depends_on('pflotran@develop')
+    depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')    
+    depends_on('pflotran@develop', when='@develop')
 
-    depends_on('alquimia@develop')    
+    depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('alquimia@develop', when='@develop')    
 
-    depends_on('xsdktrilinos@develop')
+    depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('xsdktrilinos@develop', when='@develop')    
+
+    variant('debug', default=False, description='Compile in debug mode')
 
     # How do we propagate debug flag to all depends on packages ?
-    #   If I just do spack install xsdk+debug will that propogate it down?
+    # If I just do spack install xsdk+debug will that propogate it down?
 
     # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):
