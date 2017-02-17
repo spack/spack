@@ -22,29 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Gtkplus(AutotoolsPackage):
-    """The GTK+ 2 package contains libraries used for creating graphical user
-       interfaces for applications."""
-    homepage = "http://www.gtk.org"
-    url = "http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.31.tar.xz"
+class Stc(AutotoolsPackage):
+    """STC: The Swift-Turbine Compiler"""
 
-    version('2.24.31', '68c1922732c7efc08df4656a5366dcc3afdc8791513400dac276009b40954658')
-    version('2.24.25', '38af1020cb8ff3d10dda2c8807f11e92af9d2fa4045de61c62eedb7fbc7ea5b3')
+    homepage = 'http://swift-lang.org/Swift-T'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
 
-    variant('X', default=False, description="Enable an X toolkit")
+    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
 
-    depends_on("atk")
-    depends_on("gdk-pixbuf")
-    depends_on("glib")
-    depends_on("pango")
-    depends_on("pango~X", when='~X')
-    depends_on("pango+X", when='+X')
-    depends_on('gobject-introspection', when='+X')
+    depends_on('jdk')
+    depends_on('ant')
+    depends_on('turbine')
 
-    def patch(self):
-        # remove disable deprecated flag.
-        filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
-                    '', 'configure', string=True)
+    def configure_args(self):
+        args = ['--with-turbine=' + self.spec['turbine'].prefix]
+        return args
