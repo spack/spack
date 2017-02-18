@@ -137,13 +137,14 @@ def test_suite(parser, args):
                 enabledTests= data['enable']
                 packages= data['packages'] # list of packages to test. Current libelf, libdwarf, bzip2
                 compilers = data['compilers']
+                exclusions = data['exclusions']
             except:
-                tty.msg("Testing yaml files must contain atleast enable, packages and compilers to produce results.")
-                ssy.exit(1)
+                tty.msg("Testing yaml files must contain atleast enable, packages, exclusions and compilers to produce results. Exclusions can be empty, IE []")
+                sys.exit(1)
             try:    
                 dashboards  = data['dashboard']
             except:
-                tty.msg("dashboard tag not found. Results will be create in " + str(cdash_root))
+                tty.msg("Dashboard tag not found. Results will be create in " + str(cdash_root))
                 pass
         except MarkedYAMLError as e:
             raise ConfigFileError(
@@ -152,15 +153,18 @@ def test_suite(parser, args):
         except IOError as e:
             raise ConfigFileError(
                 "Error reading configuration file %s: %s" % (filename, str(e)))
-    #creating a list of packages 
-    for package in packages:
-        for pkg in package:
-            if pkg in enabledTests:
-                versions = package[pkg][0]['versions']
-                for version in versions:
-                    # producing packages at available versions. Sample file contains only checksum'd
-                    packageVersion.append(str(pkg)+"@"+str(version))
-
+    if len(packages) != 0 and len(compilers) != 0:
+        #creating a list of packages 
+        for package in packages:
+            for pkg in package:
+                if pkg in enabledTests:
+                    versions = package[pkg][0]['versions']
+                    for version in versions:
+                        # producing packages at available versions. Sample file contains only checksum'd
+                        packageVersion.append(str(pkg)+"@"+str(version))
+    else:
+        tty.msg("Testing without packages/compilers is no fun. Please add packages/compilers to you yaml file.")
+        sys.exit(1)
     #creating a list of compilers
     for compiler in compilers:
         for comp in compiler:
@@ -177,7 +181,6 @@ def test_suite(parser, args):
             tests.append(str(pkg)+"%"+str(comp))
     #loading test excusions
     removeTests = []
-    exclusions = data['exclusions']
     if len(exclusions) != 0:
         #remove test that match the exclusion
         #setting up tests for contretizing
@@ -189,7 +192,6 @@ def test_suite(parser, args):
                     removeTests.append(test)
         for test in removeTests:
             tests.remove(test)
-
     concreteTests = []
     #setting up tests for contretizing
     for test in tests:
