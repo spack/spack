@@ -61,6 +61,8 @@ class Scorep(Package):
     depends_on("mpi")
     depends_on("papi")
 
+    variant('shmem', default=False, description='Enable shmem tracing')
+
     def install(self, spec, prefix):
         configure = Executable(join_path(self.stage.source_path, 'configure'))
         with working_dir('spack-build', create=True):
@@ -72,6 +74,7 @@ class Scorep(Package):
                 "--with-papi-header=%s" % spec['papi'].prefix.include,
                 "--with-papi-lib=%s" % spec['papi'].prefix.lib,
                 "--enable-shared",
+                "--without-shmem" if '~shmem' in spec else '',
                 "CFLAGS=-fPIC",
                 "CXXFLAGS=-fPIC"]
             configure(*configure_args)
