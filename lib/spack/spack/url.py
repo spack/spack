@@ -387,31 +387,23 @@ def parse_version_offset(path):
         # Assume name contains no digits
 
         # namever
-        # turbolinux702, nauty26r7
-        (r'^[a-zA-Z+]+(\d[\da-zA-Z]*)$', stem),
+        # e.g. turbolinux702, nauty26r7
+        (r'^[a-zA-Z+]*(\d[\da-zA-Z]*)$', stem),
 
         # 4th Pass: A single separator character is used
         # Assume name contains no digits
 
         # name-name-ver-ver
-        # e.g. panda-2016-03-07, gts-snapshot-121130
-        (r'^[a-zA-Z+-]+-v?(\d[\da-zA-Z-]*)$', stem),
+        # e.g. panda-2016-03-07, gts-snapshot-121130, cdd-061a
+        (r'^[a-zA-Z+-]*(\d[\da-zA-Z-]*)$', stem),
 
         # name_name_ver_ver
-        # e.g. tinyxml_2_6_2, boost_1_55_0
-        (r'^[a-zA-Z+_]+_v?(\d[\da-zA-Z_]*)$', stem),
-
-        # name_namever_ver
-        # e.g. tbb2017_20161128
-        (r'^[a-zA-Z+_]+(\d[\da-zA-Z_]*)$', stem),
+        # e.g. tinyxml_2_6_2, boost_1_55_0, tbb2017_20161128, v1_6_3
+        (r'^[a-zA-Z+_]*(\d[\da-zA-Z_]*)$', stem),
 
         # name.name.ver.ver
-        # e.g. prank.source.150803, jpegsrc.v9b
-        (r'^[a-zA-Z+.]+\.v?(\d[\da-zA-Z.]*)$', stem),
-
-        # name.namever.ver
-        # e.g. atlas3.11.34, visit2.10.1, geant4.10.01.p03
-        (r'^[a-zA-Z+.]+(\d[\da-zA-Z.]*)$', stem),
+        # e.g. prank.source.150803, jpegsrc.v9b, atlas3.11.34, geant4.10.01.p03
+        (r'^[a-zA-Z+.]*(\d[\da-zA-Z.]*)$', stem),
 
         # 5th Pass: Two separator characters are used
         # Name may contain digits, version may contain letters
@@ -433,8 +425,8 @@ def parse_version_offset(path):
         (r'^[a-zA-Z\d+_]+\.v?(\d[\da-zA-Z.]*)$', stem),
 
         # name-name-ver.ver-ver.ver
-        # e.g. sowing-1.1.23-p1, bib2xhtml-v3.0-15-gf506
-        (r'^[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.-]*)$', stem),
+        # e.g. sowing-1.1.23-p1, bib2xhtml-v3.0-15-gf506, 4.6.3-alpha04
+        (r'^(?:[a-zA-Z\d+-]+-)?v?(\d[\da-zA-Z.-]*)$', stem),
 
         # namever.ver-ver.ver
         # e.g. go1.4-bootstrap-20161024

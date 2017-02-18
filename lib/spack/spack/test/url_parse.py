@@ -409,15 +409,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
 
     # Common Tarball Formats
 
-    def test_no_separators(self):
-        # namever
-        self.check(
-            'turbolinux', '702',
-            'file://{0}/turbolinux702.tar.gz'.format(os.getcwd()))
-        self.check(
-            'nauty', '26r7',
-            'http://pallini.di.uniroma1.it/nauty26r7.tar.gz')
-
     def test_version_only(self):
         # ver.ver
         self.check(
@@ -436,14 +427,29 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'luafilesystem', '1_6_3',
             'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz')
 
+    def test_no_separators(self):
+        # namever
+        self.check(
+            'turbolinux', '702',
+            'file://{0}/turbolinux702.tar.gz'.format(os.getcwd()))
+        self.check(
+            'nauty', '26r7',
+            'http://pallini.di.uniroma1.it/nauty26r7.tar.gz')
+
     def test_dashes_only(self):
         # name-name-ver-ver
+        self.check(
+            'Trilinos', '12-10-1',
+            'https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz')
         self.check(
             'panda', '2016-03-07',
             'http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-2016-03-07.tar')
         self.check(
             'gts', '121130',
             'http://gts.sourceforge.net/tarballs/gts-snapshot-121130.tar.gz')
+        self.check(
+            'cdd', '061a',
+            'http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz')
 
     def test_underscores_only(self):
         # name_name_ver_ver
@@ -453,6 +459,13 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'boost', '1_55_0',
             'http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2')
+        self.check(
+            'yorick', '2_2_04',
+            'https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz')
+        # name_namever_ver
+        self.check(
+            'tbb', '44_20160413',
+            'https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')
 
     def test_dots_only(self):
         # name.name.ver.ver
@@ -462,6 +475,9 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'jpeg', '9b',
             'http://www.ijg.org/files/jpegsrc.v9b.tar.gz')
+        self.check(
+            'openjpeg', '2.1',
+            'https://github.com/uclouvain/openjpeg/archive/version.2.1.tar.gz')
         # name.namever.ver
         self.check(
             'atlas', '3.11.34',
@@ -472,6 +488,9 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'geant', '4.10.01.p03',
             'http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz')
+        self.check(
+            'tcl', '8.6.5',
+            'http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz')
 
     def test_dash_dot(self):
         # name-name-ver.ver
@@ -487,7 +506,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'LaunchMON', '1.0.2',
             'https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz')
-
         # name-ver-ver.ver
         self.check(
             'libedit', '20150325-3.1',
@@ -591,7 +609,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip')
 
     def plus_in_name(self):
-        # FIXME: We should probably auto-convert these to 'plus'
         self.check(
             'gtk+', '2.24.31',
             'http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.31.tar.xz')
@@ -641,16 +658,6 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
             'js', '1.8.0-rc1',
             'http://ftp.mozilla.org/pub/mozilla.org/js/js-1.8.0-rc1.tar.gz')
 
-    def test_imagemagick_style(self):
-        self.check(
-            'ImageMagick', '6.7.5-7',
-            'http://downloads.sf.net/project/machomebrew/mirror/ImageMagick-6.7.5-7.tar.bz2')
-
-    def test_dash_version_dash_style(self):
-        self.check(
-            'antlr', '3.4',
-            'http://www.antlr.org/download/antlr-3.4-complete.jar')
-
     def test_apache_version_style(self):
         self.check(
             'apache-cassandra', '1.2.0-rc2',
@@ -693,3 +700,11 @@ class UrlParseNameAndVersionTest(unittest.TestCase):
         self.check(
             'luaposix', '33.4.0',
             'https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz')
+
+    def test_nco_version(self):
+        self.check(
+            'nco', '4.6.2-beta03',
+            'https://github.com/nco/nco/archive/4.6.2-beta03.tar.gz')
+        self.check(
+            'nco', '4.6.3-alpha04',
+            'https://github.com/nco/nco/archive/4.6.3-alpha04.tar.gz')
