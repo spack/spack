@@ -88,7 +88,7 @@ class Octave(AutotoolsPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('image-magick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('jdk',          when='+jdk')
+    depends_on('jdk',          when='+jdk') # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
     # depends_on('opengl',      when='+opengl')    # TODO: add package
     depends_on('qhull',        when='+qhull')
@@ -167,6 +167,8 @@ class Octave(AutotoolsPackage):
         if '+magick' in spec:
             config_args.append("--with-magick=%s"
                                % spec['image-magick'].prefix.lib)
+        else:
+            config_args.append("--without-magick")
 
         if '+hdf5' in spec:
             config_args.extend([
@@ -182,12 +184,15 @@ class Octave(AutotoolsPackage):
                 "--with-java-includedir=%s" % spec['jdk'].prefix.include,
                 "--with-java-libdir=%s"     % spec['jdk'].prefix.lib
             ])
+        else:
+            config_args.append("--disable-java")
 
         if '~opengl' in spec:
             config_args.extend([
                 "--without-opengl",
                 "--without-framework-opengl"
             ])
+        # TODO:  opengl dependency and package is missing?
 
         if '+qhull' in spec:
             config_args.extend([
