@@ -26,12 +26,18 @@
 from spack import *
 
 
-class Exmcutils(AutotoolsPackage):
-    """ExM C-Utils: Generic C utility library for ADLB/X and Swift/T"""
+class Stc(AutotoolsPackage):
+    """STC: The Swift-Turbine Compiler"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/exmcutils-0.5.3.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
 
-    version('0.5.3', '0e3ed6cc2991c684cd8f08db45c99a39')
+    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
 
-    # This package has no dependencies.
+    depends_on('jdk')
+    depends_on('ant')
+    depends_on('turbine')
+
+    def configure_args(self):
+        args = ['--with-turbine=' + self.spec['turbine'].prefix]
+        return args

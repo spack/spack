@@ -25,33 +25,26 @@
 from spack import *
 
 
-class Curl(Package):
-    """cURL is an open source command line tool and library for
-    transferring data with URL syntax"""
+class PyGit2(PythonPackage):
+    """Pygit2 is a set of Python bindings to the libgit2 shared library,
+    libgit2 implements the core of Git.
+    """
 
-    homepage = "http://curl.haxx.se"
-    # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
+    homepage = "http://www.pygit2.org/"
 
-    version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
-    version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
-    version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
-    version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
-    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
-    version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
-    version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
-    version('7.45.0', '62c1a352b28558f25ba6209214beadc8')
-    version('7.44.0', '6b952ca00e5473b16a11f05f06aa8dae')
-    version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
-    version('7.42.1', '296945012ce647b94083ed427c1877a8')
+    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545',
+        url="https://pypi.python.org/packages/aa/56/84dcce942a48d4b7b970cfb7a779b8db1d904e5ec5f71e7a67a63a23a4e2/pygit2-0.24.1.tar.gz")
 
-    depends_on("openssl")
-    depends_on("zlib")
+    extends('python')
+    depends_on('py-setuptools', type='build')
+    # Version must match with libgit2
+    # See: http://www.pygit2.org/install.html
+    depends_on('libgit2@0.24:', when='@0.24:')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-cffi', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix,
-                  '--with-ssl=%s' % spec['openssl'].prefix)
-
-        make()
-        make("install")
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        # http://www.pygit2.org/install.html
+        spack_env.set('LIBGIT2', spec['libgit2'].prefix)
+        spack_env.set('LIBGIT2_LIB', spec['libgit2'].prefix.lib)
