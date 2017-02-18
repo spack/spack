@@ -1,0 +1,16 @@
+diff -Naur lapack-3.6.1/CMAKE/CheckLAPACKCompilerFlags.cmake lapack-3.6.1-patched/CMAKE/CheckLAPACKCompilerFlags.cmake
+--- lapack-3.6.1/CMAKE/CheckLAPACKCompilerFlags.cmake	2017-01-27 17:14:37.414854283 -0500
++++ lapack-3.6.1-patched/CMAKE/CheckLAPACKCompilerFlags.cmake	2017-01-27 17:14:24.754719546 -0500
+@@ -43,12 +43,6 @@
+   if( "${CMAKE_Fortran_FLAGS}" MATCHES "-qflttrap=[a-zA-Z:]:enable" )
+     set( FPE_EXIT TRUE )
+   endif()
+-
+-  if( NOT ("${CMAKE_Fortran_FLAGS}" MATCHES "-qfixed") )
+-    message( STATUS "Enabling fixed format F90/F95 with -qfixed" )
+-    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qfixed"
+-         CACHE STRING "Flags for Fortran compiler." FORCE )
+-  endif()
+ 
+ # HP Fortran
+ elseif( CMAKE_Fortran_COMPILER_ID STREQUAL "HP" )

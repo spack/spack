@@ -25,33 +25,19 @@
 from spack import *
 
 
-class Curl(Package):
-    """cURL is an open source command line tool and library for
-    transferring data with URL syntax"""
+class Random123(Package):
+    """Random123 is a library of 'counter-based' random number
+    generators (CBRNGs), in which the Nth random number can be obtained
+    by applying a stateless mixing function to N instead of the
+    conventional approach of using N iterations of a stateful
+    transformation."""
+    homepage = "http://www.deshawresearch.com/resources_random123.html"
+    url      = "http://www.deshawresearch.com/downloads/download_random123.cgi/Random123-1.09.tar.gz"
 
-    homepage = "http://curl.haxx.se"
-    # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
-
-    version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
-    version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
-    version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
-    version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
-    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
-    version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
-    version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
-    version('7.45.0', '62c1a352b28558f25ba6209214beadc8')
-    version('7.44.0', '6b952ca00e5473b16a11f05f06aa8dae')
-    version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
-    version('7.42.1', '296945012ce647b94083ed427c1877a8')
-
-    depends_on("openssl")
-    depends_on("zlib")
+    version('1.09', '67ae45ff94b12acea590a6aa04ed1123')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix,
-                  '--with-ssl=%s' % spec['openssl'].prefix)
-
-        make()
-        make("install")
+        # Random123 doesn't have a build system.
+        # We have to do our own install here.
+        install_tree('include', prefix.include)
+        install('./LICENSE', "%s" % prefix)

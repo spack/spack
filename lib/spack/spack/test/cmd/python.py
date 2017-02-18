@@ -22,16 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import argparse
+import pytest
 
-from spack import *
+from spack.cmd.python import *
 
 
-class Exmcutils(AutotoolsPackage):
-    """ExM C-Utils: Generic C utility library for ADLB/X and Swift/T"""
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the ``python`` command"""
+    parser = argparse.ArgumentParser()
+    setup_parser(parser)
+    return parser
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/exmcutils-0.5.3.tar.gz'
 
-    version('0.5.3', '0e3ed6cc2991c684cd8f08db45c99a39')
-
-    # This package has no dependencies.
+def test_python(parser):
+    args = parser.parse_args([
+        '-c', 'import spack; print(spack.spack_version)'
+    ])
+    python(parser, args)

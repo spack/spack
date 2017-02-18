@@ -25,33 +25,11 @@
 from spack import *
 
 
-class Curl(Package):
-    """cURL is an open source command line tool and library for
-    transferring data with URL syntax"""
+class PyApacheLibcloud(PythonPackage):
+    """Python library for multiple cloud provider APIs"""
 
-    homepage = "http://curl.haxx.se"
-    # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
+    homepage = "http://libcloud.apache.org"
 
-    version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
-    version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
-    version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
-    version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
-    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
-    version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
-    version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
-    version('7.45.0', '62c1a352b28558f25ba6209214beadc8')
-    version('7.44.0', '6b952ca00e5473b16a11f05f06aa8dae')
-    version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
-    version('7.42.1', '296945012ce647b94083ed427c1877a8')
+    version('1.2.1', '912e6fb1f2d13f7d3b58ee982b9f9d1f', url="https://pypi.python.org/packages/dd/b5/7b8b5796177345b6a7c1f3d4fda9fbbe9aeef000ac33f3aac06f176845d0/apache-libcloud-1.2.1.tar.gz")
 
-    depends_on("openssl")
-    depends_on("zlib")
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix,
-                  '--with-ssl=%s' % spec['openssl'].prefix)
-
-        make()
-        make("install")
+    depends_on('py-setuptools', type='build')
