@@ -718,7 +718,7 @@ function _spack_test {
 function _spack_uninstall {
     if $list_options
     then
-        compgen -W "-h --help -f --force -a --all -d --dependents
+        compgen -W "-h --help -f --force -a --all -R --dependents
                     -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
