@@ -45,11 +45,15 @@ class IntelParallelStudio(IntelInstaller):
     version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01')
     version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01')
     version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9')
+    version('professional.2016.4', '16a641a06b156bb647c8a56e71f3bb33')
+    version('cluster.2016.4',      '16a641a06b156bb647c8a56e71f3bb33')
     version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3')
     version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3')
     version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa')
     version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832')
     version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832')
+    version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf')
+    version('cluster.2015.6',      'd460f362c30017b60f85da2e51ad25bf')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
