@@ -124,6 +124,10 @@ def url_parse(args):
         tty.msg('Spidering for versions:')
         versions = find_versions_of_archive(url)
 
+        if not versions:
+            print('  Found no versions for {0}'.format(name))
+            return
+
         max_len = max(len(str(v)) for v in versions)
 
         for v in sorted(versions):
