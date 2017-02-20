@@ -31,7 +31,7 @@ class PyPytestMock(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-mock"
 
     version('1.2', 'a7fa820f7bc71698660945836ff93c73',
-        url="https://pypi.python.org/packages/30/11/a5a8009eff04bc15c37e2f8e33d8ed99adf828ec8f551fb31d99f6c73b5b/pytest-mock-1.2.zip")
+            url="https://pypi.python.org/packages/30/11/a5a8009eff04bc15c37e2f8e33d8ed99adf828ec8f551fb31d99f6c73b5b/pytest-mock-1.2.zip")
 
     extends('python', ignore=r'bin/*')
 
