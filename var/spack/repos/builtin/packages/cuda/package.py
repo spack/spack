@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from glob import glob
-import os
 
 
 class Cuda(Package):
@@ -47,7 +46,7 @@ class Cuda(Package):
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
     def install(self, spec, prefix):
-        runfile = glob(os.path.join(self.stage.path, 'cuda*run'))[0]
+        runfile = glob(join_path(self.stage.path, 'cuda*run'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)
