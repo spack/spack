@@ -199,7 +199,7 @@ def parse_config_options(module_generator):
     module_file_actions['hash_length'] = module_configuration.get(
         'hash_length', 7)
     module_file_actions['autoload'] = dependencies(
-        module_generator.spec, module_file_actions.get('autoload', 'none'))
+        module_generator.spec, module_file_actions.get('autoload', 'direct'))
     # Prerequisites
     module_file_actions['prerequisites'] = dependencies(
         module_generator.spec, module_file_actions.get('prerequisites',
@@ -560,7 +560,7 @@ class TclModule(EnvModule):
     prerequisite_format = 'prereq {module_file}\n'
 
     default_naming_format = \
-        '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+        '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
 
     @property
     def file_name(self):

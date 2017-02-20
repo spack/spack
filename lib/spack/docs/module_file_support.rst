@@ -55,7 +55,7 @@ Using module files via Spack
 ----------------------------
 
 If you have shell support enabled you should be able to run either
-``module avail`` or ``use -l spack`` to see what module/dotkit files have
+``module avail`` or ``use -l`` to see what module/dotkit files have
 been installed.  Here is sample output of those programs, showing lots
 of installed packages.
 
@@ -64,51 +64,68 @@ of installed packages.
    $ module avail
 
    ------- ~/spack/share/spack/modules/linux-debian7-x86_64 --------
-   adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
-   automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
-   boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
-   callpath@1.0.1%gcc@4.4.7-5dce4318    mpfr@3.1.2%gcc@4.4.7
-   dyninst@8.1.2%gcc@4.4.7-b040c20e     mpich@3.0.4%gcc@4.4.7
-   gcc@4.9.1%gcc@4.4.7-93ab98c5         mpich@3.0.4%gcc@4.9.0
-   gmp@6.0.0a%gcc@4.4.7                 mrnet@4.1.0%gcc@4.4.7-72b7881d
-   graphlib@2.0.0%gcc@4.4.7             netgauge@2.4.6%gcc@4.9.0-27912b7b
-   launchmon@1.0.1%gcc@4.4.7            stat@2.1.0%gcc@4.4.7-51101207
-   libNBC@1.1.1%gcc@4.9.0-27912b7b      sundials@2.5.0%gcc@4.9.0-27912b7b
-   libdwarf@20130729%gcc@4.4.7-b52fac98
+   adept-utils/1.0-gcc-4.4.7-5adef8da   libelf/0.8.13-gcc-4.4.7
+   automaded/1.0-gcc-4.4.7-d9691bb0     libelf/0.8.13-intel-15.0.0
+   boost/1.55.0-gcc-4.4.7               mpc/1.0.2-gcc-4.4.7-559607f5
+   callpath/1.0.1-gcc-4.4.7-5dce4318    mpfr/3.1.2-gcc-4.4.7
+   dyninst/8.1.2-gcc-4.4.7-b040c20e     mpich/3.0.4-gcc-4.4.7
+   gcc/4.9.1-gcc-4.4.7-93ab98c5         mpich/3.0.4-gcc-4.9.0
+   gmp/6.0.0a-gcc-4.4.7                 mrnet/4.1.0-gcc-4.4.7-72b7881d
+   graphlib/2.0.0-gcc-4.4.7             netgauge/2.4.6-gcc-4.9.0-27912b7b
+   launchmon/1.0.1-gcc-4.4.7            python-2.7.11-gcc-5.4.0-iszqxjp - python @2.7.11
+   libNBC/1.1.1-gcc-4.9.0-27912b7b      stat/2.1.0-gcc-4.4.7-51101207
+   libdwarf/20130729-gcc-4.4.7-b52fac98 sundials/2.5.0-gcc-4.9.0-27912b7b
 
 .. code-block:: console
 
-   $ use -l spack
+   $ use -l
+   python_extension ----------
+     py-setuptools-25.2.0-gcc-5.4.0-3au2b7p - py-setuptools @25.2.0
 
    spack ----------
-     adept-utils@1.0%gcc@4.4.7-5adef8da - adept-utils @1.0
-     automaded@1.0%gcc@4.4.7-d9691bb0 - automaded @1.0
-     boost@1.55.0%gcc@4.4.7 - boost @1.55.0
-     callpath@1.0.1%gcc@4.4.7-5dce4318 - callpath @1.0.1
-     dyninst@8.1.2%gcc@4.4.7-b040c20e - dyninst @8.1.2
-     gmp@6.0.0a%gcc@4.4.7 - gmp @6.0.0a
-     libNBC@1.1.1%gcc@4.9.0-27912b7b - libNBC @1.1.1
-     libdwarf@20130729%gcc@4.4.7-b52fac98 - libdwarf @20130729
-     libelf@0.8.13%gcc@4.4.7 - libelf @0.8.13
-     libelf@0.8.13%intel@15.0.0 - libelf @0.8.13
-     mpc@1.0.2%gcc@4.4.7-559607f5 - mpc @1.0.2
-     mpfr@3.1.2%gcc@4.4.7 - mpfr @3.1.2
-     mpich@3.0.4%gcc@4.4.7 - mpich @3.0.4
-     mpich@3.0.4%gcc@4.9.0 - mpich @3.0.4
-     netgauge@2.4.6%gcc@4.9.0-27912b7b - netgauge @2.4.6
-     sundials@2.5.0%gcc@4.9.0-27912b7b - sundials @2.5.0
+     adept-utils-1.0-gcc-4.4.7-5adef8da - adept-utils @1.0
+     automaded-1.0-gcc-4.4.7-d9691bb0 - automaded @1.0
+     boost-1.55.0-gcc-4.4.7 - boost @1.55.0
+     callpath-1.0.1-gcc-4.4.7-5dce4318 - callpath @1.0.1
+     dyninst-8.1.2-gcc-4.4.7-b040c20e - dyninst @8.1.2
+     gmp-6.0.0a-gcc-4.4.7 - gmp @6.0.0a
+     libNBC-1.1.1-gcc-4.9.0-27912b7b - libNBC @1.1.1
+     libdwarf-20130729-gcc-4.4.7-b52fac98 - libdwarf @20130729
+     libelf-0.8.13-gcc-4.4.7 - libelf @0.8.13
+     libelf-0.8.13-intel-15.0.0 - libelf @0.8.13
+     mpc-1.0.2-gcc-4.4.7-559607f5 - mpc @1.0.2
+     mpfr-3.1.2-gcc-4.4.7 - mpfr @3.1.2
+     mpich-3.0.4-gcc-4.4.7 - mpich @3.0.4
+     mpich-3.0.4-gcc-4.9.0 - mpich @3.0.4
+     netgauge-2.4.6-gcc-4.9.0-27912b7b - netgauge @2.4.6
+     sundials-2.5.0-gcc-4.9.0-27912b7b - sundials @2.5.0
 
-The names here should look familiar, they're the same ones from
-``spack find``.  You *can* use the names here directly.  For example,
-you could type either of these commands to load the callpath module:
-
-.. code-block:: console
-
-   $ use callpath@1.0.1%gcc@4.4.7-5dce4318
+You can type either of these commands to load the callpath module
+depending on whether you are using dotkits or modules:
 
 .. code-block:: console
 
-   $ module load callpath@1.0.1%gcc@4.4.7-5dce4318
+   $ use callpath-1.0.1-gcc-4.4.7-5dce4318
+
+.. code-block:: console
+
+   $ module load callpath/1.0.1-gcc-4.4.7-5dce4318
+
+By default Environment Modules are installed into subdirectories
+featuring the package name which allows you to load packages by their
+name only:
+
+.. code-block:: console
+
+   $ module load callpath
+
+If there is more than one instance of callpatch installed then the
+first lexigraphically sorted module is selected.
+
+Loading a module will also recursively load modules for the package
+dependencies. Although this is not required for packages that use
+RPATH to find their libraries, this is useful for runtime
+dependencies, Python extensions, and creating software environments.
 
 .. _cmd-spack-load:
 
@@ -116,9 +133,7 @@ you could type either of these commands to load the callpath module:
 ``spack load / unload``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Neither of these is particularly pretty, easy to remember, or
-easy to type.  Luckily, Spack has its own interface for using modules
-and dotkits.  You can use the same spec syntax you're used to:
+You can also use Spack to load modules using the spec syntax you're used to:
 
 =========================  ==========================
 Environment Modules        Dotkit
@@ -197,14 +212,7 @@ To identify just the one built with the Intel compiler.
 ``spack module loads``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-In some cases, it is desirable to load not just a module, but also all
-the modules it depends on.  This is not required for most modules
-because Spack builds binaries with RPATH support.  However, not all
-packages use RPATH to find their dependencies: this can be true in
-particular for Python extensions, which are currently *not* built with
-RPATH.
-
-Scripts to load modules recursively may be made with the command:
+As well as directly loading modules, scripts to load modules may be made with the command:
 
 .. code-block:: console
 
@@ -216,24 +224,13 @@ An equivalent alternative is:
 
     $ source <( spack module loads --dependencies <spec> )
 
-.. warning::
-
-    The ``spack load`` command does not currently accept the
-    ``--dependencies`` flag.  Use ``spack module loads`` instead, for
-    now.
-
-.. See #1662
-
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Module Commands for Shell Scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
-commands inside a shell script.  By adding the ``--shell`` flag,
-``spack module find`` may also be used to generate code that can be
-cut-and-pasted into a shell script.  For example:
+commands inside a shell script.
 
 .. code-block:: console
 
@@ -540,24 +537,28 @@ version of python a set of python extensions is associated with. Likewise, the
 ``openblas`` string is attached to any program that has openblas in the spec,
 most likely via the ``+blas`` variant specification.
 
-.. note::
-   TCL module files
-     A modification that is specific to ``tcl`` module files is the possibility
-     to change the naming scheme of modules.
+Finally, it is also possible to change the naming scheme of modules.
 
-     .. code-block:: yaml
+.. code-block:: yaml
+
+   modules:
+       tcl:
+         naming_scheme: '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+	 Will create modules with a flat directory structure and thereby require users to specify the entire name.
+
+A modification that is specific to ``tcl`` modules is the possibility to add ``conflicts``.
+.. code-block:: yaml
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
            all:
-             conflict: ['${PACKAGE}', 'intel/14.0.1']
+             conflict: ['${PACKAGE}']
 
-     will create module files that will conflict with ``intel/14.0.1`` and with the
-     base directory of the same module, effectively preventing the possibility to
-     load two or more versions of the same software at the same time. The tokens
-     that are available for use in this directive are the same understood by
-     the ``Spec.format`` method.
+     will create module files that will conflict with the base
+     directory of the same module, effectively preventing the
+     possibility to load two or more versions of the same software at
+     the same time. The tokens that are available for use in this
+     directive are the same understood by the ``Spec.format`` method.
 
 
 .. note::
@@ -568,7 +569,7 @@ most likely via the ``+blas`` variant specification.
      any other virtual dependency present in Spack. A case that could be useful in
      practice is for instance:
 
-     .. code-block:: yaml
+.. code-block:: yaml
 
        modules:
          enable:
