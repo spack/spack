@@ -35,5 +35,5 @@ class PyPetsc4py(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
-    depends_on('py-mpi4py')
+    depends_on('py-mpi4py', type=('build', 'run'))
     depends_on('petsc+mpi')    
