@@ -29,7 +29,7 @@ class PyFlask(PythonPackage):
     """A microframework based on Werkzeug, Jinja2 and good intentions"""
 
     homepage = "http://github.com/pallets/flask"
-    url      = "https://github.com/pallets/flask/archive/0.12.tar.gz"
+    url      = "https://pypi.io/packages/source/f/flask/flask-0.11.1.tar.gz"
 
     version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08',
         url='https://pypi.python.org/packages/55/8a/78e165d30f0c8bb5d57c429a30ee5749825ed461ad6c959688872643ffb3/Flask-0.11.1.tar.gz')

@@ -29,10 +29,9 @@ class PyHttpbin(PythonPackage):
     """HTTP Request and Response Service"""
 
     homepage = "https://github.com/Runscope/httpbin"
-    url      = "https://github.com/Runscope/httpbin/archive/v0.5.0.tar.gz"
+    url = "https://pypi.io/packages/source/h/httpbin/httpbin-0.5.0.tar.gz"
 
-    version('0.5.0', '923793df99156caa484975ade96ee115',
-        url='https://pypi.python.org/packages/61/8d/2e5b787a3381ff6c380cd05a0d0bc3d97888299704294ae198e90693c4cd/httpbin-0.5.0.tar.gz')
+    version('0.5.0', '923793df99156caa484975ade96ee115')
 
     depends_on('py-setuptools',         type='build')
     depends_on('py-decorator@3.4.0:',   type=('build', 'run'))

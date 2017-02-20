@@ -29,9 +29,8 @@ class PyWerkzeug(PythonPackage):
     """The Swiss Army knife of Python web development"""
 
     homepage = "http://werkzeug.pocoo.org"
-    url      = "https://github.com/pallets/werkzeug/archive/0.11.15.tar.gz"
+    url      = "https://pypi.io/packages/source/w/werkzeug/werkzeug-0.11.11.tar.gz"
 
-    version('0.11.11', '1d34afa1f19abcef4c0da51ebc2c4ea7',
-        url='https://pypi.python.org/packages/43/2e/d822b4a4216804519ace92e0368dcfc4b0b2887462d852fdd476b253ecc9/Werkzeug-0.11.11.tar.gz')
+    version('0.11.11', '1d34afa1f19abcef4c0da51ebc2c4ea7')
 
     depends_on('py-setuptools', type='build')

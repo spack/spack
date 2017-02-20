@@ -25,11 +25,11 @@
 from spack import *
 
 
-class GitReview(PythonPackage):
+class PyGitReview(PythonPackage):
     """git-review is a tool that helps submitting git branches to gerrit"""
 
     homepage = "http://docs.openstack.org/infra/git-review"
-    url = "https://github.com/openstack-infra/git-review/archive/1.25.0.tar.gz"
+    url = "https://pypi.io/packages/source/g/git-review/git-review-1.25.0.tar.gz"
 
     version('1.25.0', '0a061d0e23ee9b93c6212a3fe68fb7ab',
         url='https://pypi.python.org/packages/92/38/b97fee6752540a92f44e405a51c53d3c36b5d57e139683862597b09a5c6c/git-review-1.25.0.tar.gz')

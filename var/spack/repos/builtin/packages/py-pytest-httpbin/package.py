@@ -29,7 +29,6 @@ class PyPytestHttpbin(PythonPackage):
     """Easily test your HTTP library against a local copy of httpbin"""
 
     homepage = "https://github.com/kevin1024/pytest-httpbin"
-    url      = "https://github.com/kevin1024/pytest-httpbin/archive/v0.2.0.tar.gz"
 
     version('0.2.3', 'b8ebb8e2fbac1a445fb5d044f7fec556',
         url='https://pypi.python.org/packages/12/12/5430600cb9417080b561237761ff2dffde520b664cc352433d2e57051222/pytest-httpbin-0.2.3.tar.gz')

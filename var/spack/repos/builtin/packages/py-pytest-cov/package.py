@@ -29,7 +29,6 @@ class PyPytestCov(PythonPackage):
     """Pytest plugin for measuring coverage."""
 
     homepage = "https://github.com/pytest-dev/pytest-cov"
-    url      = "https://github.com/pytest-dev/pytest-cov/archive/v2.4.0.tar.gz"
 
     version('2.3.1', '8e7475454313a035d08f387ee6d725cb',
         url='https://pypi.python.org/packages/4c/2f/de9e8f226d4fb86f330ee2fcc709204fbd3aeab6ce17756b3cf5ea9aa4d7/pytest-cov-2.3.1.tar.gz')
