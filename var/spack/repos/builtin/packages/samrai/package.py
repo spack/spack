@@ -33,10 +33,12 @@ class Samrai(Package):
        (SAMR) technology in large-scale parallel application development.
 
     """
-    homepage = "https://computation.llnl.gov/project/SAMRAI/"
-    url      = "https://computation.llnl.gov/project/SAMRAI/download/SAMRAI-v3.9.1.tar.gz"
+    homepage = "https://computation.llnl.gov/projects/samrai/"
+    url      = "https://computation.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
 
+    version('3.11.2',     'd5f59f8efd755b23b797e46349428206')
+    version('3.10.0',     'ff5f5b8b4a35b52a1b7e37a74166c65a')
     version('3.9.1',      '232d04d0c995f5abf20d94350befd0b2')
     version('3.8.0',      'c18fcffa706346bfa5828b36787ce5fe')
     version('3.7.3',      '12d574eacadf8c9a70f1bb4cd1a69df6')
@@ -53,16 +55,18 @@ class Samrai(Package):
     depends_on("zlib")
     depends_on("hdf5+mpi")
     depends_on("boost")
+    depends_on("m4")
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
 
-    # TODO: currently hard-coded to use openmpi - be careful!
     def install(self, spec, prefix):
         configure(
             "--prefix=%s" % prefix,
-            "--with-CXX=%s" % spec['mpi'].prefix.bin + "/mpic++",
-            "--with-CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
+            "--with-CXX=%s" % spec['mpi'].mpicxx,
+            "--with-CC=%s" % spec['mpi'].mpicc,
+            "--with-F77=%s" % spec['mpi'].mpifc,
+            "--with-M4=%s" % spec['m4'].prefix,
             "--with-hdf5=%s" % spec['hdf5'].prefix,
             "--with-boost=%s" % spec['boost'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
@@ -70,7 +74,7 @@ class Samrai(Package):
             "--without-lapack",
             "--with-hypre=no",
             "--with-petsc=no",
-            "--enable-opt",
+            "--enable-opt=-O3",
             "--disable-debug")
 
         make()
