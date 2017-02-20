@@ -69,7 +69,7 @@ class PyScipy(PythonPackage):
     # TODO: Add a 'test' deptype
     # depends_on('py-nose', type='test')
 
-    def test(self, spec, prefix):
+    def test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #

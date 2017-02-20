@@ -127,7 +127,7 @@ class PythonPackage(PackageBase):
         inspect.getmodule(self).python(*args, **kwargs)
 
     def setup_py(self, *args, **kwargs):
-        setup = self.setup_file(self.spec, self.prefix)
+        setup = self.setup_file()
 
         with working_dir(self.build_directory):
             self.python(setup, '--no-user-cfg', *args, **kwargs)
@@ -146,7 +146,7 @@ class PythonPackage(PackageBase):
         }
 
         python = inspect.getmodule(self).python
-        setup = self.setup_file(self.spec, self.prefix)
+        setup = self.setup_file()
 
         python(setup, '--no-user-cfg', command, '--help', **kwargs)
         return python.returncode == 0
@@ -344,13 +344,13 @@ class PythonPackage(PackageBase):
 
     # Testing
 
-    def test(self, spec, prefix):
+    def test(self):
         """Run unit tests after in-place build.
 
         These tests are only run if the package actually has a 'test' command.
         """
         if self._setup_command_available('test'):
-            args = self.test_args(spec, prefix)
+            args = self.test_args(self.spec, self.prefix)
 
             self.setup_py('test', *args)
 

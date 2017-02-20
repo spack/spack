@@ -138,7 +138,7 @@ class PyNumpy(PythonPackage):
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % dirs)
 
-    def test(self, spec, prefix):
+    def test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #
