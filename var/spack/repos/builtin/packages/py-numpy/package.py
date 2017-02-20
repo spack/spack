@@ -36,6 +36,8 @@ class PyNumpy(PythonPackage):
     homepage = "http://www.numpy.org/"
     url      = "https://pypi.io/packages/source/n/numpy/numpy-1.9.1.tar.gz"
 
+    version('1.12.0', '33e5a84579f31829bbbba084fe0a4300',
+            url="https://pypi.io/packages/source/n/numpy/numpy-1.12.0.zip")
     version('1.11.2', '03bd7927c314c43780271bf1ab795ebc')
     version('1.11.1', '2f44a895a8104ffac140c3a70edbd450')
     version('1.11.0', 'bc56fb9fc2895aa4961802ffbdb31d0b')
@@ -43,11 +45,10 @@ class PyNumpy(PythonPackage):
     version('1.9.2',  'a1ed53432dbcd256398898d35bc8e645')
     version('1.9.1',  '78842b73560ec378142665e712ae4ad9')
 
-    variant('blas',   default=True)
-    variant('lapack', default=True)
+    variant('blas',   default=True, description='Build with BLAS support')
+    variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-nose', type='build')
+    depends_on('python@2.7:2.8,3.4:')
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
@@ -122,3 +123,12 @@ class PyNumpy(PythonPackage):
                 if not ((platform.system() == "Darwin") and
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % dirs)
+
+    def build_args(self, spec, prefix):
+        args = []
+
+        # From NumPy 1.10.0 on it's possible to do a parallel build
+        if self.version >= Version('1.10.0'):
+            args = ['-j', str(make_jobs)]
+
+        return args
