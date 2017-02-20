@@ -733,34 +733,16 @@ def wildcard_version(path):
     """Find the version in the supplied path, and return a regular expression
        that will match this path with any version in its place.
     """
-    # Get name and version, so we can treat them specially
-    name, v = parse_name_and_version(path)
+    # Get version so we can replace it with a wildcard
+    version = parse_version(path)
 
-    path, ext, suffix = split_url_extension(path)
+    # Split path by versions
+    vparts = re.split(str(version), path)
 
-    # Construct a case-insensitive regular expression for the package name.
-    name_re = '(%s)' % insensitize(name)
+    # Replace each version with a generic capture group to find versions
+    # and escape everything else so it's not interpreted as a regex
+    result = '(.*)'.join(re.escape(vp) for vp in vparts)
 
-    # Split the string apart by things that match the name so that if the
-    # name contains numbers or things that look like versions, we don't
-    # catch them with the version wildcard.
-    name_parts = re.split(name_re, path)
-
-    # Even elements in the array did *not* match the name
-    for i in xrange(0, len(name_parts), 2):
-        # Split each part by things that look like versions.
-        vparts = re.split(v.wildcard(), name_parts[i])
-
-        # Replace each version with a generic capture group to find versions.
-        # And escape everything else so it's not interpreted as a regex
-        vgroup = '(%s)' % v.wildcard()
-        name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
-
-    # Put it all back together with original name matches intact.
-    result = ''.join(name_parts)
-    if ext:
-        result += '.' + ext
-    result += suffix
     return result
 
 
