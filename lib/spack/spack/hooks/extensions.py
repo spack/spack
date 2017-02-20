@@ -29,5 +29,6 @@ def pre_uninstall(spec):
     assert spec.concrete
 
     if pkg.is_extension:
-        if pkg.activated:
+        if pkg.is_activated():
+            # deactivate globally
             pkg.do_deactivate(force=True)
