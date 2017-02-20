@@ -33,6 +33,8 @@ class PyScipy(PythonPackage):
     homepage = "http://www.scipy.org/"
     url = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
 
+    install_time_test_callbacks = ['install_test', 'import_module_test']
+
     import_modules = [
         'scipy', 'scipy._build_utils', 'scipy._lib', 'scipy.cluster',
         'scipy.constants', 'scipy.fftpack', 'scipy.integrate',
@@ -84,8 +86,6 @@ class PyScipy(PythonPackage):
         #                                 from within an interpreter)
         pass
 
-    @PythonPackage.sanity_check('install')
-    @PythonPackage.on_package_attributes(run_tests=True)
     def install_test(self):
         # Change directories due to the following error:
         #

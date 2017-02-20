@@ -106,6 +106,12 @@ class PythonPackage(PackageBase):
     # build-system class we are using
     build_system_class = 'PythonPackage'
 
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['test']
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ['import_module_test']
+
     extends('python')
 
     def setup_file(self):
@@ -336,7 +342,7 @@ class PythonPackage(PackageBase):
         """Arguments to pass to check."""
         return []
 
-    # Extra commands
+    # Testing
 
     def test(self, spec, prefix):
         """Run unit tests after in-place build.
@@ -352,19 +358,8 @@ class PythonPackage(PackageBase):
         """Arguments to pass to test."""
         return []
 
-    # Testing
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def _run_build_tests(self):
-        """This function is run after build if ``self.run_tests == True``
-
-        It will search for a method named ``test`` and run it. A sensible
-        default is provided in the base class.
-        """
-        self.test(self.spec, self.prefix)
-
-    @PackageBase.sanity_check('install')
     def import_module_test(self):
         """Attempts to import the module that was just installed.
 
@@ -376,6 +371,8 @@ class PythonPackage(PackageBase):
         with working_dir('..'):
             for module in self.import_modules:
                 self.python('-c', 'import {0}'.format(module))
+
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

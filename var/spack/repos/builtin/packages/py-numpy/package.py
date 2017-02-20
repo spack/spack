@@ -36,6 +36,8 @@ class PyNumpy(PythonPackage):
     homepage = "http://www.numpy.org/"
     url      = "https://pypi.io/packages/source/n/numpy/numpy-1.9.1.tar.gz"
 
+    install_time_test_callbacks = ['install_test', 'import_module_test']
+
     import_modules = [
         'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
         'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
@@ -157,8 +159,6 @@ class PyNumpy(PythonPackage):
         #                                 from within an interpreter)
         pass
 
-    @PythonPackage.sanity_check('install')
-    @PythonPackage.on_package_attributes(run_tests=True)
     def install_test(self):
         # Change directories due to the following error:
         #
