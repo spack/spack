@@ -92,6 +92,9 @@ class Zoltan(Package):
 
             mpi_libs = self.get_mpi_libs()
 
+            # NOTE: Some external mpi installations may have empty lib
+            # directory (e.g. bg-q). In this case we need to explicitly
+            # pass empty library name.
             if mpi_libs:
                 mpi_libs = ' -l'.join(mpi_libs)
                 config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
