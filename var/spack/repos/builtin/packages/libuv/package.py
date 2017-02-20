@@ -37,5 +37,7 @@ class Libuv(AutotoolsPackage):
     depends_on('libtool', type='build')
 
     def autoreconf(self, spec, prefix):
+        # This is needed because autogen.sh generates on-the-fly
+        # an m4 macro needed during configuration
         bash = which("bash")
         bash('autogen.sh')

@@ -25,16 +25,29 @@
 from spack import *
 
 
-class RDatatable(RPackage):
-    """Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
-    fast add/modify/delete of columns by group using no copies at all, list
-    columns and a fast file reader (fread). Offers a natural and flexible
-    syntax, for faster development."""
+class Voropp(MakefilePackage):
+    """Voro++ is a open source software library for the computation of the
+    Voronoi diagram, a widely-used tessellation that has applications in many
+    scientific fields."""
 
-    homepage = "https://github.com/Rdatatable/data.table/wiki"
-    url      = "https://cran.r-project.org/src/contrib/data.table_1.9.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
+    homepage = "http://math.lbl.gov/voro++/about.html"
 
-    version('1.9.6', 'b1c0c7cce490bdf42ab288541cc55372')
+    # This url is wrong but it passes the test the ++ make the url parser fail,
+    # the correct url is constructed by url_for_version that has to be used in
+    # any case due to the difference between the package name and the url
+    url      = "http://math.lbl.gov/voropp/download/dir/voropp-0.4.6.tar.gz"
 
-    depends_on('r-chron', type=('build', 'run'))
+    version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9')
+
+    def url_for_version(self, version):
+        url = "http://math.lbl.gov/voro++/download/dir/voro++-{0}.tar.gz".format(  # noqa: E501
+            str(version))
+        return url
+
+    def edit(self, spec, prefix):
+        filter_file(r'CC=g\+\+',
+                    'CC={0}'.format(self.compiler.cxx),
+                    'config.mk')
+        filter_file(r'PREFIX=/usr/local',
+                    'PREFIX={0}'.format(self.prefix),
+                    'config.mk')

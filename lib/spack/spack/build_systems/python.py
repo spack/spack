@@ -27,7 +27,7 @@ import inspect
 import os
 
 from spack.directives import extends
-from spack.package import PackageBase
+from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
 
@@ -108,10 +108,11 @@ class PythonPackage(PackageBase):
 
     extends('python')
 
-    def setup_file(self, spec, prefix):
+    def setup_file(self):
         """Returns the name of the setup file to use."""
         return 'setup.py'
 
+    @property
     def build_directory(self):
         """The directory containing the ``setup.py`` file."""
         return self.stage.source_path
@@ -122,7 +123,7 @@ class PythonPackage(PackageBase):
     def setup_py(self, *args, **kwargs):
         setup = self.setup_file(self.spec, self.prefix)
 
-        with working_dir(self.build_directory()):
+        with working_dir(self.build_directory):
             self.python(setup, '--no-user-cfg', *args, **kwargs)
 
     def _setup_command_available(self, command):
@@ -377,4 +378,4 @@ class PythonPackage(PackageBase):
                 self.python('-c', 'import {0}'.format(module))
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

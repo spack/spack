@@ -39,11 +39,12 @@ class Astyle(MakefilePackage):
 
     parallel = False
 
+    @property
     def build_directory(self):
         return join_path(self.stage.source_path, 'build', self.compiler.name)
 
     def edit(self, spec, prefix):
-        makefile = join_path(self.build_directory(), 'Makefile')
+        makefile = join_path(self.build_directory, 'Makefile')
         filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
         # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
         if sys.platform == 'darwin':

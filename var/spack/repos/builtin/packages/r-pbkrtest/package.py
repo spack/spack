@@ -37,7 +37,10 @@ class RPbkrtest(RPackage):
     list_url = "https://cran.r-project.org/src/contrib/Archive/pbkrtest"
 
     version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
+    version('0.4-4', '5e54b1b1b35413dd1d24ef15735ec645')
 
-    depends_on('r-lme4', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r@3.2.3:')
+
+    depends_on('r-lme4@1.1.10:', type=('build', 'run'))
+    depends_on('r-matrix@1.2.3:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

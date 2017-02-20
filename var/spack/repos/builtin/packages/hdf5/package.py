@@ -70,7 +70,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    @AutotoolsPackage.precondition('configure')
+    @run_before('configure')
     def validate(self):
         """
         Checks if incompatible variants have been activated at the same time
@@ -126,7 +126,7 @@ class Hdf5(AutotoolsPackage):
         if '+pic' in spec:
             extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
             extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('FCFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -170,7 +170,7 @@ class Hdf5(AutotoolsPackage):
                     arg for arg in m.group(1).split(' ') if arg != '-l'),
                 'libtool')
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
