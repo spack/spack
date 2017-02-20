@@ -29,14 +29,14 @@ class PyPytestHttpbin(PythonPackage):
     """Easily test your HTTP library against a local copy of httpbin"""
 
     homepage = "https://github.com/kevin1024/pytest-httpbin"
+    url      = "https://pypi.io/packages/source/p/pytest-httpbin/pytest-httpbin-0.2.3.tar.gz"
 
-    version('0.2.3', 'b8ebb8e2fbac1a445fb5d044f7fec556',
-            url='https://pypi.python.org/packages/12/12/5430600cb9417080b561237761ff2dffde520b664cc352433d2e57051222/pytest-httpbin-0.2.3.tar.gz')
+    version('0.2.3', 'b8ebb8e2fbac1a445fb5d044f7fec556')
 
     extends('python', ignore=r'bin/flask')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest',     type=('build', 'run'))
+    # depends_on('py-pytest',     type=('build', 'run'))
     depends_on('py-flask',      type=('build', 'run'))
     depends_on('py-decorator',  type=('build', 'run'))
     depends_on('py-httpbin',    type=('build', 'run'))

@@ -29,7 +29,7 @@ class PyItsdangerous(PythonPackage):
     """Various helpers to pass trusted data to untrusted environments."""
 
     homepage = "http://github.com/mitsuhiko/itsdangerous"
-    url = "https://pypi.io/packages/source/i/itsdangerous/itsdangerous-1.5.7.tar.gz"
+    url = "https://pypi.io/packages/source/i/itsdangerous/itsdangerous-0.24.tar.gz"
 
     version('0.24', 'a3d55aa79369aef5345c036a8a26307f')
 

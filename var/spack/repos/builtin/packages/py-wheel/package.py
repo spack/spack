@@ -29,10 +29,9 @@ class PyWheel(PythonPackage):
     """A built-package format for Python."""
 
     homepage = "https://pypi.python.org/pypi/wheel"
+    url      = "https://pypi.io/packages/source/w/wheel/wheel-0.30.0a0.tar.gz"
 
-    version('0.30.0', 'aa1145d48e4da2f9415eac2d51468a83',
-        url='https://pypi.python.org/packages/a7/37/947b4329c4a3c72093b6c8e9b4be8c7f10c32dbb78848d3a234ce01c059d/wheel-0.30.0a0.tar.gz')
-    version('0.26.0', '4cfc6e7e3dc7377d0164914623922a10',
-        url='https://pypi.python.org/packages/source/w/wheel/wheel-0.26.0.tar.gz')
+    version('0.30.0a0', 'aa1145d48e4da2f9415eac2d51468a83')
+    version('0.26.0'  , '4cfc6e7e3dc7377d0164914623922a10')
 
     depends_on('py-setuptools', type='build')

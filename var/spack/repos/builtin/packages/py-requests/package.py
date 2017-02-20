@@ -29,33 +29,16 @@ class PyRequests(PythonPackage):
     """Python HTTP for Humans."""
 
     homepage = "http://python-requests.org"
-    url = "https://pypi.io/packages/source/r/requests/requests-1.25.0.tar.gz"
+    url = "https://pypi.io/packages/source/r/requests/requests-2.13.0.tar.gz"
 
-    version('2.13.0', '94ad79c2e57917aca999308b1fb4cbb4')
+    version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
 
     depends_on('py-setuptools',              type='build')
-    depends_on('py-alabaster@0.7.7:',        type=('build', 'run'))
-    depends_on('py-babel@2.2.0:',            type=('build', 'run'))
-    depends_on('py-coverage@4.0.3:',         type=('build', 'run'))
-    depends_on('py-decorator@4.0.9:',        type=('build', 'run'))
-    depends_on('py-docutils@0.12:',          type=('build', 'run'))
-    depends_on('py-flask@0.10.1:',           type=('build', 'run'))
-    depends_on('py-httpbin@0.4.1:',          type=('build', 'run'))
-    depends_on('py-itsdangerous@0.24:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.8:',             type=('build', 'run'))
-    depends_on('py-markupsafe@0.23:',        type=('build', 'run'))
-    depends_on('py-py@1.4.31:',              type=('build', 'run'))
-    depends_on('py-pygments@2.1.1:',         type=('build', 'run'))
-    depends_on('py-pysocks@1.5.6:',          type=('build', 'run'))
-    depends_on('py-pytest@2.8.7:',           type=('build', 'run'))
-    depends_on('py-pytest-cov@2.2.1:',       type=('build', 'run'))
-    depends_on('py-pytest-httpbin@0.2.0:',   type=('build', 'run'))
-    depends_on('py-pytest-mock@0.11.0:',     type=('build', 'run'))
-    depends_on('py-pytz@2015.7:',            type=('build', 'run'))
-    depends_on('py-six@1.10.0:',             type=('build', 'run'))
-    depends_on('py-snowballstemmer@1.2.1:',  type=('build', 'run'))
-    depends_on('py-sphinx@1.3.5:',           type=('build', 'run'))
-    depends_on('py-sphinx-rtd-theme@0.1.9:', type=('build', 'run'))
-    depends_on('py-werkzeug@0.11.4:',        type=('build', 'run'))
-    depends_on('py-wheel@0.29.0:',           type=('build', 'run'))
+    # from setup.py:
+    # test_requirements = ['pytest>=2.8.0', 'pytest-httpbin'==0.0.7, 'pytest-cov', 'pytest-mock']
+    # needs #1279 and #2869
+    # depends_on('py-pytest@2.8.7:',           type=('build', 'run'))
+    # depends_on('py-pytest-cov@2.2.1:',       type=('build', 'run'))
+    # depends_on('py-pytest-httpbin@0.2.0:',   type=('build', 'run'))
+    # depends_on('py-pytest-mock@0.11.0:',     type=('build', 'run'))
