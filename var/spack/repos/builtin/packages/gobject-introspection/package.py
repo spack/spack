@@ -31,12 +31,14 @@ class GobjectIntrospection(Package):
     library with support for multiple output"""
 
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.48/gobject-introspection-1.48.0.tar.xz"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.49/gobject-introspection-1.49.2.tar.xz"
 
+    version('1.49.2', 'c47a76b05b2d8438089f519922180747')
     version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
+    depends_on("glib@2.49.2:", when="@1.49.2:")
     # version 1.48.0 build fails with glib 2.49.4
-    depends_on("glib@2.48.1")
+    depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("python")
     depends_on("cairo")
     depends_on("bison", type="build")
