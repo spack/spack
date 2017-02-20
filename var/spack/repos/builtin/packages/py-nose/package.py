@@ -30,10 +30,12 @@ class PyNose(PythonPackage):
     making it easier to write, find and run tests."""
 
     homepage = "https://pypi.python.org/pypi/nose"
-    url = "https://pypi.python.org/packages/source/n/nose/nose-1.3.4.tar.gz"
+    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
+    list_url = "https://pypi.python.org/pypi/nose/"
+    list_depth = 2
 
-    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
-    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
     version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
+    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
+    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
 
     depends_on('py-setuptools', type='build')
