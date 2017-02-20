@@ -34,8 +34,5 @@ class PySlepc4py(PythonPackage):
     version('3.7.0', 'c4775e88b0825c7313629c01de60ecb2')
 
     depends_on('py-setuptools', type='build')
-    depends_on('mpi')
-    depends_on('py-mpi4py', type=('build', 'run'))
-    depends_on('petsc+mpi')
     depends_on('py-petsc4py', type=('build', 'run'))
     depends_on('slepc')
