@@ -67,6 +67,14 @@ from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.version import *
 
+# The xmlrpclib module has been renamed to xmlrpc.client in Python 3
+# Spack does not yet support Python 3, but there's no reason not to be
+# future-proof
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
+
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
@@ -678,17 +686,40 @@ class PackageBase(object):
             version = Version(version)
 
         cls = self.__class__
-        if not (hasattr(cls, 'url') or self.version_urls()):
+
+        if hasattr(cls, 'url') or self.version_urls():
+            # If we have a specific URL for this version, don't extrapolate.
+            version_urls = self.version_urls()
+            if version in version_urls:
+                return version_urls[version]
+
+            # If we have no idea, try to substitute the version.
+            return spack.url.substitute_version(
+                self.nearest_url(version), self.url_version(version))
+        elif hasattr(cls, 'pypi') or hasattr(self, 'pypi'):
+            client = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+            releases = client.release_urls(cls.pypi, str(version))
+
+            # Each release may contain dozens of different download URLs
+            # for wheels, tarballs, or zipballs. We don't really have a good
+            # way to tell which version the package needs to download.
+            # Tarballs have the highest preference
+            for release in releases:
+                if release['filename'].endswith('.tar.gz'):
+                    return release['url']
+
+            # Zipballs have a lower preference
+            for release in releases:
+                if release['filename'].endswith('.zip'):
+                    return release['url']
+
+            # Are there any source distributions at all?
+            for release in releases:
+                if release['packagetype']    == 'sdist' or \
+                   release['python_version'] == 'source':
+                    return release['url']
+        else:
             raise NoURLError(cls)
-
-        # If we have a specific URL for this version, don't extrapolate.
-        version_urls = self.version_urls()
-        if version in version_urls:
-            return version_urls[version]
-
-        # If we have no idea, try to substitute the version.
-        return spack.url.substitute_version(
-            self.nearest_url(version), self.url_version(version))
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)

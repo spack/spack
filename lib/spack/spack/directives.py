@@ -218,6 +218,8 @@ def version(ver, checksum=None, **kwargs):
         if checksum:
             kwargs['md5'] = checksum
 
+        kwargs['version'] = ver
+
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[Version(ver)] = kwargs
     return _execute

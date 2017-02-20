@@ -31,13 +31,12 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "http://www.scipy.org/"
-    url = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
+    pypi = 'scipy'
 
-    version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327',
-            url="https://pypi.python.org/packages/22/41/b1538a75309ae4913cdbbdc8d1cc54cae6d37981d2759532c1aa37a41121/scipy-0.18.1.tar.gz")
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327', pypi='scipy')
+    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224', pypi='scipy')
+    version('0.15.1', 'be56cd8e60591d6332aac792a5880110', pypi='scipy')
+    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a', pypi='scipy')
 
     depends_on('python@2.6:2.8,3.2:')
     depends_on('py-nose', type='build')
