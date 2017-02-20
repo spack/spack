@@ -73,6 +73,9 @@ schema = {
                         }
                     }
                 },
+                'template': {
+                    'type': 'string'
+                },
                 'autoload': {
                     '$ref': '#/definitions/dependency_selection'},
                 'prerequisites': {

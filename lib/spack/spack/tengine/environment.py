@@ -23,15 +23,40 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import context
+import textwrap
+
 import jinja2
-from environment import *
+import spack
 
-TemplateNotFound = jinja2.TemplateNotFound
-ContextClass = context.ContextClass
+#: Directories where to search for templates
+template_dirs = spack.template_dirs
 
-__all__ = [
-    'make_environment',
-    'ContextClass',
-    'TemplateNotFound'
-]
+
+def make_environment(dirs=None):
+    if dirs is None:
+        dirs = template_dirs
+    # Loader for the templates
+    loader = jinja2.FileSystemLoader(dirs)
+    # Environment of the template engine
+    env = jinja2.Environment(loader=loader, trim_blocks=True)
+    # Custom filters
+    _set_filters(env)
+    return env
+
+
+def prepend_to_line(text, token):
+    """Prepends a token to each line in text"""
+    return [token + line for line in text]
+
+
+def quote(text):
+    """Quotes each line in text"""
+    return ['"{0}"'.format(line) for line in text]
+
+
+def _set_filters(env):
+    """Sets custom filters to the template engine environment"""
+    env.filters['textwrap'] = textwrap.wrap
+    env.filters['prepend_to_line'] = prepend_to_line
+    env.filters['join'] = '\n'.join
+    env.filters['quote'] = quote

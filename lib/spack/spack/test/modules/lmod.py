@@ -170,6 +170,17 @@ class TestLmod(object):
         }
     }
 
+    configuration_override = {
+        'enable': ['lmod'],
+        'lmod': {
+            'core_compilers': ['clang@3.3'],
+            'hierarchy': ['mpi'],
+            'all': {
+                'template': 'override_from_modules.txt'
+            }
+        }
+    }
+
     def test_file_layout(
             self, compiler, provider, lmod_factory, patch_configuration
     ):
@@ -273,3 +284,25 @@ class TestLmod(object):
             mpileaks_spec.name, mpileaks_spec.version
         )
         assert path.endswith(mpileaks_element)
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_override_template_in_package(
+            self, lmod_modulefile, patch_configuration
+    ):
+        """Tests overriding a template reading an attribute in the package."""
+        patch_configuration(self.configuration_autoload_direct)
+        content = lmod_modulefile('override-module-templates')
+        assert 'Override successful!' in content
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_override_template_in_modules_yaml(
+            self, lmod_modulefile, patch_configuration
+    ):
+        """Tests overriding a template reading `modules.yaml`"""
+        patch_configuration(self.configuration_override)
+
+        content = lmod_modulefile('override-module-templates')
+        assert 'Override even better!' in content
+
+        content = lmod_modulefile('mpileaks arch=x86-linux')
+        assert 'Override even better!' in content

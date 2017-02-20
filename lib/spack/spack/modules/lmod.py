@@ -391,10 +391,7 @@ class LmodContext(common.BaseContext):
 
 class LmodModulefileWriter(common.BaseModuleFileWriter):
     """Writer class for lmod module files."""
-    templates = [
-        # TODO: add more specialized classes here
-        os.path.join('modules', 'modulefile.lua')
-    ]
+    default_template = os.path.join('modules', 'modulefile.lua')
 
 
 class CoreCompilersNotFoundError(KeyError, spack.error.SpackError):

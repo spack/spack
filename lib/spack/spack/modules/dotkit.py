@@ -81,7 +81,4 @@ class DotkitContext(common.BaseContext):
 
 class DotkitModulefileWriter(common.BaseModuleFileWriter):
     """Writer class for dotkit module files."""
-    templates = [
-        # TODO: add more specialized classes here
-        os.path.join('modules', 'modulefile.dk')
-    ]
+    default_template = os.path.join('modules', 'modulefile.dk')

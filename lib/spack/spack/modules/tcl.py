@@ -125,7 +125,4 @@ class TclContext(common.BaseContext):
 
 class TclModulefileWriter(common.BaseModuleFileWriter):
     """Writer class for tcl module files."""
-    templates = [
-        # TODO: add more specialized classes here
-        os.path.join('modules', 'modulefile.tcl')
-    ]
+    default_template = os.path.join('modules', 'modulefile.tcl')

@@ -60,6 +60,7 @@ import spack.build_environment as build_environment
 import spack.environment
 import spack.tengine as tengine
 import spack.util.path
+import spack.error
 
 #: Root folders where the various module files should be written
 roots = spack.config.get_config('config').get('module_roots', {})
@@ -202,6 +203,13 @@ class BaseConfiguration(object):
         # Dictionary of configuration options that should be applied
         # to the spec
         self.conf = merge_config_rules(self.module.configuration, self.spec)
+
+    @property
+    def template(self):
+        """Returns the name of the template to use for the module file
+        or None if not specified in the configuration.
+        """
+        return self.conf.get('template', None)
 
     @property
     def env(self):
@@ -491,10 +499,41 @@ class BaseContext(tengine.ContextClass):
 class BaseModuleFileWriter(object):
     def __init__(self, spec):
         self.spec = spec
-        m = inspect.getmodule(self)
+        # This class is meant to be derives. Get the module of the
+        # actual writer.
+        self.module = inspect.getmodule(self)
+        m = self.module
+        # Create the triplet of configuration/layout/context
         self.conf = m.make_configuration(spec)
         self.layout = m.make_layout(spec)
         self.context = m.make_context(spec)
+        # Check if a default template has been defined,
+        # throw if not found
+        try:
+            self.default_template
+        except AttributeError:
+            msg = '\'{0}\' object has no attribute \'default_template\'\n'
+            msg += 'Did you forget to define it in the class?'
+            name = type(self).__name__
+            raise DefaultTemplateNotDefined(msg.format(name))
+
+    def _get_template(self):
+        """Gets the template that will be rendered for this spec."""
+        # Get templates and put them in the order of importance:
+        # 1. template specified in "modules.yaml"
+        # 2. template specified in a package directly
+        # 3. default template (must be defined, check in __init__)
+        module_system_name = str(self.module.__name__).split('.')[-1]
+        package_attribute = '{0}_template'.format(module_system_name)
+        choices = [
+            self.conf.template,
+            getattr(self.spec.package, package_attribute, None),
+            self.default_template  # This is always defined at this point
+        ]
+        # Filter out false-ish values
+        choices = filter(lambda x: bool(x), choices)
+        # ... and return the first match
+        return choices.pop(0)
 
     def write(self, overwrite=False):
         """Writes the module file.
@@ -529,16 +568,17 @@ class BaseModuleFileWriter(object):
             llnl.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
-        # TODO: decide on a policy for extensions
-        template = None
-        for x in self.templates:
-            try:
-                template = tengine.env.get_template(x)
-                break
-            except tengine.TemplateNotFound:
-                # FIXME: do something
-                # FIXME: in case template is not found
-                pass
+        template_name = self._get_template()
+        try:
+            env = tengine.make_environment()
+            template = env.get_template(template_name)
+        except tengine.TemplateNotFound:
+            # If the template was not found raise an exception with a little
+            # more information
+            msg = 'template \'{0}\' was not found for \'{1}\''
+            name = type(self).__name__
+            msg = msg.format(template_name, name)
+            raise ModulesTemplateNotFoundError(msg)
 
         # Render the template
         text = template.render(self.context.as_dict())
@@ -558,3 +598,17 @@ class BaseModuleFileWriter(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+
+class ModulesError(spack.error.SpackError):
+    """Base error for modules."""
+
+
+class DefaultTemplateNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute 'default_template' has not been specified
+    in the derived classes.
+    """
+
+
+class ModulesTemplateNotFoundError(ModulesError, RuntimeError):
+    """Raised if the template for a module file was not found."""

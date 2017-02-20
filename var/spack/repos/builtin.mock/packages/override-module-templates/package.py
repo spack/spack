@@ -22,16 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack import *
 
-import context
-import jinja2
-from environment import *
 
-TemplateNotFound = jinja2.TemplateNotFound
-ContextClass = context.ContextClass
+class OverrideModuleTemplates(Package):
+    homepage = "http://www.fake-spack-example.org"
+    url      = "http://www.fake-spack-example.org/downloads/fake-1.0.tar.gz"
 
-__all__ = [
-    'make_environment',
-    'ContextClass',
-    'TemplateNotFound'
-]
+    version('1.0', 'foobarbaz')
+
+    dotkit_template = 'override.txt'
+    tcl_template = 'override.txt'
+    lmod_template = 'override.txt'
+
+    def install(self, spec, prefix):
+        pass

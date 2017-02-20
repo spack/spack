@@ -29,6 +29,7 @@ import contextlib
 import cStringIO
 import pytest
 import spack.modules.common
+from spack.util.path import canonicalize_path
 
 
 @pytest.fixture()
@@ -84,3 +85,10 @@ def modulefile_content(filename_dict):
         return content
 
     return _impl
+
+
+@pytest.fixture()
+def update_template_dirs(config, monkeypatch):
+    dirs = spack.config.get_config('config')['template_dirs']
+    dirs = [canonicalize_path(x) for x in dirs]
+    monkeypatch.setattr(spack.tengine.environment, 'template_dirs', dirs)

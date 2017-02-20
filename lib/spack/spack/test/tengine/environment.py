@@ -23,15 +23,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import context
-import jinja2
-from environment import *
+import pytest
+import spack.tengine.environment as environment
+import spack.config
 
-TemplateNotFound = jinja2.TemplateNotFound
-ContextClass = context.ContextClass
+from spack.util.path import canonicalize_path
 
-__all__ = [
-    'make_environment',
-    'ContextClass',
-    'TemplateNotFound'
-]
+
+@pytest.mark.usefixtures('config')
+class TestTengineEnvironment(object):
+
+    def test_template_retrieval(self):
+        """Tests the template retrieval mechanism hooked into config files"""
+        # Check the directories are correct
+        template_dirs = spack.config.get_config('config')['template_dirs']
+        template_dirs = [canonicalize_path(x) for x in template_dirs]
+        assert len(template_dirs) == 3
+
+        env = environment.make_environment(template_dirs)
+
+        # Retrieve a.txt, which resides in the second
+        # template directory specified in the mock configuration
+        template = env.get_template('a.txt')
+        text = template.render({'word': 'world'})
+        assert 'Hello world!' == text
+
+        # Retrieve b.txt, which resides in the third
+        # template directory specified in the mock configuration
+        template = env.get_template('b.txt')
+        text = template.render({'word': 'world'})
+        assert 'Howdy world!' == text

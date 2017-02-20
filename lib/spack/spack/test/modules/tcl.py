@@ -171,6 +171,15 @@ class TestTcl(object):
         }
     }
 
+    configuration_override = {
+        'enable': ['tcl'],
+        'tcl': {
+            'all': {
+                'template': 'override_from_modules.txt'
+            }
+        }
+    }
+
     def test_simple_case(self, tcl_modulefile, patch_configuration):
         patch_configuration(self.configuration_autoload_direct)
         content = tcl_modulefile(mpich_spec_string)
@@ -287,3 +296,25 @@ class TestTcl(object):
         assert len(
             [x for x in content if 'setenv FOOBAR "callpath"' in x]
         ) == 1
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_override_template_in_package(
+            self, tcl_modulefile, patch_configuration
+    ):
+        """Tests overriding a template reading an attribute in the package."""
+        patch_configuration(self.configuration_autoload_direct)
+        content = tcl_modulefile('override-module-templates')
+        assert 'Override successful!' in content
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_override_template_in_modules_yaml(
+            self, tcl_modulefile, patch_configuration
+    ):
+        """Tests overriding a template reading `modules.yaml`"""
+        patch_configuration(self.configuration_override)
+
+        content = tcl_modulefile('override-module-templates')
+        assert 'Override even better!' in content
+
+        content = tcl_modulefile('mpileaks arch=x86-linux')
+        assert 'Override even better!' in content

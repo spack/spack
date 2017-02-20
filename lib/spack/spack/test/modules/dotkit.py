@@ -24,9 +24,11 @@
 ##############################################################################
 
 import functools
+
 import pytest
-import spack.modules.dotkit
 import spack.modules.common
+import spack.modules.dotkit
+import spack.tengine.environment
 
 
 @pytest.fixture()
@@ -68,9 +70,41 @@ class TestDotkit(object):
         }
     }
 
+    configuration_override = {
+        'enable': ['dotkit'],
+        'dotkit': {
+            'all': {
+                'template': 'override_from_modules.txt'
+            }
+        }
+    }
+
     def test_dotkit(self, dotkit_modulefile, patch_configuration):
+        """Tests the generation of a basic dotkit file."""
         patch_configuration(self.configuration_dotkit)
         content = dotkit_modulefile('mpileaks arch=x86-linux')
         assert '#c spack' in content
         assert '#d mpileaks @2.3' in content
         assert len([x for x in content if 'dk_op' in x]) == 2
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_override_template_in_package(
+            self, dotkit_modulefile, patch_configuration
+    ):
+        """Tests overriding a template reading an attribute in the package."""
+        patch_configuration(self.configuration_dotkit)
+        content = dotkit_modulefile('override-module-templates')
+        assert 'Override successful!' in content
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_override_template_in_modules_yaml(
+            self, dotkit_modulefile, patch_configuration
+    ):
+        """Tests overriding a template reading `modules.yaml`"""
+        patch_configuration(self.configuration_override)
+
+        content = dotkit_modulefile('override-module-templates')
+        assert 'Override even better!' in content
+
+        content = dotkit_modulefile('mpileaks arch=x86-linux')
+        assert 'Override even better!' in content
