@@ -56,12 +56,9 @@ class PyScipy(PythonPackage):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
-
-    # FIXME: Is this really necessary?
     # Known not to work with 2.23, 2.25
-    # depends_on('binutils@2.26:', type='build')
+    depends_on('binutils@2.26:', type='build')
+    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
@@ -71,10 +68,6 @@ class PyScipy(PythonPackage):
     # Tests require:
     # TODO: Add a 'test' deptype
     # depends_on('py-nose', type='test')
-
-    def build_args(self, spec, prefix):
-        # Build in parallel
-        return ['-j', str(make_jobs)]
 
     def test(self, spec, prefix):
         # `setup.py test` is not supported.  Use one of the following
