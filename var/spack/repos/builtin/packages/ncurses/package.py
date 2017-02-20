@@ -59,3 +59,4 @@ class Ncurses(AutotoolsPackage):
         ]
         if '+symlinks' in self.spec:
             opts += ["--enable-symlinks"]
+        return opts
