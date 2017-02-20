@@ -88,9 +88,18 @@ class Zoltan(Package):
             config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
             config_args.append('FC={0}'.format(spec['mpi'].mpifc))
 
-            mpi_libs = ' -l'.join(self.get_mpi_libs())
             config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
-            config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
+
+            mpi_libs = self.get_mpi_libs()
+
+            # NOTE: Some external mpi installations may have empty lib
+            # directory (e.g. bg-q). In this case we need to explicitly
+            # pass empty library name.
+            if mpi_libs:
+                mpi_libs = ' -l'.join(mpi_libs)
+                config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
+            else:
+                config_args.append('--with-mpi-libs= ')
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
