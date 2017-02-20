@@ -41,9 +41,10 @@ class Silo(Package):
     variant('silex', default=False,
             description='Builds Silex, a GUI for viewing Silo files')
 
-    # silo uses the obsolete function H5Pset_fapl_mpiposix:
-    depends_on("hdf5 @:1.8.12")
+    depends_on('hdf5')
     depends_on('qt', when='+silex')
+
+    patch('remove-mpiposix.patch', when='@4.8:4.10.2')
 
     def install(self, spec, prefix):
         config_args = [
