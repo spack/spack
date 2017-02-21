@@ -58,6 +58,11 @@ Examples:
 	$ spack info python
 	$ spack info python@2.7.13 
 
+Locate installed packages
+-----
+
+	$ spack locate -i gcc
+	
 Install packages
 ------
 

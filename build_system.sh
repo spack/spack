@@ -11,6 +11,9 @@ spack install jdk 	$cc
 spack install bazel	$cc
 spack install maven	$cc
 spack install lua-jit	$cc
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; spack install intel-parallel-studio@cluster.2016.4 $cc +openmp 
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; spack install intel-parallel-studio@cluster.2015.6 $cc +openmp 
+# rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; spack install intel-parallel-studio@cluster.2017.1 $cc +openmp 
 
 # Tools: git, emacs
 spack install git 	$cc	
