@@ -137,7 +137,6 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
-
     def url_for_version(self, version):
         """
         Handle Boost's weird URLs,
@@ -155,8 +154,8 @@ class Boost(Package):
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang', 
-                    'xlc++':'xlcpp',
-                     'xlc++_r':'xlcpp'}
+                    'xlc++': 'xlcpp',
+                    'xlc++_r': 'xlcpp'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
