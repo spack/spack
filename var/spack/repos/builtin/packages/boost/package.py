@@ -126,8 +126,6 @@ class Boost(Package):
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
-    depends_on('zlib', when='%xl_r' )
-    depends_on('bzip2', when='%xl_r')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
