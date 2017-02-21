@@ -36,7 +36,6 @@ class PyPytestHttpbin(PythonPackage):
     extends('python', ignore=r'bin/flask')
 
     depends_on('py-setuptools', type='build')
-    # depends_on('py-pytest',     type=('build', 'run'))
     depends_on('py-flask',      type=('build', 'run'))
     depends_on('py-decorator',  type=('build', 'run'))
     depends_on('py-httpbin',    type=('build', 'run'))

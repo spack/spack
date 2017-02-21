@@ -36,7 +36,8 @@ class PyRequests(PythonPackage):
 
     depends_on('py-setuptools',              type='build')
     # from setup.py:
-    # test_requirements = ['pytest>=2.8.0', 'pytest-httpbin'==0.0.7, 'pytest-cov', 'pytest-mock']
+    # test_requirements = ['pytest>=2.8.0', 'pytest-httpbin'==0.0.7,
+    #                      'pytest-cov', 'pytest-mock']
     # needs #1279 and #2869
     # depends_on('py-pytest@2.8.7:',           type=('build', 'run'))
     # depends_on('py-pytest-cov@2.2.1:',       type=('build', 'run'))
