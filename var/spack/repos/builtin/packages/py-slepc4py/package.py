@@ -25,21 +25,14 @@
 from spack import *
 
 
-class PyNose(PythonPackage):
-    """nose extends the test loading and running features of unittest,
-    making it easier to write, find and run tests."""
+class PySlepc4py(PythonPackage):
+    """This package provides Python bindings for the SLEPc package.
+    """
+    homepage = "https://pypi.python.org/pypi/slepc4py"
+    url      = "https://pypi.python.org/packages/b4/dd/116fbdf865f6f9eda779c5d31bc5b68f37ef3dd5dbfc3feb4aaba1565560/slepc4py-3.7.0.tar.gz"
 
-    homepage = "https://pypi.python.org/pypi/nose"
-    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
-    list_url = "https://pypi.python.org/pypi/nose/"
-    list_depth = 2
-
-    import_modules = [
-        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
-    ]
-
-    version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
-    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
-    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
+    version('3.7.0', 'c4775e88b0825c7313629c01de60ecb2')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-petsc4py', type=('build', 'run'))
+    depends_on('slepc')

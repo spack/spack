@@ -25,21 +25,14 @@
 from spack import *
 
 
-class PyNose(PythonPackage):
-    """nose extends the test loading and running features of unittest,
-    making it easier to write, find and run tests."""
+class PyPetsc4py(PythonPackage):
+    """This package provides Python bindings for the PETSc package.
+    """
+    homepage = "https://pypi.python.org/pypi/petsc4py"
+    url      = "https://pypi.python.org/packages/b3/d5/84a71e3ccc13bf90b5055d264e5b256d161ae513392d0f28e8a7ac80d15c/petsc4py-3.7.0.tar.gz"
 
-    homepage = "https://pypi.python.org/pypi/nose"
-    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
-    list_url = "https://pypi.python.org/pypi/nose/"
-    list_depth = 2
-
-    import_modules = [
-        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
-    ]
-
-    version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
-    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
-    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
+    version('3.7.0', '816a20040a6a477bd637f397c9fb5b6d')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-mpi4py', type=('build', 'run'))
+    depends_on('petsc+mpi')    

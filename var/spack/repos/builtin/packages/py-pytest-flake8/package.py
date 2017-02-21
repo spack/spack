@@ -25,21 +25,16 @@
 from spack import *
 
 
-class PyNose(PythonPackage):
-    """nose extends the test loading and running features of unittest,
-    making it easier to write, find and run tests."""
+class PyPytestFlake8(PythonPackage):
+    """pytest plugin to check FLAKE8 requirements."""
 
-    homepage = "https://pypi.python.org/pypi/nose"
-    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
-    list_url = "https://pypi.python.org/pypi/nose/"
-    list_depth = 2
+    homepage = "https://github.com/tholo/pytest-flake8"
+    url      = "https://pypi.io/packages/source/p/pytest-flake8/pytest-flake8-0.8.1.tar.gz"
 
-    import_modules = [
-        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
-    ]
-
-    version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
-    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
-    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
+    version('0.8.1', '39b64ebceb2849805975a2ff4ea7e947')
 
     depends_on('py-setuptools', type='build')
+
+    # Install requires:
+    depends_on('py-flake8@3.0:', type=('build', 'run'))
+    depends_on('py-pytest@2.8:', type=('build', 'run'))

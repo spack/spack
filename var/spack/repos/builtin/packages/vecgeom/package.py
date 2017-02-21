@@ -22,24 +22,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import platform
 
 
-class PyNose(PythonPackage):
-    """nose extends the test loading and running features of unittest,
-    making it easier to write, find and run tests."""
+class Vecgeom(CMakePackage):
+    """The vectorized geometry library for particle-detector simulation
+    (toolkits)."""
 
-    homepage = "https://pypi.python.org/pypi/nose"
-    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
-    list_url = "https://pypi.python.org/pypi/nose/"
-    list_depth = 2
+    homepage = "https://gitlab.cern.ch/VecGeom/VecGeom"
 
-    import_modules = [
-        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
-    ]
+    version('0.3.rc', git='https://gitlab.cern.ch/VecGeom/VecGeom.git',
+            tag='v0.3.rc')
 
-    version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
-    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
-    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
+    variant('debug', default=False, description='Build debug version')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('cmake@3.5:', type='build')
+
+    def build_type(self):
+        spec = self.spec
+        if '+debug' in spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        options = [
+            '-DBACKEND=Scalar',
+            '-DGEANT4=OFF',
+            '-DUSOLIDS=ON',
+            '-DUSOLIDS_VECGEOM=ON'
+        ]
+
+        arch = platform.machine()
+        if arch == 'x86_64':
+            options.append('-DVECGEOM_VECTOR=sse4.2')
+        else:
+            options.append('-DVECGEOM_VECTOR=' + arch)
+        return options

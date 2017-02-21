@@ -25,21 +25,21 @@
 from spack import *
 
 
-class PyNose(PythonPackage):
-    """nose extends the test loading and running features of unittest,
-    making it easier to write, find and run tests."""
+class PyPackaging(PythonPackage):
+    """Core utilities for Python packages."""
 
-    homepage = "https://pypi.python.org/pypi/nose"
-    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
-    list_url = "https://pypi.python.org/pypi/nose/"
-    list_depth = 2
+    homepage = "https://github.com/pypa/packaging"
+    url      = "https://pypi.io/packages/source/p/packaging/packaging-16.8.tar.gz"
 
-    import_modules = [
-        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
-    ]
+    version('16.8', '53895cdca04ecff80b54128e475b5d3b')
 
-    version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
-    version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
-    version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
+    # Not needed for the installation, but used at runtime
+    depends_on('py-six',       type='run')
+    depends_on('py-pyparsing', type='run')
 
-    depends_on('py-setuptools', type='build')
+    # Newer versions of setuptools require packaging. Although setuptools is an
+    # optional dependency of packaging, if it is not found, setup.py will
+    # fallback on distutils.core instead. Don't add a setuptools dependency
+    # or we won't be able to bootstrap setuptools.
+
+    # depends_on('py-setuptools', type='build')
