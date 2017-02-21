@@ -53,8 +53,16 @@ class Zoltan(Package):
 
     variant('fortran', default=True, description='Enable Fortran support.')
     variant('mpi', default=True, description='Enable MPI support.')
+    variant('scotch', default=False, description='Build with Scotch.')
+    variant('parmetis', default=False, description='Build with Parmetis.')
 
     depends_on('mpi', when='+mpi')
+
+    depends_on('scotch+shared', when='+scotch+shared')
+    depends_on('scotch~shared', when='+scotch~shared')
+
+    depends_on('parmetis+shared', when='+parmetis+shared')
+    depends_on('parmetis~shared', when='+parmetis~shared')
 
     def url_for_version(self, version):
         return '%s/zoltan_distrib_v%s.tar.gz' % (Zoltan.base_url, version)
@@ -97,6 +105,14 @@ class Zoltan(Package):
                 config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
             else:
                 config_args.append('--with-mpi-libs= ')
+
+        if '+scotch' in spec:
+            config_args.append('--with-scotch-incdir={0}'.format(spec['scotch'].prefix.include))
+            config_args.append('--with-scotch-libdir={0}'.format(spec['scotch'].prefix.lib))
+
+        if '+parmetis' in spec:
+            config_args.append('--with-parmetis-incdir={0}'.format(spec['parmetis'].prefix.include))
+            config_args.append('--with-parmetis-libdir={0}'.format(spec['parmetis'].prefix.lib))
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
