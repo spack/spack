@@ -72,6 +72,7 @@ class Alquimia(CMakePackage):
                 spec['pflotran'].prefix.lib + "/libpflotranchem.a"),
             '-DTPL_PFLOTRAN_INCLUDE_DIRS=%s' % spec['pflotran'].prefix.include,
             '-DTPL_ENABLE_PETSC:BOOL=ON',
+            '-DPETSC_EXECUTABLE_RUNS=ON',
             '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix 
         ])
 

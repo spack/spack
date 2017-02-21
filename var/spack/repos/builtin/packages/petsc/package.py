@@ -66,7 +66,7 @@ class Petsc(Package):
     variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
-    variant('mumps',   default=True,
+    variant('mumps',   default=False,
             description='Activates support for MUMPS (only parallel'
             ' and 32bit indices)')
     variant('superlu-dist', default=True,
