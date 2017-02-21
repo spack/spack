@@ -25,11 +25,15 @@
 
 import collections
 import contextlib
+import inspect
+import os.path
+import yaml
 
 import cStringIO
 import pytest
+import spack
 import spack.modules.common
-from spack.util.path import canonicalize_path
+import spack.util.path
 
 
 @pytest.fixture()
@@ -55,26 +59,24 @@ def filename_dict(file_registry, monkeypatch):
             handle = file_registry[filename]
             file_registry[filename] = handle.getvalue()
             handle.close()
-    # Patch open in te appropriate module
+    # Patch 'open' in the appropriate module
     monkeypatch.setattr(spack.modules.common, 'open', _mock, raising=False)
     return file_registry
 
 
 @pytest.fixture()
-def modulefile_content(filename_dict):
-    """Writes the module file and returns the content as a string.
-
-    :param factory: module file factory
-    :param spec: spec of the module file to be written
-    :return: content of the module file
-    :rtype: str
+def modulefile_content(filename_dict, request):
+    """Returns a function that generates the content of a module file
+    as a list of lines.
     """
 
-    def _impl(factory, spec_str):
+    writer_cls = getattr(request.module, 'writer_cls')
+
+    def _impl(spec_str):
         # Write the module file
         spec = spack.spec.Spec(spec_str)
         spec.concretize()
-        generator = factory(spec)
+        generator = writer_cls(spec)
         generator.write()
 
         # Get its filename
@@ -89,6 +91,64 @@ def modulefile_content(filename_dict):
 
 @pytest.fixture()
 def update_template_dirs(config, monkeypatch):
+    """Mocks the template directories for tests"""
     dirs = spack.config.get_config('config')['template_dirs']
-    dirs = [canonicalize_path(x) for x in dirs]
-    monkeypatch.setattr(spack.tengine.environment, 'template_dirs', dirs)
+    dirs = [spack.util.path.canonicalize_path(x) for x in dirs]
+    monkeypatch.setattr(spack, 'template_dirs', dirs)
+
+
+@pytest.fixture()
+def patch_configuration(monkeypatch, request):
+    """Reads a configuration file from the mock ones prepared for tests
+    and monkeypatches the right classes to hook it in.
+    """
+    # Class of the module file writer
+    writer_cls = getattr(request.module, 'writer_cls')
+    # Module where the module file writer is defined
+    writer_mod = inspect.getmodule(writer_cls)
+    # Key for specific settings relative to this module type
+    writer_key = str(writer_mod.__name__).split('.')[-1]
+    # Root folder for configuration
+    root_for_conf = os.path.join(
+        spack.test_path, 'data', 'modules', writer_key
+    )
+
+    def _impl(filename):
+
+        file = os.path.join(root_for_conf, filename + '.yaml')
+        with open(file) as f:
+            configuration = yaml.load(f)
+
+        monkeypatch.setattr(
+            spack.modules.common,
+            'configuration',
+            configuration
+        )
+        monkeypatch.setattr(
+            writer_mod,
+            'configuration',
+            configuration[writer_key]
+        )
+        monkeypatch.setattr(
+            writer_mod,
+            'configuration_registry',
+            {}
+        )
+    return _impl
+
+
+@pytest.fixture()
+def factory(request):
+    """Function that, given a spec string, returns an instance of the writer
+    and the corresponding spec.
+    """
+
+    # Class of the module file writer
+    writer_cls = getattr(request.module, 'writer_cls')
+
+    def _mock(spec_string):
+        spec = spack.spec.Spec(spec_string)
+        spec.concretize()
+        return writer_cls(spec), spec
+
+    return _mock

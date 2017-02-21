@@ -110,7 +110,7 @@ schema = {
                 {'properties': {
                     'verbose': {
                         'type': 'boolean',
-                        'default': True
+                        'default': False
                     },
                     'hash_length': {
                         'type': 'integer',

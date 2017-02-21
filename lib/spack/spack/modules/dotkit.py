@@ -70,13 +70,6 @@ class DotkitFileLayout(common.BaseFileLayout):
 
 class DotkitContext(common.BaseContext):
     """Context class for dotkit module files."""
-    fields = [
-        'category',
-        'short_description',
-        'long_description',
-        'autoload',
-        'environment_modifications'
-    ]
 
 
 class DotkitModulefileWriter(common.BaseModuleFileWriter):

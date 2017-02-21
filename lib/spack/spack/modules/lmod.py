@@ -30,6 +30,7 @@ import spack.spec
 import spack.error
 import itertools
 import collections
+import spack.tengine as tengine
 
 from . import common
 
@@ -303,30 +304,13 @@ class LmodFileLayout(common.BaseFileLayout):
 
 class LmodContext(common.BaseContext):
     """Context class for lmod module files."""
-    fields = [
-        'timestamp',
-        'spec',
-        'short_description',
-        'long_description',
-        'autoload',
-        'name_part',
-        'version_part',
-        'environment_modifications',
-        'has_modulepath_modifications',
-        'has_conditional_modifications',
-        'unlocked_paths',
-        'conditionally_unlocked_paths',
-        'provides',
-        'missing',
-        'verbose'
-    ]
 
-    @property
+    @tengine.context_property
     def has_modulepath_modifications(self):
         """True if this module modifies MODULEPATH, False otherwise."""
         return bool(self.conf.provides)
 
-    @property
+    @tengine.context_property
     def has_conditional_modifications(self):
         """True if this module modifies MODULEPATH conditionally to the
         presence of other services in the environment, False otherwise.
@@ -338,34 +322,34 @@ class LmodContext(common.BaseContext):
         has_modifications = self.has_modulepath_modifications
         return has_modifications and not provide_compiler_only
 
-    @property
+    @tengine.context_property
     def name_part(self):
         """Name of this provider."""
         return self.spec.name
 
-    @property
+    @tengine.context_property
     def version_part(self):
         """Version of this provider."""
         s = self.spec
         return '-'.join([str(s.version), s.dag_hash(length=7)])
 
-    @property
+    @tengine.context_property
     def provides(self):
         """Returns the dictionary of provided services."""
         return self.conf.provides
 
-    @property
+    @tengine.context_property
     def missing(self):
         """Returns a list of missing services."""
         return self.conf.missing
 
-    @property
+    @tengine.context_property
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
         l = make_layout(self.spec)
         return [os.path.join(*parts) for parts in l.unlocked_paths[None]]
 
-    @property
+    @tengine.context_property
     def conditionally_unlocked_paths(self):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).

@@ -27,6 +27,7 @@ non-hierarchical modules.
 """
 import os.path
 import string
+import spack.tengine as tengine
 
 import llnl.util.tty as tty
 
@@ -78,24 +79,13 @@ class TclFileLayout(common.BaseFileLayout):
 
 class TclContext(common.BaseContext):
     """Context class for tcl module files."""
-    fields = [
-        'timestamp',
-        'spec',
-        'short_description',
-        'long_description',
-        'autoload',
-        'prerequisites',
-        'environment_modifications',
-        'conflicts',
-        'verbose'
-    ]
 
-    @property
+    @tengine.context_property
     def prerequisites(self):
         """List of modules that needs to be loaded automatically."""
         return self._create_module_list_of('specs_to_prereq')
 
-    @property
+    @tengine.context_property
     def conflicts(self):
         """List of conflicts for the tcl module file."""
         l = []

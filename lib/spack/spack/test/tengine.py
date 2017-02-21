@@ -24,10 +24,65 @@
 ##############################################################################
 
 import pytest
-import spack.tengine.environment as environment
+import spack.tengine as tengine
 import spack.config
 
 from spack.util.path import canonicalize_path
+
+
+class TestContext(object):
+
+    class A(tengine.Context):
+        @tengine.context_property
+        def foo(self):
+            return 1
+
+    class B(tengine.Context):
+        @tengine.context_property
+        def bar(self):
+            return 2
+
+    class C(A, B):
+        @tengine.context_property
+        def foobar(self):
+            return 3
+
+        @tengine.context_property
+        def foo(self):
+            return 10
+
+    def test_to_dict(self):
+        """Tests that all the context properties in a hierarchy are considered
+        when building the context dictionary.
+        """
+
+        # A derives directly from Context
+        a = TestContext.A()
+        d = a.to_dict()
+
+        assert len(d) == 1
+        assert 'foo' in d
+        assert d['foo'] == 1
+
+        # So does B
+        b = TestContext.B()
+        d = b.to_dict()
+
+        assert len(d) == 1
+        assert 'bar' in d
+        assert d['bar'] == 2
+
+        # C derives from both and overrides 'foo'
+        c = TestContext.C()
+        d = c.to_dict()
+
+        assert len(d) == 3
+        for x in ('foo', 'bar', 'foobar'):
+            assert x in d
+
+        assert d['foo'] == 10
+        assert d['bar'] == 2
+        assert d['foobar'] == 3
 
 
 @pytest.mark.usefixtures('config')
@@ -40,7 +95,7 @@ class TestTengineEnvironment(object):
         template_dirs = [canonicalize_path(x) for x in template_dirs]
         assert len(template_dirs) == 3
 
-        env = environment.make_environment(template_dirs)
+        env = tengine.make_environment(template_dirs)
 
         # Retrieve a.txt, which resides in the second
         # template directory specified in the mock configuration
