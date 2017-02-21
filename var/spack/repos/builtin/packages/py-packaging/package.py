@@ -25,18 +25,20 @@
 from spack import *
 
 
-class PyPyparsing(PythonPackage):
-    """A Python Parsing Module."""
-    homepage = "https://pypi.python.org/pypi/pyparsing"
-    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.0.3.tar.gz"
+class PyPackaging(PythonPackage):
+    """Core utilities for Python packages."""
 
-    version('2.1.10', '065908b92904e0d3634eb156f44cc80e')
-    version('2.0.3',  '0fe479be09fc2cf005f753d3acc35939')
+    homepage = "https://github.com/pypa/packaging"
+    url      = "https://pypi.io/packages/source/p/packaging/packaging-16.8.tar.gz"
 
-    patch('setuptools-import.patch', when='@:2.1.10')
+    version('16.8', '53895cdca04ecff80b54128e475b5d3b')
 
-    # Newer versions of setuptools require pyparsing. Although setuptools is an
-    # optional dependency of pyparsing, if it is not found, setup.py will
+    # Not needed for the installation, but used at runtime
+    depends_on('py-six',       type='run')
+    depends_on('py-pyparsing', type='run')
+
+    # Newer versions of setuptools require packaging. Although setuptools is an
+    # optional dependency of packaging, if it is not found, setup.py will
     # fallback on distutils.core instead. Don't add a setuptools dependency
     # or we won't be able to bootstrap setuptools.
 
