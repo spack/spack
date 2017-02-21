@@ -23,32 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-
-from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Daal(IntelInstaller):
-    """Intel Data Analytics Acceleration Library.
+class Log4cxx(AutotoolsPackage):
+    """A C++ port of Log4j"""
 
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    homepage = "https://logging.apache.org/log4cxx/latest_stable/"
+    url      = "http://mirror.netcologne.de/apache.org/logging/log4cxx/0.10.0/apache-log4cxx-0.10.0.tar.gz"
 
-    homepage = "https://software.intel.com/en-us/daal"
+    version('0.10.0', 'b30ffb8da3665178e68940ff7a61084c')
 
-    version('2017.0.098', 'b4eb234de12beff4a5cba4b81ea60673',
-            url="file://%s/l_daal_2017.0.098.tgz" % os.getcwd())
-    version('2016.2.181', 'aad2aa70e5599ebfe6f85b29d8719d46',
-            url="file://%s/l_daal_2016.2.181.tgz" % os.getcwd())
-    version('2016.3.210', 'ad747c0dd97dace4cad03cf2266cad28',
-            url="file://%s/l_daal_2016.3.210.tgz" % os.getcwd())
+    depends_on('libxml2')
+    depends_on('apr-util')
 
-    def install(self, spec, prefix):
+    build_directory = 'spack-build'
 
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
+    # patches from https://aur.archlinux.org/packages/log4cxx/
+    patch('log4cxx-0.10.0-missing_includes.patch')
+    patch('log4cxx-0.10.0-narrowing-fixes-from-upstream.patch')
 
-        daal_dir = os.path.join(self.intel_prefix, "daal")
-        for f in os.listdir(daal_dir):
-            os.symlink(os.path.join(daal_dir, f), os.path.join(self.prefix, f))
+    def configure_args(self):
+        args = ['--disable-static']
+        return args
