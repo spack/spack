@@ -37,8 +37,9 @@ class Mosh(AutotoolsPackage):
 
     version('1.2.6', 'bb4e24795bb135a754558176a981ee9e')
 
-    depends_on('perl')
     depends_on('protobuf')
     depends_on('ncurses')
     depends_on('zlib')
     depends_on('openssl')
+
+    depends_on('perl', type='run')
