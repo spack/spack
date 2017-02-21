@@ -231,7 +231,7 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on('py-foo',        type=('build', 'run'))"""
 
     body = """\
-    def build_args(self):
+    def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete the function
         args = []
