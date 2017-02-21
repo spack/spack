@@ -19,10 +19,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-hbgtlpvzf6geezpiogfm6cpjzudcinzx/gcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-hbgtlpvzf6geezpiogfm6cpjzudcinzx/g++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-hbgtlpvzf6geezpiogfm6cpjzudcinzx/gfortran
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-hbgtlpvzf6geezpiogfm6cpjzudcinzx/gfortran
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/gcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/g++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/gfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/gfortran
     spec: gcc@4.9.4
     target: x86_64
 - compiler:
@@ -32,8 +32,8 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.1-ssdk34xamul6nnlfntb5xacwc2wdu2gz/bin/clang
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.1-ssdk34xamul6nnlfntb5xacwc2wdu2gz/bin/clang++
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.1-y6gvk4ohv2bgvxvlvjnqlhxtgxhewxqb/bin/clang
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.1-y6gvk4ohv2bgvxvlvjnqlhxtgxhewxqb/bin/clang++
       f77: None
       fc: None
     spec: clang@3.9.0
@@ -45,10 +45,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-bqhyrlfdccapmjbhb56sov6ycyio2ysl/bin/gcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-bqhyrlfdccapmjbhb56sov6ycyio2ysl/bin/g++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-bqhyrlfdccapmjbhb56sov6ycyio2ysl/bin/gfortran
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-bqhyrlfdccapmjbhb56sov6ycyio2ysl/bin/gfortran
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/g++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gfortran
     spec: gcc@5.4.0
     target: x86_64
 - compiler:
@@ -58,10 +58,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-zxzsjid7w2ys27baruam3nel4ghgh7x6/bin/gcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-zxzsjid7w2ys27baruam3nel4ghgh7x6/bin/g++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-zxzsjid7w2ys27baruam3nel4ghgh7x6/bin/gfortran
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-zxzsjid7w2ys27baruam3nel4ghgh7x6/bin/gfortran
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/gcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/g++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/gfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/gfortran
     spec: gcc@6.3.0
     target: x86_64
 - compiler:
