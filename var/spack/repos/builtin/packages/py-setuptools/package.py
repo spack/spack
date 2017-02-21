@@ -42,3 +42,12 @@ class PySetuptools(PythonPackage):
     version('18.1',   'f72e87f34fbf07f299f6cb46256a0b06')
     version('16.0',   '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
+
+    depends_on('python@2.6:2.7,3.3:')
+
+    # Previously, setuptools vendored all of its dependencies to allow
+    # easy bootstrapping. As of version 34.0.0, this is no longer done
+    # and the dependencies need to be installed externally.
+    depends_on('py-packaging@16.8:', when='@34.0.0:', type=('build', 'run'))
+    depends_on('py-six@1.6.0:',      when='@34.0.0:', type=('build', 'run'))
+    depends_on('py-appdirs@1.4.0:',  when='@34.0.0:', type=('build', 'run'))
