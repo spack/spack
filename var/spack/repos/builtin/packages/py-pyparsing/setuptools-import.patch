@@ -1,11 +1,15 @@
-diff -Nuar a/setup.py b/setup.py
---- a/setup.py	2017-02-20 18:45:45.000000000 -0600
-+++ b/setup.py	2017-02-20 18:47:59.000000000 -0600
-@@ -1,13 +1,16 @@
+diff --git a/setup.py b/setup.py
+index 82061c6..ff342af 100644
+--- a/setup.py
++++ b/setup.py
+@@ -1,7 +1,13 @@
  #!/usr/bin/env python
  
  """Setup script for the pyparsing module distribution."""
 -from setuptools import setup
++
++# Setuptools depends on pyparsing (via packaging) as of version 34, so allow
++# installing without it to avoid bootstrap problems.
 +try:
 +    from setuptools import setup
 +except ImportError:
@@ -14,9 +18,3 @@ diff -Nuar a/setup.py b/setup.py
  import sys
  import os
  
- from pyparsing import __version__ as pyparsing_version
--    
-+
- modules = ["pyparsing",]
- 
- setup(# Distribution meta-data
