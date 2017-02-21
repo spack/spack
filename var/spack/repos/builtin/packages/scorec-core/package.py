@@ -50,7 +50,7 @@ class ScorecCore(CMakePackage):
     def cmake_args(self):
         options = []
         options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)
-        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx )
+        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
         options.append('-DENABLE_ZOLTAN=ON')
 
         if self.compiler.name == 'xl':
