@@ -41,8 +41,11 @@ class Ncurses(AutotoolsPackage):
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
+    variant('symlinks', default=False,
+            description='Enables symlinks. Needed on AFS filesystem.')
+
     def configure_args(self):
-        return [
+        opts = [
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
@@ -54,3 +57,6 @@ class Ncurses(AutotoolsPackage):
             '--enable-pc-files',
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
+        if '+symlinks' in self.spec:
+            opts += ["--enable-symlinks"]
+        return opts

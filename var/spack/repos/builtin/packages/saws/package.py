@@ -25,28 +25,12 @@
 from spack import *
 
 
-class PyScipy(PythonPackage):
-    """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
-    It provides many user-friendly and efficient numerical routines such
-    as routines for numerical integration and optimization."""
+class Saws(AutotoolsPackage):
+    """The Scientific Application Web server (SAWs) turns any C or C++ 
+       scientific or engineering application code into a webserver, 
+       allowing one to examine (and even modify) the state of the 
+       simulation with any browser from anywhere."""
+    homepage = "https://bitbucket.org/saws/saws/wiki/Home"
 
-    homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-0.18.1.tar.gz"
-
-    version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
-
-    depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
-
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
-    depends_on('blas')
-    depends_on('lapack')
-
-    def build_args(self, spec, prefix):
-        # Build in parallel
-        return ['-j', str(make_jobs)]
+    version('develop', git='https://bitbucket.org/saws/saws.git', tag='master')
+    version('0.1.0', git='https://bitbucket.org/saws/saws.git', tag='v0.1.0')

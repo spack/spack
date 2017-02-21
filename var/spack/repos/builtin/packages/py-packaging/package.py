@@ -25,28 +25,21 @@
 from spack import *
 
 
-class PyScipy(PythonPackage):
-    """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
-    It provides many user-friendly and efficient numerical routines such
-    as routines for numerical integration and optimization."""
+class PyPackaging(PythonPackage):
+    """Core utilities for Python packages."""
 
-    homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-0.18.1.tar.gz"
+    homepage = "https://github.com/pypa/packaging"
+    url      = "https://pypi.io/packages/source/p/packaging/packaging-16.8.tar.gz"
 
-    version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    version('16.8', '53895cdca04ecff80b54128e475b5d3b')
 
-    depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
+    # Not needed for the installation, but used at runtime
+    depends_on('py-six',       type='run')
+    depends_on('py-pyparsing', type='run')
 
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
-    depends_on('blas')
-    depends_on('lapack')
+    # Newer versions of setuptools require packaging. Although setuptools is an
+    # optional dependency of packaging, if it is not found, setup.py will
+    # fallback on distutils.core instead. Don't add a setuptools dependency
+    # or we won't be able to bootstrap setuptools.
 
-    def build_args(self, spec, prefix):
-        # Build in parallel
-        return ['-j', str(make_jobs)]
+    # depends_on('py-setuptools', type='build')

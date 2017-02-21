@@ -22,31 +22,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import platform
 
 
-class PyScipy(PythonPackage):
-    """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
-    It provides many user-friendly and efficient numerical routines such
-    as routines for numerical integration and optimization."""
+class Vecgeom(CMakePackage):
+    """The vectorized geometry library for particle-detector simulation
+    (toolkits)."""
 
-    homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-0.18.1.tar.gz"
+    homepage = "https://gitlab.cern.ch/VecGeom/VecGeom"
 
-    version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    version('0.3.rc', git='https://gitlab.cern.ch/VecGeom/VecGeom.git',
+            tag='v0.3.rc')
 
-    depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
+    variant('debug', default=False, description='Build debug version')
 
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
-    depends_on('blas')
-    depends_on('lapack')
+    depends_on('cmake@3.5:', type='build')
 
-    def build_args(self, spec, prefix):
-        # Build in parallel
-        return ['-j', str(make_jobs)]
+    def build_type(self):
+        spec = self.spec
+        if '+debug' in spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        options = [
+            '-DBACKEND=Scalar',
+            '-DGEANT4=OFF',
+            '-DUSOLIDS=ON',
+            '-DUSOLIDS_VECGEOM=ON'
+        ]
+
+        arch = platform.machine()
+        if arch == 'x86_64':
+            options.append('-DVECGEOM_VECTOR=sse4.2')
+        else:
+            options.append('-DVECGEOM_VECTOR=' + arch)
+        return options

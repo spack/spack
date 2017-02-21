@@ -25,28 +25,16 @@
 from spack import *
 
 
-class PyScipy(PythonPackage):
-    """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
-    It provides many user-friendly and efficient numerical routines such
-    as routines for numerical integration and optimization."""
+class PyPytestFlake8(PythonPackage):
+    """pytest plugin to check FLAKE8 requirements."""
 
-    homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-0.18.1.tar.gz"
+    homepage = "https://github.com/tholo/pytest-flake8"
+    url      = "https://pypi.io/packages/source/p/pytest-flake8/pytest-flake8-0.8.1.tar.gz"
 
-    version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    version('0.8.1', '39b64ebceb2849805975a2ff4ea7e947')
 
-    depends_on('python@2.6:2.8,3.2:')
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
-    depends_on('blas')
-    depends_on('lapack')
-
-    def build_args(self, spec, prefix):
-        # Build in parallel
-        return ['-j', str(make_jobs)]
+    # Install requires:
+    depends_on('py-flake8@3.0:', type=('build', 'run'))
+    depends_on('py-pytest@2.8:', type=('build', 'run'))
