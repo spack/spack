@@ -111,6 +111,18 @@ class PyNumpy(PythonPackage):
                 # Intel MKL build notes:
                 # https://software.intel.com/en-us/articles/numpyscipy-with-intel-mkl
 
+                # FIXME: as of @1.11.2, numpy does not work with separately
+                # specified threading and interface layers. Intel recommends
+                # using mkl_rt instead. Unfortunately, this means that Spack
+                # won't be able to guarantee that the variant of Blas/Lapack
+                # (32/64bit, threaded/serial) in the DAG is the one that is
+                # used. This may lead to a lot of hard-to-debug segmentation
+                # faults on the user's side. Users may also break working
+                # installations by (unconciously) setting environment variables
+                # to switch between different interface and threading layers
+                # dynamically. From this perspective it is no different from
+                # throwing away RPATH's and using LD_LIBRARY_PATH.
+
                 # library_dirs are in compilers_and_libraries_2017/linux/mkl/lib/intel64  # noqa
                 # include_dirs are in compilers_and_libraries_2017/linux/mkl/include      # noqa
                 lapackblas_includes = set()
