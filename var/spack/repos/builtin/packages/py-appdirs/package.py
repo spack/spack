@@ -25,18 +25,19 @@
 from spack import *
 
 
-class PyPyparsing(PythonPackage):
-    """A Python Parsing Module."""
-    homepage = "https://pypi.python.org/pypi/pyparsing"
-    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.0.3.tar.gz"
+class PyAppdirs(PythonPackage):
+    """A small Python module for determining appropriate platform-specific
+    dirs, e.g. a "user data dir"."""
 
-    version('2.1.10', '065908b92904e0d3634eb156f44cc80e')
-    version('2.0.3',  '0fe479be09fc2cf005f753d3acc35939')
+    homepage = "https://github.com/ActiveState/appdirs"
+    url      = "https://pypi.io/packages/source/a/appdirs/appdirs-1.4.0.tar.gz"
 
-    patch('setuptools-import.patch', when='@:2.1.10')
+    version('1.4.0', '1d17b4c9694ab84794e228f28dc3275b')
 
-    # Newer versions of setuptools require pyparsing. Although setuptools is an
-    # optional dependency of pyparsing, if it is not found, setup.py will
+    patch('setuptools-import.patch', when='@:1.4.0')
+
+    # Newer versions of setuptools require appdirs. Although setuptools is an
+    # optional dependency of appdirs, if it is not found, setup.py will
     # fallback on distutils.core instead. Don't add a setuptools dependency
     # or we won't be able to bootstrap setuptools.
 
