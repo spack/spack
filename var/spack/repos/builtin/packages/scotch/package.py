@@ -57,7 +57,7 @@ class Scotch(Package):
     depends_on('zlib', when='+compression')
 
     # NOTE: In cross-compiling environment parallel build
-    # produces weired linker errors.
+    # produces weird linker errors.
     parallel = False
 
     # NOTE: Versions of Scotch up to version 6.0.0 don't include support for
