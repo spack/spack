@@ -144,6 +144,9 @@ class Scotch(Package):
             ldflags.append('-L%s -lz' % (self.spec['zlib'].prefix.lib))
 
         cflags.append('-DCOMMON_PTHREAD')
+
+        # NOTE: bg-q platform needs -lpthread (and not -pthread)
+        # otherwise we get illegal instruction error during runtime
         if self.spec.satisfies('platform=darwin'):
             cflags.append('-DCOMMON_PTHREAD_BARRIER')
             ldflags.append('-lm -pthread')
