@@ -76,6 +76,8 @@ class Binutils(Package):
 
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')
+            configure_args.append('--disable-nls')
+ 
 
         configure(*configure_args)
         make()
