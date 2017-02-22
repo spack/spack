@@ -817,11 +817,10 @@ class ForwardQueryToPackage(object):
 
         3. try to call the default handler
 
-        The first call that produces a value that is not None will stop the
-        chain.
+        The first call that produces a value will stop the chain.
 
         If no call can handle the request or a None value is produced,
-        then AttributeError is raised
+        then AttributeError is raised.
         """
         pkg = instance.package
         try:
@@ -873,7 +872,7 @@ class ForwardQueryToPackage(object):
 
     def __set__(self, instance, value):
         cls_name = type(instance).__name__
-        msg = '\'{0}\' object attribute \'{1}\' is read-only'
+        msg = "'{0}' object attribute '{1}' is read-only"
         raise AttributeError(msg.format(cls_name, self.attribute_name))
 
 
