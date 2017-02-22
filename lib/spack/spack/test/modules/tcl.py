@@ -225,3 +225,16 @@ class TestTcl(object):
 
         content = modulefile_content('mpileaks arch=x86-linux')
         assert 'Override even better!' in content
+
+    @pytest.mark.usefixtures('update_template_dirs')
+    def test_extend_context(
+            self, modulefile_content, patch_configuration
+    ):
+        """Tests using a package defined context"""
+        patch_configuration('autoload_direct')
+        content = modulefile_content('override-context-templates')
+
+        assert 'puts stderr "sentence from package"' in content
+
+        short_description = 'module-whatis "This package updates the context for TCL modulefiles."'  # NOQA: ignore=E501
+        assert short_description in content
