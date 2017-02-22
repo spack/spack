@@ -33,7 +33,7 @@ class Samrai(Package):
        (SAMR) technology in large-scale parallel application development.
 
     """
-    homepage = "https://computation.llnl.gov/projects/samrai/"
+    homepage = "https://computation.llnl.gov/projects/samrai"
     url      = "https://computation.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
 
@@ -51,6 +51,11 @@ class Samrai(Package):
     version('3.3.2-beta', 'e598a085dab979498fcb6c110c4dd26c')
     version('2.4.4',      '04fb048ed0efe7c531ac10c81cc5f6ac')
 
+    # Debug mode reduces optimization, includes assertions, debug symbols
+    # and more print statements
+    variant('debug', default=False,
+            description='Compile with reduced optimization and debugging on')
+
     depends_on('mpi')
     depends_on('zlib')
     depends_on('hdf5+mpi')
@@ -61,21 +66,30 @@ class Samrai(Package):
     patch('no-tool-build.patch', when='%gcc')
 
     def install(self, spec, prefix):
-        configure(
-            "--prefix=%s" % prefix,
-            "--with-CXX=%s" % spec['mpi'].mpicxx,
-            "--with-CC=%s" % spec['mpi'].mpicc,
-            "--with-F77=%s" % spec['mpi'].mpifc,
-            "--with-M4=%s" % spec['m4'].prefix,
-            "--with-hdf5=%s" % spec['hdf5'].prefix,
-            "--with-boost=%s" % spec['boost'].prefix,
-            "--with-zlib=%s" % spec['zlib'].prefix,
-            "--without-blas",
-            "--without-lapack",
-            "--with-hypre=no",
-            "--with-petsc=no",
-            "--enable-opt",
-            "--disable-debug")
+        options = []
+        options.extend([
+            '--prefix=%s' % prefix,
+            '--with-CXX=%s' % spec['mpi'].mpicxx,
+            '--with-CC=%s' % spec['mpi'].mpicc,
+            '--with-F77=%s' % spec['mpi'].mpifc,
+            '--with-M4=%s' % spec['m4'].prefix,
+            '--with-hdf5=%s' % spec['hdf5'].prefix,
+            '--with-boost=%s' % spec['boost'].prefix,
+            '--with-zlib=%s' % spec['zlib'].prefix,
+            '--without-blas',
+            '--without-lapack',
+            '--with-hypre=no',
+            '--with-petsc=no'])
 
+        if '+debug' in spec:
+            options.extend([
+                '--disable-opt',
+                '--enable-debug'])
+        else:
+            options.extend([
+                '--enable-opt',
+                '--disable-debug'])
+
+        configure(options)
         make()
         make("install")
