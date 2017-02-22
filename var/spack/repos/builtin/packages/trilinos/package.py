@@ -47,7 +47,7 @@ class Trilinos(CMakePackage):
     base_url = "https://github.com/trilinos/Trilinos/archive"
 
     version('xsdk-0.2.0',
-            git='https://github.com/trilinos/Trilinos.git', tag='develop')
+            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0-rc1')
     version('develop',
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
@@ -129,11 +129,11 @@ class Trilinos(CMakePackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
-    patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
+    patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
 
     # check that the combination of variants makes sense
     def variants_check(self):
-        if '+superlu-dist' in self.spec and self.spec.satisfies('@:11.4.3'):
+        if '+superlu-dist' in self.spec and self.spec.satisfies('@11.14.1:11.14.3'):
             # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
             # deprecated SuperLUDist v3.3 together with an Amesos patch is
             # working.

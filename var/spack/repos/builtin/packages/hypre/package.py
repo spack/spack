@@ -36,7 +36,7 @@ class Hypre(Package):
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
     version('develop', git='https://github.com/LLNL/hypre', tag='master')
-    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='master')    
+    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='xsdk-0.2.0-rc1')    
     version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')

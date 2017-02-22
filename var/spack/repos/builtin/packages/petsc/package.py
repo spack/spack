@@ -37,7 +37,7 @@ class Petsc(Package):
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
-    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='master')
+    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
     version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
             commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
 

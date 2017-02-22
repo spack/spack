@@ -31,7 +31,7 @@ class Alquimia(CMakePackage):
 
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
 
-    version('xsdk-0.2.0', git='https://github.com/ghammond86/alquimia-dev.git')
+    version('xsdk-0.2.0', git='https://github.com/ghammond86/alquimia-dev.git', tag='xsdk-0.2.0-rc1')
     version('develop', git='https://github.com/ghammond86/alquimia-dev.git')    
 
     variant('shared', default=True,

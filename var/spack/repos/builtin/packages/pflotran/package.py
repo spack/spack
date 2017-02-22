@@ -34,7 +34,7 @@ class Pflotran(AutotoolsPackage):
     homepage = "http://www.pflotran.org"
 
     version('develop', hg='https://bitbucket.org/pflotran/pflotran-xsdk')
-    version('xsdk-0.2.0', hg='https://bitbucket.org/pflotran/pflotran-xsdk')
+    version('xsdk-0.2.0', hg='https://bitbucket.org/pflotran/pflotran-xsdk', tag='xsdk-0.2.0rc1')
     version('0.1.0', hg='https://bitbucket.org/pflotran/pflotran-xsdk',
             commmit='4734cf5e606b')    
 
