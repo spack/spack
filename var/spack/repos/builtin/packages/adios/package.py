@@ -24,6 +24,8 @@
 ##############################################################################
 
 from spack import *
+from spack import architecture
+import os, subprocess
 
 
 class Adios(Package):
@@ -78,6 +80,12 @@ class Adios(Package):
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/LLNL/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
+    patch('adios_python.patch', when='@1:+fortran')
+
+    def get_arch(self):
+        arch = architecture.Arch()
+        arch.platform = architecture.platform()
+        return str(arch.platform.target('default_target'))
 
     def validate(self, spec):
         """
@@ -124,6 +132,17 @@ class Adios(Package):
 
         sh = which('sh')
         sh('./autogen.sh')
+
+        if self.get_arch() == 'ppc64le':
+            ## update the config.sub/guess files
+            with working_dir("config"):
+                # get new config.guess and config.sub files
+                print 'Backing up existing config.[sub|guess] files\n'
+                subprocess.call("mv config.sub config.sub.orig", shell=True)
+                subprocess.call("mv config.guess config.guess.orig", shell=True)
+                print 'Downloading lastest config.[sub|guess] files\n'
+                subprocess.call("wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'", shell=True)
+                subprocess.call("wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'", shell=True)
 
         configure("--prefix=%s" % prefix,
                   *extra_args)
