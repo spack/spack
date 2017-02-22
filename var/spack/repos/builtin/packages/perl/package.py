@@ -31,7 +31,7 @@
 from spack import *
 
 
-class Perl(Package):  # Perl does not use Autotools, it should subclass Package
+class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
     homepage = "http://www.perl.org"
