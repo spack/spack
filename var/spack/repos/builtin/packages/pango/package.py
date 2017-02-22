@@ -49,7 +49,6 @@ class Pango(AutotoolsPackage):
     depends_on("libxft", when='+X')
     depends_on("glib")
     depends_on('gobject-introspection')
-    depends_on('python')
 
     def configure_args(self):
         args = []

@@ -39,7 +39,6 @@ class Atk(AutotoolsPackage):
     depends_on('glib')
     depends_on('pkg-config', type='build')
     depends_on('gobject-introspection')
-    depends_on('python')
 
     def url_for_version(self, version):
         """Handle atk's version-based custom URLs."""
