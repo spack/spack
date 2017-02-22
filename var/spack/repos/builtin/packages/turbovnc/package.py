@@ -51,6 +51,10 @@ class Turbovnc(Package):
     depends_on("pam")
     depends_on("libx11")
     depends_on("libxext")
+    depends_on('libxkbfile')
+    depends_on('xkeyboard-config')
+    depends_on('xkbcomp', type="run")
+    depends_on('xkbdata', type='build')
 
     def url_for_version(self, version):
         """Handle TurboVNC's version-based custom URLs."""
@@ -87,6 +91,7 @@ class Turbovnc(Package):
             feature_args.append(
                 '-DTVNC_BUILDNATIVE=%s' % feature_to_bool('+java'))
         feature_args.append('-DCMAKE_VERBOSE_MAKEFILE=ON')
+        feature_args.append('-DXKB_BASE_DIRECTORY:PATH='+spec['xkbdata'].prefix+'/share/X11/xkb')
         feature_args.extend(std_cmake_args)
         cmake('.', *feature_args)
 
