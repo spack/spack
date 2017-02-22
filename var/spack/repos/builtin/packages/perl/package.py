@@ -54,8 +54,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     resource(
         name="cpanm",
-        url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA"
-            "/App-cpanminus-1.7042.tar.gz",
+        url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
         md5="e87f55fbcb3c13a4754500c18e89219f",
         destination="cpanm",
         placement="cpanm"
