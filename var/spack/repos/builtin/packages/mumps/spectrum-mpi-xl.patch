@@ -1,0 +1,75 @@
+diff -Naur MUMPS_5.0.1/Makefile MUMPS_5.0.1-patched/MUMPS_5.0.1/Makefile
+--- ./Makefile	2015-07-23 13:08:29.000000000 -0400
++++ ./Makefile	2016-12-05 14:08:30.788638382 -0500
+@@ -62,7 +62,7 @@
+ $(libdir)/libpord$(PLAT)$(LIBEXT):
+ 	if [ "$(LPORDDIR)" != "" ] ; then \
+ 	  cd $(LPORDDIR); \
+-	  $(MAKE) CC="$(CC)" CFLAGS="$(OPTC)" AR="$(AR)" RANLIB="$(RANLIB)" OUTC="$(OUTC)" LIBEXT=$(LIBEXT); \
++	  $(MAKE) CC="$(CC)" CFLAGS="$(OPTC)" SAR="$(SAR)" RANLIB="$(RANLIB)" OUTC="$(OUTC)" LIBEXT=$(LIBEXT); \
+ 	fi;
+ 	if [ "$(LPORDDIR)" != "" ] ; then \
+ 	  cp $(LPORDDIR)/libpord$(LIBEXT) $@; \
+diff -Naur MUMPS_5.0.1/PORD/lib/Makefile MUMPS_5.0.1-patched/PORD/lib/MUMPS_5.0.1/Makefile
+--- ./PORD/lib/Makefile	2015-07-23 13:08:29.000000000 -0400
++++ ./PORD/lib/Makefile	2016-12-05 11:26:24.785317467 -0500
+@@ -25,7 +25,7 @@
+ 	$(CC) $(COPTIONS) -c $*.c $(OUTC)$*.o
+ 
+ libpord$(LIBEXT):$(OBJS)
+-	$(AR)$@ $(OBJS)
++	$(SAR)$@ $(OBJS)
+ 	$(RANLIB) $@
+ 
+ clean:
+diff -Naur MUMPS_5.0.1/examples/Makefile MUMPS_5.0.1-patched/examples/Makefile
+--- ./examples/Makefile	2015-07-23 13:08:32.000000000 -0400
++++ ./examples/Makefile	2016-12-05 14:36:10.692857906 -0500
+@@ -25,37 +25,30 @@
+ 
+ LIBSMUMPS = $(libdir)/libsmumps$(PLAT)$(LIBEXT) $(LIBMUMPS_COMMON)
+ 
+-ssimpletest:  $(LIBSMUMPS)  $$@.o
+-	$(FL) -o $@ $(OPTL) ssimpletest.o  $(LIBSMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
++ssimpletest:  $(LIBSMUMPS)  $$@.F
++	$(FC) -o $@ $(OPTF) $(INCS) -I. -I$(topdir)/include ssimpletest.F  $(LIBSMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+ 
+ 
+ LIBDMUMPS = $(libdir)/libdmumps$(PLAT)$(LIBEXT) $(LIBMUMPS_COMMON)
+ 
+-dsimpletest: $(LIBDMUMPS)  $$@.o 
+-	$(FL) -o $@ $(OPTL) dsimpletest.o  $(LIBDMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
++dsimpletest: $(LIBDMUMPS)  $$@.F 
++	$(FC) -o $@ $(OPTF) $(INCS) -I. -I$(topdir)/include dsimpletest.F  $(LIBDMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+ 
+ 
+ LIBCMUMPS = $(libdir)/libcmumps$(PLAT)$(LIBEXT) $(LIBMUMPS_COMMON)
+ 
+-csimpletest: $(LIBCMUMPS)  $$@.o
+-	$(FL) -o $@ $(OPTL) csimpletest.o  $(LIBCMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
++csimpletest: $(LIBCMUMPS)  $$@.F
++	$(FC) -o $@ $(OPTF) $(INCS) -I. -I$(topdir)/include csimpletest.F  $(LIBCMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+ 
+ 
+ LIBZMUMPS = $(libdir)/libzmumps$(PLAT)$(LIBEXT) $(LIBMUMPS_COMMON)
+ 
+-zsimpletest: $(LIBZMUMPS)  $$@.o
+-	$(FL) -o $@ $(OPTL) zsimpletest.o  $(LIBZMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
++zsimpletest: $(LIBZMUMPS)  $$@.F
++	$(FC) -o $@ $(OPTF) $(INCS) -I. -I$(topdir)/include zsimpletest.F  $(LIBZMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+ 
+ 
+-c_example:	$(LIBDMUMPS) $$@.o
+-	$(FL) -o $@ $(OPTL) $@.o $(LIBDMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+-
+-
+-.SUFFIXES: .c .F .o
+-.F.o:
+-	$(FC) $(OPTF) $(INCS) -I. -I$(topdir)/include -c $*.F $(OUTF)$*.o
+-.c.o:
+-	$(CC) $(OPTC) $(INCS) $(CDEFS) -I. -I$(topdir)/include -I$(topdir)/src -c $*.c $(OUTC)$*.o
++c_example:	$(LIBDMUMPS) $$@.c
++	$(CC) -o $@ $(OPTC) $(INCS) -I. -I$(topdir)/include c_example.c $(LIBDMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+ 
+ 
+ $(libdir)/libsmumps$(PLAT)$(LIBEXT):
