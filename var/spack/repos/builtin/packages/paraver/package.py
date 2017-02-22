@@ -37,6 +37,7 @@ class Paraver(Package):
     # NOTE: Paraver provides only latest version for download.
     #       Don't keep/add older versions.
     version('4.6.3', '7940a2651f56712c4e8a21138b4bf16c')
+    version('4.6.2', '3f5b3e207d98b2c44101f1ff5685aa55')
 
     depends_on("boost")
     # depends_on("extrae")
