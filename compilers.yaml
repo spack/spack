@@ -67,8 +67,7 @@ compilers:
 - compiler:
     environment: {}
     extra_rpaths: []
-    modules:
-      - icc/15.0 
+    modules: []
     operating_system: centos7
     paths:
       cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/icc
@@ -76,14 +75,13 @@ compilers:
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/ifort
       fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/ifort
     flags: {}
-    spec: intel@15.0.2
+    spec: intel@15.0.6
     target: x86_64
 - compiler:
     environment: {}
     flags: {}
     extra_rpaths: []
-    modules:
-      - icc/16.0 
+    modules: []
     operating_system: centos7
     paths:
       cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/icc
@@ -91,4 +89,17 @@ compilers:
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/ifort
       fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/ifort
     spec: intel@16.0.4
+    target: x86_64
+- compiler:
+    environment: {}
+    flags: {}
+    extra_rpaths: []
+    modules: []
+    operating_system: centos7
+    paths:
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/ifort
+    spec: intel@17.0.1
     target: x86_64
