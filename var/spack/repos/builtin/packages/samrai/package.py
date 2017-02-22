@@ -51,11 +51,11 @@ class Samrai(Package):
     version('3.3.2-beta', 'e598a085dab979498fcb6c110c4dd26c')
     version('2.4.4',      '04fb048ed0efe7c531ac10c81cc5f6ac')
 
-    depends_on("mpi")
-    depends_on("zlib")
-    depends_on("hdf5+mpi")
-    depends_on("boost")
-    depends_on("m4")
+    depends_on('mpi')
+    depends_on('zlib')
+    depends_on('hdf5+mpi')
+    depends_on('boost')
+    depends_on('m4', type='build')
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
@@ -74,7 +74,7 @@ class Samrai(Package):
             "--without-lapack",
             "--with-hypre=no",
             "--with-petsc=no",
-            "--enable-opt=-O3",
+            "--enable-opt",
             "--disable-debug")
 
         make()
