@@ -133,6 +133,10 @@ class Boost(Package):
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
     patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
 
+    # Patch fix for IBM XL compiler
+    patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
+    patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
+
     def url_for_version(self, version):
         """
         Handle Boost's weird URLs,
@@ -149,7 +153,9 @@ class Boost(Package):
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
-                    'clang++': 'clang'}
+                    'clang++': 'clang', 
+                    'xlc++': 'xlcpp',
+                    'xlc++_r': 'xlcpp'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
