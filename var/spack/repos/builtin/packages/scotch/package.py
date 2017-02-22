@@ -56,6 +56,10 @@ class Scotch(Package):
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
 
+    # NOTE: In cross-compiling environment parallel build
+    # produces weird linker errors.
+    parallel = False
+
     # NOTE: Versions of Scotch up to version 6.0.0 don't include support for
     # building with 'esmumps' in their default packages.  In order to enable
     # support for this feature, we must grab the 'esmumps' enabled archives
@@ -140,9 +144,14 @@ class Scotch(Package):
             ldflags.append('-L%s -lz' % (self.spec['zlib'].prefix.lib))
 
         cflags.append('-DCOMMON_PTHREAD')
+
+        # NOTE: bg-q platform needs -lpthread (and not -pthread)
+        # otherwise we get illegal instruction error during runtime
         if self.spec.satisfies('platform=darwin'):
             cflags.append('-DCOMMON_PTHREAD_BARRIER')
             ldflags.append('-lm -pthread')
+        elif self.spec.satisfies('platform=bgq'):
+            ldflags.append('-lm -lrt -lpthread')
         else:
             ldflags.append('-lm -lrt -pthread')
 
