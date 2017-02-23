@@ -25,6 +25,7 @@
 import re
 
 from spack.architecture import OperatingSystem
+from spack.build_environment import get_modulecmd
 from spack.util.executable import *
 import spack.spec
 import spack.version
@@ -41,13 +42,12 @@ class Cnl(OperatingSystem):
     """
 
     def detect_crayos_version(self):
-        modulecmd = which("modulecmd")
-        modulecmd.add_default_arg("python")
-        output = modulecmd("avail", "PrgEnv-intel", output=str, error=str)
-        matches = re.findall(r'PrgEnv-intel/(\d+).\d+.\d+', output)
+        modulecmd = get_modulecmd()
+        output = modulecmd("avail", "PrgEnv-gnu", output=str, error=str)
+        matches = re.findall(r'PrgEnv-gnu/(\d+).\d+.\d+', output)
         version_set = set(matches)
         recent_version = max(version_set)
-        return spack.version.Version(recent_version)
+        return recent_version
 
     def __init__(self):
         name = 'cnl'
@@ -55,7 +55,7 @@ class Cnl(OperatingSystem):
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
-        return self.name + str(self.version)
+        return self.name + self.version
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()
@@ -73,8 +73,7 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = which('modulecmd')
-            modulecmd.add_default_arg('python')
+            modulecmd = get_modulecmd()
 
             output = modulecmd(
                 'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
