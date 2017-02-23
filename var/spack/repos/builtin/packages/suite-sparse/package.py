@@ -35,7 +35,7 @@ class SuiteSparse(Package):
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    variant('tbb', default=True, description='Build with Intel TBB')
+    variant('tbb', default=False, description='Build with Intel TBB')
     variant('pic', default=True, description='Build position independent code (required to link with shared libraries)')
 
     depends_on('blas')
