@@ -77,7 +77,10 @@ class SuiteSparse(Package):
             'NVCCFLAGS     =',
         ])
         if '+pic' in spec:
-            make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+            make_args.extend([
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'FFLAGS={0}'.format(self.compiler.pic_flag)
+            ])
 
         if '%xl' in spec or '%xl_r' in spec:
             make_args.extend(['CFLAGS+=-DBLAS_NO_UNDERSCORE'])
