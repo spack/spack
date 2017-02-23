@@ -29,7 +29,7 @@ class PyPysocks(PythonPackage):
     """A Python SOCKS client module."""
 
     homepage = "https://github.com/Anorov/PySocks"
-    url      = "https://pypi.io/packages/source/s/socks/socks-1.5.7.tar.gz"
+    url      = "https://pypi.io/packages/source/s/socks/socks-1.6.6.tar.gz"
 
     version('1.6.6', '571f4c23982fa86bf0e7a441f1b6c881')
     version('1.5.7', '68f4ad7a8d4fa725656ae3e9dd142d29')
