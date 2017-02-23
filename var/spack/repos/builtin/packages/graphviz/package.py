@@ -90,6 +90,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('python@2:2.8', when='+python')
 
     def configure_args(self):
+        spec = self.spec
         options = []
 
         # These language bindings have been tested, we know they work.
