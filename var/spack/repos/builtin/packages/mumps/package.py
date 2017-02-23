@@ -129,7 +129,7 @@ class Mumps(Package):
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
-        if '+idx64' in self.spec:
+        if '+int64' in self.spec:
             if self.compiler.name == "xl" or self.compiler.name == "xl_r":
                 makefile_conf.extend(
                     ['OPTF    = -O3',
