@@ -25,34 +25,35 @@
 from spack import *
 
 
-class Jasper(AutotoolsPackage):
-    """Library for manipulating JPEG-2000 images"""
+class ScorecCore(CMakePackage):
+    """The SCOREC Core is a set of C/C++ libraries for unstructured mesh
+    simulations on supercomputers.
+    """
 
-    homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
-    url = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip"
+    homepage = 'https://www.scorec.rpi.edu/'
+    url = 'https://github.com/SCOREC/core.git'
 
-    version('1.900.1', 'a342b2b4495b3e1394e161eb5d85d754')
+    version('develop', git=url)
 
-    variant('shared', default=True,
-            description='Builds shared versions of the libraries')
-    variant('debug', default=False,
-            description='Builds debug versions of the libraries')
+    depends_on('mpi')
+    depends_on('zoltan')
+    depends_on('cmake@3.0:', type='build')
 
-    depends_on('libjpeg-turbo')
+    @property
+    def std_cmake_args(self):
+        # Default cmake RPATH options causes build failure on bg-q
+        if self.spec.satisfies('platform=bgq'):
+            return ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(self.prefix)]
+        else:
+            return self._std_args(self)
 
-    # Fixes a bug (still in upstream as of v.1.900.1) where an assertion fails
-    # when certain JPEG-2000 files with an alpha channel are processed
-    # see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=469786
-    patch('fix_alpha_channel_assert_fail.patch')
+    def cmake_args(self):
+        options = []
+        options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)
+        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
+        options.append('-DENABLE_ZOLTAN=ON')
 
-    def configure_args(self):
-        spec = self.spec
-        args = ['--mandir={0}'.format(spec.prefix.man)]
+        if self.compiler.name == 'xl':
+            options.append('-DSCOREC_EXTRA_CXX_FLAGS=%s' % '-qminimaltoc')
 
-        if '+shared' in spec:
-            args.append('--enable-shared')
-
-        if '+debug' not in spec:
-            args.append('--disable-debug')
-
-        return args
+        return options
