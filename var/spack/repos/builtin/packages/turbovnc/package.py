@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Turbovnc(Package):
+class Turbovnc(CMakePackage):
     """TurboVNC is a derivative of VNC (Virtual Network Computing) 
  that is tuned to provide peak performance for 3D and video workloads.
  TurboVNC was originally a fork of TightVNC 1.3.x, on the surface, 
@@ -35,11 +35,9 @@ class Turbovnc(Package):
     url      = "http://downloads.sourceforge.net/project/turbovnc/2.0.1/turbovnc-2.0.1.tar.gz"
 
 
-    version('2.0.1', 'a279fdb9ac86a1ebe82f85ab68353dcc')
-    version('2.0.91', '1e203cc533103cf7bd1186c7fd620186',
-            url      = "http://downloads.sourceforge.net/project/turbovnc/2.0.91%20%282.1beta2%29/turbovnc-2.0.91.tar.gz"            
-    )
     version('2.1', '6748bb13647d318f0c932394f8298d10')
+    version('2.0.1', 'a279fdb9ac86a1ebe82f85ab68353dcc')
+
 
     # FIXME: Add dependencies if this package requires them.
     variant('java', default=False, description='Enable Java build')
@@ -47,54 +45,77 @@ class Turbovnc(Package):
    
     depends_on('cmake', type='build')
     depends_on("libjpeg-turbo")
+    depends_on("libjpeg-turbo+java", when='+java')
+    depends_on('jdk', when='+java')
     depends_on("openssl")
     depends_on("pam")
     depends_on("libx11")
     depends_on("libxext")
+    depends_on("libxdmcp")
+    depends_on("libxau")
+    depends_on("libxdamage")
+    depends_on("libxcursor")
     depends_on('libxkbfile')
     depends_on('xkeyboard-config')
     depends_on('xkbcomp', type="run")
     depends_on('xkbdata', type='build')
 
-    def url_for_version(self, version):
-        """Handle TurboVNC's version-based custom URLs."""
-        return 'http://downloads.sourceforge.net/project/turbovnc/%s/turbovnc-%s.tar.gz' % (
-            version, version)
+    #def url_for_version(self, version):
+        #"""Handle TurboVNC's version-based custom URLs."""
+        #return 'http://downloads.sourceforge.net/project/turbovnc/%s/turbovnc-%s.tar.gz' % (
+            #version, version)
 
-    def validate(self, spec):
+
+
+    def validate(self):
         """
         Checks if incompatible versions of openssl were specified
 
         :param spec: spec of the package
         :raises RuntimeError: in case of inconsistencies
         """
-
+        spec=self.spec
         if spec.satisfies('@:2.1') and spec.satisfies('^openssl@1.1:'):
             msg = 'turbovnc does not compile with openssl 1.1 '
             raise RuntimeError(msg)
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+
+        #self.validate()
+        options = []
+        if '+java' in self.spec:            
+            options.append('-DTVNC_BUILDJAVA:BOOL=ON')
+        else:
+            options.append('-DTVNC_BUILDJAVA:BOOL=OFF')
+            options.append('-DTVNC_BUILDNATIVE:BOOL=ON')
+            options.append('-DXKB_BASE_DIRECTORY:PATH='+self.spec['xkbdata'].prefix+'/share/X11/xkb')
+        if '+debug' in self.spec:
+            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
+        else:
+            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
+
+        return options
+    #def install(self, spec, prefix):
         
-        self.validate(spec)
+        #self.validate(spec)
 
-        def feature_to_bool(feature, on='ON', off='OFF'):
-            if feature in spec:
-                return on
-            return off
-#        layout = YamlDirectoryLayout(self.tmpdir)
-#        rel_path=layout.relative_path_for_spec(spec)
-        feature_args = []
-        # FIXME: Modify the configure line to suit your build system here.
-        if '+java' not in spec:
-            feature_args.append(
-                '-DTVNC_BUILDJAVA=%s' % feature_to_bool('+java'))
-            feature_args.append(
-                '-DTVNC_BUILDNATIVE=%s' % feature_to_bool('+java'))
-        feature_args.append('-DCMAKE_VERBOSE_MAKEFILE=ON')
-        feature_args.append('-DXKB_BASE_DIRECTORY:PATH='+spec['xkbdata'].prefix+'/share/X11/xkb')
-        feature_args.extend(std_cmake_args)
-        cmake('.', *feature_args)
+        #def feature_to_bool(feature, on='ON', off='OFF'):
+            #if feature in spec:
+                #return on
+            #return off
+##        layout = YamlDirectoryLayout(self.tmpdir)
+##        rel_path=layout.relative_path_for_spec(spec)
+        #feature_args = []
+        ## FIXME: Modify the configure line to suit your build system here.
+        #if '+java' not in spec:
+            #feature_args.append(
+                #'-DTVNC_BUILDJAVA=%s' % feature_to_bool('+java'))
+            #feature_args.append(
+                #' %s' % feature_to_bool('+java'))
+        #feature_args.append('-DCMAKE_VERBOSE_MAKEFILE=ON')
+        #feature_args.extend(std_cmake_args)
+        #cmake('.', *feature_args)
 
-        # FIXME: Add logic to build and install here
-        make()
-        make("install")
+        ## FIXME: Add logic to build and install here
+        #make()
+        #make("install")

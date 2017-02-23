@@ -75,6 +75,7 @@ class LibjpegTurbo(Package):
             cmake('..', *cmake_args)
             make()
             make('install')
+    depends_on('jdk', when='+java')
     
     def configure_args(self):
         args = []
