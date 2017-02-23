@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Samrai(Package):
+class Samrai(AutotoolsPackage):
     """SAMRAI (Structured Adaptive Mesh Refinement Application Infrastructure)
        is an object-oriented C++ software library enables exploration of
        numerical, algorithmic, parallel computing, and software issues
@@ -65,17 +65,17 @@ class Samrai(Package):
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
         options = []
+
         options.extend([
-            '--prefix=%s' % prefix,
-            '--with-CXX=%s' % spec['mpi'].mpicxx,
-            '--with-CC=%s' % spec['mpi'].mpicc,
-            '--with-F77=%s' % spec['mpi'].mpifc,
-            '--with-M4=%s' % spec['m4'].prefix,
-            '--with-hdf5=%s' % spec['hdf5'].prefix,
-            '--with-boost=%s' % spec['boost'].prefix,
-            '--with-zlib=%s' % spec['zlib'].prefix,
+            '--with-CXX=%s' % self.spec['mpi'].mpicxx,
+            '--with-CC=%s' % self.spec['mpi'].mpicc,
+            '--with-F77=%s' % self.spec['mpi'].mpifc,
+            '--with-M4=%s' % self.spec['m4'].prefix,
+            '--with-hdf5=%s' % self.spec['hdf5'].prefix,
+            '--with-boost=%s' % self.spec['boost'].prefix,
+            '--with-zlib=%s' % self.spec['zlib'].prefix,
             '--without-blas',
             '--without-lapack',
             '--with-hypre=no',
@@ -90,6 +90,4 @@ class Samrai(Package):
                 '--enable-opt',
                 '--disable-debug'])
 
-        configure(options)
-        make()
-        make("install")
+        return options
