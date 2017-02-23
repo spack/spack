@@ -27,6 +27,7 @@ import re
 import llnl.util.tty as tty
 from spack import build_env_path
 from spack.util.executable import which
+from spack.build_environment import get_modulecmd, unload_module
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
@@ -102,6 +103,9 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
+        # unload cray-libsci to avoid silently linking if another blas/lapack
+        # is used.
+        unload_module("cray-libsci")
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
         cray_wrapper_names = join_path(build_env_path, 'cray')
         if os.path.isdir(cray_wrapper_names):
@@ -142,9 +146,8 @@ class Cray(Platform):
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
         if getattr(self, '_craype_targets', None) is None:
-            module = which('modulecmd', required=True)
-            module.add_default_arg('python')
-            output = module('avail', '-t', 'craype-', output=str, error=str)
+            modulecmd = get_modulecmd()
+            output = modulecmd('avail', '-t', 'craype-', output=str, error=str)
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []
             _fill_craype_targets_from_modules(targets, craype_modules)
