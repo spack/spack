@@ -125,7 +125,7 @@ class Mumps(Package):
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        fpic = '-fPIC' if '+shared' in self.spec else ''
+        fpic = self.compiler.pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
@@ -160,9 +160,14 @@ class Mumps(Package):
             makefile_conf.extend(
                 ['CC = {0}'.format(self.spec['mpi'].mpicc),
                  'FC = {0}'.format(self.spec['mpi'].mpifc),
-                 'FL = {0}'.format(self.spec['mpi'].mpicc) if self.spec.satisfies('%xl_r' or '%xl') else 'FL = {0}'.format(self.spec['mpi'].mpifc),  # noqa
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
+            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'): # noqa
+                makefile_conf.extend(
+                    ['FL = {0}'.format(self.spec['mpi'].mpicc)])
+            else:
+                makefile_conf.extend(
+                    ['FL = {0}'.format(self.spec['mpi'].mpifc)])
         else:
             makefile_conf.extend(
                 ["CC = cc",
