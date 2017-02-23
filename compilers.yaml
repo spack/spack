@@ -101,5 +101,5 @@ compilers:
       cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/icpc
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/ifort
       fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/intel-parallel-studio-cluster.2017.1-hehlxv4gixdccohwm4ebfsg7prfwb3j7/bin/ifort
-    spec: intel@17.0.1
+    spec: intel@17.0.4
     target: x86_64
