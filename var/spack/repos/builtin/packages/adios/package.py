@@ -25,7 +25,7 @@
 
 from spack import *
 from spack import architecture
-import os, subprocess
+import subprocess
 
 
 class Adios(Package):
@@ -134,12 +134,13 @@ class Adios(Package):
         sh('./autogen.sh')
 
         if self.get_arch() == 'ppc64le':
-            ## update the config.sub/guess files
+            # update the config.sub/guess files
             with working_dir("config"):
                 # get new config.guess and config.sub files
                 print 'Backing up existing config.[sub|guess] files\n'
                 subprocess.call("mv config.sub config.sub.orig", shell=True)
-                subprocess.call("mv config.guess config.guess.orig", shell=True)
+                subprocess.call("mv config.guess config.guess.orig",
+                                shell=True)
                 print 'Downloading lastest config.[sub|guess] files\n'
                 subprocess.call("wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'", shell=True)
                 subprocess.call("wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'", shell=True)
