@@ -40,27 +40,20 @@
 from spack import *
 
 
-class Pam(Package):
-    """FIXME: Put a proper description of your package here."""
+class Pam(AutotoolsPackage):
+    """Linux Pluggable Authentication Modules"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "http://linux-pam.org/"
     url      = "http://linux-pam.org/library/Linux-PAM-1.3.0.tar.bz2"
 
     version('1.3.0', 'da4b2289b7cfb19583d54e9eaaef1c3a')
     version('1.2.1', '9dc53067556d2dd567808fd509519dd6')
     version('1.2.0', 'ee4a480d77b341c99e8b1375f8f180c0')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
 
-    def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
-        configure(
+    def configure_args(self):
+        prefix = self.spec.prefix
+        return [
             '--prefix={0}'.format(prefix),
-            '--includedir={0}/include/security'.format(prefix)
-        )
+            '--includedir={0}/include/security'.format(prefix)]
 
-        # FIXME: Add logic to build and install here.
-        make()
-        make('install')
