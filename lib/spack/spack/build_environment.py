@@ -146,17 +146,13 @@ def get_argument_from_module_line(line):
     if '(' in line and ')' in line:
         # Determine which lua quote symbol is being used for the argument
         comma_index = line.index(',')
-        if '"' in line[comma_index:] and "'" in line[comma_index:]:
-            dbl_index = line.index('"', comma_index)
-            sgl_index = line.index("'", comma_index)
-            lua_quote = '"' if dbl_index < sgl_index else "'"
-        elif '"' in line[comma_index:]:
-            lua_quote = '"'
-        elif "'" in line[comma_index:]:
-            lua_quote = "'"
-        else:
-            raise ValueError("No valid quote string found in lua module.")
-        # Split the line based on the quote string used for the argument
+        cline = line[comma_index:]
+        try:
+            quote_index = min(cline.find(q) for q in ['"', "'"] if q in cline)
+            lua_quote = cline[quote_index]
+        except ValueError:
+            # Change error text to describe what is going on.
+            raise ValueError("No lua quote symbol found in lmod module line.")
         words_and_symbols = line.split(lua_quote)
         return words_and_symbols[-2]
     else:
@@ -173,6 +169,7 @@ def get_path_from_module(mod):
 
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
+
     # If it lists its package directory, return that
     for line in text:
         if line.find(mod.upper() + '_DIR') >= 0:
@@ -195,6 +192,7 @@ def get_path_from_module(mod):
         if line.find('LD_LIBRARY_PATH') >= 0:
             path = get_argument_from_module_line(line)
             return path[:path.find('/lib')]
+
     # Unable to find module path
     return None
 
