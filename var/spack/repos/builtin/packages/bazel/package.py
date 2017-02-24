@@ -34,6 +34,8 @@ class Bazel(Package):
     homepage = "https://www.bazel.io"
     url = "https://github.com/bazelbuild/bazel/archive/0.3.1.tar.gz"
 
+    version('0.4.4', '5e7c52b89071efc41277e2f0057d258f',
+            url="https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel-0.4.4-dist.zip")
     version('0.3.1', '5c959467484a7fc7dd2e5e4a1e8e866b')
     version('0.3.0', '33a2cb457d28e1bee9282134769b9283')
     version('0.2.3', '393a491d690e43caaba88005efe6da91')
