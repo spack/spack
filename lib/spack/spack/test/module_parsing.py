@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
-from spack.build_environment import get_argument_from_module_line
+from spack.util.module_cmd import get_argument_from_module_line
 
 
 def test_get_argument_from_module_line():

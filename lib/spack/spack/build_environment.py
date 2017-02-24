@@ -66,8 +66,8 @@ import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
-from spack.util.executable import Executable, which
-
+from spack.util.executable import Executable
+from spack.util.module_cmd import get_module_cmd
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -117,84 +117,6 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
-
-
-def load_module(mod):
-    """Takes a module name and removes modules until it is possible to
-    load that module. It then loads the provided module. Depends on the
-    modulecmd implementation of modules used in cray and lmod.
-    """
-    # Create an executable of the module command that will output python code
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
-
-    # Read the module and remove any conflicting modules
-    # We do this without checking that they are already installed
-    # for ease of programming because unloading a module that is not
-    # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
-    for i, word in enumerate(text):
-        if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
-    # Load the module now that there are no conflicts
-    load = modulecmd('load', mod, output=str, error=str)
-    exec(compile(load, '<string>', 'exec'))
-
-
-def get_argument_from_module_line(line):
-    if '(' in line and ')' in line:
-        # Determine which lua quote symbol is being used for the argument
-        comma_index = line.index(',')
-        cline = line[comma_index:]
-        try:
-            quote_index = min(cline.find(q) for q in ['"', "'"] if q in cline)
-            lua_quote = cline[quote_index]
-        except ValueError:
-            # Change error text to describe what is going on.
-            raise ValueError("No lua quote symbol found in lmod module line.")
-        words_and_symbols = line.split(lua_quote)
-        return words_and_symbols[-2]
-    else:
-        return line.split()[2]
-
-
-def get_path_from_module(mod):
-    """Inspects a TCL module for entries that indicate the absolute path
-    at which the library supported by said module can be found.
-    """
-    # Create a modulecmd executable
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
-
-    # Read the module
-    text = modulecmd('show', mod, output=str, error=str).split('\n')
-
-    # If it lists its package directory, return that
-    for line in text:
-        if line.find(mod.upper() + '_DIR') >= 0:
-            return get_argument_from_module_line(line)
-
-    # If it lists a -rpath instruction, use that
-    for line in text:
-        rpath = line.find('-rpath/')
-        if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
-
-    # If it lists a -L instruction, use that
-    for line in text:
-        L = line.find('-L/')
-        if L >= 0:
-            return line[L + 2:line.find('/lib')]
-
-    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
-    for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0:
-            path = get_argument_from_module_line(line)
-            return path[:path.find('/lib')]
-
-    # Unable to find module path
-    return None
 
 
 def set_compiler_environment_variables(pkg, env):

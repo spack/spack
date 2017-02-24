@@ -117,7 +117,7 @@ from cStringIO import StringIO
 from llnl.util.filesystem import find_libraries
 from llnl.util.lang import *
 from llnl.util.tty.color import *
-from spack.build_environment import get_path_from_module, load_module
+from spack.util.module_cmd import get_path_from_module, load_module
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.prefix import Prefix

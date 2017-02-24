@@ -25,11 +25,10 @@
 import re
 
 from spack.architecture import OperatingSystem
-from spack.util.executable import *
 import spack.spec
 from spack.util.multiproc import parmap
 import spack.compilers
-
+from spack.util.module_cmd import get_module_cmd
 
 class Cnl(OperatingSystem):
     """ Compute Node Linux (CNL) is the operating system used for the Cray XC
@@ -63,8 +62,7 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = which('modulecmd')
-            modulecmd.add_default_arg('python')
+            modulecmd = get_module_cmd()
 
             output = modulecmd(
                 'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
