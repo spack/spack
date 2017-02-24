@@ -324,6 +324,7 @@ def validate_args(args):
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
         'install_status': args.install_status,
+        'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty
     }
