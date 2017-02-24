@@ -2287,6 +2287,30 @@ class Spec(object):
         elif strict and (other.compiler and not self.compiler):
             return False
 
+        # If self is a concrete spec, and other is not virtual, then we need
+        # to substitute every multi-valued variant that needs it with a
+        # single-valued variant.
+        if self.concrete:
+            for name, v in [(x, y) for (x, y) in other.variants.items()]:
+                # When parsing a spec every variant of the form
+                # 'foo=value' will be interpreted by default as a
+                # multi-valued variant. During validation of the
+                # variants we use the information in the package
+                # to turn any variant that needs it to a single-valued
+                # variant.
+                pkg_cls = type(other.package)
+                try:
+                    pkg_variant = other.package.variants[name]
+                    pkg_variant.validate_or_raise(v, pkg_cls)
+                except (SpecError, KeyError):
+                    # Catch the two things that could go wrong above:
+                    # 1. name is not a valid variant (KeyError)
+                    # 2. the variant is not validated (SpecError)
+                    return False
+                other.variants.substitute(
+                    pkg_variant.make_variant(v._original_value)
+                )
+
         var_strict = strict
         if (not self.name) or (not other.name):
             var_strict = True

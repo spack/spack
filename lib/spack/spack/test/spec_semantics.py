@@ -265,6 +265,16 @@ class TestSpecSematics(object):
         check_satisfies('multivalue_variant foo="bar,baz"',
                         'foo="bar"')
 
+    def test_satisfies_single_valued_variant(self):
+        """Tests that the case reported in
+        https://github.com/LLNL/spack/pull/2386#issuecomment-282147639
+        is handled correctly.
+        """
+        a = Spec('a foobar=bar')
+        a.concretize()
+
+        assert a.satisfies('foobar=bar')
+
     def test_unsatisfiable_multi_value_variant(self):
 
         # Semantics for a multi-valued variant is different

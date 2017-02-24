@@ -41,6 +41,14 @@ class A(AutotoolsPackage):
         exclusive=False
     )
 
+    variant(
+        'foobar',
+        values=('bar', 'baz', 'fee'),
+        default='bar',
+        description='',
+        exclusive=True
+    )
+
     def with_or_without_fee(self, activated):
         if not activated:
             return '--no-fee'
