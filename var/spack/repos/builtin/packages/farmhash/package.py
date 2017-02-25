@@ -38,8 +38,8 @@
 # please first remove this boilerplate and all FIXME comments.
 #
 from spack import *
-import os.path 
-from shutil import copyfile 
+import os.path
+from shutil import copyfile
 
 class Farmhash(CMakePackage):
     """
