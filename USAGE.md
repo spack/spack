@@ -24,18 +24,7 @@ And Spack shell support in `.bashrc` or `.zshrc`:
 Spack basics
 =======
 
-Find available packages
-------
-
-SYNOSYS
-	
-	spack find PKGNAME 
-
-Examples:
-
-	spack find gcc	
-
-List versions
+Listing versions
 ------
 
 SYNOSYS
@@ -45,6 +34,17 @@ SYNOSYS
 Example:
 
 	$ spack version gcc
+
+Search packages in spack repo
+------
+
+Search by name:
+
+	$ spack list sql
+
+Search by description:
+
+	$ spack list --search-description documentation
 
 List package opitions
 ------
@@ -63,7 +63,7 @@ Locate installed packages
 
 	$ spack locate -i gcc
 	
-Install packages
+Installing packages
 ------
 
 SYNOSYS
@@ -75,3 +75,16 @@ Examples:
 Build Python 2.7.13 with GCC 5.4.6.
 	
 	$ spack install python@2.7.13 %gcc@5.4.0
+
+Seeing installed packages
+------
+
+SYNOSYS
+	
+	spack find [--deps] [--paths] [--long] PKGNAME 
+
+Examples:
+
+	spack find gcc	
+
+
