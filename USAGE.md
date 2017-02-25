@@ -3,15 +3,15 @@ Bootstrap
 
 For Pi users:
 
-	$ ./bootstrap user
+	$ ./bootstrap user --install
 
 For rpm builders:
 
-	$ ./bootstrap rpm
+	$ ./bootstrap rpm --install
 
 For compiler builders:
 
-	$ ./bootstrap system
+	$ ./bootstrap system --install
 
 Spack shell support
 ======
