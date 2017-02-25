@@ -27,13 +27,11 @@ from __future__ import print_function
 import collections
 import os
 import shutil
-import sys
+import spack.modules
 
 import spack.cmd
-
 from llnl.util import filesystem, tty
 from spack.cmd.common import arguments
-from spack.modules import module_types
 
 description = "manipulate module files"
 section = "environment"
@@ -103,17 +101,54 @@ def setup_parser(subparser):
     )
 
 
-class MultipleMatches(Exception):
-    pass
+class MultipleSpecsMatch(Exception):
+    """Raised when multiple specs match a constraint, in a context where
+    this is not allowed.
+    """
 
 
-class NoMatch(Exception):
-    pass
+class NoSpecMatches(Exception):
+    """Raised when no spec matches a constraint, in a context where
+    this is not allowed.
+    """
+
+
+class MultipleModuleTypes(Exception):
+    """Raised when multiple module types match a cli request, in a context
+    where this is not allowed.
+    """
+
+
+def one_module_or_raise(module_types):
+    """Ensures exactly one module type has been selected, or raises the
+    appropriate exception.
+    """
+    # Ensure a single module type has been selected
+    if len(module_types) > 1:
+        raise MultipleModuleTypes()
+    return module_types[0]
+
+
+def one_spec_or_raise(specs):
+    """Ensures exactly one spec has been selected, or raises the appropriate
+    exception.
+    """
+    # Ensure a single spec matches the constraint
+    if len(specs) == 0:
+        raise NoSpecMatches()
+    if len(specs) > 1:
+        raise MultipleSpecsMatch()
+
+    # Get the spec and module type
+    return specs[0]
 
 
 @subcommand('loads')
-def loads(mtype, specs, args):
+def loads(module_types, specs, args):
     """Prompt the list of modules associated with a list of specs"""
+
+    module_type = one_module_or_raise(module_types)
+
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
@@ -130,9 +165,9 @@ def loads(mtype, specs, args):
                  if not (item in seen or seen_add(item))]
             )
 
-    module_cls = module_types[mtype]
+    module_cls = spack.modules.module_types[module_type]
     modules = [
-        (spec, module_cls(spec).use_name)
+        (spec, module_cls(spec).layout.use_name)
         for spec in specs if os.path.exists(module_cls(spec).layout.filename)
     ]
 
@@ -143,7 +178,7 @@ def loads(mtype, specs, args):
     }
 
     d = {
-        'command': '' if not args.shell else module_commands[mtype],
+        'command': '' if not args.shell else module_commands[module_type],
         'prefix': args.prefix
     }
 
@@ -158,82 +193,91 @@ def loads(mtype, specs, args):
 
 
 @subcommand('find')
-def find(mtype, specs, args):
+def find(module_types, specs, args):
+    """Returns the module file "use" name if there's a single match. Raises
+    error messages otherwise.
     """
-    Look at all installed packages and see if the spec provided
-    matches any.  If it does, check whether there is a module file
-    of type <mtype> there, and print out the name that the user
-    should type to use that package's module.
-    """
-    if len(specs) == 0:
-        raise NoMatch()
 
-    if len(specs) > 1:
-        raise MultipleMatches()
+    spec = one_spec_or_raise(specs)
+    module_type = one_module_or_raise(module_types)
 
-    spec = specs.pop()
-    mod = module_types[mtype](spec)
-    if not os.path.isfile(mod.layout.filename):
-        tty.die('No {0} module is installed for {1}'.format(mtype, spec))
-    print(mod.layout.use_name)
+    # Check if the module file is present
+    writer = spack.modules.module_types[module_type](spec)
+    if not os.path.isfile(writer.layout.filename):
+        msg = 'Even though {1} is installed, '
+        msg += 'no {0} module has been generated for it.'
+        tty.die(msg.format(module_type, spec))
+
+    # ... and if it is print its use name
+    print(writer.layout.use_name)
 
 
 @subcommand('rm')
-def rm(mtype, specs, args):
-    """Deletes module files associated with items in specs"""
-    module_cls = module_types[mtype]
-    specs_with_modules = [
-        spec
-        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
-    ]
-    modules = [module_cls(spec) for spec in specs_with_modules]
+def rm(module_types, specs, args):
+    """Deletes the module files associated with every spec in specs, for every
+    module type in module types.
+    """
+    for module_type in module_types:
 
-    if not modules:
-        tty.msg('No module file matches your query')
-        raise SystemExit(1)
+        module_cls = spack.modules.module_types[module_type]
+        module_exist = lambda x: os.path.exists(module_cls(x).layout.filename)
 
-    # Ask for confirmation
-    if not args.yes_to_all:
-        tty.msg(
-            'You are about to remove {0} module files the following specs:\n'
-            .format(mtype))
-        spack.cmd.display_specs(specs_with_modules, long=True)
-        print('')
-        answer = tty.get_yes_or_no('Do you want to proceed?')
-        if not answer:
-            tty.die('Will not remove any module files')
+        specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-    # Remove the module files
-    for s in modules:
-        s.remove()
+        modules = [module_cls(spec) for spec in specs_with_modules]
+
+        if not modules:
+            tty.die('No module file matches your query')
+
+        # Ask for confirmation
+        if not args.yes_to_all:
+            msg = 'You are about to remove {0} module files for:\n'
+            tty.msg(msg.format(module_type))
+            spack.cmd.display_specs(specs_with_modules, long=True)
+            print('')
+            answer = tty.get_yes_or_no('Do you want to proceed?')
+            if not answer:
+                tty.die('Will not remove any module files')
+
+        # Remove the module files
+        for s in modules:
+            s.remove()
 
 
 @subcommand('refresh')
-def refresh(mtype, specs, args):
-    """Regenerate module files for item in specs."""
+def refresh(module_types, specs, args):
+    """Regenerates the module files for every spec in specs and every module
+    type in module types.
+    """
+
     # Prompt a message to the user about what is going to change
     if not specs:
         tty.msg('No package matches your query')
         return
 
     if not args.yes_to_all:
-        tty.msg(
-            'You are about to regenerate {name} module files for:\n'
-            .format(name=mtype))
+        msg = 'You are about to regenerate {types} module files for:\n'
+        types = ', '.join(module_types)
+        tty.msg(msg.format(types=types))
         spack.cmd.display_specs(specs, long=True)
         print('')
         answer = tty.get_yes_or_no('Do you want to proceed?')
         if not answer:
-            tty.die('Will not regenerate any module files')
+            tty.die('Module file regeneration aborted.')
 
-    cls = module_types[mtype]
+    # Cycle over the module types and regenerate module files
+    for module_type in module_types:
 
-    # Detect name clashes
-    writers = [cls(spec) for spec in specs
-               if spack.repo.exists(spec.name)]  # skip unknown packages.
-    file2writer = collections.defaultdict(list)
-    for item in writers:
-        file2writer[item.layout.filename].append(item)
+        cls = spack.modules.module_types[module_type]
+
+        writers = [
+            cls(spec) for spec in specs if spack.repo.exists(spec.name)
+        ]  # skip unknown packages.
+
+        # Detect name clashes in module files
+        file2writer = collections.defaultdict(list)
+        for item in writers:
+            file2writer[item.layout.filename].append(item)
 
     if len(file2writer) != len(writers):
         message = 'Name clashes detected in module files:\n'
@@ -242,7 +286,6 @@ def refresh(mtype, specs, args):
                 message += '\nfile: {0}\n'.format(filename)
                 for x in writer_list:
                     message += 'spec: {0}\n'.format(x.spec.format())
-
         tty.error(message)
         tty.error('Operation aborted')
         raise SystemExit(1)
@@ -250,7 +293,7 @@ def refresh(mtype, specs, args):
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
     # Proceed regenerating module files
-    tty.msg('Regenerating {name} module files'.format(name=mtype))
+    tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
@@ -259,6 +302,7 @@ def refresh(mtype, specs, args):
 
 
 def module(parser, args):
+
     # Qualifiers to be used when querying the db for specs
     constraint_qualifiers = {
         'refresh': {
@@ -267,19 +311,32 @@ def module(parser, args):
         },
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
+
+    # Get the specs that match the query from the DB
     specs = args.specs(**query_args)
-    module_type = args.module_type
-    constraint = args.constraint
+
+    # Set the module types that have been selected
+    module_types = args.module_type
+    if module_types is None:
+        # If no selection has been made select all of them
+        module_types = list(spack.modules.module_types.keys())
+
     try:
-        callbacks[args.subparser_name](module_type, specs, args)
-    except MultipleMatches:
-        message = ("the constraint '{query}' matches multiple packages, "
-                   "and this is not allowed in this context")
-        tty.error(message.format(query=constraint))
+
+        callbacks[args.subparser_name](module_types, specs, args)
+
+    except MultipleSpecsMatch:
+        msg = "the constraint '{query}' matches multiple packages:\n"
         for s in specs:
-            sys.stderr.write(s.cformat() + '\n')
-        raise SystemExit(1)
-    except NoMatch:
-        message = ("the constraint '{query}' matches no package, "
-                   "and this is not allowed in this context")
-        tty.die(message.format(query=constraint))
+            msg += '\t' + s.cformat() + '\n'
+        tty.error(msg.format(query=args.constraint))
+        tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
+
+    except NoSpecMatches:
+        msg = "the constraint '{query}' matches no package."
+        tty.error(msg.format(query=args.constraint))
+        tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
+
+    except MultipleModuleTypes:
+        msg = "this command needs exactly **one** module type active."
+        tty.die(msg)

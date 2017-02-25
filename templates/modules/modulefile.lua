@@ -10,6 +10,9 @@ whatis([[Name : {{ spec.name }}]])
 whatis([[Version : {{ spec.version }}]])
 whatis([[Short description : {{ short_description }}]])
 {% endif %}
+{% if configure_options %}
+whatis([[Configure options : {{ configure_options }}]])
+{% endif %}
 
 {% if long_description %}
 help([[{{ long_description| textwrap(72)| join() }}]])

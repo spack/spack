@@ -433,6 +433,22 @@ class BaseContext(tengine.Context):
         return None
 
     @tengine.context_property
+    def configure_options(self):
+        pkg = self.spec.package
+
+        # This is quite simple right now, but contains information on how
+        # to call different build system classes.
+        for attr in ('configure_args', 'cmake_args'):
+            try:
+                configure_args = getattr(pkg, attr)()
+                return ' '.join(configure_args)
+            except (AttributeError, IOError):
+                pass
+
+        # The default is to return None
+        return None
+
+    @tengine.context_property
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed inspecting the spec prefix

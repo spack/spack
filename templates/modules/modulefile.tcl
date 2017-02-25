@@ -3,6 +3,11 @@
 ##
 ## {{ spec.short_spec }}
 ##
+{% if configure_options %}
+## Configure options: {{ configure_options }}
+##
+{% endif %}
+
 
 {% block header %}
 {% if short_description %}
