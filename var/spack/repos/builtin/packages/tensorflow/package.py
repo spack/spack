@@ -44,6 +44,7 @@ class Tensorflow(Package):
     depends_on('farmhash')
     depends_on('highwayhash')
     depends_on('protobuf')
+
     def install(self, spec, prefix):
         # FIXME: Unknown build system
         make()
