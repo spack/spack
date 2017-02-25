@@ -5,5 +5,4 @@ git :
 	git push origin
 
 pull :
-	git fetch upstream
 	git pull upstream develop
