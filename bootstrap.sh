@@ -2,10 +2,11 @@
 
 # Usage
 if [ -z $1 ]; then
-	echo "Usage: ./bootstrap <system|rpm|user>"
+	echo "Usage: ./bootstrap <system|rpm|user> [--install]"
 	echo "- system: For system administrators to install compilers globally."
 	echo "- rpm: For rpm builder to install packages on specific architectures."
 	echo "- user: For Pi users to install packages in ~/spack."
+	echo "- --install: Build and install."
 	exit 1
 fi
 echo "=> $1"
@@ -77,5 +78,7 @@ echo "=> $SPACKCACHE"
 echo "=> $SPACKSOURCECACHE"
 source ~/spack/share/spack/setup-env.sh
 
-echo "Installing packages..."
-./build_${1}.sh
+if [[ $2 == "--install" ]]; then
+	echo "Installing packages..."
+	./build_${1}.sh
+fi

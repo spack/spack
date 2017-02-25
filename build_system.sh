@@ -1,20 +1,31 @@
 #!/bin/sh
 
+function s {
+	spack find $@ | grep 'No package'
+	if [ $? -eq 0 ]
+	then
+		spack install $@
+	else
+		echo "$@ has been installed."
+	fi
+}  
+
 cc=%gcc@4.8.5
 
 # Compilers
-spack install gcc@4.9.4 $cc
-spack install gcc@5.4.0 $cc
-spack install gcc@6.3.0 $cc
-spack install llvm 	$cc
-spack install jdk 	$cc
-spack install bazel	$cc
-spack install maven	$cc
-spack install lua-jit	$cc
-rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; spack install intel-parallel-studio@cluster.2016.4 $cc +openmp 
-rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; spack install intel-parallel-studio@cluster.2015.6 $cc +openmp 
-rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; spack install intel-parallel-studio@cluster.2017.1 $cc +openmp 
+s gcc@4.9.4 $cc
+s gcc@5.4.0 $cc
+s gcc@6.3.0 $cc
+s llvm 	$cc
+s jdk 	$cc
+s bazel	$cc
+s maven	$cc
+s lua-jit	$cc
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2016.4 $cc +openmp 
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2015.6 $cc +openmp 
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2017.1 $cc +openmp 
 
-# Tools: git, emacs
-spack install git 	$cc	
-spack install emacs 	$cc	
+# Tools
+s git 		$cc	
+s git-lfs 	$cc	
+s parallel 	$cc	
