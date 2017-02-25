@@ -1673,7 +1673,7 @@ class Spec(object):
                 if spec.virtual:
                     spec._replace_with(replacement)
                     changed = True
-                if spec._dup(replacement, deps=False, cleardeps=False):
+                if spec._dup(replacement, deps=False, cleardeps=False, soft_dup=True):
                     changed = True
 
                 self_index.update(spec)
@@ -2383,7 +2383,7 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    def _dup(self, other, deps=True, cleardeps=True):
+    def _dup(self, other, deps=True, cleardeps=True, soft_dup=False):
         """Copy the spec other into self.  This is an overwriting
            copy.  It does not copy any dependents (parents), but by default
            copies dependencies.
@@ -2394,6 +2394,10 @@ class Spec(object):
            dependencies[=True]
                Whether deps should be copied too.  Set to False to copy a
                spec but not its dependencies.
+           soft_dup[=False]
+               Whether version or compiler information should be overwritten
+               in the event that the current spec has concrete information
+               while the other spec does not.
         """
         # We don't count dependencies as changes here
         changed = True
@@ -2411,10 +2415,22 @@ class Spec(object):
 
         # Local node attributes get copied first.
         self.name = other.name
-        self.versions = other.versions.copy()
+        if soft_dup:
+            if not (self.versions.concrete and (not other.versions.concrete)):
+                 self.versions = other.versions.copy()
+        else:
+            self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture \
             else None
-        self.compiler = other.compiler.copy() if other.compiler else None
+        if soft_dup:
+            if self.compiler:
+                if other.compiler:
+                    if not (self.compiler.versions.concrete and (not other.compiler.versions.concrete)):
+                        self.compiler = other.compiler.copy()
+            else:
+                self.compiler = other.compiler.copy() if other.compiler else None
+        else:
+            self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
             self._dependents = DependencyMap()
             self._dependencies = DependencyMap()
