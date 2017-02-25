@@ -48,6 +48,9 @@ class Hypre(Package):
             description="Use internal Superlu routines")
     variant('int64', default=False,
             description="Use 64bit integers")
+    
+    # Temporary patch to add ppc64le in config.guess
+    patch('ibm-ppc64le.patch')
 
     depends_on("mpi")
     depends_on("blas")
