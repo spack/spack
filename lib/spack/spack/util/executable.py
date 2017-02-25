@@ -166,7 +166,7 @@ class Executable(object):
         cmd_line = "'%s'" % "' '".join(
             map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
 
-        tty.debug(cmd_line)
+        tty.debug("Executing command: (" + cmd_line + ")")
 
         try:
             proc = subprocess.Popen(
