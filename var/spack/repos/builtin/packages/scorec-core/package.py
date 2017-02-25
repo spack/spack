@@ -25,16 +25,35 @@
 from spack import *
 
 
-class PyMock(PythonPackage):
-    """mock is a library for testing in Python. It allows you to replace parts
-    of your system under test with mock objects and make assertions about how
-    they have been used."""
+class ScorecCore(CMakePackage):
+    """The SCOREC Core is a set of C/C++ libraries for unstructured mesh
+    simulations on supercomputers.
+    """
 
-    homepage = "https://github.com/testing-cabal/mock"
-    url      = "https://pypi.python.org/packages/source/m/mock/mock-1.3.0.tar.gz"
+    homepage = 'https://www.scorec.rpi.edu/'
+    url = 'https://github.com/SCOREC/core.git'
 
-    version('2.0.0', '0febfafd14330c9dcaa40de2d82d40ad')
-    version('1.3.0', '73ee8a4afb3ff4da1b4afa287f39fdeb')
+    version('develop', git=url)
 
-    depends_on('py-pbr', type=('build', 'run'))
-    depends_on('py-setuptools@17.1:', type='build')
+    depends_on('mpi')
+    depends_on('zoltan')
+    depends_on('cmake@3.0:', type='build')
+
+    @property
+    def std_cmake_args(self):
+        # Default cmake RPATH options causes build failure on bg-q
+        if self.spec.satisfies('platform=bgq'):
+            return ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(self.prefix)]
+        else:
+            return self._std_args(self)
+
+    def cmake_args(self):
+        options = []
+        options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)
+        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
+        options.append('-DENABLE_ZOLTAN=ON')
+
+        if self.compiler.name == 'xl':
+            options.append('-DSCOREC_EXTRA_CXX_FLAGS=%s' % '-qminimaltoc')
+
+        return options
