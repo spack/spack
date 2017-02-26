@@ -30,13 +30,13 @@ class Tensorflow(Package):
     TensorFlow is an open source software library for numerical computation using data flow graphs
     """
 
-    homepage = "https://github.com/tensorflow"
+    homepage = "https://www.tensorflow.org/"
 
-    version('e697cf7', git='https://github.com/tensorflow.git', commit='e697cf787b09193a6921af6d2b7db2d6c4d2a5dd')
+    version('e697cf7', git='https://github.com/tensorflow/tensorflow.git', commit='e697cf787b09193a6921af6d2b7db2d6c4d2a5dd')
 
     depends_on('zlib')
     depends_on('giflib')
-    depends_on('png')
+    depends_on('libpng')
     depends_on('jpeg')
     depends_on('eigen')
     depends_on('gemmlowp')
