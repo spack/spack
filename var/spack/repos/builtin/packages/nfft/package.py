@@ -40,6 +40,7 @@ class Nfft(AutotoolsPackage):
     def install(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]
 
+        make("distclean")
         configure(*options)
         make()
         if self.run_tests:
@@ -47,12 +48,14 @@ class Nfft(AutotoolsPackage):
         make("install")
 
         if '+float' in spec['fftw']:
+            make("distclean")
             configure('--enable-float', *options)
             make()
             if self.run_tests:
                 make("check")
             make("install")
         if '+long_double' in spec['fftw']:
+            make("distclean")
             configure('--enable-long-double', *options)
             make()
             if self.run_tests:
