@@ -38,6 +38,9 @@ class Jpeg(AutotoolsPackage):
     version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
     version('9a', '3353992aecaee1805ef4109aadd433e7')
     
+    #version('turbo1.5.1', url='https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.1.tar.gz',
+    #        md5='d25e180b5300052be8871c7628e010cb')
+    
     @run_after('install')
     def install_build_headers(self):
         build_header_dir = self.prefix.include + '/jpeg-build'

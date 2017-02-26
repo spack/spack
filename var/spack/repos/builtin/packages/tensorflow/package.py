@@ -37,18 +37,18 @@ class Tensorflow(CMakePackage):
 
     version('e697cf7', git='https://github.com/tensorflow/tensorflow.git', commit='e697cf787b09193a6921af6d2b7db2d6c4d2a5dd')
 
-    depends_on('zlib')
-    depends_on('giflib')
-    depends_on('libpng@1.2:1.2.999')
-    depends_on('jpeg')
+    depends_on('zlib@1.2.8')
+    depends_on('giflib@5.1.4')
+    depends_on('libpng@1.2:1.2.999') #1.2.53
+    depends_on('jpeg')#turbo 1.5.1
     depends_on('eigen@290bfb42684a')
-    depends_on('gemmlowp')
-    depends_on('jsoncpp')
-    depends_on('farmhash')
-    depends_on('highwayhash')
-    depends_on('protobuf')
+    depends_on('gemmlowp')#a6f29d8ac48d63293f845f2253eccbf86bc28321 -check
+    depends_on('jsoncpp')#11086dd6a7eba04289944367ca82cea71299ed70
+    depends_on('farmhash')#92e897b282426729f4724d91a637596c7e2fe28f-check
+    depends_on('highwayhash')#dfcb97ca4fe9277bf9dc1802dd979b071896453b -check
+    depends_on('protobuf@ef927cc')#ef927cc428db7bf41d3a593a16a8f1a0fe6306c5
 
-    depends_on('swig')
+    depends_on('swig@3.0.8')
     
     build_directory = "tensorflow/contrib/cmake/spack-build"
     root_cmakelists_dir = ".."
