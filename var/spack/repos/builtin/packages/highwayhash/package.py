@@ -23,24 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os.path
 from glob import glob
 
 
 class Highwayhash(MakefilePackage):
     """Strong (well-distributed and unpredictable) hashes:
-	- Portable implementation of SipHash
-	- HighwayHash, a 5x faster SIMD hash with security claims
+        - Portable implementation of SipHash
+        - HighwayHash, a 5x faster SIMD hash with security claims
     """
- 
+
     homepage = "https://github.com/google/highwayhash"
- 
+
     version('dfcb97', git='https://github.com/google/highwayhash.git',
-	    commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')  
+            commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')
 
     build_targets = ['all', 'libhighwayhash.a']
- 
+
     def install(self, spec, prefix):
-	install('libhighwayhash.a', prefix.lib)
-	for i in glob('highwayhash/*.h'):
-	    install(i, prefix.bin)
+        install('libhighwayhash.a', prefix.lib)
+        for i in glob('highwayhash/*.h'):
+            install(i, prefix.bin)
