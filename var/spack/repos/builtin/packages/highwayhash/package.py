@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 import os.path
-from shutil import copyfile
+from glob import glob
 
-class Highwayhash(CMakePackage):
+
+class Highwayhash(MakefilePackage):
     """Strong (well-distributed and unpredictable) hashes:
 	- Portable implementation of SipHash
 	- HighwayHash, a 5x faster SIMD hash with security claims
@@ -37,6 +38,9 @@ class Highwayhash(CMakePackage):
     version('dfcb97', git='https://github.com/google/highwayhash.git',
 	    commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')  
 
-    def patch(self):
-	copyfile(join_path(os.path.dirname(__file__),
-                 "CMakeLists.txt"), "CMakeLists.txt")
+    build_targets = ['all', 'libhighwayhash.a']
+ 
+    def install(self, spec, prefix):
+	install('libhighwayhash.a', prefix.lib)
+	for i in glob('highwayhash/*.h'):
+	    install(i, prefix.bin)
