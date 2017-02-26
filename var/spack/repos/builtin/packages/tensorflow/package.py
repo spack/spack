@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from llnl.util.filesystem import *
 
 
-class Tensorflow(Package):
+class Tensorflow(CMakePackage):
     """
     TensorFlow is an open source software library for numerical computation using data flow graphs
     """
@@ -45,7 +46,30 @@ class Tensorflow(Package):
     depends_on('highwayhash')
     depends_on('protobuf')
 
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+    
+    def mock_external(self, tfname, external_prefix):
+        """TODO: Make docstring"""
+        touch("CMakeFiles/%s" % tfname)
+        touch("CMakeFiles/%s-complete" % tfname)
+        for stamp in ("install", "mkdir", "download", 
+                      "update", "patch", "configure", "build"):
+            touch("{0}/src/{0}-stamp/{0}-{1}".format(tfname, stamp))
+        touch("CMakeFiles/%s.dir/build.make" % tfname)
+        
+        install_dir = "%s/install" % tfname
+        rmtree(install_dir)
+        symlink(external_prefix, install_dir)
+
+    @run_after('cmake')
+    def mock_all_externals(self):
+        spec = self.spec
+        self.mock_external('zlib', spec['zlib'].prefix)
+        self.mock_external('gif', spec['giflib'].prefix)
+        self.mock_external('png', spec['libpng'].prefix)
+        self.mock_external('jpeg', spec['jpeg'].prefix)
+        self.mock_external('eigen', spec['eigen'].prefix)
+        self.mock_external('gemmlowp', spec['gemmlowp'].prefix)
+        self.mock_external('jsoncpp', spec['jsoncpp'].prefix)
+        self.mock_external('farmhash', spec['farmhash'].prefix)
+        self.mock_external('highwayhash', spec['highwayhash'].prefix)
+        self.mock_external('protobuf', spec['protobuf'].prefix)
