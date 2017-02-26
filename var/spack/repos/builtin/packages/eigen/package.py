@@ -39,6 +39,9 @@ class Eigen(Package):
     version('3.2.8', '64f4aef8012a424c7e079eaf0be71793ab9bc6e0')
     version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184')
 
+    version('290bfb42684a', url='http://bitbucket.org/eigen/eigen/get/290bfb42684a.tar.gz',
+            sha256='269c8bf20e8ac1aa8f5caf1ab2ca7be4909ec6ae085177a647aae138cd069b12')
+    
     variant('debug', default=False,
             description='Builds the library in debug mode')
 

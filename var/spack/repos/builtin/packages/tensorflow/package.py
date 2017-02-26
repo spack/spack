@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 from llnl.util.filesystem import *
+import os
+from glob import glob
 
 
 class Tensorflow(CMakePackage):
@@ -37,39 +39,61 @@ class Tensorflow(CMakePackage):
 
     depends_on('zlib')
     depends_on('giflib')
-    depends_on('libpng')
+    depends_on('libpng@1.2:1.2.999')
     depends_on('jpeg')
-    depends_on('eigen')
+    depends_on('eigen@290bfb42684a')
     depends_on('gemmlowp')
     depends_on('jsoncpp')
     depends_on('farmhash')
     depends_on('highwayhash')
     depends_on('protobuf')
 
+    depends_on('swig')
     
+    build_directory = "tensorflow/contrib/cmake/spack-build"
+    root_cmakelists_dir = ".."
+
     def mock_external(self, tfname, external_prefix):
         """TODO: Make docstring"""
         touch("CMakeFiles/%s" % tfname)
         touch("CMakeFiles/%s-complete" % tfname)
-        for stamp in ("install", "mkdir", "download", 
+        for stamp in ("install", "mkdir", "download", "done",
                       "update", "patch", "configure", "build"):
             touch("{0}/src/{0}-stamp/{0}-{1}".format(tfname, stamp))
         touch("CMakeFiles/%s.dir/build.make" % tfname)
-        
+
         install_dir = "%s/install" % tfname
-        rmtree(install_dir)
-        symlink(external_prefix, install_dir)
+            
+        if not os.path.islink(install_dir):
+            rmtree(install_dir, ignore_errors=True)
+            symlink(external_prefix, install_dir)
 
     @run_after('cmake')
     def mock_all_externals(self):
         spec = self.spec
-        self.mock_external('zlib', spec['zlib'].prefix)
-        self.mock_external('gif', spec['giflib'].prefix)
-        self.mock_external('png', spec['libpng'].prefix)
-        self.mock_external('jpeg', spec['jpeg'].prefix)
-        self.mock_external('eigen', spec['eigen'].prefix)
-        self.mock_external('gemmlowp', spec['gemmlowp'].prefix)
-        self.mock_external('jsoncpp', spec['jsoncpp'].prefix)
-        self.mock_external('farmhash', spec['farmhash'].prefix)
-        self.mock_external('highwayhash', spec['highwayhash'].prefix)
-        self.mock_external('protobuf', spec['protobuf'].prefix)
+        with working_dir(self.build_directory):
+            self.mock_external('zlib', spec['zlib'].prefix)
+            self.mock_external('gif', spec['giflib'].prefix)
+            self.mock_external('png', spec['libpng'].prefix)
+            self.mock_external('jpeg', spec['jpeg'].prefix)
+            self.mock_external('eigen', spec['eigen'].prefix)
+            self.mock_external('gemmlowp', spec['gemmlowp'].prefix)
+            self.mock_external('jsoncpp', spec['jsoncpp'].prefix)
+            self.mock_external('farmhash', spec['farmhash'].prefix)
+            self.mock_external('highwayhash', spec['highwayhash'].prefix)
+            self.mock_external('protobuf', spec['protobuf'].prefix)
+
+            src_protobuf = "protobuf/src/protobuf/protoc"
+            if os.path.islink(src_protobuf):
+                os.unlink(src_protobuf)
+            symlink("../../install/bin/protoc", src_protobuf)
+
+            mkdirp('farmhash/src/farmhash/src')
+            install('farmhash/install/include/farmhash.h',
+                    'farmhash/src/farmhash/src/farmhash.h')
+
+            mkdirp('jpeg/src/jpeg')
+            for header in glob('jpeg/install/include/jpeg-build/*.h'):
+                install(header, 'jpeg/src/jpeg')
+
+            

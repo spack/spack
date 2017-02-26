@@ -1,3 +1,4 @@
+
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -23,6 +24,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
 
 
 class Jpeg(AutotoolsPackage):
@@ -31,7 +33,15 @@ class Jpeg(AutotoolsPackage):
     alongside various utilities for handling JPEG data."""
 
     homepage = "http://www.ijg.org"
-    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
+    url      = "http://www.ijg.org/files/jpegsrc.v8b.tar.gz"
 
     version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
     version('9a', '3353992aecaee1805ef4109aadd433e7')
+    
+    @run_after('install')
+    def install_build_headers(self):
+        build_header_dir = self.prefix.include + '/jpeg-build'
+        mkdirp(build_header_dir)
+        for header in glob("*.h"):
+            install(header, build_header_dir)
+        
