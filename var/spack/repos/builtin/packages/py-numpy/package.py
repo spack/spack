@@ -39,6 +39,8 @@ class PyNumpy(PythonPackage):
 
     version('1.12.0', '33e5a84579f31829bbbba084fe0a4300',
             url="https://pypi.io/packages/source/n/numpy/numpy-1.12.0.zip")
+    version('1.11.3', 'aa70cd5bba81b78382694d654ed10036',
+            url="https://pypi.io/packages/source/n/numpy/numpy-1.11.3.zip")
     version('1.11.2', '03bd7927c314c43780271bf1ab795ebc')
     version('1.11.1', '2f44a895a8104ffac140c3a70edbd450')
     version('1.11.0', 'bc56fb9fc2895aa4961802ffbdb31d0b')
