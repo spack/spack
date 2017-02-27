@@ -31,6 +31,7 @@ import spack
 import spack.error
 from spack.util.path import canonicalize_path
 from spack.version import *
+from spack.spec import parse_anonymous_spec
 
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
@@ -240,8 +241,24 @@ def is_spec_buildable(spec):
     if spec.name not in allpkgs:
         return True
     if 'buildable' not in allpkgs[spec.name]:
-        return True
-    return allpkgs[spec.name]['buildable']
+        buildable_direct = True
+    else:
+        buildable_direct = allpkgs[spec.name]['buildable']
+
+    in_buildable_blacklist = False
+    if 'buildable-blacklist' in allpkgs[spec.name]:
+        buildable_blacklist = allpkgs[spec.name]['buildable-blacklist']
+        for bl_spec in buildable_blacklist:
+            blacklist_spec = parse_anonymous_spec(bl_spec, spec.name)
+            if spec.satisfies(blacklist_spec):
+                in_buildable_blacklist = True
+
+    if buildable_direct and (not in_buildable_blacklist):
+        buildable = True
+    else:
+        buildable = False
+
+    return buildable
 
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):

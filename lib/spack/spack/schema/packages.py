@@ -59,6 +59,11 @@ schema = {
                             'type':  'boolean',
                             'default': True,
                         },
+                        'buildable-blacklist': {
+                            'type':  'array',
+                            'default': [],
+                            'items': {'type': 'string'}  # package specs
+                        },
                         'modules': {
                             'type': 'object',
                             'default': {},
