@@ -64,7 +64,8 @@ def get_module_cmd_from_bash():
         exec_line = find_exec_line.group(1)
     except:
         try:
-            find_exec_line = re.search(r'.*\(([^(]*bash[^)]*)\).*', module_func)
+            # This will fail with nested parentheses. TODO: expand regex.
+            find_exec_line = re.search(r'.*\(([^()]*bash[^()]*)\).*', module_func)
             exec_line = find_exec_line.group(1)
         except:
             raise ModuleError('get_module_cmd cannot determine the module command')
