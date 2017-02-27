@@ -30,12 +30,14 @@ import subprocess
 import re
 from spack.util.executable import which
 
+
 def get_module_cmd():
     try:
         return get_module_cmd_from_bash()
-    except ModuleError as e:
+    except ModuleError:
         # Don't catch the exception this time; we have no other way to do it.
         return get_module_cmd_from_which()
+
 
 def get_module_cmd_from_which():
     module_cmd = which('modulecmd')
@@ -47,6 +49,7 @@ def get_module_cmd_from_which():
         raise ModuleError('get_module_cmd cannot determine the module command')
 
     return module_cmd
+
 
 def get_module_cmd_from_bash():
     # Find how the module function is defined in the environment
@@ -65,10 +68,12 @@ def get_module_cmd_from_bash():
     except:
         try:
             # This will fail with nested parentheses. TODO: expand regex.
-            find_exec_line = re.search(r'.*\(([^()]*bash[^()]*)\).*', module_func)
+            find_exec_line = re.search(r'.*\(([^()]*bash[^()]*)\).*',
+                                       module_func)
             exec_line = find_exec_line.group(1)
         except:
-            raise ModuleError('get_module_cmd cannot determine the module command')
+            raise ModuleError('get_module_cmd cannot '
+                              'determine the module command')
 
     # Create an executable
     args = exec_line.split()

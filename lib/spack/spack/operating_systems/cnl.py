@@ -30,6 +30,7 @@ from spack.util.multiproc import parmap
 import spack.compilers
 from spack.util.module_cmd import get_module_cmd
 
+
 class Cnl(OperatingSystem):
     """ Compute Node Linux (CNL) is the operating system used for the Cray XC
     series super computers. It is a very stripped down version of GNU/Linux.

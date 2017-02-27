@@ -33,6 +33,7 @@ from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
 from spack.util.module_cmd import get_module_cmd
 
+
 def _get_modules_in_modulecmd_output(output):
     '''Return list of valid modules parsed from modulecmd output string.'''
     return [i for i in output.splitlines()

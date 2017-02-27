@@ -67,7 +67,7 @@ import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable
-from spack.util.module_cmd import get_module_cmd
+from spack.util.module_cmd import load_module, get_path_from_module
 #
 # This can be set by the user to globally disable parallel builds.
 #
