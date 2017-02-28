@@ -37,5 +37,7 @@ class Vcsh(Package):
     version('1.20141026', 'e8f42a9dbb7460f641545bea5ca1cbc4')
     version('1.20141025', '93c7fad67ab4300d76d753a32c300831')
 
+    depends_on('git', type='run')
+
     def install(self, spec, prefix):
         install('vcsh', prefix.bin)
