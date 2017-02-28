@@ -32,3 +32,5 @@ class PyTabulate(PythonPackage):
     url      = "https://pypi.io/packages/source/t/tabulate/tabulate-0.7.7.tar.gz"
 
     version('0.7.7', '39a21aaa9c10be0749c545be34552559')
+
+    depends_on('py-setuptools', type='build')
