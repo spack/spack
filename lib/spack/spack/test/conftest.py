@@ -39,6 +39,7 @@ import spack
 import spack.architecture
 import spack.database
 import spack.directory_layout
+import spack.environment
 import spack.fetch_strategy
 import spack.platforms.test
 import spack.repository
@@ -523,3 +524,57 @@ def mock_svn_repository():
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
     current.chdir()
+
+
+@pytest.fixture(scope='module')
+def modulepath():
+    """Return fake modulepath"""
+    test_path = spack.test_path
+    env = spack.environment.EnvironmentModifications()
+    modulepath = llnl.util.filesystem.join_path(test_path,
+                                                "data",
+                                                "modulefiles")
+    modulefile = llnl.util.filesystem.join_path(modulepath,
+                                                "externalmodule",
+                                                "1.0")
+    print "Creating modulefile at %s" % modulepath
+    llnl.util.filesystem.touchp(modulefile)
+    fake_root = str(spack.mock_packages_path) + "/$name/$version"
+    with open(modulefile, "w") as f:
+        f.write(
+"""#%Module
+## Mock module file for testing modules. Requires cray tclmodules
+
+set           name          external-module
+set           version       1.0
+set           root          {package_path}
+
+set           fullname      $name
+set           externalurl   http://www.example.com
+set           description   "Fake module for testing with spack"
+
+proc ModulesHelp {{}} {{
+    global description externalurl
+    puts stdout "Description - $description"
+    puts stdout "Other Docs  - $externalurl"
+}}
+
+module-whatis               "$description"
+
+prepend-path   PATH          $root/bin
+prepend-path   MANPATH       $root/share
+        """.format(package_path=fake_root)
+        )
+
+    env.prepend_path("MODULEPATH", modulepath)
+    env.apply_modifications()
+    yield
+    env.unset("MODULEPATH")
+    shutil.rmtree(modulepath, ignore_errors=True)
+
+@pytest.fixture(scope="module")
+def fake_external_package():
+    temp_path = tempfile.mkdtemp()
+    yield temp_path
+    print "deleting temporary path %s" % temp_path
+    shutil.rmtree(temp_path, ignore_errors=True)

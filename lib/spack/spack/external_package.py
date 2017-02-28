@@ -336,6 +336,25 @@ class ExternalPackage(object):
         return syaml_dict([(self.name, entry)])
 
     @classmethod
+    def find_external_pacakges(cls, package_spec=None):
+        """Attempts to find system packages.
+
+        Currently, uses the modulecmd and parses for all packages. If
+        a package_spec is given, the name will be used to search for packages.
+        If no args are given it will attempt to find packages depending on
+        the platform it is located.
+
+        Args:
+            package_spec: an optional spec object
+        Returns:
+            a list of ExternalPackage objects
+        """
+        # Packages should probably tell us how to find themselves given a 
+        # System. At the moment I will only support cray packages.
+        return []
+
+
+    @classmethod
     def create_external_package(cls, spec, external_location):
         """Return an external package object.
 
@@ -353,7 +372,7 @@ class ExternalPackage(object):
             package_location: either a prefix path string or a module name.
 
         Returns:
-            an ExternalPackage object. 
+            an ExternalPackage object.
         """
 
         def _get_version_from_spec(package_spec):
@@ -421,6 +440,7 @@ class ExternalPackage(object):
                 modulecmd.add_default_arg("python")
                 output = modulecmd("show", external_package_location,
                                    output=str, error=str)
+                print output
                 if "ERROR" not in output:
                     return "modules"
             return "unknown"
