@@ -41,5 +41,11 @@ class Highwayhash(MakefilePackage):
 
     def install(self, spec, prefix):
         install('libhighwayhash.a', prefix.lib)
+        install('profiler_example', prefix.bin)
+        install('nanobenchmark_example', prefix.bin)
+        install('vector_test', prefix.bin)
+        install('sip_hash_test', prefix.bin)
+        install('highwayhash_test', prefix.bin)
+        install('benchmark', prefix.bin)
         for i in glob('highwayhash/*.h'):
-            install(i, prefix.bin)
+            install(i, prefix.include)
