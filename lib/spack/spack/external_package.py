@@ -397,6 +397,25 @@ class ExternalPackage(object):
 
 
     @classmethod
+    def find_external_pacakges(cls, package_spec=None):
+        """Attempts to find system packages.
+
+        Currently, uses the modulecmd and parses for all packages. If
+        a package_spec is given, the name will be used to search for packages.
+        If no args are given it will attempt to find packages depending on
+        the platform it is located.
+
+        Args:
+            package_spec: an optional spec object
+        Returns:
+            a list of ExternalPackage objects
+        """
+        # Packages should probably tell us how to find themselves given a 
+        # System. At the moment I will only support cray packages.
+        return []
+
+
+    @classmethod
     def create_external_package(cls, spec, external_location):
         """Return an external package object.
 
