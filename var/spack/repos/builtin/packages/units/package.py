@@ -32,3 +32,5 @@ class Units(AutotoolsPackage):
     url      = "https://ftp.gnu.org/gnu/units/units-2.13.tar.gz"
 
     version('2.13', '5cbf2a6af76e94ba0ac55fc8d99d5a3e')
+
+    depends_on('python', type=('build', 'run'))
