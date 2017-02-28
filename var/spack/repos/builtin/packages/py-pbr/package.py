@@ -31,8 +31,8 @@ class PyPbr(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pbr"
     url      = "https://pypi.io/packages/source/p/pbr/pbr-1.10.0.tar.gz"
 
-    version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
     version('1.10.0', '8e4968c587268f030e38329feb9c8f17')
+    version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-enum34', type='build', when='^python@:3.3')
