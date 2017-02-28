@@ -90,23 +90,23 @@ class Vim(Package):
         if '+python' in spec:
             configure_args.append("--enable-pythoninterp=yes")
         else:
-            configure_args.append("--enable-pythoninterp=dynamic")
+            configure_args.append("--enable-pythoninterp=no")
 
         if '+ruby' in spec:
             configure_args.append("--enable-rubyinterp=yes")
         else:
-            configure_args.append("--enable-rubyinterp=dynamic")
+            configure_args.append("--enable-rubyinterp=no")
 
         if '+lua' in spec:
             configure_args.append("--enable-luainterp=yes")
             configure_args.append("--with-lua-prefix=%s" % spec['lua'].prefix)
         else:
-            configure_args.append("--enable-luainterp=dynamic")
+            configure_args.append("--enable-luainterp=no")
 
         if '+perl' in spec:
             configure_args.append("--enable-perlinterp=yes")
         else:
-            configure_args.append("--enable-perlinterp=dynamic")
+            configure_args.append("--enable-perlinterp=no")
 
         if '+gui' in spec:
             configure_args.append("--enable-gui=auto")
