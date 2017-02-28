@@ -32,7 +32,6 @@ class PyStatsmodels(PythonPackage):
     url      = "https://pypi.io/packages/source/s/statsmodels/statsmodels-0.8.0.tar.gz"
 
     version('0.8.0', 'b3e5911cc9b00b71228d5d39a880bba0')
-    version('0.8.0rc1', 'da32434ebfebae2c7506e9577ac558f5')
 
     variant('tests',    default=False, description='With nose tests')
     variant('plotting', default=False, description='With matplotlib')
