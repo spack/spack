@@ -60,9 +60,17 @@ class Pagmo(CMakePackage):
 
     extends('python', when='+python')
 
-    depends_on('boost+system+serialization+thread')
-    depends_on('boost+python',    when='+python')
-    depends_on('boost+date_time', when='+gtop')
+    # Concretization in Python is currently broken
+    # depends_on('boost+system+serialization+thread')
+    # depends_on('boost+python',    when='+python')
+    # depends_on('boost+date_time', when='+gtop')
+
+    # Workaround for now
+    depends_on('boost+system+serialization+thread',                  when='~python~gtop')
+    depends_on('boost+system+serialization+thread+python',           when='+python~gtop')
+    depends_on('boost+system+serialization+thread+date_time',        when='~python+gtop')
+    depends_on('boost+system+serialization+thread+python+date_time', when='+python+gtop')
+
     depends_on('gsl@1.15:',       when='+gsl')
     depends_on('ipopt',           when='+ipopt')
     depends_on('mpi@1.2:',        when='+mpi')
