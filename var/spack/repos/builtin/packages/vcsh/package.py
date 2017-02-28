@@ -39,5 +39,6 @@ class Vcsh(Package):
 
     depends_on('git', type='run')
 
+    # vcsh provides a makefile, if needed the install method should be adapted
     def install(self, spec, prefix):
         install('vcsh', prefix.bin)
