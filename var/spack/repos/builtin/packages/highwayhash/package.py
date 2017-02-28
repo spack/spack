@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 from glob import glob
+import os
 
 
 class Highwayhash(MakefilePackage):
