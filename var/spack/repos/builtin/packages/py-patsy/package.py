@@ -26,15 +26,16 @@ from spack import *
 
 
 class PyPatsy(PythonPackage):
-    """A Python package for describing statistical models and for building design matrices."""
+    """A Python package for describing statistical models and for
+    building design matrices."""
 
     homepage = "https://github.com/pydata/patsy"
     url      = "https://pypi.io/packages/source/p/patsy/patsy-1.9.1.tar.gz"
 
     version('0.4.1', '286db90a03ad04a1e9e1e418142ca613')
 
-    variant('splines', desciption="Offers spline related functions")
-    variant('tests', desciption="allows nose tests")
+    variant('splines', description="Offers spline related functions")
+    variant('tests', description="allows nose tests")
 
     depends_on('py-setuptools',  type='build')
     depends_on('py-numpy',       type=('build', 'run'))
