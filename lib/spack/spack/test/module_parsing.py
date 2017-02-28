@@ -27,7 +27,12 @@ import subprocess
 import os
 from spack.util.module_cmd import *
 
-typeset = subprocess.check_output('module avail', shell=True)
+typeset_func = subprocess.Popen('module avail',
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                shell=True)
+typeset_func.wait()
+typeset = typeset_func.stdout.read()
 MODULE_DEFINED = False if 'Command not found' in typeset else True
 
 def test_get_argument_from_module_line():
