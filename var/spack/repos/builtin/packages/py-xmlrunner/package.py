@@ -33,4 +33,5 @@ class PyXmlrunner(PythonPackage):
 
     version('1.7.7', '7b0b152ed2d278516aedbc0cac22dfb3')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-unittest2', type=('build', 'run'), when='^python@:2.7')
