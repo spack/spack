@@ -29,7 +29,7 @@ class PyStatsmodels(PythonPackage):
     """Statistical computations and models for use with SciPy"""
 
     homepage = "http://www.statsmodels.org"
-    url      = "https://pypi.io/packages/source/s/statsmodels/statsmodels-1.9.1.tar.gz"
+    url      = "https://pypi.io/packages/source/s/statsmodels/statsmodels-0.8.0.tar.gz"
 
     version('0.8.0', 'b3e5911cc9b00b71228d5d39a880bba0')
     version('0.8.0rc1', 'da32434ebfebae2c7506e9577ac558f5')
@@ -39,11 +39,11 @@ class PyStatsmodels(PythonPackage):
 
     # according to http://www.statsmodels.org/dev/install.html earlier versions
     # might work.
-    depends_on('py-setuptools',      type='build')
-    depends_on('py-numpy@1.6:',      type=('build', 'run'))
-    depends_on('py-scipy@0.11:',     type=('build', 'run'))
-    depends_on('py-pandas@0.12:',    type=('build', 'run'))
-    depends_on('py-patsy@0.2.1:',    type=('build', 'run'))
-    depends_on('py-cython@0.24:',    type=('build', 'run'))
-    depends_on('py-nose',            type='run', when='+tests')
-    depends_on('py-matplotlib@1.3:', type='run', when='+plotting')
+    depends_on('py-setuptools@0.6c5:', type='build')
+    depends_on('py-numpy@1.7.0:',      type=('build', 'run'))
+    depends_on('py-scipy@0.11:',       type=('build', 'run'))
+    depends_on('py-pandas@0.12:',      type=('build', 'run'))
+    depends_on('py-patsy@0.2.1:',      type=('build', 'run'))
+    depends_on('py-cython@0.24:',      type=('build', 'run'))
+    depends_on('py-nose',              type='run', when='+tests')
+    depends_on('py-matplotlib@1.3:',   type='run', when='+plotting')

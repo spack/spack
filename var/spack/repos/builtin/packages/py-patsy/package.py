@@ -30,9 +30,9 @@ class PyPatsy(PythonPackage):
     building design matrices."""
 
     homepage = "https://github.com/pydata/patsy"
-    url      = "https://pypi.io/packages/source/p/patsy/patsy-1.9.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/patsy/patsy-0.4.1.zip"
 
-    version('0.4.1', '286db90a03ad04a1e9e1e418142ca613')
+    version('0.4.1', '9445f29e3426d1ed30d683a1e1453f84')
 
     variant('splines', description="Offers spline related functions")
     variant('tests', description="allows nose tests")
