@@ -35,6 +35,8 @@ class Cscope(AutotoolsPackage):
 
     variant('flex', default=False, description="Builds with flex")
 
+    depends_on('flex', when='+flex')
+
     def configure_args(self):
         args = []
         if 'flex' in self.spec:
