@@ -23,8 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
-from spack.util.module_cmd import get_argument_from_module_line
+import subprocess
+import os
+from spack.util.module_cmd import *
 
+typeset = subprocess.check_output('module avail', shell=True)
+MODULE_DEFINED = False if 'Command not found' in typeset else True
 
 def test_get_argument_from_module_line():
     lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
@@ -40,3 +44,59 @@ def test_get_argument_from_module_line():
     for bl in bad_lines:
         with pytest.raises(ValueError):
             get_argument_from_module_line(bl)
+
+@pytest.mark.skipif(not MODULE_DEFINED, reason='Depends on defined module cmd')
+def test_get_module_cmd_from_bash_using_modules():
+    module_list_proc = subprocess.Popen(['module list'],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        executable='/bin/bash',
+                                        shell=True)
+    module_list_proc.wait()
+    module_list = module_list_proc.stdout.read()
+
+    module_cmd = get_module_cmd_from_bash()
+    module_cmd_list = module_cmd('list', output=str, error=str)
+
+    assert module_cmd_list == module_list
+
+@pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
+def test_get_module_cmd_from_bash_ticks():
+    module_func = os.environ.get('BASH_FUNC_module()', None)
+    os.environ['BASH_FUNC_module()'] = '() { `echo bash $*` \n }'
+    module_cmd = get_module_cmd_from_bash()
+    module_cmd_list = module_cmd('list', output=str, error=str)
+
+    assert module_cmd_list == 'python list\n'
+
+    if module_func:
+        os.environ['BASH_FUNC_module()'] = module_func
+
+@pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
+def test_get_module_cmd_from_bash_parens():
+    module_func = os.environ.get('BASH_FUNC_module()', None)
+    os.environ['BASH_FUNC_module()'] = '() { eval $(cat arg bash $*) \n }'
+    module_cmd = get_module_cmd_from_bash()
+    module_cmd_list = module_cmd('list', output=str, error=str)
+
+    # Check directory for spack, python, and list
+    # Parse output appropriately
+    dir_list = os.listdir(os.getcwd())
+    if 'arg' in dir_list:
+        with open('arg', 'r') as f:
+            assert f.read() in module_cmd_list
+    else:
+        assert 'cat: arg: No such file or directory' in module_cmd_list
+    if 'python' in dir_list:
+        with open('python', 'r') as f:
+            assert f.read() in module_cmd_list
+    else:
+        assert 'cat: python: No such file or directory' in module_cmd_list
+    if 'list' in dir_list:
+        with open('list', 'r') as f:
+            assert f.read() in module_cmd_list
+    else:
+        assert 'cat: list: No such file or directory' in module_cmd_list
+
+    if module_func:
+        os.environ['BASH_FUNC_module()'] = module_func
