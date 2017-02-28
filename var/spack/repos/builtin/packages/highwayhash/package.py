@@ -40,12 +40,17 @@ class Highwayhash(MakefilePackage):
     build_targets = ['all', 'libhighwayhash.a']
 
     def install(self, spec, prefix):
-        install('libhighwayhash.a', prefix.lib)
+        # The following are CPU and compiler flag specific
+        if(os.path.exists('libhighwayhash.a')):
+            install('libhighwayhash.a', prefix.lib)
+        if(os.path.exists('highwayhash_test')):
+            install('highwayhash_test', prefix.bin)
+        if(os.path.exists('benchmark')):
+            install('benchmark', prefix.bin)
+        # Always installed
         install('profiler_example', prefix.bin)
         install('nanobenchmark_example', prefix.bin)
         install('vector_test', prefix.bin)
         install('sip_hash_test', prefix.bin)
-        install('highwayhash_test', prefix.bin)
-        install('benchmark', prefix.bin)
         for i in glob('highwayhash/*.h'):
             install(i, prefix.include)
