@@ -59,9 +59,6 @@ class Vim(Package):
     variant('cscope', default=False, description="build with cscope support")
     depends_on('cscope', when='+cscope', type='run')
 
-    variant('failmissing', default=True,
-        description="Fail if dependencies on additional features are missing.")
-
     variant('gui', default=False, description="build with gui (gvim)")
     # virtual dependency?
 
@@ -86,10 +83,7 @@ class Vim(Package):
         if feature_set is None:
             feature_set = 'normal'
 
-        configure_args = []
-
-        if '+failmissing' in spec:
-            configure_args.append("--enable-fail-if-missing")
+        configure_args = ["--enable-fail-if-missing"]
 
         configure_args.append("--with-features=" + feature_set)
 
