@@ -31,6 +31,7 @@ class PyWheel(PythonPackage):
     homepage = "https://pypi.python.org/pypi/wheel"
     url      = "https://pypi.python.org/packages/source/w/wheel/wheel-0.26.0.tar.gz"
 
+    version('0.29.0', '555a67e4507cedee23a0deb9651e452f')
     version('0.26.0', '4cfc6e7e3dc7377d0164914623922a10')
 
     depends_on('py-setuptools', type='build')
