@@ -39,21 +39,42 @@ class IntelParallelStudio(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542')
-    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542')
-    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85')
-    version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01')
-    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01')
-    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9')
-    version('professional.2016.4', '16a641a06b156bb647c8a56e71f3bb33')
-    version('cluster.2016.4',      '16a641a06b156bb647c8a56e71f3bb33')
-    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3')
-    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3')
-    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa')
-    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832')
-    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832')
-    version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf')
-    version('cluster.2015.6',      'd460f362c30017b60f85da2e51ad25bf')
+    version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
+    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
+    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
+    version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
+    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
+    version('composer.2017.0',     'b67da0065a17a05f110ed1d15c3c6312',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
+    version('professional.2016.4', '16a641a06b156bb647c8a56e71f3bb33',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
+    version('cluster.2016.4',      '16a641a06b156bb647c8a56e71f3bb33',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
+    version('composer.2016.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
+    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
+    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
+    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
+    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
+    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
+    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
+    version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+    version('cluster.2015.6',      'd460f362c30017b60f85da2e51ad25bf',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+    version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
@@ -135,29 +156,6 @@ class IntelParallelStudio(IntelInstaller):
             shared=shared
         )
         return libs
-
-    def url_for_version(self, version):
-        """Assume the tarball is in the current directory."""
-
-        version_tuple = str(version).split('.')
-        year = int(version_tuple[1])
-
-        url = "file://{0}/parallel_studio_xe_{1}".format(
-            os.getcwd(), version_tuple[1])
-
-        update_string = ""
-        if version_tuple[2] != '0':
-            update_string = "_update{0}".format(version_tuple[2])
-
-        if version_tuple[0] == 'composer':
-            if year == 2016:
-                url += "_composer_edition{0}".format(update_string)
-            else:
-                url += "{0}_composer_edition".format(update_string)
-        else:
-            url += update_string
-
-        return url + ".tgz"
 
     def install(self, spec, prefix):
         base_components = "ALL"  # when in doubt, install everything
