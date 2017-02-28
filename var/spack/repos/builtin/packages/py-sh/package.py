@@ -34,4 +34,4 @@ class PySh(PythonPackage):
     version('1.12.9', 'ddc128a8d943d25afa6e01af11e0063b')
     version('1.11',   '7af8df6c92d29ff927b6db0146bddec3')
 
-    depends_on('py-setuptools', type='build', when="@1.12.9:")
+    depends_on('py-setuptools', type='build')
