@@ -25,14 +25,17 @@
 from spack import *
 
 
-class PyPbr(PythonPackage):
-    """PBR is a library that injects some useful and sensible default
-       behaviors into your setuptools run."""
-    homepage = "https://pypi.python.org/pypi/pbr"
-    url      = "https://pypi.io/packages/source/p/pbr/pbr-1.10.0.tar.gz"
+class PySymfit(PythonPackage):
+    """Symbolic Fitting; fitting as it should be."""
 
-    version('1.10.0', '8e4968c587268f030e38329feb9c8f17')
-    version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
+    homepage = "http://symfit.readthedocs.org"
+    url      = "https://pypi.io/packages/source/s/symfit/symfit-0.3.5.tar.gz"
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-enum34', type='build', when='^python@:3.3')
+    version('0.3.5', '7f62552ffeba4b4d203c01ff52fe15d5')
+
+    depends_on('py-setuptools@17.1:', type='build')
+    depends_on('py-pbr@1.9:',         type='build')
+    depends_on('py-numpy',            type='run')
+    depends_on('py-scipy',            type='run')
+    depends_on('py-sympy',            type='run')
+    depends_on('py-funcsigs',         type='run', when='^python@:2.7.999')
