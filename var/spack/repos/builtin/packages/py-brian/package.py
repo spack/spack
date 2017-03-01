@@ -29,7 +29,7 @@ class PyBrian(PythonPackage):
     """A clock-driven simulator for spiking neural networks"""
 
     homepage = "http://www.briansimulator.org"
-    url      = "https://pypi.io/packages/source/b/brian/brain-1.4.3.tar.gz"
+    url      = "https://pypi.io/packages/source/b/brian/brian-1.4.3.tar.gz"
 
     version('1.4.3', '0570099bcce4d7afde73ff4126e6c30f')
 
