@@ -29,11 +29,16 @@ class PySix(PythonPackage):
     """Python 2 and 3 compatibility utilities."""
 
     homepage = "https://pypi.python.org/pypi/six"
-    url      = "https://pypi.python.org/packages/source/s/six/six-1.9.0.tar.gz"
+    url      = "https://pypi.io/packages/source/s/six/six-1.9.0.tar.gz"
 
     version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
     version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
 
     extends('python', ignore=r'bin/pytest')
 
-    depends_on('py-setuptools', type='build')
+    # Newer versions of setuptools require six. Although setuptools is an
+    # optional dependency of six, if it is not found, setup.py will fallback
+    # on distutils.core instead. Don't add a setuptools dependency or we
+    # won't be able to bootstrap setuptools.
+
+    # depends_on('py-setuptools', type='build')

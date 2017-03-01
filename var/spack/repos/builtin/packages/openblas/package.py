@@ -38,6 +38,8 @@ class Openblas(MakefilePackage):
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
+    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
+
     variant(
         'shared',
         default=True,
@@ -50,7 +52,7 @@ class Openblas(MakefilePackage):
     provides('blas')
     provides('lapack')
 
-    patch('make.patch')
+    patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')

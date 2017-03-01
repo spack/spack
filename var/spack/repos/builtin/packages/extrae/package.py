@@ -52,9 +52,9 @@ class Extrae(Package):
        instrument the MPI programin model, and the following parallel
        programming models either alone or in conjunction with MPI :
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
-    homepage = "http://www.bsc.es/computer-sciences/extrae"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-3.3.0.tar.bz2"
-    version('3.3.0', 'f46e3f1a6086b5b3ac41c9585b42952d')
+    homepage = "https://tools.bsc.es/extrae"
+    url      = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
+    version('3.4.1', '69001f5cfac46e445d61eeb567bc8844')
 
     depends_on("mpi")
     depends_on("dyninst")

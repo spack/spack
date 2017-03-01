@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Jasper(Package):
+class Jasper(AutotoolsPackage):
     """Library for manipulating JPEG-2000 images"""
 
     homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
@@ -45,19 +45,14 @@ class Jasper(Package):
     # see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=469786
     patch('fix_alpha_channel_assert_fail.patch')
 
-    def install(self, spec, prefix):
-        configure_options = [
-            '--prefix={0}'.format(prefix),
-            '--mandir={0}'.format(spec.prefix.man),
-        ]
+    def configure_args(self):
+        spec = self.spec
+        args = ['--mandir={0}'.format(spec.prefix.man)]
 
         if '+shared' in spec:
-            configure_options.append('--enable-shared')
+            args.append('--enable-shared')
 
         if '+debug' not in spec:
-            configure_options.append('--disable-debug')
+            args.append('--disable-debug')
 
-        configure(*configure_options)
-
-        make()
-        make('install')
+        return args

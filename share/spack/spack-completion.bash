@@ -136,8 +136,6 @@ function _spack_bootstrap {
     if $list_options
     then
         compgen -W "-h --help -r --remote" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -192,8 +190,6 @@ function _spack_compiler_add {
     if $list_options
     then
         compgen -W "-h --help --scope" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -375,8 +371,6 @@ function _spack_flake8 {
     then
         compgen -W "-h --help -k --keep-temp -o --output
                     -r --root-relative -U --no-untracked" -- "$cur"
-    else
-        compgen -o filenames -- "$cur"
     fi
 }
 
@@ -452,8 +446,6 @@ function _spack_md5 {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    else
-        compgen -o filenames -- "$cur"
     fi
 }
 
@@ -470,8 +462,6 @@ function _spack_mirror_add {
     if $list_options
     then
         compgen -W "-h --help --scope" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -613,8 +603,6 @@ function _spack_python {
     if $list_options
     then
         compgen -W "-h --help -c" -- "$cur"
-    else
-        compgen -o filenames -- "$cur"
     fi
 }
 
@@ -635,8 +623,6 @@ function _spack_repo_add {
     if $list_options
     then
         compgen -W "-h --help --scope" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -644,8 +630,6 @@ function _spack_repo_create {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -718,7 +702,7 @@ function _spack_test {
 function _spack_uninstall {
     if $list_options
     then
-        compgen -W "-h --help -f --force -a --all -d --dependents
+        compgen -W "-h --help -f --force -a --all -R --dependents
                     -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
@@ -813,8 +797,6 @@ function _spack_view_hardlink {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -822,8 +804,6 @@ function _spack_view_remove {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -841,8 +821,6 @@ function _spack_view_statlink {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -855,8 +833,6 @@ function _spack_view_symlink {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    else
-        compgen -o dirnames -- "$cur"
     fi
 }
 
@@ -894,18 +870,18 @@ function _tests {
 # Testing functions
 
 function _test_vars {
-    echo "-----------------------------------------------------"            >> temp
-    echo "Full line:                '$COMP_LINE'"                           >> temp
-    echo                                                                    >> temp
+    echo "-----------------------------------------------------"             >> temp
+    echo "Full line:                '$COMP_LINE'"                            >> temp
+    echo                                                                     >> temp
     echo "Word list w/ flags:       $(_pretty_print COMP_WORDS[@])"          >> temp
-    echo "# words w/ flags:         '${#COMP_WORDS[@]}'"                    >> temp
-    echo "Cursor index w/ flags:    '$COMP_CWORD'"                          >> temp
-    echo                                                                    >> temp
+    echo "# words w/ flags:         '${#COMP_WORDS[@]}'"                     >> temp
+    echo "Cursor index w/ flags:    '$COMP_CWORD'"                           >> temp
+    echo                                                                     >> temp
     echo "Word list w/out flags:    $(_pretty_print COMP_WORDS_NO_FLAGS[@])" >> temp
-    echo "# words w/out flags:      '${#COMP_WORDS_NO_FLAGS[@]}'"           >> temp
-    echo "Cursor index w/out flags: '$COMP_CWORD_NO_FLAGS'"                 >> temp
-    echo                                                                    >> temp
-    echo "Subfunction:              '$subfunction'"                         >> temp
+    echo "# words w/out flags:      '${#COMP_WORDS_NO_FLAGS[@]}'"            >> temp
+    echo "Cursor index w/out flags: '$COMP_CWORD_NO_FLAGS'"                  >> temp
+    echo                                                                     >> temp
+    echo "Subfunction:              '$subfunction'"                          >> temp
     if $list_options
     then
         echo "List options:             'True'"  >> temp
@@ -929,4 +905,4 @@ function _pretty_print {
     done
 }
 
-complete -F _bash_completion_spack spack
+complete -o default -F _bash_completion_spack spack
