@@ -91,18 +91,25 @@ class Pagmo(CMakePackage):
         return 'ON' if variant in self.spec else 'OFF'
 
     def cmake_args(self):
+        spec = self.spec
+
         args = [
-            'BUILD_EXAMPLES={0}'.format(self.variant_to_bool('+examples')),
-            'BUILD_MAIN={0}'.format(self.variant_to_bool('+cxx')),
-            'BUILD_PYGMO={0}'.format(self.variant_to_bool('+python')),
-            'ENABLE_GSL={0}'.format(self.variant_to_bool('+gsl')),
-            'ENABLE_GTOP_DATABASE={0}'.format(self.variant_to_bool('+gtop')),
-            'ENABLE_IPOPT={0}'.format(self.variant_to_bool('+ipopt')),
-            'ENABLE_MPI={0}'.format(self.variant_to_bool('+mpi')),
-            'ENABLE_NLOPT={0}'.format(self.variant_to_bool('+nlopt')),
-            'ENABLE_SNOPT={0}'.format(self.variant_to_bool('+snopt')),
-            'ENABLE_TESTS={0}'.format(self.variant_to_bool('+tests')),
-            'ENABLE_WORHP={0}'.format(self.variant_to_bool('+worhp')),
-            'INSTALL_HEADERS={0}'.format(self.variant_to_bool('+headers')),
+            '-DBUILD_EXAMPLES={0}'.format(self.variant_to_bool('+examples')),
+            '-DBUILD_MAIN={0}'.format(self.variant_to_bool('+cxx')),
+            '-DBUILD_PYGMO={0}'.format(self.variant_to_bool('+python')),
+            '-DENABLE_GSL={0}'.format(self.variant_to_bool('+gsl')),
+            '-DENABLE_GTOP_DATABASE={0}'.format(self.variant_to_bool('+gtop')),
+            '-DENABLE_IPOPT={0}'.format(self.variant_to_bool('+ipopt')),
+            '-DENABLE_MPI={0}'.format(self.variant_to_bool('+mpi')),
+            '-DENABLE_NLOPT={0}'.format(self.variant_to_bool('+nlopt')),
+            '-DENABLE_SNOPT={0}'.format(self.variant_to_bool('+snopt')),
+            '-DENABLE_TESTS={0}'.format(self.variant_to_bool('+tests')),
+            '-DENABLE_WORHP={0}'.format(self.variant_to_bool('+worhp')),
+            '-DINSTALL_HEADERS={0}'.format(self.variant_to_bool('+headers')),
         ]
+
+        if '+python' in spec:
+            # By default, picks up the system Python, not the Spack build
+            args.append('-DPYTHON_EXECUTABLE={0}'.format(python_exe))
+
         return args
