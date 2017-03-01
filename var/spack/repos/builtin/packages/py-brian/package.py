@@ -33,7 +33,6 @@ class PyBrian(PythonPackage):
 
     version('1.4.3', '0570099bcce4d7afde73ff4126e6c30f')
 
-    depends_on('py-setuptools',         type='build')
     depends_on('py-matplotlib@0.90.1:', type=('build', 'run'))
     depends_on('py-numpy@1.4.1:',       type=('build', 'run'))
     depends_on('py-scipy@0.7.0:',       type=('build', 'run'))
