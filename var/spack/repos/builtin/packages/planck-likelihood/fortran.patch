@@ -1,0 +1,11 @@
+--- a/src/bflike/bflike_smw.f90
++++ b/src/bflike/bflike_smw.f90
+@@ -1600,6 +1600,8 @@
+     ok = .false.
+ 
+     call fid%init()
++
++    unit = 3001
+ 
+     open(unit = unit,file=trim(filein),status='old',action='read',&
+          iostat=istat)
