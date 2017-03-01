@@ -25,14 +25,13 @@
 from spack import *
 
 
-class PyUnittest2(PythonPackage):
-    """unittest2 is a backport of the new features added to the unittest
-    testing framework in Python 2.7 and onwards."""
+class PyXmlrunner(PythonPackage):
+    """PyUnit-based test runner with JUnit like XML reporting."""
 
-    homepage = "https://pypi.python.org/pypi/unittest2"
-    url      = "https://pypi.python.org/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
+    homepage = "https://github.com/pycontribs/xmlrunner"
+    url      = "https://pypi.io/packages/source/x/xmlrunner/xmlrunner-1.7.7.tar.gz"
 
-    version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
+    version('1.7.7', '7b0b152ed2d278516aedbc0cac22dfb3')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-enum34', when='^python@:3.3')
+    depends_on('py-unittest2', type=('build', 'run'), when='^python@:2.7')
