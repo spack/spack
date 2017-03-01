@@ -63,7 +63,9 @@ def test_get_module_cmd_from_bash_using_modules():
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
 
-    assert module_cmd_list == module_list
+    # Lmod command reprints some env variables on every invocation.
+    # Test containment to avoid false failures on lmod systems.
+    assert module_list in module_cmd_list
 
 @pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_ticks():
