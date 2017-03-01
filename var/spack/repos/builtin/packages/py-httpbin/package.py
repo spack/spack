@@ -25,13 +25,17 @@
 from spack import *
 
 
-class PyCoverage(PythonPackage):
-    """ Testing coverage checker for python """
+class PyHttpbin(PythonPackage):
+    """HTTP Request and Response Service"""
 
-    homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.io/packages/source/c/coverage/coverage-4.3.4.tar.gz"
+    homepage = "https://github.com/Runscope/httpbin"
+    url = "https://pypi.io/packages/source/h/httpbin/httpbin-0.5.0.tar.gz"
 
-    version('4.3.4', 'd347766b06bbb4fd0bc822014b7cfb0a')
-    version('4.0a6', '1bb4058062646148965bef0796b61efc')
+    version('0.5.0', '923793df99156caa484975ade96ee115')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',         type='build')
+    depends_on('py-decorator@3.4.0:',   type=('build', 'run'))
+    depends_on('py-flask@0.10.1:',      type=('build', 'run'))
+    depends_on('py-itsdangerous@0.24:', type=('build', 'run'))
+    depends_on('py-markupsafe@0.23:',   type=('build', 'run'))
+    depends_on('py-six@1.6.1:',         type=('build', 'run'))

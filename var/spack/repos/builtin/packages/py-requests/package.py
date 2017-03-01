@@ -25,13 +25,21 @@
 from spack import *
 
 
-class PyCoverage(PythonPackage):
-    """ Testing coverage checker for python """
+class PyRequests(PythonPackage):
+    """Python HTTP for Humans."""
 
-    homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.io/packages/source/c/coverage/coverage-4.3.4.tar.gz"
+    homepage = "http://python-requests.org"
+    url = "https://pypi.io/packages/source/r/requests/requests-2.13.0.tar.gz"
 
-    version('4.3.4', 'd347766b06bbb4fd0bc822014b7cfb0a')
-    version('4.0a6', '1bb4058062646148965bef0796b61efc')
+    version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
+    version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',              type='build')
+    # from setup.py:
+    # test_requirements = ['pytest>=2.8.0', 'pytest-httpbin'==0.0.7,
+    #                      'pytest-cov', 'pytest-mock']
+    # needs #1279 and #2869
+    # depends_on('py-pytest@2.8.7:',           type=('build', 'run'))
+    # depends_on('py-pytest-cov@2.2.1:',       type=('build', 'run'))
+    # depends_on('py-pytest-httpbin@0.2.0:',   type=('build', 'run'))
+    # depends_on('py-pytest-mock@0.11.0:',     type=('build', 'run'))
