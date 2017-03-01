@@ -31,7 +31,7 @@ class PyBoltons(PythonPackage):
     Functionality that should be in the standard library. Like builtins,
     but Boltons.
 
-    Otherwise known as, “everyone’s util.py,” but cleaned up and tested.
+    Otherwise known as, "everyone's util.py," but cleaned up and tested.
     """
     homepage = "https://boltons.readthedocs.io/"
     url = "https://pypi.io/packages/source/b/boltons/boltons-16.5.1.tar.gz"
