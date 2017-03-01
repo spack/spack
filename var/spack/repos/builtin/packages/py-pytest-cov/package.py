@@ -25,13 +25,16 @@
 from spack import *
 
 
-class PyCoverage(PythonPackage):
-    """ Testing coverage checker for python """
+class PyPytestCov(PythonPackage):
+    """Pytest plugin for measuring coverage."""
 
-    homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.io/packages/source/c/coverage/coverage-4.3.4.tar.gz"
+    homepage = "https://github.com/pytest-dev/pytest-cov"
+    url =      "https://pypi.io/packages/source/p/pytest-cov/pytest-cov-2.3.1.tar.gz"
 
-    version('4.3.4', 'd347766b06bbb4fd0bc822014b7cfb0a')
-    version('4.0a6', '1bb4058062646148965bef0796b61efc')
+    version('2.3.1', '8e7475454313a035d08f387ee6d725cb')
 
-    depends_on('py-setuptools', type='build')
+    extends('python', ignore=r'bin/*')
+
+    depends_on('py-setuptools',      type='build')
+    depends_on('py-pytest@2.6.0:',   type=('build', 'run'))
+    depends_on('py-coverage@3.7.1:', type=('build', 'run'))

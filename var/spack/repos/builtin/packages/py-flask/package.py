@@ -25,13 +25,16 @@
 from spack import *
 
 
-class PyCoverage(PythonPackage):
-    """ Testing coverage checker for python """
+class PyFlask(PythonPackage):
+    """A microframework based on Werkzeug, Jinja2 and good intentions"""
 
-    homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.io/packages/source/c/coverage/coverage-4.3.4.tar.gz"
+    homepage = "http://github.com/pallets/flask"
+    url      = "https://pypi.io/packages/source/f/flask/flask-0.11.1.tar.gz"
 
-    version('4.3.4', 'd347766b06bbb4fd0bc822014b7cfb0a')
-    version('4.0a6', '1bb4058062646148965bef0796b61efc')
+    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',         type='build')
+    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
+    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
+    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
+    depends_on('py-click@2.0:',         type=('build', 'run'))

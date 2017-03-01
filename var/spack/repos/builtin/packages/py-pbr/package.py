@@ -35,4 +35,6 @@ class PyPbr(PythonPackage):
     version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
 
     depends_on('py-setuptools', type='build')
+    # Only needed for py<3.4, however when='^python@:3.4.2' syntax might be
+    # broken, if this fails, remove the when-clause
     depends_on('py-enum34', type='build', when='^python@:3.3')
