@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-doxypy
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-doxypy
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -44,6 +29,6 @@ class PyDoxypy(PythonPackage):
     """doxypy is an input filter for Doxygen."""
 
     homepage = "https://pypi.python.org/pypi/doxypy"
-    url      = "https://pypi.io/packages/source/d/doxypy/doxypy-1.9.1.tar.gz"
+    url      = "https://pypi.io/packages/source/d/doxypy/doxypy-0.3.tar.gz"
 
     version('0.3', '3b52289e0962d31b92af8be0eef8cbb2')
