@@ -373,6 +373,14 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
+
+        # disable due to compiler / config errors:
+        if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            options.extend([
+                '-DTrilinos_ENABLE_Pamgen:BOOL=OFF',
+                '-DTrilinos_ENABLE_Stokhos:BOOL=OFF'
+            ])
+
         if sys.platform == 'darwin':
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'
