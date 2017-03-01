@@ -39,8 +39,14 @@ class Cosmomc(Package):
     homepage = "http://cosmologist.info/cosmomc/"
     url      = "https://github.com/cmbant/CosmoMC/archive/Nov2016.tar.gz"
 
-    version('Nov2016',  '98620cb746352f68fb0c1196e9a070ac', preferred=True)
-    version('June2016', '92dc651d1407cca6ea9228992165f5cb')
+    version('2016.11', '98620cb746352f68fb0c1196e9a070ac')
+    version('2016.06', '92dc651d1407cca6ea9228992165f5cb')
+
+    def url_for_version(self, version):
+        names = {'2016.11': "Nov2016",
+                 '2016.06': "June2016"}
+        return ("https://github.com/cmbant/CosmoMC/archive/%s.tar.gz" %
+                names[str(version)])
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('planck', default=False,
@@ -97,9 +103,9 @@ class Cosmomc(Package):
             mpif90 = 'MPIF90C='
         
         # Choose BLAS and LAPACK
-        lapack = ("LAPACKL=%s %s" %
-                  (spec['lapack'].lapack_libs.ld_flags,
-                   spec['blas'].blas_libs.ld_flags))
+        lapack = ("LAPACKL=%s" %
+                  (spec['lapack'].lapack_libs +
+                   spec['blas'].blas_libs).ld_flags)
 
         # Build
         make(choosecomp, wantmpi, mpif90, lapack)
