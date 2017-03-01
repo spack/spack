@@ -109,7 +109,11 @@ class Pagmo(CMakePackage):
         ]
 
         if '+python' in spec:
-            # By default, picks up the system Python, not the Spack build
-            args.append('-DPYTHON_EXECUTABLE={0}'.format(python_exe))
+            args.extend([
+                # By default picks up the system python not the Spack build
+                '-DPYTHON_EXECUTABLE={0}'.format(python_exe),
+                # By default installs to the python prefix not the pagmo prefix
+                '-DPYTHON_MODULES_DIR={0}'.format(site_packages_dir),
+            ])
 
         return args
