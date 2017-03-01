@@ -36,4 +36,3 @@ class PyLazyarray(PythonPackage):
 
     depends_on('py-numpy@1.3:')
     depends_on('py-numpy@1.5:', when='^python@3:')
-
