@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Caffe(CMakePackage):
     """Caffe is a deep learning framework made with expression, speed, and
        modularity in mind. It is developed by the Berkeley Vision and Learning
@@ -63,6 +64,8 @@ class Caffe(CMakePackage):
     depends_on('python@2.7:', when='+python')
     depends_on('py-numpy@1.7:', when='+python')
     depends_on('matlab', when='+matlab')
+
+    extends('python', when='+python')
 
     def cmake_args(self):
         spec = self.spec
