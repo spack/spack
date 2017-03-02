@@ -35,4 +35,3 @@ class PyNumpydoc(PythonPackage):
 
     depends_on('py-setuptools',    type='build')
     depends_on('py-sphinx@1.0.1:', type='build')
-    depends_on('py-jinja2@2.3:',   type='build')
