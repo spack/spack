@@ -123,10 +123,10 @@ class Git(Package):
         resource(
             name="git-manpages",
             url="https://www.kernel.org/pub/software/scm/git/"
-            "git-manpages-{}.tar.xz".format(release['version']),
+            "git-manpages-{0}.tar.xz".format(release['version']),
             md5=release['md5_manpages'],
             placement="git-manpages",
-            when="@{}".format(release['version']))
+            when="@{0}".format(release['version']))
 
     depends_on("autoconf", type='build')
     depends_on("curl")
