@@ -44,7 +44,7 @@ class PySpyder(PythonPackage):
     depends_on('py-qtconsole@4.2.0:', type=('build', 'run'))
     depends_on('py-nbconvert',        type=('build', 'run'))
     depends_on('py-sphinx',           type=('build', 'run'))
-    depends_on('py-flake8',           type=('build', 'run'))
+    depends_on('py-pycodestyle',      type=('build', 'run'))
     depends_on('py-pylint',           type=('build', 'run'))
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
