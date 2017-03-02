@@ -30,9 +30,11 @@ class Mesa(AutotoolsPackage):
     specification - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    #url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    url      = "ftp://ftp.freedesktop.org/pub/mesa/older-versions/10.x/10.2.4/MesaLib-10.2.4.tar.bz2"
 
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
+    version('10.2.4', '11d3542da1b703618634be840a87b0b2')
 
     # General dependencies
     depends_on('python@2.6.4:')
@@ -56,6 +58,11 @@ class Mesa(AutotoolsPackage):
     depends_on('dri3proto@1.0:', type='build')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
+
+    def configure_args(self):
+        return ['--enable-osmesa', '--disable-dri', '--disable-egl',
+                '--enable-xlib-glx', '--disable-gallium-llvm',
+                '--with-dri-drivers=', '--with-gallium-drivers=']
 
     # TODO: Add package for systemd, provides libudev
     # Using the system package manager to install systemd didn't work for me
