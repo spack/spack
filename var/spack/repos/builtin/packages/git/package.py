@@ -43,6 +43,13 @@ class Git(Package):
     # version('2.5.4', '3eca2390cf1fa698b48e2a233563a76b')
     # version('2.2.1', 'ff41fdb094eed1ec430aed8ee9b9849c')
 
+    # In order to add new versions here, add a new list entry with:
+    #       * version: versionnumber
+    #       * md5: the md5sum of the v<versionnumber>.tar.gz
+    #       * md5_manpages: the md5sum of the corresponding manpage from
+    #                       https://www.kernel.org/pub/software/scm/git/
+    #                                               git-manpages-{}.tar.xz
+
     releases = [
         {
             'version': '2.11.1',
