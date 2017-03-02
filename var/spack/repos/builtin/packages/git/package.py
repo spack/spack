@@ -57,6 +57,13 @@ class Git(Package):
     # version('2.5.4', '3eca2390cf1fa698b48e2a233563a76b')
     # version('2.2.1', 'ff41fdb094eed1ec430aed8ee9b9849c')
 
+    resource(
+        name="git-manpages",
+        url="https://www.kernel.org/pub/software/scm/git/"
+        "git-manpages-2.11.0.tar.xz",
+        md5="72718851626e5b2267877cc2194a1ac9",
+        placement="git-manpages")
+
     depends_on("autoconf", type='build')
     depends_on("curl")
     depends_on("expat")
@@ -68,7 +75,7 @@ class Git(Package):
     depends_on("zlib")
 
     def install(self, spec, prefix):
-        env['LDFLAGS'] = "-L%s" % spec['gettext'].prefix.lib + " -lintl"
+        env['NO_GETTEXT'] = "YesPlease"
         configure_args = [
             "--prefix=%s" % prefix,
             "--with-curl=%s" % spec['curl'].prefix,
@@ -87,3 +94,8 @@ class Git(Package):
             filter_file(r' -lrt$', '', 'Makefile')
         make()
         make("install")
+
+        with working_dir("git-manpages"):
+            install_tree("man1", prefix.share_man1)
+            install_tree("man5", prefix.share_man5)
+            install_tree("man7", prefix.share_man7)
