@@ -1,0 +1,51 @@
+Intel optimization flags suggested by Intel:
+https://software.intel.com/en-us/articles/numpyscipy-with-intel-mkl
+
+diff --git a/numpy/distutils/fcompiler/intel.py b/numpy/distutils/fcompiler/intel.py
+index f6f2d7e..3bbce5e 100644
+--- a/numpy/distutils/fcompiler/intel.py
++++ b/numpy/distutils/fcompiler/intel.py
+@@ -56,7 +56,7 @@ class IntelFCompiler(BaseIntelFCompiler):
+         return ['-fPIC']
+ 
+     def get_flags_opt(self):  # Scipy test failures with -O2
+-        return ['-xhost -openmp -fp-model strict -O1']
++        return ['-xhost -openmp -fp-model strict -fPIC']
+ 
+     def get_flags_arch(self):
+         return []
+@@ -120,7 +120,7 @@ class IntelEM64TFCompiler(IntelFCompiler):
+         return ['-fPIC']
+ 
+     def get_flags_opt(self):  # Scipy test failures with -O2
+-        return ['-openmp -fp-model strict -O1']
++        return ['-xhost -openmp -fp-model strict -fPIC']
+ 
+     def get_flags_arch(self):
+         return ['']
+diff --git a/numpy/distutils/intelccompiler.py b/numpy/distutils/intelccompiler.py
+index 902f19b..457f30d 100644
+--- a/numpy/distutils/intelccompiler.py
++++ b/numpy/distutils/intelccompiler.py
+@@ -17,8 +17,8 @@ class IntelCCompiler(UnixCCompiler):
+ 
+     def __init__(self, verbose=0, dry_run=0, force=0):
+         UnixCCompiler.__init__(self, verbose, dry_run, force)
+-        self.cc_exe = ('icc -fPIC -fp-model strict -O3 '
+-                       '-fomit-frame-pointer -openmp')
++        self.cc_exe = ('icc -O3 -g -fPIC -fp-model strict '
++                       '-fomit-frame-pointer -openmp -xhost')
+         compiler = self.cc_exe
+         if platform.system() == 'Darwin':
+             shared_flag = '-Wl,-undefined,dynamic_lookup'
+@@ -53,8 +53,8 @@ class IntelEM64TCCompiler(UnixCCompiler):
+ 
+     def __init__(self, verbose=0, dry_run=0, force=0):
+         UnixCCompiler.__init__(self, verbose, dry_run, force)
+-        self.cc_exe = ('icc -m64 -fPIC -fp-model strict -O3 '
+-                       '-fomit-frame-pointer -openmp')
++        self.cc_exe = ('icc -O3 -g -fPIC -fp-model strict '
++                       '-fomit-frame-pointer -openmp -xhost')
+         compiler = self.cc_exe
+         if platform.system() == 'Darwin':
+             shared_flag = '-Wl,-undefined,dynamic_lookup'
