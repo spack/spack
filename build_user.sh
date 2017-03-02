@@ -1,9 +1,18 @@
 #!/bin/sh
 
+function s {
+	spack find $@ | grep 'No package'
+	if [ $? -eq 0 ]
+	then
+		spack install $@
+	else
+		echo "$@ has been installed."
+	fi
+}  
+
 compilers=(
-    %gcc@5.4.0
-    %intel@16.0.4
+    %gcc@6.3.0
+    %intel@17.0.1
 )
 
-spack install zlib 	%gcc@5.4.0
-spack install zlib 	%intel@16.0.4
+s zlib 	%gcc@6.3.0
