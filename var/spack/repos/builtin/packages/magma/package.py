@@ -54,7 +54,8 @@ class Magma(Package):
 
         options.extend([
             '-DCMAKE_INSTALL_PREFIX=%s' % prefix, 
-            '-DLAPACK_LIBRARIES=%s;%s' % (spec['blas'].blas_libs,spec['lapack'].lapack_libs)
+            '-DLAPACK_LIBRARIES=%s;%s' % (spec['blas'].blas_libs,
+                                          spec['lapack'].lapack_libs)
         ])      
 
         if '+fortran' in spec:
