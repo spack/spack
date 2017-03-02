@@ -58,11 +58,7 @@ Examples:
 	$ spack info python
 	$ spack info python@2.7.13 
 
-Locate installed packages
------
 
-	$ spack locate -i gcc
-	
 Installing packages
 ------
 
@@ -87,4 +83,14 @@ Examples:
 
 	spack find gcc	
 
+Locate installed packages
+------
 
+	$ spack locate -i gcc
+	
+Create filesystem views of installed packages
+------
+
+SYNOSYS
+	
+	spack view [symlink|hardlink|view] PKGNAME 
