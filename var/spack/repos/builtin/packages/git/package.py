@@ -75,6 +75,7 @@ class Git(Package):
     depends_on("zlib")
 
     def install(self, spec, prefix):
+        env['LDFLAGS'] = "-L%s" % spec['gettext'].prefix.lib + " -lintl"
         env['NO_GETTEXT'] = "YesPlease"
         configure_args = [
             "--prefix=%s" % prefix,
