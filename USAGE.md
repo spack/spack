@@ -18,7 +18,7 @@ Spack shell support
 
 And Spack shell support in `.bashrc` or `.zshrc`:
 
-	export SPACK_ROOT=$HOME/spack
+	export SPACK_ROOT=PATH_TO_SPACK
 	source $SPACK_ROOT/share/spack/setup-env.sh
 
 Spack basics

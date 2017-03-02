@@ -6,10 +6,11 @@ if [ -z $1 ]; then
 	echo "- system: For system administrators to install compilers globally."
 	echo "- rpm: For rpm builder to install packages on specific architectures."
 	echo "- user: For Pi users to install packages in ~/spack."
+	echo "- SPACK_ROOT: a specified SPACK_ROOT"
 	echo "- --install: Build and install."
 	exit 1
 fi
-echo "=> $1"
+echo "Scope => $1"
 
 echo "Determine the CPU architecture; sandybridge, haswell, knightlanding."
 if [[ $HOST == "*knl*" ]]; then
@@ -19,7 +20,10 @@ elif [[ $HOST == "*nv*" ]]; then
 else
 	PLATFORM="sandybridge"
 fi
-echo "=> $PLATFORM"
+echo "Architecture => $PLATFORM"
+
+SPACK_ROOT=`pwd`
+echo "SPACK_ROOT => $SPACK_ROOT"
 
 echo "Check if the user is rpm(system builder)."
 if [ $1 = "system" ]; then
@@ -27,22 +31,14 @@ if [ $1 = "system" ]; then
 elif [ $1 = "rpm" ]; then 
 	SPACKPREFIX=/lustre/spack/$PLATFORM
 else
-	SPACKPREFIX=~/spack
+	SPACKPREFIX="$SPACK_ROOT"
 fi
 
 export SPACKSTAGE=/tmp/`whoami`/pytest-of-rpm/pytest-4/test_fetch0/tmp
 export SPACKCACHE=/tmp/`whoami`/spack_misc_cache
 export SPACKSOURCECACHE=/tmp/`whoami`/spack_source_cache
 
-echo "Apply Spack configuration."
-mkdir -p ~/.spack
-
-if [ -e ~/.spack/config.yaml ]
-then
-	mv ~/.spack/config.yaml ~/.spack/config.yaml.bak
-fi
-
-cat << EOF > ~/.spack/config.yaml
+cat << EOF > $SPACK_ROOT/etc/spack/config.yaml
 config:
   build_stage:
   - $SPACKSTAGE
@@ -58,25 +54,15 @@ config:
   verify_ssl: true
 EOF
 
-if [ -e ~/.spack/linux/compilers.yaml ]
-then
-	mv ~/.spack/linux/compilers.yaml ~/.spack/linux/compilers.yaml.bak
-fi
-mkdir -p ~/.spack/linux
-cp -f compilers.yaml  ~/.spack/linux/compilers.yaml
-
-if [ -e ~/.spack/packages.yaml ]
-then
-	mv ~/.spack/packages.yaml ~/.spack/packages.yaml.bak
-fi
-cp -f packages.yaml  ~/.spack/packages.yaml
+cp -f compilers.yaml  $SPACK_ROOT/etc/spack/compilers.yaml
+cp -f packages.yaml   $SPACK_ROOT/etc/spack/packages.yaml
 
 echo "Make Spack configuration take effect."
-echo "=> $SPACKPREFIX"
-echo "=> $SPACKSTAGE"
-echo "=> $SPACKCACHE"
-echo "=> $SPACKSOURCECACHE"
-source ~/spack/share/spack/setup-env.sh
+echo "SPACKPREFIX => $SPACKPREFIX"
+echo "SPACKSTAGE  => $SPACKSTAGE"
+echo "SPACKCACHE  => $SPACKCACHE"
+echo "SPACKSOURCECACHE => $SPACKSOURCECACHE"
+source $SPACK_ROOT/share/spack/setup-env.sh
 
 if [[ $2 == "--install" ]]; then
 	echo "Installing packages..."
