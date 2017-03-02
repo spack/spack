@@ -70,10 +70,10 @@ class PyNumpy(PythonPackage):
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
         lapackblas = LibraryList('')
         if '+lapack' in spec:
-            lapackblas += spec['lapack'].lapack_libs
+            lapackblas += spec['lapack'].libs
 
         if '+blas' in spec:
-            lapackblas += spec['blas'].blas_libs
+            lapackblas += spec['blas'].libs
 
         if '+blas' in spec or '+lapack' in spec:
             # note that one should not use [blas_opt] and [lapack_opt], see
