@@ -59,17 +59,6 @@ class Openblas(MakefilePackage):
 
     parallel = False
 
-    @property
-    def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        return find_libraries(
-            ['libopenblas'], root=self.prefix, shared=shared, recurse=True
-        )
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
-
     @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
@@ -151,13 +140,15 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = self.lapack_libs.ld_flags.split()
+        include_flags = spec.cppflags
+        link_flags = spec.libs.ld_flags
         if self.compiler.name == 'intel':
-            link_flags.extend(["-lifcore"])
-        link_flags.extend(["-lpthread"])
+            link_flags += ' -lifcore'
+        link_flags += ' -lpthread'
         if '+openmp' in spec:
-            link_flags.extend([self.compiler.openmp_flag])
+            link_flags += ' ' + self.compiler.openmp_flag
 
-        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        output = compile_c_and_execute(
+            source_file, [include_flags], link_flags.split()
+        )
         compare_output_file(output, blessed_file)

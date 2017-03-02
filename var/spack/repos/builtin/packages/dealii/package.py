@@ -145,7 +145,7 @@ class Dealii(CMakePackage):
         options = []
         cxx_flags = []
 
-        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',

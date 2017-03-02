@@ -147,8 +147,8 @@ class Trilinos(CMakePackage):
 
         mpi_bin = spec['mpi'].prefix.bin
         # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
             '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',

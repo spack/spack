@@ -161,7 +161,7 @@ class Petsc(Package):
         ])
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
-        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         options.extend([
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])

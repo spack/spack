@@ -78,7 +78,7 @@ class Hpl(Package):
             'MPlib        = -L{0}'.format(spec['mpi'].prefix.lib),
             # Linear Algebra library (BLAS or VSIPL)
             'LAinc        = {0}'.format(spec['blas'].prefix.include),
-            'LAlib        = {0}'.format(spec['blas'].blas_libs.joined()),
+            'LAlib        = {0}'.format(spec['blas'].libs.joined()),
             # F77 / C interface
             'F2CDEFS      = -DAdd_ -DF77_INTEGER=int -DStringSunStyle',
             # HPL includes / libraries / specifics
