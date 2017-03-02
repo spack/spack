@@ -115,6 +115,8 @@ class Openspeedshop(Package):
     depends_on("bison", type='build')
     depends_on("flex", type='build')
     depends_on("binutils@2.24+krellpatch", type='build')
+    # TODO: when using dyninst@9.3.0:, we will need to use elf
+    #depends_on("elf", type="link")
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")

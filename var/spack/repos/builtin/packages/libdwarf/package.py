@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import llnl.util.tty as tty
+import shutil, os
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
@@ -48,11 +50,25 @@ class Libdwarf(Package):
     version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
     version('20130207', '64b42692e947d5180e162e46c689dfbf')
     version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
-    depends_on("libelf")
+    depends_on("elf", type='link')
 
     parallel = False
 
     def install(self, spec, prefix):
+
+        # elfutils contains a dwarf.h that conflicts with libdwarf's
+        if spec.satisfies('^elfutils'):
+            dwarf_h = join_path(spec['elfutils'].prefix, 'include/dwarf.h')
+            dwarf_h_bak = dwarf_h + '.bak'
+            dwarf_h_moved = False
+            if os.path.exists(dwarf_h):
+                try:
+                    shutil.move(dwarf_h, dwarf_h_bak)
+                    dwarf_h_moved = True
+                except:
+                    tty.warn(('Failed to move {0}. Libdwarf may use elfutils '
+                              'dwarf.h and fail to build').format(dwarf.h))
+
         # dwarf build does not set arguments for ar properly
         make.add_default_arg('ARFLAGS=rcs')
 
@@ -60,13 +76,22 @@ class Libdwarf(Package):
         mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
 
         with working_dir('libdwarf'):
-            configure("--prefix=" + prefix, "--enable-shared")
+            extra_config_args = []
+
+            # this is to prevent picking up system /usr/include/libelf.h
+            if spec.satisfies('^libelf'):
+                libelf_inc_dir = join_path(spec['libelf'].prefix,
+                                           'include/libelf')
+                extra_config_args.append('CFLAGS=-I{0}'.format(libelf_inc_dir))
+            configure("--prefix=" + prefix, "--enable-shared",
+                      *extra_config_args)
             make()
 
             install('libdwarf.a',  prefix.lib)
             install('libdwarf.so', prefix.lib)
             install('libdwarf.h',  prefix.include)
             install('dwarf.h',     prefix.include)
+
 
         if spec.satisfies('@20130126:20130729'):
             dwarfdump_dir = 'dwarfdump2'
@@ -82,3 +107,11 @@ class Libdwarf(Package):
             install('dwarfdump',      prefix.bin)
             install('dwarfdump.conf', prefix.lib)
             install('dwarfdump.1',    prefix.man1)
+
+        # restore elfutils dwarf.h
+        if spec.satisfies('^elfutils') and dwarf_h_moved:
+            if os.path.exists(dwarf_h_bak):
+                try:
+                    shutil.move(dwarf_h_bak, dwarf_h)
+                except:
+                    tty.warn(('Failed to restore {0}').format(dwarf_h))
