@@ -121,16 +121,15 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
+from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.util.spack_yaml import syaml_dict
 from spack.util.string import *
-from spack.version import *
-from spack.provider_index import ProviderIndex
 from spack.variant import *
-from spack.error import SpecError, UnsatisfiableSpecError
+from spack.version import *
 from yaml.error import MarkedYAMLError
 
 __all__ = [
