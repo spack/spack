@@ -71,7 +71,7 @@ class Caffe(CMakePackage):
         spec = self.spec
         args = ['-DBLAS={0}'.format(spec['blas'].name),
                 '-DCPU_ONLY=%s' % ('~gpu' in spec),
-                '-DUSE_CUDNN=%s' %('+gpu' in spec),
+                '-DUSE_CUDNN=%s' % ('+gpu' in spec),
                 '-DBUILD_python=%s' % ('+python' in spec),
                 '-DBUILD_python_layer=%s' % ('+python' in spec),
                 '-DBUILD_matlab=%s' % ('+matlab' in spec),
