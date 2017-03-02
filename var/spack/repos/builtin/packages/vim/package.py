@@ -50,6 +50,12 @@ class Vim(Package):
     variant('ruby', default=False, description="build with Ruby")
     depends_on('ruby', when='+ruby')
 
+    variant('lua', default=False, description="build with Lua")
+    depends_on('lua', when='+lua')
+
+    variant('perl', default=False, description="build with Perl")
+    depends_on('perl', when='+perl')
+
     variant('cscope', default=False, description="build with cscope support")
     depends_on('cscope', when='+cscope', type='run')
 
@@ -77,18 +83,30 @@ class Vim(Package):
         if feature_set is None:
             feature_set = 'normal'
 
-        configure_args = []
+        configure_args = ["--enable-fail-if-missing"]
+
         configure_args.append("--with-features=" + feature_set)
 
         if '+python' in spec:
             configure_args.append("--enable-pythoninterp=yes")
         else:
-            configure_args.append("--enable-pythoninterp=dynamic")
+            configure_args.append("--enable-pythoninterp=no")
 
         if '+ruby' in spec:
             configure_args.append("--enable-rubyinterp=yes")
         else:
-            configure_args.append("--enable-rubyinterp=dynamic")
+            configure_args.append("--enable-rubyinterp=no")
+
+        if '+lua' in spec:
+            configure_args.append("--enable-luainterp=yes")
+            configure_args.append("--with-lua-prefix=%s" % spec['lua'].prefix)
+        else:
+            configure_args.append("--enable-luainterp=no")
+
+        if '+perl' in spec:
+            configure_args.append("--enable-perlinterp=yes")
+        else:
+            configure_args.append("--enable-perlinterp=no")
 
         if '+gui' in spec:
             configure_args.append("--enable-gui=auto")
