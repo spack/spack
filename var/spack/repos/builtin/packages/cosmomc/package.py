@@ -140,8 +140,7 @@ class Cosmomc(Package):
                       'test.ini',
                       'test_pico.ini',
                       'test_planck.ini',
-                      'tests',
-        ]:
+                      'tests']:
             if os.path.isfile(entry):
                 shutil.copy(entry, root)
             else:

@@ -40,30 +40,30 @@ class PlanckLikelihood(Package):
     patch('make.patch')
 
     resource(
-        name = 'baseline',
-        url = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-baseline_R2.00.tar.gz",
-        md5 = '7e784819cea65dbc290ea3619420295a',
-        destination = '.')
+        name='baseline',
+        url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-baseline_R2.00.tar.gz",
+        md5='7e784819cea65dbc290ea3619420295a',
+        destination='.')
     # resource(
-    #     name = 'lensing-ext',
-    #     url = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-lensing-ext.R2.00.tar.gz",
-    #     md5 = '091736f73b47a09162050bee27d68399',
-    #     destination = '.')
+    #     name='lensing-ext',
+    #     url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-lensing-ext.R2.00.tar.gz",
+    #     md5='091736f73b47a09162050bee27d68399',
+    #     destination='.')
     # resource(
-    #     name = 'plik-DS',
-    #     url = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-DS.R2.00.tar.gz",
-    #     md5 = '76ac04f989025eecab3825aba7e41f36',
-    #     destination = '.')
+    #     name='plik-DS',
+    #     url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-DS.R2.00.tar.gz",
+    #     md5='76ac04f989025eecab3825aba7e41f36',
+    #     destination='.')
     # resource(
-    #     name = 'plik-HM-ext',
-    #     url = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-HM-ext.R2.00.tar.gz",
-    #     md5 = '1c3bd8221f973b7bf7e76647451fd6e5',
-    #     destination = '.')
+    #     name='plik-HM-ext',
+    #     url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-HM-ext.R2.00.tar.gz",
+    #     md5='1c3bd8221f973b7bf7e76647451fd6e5',
+    #     destination='.')
     # resource(
-    #     name = 'plik-unbinned',
-    #     url = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-unbinned.R2.00.tar.gz",
-    #     md5 = 'c5869aa6b6581b6863d2a6e0ffd3826c',
-    #     destination = '.')
+    #     name='plik-unbinned',
+    #     url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-unbinned.R2.00.tar.gz",
+    #     md5='c5869aa6b6581b6863d2a6e0ffd3826c',
+    #     destination='.')
 
     depends_on('blas')
     depends_on('cfitsio +shared')
@@ -75,7 +75,7 @@ class PlanckLikelihood(Package):
 
     def install(self, spec, prefix):
         # Configure
-        makeflags=[
+        makeflags = [
             'PREFIX=%s' % prefix,
             'CFITSIOPATH=%s' % spec['cfitsio'].prefix,
             'CC=cc',
