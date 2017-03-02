@@ -29,12 +29,11 @@ class PyQtawesome(PythonPackage):
     """FontAwesome icons in PyQt and PySide applications"""
 
     homepage = "https://github.com/spyder-ide/qtawesome"
+    url = "https://pypi.io/packages/source/Q/QtAwesome/QtAwesome-0.4.1.tar.gz"
 
     # no working pypi.io url found...
-    version('0.4.1', 'bf93df612a31f3b501d751fc994c1b05',
-                url="https://github.com/spyder-ide/qtawesome/archive/v0.4.1.tar.gz")
-    version('0.3.3', '830677aa6ca4e7014e228147475183d3',
-                url="https://pypi.python.org/packages/c7/94/f42d93832237ce84c1c43ace151b3ce671d171127b424800970ff8eb1bef/QtAwesome-0.3.3.tar.gz")
+    version('0.4.1', 'bf93df612a31f3b501d751fc994c1b05')
+    version('0.3.3', '830677aa6ca4e7014e228147475183d3')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-qtpy',       type=('build', 'run'))
