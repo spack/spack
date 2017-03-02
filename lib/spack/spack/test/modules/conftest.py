@@ -29,7 +29,7 @@ import inspect
 import os.path
 import yaml
 
-import cStringIO
+from six import StringIO
 import pytest
 import spack
 import spack.modules.common
@@ -39,7 +39,7 @@ import spack.util.path
 @pytest.fixture()
 def file_registry():
     """Fake filesystem for modulefiles test"""
-    return collections.defaultdict(cStringIO.StringIO)
+    return collections.defaultdict(StringIO)
 
 
 @pytest.fixture()
@@ -52,7 +52,7 @@ def filename_dict(file_registry, monkeypatch):
         if not mode == 'w':
             raise RuntimeError('opening mode must be "w" [stringio_open]')
 
-        file_registry[filename] = cStringIO.StringIO()
+        file_registry[filename] = StringIO()
         try:
             yield file_registry[filename]
         finally:

@@ -27,7 +27,11 @@ import textwrap
 
 import jinja2
 import llnl.util.lang
+import six
 import spack
+
+
+TemplateNotFound = jinja2.TemplateNotFound
 
 
 class ContextMeta(type):
@@ -71,11 +75,10 @@ class ContextMeta(type):
 context_property = ContextMeta.context_property
 
 
-class Context(object):
+class Context(six.with_metaclass(ContextMeta, object)):
     """Base class for context classes that are used with the template
     engine.
     """
-    __metaclass__ = ContextMeta
 
     def to_dict(self):
         """Returns a dictionary containing all the context properties."""

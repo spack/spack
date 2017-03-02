@@ -25,10 +25,11 @@
 """This module implements the classes necessary to generate dotkit modules."""
 import os.path
 
-from . import common
+from .common import BaseConfiguration, BaseFileLayout
+from .common import BaseContext, BaseModuleFileWriter, configuration
 
 #: Dotkit specific part of the configuration
-configuration = common.configuration.get('dotkit', {})
+configuration = configuration.get('dotkit', {})
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}
@@ -57,21 +58,21 @@ def make_context(spec):
     return DotkitContext(conf)
 
 
-class DotkitConfiguration(common.BaseConfiguration):
+class DotkitConfiguration(BaseConfiguration):
     """Configuration class for dotkit module files."""
 
 
-class DotkitFileLayout(common.BaseFileLayout):
+class DotkitFileLayout(BaseFileLayout):
     """File layout for dotkit module files."""
 
     #: file extension of dotkit module files
     extension = 'dk'
 
 
-class DotkitContext(common.BaseContext):
+class DotkitContext(BaseContext):
     """Context class for dotkit module files."""
 
 
-class DotkitModulefileWriter(common.BaseModuleFileWriter):
+class DotkitModulefileWriter(BaseModuleFileWriter):
     """Writer class for dotkit module files."""
     default_template = os.path.join('modules', 'modulefile.dk')

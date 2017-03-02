@@ -23,12 +23,12 @@ proc ModulesHelp { } {
 
 {% block autoloads %}
 {% for module in autoload %}
-if ![ is-loaded {{ module }} ] {{ '{{' }}
+if ![ is-loaded {{ module }} ] {{ '{' }}
 {% if verbose %}
     puts stderr "Autoloading {{ module }}"
 {% endif %}
     module load {{ module }}
-{{ '}}' }}
+{{ '}' }}
 {% endfor %}
 {% endblock %}
 {#  #}

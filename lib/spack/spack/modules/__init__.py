@@ -27,9 +27,11 @@ include dotkits, TCL non-hierarchical modules, LUA hierarchical modules, and
 others.
 """
 
-from dotkit import DotkitModulefileWriter
-from tcl import TclModulefileWriter
-from lmod import LmodModulefileWriter
+from __future__ import absolute_import
+
+from .dotkit import DotkitModulefileWriter
+from .tcl import TclModulefileWriter
+from .lmod import LmodModulefileWriter
 
 __all__ = [
     'DotkitModulefileWriter',

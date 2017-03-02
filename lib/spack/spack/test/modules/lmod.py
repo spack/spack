@@ -184,6 +184,35 @@ class TestLmod(object):
 
         assert path.endswith(mpileaks_element)
 
+    def test_no_core_compilers(self, factory, patch_configuration):
+        """Ensures that missing 'core_compilers' in the configuration file
+        raises the right exception.
+        """
+
+        # In this case we miss the entry completely
+        patch_configuration('missing_core_compilers')
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
+            module.write()
+
+        # Here we have an empty list
+        patch_configuration('core_compilers_empty')
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
+            module.write()
+
+    def test_non_virtual_in_hierarchy(self, factory, patch_configuration):
+        """Ensures that if a non-virtual is in hierarchy, an exception will
+        be raised.
+        """
+        patch_configuration('non_virtual_in_hierarchy')
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
+            module.write()
+
     @pytest.mark.usefixtures('update_template_dirs')
     def test_override_template_in_package(
             self, modulefile_content, patch_configuration

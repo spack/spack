@@ -155,6 +155,19 @@ class TestTcl(object):
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
 
+    def test_naming_scheme(self, factory, patch_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        patch_configuration('conflicts')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('mpileaks')
+        expected = '${PACKAGE}/${VERSION}-${COMPILERNAME}'
+
+        assert writer.conf.naming_scheme == expected
+
     def test_conflicts(self, modulefile_content, patch_configuration):
         """Tests adding conflicts to the module."""
 

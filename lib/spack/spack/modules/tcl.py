@@ -31,10 +31,11 @@ import spack.tengine as tengine
 
 import llnl.util.tty as tty
 
-from . import common
+from .common import BaseConfiguration, BaseFileLayout
+from .common import BaseContext, BaseModuleFileWriter, configuration
 
 #: TCL specific part of the configuration
-configuration = common.configuration.get('tcl', {})
+configuration = configuration.get('tcl', {})
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}
@@ -61,7 +62,7 @@ def make_context(spec):
     return TclContext(conf)
 
 
-class TclConfiguration(common.BaseConfiguration):
+class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
     @property
@@ -70,14 +71,11 @@ class TclConfiguration(common.BaseConfiguration):
         return self.conf.get('conflict', [])
 
 
-class TclFileLayout(common.BaseFileLayout):
+class TclFileLayout(BaseFileLayout):
     """File layout for tcl module files."""
 
-    #: file extension for tcl module files
-    extension = 'tcl'
 
-
-class TclContext(common.BaseContext):
+class TclContext(BaseContext):
     """Context class for tcl module files."""
 
     @tengine.context_property
@@ -113,6 +111,6 @@ class TclContext(common.BaseContext):
         return [self.spec.format(x) for x in l]
 
 
-class TclModulefileWriter(common.BaseModuleFileWriter):
+class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
     default_template = os.path.join('modules', 'modulefile.tcl')

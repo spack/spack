@@ -32,10 +32,11 @@ import itertools
 import collections
 import spack.tengine as tengine
 
-from . import common
+from .common import BaseConfiguration, BaseFileLayout
+from .common import BaseContext, BaseModuleFileWriter, configuration
 
 #: LMOD specific part of the configuration
-configuration = common.configuration.get('lmod', {})
+configuration = configuration.get('lmod', {})
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}
@@ -62,7 +63,7 @@ def make_context(spec):
     return LmodContext(conf)
 
 
-class LmodConfiguration(common.BaseConfiguration):
+class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
     @property
@@ -87,11 +88,24 @@ class LmodConfiguration(common.BaseConfiguration):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
         """
-        # TODO : Check that the extra hierarchy tokens specified in the
-        # TODO : configuration file are actually virtual dependencies
-        #
-        # TODO : dedupe the list and warn for duplicated dependencies
-        return configuration.get('hierarchy', []) + ['compiler']
+        tokens = configuration.get('hierarchy', [])
+
+        # Check if all the tokens in the hierarchy are virtual specs.
+        # If not warn the user and raise an error.
+        not_virtual = [t for t in tokens if not spack.spec.Spec.is_virtual(t)]
+        if not_virtual:
+            msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
+            msg += "Please check the 'modules.yaml' configuration files"
+            msg.format(', '.join(not_virtual))
+            raise NonVirtualInHierarchyError(msg)
+
+        # Append 'compiler' which is always implied
+        tokens.append('compiler')
+
+        # Deduplicate tokens in case duplicates have been coded
+        tokens = list(lang.dedupe(tokens))
+
+        return tokens
 
     @property
     def requires(self):
@@ -151,7 +165,7 @@ class LmodConfiguration(common.BaseConfiguration):
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
 
-class LmodFileLayout(common.BaseFileLayout):
+class LmodFileLayout(BaseFileLayout):
     """File layout for lmod module files."""
 
     #: file extension of lua module files
@@ -302,7 +316,7 @@ class LmodFileLayout(common.BaseFileLayout):
         return unlocked
 
 
-class LmodContext(common.BaseContext):
+class LmodContext(BaseContext):
     """Context class for lmod module files."""
 
     @tengine.context_property
@@ -373,13 +387,19 @@ class LmodContext(common.BaseContext):
         return value
 
 
-class LmodModulefileWriter(common.BaseModuleFileWriter):
+class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
     default_template = os.path.join('modules', 'modulefile.lua')
 
 
-class CoreCompilersNotFoundError(KeyError, spack.error.SpackError):
+class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
     """Error raised if the key 'core_compilers' has not been specified
     in the configuration file.
     """
     pass
+
+
+class NonVirtualInHierarchyError(spack.error.SpackError, TypeError):
+    """Error raised if non-virtual specs are used as hierarchy tokens in
+    the lmod section of 'modules.yaml'.
+    """

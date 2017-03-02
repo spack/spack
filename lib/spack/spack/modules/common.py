@@ -53,6 +53,7 @@ import inspect
 import os.path
 import re
 
+import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
 import spack
@@ -195,11 +196,6 @@ class BaseConfiguration(object):
     querying easier. It needs to be sub-classed for specific module types.
     """
 
-    #: naming scheme suitable for non-hierarchical layouts
-    naming_scheme = configuration.get(
-        'naming_scheme', '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
-    )
-
     def __init__(self, spec):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
@@ -208,6 +204,15 @@ class BaseConfiguration(object):
         # Dictionary of configuration options that should be applied
         # to the spec
         self.conf = merge_config_rules(self.module.configuration, self.spec)
+
+    @property
+    def naming_scheme(self):
+        """Naming scheme suitable for non-hierarchical layouts"""
+        scheme = self.module.configuration.get(
+            'naming_scheme',
+            '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+        )
+        return scheme
 
     @property
     def template(self):
@@ -229,7 +234,7 @@ class BaseConfiguration(object):
                 for x in arglist:
                     yield (x,)
             else:
-                for x in arglist.iteritems():
+                for x in six.iteritems(arglist):
                     yield x
 
         for method, arglist in actions.items():
@@ -559,7 +564,7 @@ class BaseModuleFileWriter(object):
             self.default_template  # This is always defined at this point
         ]
         # Filter out false-ish values
-        choices = filter(lambda x: bool(x), choices)
+        choices = list(filter(lambda x: bool(x), choices))
         # ... and return the first match
         return choices.pop(0)
 

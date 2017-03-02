@@ -33,7 +33,7 @@ from spack.util.environment import filter_system_paths
 import spack.environment as environment
 
 
-def test_inspect_path():
+def test_inspect_path(tmpdir):
     inspections = {
         'bin': ['PATH'],
         'man': ['MANPATH'],
@@ -46,7 +46,13 @@ def test_inspect_path():
         'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
         '': ['CMAKE_PREFIX_PATH']
     }
-    env = environment.inspect_path('/usr', inspections)
+
+    tmpdir.chdir()
+    tmpdir.mkdir('bin')
+    tmpdir.mkdir('lib')
+    tmpdir.mkdir('include')
+
+    env = environment.inspect_path(str(tmpdir), inspections)
     names = [item.name for item in env]
     assert 'PATH' in names
     assert 'LIBRARY_PATH' in names
