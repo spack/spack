@@ -51,6 +51,7 @@ class Paraview(Package):
     depends_on('qt@:4', when='+qt')
 
     depends_on('cmake', type='build')
+    depends_on('mesa')
     depends_on('bzip2')
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
