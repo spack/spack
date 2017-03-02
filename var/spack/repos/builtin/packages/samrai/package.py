@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Samrai(Package):
+class Samrai(AutotoolsPackage):
     """SAMRAI (Structured Adaptive Mesh Refinement Application Infrastructure)
        is an object-oriented C++ software library enables exploration of
        numerical, algorithmic, parallel computing, and software issues
@@ -33,10 +33,12 @@ class Samrai(Package):
        (SAMR) technology in large-scale parallel application development.
 
     """
-    homepage = "https://computation.llnl.gov/project/SAMRAI/"
-    url      = "https://computation.llnl.gov/project/SAMRAI/download/SAMRAI-v3.9.1.tar.gz"
+    homepage = "https://computation.llnl.gov/projects/samrai"
+    url      = "https://computation.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
 
+    version('3.11.2',     'd5f59f8efd755b23b797e46349428206')
+    version('3.10.0',     'ff5f5b8b4a35b52a1b7e37a74166c65a')
     version('3.9.1',      '232d04d0c995f5abf20d94350befd0b2')
     version('3.8.0',      'c18fcffa706346bfa5828b36787ce5fe')
     version('3.7.3',      '12d574eacadf8c9a70f1bb4cd1a69df6')
@@ -49,29 +51,43 @@ class Samrai(Package):
     version('3.3.2-beta', 'e598a085dab979498fcb6c110c4dd26c')
     version('2.4.4',      '04fb048ed0efe7c531ac10c81cc5f6ac')
 
-    depends_on("mpi")
-    depends_on("zlib")
-    depends_on("hdf5+mpi")
-    depends_on("boost")
+    # Debug mode reduces optimization, includes assertions, debug symbols
+    # and more print statements
+    variant('debug', default=False,
+            description='Compile with reduced optimization and debugging on')
+
+    depends_on('mpi')
+    depends_on('zlib')
+    depends_on('hdf5+mpi')
+    depends_on('boost')
+    depends_on('m4', type='build')
 
     # don't build tools with gcc
     patch('no-tool-build.patch', when='%gcc')
 
-    # TODO: currently hard-coded to use openmpi - be careful!
-    def install(self, spec, prefix):
-        configure(
-            "--prefix=%s" % prefix,
-            "--with-CXX=%s" % spec['mpi'].prefix.bin + "/mpic++",
-            "--with-CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
-            "--with-hdf5=%s" % spec['hdf5'].prefix,
-            "--with-boost=%s" % spec['boost'].prefix,
-            "--with-zlib=%s" % spec['zlib'].prefix,
-            "--without-blas",
-            "--without-lapack",
-            "--with-hypre=no",
-            "--with-petsc=no",
-            "--enable-opt",
-            "--disable-debug")
+    def configure_args(self):
+        options = []
 
-        make()
-        make("install")
+        options.extend([
+            '--with-CXX=%s' % self.spec['mpi'].mpicxx,
+            '--with-CC=%s' % self.spec['mpi'].mpicc,
+            '--with-F77=%s' % self.spec['mpi'].mpifc,
+            '--with-M4=%s' % self.spec['m4'].prefix,
+            '--with-hdf5=%s' % self.spec['hdf5'].prefix,
+            '--with-boost=%s' % self.spec['boost'].prefix,
+            '--with-zlib=%s' % self.spec['zlib'].prefix,
+            '--without-blas',
+            '--without-lapack',
+            '--with-hypre=no',
+            '--with-petsc=no'])
+
+        if '+debug' in spec:
+            options.extend([
+                '--disable-opt',
+                '--enable-debug'])
+        else:
+            options.extend([
+                '--enable-opt',
+                '--disable-debug'])
+
+        return options
