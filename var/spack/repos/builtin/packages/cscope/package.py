@@ -39,6 +39,6 @@ class Cscope(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if 'flex' in self.spec:
+        if '+flex' in self.spec:
             args.append('--with-flex')
         return args
