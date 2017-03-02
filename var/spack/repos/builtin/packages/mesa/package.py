@@ -33,8 +33,8 @@ class Mesa(AutotoolsPackage):
     url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
 
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
-    version('10.2.4', '11d3542da1b703618634be840a87b0b2',
-        url="ftp://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/older-versions/10.x/10.2.4/MesaLib-10.2.4.tar.bz2")
+    #version('10.2.4', '11d3542da1b703618634be840a87b0b2',
+    #    url="ftp://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/older-versions/10.x/10.2.4/MesaLib-10.2.4.tar.bz2")
 
     # General dependencies
     depends_on('autoconf', type='build')
@@ -65,7 +65,7 @@ class Mesa(AutotoolsPackage):
 
 
     def configure_args(self):
-        make('autoreconf -fi')
+        #make('autoreconf -fi')
         return ['--enable-osmesa', '--disable-dri', '--disable-egl',
                 '--enable-xlib-glx', '--disable-gallium-llvm',
                 '--with-dri-drivers=', '--with-gallium-drivers=']
