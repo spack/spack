@@ -29,7 +29,7 @@ class PyQtpy(PythonPackage):
     """QtPy: Abtraction layer for PyQt5/PyQt4/PySide"""
 
     homepage = "https://github.com/spyder-ide/qtpy"
-    url      = "https://files.pythonhosted.org/packages/0a/a8/31632a1c7cab273ac801da8b610d8659195853c099e1a26bfc08e78ddbe6/QtPy-1.2.1.tar.gz"
+    url      = "https://pypi.io/packages/source/Q/QtPy/QtPy-1.2.1.tar.gz"
 
     version('1.2.1', 'e2f783fb7f8e502815237bd8d30c6d11')
 
