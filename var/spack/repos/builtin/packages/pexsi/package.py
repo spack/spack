@@ -59,7 +59,7 @@ class Pexsi(Package):
             '@MPICC': self.spec['mpi'].mpicc,
             '@MPICXX': self.spec['mpi'].mpicxx,
             '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPICXX_LIB': ' '.join(self.spec['mpi'].mpicxx_shared_libs),
+            '@MPICXX_LIB': self.spec['mpi:cxx'].libs.joined(),
             '@RANLIB': 'ranlib',
             '@PEXSI_STAGE': self.stage.source_path,
             '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,
@@ -67,8 +67,9 @@ class Pexsi(Package):
             '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
             '@LAPACK_PREFIX': self.spec['lapack'].prefix,
             '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].lapack_libs.joined(),
-            '@BLAS_LIBS': self.spec['lapack'].blas_libs.joined(),
+            '@LAPACK_LIBS': self.spec['lapack'].libs.joined(),
+            '@BLAS_LIBS': self.spec['blas'].libs.joined(),
+            # FIXME : what to do with compiler provided libraries ?
             '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs)
         }
 

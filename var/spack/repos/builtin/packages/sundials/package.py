@@ -80,8 +80,8 @@ class Sundials(Package):
             cmake_args.extend([
                 '-DLAPACK_ENABLE=ON',
                 '-DLAPACK_LIBRARIES={0}'.format(
-                    (spec['lapack'].lapack_libs +
-                     spec['blas'].blas_libs).joined(';')
+                    (spec['lapack'].libs +
+                     spec['blas'].libs).joined(';')
                 )
             ])
         else:

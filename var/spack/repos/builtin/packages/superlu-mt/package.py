@@ -86,7 +86,7 @@ class SuperluMt(Package):
         if '+blas' in spec:
             config.extend([
                 'BLASDEF    = -DUSE_VENDOR_BLAS',
-                'BLASLIB    = {0}'.format(spec['blas'].blas_libs.ld_flags)
+                'BLASLIB    = {0}'.format(spec['blas'].libs.ld_flags)
             ])
         else:
             config.append('BLASLIB    = ../lib/libblas$(PLAT).a')

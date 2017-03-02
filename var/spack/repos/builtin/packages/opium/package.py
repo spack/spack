@@ -37,7 +37,7 @@ class Opium(Package):
     depends_on('lapack')
 
     def install(self, spec, prefix):
-        libs = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        libs = spec['lapack'].libs + spec['blas'].libs
         options = ['LDFLAGS=%s' % libs.ld_flags]
 
         configure(*options)

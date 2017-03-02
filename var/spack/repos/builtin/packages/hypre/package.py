@@ -62,8 +62,8 @@ class Hypre(Package):
         os.environ['F77'] = spec['mpi'].mpif77
 
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
-        lapack = spec['lapack'].lapack_libs
-        blas = spec['blas'].blas_libs
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
 
         configure_args = [
             '--prefix=%s' % prefix,

@@ -48,7 +48,7 @@ class Superlu(Package):
     def install(self, spec, prefix):
         cmake_args = [
             '-Denable_blaslib=OFF',
-            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_libs.joined())
+            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].libs.joined())
         ]
 
         if '+fpic' in spec:
@@ -76,7 +76,7 @@ class Superlu(Package):
             'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu_{0}.a' \
             .format(self.spec.version),
             'BLASDEF    = -DUSE_VENDOR_BLAS',
-            'BLASLIB    = {0}'.format(spec['blas'].blas_libs.ld_flags),
+            'BLASLIB    = {0}'.format(spec['blas'].libs.ld_flags),
             # or BLASLIB      = -L/usr/lib64 -lblas
             'TMGLIB     = libtmglib.a',
             'LIBS       = $(SUPERLULIB) $(BLASLIB)',

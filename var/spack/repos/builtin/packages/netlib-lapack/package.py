@@ -113,7 +113,7 @@ class NetlibLapack(Package):
         if '+external-blas' in spec:
             cmake_args.extend([
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
-                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].blas_libs.joined(';')
+                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].libs.joined(';')
             ])
 
         cmake_args.extend(std_cmake_args)

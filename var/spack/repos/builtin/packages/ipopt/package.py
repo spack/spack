@@ -53,8 +53,8 @@ class Ipopt(Package):
         mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
         mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
 
-        blas_lib = spec['blas'].blas_libs.ld_flags
-        lapack_lib = spec['lapack'].lapack_libs.ld_flags
+        blas_lib = spec['blas'].libs.ld_flags
+        lapack_lib = spec['lapack'].libs.ld_flags
 
         configure_args = [
             "--prefix=%s" % prefix,
