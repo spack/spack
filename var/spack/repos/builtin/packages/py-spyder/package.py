@@ -49,7 +49,7 @@ class PySpyder(PythonPackage):
     depends_on('py-psutil',           type=('build', 'run'))
     depends_on('py-qtawesome@0.4.1:', type=('build', 'run'))
     depends_on('py-qtpy@1.1.0:',      type=('build', 'run'))
-    depends_on('py-zmq',            type=('build', 'run'))
+    depends_on('py-zmq',              type=('build', 'run'))
     depends_on('py-chardet@2:',       type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
     depends_on('py-numpydoc',         type=('build', 'run'))
