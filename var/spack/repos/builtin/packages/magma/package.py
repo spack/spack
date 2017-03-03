@@ -25,14 +25,14 @@
 from spack import *
 
 
-class Magma(Package):
+class Magma(CMakePackage):
     """The MAGMA project aims to develop a dense linear algebra library 
     similar to LAPACK but for heterogeneous/hybrid architectures,
     starting with current "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
-    base_url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/"
+    url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
 
     version('2.2.0', '6c1ebf4cdf63eb302ff6258ff8c49217')
 
@@ -45,15 +45,13 @@ class Magma(Package):
     patch('ibm-xl.patch', when='@2.2:%xl')
     patch('ibm-xl.patch', when='@2.2:%xl_r')
 
-    def url_for_version(self, version):
-        return '%s/magma-%s.tar.gz' % (Magma.base_url, version)
-
-    def install(self, spec, prefix):
-
+    def cmake_args(self):
+        spec = self.spec
         options = []
 
         options.extend([
-            '-DCMAKE_INSTALL_PREFIX=%s' % prefix, 
+            '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix,
             '-DLAPACK_LIBRARIES=%s;%s' % (spec['blas'].blas_libs,
                                           spec['lapack'].lapack_libs)
         ])      
@@ -65,9 +63,6 @@ class Magma(Package):
             if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
                 options.extend([
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
-                ])      
+                ])
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()  
-            make('install')
+        return options
