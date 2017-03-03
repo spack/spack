@@ -90,9 +90,9 @@ class Elk(Package):
         blas = 'blas.a'
         lapack = 'lapack.a'
         if '+blas' in spec:
-            blas = spec['blas'].blas_libs.joined()
+            blas = spec['blas'].libs.joined()
         if '+lapack' in spec:
-            lapack = spec['lapack'].lapack_libs.joined()
+            lapack = spec['lapack'].libs.joined()
         # lapack must come before blas
         config['LIB_LPK'] = ' '.join([lapack, blas])
 

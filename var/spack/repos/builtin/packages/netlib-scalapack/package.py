@@ -74,8 +74,8 @@ class NetlibScalapack(Package):
         ]
 
         # Make sure we use Spack's Lapack:
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,

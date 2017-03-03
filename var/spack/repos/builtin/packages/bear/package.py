@@ -31,6 +31,7 @@ class Bear(Package):
     homepage = "https://github.com/rizsotto/Bear"
     url      = "https://github.com/rizsotto/Bear/archive/2.0.4.tar.gz"
 
+    version('2.2.0', '87250cc3a9a697e7d1e8972253a35259')
     version('2.0.4', 'fd8afb5e8e18f8737ba06f90bd77d011')
 
     depends_on('cmake', type='build')

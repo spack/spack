@@ -49,7 +49,7 @@ class Atompaw(Package):
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
 
-        linalg = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        linalg = spec['lapack'].libs + spec['blas'].libs
         options.extend([
             "--with-linalg-libs=%s" % linalg.ld_flags,
             "--enable-libxc",
