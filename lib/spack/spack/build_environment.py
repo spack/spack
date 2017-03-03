@@ -232,6 +232,17 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
+def compiler_paths(pkg):
+    paths = []
+    compiler_specific = join_path(spack.build_env_path, pkg.compiler.name)
+    for item in [spack.build_env_path, compiler_specific]:
+        paths.append(item)
+        ci = join_path(item, 'case-insensitive')
+        if os.path.isdir(ci):
+            paths.append(ci)
+    return paths
+
+
 def set_build_environment_variables(pkg, env, dirty=False):
     """
     This ensures a clean install environment when we build packages.
@@ -250,12 +261,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
     env_paths = []
-    compiler_specific = join_path(spack.build_env_path, pkg.compiler.name)
-    for item in [spack.build_env_path, compiler_specific]:
-        env_paths.append(item)
-        ci = join_path(item, 'case-insensitive')
-        if os.path.isdir(ci):
-            env_paths.append(ci)
+    env_paths.extend(compiler_paths(pkg))
 
     env_paths = filter_system_paths(env_paths)
 

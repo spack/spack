@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack
 import sys
 import os
 from glob import glob
@@ -184,14 +185,19 @@ class Boost(Package):
             incs, libs
         )
 
-    def determine_bootstrap_options(self, spec, withLibs, options):
-        boostToolsetId = self.determine_toolset(spec)
-        options.append('--with-toolset=%s' % boostToolsetId)
+    def determine_bootstrap_options(self, spec, withLibs, options,
+                                    is_frontend_target):
+        if is_frontend_target:
+            boostToolsetId = self.determine_toolset(spec)
+            options.append('--with-toolset=%s' % boostToolsetId)
+
         options.append("--with-libraries=%s" % ','.join(withLibs))
 
         if '+python' in spec:
             options.append('--with-python=%s' % python_exe)
 
+    def write_user_config(self, spec):
+        boostToolsetId = self.determine_toolset(spec)
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
@@ -272,6 +278,18 @@ class Boost(Package):
                 prefix, remainder = lib.split('.', 1)
                 symlink(lib, '%s-mt.%s' % (prefix, remainder))
 
+    def amend_path_for_bootstrap(self):
+        # Ensure that paths to compilers chosen by spack come after system
+        # paths like /usr/bin/. This allows boost's bootstrap.sh to build with
+        # a system compiler, after which Spack can set options in
+        # user-config.jam to ensure that the boost libs are built with Spack's
+        # chosen compiler.
+        path_items = env['PATH'].split(':')
+        move = spack.build_environment.compiler_paths(self)
+        before_items = list(x for x in path_items if x not in move)
+        after_items = list(x for x in path_items if x in move)
+        env['PATH'] = ':'.join(before_items + after_items)
+
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
         # dependencies may have pulled in Spack's GNU libtool, and these two
@@ -318,9 +336,18 @@ class Boost(Package):
         bootstrap = Executable('./bootstrap.sh')
 
         bootstrap_options = ['--prefix=%s' % prefix]
-        self.determine_bootstrap_options(spec, withLibs, bootstrap_options)
-
-        bootstrap(*bootstrap_options)
+        frontend_arch = spack.spec.ArchSpec(
+            spack.architecture.frontend_sys_type())
+        is_frontend_target = (spec.architecture == frontend_arch)
+        self.determine_bootstrap_options(spec, withLibs, bootstrap_options,
+                                         is_frontend_target)
+        if is_frontend_target:
+            self.write_user_config(spec)
+            bootstrap(*bootstrap_options)
+        else:
+            self.amend_path_for_bootstrap()
+            bootstrap(*bootstrap_options)
+            self.write_user_config(spec)
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
