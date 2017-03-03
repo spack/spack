@@ -25,15 +25,10 @@
 from spack import *
 
 
-class PyJedi(PythonPackage):
-    """An autocompletion tool for Python that can be used for text editors."""
+class PyAppnope(PythonPackage):
+    """Disable App Nap on OS X 10.9"""
 
-    homepage = "https://github.com/davidhalter/jedi"
-    url      = "https://pypi.io/packages/source/j/jedi/jedi-0.9.0.tar.gz"
+    homepage = "https://github.com/minrk/appnope"
+    url      = "https://pypi.io/packages/source/a/appnope/appnope-0.1.0.tar.gz"
 
-    # unfortunately pypi.io only offers a .whl
-    version('0.10.0', '89ed853d4a283bfa0fdbcf688b4d35fe',
-                url='https://github.com/davidhalter/jedi/archive/v0.10.0.tar.gz')
-    version('0.9.0', '2fee93d273622527ef8c97ac736e92bd')
-
-    depends_on('py-setuptools', type='build')
+    version('0.1.0', '932fbaa73792c9b06754755a774dcac5')
