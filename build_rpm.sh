@@ -19,8 +19,14 @@ mpis=(
     openmpi@1.6.5
     openmpi@1.10.3
     openmpi@2.0.2
-    mvapich2@2.2
-    mpich@3.2
+    mvapich2
+    mpich
+)
+
+pkgs=(
+    mdtest
+    simul
+    sga
 )
 
 # CUDA
@@ -48,5 +54,9 @@ do
 	for mpi in "${mpis[@]}"
 	do
 		s $mpi $compiler
+		for pkg in "${pkgs[@]}"
+			s $pkg ^$mpi $compiler
 	done
 done
+
+# Other packages
