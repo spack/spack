@@ -50,6 +50,7 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'hide_files',
     'install',
     'install_tree',
     'is_exe',
@@ -255,6 +256,18 @@ def working_dir(dirname, **kwargs):
     os.chdir(dirname)
     yield
     os.chdir(orig_dir)
+
+
+@contextmanager
+def hide_files(*file_list):
+    try:
+        baks = ['%s.bak' % f for f in file_list]
+        for f, bak in zip(file_list, baks):
+            shutil.move(f, bak)
+        yield
+    finally:
+        for f, bak in zip(file_list, baks):
+            shutil.move(bak, f)
 
 
 def touch(path):
