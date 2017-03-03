@@ -29,9 +29,11 @@ class PyQtconsole(PythonPackage):
     """Jupyter Qt console"""
 
     homepage = "http://ipython.org"
-    url      = "https://pypi.python.org/packages/2b/94/ed3d11ab0ceac135f22fe418a9d5f99c4a071f74b5bd46c4f2ede65eafb1/qtconsole-4.2.1.tar.gz"
+    url      = "https://pypi.io/packages/source/q/qtconsole/qtconsole-4.2.1.zip"
 
     version('4.2.1', 'c08ebebc7a60629ebadf685361ca0798')
+
+    variant('docs', default=False, description='Build documentation')
 
     depends_on('py-setuptools',          type='build')
     depends_on('py-ipykernel@4.1:',      type=('build', 'run'))
@@ -39,7 +41,6 @@ class PyQtconsole(PythonPackage):
     depends_on('py-jupyter-core',        type=('build', 'run'))
     depends_on('py-pygments',            type=('build', 'run'))
     depends_on('py-traitlets',           type=('build', 'run'))
-
-    #Sphinx (>=1.3); extra == 'doc'
+    depends_on('py-sphinx@1.3:',         type=('build', 'run'), when='+docs')
     #mock; python_version=="2.7" and extra == 'test'
     #pexpect; sys_platform != "win32" and extra == 'test'
