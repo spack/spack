@@ -199,8 +199,7 @@ def main(args):
 
     if args.profile:
         import cProfile
-        cProfile.runctx('_main(args, unknown)', globals(), locals(),
-                        sort='time')
+        cProfile.runctx('_main(args, unknown)', globals(), locals())
     elif args.pdb:
         import pdb
         pdb.runctx('_main(args, unknown)', globals(), locals())
