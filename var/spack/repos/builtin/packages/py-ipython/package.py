@@ -35,7 +35,6 @@ class PyIpython(PythonPackage):
     version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
 
-    depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
     # These dependencies breaks concretization
@@ -43,7 +42,14 @@ class PyIpython(PythonPackage):
     # depends_on('py-backports-shutil-get-terminal-size', when="^python@:3.2.999")  # noqa
     # depends_on('py-pathlib2', when="^python@:3.3.999")
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'))
-    depends_on('py-pathlib2', type=('build', 'run'))
+    depends_on('py-pathlib2',                   type=('build', 'run'))
 
-    depends_on('py-pickleshare', type=('build', 'run'))
-    depends_on('py-simplegeneric', type=('build', 'run'))
+    depends_on('py-jedi@0.10:',                 type=('build', 'run'))
+    depends_on('py-pygments',                   type=('build', 'run'))
+    depends_on('py-pickleshare',                type=('build', 'run'))
+    depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))
+    depends_on('py-prompt-toolkit@1.0.9',       type=('build', 'run'))
+    # according to setup.py, but tries to download @2.0.0, which does not exist
+    # depends_on('py-prompt-toolkit@1.04:2.0.0',  type=('build', 'run'))
+    depends_on('py-traitlets@4.2:',             type=('build', 'run'))
+    depends_on('py-decorator',                  type=('build', 'run'))

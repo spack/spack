@@ -32,5 +32,8 @@ class PyJedi(PythonPackage):
     url      = "https://pypi.io/packages/source/j/jedi/jedi-0.9.0.tar.gz"
 
     version('0.9.0', '2fee93d273622527ef8c97ac736e92bd')
+    # unfortunately pypi.io only offers a .whl
+    version('0.10.0', '89ed853d4a283bfa0fdbcf688b4d35fe',
+        url='https://github.com/davidhalter/jedi/archive/v0.10.0.tar.gz')
 
     depends_on('py-setuptools', type='build')
