@@ -29,7 +29,7 @@ class PyJunitXml(PythonPackage):
     """Creates JUnit XML test result documents that can be read by tools such as Jenkins"""
 
     homepage = "https://github.com/kyrus/python-junit-xml"
-    url      = "https://pypi.python.org/packages/9f/96/5c2b6968d9d5b53931618b801392759b331e0dbb8ed9bdb705fab8209b24/junit-xml-1.7.tar.gz"
+    url      = "https://pypi.io/packages/source/j/junit-xml/junit-xml-1.7.tar.gz"
 
     version('1.7', '5e6a96edb8a1592f2832241cfd99983e')
 
