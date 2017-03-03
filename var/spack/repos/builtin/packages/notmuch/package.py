@@ -26,7 +26,10 @@ from spack import *
 
 
 class Notmuch(AutotoolsPackage):
-    """Notmuch is a mail indexer. Essentially, is a very thin front end on top of xapian."""
+    """Notmuch is a mail indexer. 
+    
+    Essentially, is a very thin front end on top of xapian.
+    """
 
     homepage = "https://notmuchmail.org/"
     url      = "https://notmuchmail.org/releases/notmuch-0.23.7.tar.gz"
