@@ -42,5 +42,4 @@ class PyQtconsole(PythonPackage):
     depends_on('py-pygments',            type=('build', 'run'))
     depends_on('py-traitlets',           type=('build', 'run'))
     depends_on('py-sphinx@1.3:',         type=('build', 'run'), when='+docs')
-    #mock; python_version=="2.7" and extra == 'test'
-    #pexpect; sys_platform != "win32" and extra == 'test'
+    # mock; python_version=="2.7" and extra == 'test'
