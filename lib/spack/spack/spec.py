@@ -1112,15 +1112,19 @@ class Spec(object):
         return first_root
 
     @property
+    def repository(self):
+        return spack.repo
+
+    @property
     def package(self):
-        return spack.repo.get(self)
+        return self.repository.get(self)
 
     @property
     def package_class(self):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.get_pkg_class(self.fullname)
+        return self.repository.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -1687,7 +1691,7 @@ class Spec(object):
             # we can do it as late as possible to allow as much
             # compatibility across repositories as possible.
             if s.namespace is None:
-                s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+                s.namespace = self.repository.repo_for_pkg(s.name).namespace
 
         for s in self.traverse(root=False):
             if s.external_module:
@@ -1774,7 +1778,7 @@ class Spec(object):
         the dependency.  If no conditions are True (and we don't
         depend on it), return None.
         """
-        pkg = spack.repo.get(self.fullname)
+        pkg = self.repository.get(self.fullname)
         conditions = pkg.dependencies[name]
 
         # evaluate when specs to figure out constraints on the dependency.
@@ -1911,7 +1915,7 @@ class Spec(object):
         any_change = False
         changed = True
 
-        pkg = spack.repo.get(self.fullname)
+        pkg = self.repository.get(self.fullname)
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
@@ -1996,7 +2000,7 @@ class Spec(object):
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
-                spack.repo.get(spec.fullname)
+                self.repository.get(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -2166,7 +2170,7 @@ class Spec(object):
 
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
-            pkg = spack.repo.get(self.fullname)
+            pkg = self.repository.get(self.fullname)
             if pkg.provides(other.name):
                 for provided, when_specs in pkg.provided.items():
                     if any(self.satisfies(when_spec, deps=False, strict=strict)
@@ -2777,7 +2781,7 @@ class Spec(object):
         try:
             record = spack.store.db.get_record(self)
             return record.explicit
-        except KeyError:
+        except (KeyError, spack.error.SpackError):
             return None
 
     def tree(self, **kwargs):

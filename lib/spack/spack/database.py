@@ -39,24 +39,24 @@ provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 
 """
+import contextlib
 import os
 import socket
 
-from yaml.error import MarkedYAMLError, YAMLError
-
+import llnl.util.lang as lang
 import llnl.util.tty as tty
+import spack.repository
+import spack.spec
+import spack.store
+import spack.util.prefix
+import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 from llnl.util.filesystem import *
 from llnl.util.lock import *
-
-import spack.store
-import spack.repository
 from spack.directory_layout import DirectoryLayoutError
-from spack.version import Version
-import spack.spec
 from spack.error import SpackError
-import spack.util.spack_yaml as syaml
-import spack.util.spack_json as sjson
-
+from spack.version import Version
+from yaml.error import MarkedYAMLError, YAMLError
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -83,6 +83,84 @@ def _autospec(function):
     return converter
 
 
+@contextlib.contextmanager
+def context_monkeypatch(obj, attribute, value):
+    old = getattr(obj, attribute)
+    try:
+        setattr(obj, attribute, value)
+        yield old
+    finally:
+        setattr(obj, attribute, old)
+
+
+class SpecFromDB(lang.ObjectWrapper):
+    """Wraps an installed spec from the DB, except that the repository points
+    to the 'package.py' that were used to install it.
+    """
+    def __init__(self, spec, install_path, repository=None):
+        super(SpecFromDB, self).__init__(spec)
+
+        self.install_path = install_path
+
+        self._repository = repository
+        if repository is None:
+            try:
+                # Find the directory with repos.yaml in path
+                for root, _, files in os.walk(install_path):
+                    if 'repo.yaml' in files:
+                        repo_path = root
+                        break
+
+                self._repository = spack.repository.RepoPath(
+                    repo_path, skip_namespace=True
+                )
+                # Needed for build dependencies
+                for r in spack.repo.repos:
+                    self._repository.put_last(r)
+            except UnboundLocalError:
+                # Fall back to this if things go really wrong
+                self._repository = spack.repo
+
+    def copy(self, *args, **kwargs):
+        clone = super(SpecFromDB, self).copy(*args, **kwargs)
+        clone = SpecFromDB(
+            clone, self.install_path, self.repository
+        )
+        return clone
+
+    @property
+    def virtual(self):
+        return False
+
+    @property
+    def repository(self):
+        return self._repository
+
+    @property
+    def prefix(self):
+        return spack.util.prefix.Prefix(self.install_path)
+
+    def satisfies(self, other, *args, **kwargs):
+        with context_monkeypatch(spack, 'repo', self.repository) as old_repo:
+            if not isinstance(other, spack.spec.Spec):
+                other = spack.spec.Spec(other)
+
+            repo = old_repo
+            if other.name in self.repository:
+                repo = self.repository
+
+            if not isinstance(other, SpecFromDB):
+                other = SpecFromDB(other, None, repo)
+
+            return super(SpecFromDB, self).satisfies(other, *args, **kwargs)
+
+    def traverse_edges(self, *args, **kwargs):
+        with context_monkeypatch(spack, 'repo', self.repository):
+            seq = super(SpecFromDB, self).traverse_edges(*args, **kwargs)
+            for item in seq:
+                yield item
+
+
 class InstallRecord(object):
     """A record represents one installation in the DB.
 
@@ -101,7 +179,7 @@ class InstallRecord(object):
     """
 
     def __init__(self, spec, path, installed, ref_count=0, explicit=False):
-        self.spec = spec
+        self.spec = SpecFromDB(spec, str(path))
         self.path = str(path)
         self.installed = bool(installed)
         self.ref_count = ref_count
@@ -682,7 +760,7 @@ class Database(object):
                     continue
                 if explicit is not any and rec.explicit != explicit:
                     continue
-                if known is not any and spack.repo.exists(
+                if known is not any and rec.spec.repository.exists(
                         rec.spec.name) != known:
                     continue
                 if query_spec is any or rec.spec.satisfies(query_spec):

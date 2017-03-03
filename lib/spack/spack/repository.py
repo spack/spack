@@ -106,6 +106,8 @@ class RepoPath(object):
         # super-namespace for all packages in the RepoPath
         self.super_namespace = kwargs.get('namespace', repo_namespace)
 
+        self.skip_namespace = kwargs.get('skip_namespace', False)
+
         self.repos = []
         self.by_namespace = NamespaceTrie()
         self.by_path = {}
@@ -293,7 +295,7 @@ class RepoPath(object):
         """Given a spec, get the repository for its package."""
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
-        if spec.namespace:
+        if spec.namespace and not self.skip_namespace:
             fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
             if fullspace not in self.by_namespace:
                 raise UnknownNamespaceError(spec.namespace)

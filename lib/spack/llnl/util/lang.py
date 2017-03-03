@@ -386,5 +386,10 @@ class ObjectWrapper(object):
     def __init__(self, wrapped_object):
         wrapped_cls = type(wrapped_object)
         wrapped_name = wrapped_cls.__name__
-        self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+
+        bases = (type(self), wrapped_cls)
+        if isinstance(wrapped_object, type(self)):
+            bases = (wrapped_cls,)
+
+        self.__class__ = type(wrapped_name, bases, {})
         self.__dict__ = wrapped_object.__dict__
