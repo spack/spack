@@ -29,7 +29,7 @@ class PyQtconsole(PythonPackage):
     """Jupyter Qt console"""
 
     homepage = "http://ipython.org"
-    url      = "https://pypi.io/packages/source/q/qtconsole/qtconsole-4.2.1.zip"
+    url      = "https://pypi.io/packages/source/q/qtconsole/qtconsole-4.2.1.tar.gz"
 
     version('4.2.1', 'c08ebebc7a60629ebadf685361ca0798')
 
