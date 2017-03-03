@@ -24,11 +24,9 @@
 ##############################################################################
 
 from spack import *
-from spack import architecture
-import subprocess
 
 
-class Adios(Package):
+class Adios(AutotoolsPackage):
     """The Adaptable IO System (ADIOS) provides a simple,
     flexible way for scientists to describe the
     data in their code that may need to be written,
@@ -76,16 +74,13 @@ class Adios(Package):
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
 
+    build_directory = 'spack-build'
+
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/LLNL/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
     patch('adios_python.patch', when='@1:+fortran')
-
-    def get_arch(self):
-        arch = architecture.Arch()
-        arch.platform = architecture.platform()
-        return str(arch.platform.target('default_target'))
 
     def validate(self, spec):
         """
@@ -97,9 +92,10 @@ class Adios(Package):
             msg = 'cannot build a fortran variant without a fortran compiler'
             raise RuntimeError(msg)
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         self.validate(spec)
-        # Handle compilation after spec validation
+
         extra_args = []
 
         # required, otherwise building its python bindings on ADIOS will fail
@@ -130,22 +126,4 @@ class Adios(Package):
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
 
-        sh = which('sh')
-        sh('./autogen.sh')
-
-        if self.get_arch() == 'ppc64le':
-            # update the config.sub/guess files
-            with working_dir("config"):
-                # get new config.guess and config.sub files
-                print 'Backing up existing config.[sub|guess] files\n'
-                subprocess.call("mv config.sub config.sub.orig", shell=True)
-                subprocess.call("mv config.guess config.guess.orig",
-                                shell=True)
-                print 'Downloading lastest config.[sub|guess] files\n'
-                subprocess.call("wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'", shell=True)
-                subprocess.call("wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'", shell=True)
-
-        configure("--prefix=%s" % prefix,
-                  *extra_args)
-        make()
-        make("install")
+        return extra_args
