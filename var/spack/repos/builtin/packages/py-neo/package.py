@@ -35,8 +35,6 @@ class PyNeo(PythonPackage):
 
     version('0.4.1', 'f706df3a1bce835cb490b812ac198a6e')
 
-    depends_on('python@2.6.0:')
     depends_on('py-setuptools',        type='build')
     depends_on('py-numpy@1.7.1:',      type=('build', 'run'))
     depends_on('py-quantities@0.9.0:', type=('build', 'run'))
-    
