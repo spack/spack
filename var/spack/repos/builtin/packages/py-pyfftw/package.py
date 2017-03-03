@@ -36,6 +36,6 @@ class PyPyfftw(PythonPackage):
 
     depends_on('fftw')
     depends_on('py-setuptools',    type='build')
-    depends_on('py-cython',        type=('build', 'run'))
+    depends_on('py-cython',        type='build')
     depends_on('py-numpy@1.6:',    type=('build', 'run'))
     depends_on('py-scipy@0.12.0:', type=('build', 'run'))
