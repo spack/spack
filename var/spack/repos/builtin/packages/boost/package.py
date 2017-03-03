@@ -169,9 +169,11 @@ class Boost(Package):
 
         pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
         all_libs = glob(join_path(spec['python'].prefix.lib, pylib))
-        libs = set([realpath(u) for u in all_libs if splitext(u)[1] == "." + dso_suffix])
+        libs = set([realpath(u) for u in all_libs
+                    if splitext(u)[1] == "." + dso_suffix])
         if len(libs) == 0:
-            libs = set([realpath(u) for u in all_libs if splitext(u)[1] == '.a'])
+            libs = set([realpath(u)
+                        for u in all_libs if splitext(u)[1] == '.a'])
 
         # bjam only accepts one library. So if more than one is found, we leave
         # it to bjam and cross our fingers
