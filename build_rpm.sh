@@ -19,8 +19,9 @@ mpis=(
     openmpi@1.6.5
     openmpi@1.10.3
     openmpi@2.0.2
-    mvapich2
-    mpich
+    mvapich2@2.2
+    mpich@3.2
+    intel-parallel-studio@cluster.2017.1
 )
 
 pkgs=(

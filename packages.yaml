@@ -14,6 +14,14 @@
 #   ~/.spack/packages.yaml
 # -------------------------------------------------------------------------
 packages:
+  all:
+    compiler: [gcc@6, intel@17]
+    providers:
+      mpi: [openmpi, mvapich2, mpich, intel-parallel-studio]
+      blas: [openblas, intel-parallel-studio]
+      lapack: [openblas, intel-parallel-studio]
+      scalapack: [intel-parallel-stuido, netlib-scalapack]
+    variants: +debug +verbs
 
   openmpi:
     variants: +pmi +slurm
@@ -38,18 +46,5 @@ packages:
 
   intel-parallel-studio:
     paths:
-        intel-parallel-studio@cluster.2015.6: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o
-        intel-parallel-studio@cluster.2016.4: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i
-        intel-parallel-studio@cluster.2017.1: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe
-    variants: +mpi +mkl
-    version: [cluster.2015.6, cluster.2016.4, cluster.2017.1]
+        intel-parallel-studio@cluster.2017.1%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags~openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe
     buildable: False
-
-  all:
-    compiler: [gcc@6, intel@17]
-    providers:
-      mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
-      blas: [openblas, intel-parallel-studio+mkl]
-      lapack: [openblas, intel-parallel-studio+mkl]
-      scalapack: [intel-parallel-stuido+mkl, netlib-scalapack]
-    variants: +debug +verbs
