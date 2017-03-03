@@ -27,7 +27,8 @@ from spack import *
 
 class Gmime(AutotoolsPackage):
     """GMime is a C/C++ library which may be used for the creation and
-    parsing of messages using the Multipurpose Internet Mail Extension (MIME)."""
+    parsing of messages using the Multipurpose Internet Mail Extension (MIME).
+    """
 
     homepage = "http://spruce.sourceforge.net/gmime/"
     url      = "https://download.gnome.org/sources/gmime/2.6/gmime-2.6.23.tar.xz"
