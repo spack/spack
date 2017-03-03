@@ -360,6 +360,47 @@ Developer commands
 ``spack test``
 ^^^^^^^^^^^^^^
 
+.. _cmd-spack-python:
+
+^^^^^^^^^^^^^^^^
+``spack python``
+^^^^^^^^^^^^^^^^
+
+``spack python`` is a command that lets you import and debug things as if
+you were in a Spack interactive shell. Without any arguments, it is similar
+to a normal interactive Python shell, except you can import spack and any
+other Spack modules:
+
+.. code-block:: console
+
+   $ spack python
+   Spack version 0.10.0
+   Python 2.7.13, Linux x86_64
+   >>> from spack.version import Version
+   >>> a = Version('1.2.3')
+   >>> b = Version('1_2_3')
+   >>> a == b
+   True
+   >>> c = Version('1.2.3b')
+   >>> c > a
+   True
+   >>>
+
+You can also run a single command:
+
+.. code-block:: console
+
+   $ spack python -c 'import distro; distro.linux_distribution()'
+   ('Fedora', '25', 'Workstation Edition')
+
+or a file:
+
+.. code-block:: console
+
+   $ spack python ~/test_fetching.py
+
+just like you would with the normal ``python`` command.
+
 .. _cmd-spack-url:
 
 ^^^^^^^^^^^^^

@@ -43,3 +43,6 @@ class Pdt(AutotoolsPackage):
     version('3.20',   'c3edabe202926abe04552e33cd39672d')
     version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
     version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
+
+    def configure(self, spec, prefix):
+        configure('-prefix=%s' % prefix)

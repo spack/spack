@@ -88,7 +88,7 @@ class Gmsh(CMakePackage):
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        blas_lapack = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        blas_lapack = spec['lapack'].libs + spec['blas'].libs
         options.append(
             '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 

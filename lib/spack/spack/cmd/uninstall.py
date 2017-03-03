@@ -26,17 +26,18 @@ from __future__ import print_function
 
 import argparse
 
-import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.store
 import spack.repository
 
+from llnl.util import tty
+
 description = "remove an installed package"
 
 error_message = """You can either:
-    a) Use a more specific spec, or
-    b) use spack uninstall -a to uninstall ALL matching specs.
+    a) use a more specific spec, or
+    b) use `spack uninstall --all` to uninstall ALL matching specs.
 """
 
 # Arguments for display_specs when we find ambiguity
@@ -61,7 +62,7 @@ def setup_parser(subparser):
              "is both useful and dangerous, like rm -r")
 
     subparser.add_argument(
-        '-d', '--dependents', action='store_true', dest='dependents',
+        '-R', '--dependents', action='store_true', dest='dependents',
         help='also uninstall any packages that depend on the ones given '
              'via command line')
 
@@ -94,7 +95,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
-            tty.error("%s matches multiple packages:" % spec)
+            tty.error('{0} matches multiple packages:'.format(spec))
             print()
             spack.cmd.display_specs(matching, **display_args)
             print()
@@ -102,7 +103,8 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
 
         # No installed package matches the query
         if len(matching) == 0 and spec is not any:
-            tty.error("%s does not match any installed packages." % spec)
+            tty.error('{0} does not match any installed packages.'.format(
+                spec))
             has_errors = True
 
         specs_from_cli.extend(matching)
@@ -176,10 +178,10 @@ def get_uninstall_list(args):
     has_error = False
     if dependent_list and not args.dependents and not args.force:
         for spec, lst in dependent_list.items():
-            tty.error("Will not uninstall %s" %
-                      spec.format("$_$@$%@$/", color=True))
+            tty.error('Will not uninstall {0}'.format(
+                      spec.format("$_$@$%@$/", color=True)))
             print('')
-            print("The following packages depend on it:")
+            print('The following packages depend on it:')
             spack.cmd.display_specs(lst, **display_args)
             print('')
             has_error = True
@@ -188,28 +190,29 @@ def get_uninstall_list(args):
             uninstall_list.extend(lst)
         uninstall_list = list(set(uninstall_list))
     if has_error:
-        tty.die('You can use spack uninstall --dependents '
-                'to uninstall these dependencies as well')
+        tty.die('Use `spack uninstall --dependents` '
+                'to uninstall these dependencies as well.')
 
     return uninstall_list
 
 
 def uninstall(parser, args):
     if not args.packages and not args.all:
-        tty.die("uninstall requires at least one package argument.")
+        tty.die('uninstall requires at least one package argument.',
+                '  Use `spack uninstall --all` to uninstall ALL packages.')
 
     uninstall_list = get_uninstall_list(args)
 
     if not uninstall_list:
-        tty.msg("There are no package to uninstall.")
+        tty.warn('There are no package to uninstall.')
         return
 
     if not args.yes_to_all:
-        tty.msg("The following packages will be uninstalled : ")
-        print('')
+        tty.msg('The following packages will be uninstalled:\n')
         spack.cmd.display_specs(uninstall_list, **display_args)
-        print('')
-        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
+        answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
+        if not answer:
+            tty.die('Will not uninstall any packages.')
 
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)
