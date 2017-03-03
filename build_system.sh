@@ -29,3 +29,5 @@ rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-stu
 s git 		$cc	
 s git-lfs 	$cc	
 s parallel 	$cc	
+s emacs 	$cc	
+s vim 		$cc	

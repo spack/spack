@@ -6,7 +6,6 @@ if [ -z $1 ]; then
 	echo "- system: For system administrators to install compilers globally."
 	echo "- rpm: For rpm builder to install packages on specific architectures."
 	echo "- user: For Pi users to install packages in ~/spack."
-	echo "- SPACK_ROOT: a specified SPACK_ROOT"
 	echo "- --install: Build and install."
 	exit 1
 fi
