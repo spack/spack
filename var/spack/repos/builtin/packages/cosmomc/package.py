@@ -139,7 +139,8 @@ class Cosmomc(Package):
                       'test.ini',
                       'test_pico.ini',
                       'test_planck.ini',
-                      'tests']:
+                      'tests',
+        ]:
             if os.path.isfile(entry):
                 install(entry, root)
             else:
@@ -150,12 +151,9 @@ class Cosmomc(Package):
 
     @on_package_attributes(run_tests=True)
     @run_after('install')
-    def check(self):
+    def check_install(self):
         prefix = self.prefix
         spec = self.spec
-
-        # if not self.run_tests:
-        #     return
 
         os.environ.pop('LINKMPI', '')
         os.environ.pop('NERSC_HOST', '')
@@ -184,7 +182,8 @@ class Cosmomc(Package):
                 'chains',
                 'data',
                 'paramnames',
-                'planck_covmats']:
+                'planck_covmats',
+            ]:
                 os.symlink(join_path(prefix.share, 'cosmomc', entry), entry)
             inifile = join_path(prefix.share, 'cosmomc', 'test.ini')
             cosmomc(*(args + [inifile]))
