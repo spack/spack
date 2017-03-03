@@ -39,7 +39,6 @@ class Magma(CMakePackage):
     variant('fortran', default=True,
             description='Enable Fortran bindings support')
 
-    depends_on('cmake', type='build')
     depends_on('lapack')
 
     patch('ibm-xl.patch', when='@2.2:%xl')
