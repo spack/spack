@@ -387,6 +387,7 @@ class Python(Package):
             'python{0}'.format('3' if self.spec.satisfies('@3') else '')
         )
 
+        module.python_exe = python_path
         module.python = Executable(python_path)
         module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
 
