@@ -32,3 +32,5 @@ class PyPyserial(Package):
     url      = "https://pypi.io/packages/source/p/pyserial/pyserial-3.1.1.tar.gz"
 
     version('3.1.1', '2f72100de3e410b36d575e12e82e9d27')
+
+    depends_on('py-setuptools', type='build')
