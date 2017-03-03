@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import sys
+import platform
 
 
 class PyIpython(PythonPackage):
@@ -54,4 +55,5 @@ class PyIpython(PythonPackage):
     depends_on('py-decorator',                  type=('build', 'run'))
 
     depends_on('py-appnope', type=('build', 'run'),
-                    when=sys.platform == 'darwin')
+                    when=sys.platform == 'darwin'
+                            and int(platform.mac_ver()[0].split('.')[1]) >= 9)
