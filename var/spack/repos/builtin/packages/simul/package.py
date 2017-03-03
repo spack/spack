@@ -40,6 +40,8 @@ class Simul(Package):
     depends_on('mpi')
 
     def install(self, spec, prefix):
+        filter_file('mpicc',  '$(MPICC)',  'Makefile', string=True)
+        filter_file('inline void',  'void',  'simul.c', string=True)
         make('simul')
         mkdirp(prefix.bin)
         install('simul', prefix.bin)
