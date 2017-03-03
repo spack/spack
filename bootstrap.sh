@@ -53,6 +53,7 @@ config:
   verify_ssl: true
 EOF
 
+rm -f ~/.spack/config.yaml
 cp -f compilers.yaml  $SPACK_ROOT/etc/spack/compilers.yaml
 cp -f packages.yaml   $SPACK_ROOT/etc/spack/packages.yaml
 
