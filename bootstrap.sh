@@ -55,7 +55,11 @@ EOF
 
 rm -f ~/.spack/config.yaml
 cp -f compilers.yaml  $SPACK_ROOT/etc/spack/compilers.yaml
-cp -f packages.yaml   $SPACK_ROOT/etc/spack/packages.yaml
+if [ $1 = "system" ]; then
+	cp -f packages_system.yaml   $SPACK_ROOT/etc/spack/packages.yaml
+else
+	cp -f packages.yaml   $SPACK_ROOT/etc/spack/packages.yaml
+fi
 
 echo "Make Spack configuration take effect."
 echo "SPACKPREFIX => $SPACKPREFIX"
