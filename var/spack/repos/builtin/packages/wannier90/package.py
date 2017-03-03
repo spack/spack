@@ -47,8 +47,8 @@ class Wannier90(Package):
 
     def install(self, spec, prefix):
 
-        lapack = self.spec['lapack'].lapack_libs
-        blas = self.spec['blas'].blas_libs
+        lapack = self.spec['lapack'].libs
+        blas = self.spec['blas'].libs
         substitutions = {
             '@F90': spack_fc,
             '@MPIF90': self.spec['mpi'].mpifc,

@@ -26,7 +26,8 @@ from spack import *
 
 
 class Simul(Package):
-    """simul is an MPI coordinated test of parallel filesystem system calls and library functions. """
+    """simul is an MPI coordinated test of parallel 
+    filesystem system calls and library functions. """
 
     homepage = "https://github.com/LLNL/simul"
     url      = "https://github.com/LLNL/simul/archive/1.16.tar.gz"
@@ -40,5 +41,5 @@ class Simul(Package):
 
     def install(self, spec, prefix):
         make('simul')
-	mkdirp(prefix.bin)
-	install('simul', prefix.bin)
+        mkdirp(prefix.bin)
+        install('simul', prefix.bin)

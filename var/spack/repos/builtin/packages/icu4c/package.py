@@ -25,26 +25,24 @@
 from spack import *
 
 
-class Icu4c(Package):
+class Icu4c(AutotoolsPackage):
     """ICU is a mature, widely used set of C/C++ and Java libraries providing
     Unicode and Globalization support for software applications. ICU4C is the
     C/C++ interface."""
 
     homepage = "http://site.icu-project.org/"
     url      = "http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz"
+    list_url = "http://download.icu-project.org/files/icu4c"
+    list_depth = 2
 
+    version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
     version('57.1', '976734806026a4ef8bdd17937c8898b9')
 
+    configure_directory = 'source'
+
     def url_for_version(self, version):
-        base_url = "http://download.icu-project.org/files/icu4c"
-        return "{0}/{1}/icu4c-{2}-src.tgz".format(
-            base_url, version, version.underscored)
+        url = "http://download.icu-project.org/files/icu4c/{0}/icu4c-{1}-src.tgz"
+        return url.format(version.dotted, version.underscored)
 
-    def install(self, spec, prefix):
-        with working_dir('source'):
-            configure('--prefix={0}'.format(prefix),
-                      '--enable-rpath')
-
-            make()
-            make('check')
-            make('install')
+    def configure_args(self):
+        return ['--enable-rpath']

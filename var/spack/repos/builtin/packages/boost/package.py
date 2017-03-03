@@ -130,6 +130,9 @@ class Boost(Package):
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/11120
+    patch('python_jam.patch', when='^python@3:')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
     patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
 
@@ -153,7 +156,7 @@ class Boost(Package):
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
-                    'clang++': 'clang', 
+                    'clang++': 'clang',
                     'xlc++': 'xlcpp',
                     'xlc++_r': 'xlcpp'}
 
@@ -192,8 +195,7 @@ class Boost(Package):
         options.append("--with-libraries=%s" % ','.join(withLibs))
 
         if '+python' in spec:
-            options.append('--with-python=%s' %
-                           join_path(spec['python'].prefix.bin, 'python'))
+            options.append('--with-python=%s' % python_exe)
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in

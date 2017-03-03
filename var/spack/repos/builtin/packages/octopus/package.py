@@ -71,8 +71,8 @@ class Octopus(Package):
     def install(self, spec, prefix):
         arpack = find_libraries(['libarpack'], root=spec[
                                 'arpack-ng'].prefix.lib, shared=True)
-        lapack = spec['lapack'].lapack_libs
-        blas = spec['blas'].blas_libs
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
         args = []
         args.extend([
             '--prefix=%s' % prefix,
@@ -105,8 +105,8 @@ class Octopus(Package):
             ])
         if '+scalapack' in spec:
             args.extend([
-                '--with-blacs=%s' % spec['scalapack'].scalapack_libs,
-                '--with-scalapack=%s' % spec['scalapack'].scalapack_libs,
+                '--with-blacs=%s' % spec['scalapack'].libs,
+                '--with-scalapack=%s' % spec['scalapack'].libs,
             ])
             # --with-etsf-io-prefix=
             # --with-sparskit=${prefix}/lib/libskit.a
