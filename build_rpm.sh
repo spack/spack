@@ -26,7 +26,6 @@ mpis=(
 pkgs=(
     mdtest
     simul
-    sga
 )
 
 # CUDA
@@ -44,8 +43,8 @@ for compiler in "${compilers[@]}"
 do
 s python@2.7.13 $compiler
 s python@3.6.0  $compiler
-s r@3.3.2 	    $compiler
-s boost 	    $compiler
+s r@3.3.2	$compiler
+s boost		$compiler
 done
 
 # MPI and MPI-dependent Libraries
@@ -55,8 +54,12 @@ do
 	do
 		s $mpi $compiler
 		for pkg in "${pkgs[@]}"
+		do
 			s $pkg ^$mpi $compiler
+		done
 	done
 done
 
 # Other packages
+s sga %intel@17
+s sga %gcc@5
