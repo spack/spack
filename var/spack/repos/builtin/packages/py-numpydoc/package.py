@@ -25,19 +25,14 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class PyNumpydoc(PythonPackage):
+    """numpydoc - Numpy's Sphinx extensions"""
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "https://github.com/numpy/numpydoc"
+    url      = "https://pypi.io/packages/source/n/numpydoc/numpydoc-0.6.0.tar.gz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('0.6.0', '5f1763c44e613850d56ba1b1cf1cb146')
 
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    depends_on('python@2.6:2.8,3.3:')
+    depends_on('py-setuptools',    type='build')
+    depends_on('py-sphinx@1.0.1:', type='build')

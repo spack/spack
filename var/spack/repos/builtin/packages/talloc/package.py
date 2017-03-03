@@ -25,19 +25,11 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class Talloc(AutotoolsPackage):
+    """Talloc provides a hierarchical, reference counted memory pool system
+    with destructors. It is the core memory allocator used in Samba."""
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "https://talloc.samba.org"
+    url      = "https://www.samba.org/ftp/talloc/talloc-2.1.9.tar.gz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
-
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    version('2.1.9', '19ba14eba97d79a169fa92ea824d2b9e')

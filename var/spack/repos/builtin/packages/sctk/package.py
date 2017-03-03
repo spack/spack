@@ -28,9 +28,10 @@ from distutils.dir_util import copy_tree
 
 class Sctk(Package):
     """The NIST Scoring Toolkit (SCTK) is a collection of software tools 
-        designed to score benchmark test evaluations of Automatic Speech Recognition 
-        (ASR) Systems. The toolkit is currently used by NIST, benchmark test participants, 
-        and reserchers worldwide to as a common scoring engine."""
+        designed to score benchmark test evaluations of Automatic Speech 
+        Recognition (ASR) Systems. The toolkit is currently used by NIST, 
+        benchmark test participants, and reserchers worldwide to as a 
+        common scoring engine."""
 
     homepage = "https://www.nist.gov/itl/iad/mig/tools"
     url      = "http://www.openslr.org/resources/4/sctk-2.4.10-20151007-1312Z.tar.bz2"

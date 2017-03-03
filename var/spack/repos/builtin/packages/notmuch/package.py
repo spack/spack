@@ -25,19 +25,18 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class Notmuch(AutotoolsPackage):
+    """Notmuch is a mail indexer. 
+    
+    Essentially, is a very thin front end on top of xapian.
+    """
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "https://notmuchmail.org/"
+    url      = "https://notmuchmail.org/releases/notmuch-0.23.7.tar.gz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('0.23.7', '1ad339b6d0c03548140434c7bcdf0624')
 
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    depends_on('zlib')
+    depends_on('talloc')
+    depends_on('gmime@2.6:')
+    depends_on('xapian-core')

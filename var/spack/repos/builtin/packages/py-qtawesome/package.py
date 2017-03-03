@@ -25,19 +25,15 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class PyQtawesome(PythonPackage):
+    """FontAwesome icons in PyQt and PySide applications"""
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "https://github.com/spyder-ide/qtawesome"
+    url = "https://pypi.io/packages/source/Q/QtAwesome/QtAwesome-0.4.1.tar.gz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('0.4.1', 'bf93df612a31f3b501d751fc994c1b05')
+    version('0.3.3', '830677aa6ca4e7014e228147475183d3')
 
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-qtpy',       type=('build', 'run'))
+    depends_on('py-six',        type=('build', 'run'))

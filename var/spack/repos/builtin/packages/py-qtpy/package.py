@@ -25,19 +25,13 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class PyQtpy(PythonPackage):
+    """QtPy: Abtraction layer for PyQt5/PyQt4/PySide"""
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "https://github.com/spyder-ide/qtpy"
+    url      = "https://pypi.io/packages/source/Q/QtPy/QtPy-1.2.1.tar.gz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('1.2.1', 'e2f783fb7f8e502815237bd8d30c6d11')
 
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pyqt@4:',    type=('build', 'run'))

@@ -25,19 +25,15 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class XapianCore(AutotoolsPackage):
+    """Xapian is a highly adaptable toolkit which allows developers to easily
+    add advanced indexing and search facilities to their own applications.
+    It supports the Probabilistic Information Retrieval model and also
+    supports a rich set of boolean query operators."""
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "https://xapian.org"
+    url      = "http://oligarchy.co.uk/xapian/1.4.3/xapian-core-1.4.3.tar.xz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('1.4.3', '143f72693219f7fc5913815ed858f295')
 
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    depends_on('zlib')

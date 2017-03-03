@@ -25,19 +25,15 @@
 from spack import *
 
 
-class Mdtest(Package):
-    """mdtest is an MPI-coordinated metadata benchmark test 
-       that performs open/stat/close operations on files 
-       and directories and then reports the performance."""
+class Gmime(AutotoolsPackage):
+    """GMime is a C/C++ library which may be used for the creation and
+    parsing of messages using the Multipurpose Internet Mail Extension (MIME).
+    """
 
-    homepage = "https://github.com/LLNL/mdtest"
+    homepage = "http://spruce.sourceforge.net/gmime/"
+    url      = "https://download.gnome.org/sources/gmime/2.6/gmime-2.6.23.tar.xz"
 
-    version('1.9.3', git='https://github.com/LLNL/mdtest.git', commit='49f3f0')
+    version('2.6.23', '247072236d84bd0fbbff299d69bdf333')
 
-    depends_on('mpi')
-
-    def install(self, spec, prefix):
-        filter_file('$(CC.$(OS))', spec['mpi'].mpicc, 'Makefile', string=True)
-        make('mdtest')
-        mkdirp(prefix.bin)
-        install('mdtest', prefix.bin)
+    depends_on('glib@2.18.0:')
+    depends_on('libgpg-error')
