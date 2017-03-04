@@ -26,7 +26,8 @@ from spack import *
 
 
 class PyJunitXml(PythonPackage):
-    """Creates JUnit XML test result documents that can be read by tools such as Jenkins"""
+    """Creates JUnit XML test result documents that can be read by tools
+    such as Jenkins"""
 
     homepage = "https://github.com/kyrus/python-junit-xml"
     url      = "https://pypi.io/packages/source/j/junit-xml/junit-xml-1.7.tar.gz"
