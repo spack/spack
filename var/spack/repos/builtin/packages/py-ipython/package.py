@@ -55,5 +55,5 @@ class PyIpython(PythonPackage):
     depends_on('py-decorator',                  type=('build', 'run'))
 
     depends_on('py-appnope', type=('build', 'run'),
-                    when=sys.platform == 'darwin'
-                            and int(platform.mac_ver()[0].split('.')[1]) >= 9)
+                    when=sys.platform == 'darwin' and
+                            int(platform.mac_ver()[0].split('.')[1]) >= 9)
