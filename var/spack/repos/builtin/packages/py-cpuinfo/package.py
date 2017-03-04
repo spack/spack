@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPyCpuinfo(PythonPackage):
+class PyCpuinfo(PythonPackage):
     """Get CPU info with pure Python 2 & 3"""
 
     homepage = "https://github.com/workhorsy/py-cpuinfo"
