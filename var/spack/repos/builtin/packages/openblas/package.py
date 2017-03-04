@@ -140,8 +140,8 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = spec.cppflags
-        link_flags = spec.libs.ld_flags
+        include_flags = spec['openblas'].cppflags
+        link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
             link_flags += ' -lifcore'
         link_flags += ' -lpthread'
