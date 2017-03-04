@@ -33,5 +33,12 @@ class Cscope(AutotoolsPackage):
 
     version('15.8b', '8f9409a238ee313a96f9f87fe0f3b176')
 
-    # Can be configured to use flex (not necessary)
-    # ./configure --with-flex
+    variant('flex', default=False, description="Builds with flex")
+
+    depends_on('flex', when='+flex')
+
+    def configure_args(self):
+        args = []
+        if '+flex' in self.spec:
+            args.append('--with-flex')
+        return args
