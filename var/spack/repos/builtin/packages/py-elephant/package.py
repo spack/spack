@@ -25,26 +25,24 @@
 from spack import *
 
 
-class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an
-    application binary interface (ABI) supporting coarray Fortran (CAF)
-    compilers, an application programming interface (API) that supports users
-    of non-CAF compilers, and an associated compiler wrapper and program
-    launcher.
+class PyElephant(PythonPackage):
+    """Elephant is a package for analysis of electrophysiology data in Python
     """
 
-    homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
+    homepage = "http://neuralensemble.org/elephant"
+    url      = "https://pypi.io/packages/source/e/elephant/elephant-0.3.0.tar.gz"
 
-    version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
-    version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
-    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
-    version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+    version('0.3.0', '84e69e6628fd617af469780c30d2da6c')
 
-    depends_on('mpi')
+    variant('docs', default=False, description='Build the documentation')
+    variant('pandas', default=True, description='Build with pandas')
 
-    def cmake_args(self):
-        args = []
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-        return args
+    depends_on('py-setuptools',         type='build')
+    depends_on('py-neo@0.3.4:',         type=('build', 'run'))  # > 0.3.3 ?
+    depends_on('py-numpy@1.8.2:',       type=('build', 'run'))
+    depends_on('py-quantities@0.10.1:', type=('build', 'run'))
+    depends_on('py-scipy@0.14.0:',      type=('build', 'run'))
+    depends_on('py-pandas@0.14.1:',     type=('build', 'run'), when='+pandas')
+    depends_on('py-numpydoc@0.5:',      type=('build', 'run'), when='+docs')
+    depends_on('py-sphinx@1.2.2:',      type=('build', 'run'), when='+docs')
+    # depends_on('py-nose@1.3.3:',        type=('build', 'run')) # tests

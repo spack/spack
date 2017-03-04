@@ -25,26 +25,16 @@
 from spack import *
 
 
-class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an
-    application binary interface (ABI) supporting coarray Fortran (CAF)
-    compilers, an application programming interface (API) that supports users
-    of non-CAF compilers, and an associated compiler wrapper and program
-    launcher.
-    """
+class PyNeo(PythonPackage):
+    """Neo is a package for representing electrophysiology data in Python, 
+    together with support for reading a wide range of neurophysiology 
+    file formats"""
 
-    homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
+    homepage = "http://neuralensemble.org/neo"
+    url      = "https://pypi.io/packages/source/n/neo/neo-0.4.1.tar.gz"
 
-    version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
-    version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
-    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
-    version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+    version('0.4.1', 'f706df3a1bce835cb490b812ac198a6e')
 
-    depends_on('mpi')
-
-    def cmake_args(self):
-        args = []
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-        return args
+    depends_on('py-setuptools',        type='build')
+    depends_on('py-numpy@1.7.1:',      type=('build', 'run'))
+    depends_on('py-quantities@0.9.0:', type=('build', 'run'))

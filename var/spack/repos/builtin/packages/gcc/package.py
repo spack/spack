@@ -92,10 +92,6 @@ class Gcc(AutotoolsPackage):
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
                     string=True)
 
-        # Make libgcc_s relocatable
-        filter_file(r"@shlib_slibdir@", "@rpath", 
-                    'libgcc/config/t-slibgcc-darwin', string=True)
-
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
@@ -176,11 +172,6 @@ class Gcc(AutotoolsPackage):
             for line in lines:
                 out.write(line + "\n")
                 if line.startswith("*link:"):
-                    if sys.platform == 'darwin':
-                        out.write("-rpath %s/lib -rpath %s/lib64 "
-                                  r"-headerpad_max_install_names \n" %
-                                  (self.prefix, self.prefix))
-                    else:
-                        out.write(r"-rpath %s/lib:%s/lib64 \n" %
-                                  (self.prefix, self.prefix))
+                    out.write("-rpath %s/lib:%s/lib64 \\\n" %
+                              (self.prefix, self.prefix))
         set_install_permissions(specs_file)

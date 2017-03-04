@@ -23,28 +23,40 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
+import os
 
 
-class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an
-    application binary interface (ABI) supporting coarray Fortran (CAF)
-    compilers, an application programming interface (API) that supports users
-    of non-CAF compilers, and an associated compiler wrapper and program
-    launcher.
+class Highwayhash(MakefilePackage):
+    """Strong (well-distributed and unpredictable) hashes:
+        - Portable implementation of SipHash
+        - HighwayHash, a 5x faster SIMD hash with security claims
     """
 
-    homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
+    homepage = "https://github.com/google/highwayhash"
 
-    version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
-    version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
-    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
-    version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+    version('dfcb97', git='https://github.com/google/highwayhash.git',
+            commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')
 
-    depends_on('mpi')
+    build_targets = ['all', 'libhighwayhash.a']
 
-    def cmake_args(self):
-        args = []
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-        return args
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        mkdirp(prefix.include)
+
+        # The following are CPU and compiler flag specific
+        if(os.path.exists('libhighwayhash.a')):
+            mkdirp(prefix.lib)
+            install('libhighwayhash.a', prefix.lib)
+        if(os.path.exists('highwayhash_test')):
+            install('highwayhash_test', prefix.bin)
+        if(os.path.exists('benchmark')):
+            install('benchmark', prefix.bin)
+
+        # Always installed
+        install('profiler_example', prefix.bin)
+        install('nanobenchmark_example', prefix.bin)
+        install('vector_test', prefix.bin)
+        install('sip_hash_test', prefix.bin)
+        for i in glob('highwayhash/*.h'):
+            install(i, prefix.include)

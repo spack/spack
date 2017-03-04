@@ -25,26 +25,12 @@
 from spack import *
 
 
-class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an
-    application binary interface (ABI) supporting coarray Fortran (CAF)
-    compilers, an application programming interface (API) that supports users
-    of non-CAF compilers, and an associated compiler wrapper and program
-    launcher.
-    """
+class PyPyserial(Package):
+    """Python Serial Port Extension"""
 
-    homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
+    homepage = "https://github.com/pyserial/pyserial"
+    url      = "https://pypi.io/packages/source/p/pyserial/pyserial-3.1.1.tar.gz"
 
-    version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
-    version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
-    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
-    version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+    version('3.1.1', '2f72100de3e410b36d575e12e82e9d27')
 
-    depends_on('mpi')
-
-    def cmake_args(self):
-        args = []
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-        return args
+    depends_on('py-setuptools', type='build')

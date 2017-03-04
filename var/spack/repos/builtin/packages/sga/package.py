@@ -47,25 +47,15 @@ class Sga(AutotoolsPackage):
     depends_on('sparsehash')
     depends_on('jemalloc')
     depends_on('bamtools')
-
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
     configure_directory = 'src'
 
-
     def configure_args(self):
-	spec = self.spec	
-        args = [
-            '--with-sparsehash={0}'.format(spec['sparsehash'].prefix),
-            '--with-bamtools={0}'.format(spec['bamtools'].prefix),
-            '--with-jemalloc={0}'.format(spec['jemalloc'].prefix)
+        return [
+            '--with-sparsehash={0}'.format(self.spec['sparsehash'].prefix),
+            '--with-bamtools={0}'.format(self.spec['bamtools'].prefix),
+            '--with-jemalloc={0}'.format(self.spec['jemalloc'].prefix)
         ]
-        return args
-
-
-    def install(self, spec, prefix):
-        cd('src')
-        make()
-        make('install')

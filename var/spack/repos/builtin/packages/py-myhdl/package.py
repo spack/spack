@@ -22,29 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an
-    application binary interface (ABI) supporting coarray Fortran (CAF)
-    compilers, an application programming interface (API) that supports users
-    of non-CAF compilers, and an associated compiler wrapper and program
-    launcher.
-    """
+class PyMyhdl(PythonPackage):
+    """Python as a Hardware Description Language"""
 
-    homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
+    homepage = "http://www.myhdl.org"
+    url      = "https://pypi.io/packages/source/m/myhdl/myhdl-0.9.0.tar.gz"
 
-    version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
-    version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
-    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
-    version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+    version('0.9.0', 'c3b4e7b857b6f51d43720413546df15c')
 
-    depends_on('mpi')
-
-    def cmake_args(self):
-        args = []
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-        return args
+    depends_on('python@2.6:2.8,3.4:')
+    depends_on('py-setuptools', type='build')
