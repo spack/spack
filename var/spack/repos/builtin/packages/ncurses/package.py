@@ -46,6 +46,9 @@ class Ncurses(AutotoolsPackage):
 
     def configure_args(self):
         opts = [
+            # The CPPFLAGS setting works around this bug:
+            # <http://stackoverflow.com/questions/37475222/ncurses-6-0-compilation-error-error-expected-before-int>
+            'CPPFLAGS=-P',
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
