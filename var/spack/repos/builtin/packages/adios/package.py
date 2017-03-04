@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Adios(Package):
+class Adios(AutotoolsPackage):
     """The Adaptable IO System (ADIOS) provides a simple,
     flexible way for scientists to describe the
     data in their code that may need to be written,
@@ -77,6 +77,8 @@ class Adios(Package):
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
 
+    build_directory = 'spack-build'
+
     # ADIOS uses the absolute Python path, which is too long and results in
     # "bad interpreter" errors
     patch('python.patch')
@@ -95,9 +97,10 @@ class Adios(Package):
             msg = 'cannot build a fortran variant without a fortran compiler'
             raise RuntimeError(msg)
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         self.validate(spec)
-        # Handle compilation after spec validation
+
         extra_args = []
 
         # required, otherwise building its python bindings on ADIOS will fail
@@ -130,10 +133,4 @@ class Adios(Package):
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
 
-        sh = which('sh')
-        sh('./autogen.sh')
-
-        configure("--prefix=%s" % prefix,
-                  *extra_args)
-        make()
-        make("install")
+        return extra_args
