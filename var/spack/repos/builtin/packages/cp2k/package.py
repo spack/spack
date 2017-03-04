@@ -92,7 +92,7 @@ class Cp2k(Package):
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags.append(spec['fftw'].cppflags)
-            fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
+            fftw = find_libraries('libfftw3', root=spec['fftw'].prefix.lib)
             ldflags = [fftw.search_flags]
             libs = [
                 join_path(spec['libint'].prefix.lib, 'libint.so'),
