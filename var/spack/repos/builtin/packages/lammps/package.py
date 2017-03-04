@@ -160,8 +160,8 @@ class Lammps(MakefilePackage):
 
             make('lib', '-f', 'Makefile.icc')
             with open('Makefile.lammps', 'w') as fh:
-                lapack_blas = (self.spec['lapack'].lapack_libs +
-                               self.spec['blas'].blas_libs)
+                lapack_blas = (self.spec['lapack'].libs +
+                               self.spec['blas'].libs)
                 makefile = [
                     'user-atc_SYSINC =',
                     'user-atc_SYSLIB = {0}'.format(lapack_blas.ld_flags),
