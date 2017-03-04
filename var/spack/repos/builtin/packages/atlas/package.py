@@ -112,6 +112,7 @@ class Atlas(Package):
             make("install")
             self.install_test()
 
+    @property
     def libs(self):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
