@@ -56,8 +56,8 @@ class HoomdBlue(Package):
     def install(self, spec, prefix):
 
         cmake_args = [
-            '-DPYTHON_EXECUTABLE=%s/python' % spec['python'].prefix.bin,
-            '-DBOOST_ROOT=%s'               % spec['boost'].prefix
+            '-DPYTHON_EXECUTABLE=%s' % spec['python'].executable,
+            '-DBOOST_ROOT=%'         % spec['boost'].prefix
         ]
 
         # MPI support

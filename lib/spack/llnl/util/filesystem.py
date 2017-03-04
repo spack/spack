@@ -25,6 +25,7 @@
 import collections
 import errno
 import fileinput
+import fnmatch
 import glob
 import numbers
 import os
@@ -35,17 +36,20 @@ import subprocess
 import sys
 from contextlib import contextmanager
 
-import llnl.util.tty as tty
+from llnl.util import tty
 from llnl.util.lang import dedupe
 
 __all__ = [
     'FileFilter',
     'LibraryList',
+    'HeaderList',
     'ancestor',
     'can_access',
     'change_sed_delimiter',
     'copy_mode',
     'filter_file',
+    'find',
+    'find_headers',
     'find_libraries',
     'fix_darwin_install_name',
     'force_remove',
@@ -65,7 +69,8 @@ __all__ = [
     'touchp',
     'traverse_tree',
     'unset_executable_mode',
-    'working_dir']
+    'working_dir'
+]
 
 
 def filter_file(regex, repl, *filenames, **kwargs):
@@ -479,29 +484,109 @@ def fix_darwin_install_name(path):
                         stdout=subprocess.PIPE).communicate()[0]
                     break
 
-# Utilities for libraries
+
+def find(root, files, recurse=True):
+    """Search for ``files`` starting from the ``root`` directory.
+
+    Like GNU/BSD find but written entirely in Python.
+
+    Examples:
+
+    .. code-block:: console
+
+       $ find /usr -name python
+
+    is equivalent to:
+
+    .. code-block:: python
+
+       >>> find('/usr', 'python')
+
+    .. code-block:: console
+
+       $ find /usr/local/bin -maxdepth 1 -name python
+
+    is equivalent to:
+
+    .. code-block:: python
+
+       >>> find('/usr/local/bin', 'python', recurse=False)
+
+    Accepts any glob characters accepted by fnmatch:
+
+    =======  ==================================
+    Pattern  Meaning
+    =======  ==================================
+    *        matches everything
+    ?        matches any single character
+    [seq]    matches any character in `seq`
+    [!seq]   matches any character not in `seq`
+    =======  ==================================
+
+    :param str root: The root directory to start searching from
+    :param files: Library name(s) to search for
+    :type files: str or collections.Sequence
+    :param bool recurse: if False search only root folder,
+        if True descends top-down from the root
+
+    :returns: The files that have been found
+    :rtype: list
+    """
+    if isinstance(files, str):
+        files = [files]
+
+    if recurse:
+        return _find_recursive(root, files)
+    else:
+        return _find_non_recursive(root, files)
 
 
-class LibraryList(collections.Sequence):
-    """Sequence of absolute paths to libraries
+def _find_recursive(root, search_files):
+    found_files = []
 
-    Provides a few convenience methods to manipulate library paths and get
-    commonly used compiler flags or names
+    for path, _, list_files in os.walk(root):
+        for search_file in search_files:
+            for list_file in list_files:
+                if fnmatch.fnmatch(list_file, search_file):
+                    found_files.append(join_path(path, list_file))
+
+    return found_files
+
+
+def _find_non_recursive(root, search_files):
+    found_files = []
+
+    for list_file in os.listdir(root):
+        for search_file in search_files:
+            if fnmatch.fnmatch(list_file, search_file):
+                found_files.append(join_path(root, list_file))
+
+    return found_files
+
+
+# Utilities for libraries and headers
+
+
+class FileList(collections.Sequence):
+    """Sequence of absolute paths to files.
+
+    Provides a few convenience methods to manipulate file paths.
     """
 
-    def __init__(self, libraries):
-        self.libraries = list(libraries)
+    def __init__(self, files):
+        self.files = list(dedupe(files))
 
     @property
     def directories(self):
-        """Stable de-duplication of the directories where the libraries
-        reside
+        """Stable de-duplication of the directories where the files reside.
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
         >>> assert l.directories == ['/dir1', '/dir2']
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> assert h.directories == ['/dir1', '/dir2']
         """
         return list(dedupe(
-            os.path.dirname(x) for x in self.libraries if os.path.dirname(x)
+            os.path.dirname(x) for x in self.files if os.path.dirname(x)
         ))
 
     @property
@@ -510,8 +595,115 @@ class LibraryList(collections.Sequence):
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
         >>> assert l.basenames == ['liba.a', 'libb.a']
+        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> assert h.basenames == ['a.h', 'b.h']
         """
-        return list(dedupe(os.path.basename(x) for x in self.libraries))
+        return list(dedupe(os.path.basename(x) for x in self.files))
+
+    @property
+    def names(self):
+        """Stable de-duplication of file names in the list
+
+        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> assert h.names == ['a', 'b']
+        """
+        return list(dedupe(x.split('.')[0] for x in self.basenames))
+
+    def __getitem__(self, item):
+        cls = type(self)
+        if isinstance(item, numbers.Integral):
+            return self.files[item]
+        return cls(self.files[item])
+
+    def __add__(self, other):
+        return self.__class__(dedupe(self.files + list(other)))
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __eq__(self, other):
+        return self.files == other.files
+
+    def __len__(self):
+        return len(self.files)
+
+    def joined(self, separator=' '):
+        return separator.join(self.files)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + repr(self.files) + ')'
+
+    def __str__(self):
+        return self.joined()
+
+
+class HeaderList(FileList):
+    """Sequence of absolute paths to headers
+
+    Provides a few convenience methods to manipulate header paths and get
+    commonly used compiler flags or names
+    """
+
+    @property
+    def headers(self):
+        return self.files
+
+    @property
+    def cpp_flags(self):
+        """Include flags
+
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
+        """
+        return ' '.join(['-I' + x for x in self.directories])
+
+
+def find_headers(headers, root, recurse=False):
+    """Returns an iterable object containing a list of full paths to
+    headers if found.
+
+    Accepts any glob characters accepted by fnmatch:
+
+    =======  ==================================
+    Pattern  Meaning
+    =======  ==================================
+    *        matches everything
+    ?        matches any single character
+    [seq]    matches any character in `seq`
+    [!seq]   matches any character not in `seq`
+    =======  ==================================
+
+    :param headers: Header name(s) to search for
+    :type headers: str or collections.Sequence
+    :param str root: The root directory to start searching from
+    :param bool recurse: if False search only root folder,
+        if True descends top-down from the root
+
+    :returns: The headers that have been found
+    :rtype: HeaderList
+    """
+    if isinstance(headers, str):
+        headers = [headers]
+
+    # Construct the right suffix for the headers
+    suffix = 'h'
+
+    # List of headers we are searching with suffixes
+    headers = ['{0}.{1}'.format(header, suffix) for header in headers]
+
+    return HeaderList(find(root, headers, recurse))
+
+
+class LibraryList(FileList):
+    """Sequence of absolute paths to libraries
+
+    Provides a few convenience methods to manipulate library paths and get
+    commonly used compiler flags or names
+    """
+
+    @property
+    def libraries(self):
+        return self.files
 
     @property
     def names(self):
@@ -549,40 +741,24 @@ class LibraryList(collections.Sequence):
         """
         return self.search_flags + ' ' + self.link_flags
 
-    def __getitem__(self, item):
-        cls = type(self)
-        if isinstance(item, numbers.Integral):
-            return self.libraries[item]
-        return cls(self.libraries[item])
 
-    def __add__(self, other):
-        return LibraryList(dedupe(self.libraries + list(other)))
-
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    def __eq__(self, other):
-        return self.libraries == other.libraries
-
-    def __len__(self):
-        return len(self.libraries)
-
-    def joined(self, separator=' '):
-        return separator.join(self.libraries)
-
-    def __repr__(self):
-        return self.__class__.__name__ + '(' + repr(self.libraries) + ')'
-
-    def __str__(self):
-        return self.joined()
-
-
-def find_libraries(args, root, shared=True, recurse=False):
+def find_libraries(libraries, root, shared=True, recurse=False):
     """Returns an iterable object containing a list of full paths to
     libraries if found.
 
-    :param args: Library name(s) to search for
-    :type args: str or collections.Sequence
+    Accepts any glob characters accepted by fnmatch:
+
+    =======  ==================================
+    Pattern  Meaning
+    =======  ==================================
+    *        matches everything
+    ?        matches any single character
+    [seq]    matches any character in `seq`
+    [!seq]   matches any character not in `seq`
+    =======  ==================================
+
+    :param libraries: Library name(s) to search for
+    :type libraries: str or collections.Sequence
     :param str root: The root directory to start searching from
     :param bool shared: if True searches for shared libraries,
         otherwise for static
@@ -592,12 +768,8 @@ def find_libraries(args, root, shared=True, recurse=False):
     :returns: The libraries that have been found
     :rtype: LibraryList
     """
-    if isinstance(args, str):
-        args = [args]
-    elif not isinstance(args, collections.Sequence):
-        message = '{0} expects a string or sequence of strings as the '
-        message += 'first argument [got {1} instead]'
-        raise TypeError(message.format(find_libraries.__name__, type(args)))
+    if isinstance(libraries, str):
+        libraries = [libraries]
 
     # Construct the right suffix for the library
     if shared is True:
@@ -605,38 +777,6 @@ def find_libraries(args, root, shared=True, recurse=False):
     else:
         suffix = 'a'
     # List of libraries we are searching with suffixes
-    libraries = ['{0}.{1}'.format(lib, suffix) for lib in args]
-    # Search method
-    if recurse is False:
-        search_method = _find_libraries_non_recursive
-    else:
-        search_method = _find_libraries_recursive
+    libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return search_method(libraries, root)
-
-
-def _find_libraries_recursive(libraries, root):
-    library_dict = collections.defaultdict(list)
-    for path, _, files in os.walk(root):
-        for lib in libraries:
-            if lib in files:
-                library_dict[lib].append(
-                    join_path(path, lib)
-                )
-    answer = []
-    for lib in libraries:
-        answer.extend(library_dict[lib])
-    return LibraryList(answer)
-
-
-def _find_libraries_non_recursive(libraries, root):
-
-    def lib_or_none(lib):
-        library = join_path(root, lib)
-        if not os.path.exists(library):
-            return None
-        return library
-
-    return LibraryList(
-        [lib_or_none(lib) for lib in libraries if lib_or_none(lib) is not None]
-    )
+    return LibraryList(find(root, libraries, recurse))

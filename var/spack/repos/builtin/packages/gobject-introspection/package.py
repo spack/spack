@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class GobjectIntrospection(Package):
@@ -47,7 +48,7 @@ class GobjectIntrospection(Package):
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         # we need to filter this file to avoid an overly long hashbang line
-        filter_file('@PYTHON@', 'python',
+        filter_file('@PYTHON@', os.basename(spec['python'].executable),
                     'tools/g-ir-tool-template.in')
         make()
         make("install")

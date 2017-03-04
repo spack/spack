@@ -317,7 +317,8 @@ class Llvm(Package):
             '-DCMAKE_BUILD_TYPE=' + build_type,
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix])
+            '-DPYTHON_EXECUTABLE:PATH=%s' % spec['python'].executable
+        ])
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +

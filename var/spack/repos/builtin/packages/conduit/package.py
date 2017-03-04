@@ -224,21 +224,15 @@ class Conduit(Package):
         cfg.write("# Python Support\n")
 
         if "+python" in spec:
-            python_exe = join_path(spec['python'].prefix.bin, "python")
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python_exe))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
+                      spec['python'].executable))
             # install module to standard style site packages dir
             # so we can support spack activate
-            py_ver_short = "python{0}".format(spec["python"].version.up_to(2))
-            pym_prefix = join_path("${CMAKE_INSTALL_PREFIX}",
-                                   "lib",
-                                   py_ver_short,
-                                   "site-packages")
-            # use pym_prefix as the install path
             cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                        pym_prefix))
+                                        site_packages_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 

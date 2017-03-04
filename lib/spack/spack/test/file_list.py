@@ -25,7 +25,7 @@
 
 import unittest
 
-from llnl.util.filesystem import LibraryList
+from llnl.util.filesystem import LibraryList, HeaderList
 
 
 class LibraryListTest(unittest.TestCase):
@@ -108,4 +108,85 @@ class LibraryListTest(unittest.TestCase):
         self.assertEqual(
             type(pylist + self.liblist),
             type(self.liblist)
+        )
+
+
+class HeaderListTest(unittest.TestCase):
+    def setUp(self):
+        h = [
+            '/dir1/Python.h',
+            '/dir2/datetime.h',
+            '/dir1/pyconfig.h',
+            '/dir3/core.h',
+            'pymem.h'
+        ]
+        self.headlist = HeaderList(h)
+
+    def test_repr(self):
+        x = eval(repr(self.headlist))
+        self.assertEqual(self.headlist, x)
+
+    def test_joined_and_str(self):
+        s1 = self.headlist.joined()
+        self.assertEqual(
+            s1,
+            '/dir1/Python.h /dir2/datetime.h /dir1/pyconfig.h /dir3/core.h pymem.h'  # NOQA: ignore=E501
+        )
+        s2 = str(self.headlist)
+        self.assertEqual(s1, s2)
+        s3 = self.headlist.joined(';')
+        self.assertEqual(
+            s3,
+            '/dir1/Python.h;/dir2/datetime.h;/dir1/pyconfig.h;/dir3/core.h;pymem.h'  # NOQA: ignore=E501
+        )
+
+    def test_flags(self):
+        cpp_flags = self.headlist.cpp_flags
+        self.assertTrue('-I/dir1' in cpp_flags)
+        self.assertTrue('-I/dir2' in cpp_flags)
+        self.assertTrue('-I/dir3' in cpp_flags)
+        self.assertTrue(isinstance(cpp_flags, str))
+        self.assertEqual(
+            cpp_flags,
+            '-I/dir1 -I/dir2 -I/dir3'
+        )
+
+    def test_paths_manipulation(self):
+        names = self.headlist.names
+        self.assertEqual(
+            names,
+            ['Python', 'datetime', 'pyconfig', 'core', 'pymem']
+        )
+
+        directories = self.headlist.directories
+        self.assertEqual(directories, ['/dir1', '/dir2', '/dir3'])
+
+    def test_get_item(self):
+        a = self.headlist[0]
+        self.assertEqual(a, '/dir1/Python.h')
+
+        b = self.headlist[:]
+        self.assertEqual(type(b), type(self.headlist))
+        self.assertEqual(self.headlist, b)
+        self.assertTrue(self.headlist is not b)
+
+    def test_add(self):
+        pylist = [
+            '/dir1/Python.h',  # removed from the final list
+            '/dir2/pyconfig.h',
+            '/dir4/datetime.h'
+        ]
+        another = HeaderList(pylist)
+        h = self.headlist + another
+        self.assertEqual(len(h), 7)
+        # Invariant : l == l + l
+        self.assertEqual(h, h + h)
+        # Always produce an instance of HeaderList
+        self.assertEqual(
+            type(self.headlist),
+            type(self.headlist + pylist)
+        )
+        self.assertEqual(
+            type(pylist + self.headlist),
+            type(self.headlist)
         )
