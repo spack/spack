@@ -111,8 +111,7 @@ class Cosmomc(Package):
         
         # Choose BLAS and LAPACK
         lapack = ("LAPACKL=%s" %
-                  (spec['lapack'].lapack_libs +
-                   spec['blas'].blas_libs).ld_flags)
+                  (spec['lapack'].libs + spec['blas'].libs).ld_flags)
 
         # Build
         make(choosecomp, wantmpi, mpif90, lapack)

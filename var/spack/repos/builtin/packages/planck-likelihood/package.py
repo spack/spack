@@ -98,8 +98,7 @@ class PlanckLikelihood(Package):
             'GFORTRANLIBPATH=',
             'GFORTRANRUNTIME=-lgfortran -lgomp',
             'LAPACKLIBPATH=',
-            'LAPACK=%s' % (spec['lapack'].lapack_libs +
-                           spec['blas'].blas_libs).ld_flags,
+            'LAPACK=%s' % (spec['lapack'].libs + spec['blas'].libs).ld_flags,
             'COPENMP=%s' % self.compiler.openmp_flag,
             'FOPENMP=%s' % self.compiler.openmp_flag,
         ]
