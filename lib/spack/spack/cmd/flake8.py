@@ -34,7 +34,7 @@ from llnl.util.filesystem import *
 import spack
 from spack.util.executable import *
 
-description = "Runs source code style checks on Spack. Requires flake8."
+description = "runs source code style checks on Spack. requires flake8"
 flake8 = None
 include_untracked = True
 
@@ -138,17 +138,17 @@ def filter_file(source, dest, output=False):
 def setup_parser(subparser):
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
-        help="Do not delete temporary directory where flake8 runs. "
-             "Use for debugging, to see filtered files.")
+        help="do not delete temporary directory where flake8 runs. "
+             "use for debugging, to see filtered files")
     subparser.add_argument(
         '-o', '--output', action='store_true',
-        help="Send filtered files to stdout as well as temp files.")
+        help="send filtered files to stdout as well as temp files")
     subparser.add_argument(
         '-r', '--root-relative', action='store_true', default=False,
         help="print root-relative paths (default is cwd-relative)")
     subparser.add_argument(
         '-U', '--no-untracked', dest='untracked', action='store_false',
-        default=True, help="Exclude untracked files from checks.")
+        default=True, help="exclude untracked files from checks")
     subparser.add_argument(
         'files', nargs=argparse.REMAINDER, help="specific files to check")
 

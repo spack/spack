@@ -473,8 +473,8 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
 
     def __init__(self, compiler_spec, operating_system, target):
         super(UnavailableCompilerVersionError, self).__init__(
-            "No available compiler version matches '%s' on operating_system %s"
-            "for target %s"
+            "No available compiler version matches '%s' on operating_system "
+            "'%s' for target '%s'"
             % (compiler_spec, operating_system, target),
             "Run 'spack compilers' to see available compiler Options.")
 

@@ -41,7 +41,7 @@ class Texlive(Package):
     # digest values, but don't be surprised if this package is
     # briefly unbuildable.
     #
-    version('live', '01461ec2cc49fe0b14812eb67abbea46',
+    version('live', 'ad230fa814d122084c13d75c0b135fda',
             url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
 
     # There does not seem to be a complete list of schemes.
@@ -59,9 +59,14 @@ class Texlive(Package):
     depends_on('perl', type='build')
 
     def install(self, spec, prefix):
+        # Using texlive's mirror system leads to mysterious problems,
+        # in lieu of being able to specify a repository as a variant, hardwire
+        # a particular (slow, but central) one for now.
+        _repository='http://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
         env = os.environ
         env['TEXLIVE_INSTALL_PREFIX'] = prefix
         perl = which('perl')
         scheme = spec.variants['scheme'].value
         perl('./install-tl', '-scheme', scheme,
+             '-repository', _repository,
              '-portable', '-profile', '/dev/null')

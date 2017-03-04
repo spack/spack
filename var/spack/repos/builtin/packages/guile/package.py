@@ -30,7 +30,7 @@ class Guile(Package):
     the official extension language for the GNU operating system."""
 
     homepage = "https://www.gnu.org/software/guile/"
-    url      = "ftp://ftp.gnu.org/gnu/guile/guile-2.0.11.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/guile/guile-2.0.11.tar.gz"
 
     version('2.0.11', 'e532c68c6f17822561e3001136635ddd')
 

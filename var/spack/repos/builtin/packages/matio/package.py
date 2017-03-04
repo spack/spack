@@ -37,6 +37,8 @@ class Matio(AutotoolsPackage):
             description='support for compressed mat files')
     variant("hdf5", default=True,
             description='support for version 7.3 mat files via hdf5')
+    variant("shared", default=True, description='Enables the build of shared libraries.')
+
 
     depends_on("zlib", when="+zlib")
     depends_on("hdf5", when="+hdf5")
@@ -47,4 +49,6 @@ class Matio(AutotoolsPackage):
             args.append("--with-zlib=%s" % self.spec['zlib'].prefix)
         if '+hdf5' in self.spec:
             args.append("--with-hdf5=%s" % self.spec['hdf5'].prefix)
+        if '+shared' not in self.spec:
+            args.append("--disable-shared")
         return args

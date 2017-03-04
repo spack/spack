@@ -40,7 +40,7 @@ class Ior(Package):
 
     depends_on('mpi')
     depends_on('hdf5+mpi',   when='+hdf5')
-    depends_on('netcdf+mpi', when='+ncmpi')
+    depends_on('parallel-netcdf', when='+ncmpi')
 
     def install(self, spec, prefix):
         os.system('./bootstrap')
@@ -52,6 +52,7 @@ class Ior(Package):
 
         if '+hdf5' in spec:
             config_args.append('--with-hdf5')
+            config_args.append('CFLAGS=-D H5_USE_16_API')
         else:
             config_args.append('--without-hdf5')
 

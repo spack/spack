@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxtrap(Package):
+class Libxtrap(AutotoolsPackage):
     """libXTrap is the Xlib-based client API for the DEC-XTRAP extension.
 
     XTrap was a proposed standard extension for X11R5 which facilitated the
@@ -50,9 +50,3 @@ class Libxtrap(Package):
     depends_on('xextproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

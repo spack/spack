@@ -26,7 +26,7 @@ import os
 from spack import *
 
 
-class Npm(Package):
+class Npm(AutotoolsPackage):
     """npm: A package manager for javascript."""
 
     homepage = "https://github.com/npm/npm"
@@ -37,18 +37,10 @@ class Npm(Package):
     version('3.10.5', '46002413f4a71de9b0da5b506bf1d992')
 
     depends_on('node-js')
-    
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
         if not os.path.isdir(npm_config_cache_dir):
             mkdir(npm_config_cache_dir)
         run_env.set('npm_config_cache', npm_config_cache_dir)
         spack_env.set('npm_config_cache', npm_config_cache_dir)
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        if self.run_tests:
-            make('test')
-
-        make('install')

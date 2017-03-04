@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Emacs(Package):
+class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
@@ -47,7 +47,8 @@ class Emacs(Package):
     depends_on('libxaw', when='+X toolkit=athena')
     depends_on('gtkplus+X', when='+X toolkit=gtk')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         args = []
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
@@ -61,7 +62,4 @@ class Emacs(Package):
         else:
             args = ['--without-x']
 
-        configure('--prefix={0}'.format(prefix), *args)
-
-        make()
-        make("install")
+        return args

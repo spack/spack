@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Applewmproto(Package):
+class Applewmproto(AutotoolsPackage):
     """Apple Rootless Window Management Extension.
 
     This extension defines a protcol that allows X window managers
@@ -39,8 +39,3 @@ class Applewmproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

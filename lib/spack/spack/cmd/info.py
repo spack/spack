@@ -27,7 +27,7 @@ from llnl.util.tty.colify import *
 import spack
 import spack.fetch_strategy as fs
 
-description = "Get detailed information on a particular package"
+description = "get detailed information on a particular package"
 
 
 def padder(str_list, extra=0):
@@ -43,7 +43,7 @@ def padder(str_list, extra=0):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'name', metavar="PACKAGE", help="Name of package to get info for.")
+        'name', metavar="PACKAGE", help="name of package to get info for")
 
 
 def print_text_info(pkg):

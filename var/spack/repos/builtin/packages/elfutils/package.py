@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Elfutils(Package):
+class Elfutils(AutotoolsPackage):
     """elfutils is a collection of various binary tools such as
     eu-objdump, eu-readelf, and other utilities that allow you to
     inspect and manipulate ELF files. Refer to Table 5.Tools Included
@@ -35,16 +35,15 @@ class Elfutils(Package):
 
     homepage = "https://fedorahosted.org/elfutils/"
 
+    depends_on('libtool', type='build')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+
     version('0.163',
             git='git://git.fedorahosted.org/git/elfutils.git',
             tag='elfutils-0.163')
 
     provides('elf')
 
-    def install(self, spec, prefix):
-        autoreconf = which('autoreconf')
-        autoreconf('-if')
-
-        configure('--prefix=%s' % prefix, '--enable-maintainer-mode')
-        make()
-        make("install")
+    def configure_args(self):
+        return ['--enable-maintainer-mode']

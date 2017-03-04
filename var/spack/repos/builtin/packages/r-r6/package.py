@@ -34,7 +34,10 @@ class RR6(RPackage):
     classes are defined in different packages."""
 
     homepage = "https://github.com/wch/R6/"
-    url      = "https://cran.r-project.org/src/contrib/R6_2.1.2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/R6_2.2.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/R6"
 
+    version('2.2.0', '659d83b2d3f7a308a48332b4cfbdab49')
     version('2.1.2', 'b6afb9430e48707be87638675390e457')
+
+    depends_on('r@3.0:')

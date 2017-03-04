@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Lwm2(Package):
+class Lwm2(AutotoolsPackage):
     """LWM2: Light Weight Measurement Module.  This is a PMPI module
        that can collect a number of time-sliced MPI and POSIX I/O
        measurements from a program.
@@ -36,8 +36,3 @@ class Lwm2(Package):
 
     depends_on("papi")
     depends_on("mpi")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

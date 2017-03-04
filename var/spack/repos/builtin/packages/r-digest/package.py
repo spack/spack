@@ -44,7 +44,11 @@ class RDigest(RPackage):
     used."""
 
     homepage = "http://dirk.eddelbuettel.com/code/digest.html"
-    url      = "https://cran.r-project.org/src/contrib/digest_0.6.9.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/digest_0.6.12.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/digest"
 
-    version('0.6.9', '48048ce6c466bdb124716e45ba4a0e83')
+    version('0.6.12', '738efd4d9a37c5a4001ae66e954ce07e')
+    version('0.6.11', '52a864f55846b48b3cab0b5d0304a82a')
+    version('0.6.9',  '48048ce6c466bdb124716e45ba4a0e83')
+
+    depends_on('r@2.4.1:')

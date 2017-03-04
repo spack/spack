@@ -38,6 +38,7 @@ class Fftw(Package):
 
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
+    version('2.1.5', '8d16a84f3ca02a785ef9eb36249ba433')
 
     patch('pfft-3.3.5.patch', when="@3.3.5+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
@@ -62,17 +63,19 @@ class Fftw(Package):
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
 
-    # TODO : add support for architecture specific optimizations as soon as
-    # targets are supported
-
     def install(self, spec, prefix):
+        # Base options
         options = [
             '--prefix={0}'.format(prefix),
             '--enable-shared',
             '--enable-threads'
         ]
+        if not self.compiler.f77 or not self.compiler.fc:
+            options.append("--disable-fortran")
+        if spec.satisfies('@:2'):
+            options.append('--enable-type-prefix')
 
-        # Add support for OpenMP
+        # Variants that affect every precision
         if '+openmp' in spec:
             # Note: Apple's Clang does not support OpenMP.
             if spec.satisfies('%clang'):
@@ -80,34 +83,45 @@ class Fftw(Package):
                 if ver.endswith('-apple'):
                     raise InstallError("Apple's clang does not support OpenMP")
             options.append('--enable-openmp')
-        if not self.compiler.f77 or not self.compiler.fc:
-            options.append("--disable-fortran")
+            if spec.satisfies('@:2'):
+                # TODO: libtool strips CFLAGS, so 2.x libxfftw_threads
+                #       isn't linked to the openmp library. Patch Makefile?
+                options.insert(0, 'CFLAGS=' + self.compiler.openmp_flag)
         if '+mpi' in spec:
             options.append('--enable-mpi')
-
         if '+pfft_patches' in spec:
             autoreconf = which('autoreconf')
             autoreconf('-ifv')
 
-        configure(*options)
+        # SIMD support
+        # TODO: add support for more architectures
+        float_options = []
+        double_options = []
+        if 'x86_64' in spec.architecture and spec.satisfies('@3:'):
+            float_options.append('--enable-sse2')
+            double_options.append('--enable-sse2')
+
+        # Build double precision
+        configure(*(options + double_options))
         make()
         if self.run_tests:
             make("check")
         make("install")
 
+        # Build float/long double/quad variants
         if '+float' in spec:
-            configure('--enable-float', *options)
+            configure('--enable-float', *(options + float_options))
             make()
             if self.run_tests:
                 make("check")
             make("install")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             configure('--enable-long-double', *options)
             make()
             if self.run_tests:
                 make("check")
             make("install")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             configure('--enable-quad-precision', *options)
             make()
             if self.run_tests:

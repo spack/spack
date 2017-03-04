@@ -98,25 +98,25 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|c89|c99|gcc|clang|icc|pgcc|xlc)
+    cc|c89|c99|gcc|clang|icc|pgcc|xlc|xlc_r)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|icpc|pgc++|xlc++)
+    c++|CC|g++|clang++|icpc|pgc++|xlc++|xlc++_r)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
+    ftn|f90|fc|f95|gfortran|ifort|pgfortran|xlf90|xlf90_r|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         ;;
-    f77|gfortran|ifort|pgfortran|xlf|nagfor|ftn)
+    f77|gfortran|ifort|pgfortran|xlf|xlf_r|nagfor|ftn)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"

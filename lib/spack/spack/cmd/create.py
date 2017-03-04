@@ -39,7 +39,7 @@ from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.naming import *
 
-description = "Create a new package file"
+description = "create a new package file"
 
 package_template = '''\
 ##############################################################################
@@ -136,7 +136,8 @@ class PackageTemplate(object):
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for Autotools-based packages"""
+    """Provides appropriate overrides for Autotools-based packages
+    that *do* come with a ``configure`` script"""
 
     base_class_name = 'AutotoolsPackage'
 
@@ -145,6 +146,33 @@ class AutotoolsPackageTemplate(PackageTemplate):
     # depends_on('foo')"""
 
     body = """\
+    def configure_args(self):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
+class AutoreconfPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Autotools-based packages
+    that *do not* come with a ``configure`` script"""
+
+    base_class_name = 'AutotoolsPackage'
+
+    dependencies = """\
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('foo')"""
+
+    body = """\
+    def autoreconf(self, spec, prefix):
+        # FIXME: Modify the autoreconf method as necessary
+        autoreconf('--install', '--verbose', '--force')
+
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -203,7 +231,7 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on('py-foo',        type=('build', 'run'))"""
 
     body = """\
-    def build_args(self):
+    def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete the function
         args = []
@@ -221,6 +249,7 @@ class PythonPackageTemplate(PackageTemplate):
 
 class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
+    base_class_name = 'RPackage'
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -269,14 +298,15 @@ class OctavePackageTemplate(PackageTemplate):
 
 
 templates = {
-    'autotools': AutotoolsPackageTemplate,
-    'cmake':     CMakePackageTemplate,
-    'scons':     SconsPackageTemplate,
-    'bazel':     BazelPackageTemplate,
-    'python':    PythonPackageTemplate,
-    'r':         RPackageTemplate,
-    'octave':    OctavePackageTemplate,
-    'generic':   PackageTemplate
+    'autotools':  AutotoolsPackageTemplate,
+    'autoreconf': AutoreconfPackageTemplate,
+    'cmake':      CMakePackageTemplate,
+    'scons':      SconsPackageTemplate,
+    'bazel':      BazelPackageTemplate,
+    'python':     PythonPackageTemplate,
+    'r':          RPackageTemplate,
+    'octave':     OctavePackageTemplate,
+    'generic':    PackageTemplate
 }
 
 
@@ -286,7 +316,7 @@ def setup_parser(subparser):
         help="url of package archive")
     subparser.add_argument(
         '--keep-stage', action='store_true',
-        help="Don't clean up staging area when command completes.")
+        help="don't clean up staging area when command completes")
     subparser.add_argument(
         '-n', '--name',
         help="name of the package to create")
@@ -295,14 +325,14 @@ def setup_parser(subparser):
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',
-        help="Path to a repository where the package should be created.")
+        help="path to a repository where the package should be created")
     subparser.add_argument(
         '-N', '--namespace',
-        help="Specify a namespace for the package. Must be the namespace of "
-        "a repository registered with Spack.")
+        help="specify a namespace for the package. must be the namespace of "
+        "a repository registered with Spack")
     subparser.add_argument(
         '-f', '--force', action='store_true',
-        help="Overwrite any existing package file with the same name.")
+        help="overwrite any existing package file with the same name")
 
 
 class BuildSystemGuesser:
@@ -326,12 +356,14 @@ class BuildSystemGuesser:
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
         clues = [
-            (r'/configure$',      'autotools'),
-            (r'/CMakeLists.txt$', 'cmake'),
-            (r'/SConstruct$',     'scons'),
-            (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'r'),
-            (r'/WORKSPACE$',      'bazel')
+            (r'/configure$',         'autotools'),
+            (r'/configure.(in|ac)$', 'autoreconf'),
+            (r'/Makefile.am$',       'autoreconf'),
+            (r'/CMakeLists.txt$',    'cmake'),
+            (r'/SConstruct$',        'scons'),
+            (r'/setup.py$',          'python'),
+            (r'/NAMESPACE$',         'r'),
+            (r'/WORKSPACE$',         'bazel')
         ]
 
         # Peek inside the compressed file.
@@ -356,6 +388,7 @@ class BuildSystemGuesser:
         for pattern, bs in clues:
             if any(re.search(pattern, l) for l in lines):
                 build_system = bs
+                break
 
         self.build_system = build_system
 

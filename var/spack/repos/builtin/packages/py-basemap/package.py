@@ -44,7 +44,7 @@ class PyBasemap(PythonPackage):
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GEOS_DIR', self.spec['geos'].prefix)
 
-    @PythonPackage.sanity_check('install')
+    @run_after('install')
     def post_install_patch(self):
         spec = self.spec
         # We are not sure if this fix is needed before Python 3.5.2.

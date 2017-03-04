@@ -25,7 +25,7 @@
 from spack import *
 
 
-class FastxToolkit(Package):
+class FastxToolkit(AutotoolsPackage):
     """The FASTX-Toolkit is a collection of command line tools for
        Short-Reads FASTA/FASTQ files preprocessing."""
 
@@ -35,9 +35,3 @@ class FastxToolkit(Package):
     version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
 
     depends_on('libgtextutils')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xditview(Package):
+class Xditview(AutotoolsPackage):
     """xditview displays ditroff output on an X display."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xditview"
@@ -40,9 +40,3 @@ class Xditview(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -34,6 +34,7 @@ class Tk(AutotoolsPackage):
        and more."""
     homepage = "http://www.tcl.tk"
 
+    version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
@@ -41,6 +42,8 @@ class Tk(AutotoolsPackage):
 
     depends_on("tcl")
     depends_on("libx11", when='+X')
+
+    configure_directory = 'unix'
 
     def url_for_version(self, version):
         base_url = "http://prdownloads.sourceforge.net/tcl"
@@ -51,9 +54,6 @@ class Tk(AutotoolsPackage):
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
-
-    def build_directory(self):
-        return 'unix'
 
     def configure_args(self):
         spec = self.spec

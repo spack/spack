@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XcbDemo(Package):
+class XcbDemo(AutotoolsPackage):
     """xcb-demo: A collection of demo programs that use the XCB library."""
 
     homepage = "https://xcb.freedesktop.org/"
@@ -40,12 +40,5 @@ class XcbDemo(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        # FIXME: crashes with the following error message
-        # X11/XCB/xcb.h: No such file or directory
-
-        make()
-        make('check')
-        make('install')
+    # FIXME: crashes with the following error message
+    # X11/XCB/xcb.h: No such file or directory
