@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gl2ps(Package):
+class Gl2ps(CMakePackage):
     """GL2PS is a C library providing high quality vector output for any
     OpenGL application."""
 
@@ -34,10 +34,37 @@ class Gl2ps(Package):
 
     version('1.3.9', '377b2bcad62d528e7096e76358f41140')
 
-    depends_on("libpng")
+    variant('png',  default=True, description='Enable PNG support')
+    variant('zlib', default=True, description='Enable compression using ZLIB')
 
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
+    depends_on('cmake@2.4:', type='build')
 
-        make()
-        make("install")
+    # TODO: Add missing dependencies on OpenGL/Mesa and LaTeX
+
+    # X11 libraries:
+    depends_on('libice')
+    depends_on('libsm')
+    depends_on('libxau')
+    depends_on('libxdamage')
+    depends_on('libxdmcp')
+    depends_on('libxext')
+    depends_on('libxfixes')
+    depends_on('libxi')
+    depends_on('libxmu')
+    depends_on('libxt')
+    depends_on('libxxf86vm')
+    depends_on('libxcb')
+    depends_on('libdrm')
+    depends_on('expat')
+
+    depends_on('libpng', when='+png')
+    depends_on('zlib',   when='+zlib')
+
+    def variant_to_bool(self, variant):
+        return 'ON' if variant in self.spec else 'OFF'
+
+    def cmake_args(self):
+        return [
+            '-DENABLE_PNG={0}'.format(self.variant_to_bool('+png')),
+            '-DENABLE_ZLIB={0}'.format(self.variant_to_bool('+zlib')),
+        ]
