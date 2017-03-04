@@ -64,11 +64,7 @@ class Gl2ps(CMakePackage):
         return 'ON' if variant in self.spec else 'OFF'
 
     def cmake_args(self):
-        spec = self.spec
-
-        args = [
+        return [
             '-DENABLE_PNG={0}'.format(self.variant_to_bool('+png')),
             '-DENABLE_ZLIB={0}'.format(self.variant_to_bool('+zlib')),
         ]
-
-        return args
