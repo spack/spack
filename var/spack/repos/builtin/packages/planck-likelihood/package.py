@@ -88,8 +88,13 @@ class PlanckLikelihood(Package):
 
     def install(self, spec, prefix):
         # Configure
+
+        # Don't hide build commands
+        filter_file("^\t@", "\t", "Makefile")
+
         makeflags = [
             'PREFIX=%s' % prefix,
+            'COLORS=0',
             'CFITSIOPATH=%s' % spec['cfitsio'].prefix,
             'CC=cc',
             'FC=fc',
