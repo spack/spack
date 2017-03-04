@@ -767,7 +767,7 @@ def _libs_default_handler(descriptor, spec, cls):
     name = 'lib' + spec.name
     shared = '+shared' in spec
     return find_libraries(
-        [name], root=spec.prefix, shared=shared, recurse=True
+        name, root=spec.prefix, shared=shared, recurse=True
     )
 
 

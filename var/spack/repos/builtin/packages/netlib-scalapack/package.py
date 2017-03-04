@@ -62,7 +62,7 @@ class NetlibScalapack(Package):
     def scalapack_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libscalapack'], root=self.prefix, shared=shared, recurse=True
+            'libscalapack', root=self.prefix, shared=shared, recurse=True
         )
 
     def install(self, spec, prefix):

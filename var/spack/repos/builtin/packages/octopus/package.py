@@ -38,7 +38,7 @@ class Octopus(Package):
     # Sample url is:
     # "http://www.tddft.org/programs/octopus/down.php?file=5.0.1/octopus-5.0.1.tar.gz"
     def url_for_version(self, version):
-        return '{0}/{1}/octopus-{1}.tar.gz'.format(Octopus.base_url, 
+        return '{0}/{1}/octopus-{1}.tar.gz'.format(Octopus.base_url,
                                                    version.dotted)
 
     variant('scalapack', default=False,
@@ -69,7 +69,7 @@ class Octopus(Package):
     # feast, libfm, pfft, isf, pnfft
 
     def install(self, spec, prefix):
-        arpack = find_libraries(['libarpack'], root=spec[
+        arpack = find_libraries('libarpack', root=spec[
                                 'arpack-ng'].prefix.lib, shared=True)
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
@@ -96,12 +96,12 @@ class Octopus(Package):
         if '+netcdf' in spec:
             args.extend([
                 '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
-                '--with-netcdf-include=%s' % 
+                '--with-netcdf-include=%s' %
                 spec['netcdf-fortran'].prefix.include,
             ])
         if '+arpack-ng' in spec:
             args.extend([
-                '--with-arpack={0}'.format(arpack.joined()), 
+                '--with-arpack={0}'.format(arpack.joined()),
             ])
         if '+scalapack' in spec:
             args.extend([
