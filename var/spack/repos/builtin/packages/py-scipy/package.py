@@ -48,5 +48,12 @@ class PyScipy(PythonPackage):
     depends_on('lapack')
 
     def build_args(self, spec, prefix):
+        args = []
+
         # Build in parallel
-        return ['-j', str(make_jobs)]
+        # Known problems with Python 3
+        # https://github.com/scipy/scipy/issues/7112
+        if not spec.satisfies('^python@3:'):
+            args.extend(['-j', str(make_jobs)])
+
+        return args
