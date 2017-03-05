@@ -322,13 +322,32 @@ def set_build_environment_variables(pkg, env, dirty=False):
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(
-        [d.prefix.bin for d in pkg.spec.dependencies(deptype='build')
-         if os.path.isdir(d.prefix.bin)])
-    bin_dirs = filter_system_bin_paths(bin_dirs)
-    for item in bin_dirs:
-        env.prepend_path('PATH', item)
+    # Add bin directories from dependencies to the PATH for the build or run.
+    def add_dir_to_list(bin_dir, list):
+        if os.path.isdir(bin_dir):
+            if bin_dir not in list:
+                list.append(bin_dir)
+    build_deps = [ d for d in pkg.spec.dependencies(deptype='build') ]
+    build_bin_dirs = []
+    for bdep in build_deps:
+        add_dir_to_list("%s/bin" % bdep.prefix, build_bin_dirs)
+        for brdep in bdep.traverse(root=False, deptype='run'):
+            add_dir_to_list("%s/bin" % brdep.prefix, build_bin_dirs)
+    build_bin_dirs = filter_system_bin_paths(build_bin_dirs)
+    build_bin_dirs = list(build_bin_dirs)
+    run_bin_dirs = []
+    for d in pkg.spec.traverse(root=False, deptype='run'):
+        add_dir_to_list("%s/bin" % d.prefix, run_bin_dirs)
+    run_bin_dirs = filter(os.path.isdir, ['%s/bin' % d.prefix for d in pkg.spec.traverse(root=False, deptype='run') ])
+    run_bin_dirs = filter_system_bin_paths(run_bin_dirs)
+    bin_dirs = []
+    for bin_dir in build_bin_dirs:
+        bin_dirs.append(bin_dir)
+    for bin_dir in run_bin_dirs:
+        if bin_dir not in bin_dirs:
+            bin_dirs.append(bin_dir)
+    for bin_dir in bin_dirs:
+        env.prepend_path('PATH', bin_dir)
 
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
