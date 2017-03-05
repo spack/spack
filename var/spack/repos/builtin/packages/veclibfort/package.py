@@ -44,6 +44,7 @@ class Veclibfort(Package):
     provides('blas')
     provides('lapack')
 
+    @property
     def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
@@ -60,6 +61,6 @@ class Veclibfort(Package):
         # test
         fc = which('fc')
         flags = ['-o', 'tester', '-O', 'tester.f90']
-        flags.extend(spec.libs.ld_flags.split())
+        flags.extend(spec['veclibfort'].libs.ld_flags.split())
         fc(*flags)
         Executable('./tester')()
