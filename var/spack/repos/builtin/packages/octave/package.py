@@ -108,8 +108,8 @@ class Octave(AutotoolsPackage):
 
         # Required dependencies
         config_args.extend([
-            "--with-blas=%s" % spec['blas'].blas_libs.ld_flags,
-            "--with-lapack=%s" % spec['lapack'].lapack_libs.ld_flags
+            "--with-blas=%s" % spec['blas'].libs.ld_flags,
+            "--with-lapack=%s" % spec['lapack'].libs.ld_flags
         ])
 
         # Strongly recommended dependencies

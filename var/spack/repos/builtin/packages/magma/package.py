@@ -26,7 +26,7 @@ from spack import *
 
 
 class Magma(CMakePackage):
-    """The MAGMA project aims to develop a dense linear algebra library 
+    """The MAGMA project aims to develop a dense linear algebra library
     similar to LAPACK but for heterogeneous/hybrid architectures,
     starting with current "Multicore+GPU" systems.
     """
@@ -39,7 +39,6 @@ class Magma(CMakePackage):
     variant('fortran', default=True,
             description='Enable Fortran bindings support')
 
-    depends_on('cmake', type='build')
     depends_on('lapack')
 
     patch('ibm-xl.patch', when='@2.2:%xl')
@@ -52,9 +51,9 @@ class Magma(CMakePackage):
         options.extend([
             '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
             '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix,
-            '-DLAPACK_LIBRARIES=%s;%s' % (spec['blas'].blas_libs,
-                                          spec['lapack'].lapack_libs)
-        ])      
+            '-DLAPACK_LIBRARIES=%s;%s' % (spec['blas'].libs,
+                                          spec['lapack'].libs)
+        ])
 
         if '+fortran' in spec:
             options.extend([

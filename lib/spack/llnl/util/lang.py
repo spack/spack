@@ -374,3 +374,17 @@ def duplicate_stream(original):
     :rtype: file like object
     """
     return os.fdopen(os.dup(original.fileno()))
+
+
+class ObjectWrapper(object):
+    """Base class that wraps an object. Derived classes can add new behavior
+    while staying undercover.
+
+    This class is modeled after the stackoverflow answer:
+      -  http://stackoverflow.com/a/1445289/771663
+    """
+    def __init__(self, wrapped_object):
+        wrapped_cls = type(wrapped_object)
+        wrapped_name = wrapped_cls.__name__
+        self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+        self.__dict__ = wrapped_object.__dict__

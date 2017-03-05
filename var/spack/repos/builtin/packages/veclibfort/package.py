@@ -45,15 +45,11 @@ class Veclibfort(Package):
     provides('lapack')
 
     @property
-    def blas_libs(self):
+    def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libvecLibFort'], root=self.prefix, shared=shared, recurse=True
+            'libvecLibFort', root=self.prefix, shared=shared, recurse=True
         )
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
 
     def install(self, spec, prefix):
         if sys.platform != 'darwin':
@@ -65,6 +61,6 @@ class Veclibfort(Package):
         # test
         fc = which('fc')
         flags = ['-o', 'tester', '-O', 'tester.f90']
-        flags.extend(self.lapack_libs.ld_flags.split())
+        flags.extend(spec['veclibfort'].libs.ld_flags.split())
         fc(*flags)
         Executable('./tester')()
