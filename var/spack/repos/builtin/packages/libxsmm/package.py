@@ -34,7 +34,7 @@ class Libxsmm(Package):
     homepage = 'https://github.com/hfp/libxsmm'
     url      = 'https://github.com/hfp/libxsmm/archive/1.7.1.tar.gz'
 
-    version('master', git='https://github.com/hfp/libxsmm.git')
+    version('develop', git='https://github.com/hfp/libxsmm.git')
 
     version('1.7.1', 'a938335b1c2c90616dc72c2c1a5824ab')
     #version('1.7',   'cb3aff6d123ba70bd3d4daf575767d14')
@@ -89,9 +89,6 @@ class Libxsmm(Package):
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
         #make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
-
-        # TODO: shared variant introduces a BLAS dependency
-        #if '+shared' in spec: make_args += ['STATIC=0']
 
         # include call trace as the build is already de-optimized
         if '+debug' in spec: make_args += ['DBG=1 TRACE=1']
