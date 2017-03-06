@@ -36,6 +36,7 @@ class Anaconda2(Package):
     url      = "https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh"
 
     version('4.2.0', 'a0d1fbe47014b71c6764d76fb403f217', expand=False)
+    version('4.3.0', '5f2c3bd60ddbd0e213f7a1fc25bb88b4', expand=False)
 
     def url_for_version(self, version):
         return "https://repo.continuum.io/archive/Anaconda2-{0}-Linux-x86_64.sh".format(version)
