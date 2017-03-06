@@ -29,11 +29,11 @@ from spack.util.module_cmd import *
 
 typeset_func = subprocess.Popen('module avail',
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
+                                stderr=subprocess.PIPE,
                                 shell=True)
 typeset_func.wait()
-typeset = typeset_func.stdout.read()
-MODULE_DEFINED = False if 'Command not found' in typeset else True
+typeset = typeset_func.stderr.read()
+MODULE_DEFINED = False if 'not found' in typeset else True
 
 def test_get_argument_from_module_line():
     lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
