@@ -601,10 +601,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         visited.add(self.name)
         for name in self.dependencies:
-            if name not in visited and not spack.spec.Spec(name).virtual:
+            if name in visited:
+                continue
+
+            spec = spack.spec.Spec(name)
+            if not spec.virtual:
                 pkg = spack.repo.get(name)
                 for name in pkg.possible_dependencies(visited):
                     visited.add(name)
+            else:
+                for provider in spack.repo.providers_for(spec):
+                    pkg = spack.repo.get(provider.name)
+                    for name in pkg.possible_dependencies(visited):
+                        visited.add(name)
 
         return visited
 
