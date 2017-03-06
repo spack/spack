@@ -91,7 +91,8 @@ class Libxsmm(Package):
 
         # include call trace as the build is already de-optimized
         if '+debug' in spec:
-            make_args += ['DBG=1 TRACE=1']
+            make_args += ['DBG=1']
+            make_args += ['TRACE=1']
 
         make(*make_args)
         self.manual_install(prefix)
