@@ -1,8 +1,11 @@
+import itertools
 import os
+import re
 
 import llnl.util.filesystem
 from llnl.util.lang import key_ordering
 import llnl.util.tty as tty
+import spack.architecture
 from spack.util.spack_yaml import syaml_dict
 import spack.util.executable
 import spack.spec
@@ -335,8 +338,16 @@ class ExternalPackage(object):
                             (self.external_type, spec_section)])
         return syaml_dict([(self.name, entry)])
 
+
+    @staticmethod
+    def _append_version_to_string(spec_string, version, index):
+        """Inserts a version into the specified index of a spec string"""
+        new_spec_string = spec_string[:index] + "@{0}".format(version)  \
+                          + spec_string[index:]
+        return new_spec_string
+
     @classmethod
-    def find_external_pacakges(cls, package_spec=None):
+    def find_external_packages(cls, package_spec=None):
         """Attempts to find system packages.
 
         Currently, uses the modulecmd and parses for all packages. If
@@ -350,8 +361,39 @@ class ExternalPackage(object):
             a list of ExternalPackage objects
         """
         # Packages should probably tell us how to find themselves given a 
-        # System. At the moment I will only support cray packages.
-        return []
+        # System. At the moment only cray packages are supported.
+        cray_prefix = "cray-"
+        modulecmd = spack.util.executable.which("modulecmd")
+        modulecmd.add_default_arg("python")
+        cray_modules = modulecmd("avail", cray_prefix, output=str, error=str)
+        matches = re.findall(r'(cray-\w+)/([\d.]+)', cray_modules)
+
+        # Filter packages based off of valid packages in spack's database
+
+        # Create a spec string for each package name, appends version.
+        compilers = spack.compilers.all_compilers()
+        arch = spack.architecture.sys_type()
+
+        valid_packages = {}
+        for package, version in matches:
+            package_name = package.lstrip("cray-")
+            if spack.repo.exists(package_name):
+                spec_string = "{0}@{1}".format(package_name, version)
+                valid_packages[spec_string] = package + "/" + version # module
+
+        new_specs = {}
+        for spec, compiler in itertools.product(valid_packages.keys(),
+                                                compilers):
+            module = valid_packages.get(spec)
+            full_spec = spec + "%" + str(compiler) + " arch=" +arch
+            spec = spack.spec.Spec(full_spec)
+            new_specs[spec] = module
+
+        external_packages = []
+        for full_spec, module in new_specs.items():
+            package = cls.create_external_package(full_spec, module)
+            external_packages.append(package)
+        return external_packages
 
 
     @classmethod
@@ -403,6 +445,7 @@ class ExternalPackage(object):
                                external_location)
         return external_package
 
+
     @staticmethod
     def _update_spec(spec, spec_version, found_version):
         """Return a spec with a version.
@@ -417,9 +460,8 @@ class ExternalPackage(object):
         if spec_version and spec_version != found_version:
             raise SpecVersionMisMatch(spec)
         spec_string = str(spec)
-        index = len(spec.name)  # index where we want to change version
-        new_spec_string = spec_string[:index] + \
-            "@{0}".format(found_version) + spec_string[index:]
+        new_spec_string = ExternalPackage._append_version_to_string(
+                spec_string, found_version, len(spec.name))
         new_spec = spack.spec.Spec(new_spec_string)
         return new_spec
 

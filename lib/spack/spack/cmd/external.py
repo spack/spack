@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import argparse
 import sys
 
 from llnl.util.lang import index_by
@@ -58,10 +59,8 @@ def setup_parser(subparser):
     ################
     add_parser = sp.add_parser('add',
                                help="Add packages to Spack's config file")
-    add_parser.add_argument("package_spec",
-                            help="spec for external package")
-    add_parser.add_argument("external_location",
-                            help="path or module (location) of external pkg")
+    add_parser.add_argument("package_info", help="Add package name and location",
+                            nargs=argparse.REMAINDER)
     add_parser.add_argument("--scope", choices=scopes,
                             default=spack.cmd.default_modify_scope,
                             help="Configuration scope to modify.")
@@ -90,14 +89,25 @@ def setup_parser(subparser):
 
 def external_add(args):
     """Add an external package to packages.yaml config."""
-    package_spec = spack.spec.Spec(args.package_spec)
-    external_location = args.external_location
+    package_info = args.package_info
     scope = args.scope
-    external_package = ext_package.ExternalPackage.create_external_package(
-        package_spec, external_location)
-    ext_package.add_external_package(external_package, scope)
     filename = spack.config.get_config_filename(scope, "packages")
-    tty.msg("Added {0} to {1}".format(package_spec, filename))
+
+    if not package_info:
+        external_packages = ext_package.ExternalPackage.find_external_packages()
+        num_of_packages = 0
+        for package in external_packages:
+            ext_package.add_external_package(package, scope)
+            num_of_packages += 1
+        tty.msg("Added {0} packages".format(num_of_packages))
+
+    else:
+        package_spec = spack.spec.Spec(package_info[0])
+        external_location = package_info[1]
+        external_package = ext_package.ExternalPackage.create_external_package(
+            package_spec, external_location)
+        ext_package.add_external_package(external_package, scope)
+        tty.msg("Added {0} to {1}".format(package_spec, filename))
 
 
 def external_rm(args):
