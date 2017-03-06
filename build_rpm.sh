@@ -16,18 +16,18 @@ compilers=(
 )
 
 mpis=(
-    openmpi@1.6.5
-    openmpi@1.10.3
+    # openmpi@1.6.5
+    # openmpi@1.10.3
     openmpi@2.0.2
     mvapich2@2.2
     mpich@3.2
     intel-parallel-studio@cluster.2017.1
 )
 
-pkgs=(
-    mdtest
-    simul
+mpipkgs=(
 )
+
+intel='%intel@17 intel-parallel-studio@cluster@2017'
 
 # CUDA
 s cuda@8.0.44 %gcc@5
@@ -54,9 +54,10 @@ do
 	for mpi in "${mpis[@]}"
 	do
 		s $mpi $compiler
-		for pkg in "${pkgs[@]}"
+		for pkg in "${mpipkgs[@]}"
 		do
-			s $pkg ^$mpi $compiler
+			s $pkg$compiler ^$mpi
+			s $pkg $intel
 		done
 	done
 done
@@ -64,3 +65,5 @@ done
 # Other packages
 s sga %intel@17
 s sga %gcc@5
+s mdtest %gcc ^openmpi
+s simul %gcc ^openmpi
