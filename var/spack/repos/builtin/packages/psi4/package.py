@@ -62,10 +62,10 @@ class Psi4(Package):
     def install(self, spec, prefix):
         cmake_args = [
             '-DBLAS_TYPE={0}'.format(spec['blas'].name.upper()),
-            '-DBLAS_LIBRARIES={0}'.format(spec['blas'].blas_libs.joined()),
+            '-DBLAS_LIBRARIES={0}'.format(spec['blas'].libs.joined()),
             '-DLAPACK_TYPE={0}'.format(spec['lapack'].name.upper()),
             '-DLAPACK_LIBRARIES={0}'.format(
-                spec['lapack'].lapack_libs.joined()),
+                spec['lapack'].libs.joined()),
             '-DBOOST_INCLUDEDIR={0}'.format(spec['boost'].prefix.include),
             '-DBOOST_LIBRARYDIR={0}'.format(spec['boost'].prefix.lib),
             '-DENABLE_CHEMPS2=OFF'

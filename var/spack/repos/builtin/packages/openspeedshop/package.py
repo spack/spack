@@ -232,7 +232,7 @@ class Openspeedshop(Package):
         # set the DYNINSTAPI_RT_LIB library which is
         # required for OpenSpeedShop to find loop level
         # performance information
-        dyninst_libdir = find_libraries(['libdyninstAPI_RT'],
+        dyninst_libdir = find_libraries('libdyninstAPI_RT',
                                         root=self.spec['dyninst'].prefix,
                                         shared=True, recurse=True)
 
@@ -240,7 +240,7 @@ class Openspeedshop(Package):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = find_libraries(['libopenss-framework'],
+        oss_libdir = find_libraries('libopenss-framework',
                                     root=self.spec['openspeedshop'].prefix,
                                     shared=True, recurse=True)
         run_env.prepend_path('LD_LIBRARY_PATH',

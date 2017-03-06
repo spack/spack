@@ -74,14 +74,14 @@ class NetlibLapack(Package):
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libblas'], root=self.prefix, shared=shared, recurse=True
+            'libblas', root=self.prefix, shared=shared, recurse=True
         )
 
     @property
     def lapack_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['liblapack'], root=self.prefix, shared=shared, recurse=True
+            'liblapack', root=self.prefix, shared=shared, recurse=True
         )
 
     def install_one(self, spec, prefix, shared):
@@ -113,7 +113,7 @@ class NetlibLapack(Package):
         if '+external-blas' in spec:
             cmake_args.extend([
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
-                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].blas_libs.joined(';')
+                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].libs.joined(';')
             ])
 
         cmake_args.extend(std_cmake_args)
