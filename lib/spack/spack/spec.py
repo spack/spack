@@ -96,32 +96,35 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import base64
-import hashlib
+import collections
+import csv
 import ctypes
-from StringIO import StringIO
+import hashlib
+import itertools
 from operator import attrgetter
 
-from yaml.error import MarkedYAMLError
-
+import cStringIO
 import llnl.util.tty as tty
-from llnl.util.lang import *
-from llnl.util.tty.color import *
-
 import spack
 import spack.architecture
-import spack.store
 import spack.compilers as compilers
 import spack.error
 import spack.parse
-from spack.build_environment import get_path_from_module, load_module
-from spack.util.prefix import Prefix
-from spack.util.string import *
-import spack.util.spack_yaml as syaml
+import spack.store
 import spack.util.spack_json as sjson
-from spack.util.spack_yaml import syaml_dict
-from spack.util.crypto import prefix_bits
-from spack.version import *
+import spack.util.spack_yaml as syaml
+from cStringIO import StringIO
+from llnl.util.filesystem import find_libraries
+from llnl.util.lang import *
+from llnl.util.tty.color import *
+from spack.build_environment import get_path_from_module, load_module
 from spack.provider_index import ProviderIndex
+from spack.util.crypto import prefix_bits
+from spack.util.prefix import Prefix
+from spack.util.spack_yaml import syaml_dict
+from spack.util.string import *
+from spack.version import *
+from yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
@@ -750,6 +753,161 @@ class DependencyMap(HashableMap):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
 
 
+def _libs_default_handler(descriptor, spec, cls):
+    """Default handler when looking for 'libs' attribute. The default
+    tries to search for 'lib{spec.name}' recursively starting from
+    `spec.prefix`.
+
+    :param ForwardQueryToPackage descriptor: descriptor that triggered
+        the call
+    :param Spec spec: spec that is being queried
+    :param type(spec) cls: type of spec, to match the signature of the
+        descriptor `__get__` method
+    """
+    name = 'lib' + spec.name
+    shared = '+shared' in spec
+    return find_libraries(
+        name, root=spec.prefix, shared=shared, recurse=True
+    )
+
+
+def _cppflags_default_handler(descriptor, spec, cls):
+    """Default handler when looking for cppflags attribute. The default
+    just returns '-I{spec.prefix.include}'.
+
+    :param ForwardQueryToPackage descriptor: descriptor that triggered
+        the call
+    :param Spec spec: spec that is being queried
+    :param type(spec) cls: type of spec, to match the signature of the
+        descriptor `__get__` method
+    """
+    return '-I' + spec.prefix.include
+
+
+class ForwardQueryToPackage(object):
+    """Descriptor used to forward queries from Spec to Package"""
+
+    def __init__(self, attribute_name, default_handler=None):
+        """Initializes the instance of the descriptor
+
+        :param str attribute_name: name of the attribute to be
+            searched for in the Package instance
+        :param callable default_handler: [optional] default function
+            to be called if the attribute was not found in the Package
+            instance
+        """
+        self.attribute_name = attribute_name
+        # Turn the default handler into a function with the right
+        # signature that always returns None
+        if default_handler is None:
+            default_handler = lambda descriptor, spec, cls: None
+        self.default = default_handler
+
+    def __get__(self, instance, cls):
+        """Retrieves the property from Package using a well defined chain
+        of responsibility.
+
+        The order of call is :
+
+        1. if the query was through the name of a virtual package try to
+            search for the attribute `{virtual_name}_{attribute_name}`
+            in Package
+
+        2. try to search for attribute `{attribute_name}` in Package
+
+        3. try to call the default handler
+
+        The first call that produces a value will stop the chain.
+
+        If no call can handle the request or a None value is produced,
+        then AttributeError is raised.
+        """
+        pkg = instance.package
+        try:
+            query = instance.last_query
+        except AttributeError:
+            # There has been no query yet: this means
+            # a spec is trying to access its own attributes
+            _ = instance[instance.name]  # NOQA: ignore=F841
+            query = instance.last_query
+
+        callbacks_chain = []
+        # First in the chain : specialized attribute for virtual packages
+        if query.isvirtual:
+            specialized_name = '{0}_{1}'.format(
+                query.name, self.attribute_name
+            )
+            callbacks_chain.append(lambda: getattr(pkg, specialized_name))
+        # Try to get the generic method from Package
+        callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
+        # Final resort : default callback
+        callbacks_chain.append(lambda: self.default(self, instance, cls))
+
+        # Trigger the callbacks in order, the first one producing a
+        # value wins
+        value = None
+        for f in callbacks_chain:
+            try:
+                value = f()
+                break
+            except AttributeError:
+                pass
+        # 'None' value raises AttributeError : this permits to 'disable'
+        # the call in a particular package by returning None from the
+        # queried attribute, or will trigger an exception if  things
+        # searched for were not found
+        if value is None:
+            fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+            fmt += '\tspec : \'{spec}\'\n'
+            fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
+            fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+            message = fmt.format(
+                name=pkg.name,
+                query=self.attribute_name,
+                spec=instance
+            )
+            raise AttributeError(message)
+
+        return value
+
+    def __set__(self, instance, value):
+        cls_name = type(instance).__name__
+        msg = "'{0}' object attribute '{1}' is read-only"
+        raise AttributeError(msg.format(cls_name, self.attribute_name))
+
+
+class SpecBuildInterface(ObjectWrapper):
+
+    libs = ForwardQueryToPackage(
+        'libs',
+        default_handler=_libs_default_handler
+    )
+
+    cppflags = ForwardQueryToPackage(
+        'cppflags',
+        default_handler=_cppflags_default_handler
+    )
+
+    def __init__(self, spec, name, query_parameters):
+        super(SpecBuildInterface, self).__init__(spec)
+
+        # Represents a query state in a BuildInterface object
+        QueryState = collections.namedtuple(
+            'QueryState', ['name', 'extra_parameters', 'isvirtual']
+        )
+
+        is_virtual = Spec.is_virtual(name)
+        self._query_to_package = QueryState(
+            name=name,
+            extra_parameters=query_parameters,
+            isvirtual=is_virtual
+        )
+
+    @property
+    def last_query(self):
+        return self._query_to_package
+
+
 @key_ordering
 class Spec(object):
 
@@ -817,14 +975,6 @@ class Spec(object):
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec, deptypes)
             deptypes = ()
-
-    def __getattr__(self, item):
-        """Delegate to self.package if the attribute is not in the spec"""
-        # This line is to avoid infinite recursion in case package is
-        # not present among self attributes
-        if item.endswith('libs'):
-            return getattr(self.package, item)
-        raise AttributeError(item)
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -2239,22 +2389,46 @@ class Spec(object):
         return self.versions[0]
 
     def __getitem__(self, name):
-        """Get a dependency from the spec by its name."""
-        for spec in self.traverse():
-            if spec.name == name:
-                return spec
+        """Get a dependency from the spec by its name. This call implicitly
+        sets a query state in the package being retrieved. The behavior of
+        packages may be influenced by additional query parameters that are
+        passed after a colon symbol.
 
-        if Spec.is_virtual(name):
-            # TODO: this is a kind of kludgy way to find providers
-            # TODO: should we just keep virtual deps in the DAG instead of
-            # TODO: removing them on concretize?
-            for spec in self.traverse():
-                if spec.virtual:
-                    continue
-                if spec.package.provides(name):
-                    return spec
+        Note that if a virtual package is queried a copy of the Spec is
+        returned while for non-virtual a reference is returned.
+        """
+        query_parameters = name.split(':')
+        if len(query_parameters) > 2:
+            msg = 'key has more than one \':\' symbol.'
+            msg += ' At most one is admitted.'
+            raise KeyError(msg)
 
-        raise KeyError("No spec with name %s in %s" % (name, self))
+        name, query_parameters = query_parameters[0], query_parameters[1:]
+        if query_parameters:
+            # We have extra query parameters, which are comma separated
+            # values
+            f = cStringIO.StringIO(query_parameters.pop())
+            try:
+                query_parameters = next(csv.reader(f, skipinitialspace=True))
+            except StopIteration:
+                query_parameters = ['']
+
+        try:
+            value = next(
+                itertools.chain(
+                    # Regular specs
+                    (x for x in self.traverse() if x.name == name),
+                    (x for x in self.traverse()
+                     if (not x.virtual) and x.package.provides(name))
+                )
+            )
+        except StopIteration:
+            raise KeyError("No spec with name %s in %s" % (name, self))
+
+        if self._concrete:
+            return SpecBuildInterface(value, name, query_parameters)
+
+        return value
 
     def __contains__(self, spec):
         """True if this spec satisfies the provided spec, or if any dependency
@@ -2955,7 +3129,8 @@ class SpecParser(spack.parse.Parser):
         if not id:
             id = self.token.value
         if '.' in id:
-            self.last_token_error("Identifier cannot contain '.'")
+            self.last_token_error(
+                "{0}: Identifier cannot contain '.'".format(id))
 
 
 def parse(string):

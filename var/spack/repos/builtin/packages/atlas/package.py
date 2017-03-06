@@ -113,7 +113,7 @@ class Atlas(Package):
             self.install_test()
 
     @property
-    def blas_libs(self):
+    def libs(self):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
         # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
@@ -135,10 +135,6 @@ class Atlas(Package):
             to_find, root=self.prefix, shared=shared, recurse=True
         )
 
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
-
     def install_test(self):
         source_file = join_path(os.path.dirname(self.module.__file__),
                                 'test_cblas_dgemm.c')
@@ -146,7 +142,7 @@ class Atlas(Package):
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % self.spec.prefix.include]
-        link_flags = self.lapack_libs.ld_flags.split()
+        link_flags = self.libs.ld_flags.split()
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)
         compare_output_file(output, blessed_file)

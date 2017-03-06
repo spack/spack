@@ -68,6 +68,9 @@ class Mumps(Package):
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
+    patch('spectrum-mpi-xl.patch', when='%xl^spectrum-mpi')
+    patch('spectrum-mpi-xl.patch', when='%xl_r^spectrum-mpi')
+
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
     # setup_dependent_environment in scalapck. This happen after patch
@@ -79,8 +82,8 @@ class Mumps(Package):
             raise RuntimeError(
                 'You cannot use the variants parmetis or ptscotch without mpi')
 
-        lapack_blas = (self.spec['lapack'].lapack_libs +
-                       self.spec['blas'].blas_libs)
+        lapack_blas = (self.spec['lapack'].libs +
+                       self.spec['blas'].libs)
         makefile_conf = ["LIBBLAS = %s" % lapack_blas.ld_flags]
 
         orderings = ['-Dpord']
@@ -122,31 +125,49 @@ class Mumps(Package):
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        fpic = '-fPIC' if '+shared' in self.spec else ''
+        fpic = self.compiler.pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
+
         if '+int64' in self.spec:
-            makefile_conf.extend(
-                # the fortran compilation flags most probably are
-                # working only for intel and gnu compilers this is
-                # perhaps something the compiler should provide
-                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # noqa
-                 'OPTL    = %s -O ' % fpic,
-                 'OPTC    = %s -O -DINTSIZE64' % fpic])
+            if self.compiler.name == "xl" or self.compiler.name == "xl_r":
+                makefile_conf.extend(
+                    ['OPTF    = -O3',
+                     'OPTL    = %s -O3' % fpic,
+                     'OPTC    = %s -O3-DINTSIZE64' % fpic])
+            else:
+                makefile_conf.extend(
+                    # the fortran compilation flags most probably are
+                    # working only for intel and gnu compilers this is
+                    # perhaps something the compiler should provide
+                    ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # noqa
+                     'OPTL    = %s -O ' % fpic,
+                     'OPTC    = %s -O -DINTSIZE64' % fpic])
         else:
-            makefile_conf.extend(
-                ['OPTF    = %s -O  -DALLOW_NON_INIT' % fpic,
-                 'OPTL    = %s -O ' % fpic,
-                 'OPTC    = %s -O ' % fpic])
+            if self.compiler.name == "xl" or self.compiler.name == "xl_r":
+                makefile_conf.extend(
+                    ['OPTF    = -O3',
+                     'OPTL    = %s -O3' % fpic,
+                     'OPTC    = %s -O3' % fpic])
+            else:
+                makefile_conf.extend(
+                    ['OPTF    = %s -O  -DALLOW_NON_INIT' % fpic,
+                     'OPTL    = %s -O ' % fpic,
+                     'OPTC    = %s -O ' % fpic])
 
         if '+mpi' in self.spec:
-            scalapack = self.spec['scalapack'].scalapack_libs
+            scalapack = self.spec['scalapack'].libs
             makefile_conf.extend(
-                ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
-                 "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+                ['CC = {0}'.format(self.spec['mpi'].mpicc),
+                 'FC = {0}'.format(self.spec['mpi'].mpifc),
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
+            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'): # noqa
+                makefile_conf.extend(
+                    ['FL = {0}'.format(self.spec['mpi'].mpicc)])
+            else:
+                makefile_conf.extend(
+                    ['FL = {0}'.format(self.spec['mpi'].mpifc)])
         else:
             makefile_conf.extend(
                 ["CC = cc",
@@ -162,7 +183,8 @@ class Mumps(Package):
             # hack defined by _DMAIN_COMP (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
         else:
-            makefile_conf.append("CDEFS   = -DAdd_")
+            if self.compiler.name != "xl" and self.compiler.name != "xl_r":
+                makefile_conf.append("CDEFS   = -DAdd_")
 
         if '+shared' in self.spec:
             if sys.platform == 'darwin':
@@ -179,6 +201,11 @@ class Mumps(Package):
                     'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,  # noqa
                     'RANLIB=echo'
                 ])
+
+                if self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
+                    makefile_conf.extend([
+                        'SAR=/bin/xlc -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib  # noqa
+                    ])
         else:
             makefile_conf.extend([
                 'LIBEXT  = .a',

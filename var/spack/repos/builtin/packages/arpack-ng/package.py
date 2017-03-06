@@ -88,8 +88,8 @@ class ArpackNg(Package):
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Make sure we use Spack's blas/lapack:
-        lapack_libs = spec['lapack'].lapack_libs.joined(';')
-        blas_libs = spec['blas'].blas_libs.joined(';')
+        lapack_libs = spec['lapack'].libs.joined(';')
+        blas_libs = spec['blas'].libs.joined(';')
 
         options.extend([
             '-DLAPACK_FOUND=true',
@@ -129,8 +129,8 @@ class ArpackNg(Package):
             ])
 
         options.extend([
-            '--with-blas={0}'.format(spec['blas'].blas_libs.ld_flags),
-            '--with-lapack={0}'.format(spec['lapack'].lapack_libs.ld_flags)
+            '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+            '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
         ])
         if '+shared' not in spec:
             options.append('--enable-shared=no')

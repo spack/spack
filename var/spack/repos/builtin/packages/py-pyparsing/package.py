@@ -28,6 +28,16 @@ from spack import *
 class PyPyparsing(PythonPackage):
     """A Python Parsing Module."""
     homepage = "https://pypi.python.org/pypi/pyparsing"
-    url      = "https://pypi.python.org/packages/source/p/pyparsing/pyparsing-2.0.3.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.0.3.tar.gz"
 
-    version('2.0.3', '0fe479be09fc2cf005f753d3acc35939')
+    version('2.1.10', '065908b92904e0d3634eb156f44cc80e')
+    version('2.0.3',  '0fe479be09fc2cf005f753d3acc35939')
+
+    patch('setuptools-import.patch', when='@:2.1.10')
+
+    # Newer versions of setuptools require pyparsing. Although setuptools is an
+    # optional dependency of pyparsing, if it is not found, setup.py will
+    # fallback on distutils.core instead. Don't add a setuptools dependency
+    # or we won't be able to bootstrap setuptools.
+
+    # depends_on('py-setuptools', type='build')
