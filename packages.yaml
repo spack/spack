@@ -24,13 +24,13 @@ packages:
     variants: +debug +verbs
 
   openmpi:
-    variants: +pmi +slurm
+    variants: +pmi +slurm +verbs
 
   mvapich2:
     variants: +slurm +nemesisibtcp
 
   mpich:
-    variants: +pmi +romio
+    variants: +pmi +romio +verbs
 
   openssl:
       paths:
@@ -40,6 +40,9 @@ packages:
   
   openblas:
     variants: +openmp
+
+  fftw:
+    variants: +float +long_double +mpi +openmp
 
   intel-parallel-studio:
     paths:

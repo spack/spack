@@ -16,18 +16,17 @@ compilers=(
 )
 
 mpis=(
-    # openmpi@1.6.5
-    # openmpi@1.10.3
     openmpi@2.0.2
     mvapich2@2.2
     mpich@3.2
-    intel-parallel-studio@cluster.2017.1
+    intel-parallel-studio@cluster.2017
 )
 
 mpipkgs=(
+  fftw
 )
 
-intel='%intel@17 intel-parallel-studio@cluster@2017'
+icc='%intel@17'
 
 # CUDA
 s cuda@8.0.44 %gcc@5
@@ -43,6 +42,9 @@ s python@3.6.0  $compiler
 s r@3.3.2	$compiler
 s boost		$compiler
 s perl		$compiler
+s jdk		$compiler
+s bazel		$compiler
+s gradle	$compiler
 done
 
 # MPI and MPI-dependent Libraries
@@ -53,8 +55,14 @@ do
 		s $mpi $compiler
 		for pkg in "${mpipkgs[@]}"
 		do
-			s $pkg$compiler ^$mpi
-			s $pkg $intel
+			if [[ $mpi == "mvapich2"* ]]; then
+				s $pkg$compiler +mpi ^$mpi+debug
+			elif [[ $mpi == "intel"* ]]; then
+				echo ">>> Debug"
+				s $pkg$icc +mpi ^$mpi
+			else
+				s $pkg$compiler +mpi ^$mpi
+			fi
 		done
 	done
 done
@@ -64,3 +72,5 @@ s sga %intel@17
 s sga %gcc@5
 s mdtest %gcc ^openmpi
 s simul %gcc ^openmpi
+s anaconda2 %gcc
+s anaconda3 %gcc
