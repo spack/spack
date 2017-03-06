@@ -46,7 +46,7 @@ packages:
 
   intel-parallel-studio:
     paths:
-        intel-parallel-studio@cluster.2017.1%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags~openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe
-        intel-parallel-studio@cluster.2016%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags~openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i
-        intel-parallel-studio@cluster.2015%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags~openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o
+        intel-parallel-studio@cluster.2017.1%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe
+        intel-parallel-studio@cluster.2016%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i
+        intel-parallel-studio@cluster.2015%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o
     buildable: False

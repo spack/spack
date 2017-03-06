@@ -16,3 +16,13 @@
 packages:
   all:
     compiler: [gcc@4.8]
+
+  openssl:
+      paths:
+          openssl@system: /usr
+      version: [system]
+      buildable: False
+
+  intel-parallel-studio:
+    variants: +ipp +mkl +mpi +openmp
+    version: [cluster]
