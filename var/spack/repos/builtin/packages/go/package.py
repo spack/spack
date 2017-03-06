@@ -56,6 +56,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.8',   '7743960c968760437b6e39093cfe6f67')
     version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
     version('1.7.4', '49c1076428a5d3b5ad7ac65233fcca2f')
     version('1.6.4', 'b023240be707b34059d2c114d3465c92')
@@ -73,6 +74,7 @@ class Go(Package):
     patch('time_test.patch', when='@1.6.4:1.7.4')
 
     # https://github.com/golang/go/issues/17986
+    # The fix for this issue has been merged into the 1.8 tree.
     patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.5')
 
     # NOTE: Older versions of Go attempt to download external files that have

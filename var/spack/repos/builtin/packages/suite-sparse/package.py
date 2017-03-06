@@ -35,8 +35,8 @@ class SuiteSparse(Package):
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    variant('tbb', default=True, description='Build with Intel TBB')
-    variant('fpic', default=True, description='Build position independent code (required to link with shared libraries)')
+    variant('tbb', default=False, description='Build with Intel TBB')
+    variant('pic', default=True, description='Build position independent code (required to link with shared libraries)')
 
     depends_on('blas')
     depends_on('lapack')
@@ -46,7 +46,7 @@ class SuiteSparse(Package):
     # flags does not seem to be used, which leads to linking errors on Linux.
     depends_on('tbb', when='@4.5.3:+tbb')
 
-    patch('tbb_453.patch', when='@4.5.3')
+    patch('tbb_453.patch', when='@4.5.3:+tbb')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -60,9 +60,9 @@ class SuiteSparse(Package):
         # inject Spack compiler wrappers
         make_args.extend([
             'AUTOCC=no',
-            'CC=cc',
-            'CXX=c++',
-            'F77=f77',
+            'CC=%s' % self.compiler.cc,
+            'CXX=%s' % self.compiler.cxx,
+            'F77=%s' % self.compiler.f77,
             'CUDA_ROOT     =',
             'GPU_BLAS_PATH =',
             'GPU_CONFIG    =',
@@ -76,8 +76,14 @@ class SuiteSparse(Package):
             'NVCC          = echo',
             'NVCCFLAGS     =',
         ])
-        if '+fpic' in spec:
-            make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+        if '+pic' in spec:
+            make_args.extend([
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'FFLAGS={0}'.format(self.compiler.pic_flag)
+            ])
+
+        if '%xl' in spec or '%xl_r' in spec:
+            make_args.extend(['CFLAGS+=-DBLAS_NO_UNDERSCORE'])
 
         # use Spack's metis in CHOLMOD/Partition module,
         # otherwise internal Metis will be compiled
@@ -95,8 +101,8 @@ class SuiteSparse(Package):
 
         # Make sure Spack's Blas/Lapack is used. Otherwise System's
         # Blas/Lapack might be picked up.
-        blas = spec['blas'].blas_libs.ld_flags
-        lapack = spec['lapack'].lapack_libs.ld_flags
+        blas = spec['blas'].libs.ld_flags
+        lapack = spec['lapack'].libs.ld_flags
         if '@4.5.1' in spec:
             # adding -lstdc++ is clearly an ugly way to do this, but it follows
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk

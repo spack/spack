@@ -37,3 +37,5 @@ class Es(AutotoolsPackage):
     url      = "https://github.com/wryun/es-shell/releases/download/v0.9.1/es-0.9.1.tar.gz"
 
     version('0.9.1', 'bf4db55b47bcc99892468b2e0aec0c9e')
+
+    depends_on('readline')

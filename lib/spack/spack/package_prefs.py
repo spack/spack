@@ -43,7 +43,8 @@ def get_packages_config():
     if virtuals:
         errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
         raise VirtualInPackagesYAMLError(
-            "packages.yaml entries cannot be virtual packages:", *errors)
+            "packages.yaml entries cannot be virtual packages:",
+            '\n'.join(errors))
 
     return config
 

@@ -178,8 +178,7 @@ Next you should regenerate all the module files:
 
   ...
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
   ==> Regenerating tcl module files
 
 If you take a look now at the module for ``gcc`` you'll see that the unwanted
@@ -242,8 +241,7 @@ and regenerate the module files:
   3cfh3hi gmp@6.1.1     3k4ykbe libxml2@2.9.4        7tb426s ncurses@6.0          djdthlh nettle@3.2              i3rpk4e py-numpy@1.11.1    t5lk6in xz@5.2.2
   3ostwel hwloc@1.11.4  cagoem4 lz4@131              mirer2l netlib-lapack@3.6.1  js33umc openblas@0.2.19         e6uljfi py-scipy@0.18.1    asydrba zlib@1.2.8
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
 
   $ module avail
 

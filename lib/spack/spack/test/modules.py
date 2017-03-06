@@ -357,6 +357,21 @@ class TestTcl(object):
         generator = tcl_factory(spec)
         assert 'bar' in generator.use_name
 
+    def test_setup_environment(self, tcl_factory):
+        spec = spack.spec.Spec('mpileaks')
+        spec.concretize()
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'setenv FOOBAR' in x]) == 1
+        assert len(
+            [x for x in content if 'setenv FOOBAR "mpileaks"' in x]
+        ) == 1
+
+        content = get_modulefile_content(tcl_factory, spec['callpath'])
+        assert len([x for x in content if 'setenv FOOBAR' in x]) == 1
+        assert len(
+            [x for x in content if 'setenv FOOBAR "callpath"' in x]
+        ) == 1
+
 
 @pytest.mark.usefixtures('config', 'builtin_mock', 'stringio_open')
 class TestLmod(object):

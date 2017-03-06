@@ -24,9 +24,6 @@
 ##############################################################################
 """
 These tests check Spec DAG operations using dummy packages.
-You can find the dummy packages here::
-
-    spack/lib/spack/spack/test/mock_packages
 """
 import pytest
 import spack
@@ -690,3 +687,47 @@ class TestSpecDag(object):
 
         s4 = s3.copy()
         self.check_diamond_deptypes(s4)
+
+    def test_getitem_query(self):
+        s = Spec('mpileaks')
+        s.concretize()
+
+        # Check a query to a non-virtual package
+        a = s['callpath']
+
+        query = a.last_query
+        assert query.name == 'callpath'
+        assert len(query.extra_parameters) == 0
+        assert not query.isvirtual
+
+        # Check a query to a virtual package
+        a = s['mpi']
+
+        query = a.last_query
+        assert query.name == 'mpi'
+        assert len(query.extra_parameters) == 0
+        assert query.isvirtual
+
+        # Check a query to a virtual package with
+        # extra parameters after query
+        a = s['mpi:cxx,fortran']
+
+        query = a.last_query
+        assert query.name == 'mpi'
+        assert len(query.extra_parameters) == 2
+        assert 'cxx' in query.extra_parameters
+        assert 'fortran' in query.extra_parameters
+        assert query.isvirtual
+
+    def test_getitem_exceptional_paths(self):
+        s = Spec('mpileaks')
+        s.concretize()
+        # Needed to get a proxy object
+        q = s['mpileaks']
+
+        # Test that the attribute is read-only
+        with pytest.raises(AttributeError):
+            q.libs = 'foo'
+
+        with pytest.raises(AttributeError):
+            q.libs

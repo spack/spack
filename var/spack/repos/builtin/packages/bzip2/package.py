@@ -36,6 +36,7 @@ class Bzip2(Package):
     url      = "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
 
     version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
+
     variant('shared', default=True, description='Enables the build of shared libraries.')
 
     def patch(self):
@@ -43,6 +44,11 @@ class Bzip2(Package):
         # Tell both to use Spack's compiler wrapper instead of GCC
         filter_file(r'^CC=gcc', 'CC=cc', 'Makefile')
         filter_file(r'^CC=gcc', 'CC=cc', 'Makefile-libbz2_so')
+
+        # The Makefiles use GCC flags that are incompatible with PGI
+        if self.compiler.name == 'pgi':
+            filter_file('-Wall -Winline', '-Minform=inform', 'Makefile')
+            filter_file('-Wall -Winline', '-Minform=inform', 'Makefile-libbz2_so')  # noqa
 
         # Patch the link line to use RPATHs on macOS
         if 'darwin' in self.spec.architecture:

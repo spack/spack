@@ -387,6 +387,7 @@ class Python(Package):
             'python{0}'.format('3' if self.spec.satisfies('@3') else '')
         )
 
+        module.python_exe = python_path
         module.python = PythonExe(
             python_path, ext_spec.package.install_context.destdir)
         module.setup_py = (

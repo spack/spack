@@ -42,6 +42,7 @@ class Gtkplus(AutotoolsPackage):
     depends_on("pango")
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
+    depends_on('gobject-introspection', when='+X')
 
     def patch(self):
         # remove disable deprecated flag.
