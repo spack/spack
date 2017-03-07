@@ -137,7 +137,7 @@ class OrderedLineLoader(Loader):
             key = self.construct_object(key_node, deep=deep)
             try:
                 hash(key)
-            except TypeError, exc:
+            except TypeError as exc:
                 raise ConstructorError(
                     "while constructing a mapping", node.start_mark,
                     "found unacceptable key (%s)" % exc, key_node.start_mark)

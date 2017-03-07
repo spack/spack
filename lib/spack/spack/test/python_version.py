@@ -31,6 +31,8 @@ systems that ship with RHEL6/CentOS 6, which have Python 2.6 as the
 default version.  Once those go away, we can likely drop 2.6 and increase
 the minimum supported Python 3 version, as well.
 """
+from __future__ import print_function
+
 import os
 import sys
 import re

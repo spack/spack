@@ -96,7 +96,7 @@ spack_version = Version("0.10.0")
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.error.SpackError, e:
+except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
