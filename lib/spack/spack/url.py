@@ -46,8 +46,8 @@ it's never been told about that version before.
 """
 import os
 import re
-from StringIO import StringIO
-from urlparse import urlsplit, urlunsplit
+from six import StringIO
+from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import *
@@ -486,7 +486,7 @@ def substitution_offsets(path):
     name_offsets = offsets[1::2]
 
     ver_offsets = []
-    for i in xrange(0, len(name_parts), 2):
+    for i in range(0, len(name_parts), 2):
         vparts = re.split(ver, name_parts[i])
         voffsets = cumsum(vparts, offsets[i], len)
         ver_offsets.extend(voffsets[1::2])

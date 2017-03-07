@@ -265,11 +265,11 @@ class Compiler(object):
                 full_path, prefix, suffix = key
                 version = detect_version(full_path)
                 return (version, prefix, suffix, full_path)
-            except ProcessError, e:
+            except ProcessError as e:
                 tty.debug(
                     "Couldn't get version for compiler %s" % full_path, e)
                 return None
-            except Exception, e:
+            except Exception as e:
                 # Catching "Exception" here is fine because it just
                 # means something went wrong running a candidate executable.
                 tty.debug("Error while executing candidate compiler %s"

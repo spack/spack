@@ -50,4 +50,4 @@ def dependents(parser, args):
     if deps:
         spack.cmd.display_specs(deps)
     else:
-        print "No dependents"
+        print("No dependents")

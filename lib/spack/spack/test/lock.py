@@ -283,7 +283,7 @@ class LockTest(unittest.TestCase):
         # ensure lock file exists the first time, so we open it read-only
         # to begin wtih.
         touch(self.lock_path)
-        os.chmod(self.lock_path, 0444)
+        os.chmod(self.lock_path, 0o444)
 
         lock = Lock(self.lock_path)
         self.assertTrue(lock._reads == 0)

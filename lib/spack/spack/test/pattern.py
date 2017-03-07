@@ -86,6 +86,7 @@ class CompositeTest(unittest.TestCase):
         composite.append(self.Two())
         composite.add()
         self.assertEqual(self.Base.counter, 3)
+
         composite.pop()
         composite.subtract()
         self.assertEqual(self.Base.counter, 2)

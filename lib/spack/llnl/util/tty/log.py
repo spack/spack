@@ -165,8 +165,12 @@ class log_output(object):
         self.p.join(60.0)  # 1 minute to join the child
 
     def _spawn_writing_daemon(self, read, input_stream):
-        # Parent: read from child, skip the with block.
-        read_file = os.fdopen(read, 'r', 0)
+        # This is the Parent: read from child, skip the with block.
+
+        # Use line buffering (3rd param = 1) since Python 3 has a bug
+        # that prevents unbuffered text I/O.
+        read_file = os.fdopen(read, 'r', 1)
+
         with open(self.filename, 'w') as log_file:
             with keyboard_input(input_stream):
                 while True:

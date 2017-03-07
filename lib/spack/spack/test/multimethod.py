@@ -86,7 +86,7 @@ def test_default_works(builtin_mock):
 
 def test_target_match(builtin_mock):
     platform = spack.architecture.platform()
-    targets = platform.targets.values()
+    targets = list(platform.targets.values())
     for target in targets[:-1]:
         pkg = spack.repo.get('multimethod target=' + target.name)
         assert pkg.different_by_target() == target.name

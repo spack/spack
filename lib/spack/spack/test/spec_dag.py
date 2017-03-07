@@ -90,7 +90,7 @@ class TestSpecDag(object):
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'zmpi', 'fake']
-        pairs = zip([0, 1, 2, 3, 4, 2, 3], names)
+        pairs = list(zip([0, 1, 2, 3, 4, 2, 3], names))
 
         traversal = dag.traverse()
         assert [x.name for x in traversal] == names
@@ -104,7 +104,7 @@ class TestSpecDag(object):
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi']
-        pairs = zip([0, 1, 2, 3, 4, 3, 2, 3, 1], names)
+        pairs = list(zip([0, 1, 2, 3, 4, 3, 2, 3, 1], names))
 
         traversal = dag.traverse(cover='edges')
         assert [x.name for x in traversal] == names
@@ -118,7 +118,7 @@ class TestSpecDag(object):
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
-        pairs = zip([0, 1, 2, 3, 4, 3, 2, 3, 1, 2], names)
+        pairs = list(zip([0, 1, 2, 3, 4, 3, 2, 3, 1, 2], names))
 
         traversal = dag.traverse(cover='paths')
         assert [x.name for x in traversal] == names
@@ -132,7 +132,7 @@ class TestSpecDag(object):
 
         names = ['libelf', 'libdwarf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'mpileaks']
-        pairs = zip([4, 3, 2, 3, 2, 1, 0], names)
+        pairs = list(zip([4, 3, 2, 3, 2, 1, 0], names))
 
         traversal = dag.traverse(order='post')
         assert [x.name for x in traversal] == names
@@ -146,7 +146,7 @@ class TestSpecDag(object):
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'zmpi', 'mpileaks']
-        pairs = zip([4, 3, 3, 2, 3, 2, 1, 1, 0], names)
+        pairs = list(zip([4, 3, 3, 2, 3, 2, 1, 1, 0], names))
 
         traversal = dag.traverse(cover='edges', order='post')
         assert [x.name for x in traversal] == names
@@ -160,7 +160,7 @@ class TestSpecDag(object):
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'fake', 'zmpi', 'mpileaks']
-        pairs = zip([4, 3, 3, 2, 3, 2, 1, 2, 1, 0], names)
+        pairs = list(zip([4, 3, 3, 2, 3, 2, 1, 2, 1, 0], names))
 
         traversal = dag.traverse(cover='paths', order='post')
         assert [x.name for x in traversal] == names

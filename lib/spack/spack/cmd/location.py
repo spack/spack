@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+from __future__ import print_function
 
+import argparse
 import llnl.util.tty as tty
 
 import spack
@@ -70,16 +71,16 @@ def setup_parser(subparser):
 
 def location(parser, args):
     if args.module_dir:
-        print spack.module_path
+        print(spack.module_path)
 
     elif args.spack_root:
-        print spack.prefix
+        print(spack.prefix)
 
     elif args.packages:
-        print spack.repo.first_repo().root
+        print(spack.repo.first_repo().root)
 
     elif args.stages:
-        print spack.stage_path
+        print(spack.stage_path)
 
     else:
         specs = spack.cmd.parse_specs(args.spec)
@@ -91,14 +92,14 @@ def location(parser, args):
         if args.install_dir:
             # install_dir command matches against installed specs.
             spec = spack.cmd.disambiguate_spec(specs[0])
-            print spec.prefix
+            print(spec.prefix)
 
         else:
             spec = specs[0]
 
             if args.package_dir:
                 # This one just needs the spec name.
-                print spack.repo.dirname_for_package_name(spec.name)
+                print(spack.repo.dirname_for_package_name(spec.name))
 
             else:
                 # These versions need concretized specs.
@@ -106,11 +107,11 @@ def location(parser, args):
                 pkg = spack.repo.get(spec)
 
                 if args.stage_dir:
-                    print pkg.stage.path
+                    print(pkg.stage.path)
 
                 else:  # args.build_dir is the default.
                     if not pkg.stage.source_path:
                         tty.die("Build directory does not exist yet. "
                                 "Run this to create it:",
                                 "spack stage " + " ".join(args.spec))
-                    print pkg.stage.source_path
+                    print(pkg.stage.source_path)

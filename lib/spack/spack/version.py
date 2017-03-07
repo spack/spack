@@ -47,6 +47,7 @@ import re
 import numbers
 from bisect import bisect_left
 from functools import wraps
+from six import string_types
 
 from functools_backport import total_ordering
 from spack.util.spack_yaml import syaml_dict
@@ -216,7 +217,7 @@ class Version(object):
         segments = [a_or_n(seg) for seg in version]
 
         wc = segments[0]
-        for i in xrange(1, len(separators)):
+        for i in range(1, len(separators)):
             wc += '(?:' + separators[i] + segments[i]
 
         # Add possible alpha or beta indicator at the end of each segemnt
@@ -229,18 +230,24 @@ class Version(object):
 
     def __getitem__(self, idx):
         cls = type(self)
+
         if isinstance(idx, numbers.Integral):
             return self.version[idx]
+
         elif isinstance(idx, slice):
             # Currently len(self.separators) == len(self.version) - 1
             extendend_separators = self.separators + ('',)
             string_arg = []
-            for token, sep in zip(self.version, extendend_separators)[idx]:
+
+            pairs = zip(self.version[idx], extendend_separators[idx])
+            for token, sep in pairs:
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
+
             string_arg.pop()  # We don't need the last separator
             string_arg = ''.join(string_arg)
             return cls(string_arg)
+
         message = '{cls.__name__} indices must be integers'
         raise TypeError(message.format(cls=cls))
 
@@ -375,9 +382,9 @@ class Version(object):
 class VersionRange(object):
 
     def __init__(self, start, end):
-        if isinstance(start, basestring):
+        if isinstance(start, string_types):
             start = Version(start)
-        if isinstance(end, basestring):
+        if isinstance(end, string_types):
             end = Version(end)
 
         self.start = start
@@ -568,7 +575,7 @@ class VersionList(object):
     def __init__(self, vlist=None):
         self.versions = []
         if vlist is not None:
-            if isinstance(vlist, basestring):
+            if isinstance(vlist, string_types):
                 vlist = _string_to_version(vlist)
                 if type(vlist) == VersionList:
                     self.versions = vlist.versions
@@ -796,7 +803,7 @@ def ver(obj):
     """
     if isinstance(obj, (list, tuple)):
         return VersionList(obj)
-    elif isinstance(obj, basestring):
+    elif isinstance(obj, string_types):
         return _string_to_version(obj)
     elif isinstance(obj, (int, float)):
         return _string_to_version(str(obj))

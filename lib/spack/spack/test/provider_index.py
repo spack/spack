@@ -37,7 +37,8 @@ Tests assume that mock packages provide this::
                     mpi@:10.0: set([zmpi])},
     'stuff': {stuff: set([externalvirtual])}}
 """
-import StringIO
+from six import StringIO
+
 import spack
 from spack.provider_index import ProviderIndex
 from spack.spec import Spec
@@ -46,10 +47,10 @@ from spack.spec import Spec
 def test_yaml_round_trip(builtin_mock):
     p = ProviderIndex(spack.repo.all_package_names())
 
-    ostream = StringIO.StringIO()
+    ostream = StringIO()
     p.to_yaml(ostream)
 
-    istream = StringIO.StringIO(ostream.getvalue())
+    istream = StringIO(ostream.getvalue())
     q = ProviderIndex.from_yaml(istream)
 
     assert p == q

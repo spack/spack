@@ -46,7 +46,7 @@ class MakeExecutableTest(unittest.TestCase):
         with open(make_exe, 'w') as f:
             f.write('#!/bin/sh\n')
             f.write('echo "$@"')
-        os.chmod(make_exe, 0700)
+        os.chmod(make_exe, 0o700)
 
         path_put_first('PATH', [self.tmpdir])
 

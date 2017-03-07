@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import exceptions
 import shutil
 import glob
 import tempfile
@@ -137,7 +136,7 @@ class DirectoryLayout(object):
         if os.path.exists(path):
             try:
                 shutil.rmtree(path)
-            except exceptions.OSError as e:
+            except OSError as e:
                 raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)

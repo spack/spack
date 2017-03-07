@@ -25,10 +25,20 @@
 import re
 import os
 import sys
-import urllib2
-import urlparse
+
+from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.error import URLError
 from multiprocessing import Pool
-from HTMLParser import HTMLParser, HTMLParseError
+
+try:
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParser, HTMLParseError
+except ImportError:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError:
+        pass
 
 import llnl.util.tty as tty
 
@@ -80,9 +90,9 @@ def _spider(args):
         # It would be nice to do this with the HTTP Accept header to avoid
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
-        req = urllib2.Request(url)
+        req = Request(url)
         req.get_method = lambda: "HEAD"
-        resp = urllib2.urlopen(req, timeout=TIMEOUT)
+        resp = urlopen(req, timeout=TIMEOUT)
 
         if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
@@ -95,7 +105,7 @@ def _spider(args):
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
-        response = urllib2.urlopen(req, timeout=TIMEOUT)
+        response = urlopen(req, timeout=TIMEOUT)
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
@@ -142,7 +152,7 @@ def _spider(args):
                 pool.terminate()
                 pool.join()
 
-    except urllib2.URLError as e:
+    except URLError as e:
         tty.debug(e)
         if raise_on_error:
             raise spack.error.NoNetworkConnectionError(str(e), url)

@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -186,7 +188,7 @@ def display_specs(specs, **kwargs):
     # Traverse the index and print out each package
     for i, (architecture, compiler) in enumerate(sorted(index)):
         if i > 0:
-            print
+            print()
 
         header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
                                       architecture, spack.spec.compiler_color,
@@ -205,7 +207,7 @@ def display_specs(specs, **kwargs):
 
             for abbrv, spec in zip(abbreviated, specs):
                 prefix = gray_hash(spec, hlen) if hashes else ''
-                print prefix + (format % (abbrv, spec.prefix))
+                print(prefix + (format % (abbrv, spec.prefix)))
 
         elif mode == 'deps':
             for spec in specs:
