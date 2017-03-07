@@ -2841,9 +2841,9 @@ if you want to run commands in that environment to test them out, you
 can use the :ref:`cmd-spack-env` command, documented
 below.
 
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 Failing the build
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 Sometimes you don't want a package to successfully install unless some
 condition is true.  You can explicitly cause the build to fail from
@@ -3236,6 +3236,100 @@ own spec:
 
    spec['mpi'].prefix.bin
    spec['mpi'].version
+
+^^^^^^^^^^^^^^^^^^^^
+Spec build interface
+^^^^^^^^^^^^^^^^^^^^
+
+For more complex queries Spack supports an extended sub-scripting syntax:
+
+.. code-block:: python
+
+   mpi_cxx_and_fortran_query = spec['mpi:cxx,fortran']
+
+which allows for a list of comma separated values to be specified after
+the package name (a single colon separates the package name from the values).
+These values will be attached to the ``Spec`` object being created and can be
+used by the dependency to fine tune the computation of certain attributes:
+
+.. code-block:: python
+
+   # Get the list of MPI Fortran libraries
+   mpi_fortran_libs = spec['mpi:fortran'].libs
+
+   # Get the list of MPI C++ libraries
+   mpi_cxx_libs = spec['mpi:cxx'].libs
+
+The attributes that currently support this query mechanism are
+``libs`` and  ``cppflags``.
+
+``libs`` returns a ``LibraryList`` object. Its default
+construction mechanism is to search for a library with the same name
+as the spec, and a suffix that depends on the context. For instance, in
+the following snippet:
+
+.. code-block:: python
+
+   # Assume +shared in openblas is True
+   libs = spec['openblas'].libs
+
+``libs`` is a ``LibraryList`` object containing the absolute path of
+``libopenblas.so`` on a linux platform.
+
+``cppflags`` returns a string with all the preprocessor flags needed
+to compile against a package, and it defaults to ``-I<prefix>/include``.
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""
+Writing the support for build interface attributes
+""""""""""""""""""""""""""""""""""""""""""""""""""
+
+In some cases it may be necessary to customize how build
+interface attributes are computed. This can be done overriding the
+appropriate method in the package you are writing.
+
+For packages that don't provide virtual services you simply need
+to override a method that has the same name of the build interface
+attribute you want to customize:
+
+.. code-block:: python
+
+    @property
+    def libs(self):
+        spec = self.spec
+        shared = True if '+shared' in spec else False
+
+        # List of extra parameters passed in the query
+        query_parameters = spec.last_query.extra_parameters
+
+        if 'cxx' in query_parameters:
+            pass
+        # ... compute library_list
+        return library_list
+
+Query parameters can be retrieved as shown above, and you can implement business
+logic based on their values. For packages that provide virtual services you have the
+possibility of further specializing the override:
+
+.. code-block:: python
+
+    class MyPackage(Package):
+
+        provides('lapack')
+        provides('mpi')
+
+        @property
+        def lapack_libs(self):
+            # Return the libraries needed for lapack
+            # ...
+
+        @property
+        def mpi_libs(self):
+            # Return the libraries needed for mpi
+            # ...
+
+The two overrides above will always be preferred to the plain ``libs`` if the
+access to the dependency has been done through a virtual package name.
 
 .. _multimethods:
 
