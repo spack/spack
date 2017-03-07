@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 import hashlib
 
 """Set of acceptable hashes that Spack will use."""
@@ -104,11 +105,16 @@ class Checker(object):
 
 def prefix_bits(byte_array, bits):
     """Return the first <bits> bits of a byte array as an integer."""
+    if sys.version_info < (3,):
+        b2i = ord          # In Python 2, indexing byte_array gives str
+    else:
+        b2i = lambda b: b  # In Python 3, indexing byte_array gives int
+
     result = 0
     n = 0
     for i, b in enumerate(byte_array):
         n += 8
-        result = (result << 8) | ord(b)
+        result = (result << 8) | b2i(b)
         if n >= bits:
             break
 

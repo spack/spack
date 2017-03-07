@@ -85,11 +85,6 @@ class OrderedLineLoader(Loader):
 
     def construct_yaml_str(self, node):
         value = self.construct_scalar(node)
-        try:
-            value = value.encode('ascii')
-        except UnicodeEncodeError:
-            pass
-
         value = syaml_str(value)
 
         mark(value, node)
@@ -181,7 +176,7 @@ class OrderedLineDumper(Dumper):
             # if it's a syaml_dict, preserve OrderedDict order.
             # Otherwise do the default thing.
             sort = not isinstance(mapping, syaml_dict)
-            mapping = mapping.items()
+            mapping = list(mapping.items())
             if sort:
                 mapping.sort()
 

@@ -138,8 +138,8 @@ def test_user_defaults(config):
 
 def test_user_input_combination(config):
     platform = spack.architecture.platform()
-    os_list = platform.operating_sys.keys()
-    target_list = platform.targets.keys()
+    os_list = list(platform.operating_sys.keys())
+    target_list = list(platform.targets.keys())
     additional = ["fe", "be", "frontend", "backend"]
 
     os_list.extend(additional)
