@@ -131,9 +131,6 @@ class BaseConstructor(object):
                 raise ConstructorError("while constructing a mapping", node.start_mark,
                         "found unacceptable key (%s)" % exc, key_node.start_mark)
             value = self.construct_object(value_node, deep=deep)
-            if key in mapping:
-                raise ConstructorError("while constructing a mapping", node.start_mark,
-                                       "found already in-use key (%s)" % key, key_node.start_mark)
             mapping[key] = value
         return mapping
 
