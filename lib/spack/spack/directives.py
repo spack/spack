@@ -51,6 +51,7 @@ import functools
 import inspect
 import os.path
 import re
+from six import string_types
 
 import llnl.util.lang
 import spack
@@ -174,7 +175,7 @@ class DirectiveMetaMixin(type):
         """
         global __all__
 
-        if isinstance(dicts, basestring):
+        if isinstance(dicts, string_types):
             dicts = (dicts, )
         if not isinstance(dicts, collections.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"

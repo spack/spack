@@ -22,7 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import textwrap
+
 from llnl.util.tty.colify import *
 import spack
 import spack.fetch_strategy as fs
@@ -50,12 +53,12 @@ def print_text_info(pkg):
     """Print out a plain text description of a package."""
     header = "{0}:   ".format(pkg.build_system_class)
 
-    print header, pkg.name
+    print(header, pkg.name)
     whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
-    print "Homepage:", whitespaces, pkg.homepage
+    print("Homepage:", whitespaces, pkg.homepage)
 
-    print
-    print "Safe versions:  "
+    print()
+    print("Safe versions:  ")
 
     if not pkg.versions:
         print("    None")
@@ -63,20 +66,20 @@ def print_text_info(pkg):
         pad = padder(pkg.versions, 4)
         for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
-            print "    %s%s" % (pad(v), str(f))
+            print("    %s%s" % (pad(v), str(f)))
 
-    print
-    print "Variants:"
+    print()
+    print("Variants:")
     if not pkg.variants:
-        print "    None"
+        print("    None")
     else:
         pad = padder(pkg.variants, 4)
 
         maxv = max(len(v) for v in sorted(pkg.variants))
         fmt = "%%-%ss%%-10s%%s" % (maxv + 4)
 
-        print "    " + fmt % ('Name',   'Default',   'Description')
-        print
+        print("    " + fmt % ('Name',   'Default',   'Description'))
+        print()
         for name in sorted(pkg.variants):
             v = pkg.variants[name]
             default = 'on' if v.default else 'off'
@@ -85,26 +88,26 @@ def print_text_info(pkg):
             lines[1:] = ["      " + (" " * maxv) + l for l in lines[1:]]
             desc = "\n".join(lines)
 
-            print "    " + fmt % (name, default, desc)
+            print("    " + fmt % (name, default, desc))
 
-    print
-    print "Installation Phases:"
+    print()
+    print("Installation Phases:")
     phase_str = ''
     for phase in pkg.phases:
         phase_str += "    {0}".format(phase)
-    print phase_str
+    print(phase_str)
 
     for deptype in ('build', 'link', 'run'):
-        print
-        print "%s Dependencies:" % deptype.capitalize()
+        print()
+        print("%s Dependencies:" % deptype.capitalize())
         deps = sorted(pkg.dependencies_of_type(deptype))
         if deps:
             colify(deps, indent=4)
         else:
-            print "    None"
+            print("    None")
 
-    print
-    print "Virtual Packages: "
+    print()
+    print("Virtual Packages: ")
     if pkg.provided:
         inverse_map = {}
         for spec, whens in pkg.provided.items():
@@ -113,17 +116,17 @@ def print_text_info(pkg):
                     inverse_map[when] = set()
                 inverse_map[when].add(spec)
         for when, specs in reversed(sorted(inverse_map.items())):
-            print "    %s provides %s" % (
-                when, ', '.join(str(s) for s in specs))
+            print("    %s provides %s" % (
+                when, ', '.join(str(s) for s in specs)))
     else:
-        print "    None"
+        print("    None")
 
-    print
-    print "Description:"
+    print()
+    print("Description:")
     if pkg.__doc__:
-        print pkg.format_doc(indent=4)
+        print(pkg.format_doc(indent=4))
     else:
-        print "    None"
+        print("    None")
 
 
 def info(parser, args):

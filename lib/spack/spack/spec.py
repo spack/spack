@@ -97,13 +97,14 @@ expansion when it is the first character in an id typed on the command line.
 """
 import base64
 import collections
-import csv
 import ctypes
 import hashlib
 import itertools
 from operator import attrgetter
+from six import StringIO
+from six import string_types
+from six import iteritems
 
-import cStringIO
 import llnl.util.tty as tty
 import spack
 import spack.architecture
@@ -113,7 +114,7 @@ import spack.parse
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from cStringIO import StringIO
+
 from llnl.util.filesystem import find_libraries
 from llnl.util.lang import *
 from llnl.util.tty.color import *
@@ -222,7 +223,7 @@ def canonical_deptype(deptype):
     if deptype is None:
         return alldeps
 
-    elif isinstance(deptype, str):
+    elif isinstance(deptype, string_types):
         return special_types.get(deptype, (deptype,))
 
     elif isinstance(deptype, (tuple, list)):
@@ -270,7 +271,7 @@ class ArchSpec(object):
             spec_like = args[0]
             if isinstance(spec_like, ArchSpec):
                 self._dup(spec_like)
-            elif isinstance(spec_like, basestring):
+            elif isinstance(spec_like, string_types):
                 spec_fields = spec_like.split("-")
 
                 if len(spec_fields) == 3:
@@ -391,7 +392,7 @@ class ArchSpec(object):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         constrained = False
-        for attr, svalue in self.to_cmp_dict().iteritems():
+        for attr, svalue in iteritems(self.to_cmp_dict()):
             ovalue = getattr(other, attr)
             if svalue is None and ovalue is not None:
                 setattr(self, attr, ovalue)
@@ -406,7 +407,7 @@ class ArchSpec(object):
 
     @property
     def concrete(self):
-        return all(v for k, v in self.to_cmp_dict().iteritems())
+        return all(v for k, v in iteritems(self.to_cmp_dict()))
 
     def to_cmp_dict(self):
         """Returns a dictionary that can be used for field comparison."""
@@ -464,7 +465,7 @@ class CompilerSpec(object):
             arg = args[0]
             # If there is one argument, it's either another CompilerSpec
             # to copy or a string to parse
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 c = SpecParser().parse_compiler(arg)
                 self.name = c.name
                 self.versions = c.versions
@@ -728,7 +729,7 @@ class FlagMap(HashableMap):
         return clone
 
     def _cmp_key(self):
-        return tuple((k, tuple(v)) for k, v in sorted(self.iteritems()))
+        return tuple((k, tuple(v)) for k, v in sorted(iteritems(self)))
 
     def __str__(self):
         sorted_keys = filter(
@@ -918,7 +919,7 @@ class Spec(object):
             return
 
         # Parse if the spec_like is a string.
-        if not isinstance(spec_like, basestring):
+        if not isinstance(spec_like, string_types):
             raise TypeError("Can't make spec out of %s" % type(spec_like))
 
         spec_list = SpecParser().parse(spec_like)
@@ -1018,9 +1019,9 @@ class Spec(object):
         if name in self.variants:
             raise DuplicateVariantError(
                 "Cannot specify variant '%s' twice" % name)
-        if isinstance(value, basestring) and value.upper() == 'TRUE':
+        if isinstance(value, string_types) and value.upper() == 'TRUE':
             value = True
-        elif isinstance(value, basestring) and value.upper() == 'FALSE':
+        elif isinstance(value, string_types) and value.upper() == 'FALSE':
             value = False
         self.variants[name] = VariantSpec(name, value)
 
@@ -1056,7 +1057,7 @@ class Spec(object):
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
             self.architecture = ArchSpec(*new_vals)
         else:
-            new_attrvals = [(a, v) for a, v in kwargs.iteritems()
+            new_attrvals = [(a, v) for a, v in iteritems(kwargs)
                             if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
@@ -1219,7 +1220,7 @@ class Spec(object):
         # get initial values for kwargs
         depth = kwargs.get('depth', False)
         key_fun = kwargs.get('key', id)
-        if isinstance(key_fun, basestring):
+        if isinstance(key_fun, string_types):
             key_fun = attrgetter(key_fun)
         yield_root = kwargs.get('root', True)
         cover = kwargs.get('cover', 'nodes')
@@ -1314,7 +1315,7 @@ class Spec(object):
         else:
             yaml_text = syaml.dump(
                 self.to_node_dict(), default_flow_style=True, width=maxint)
-            sha = hashlib.sha1(yaml_text)
+            sha = hashlib.sha1(yaml_text.encode('utf-8'))
             b32_hash = base64.b32encode(sha.digest()).lower()
             if self.concrete:
                 self._hash = b32_hash
@@ -1421,7 +1422,7 @@ class Spec(object):
         formats so that reindex will work on old specs/databases.
         """
         for dep_name, elt in dependency_dict.items():
-            if isinstance(elt, basestring):
+            if isinstance(elt, string_types):
                 # original format, elt is just the dependency hash.
                 dag_hash, deptypes = elt, ['build', 'link']
             elif isinstance(elt, tuple):
@@ -2413,11 +2414,8 @@ class Spec(object):
         if query_parameters:
             # We have extra query parameters, which are comma separated
             # values
-            f = cStringIO.StringIO(query_parameters.pop())
-            try:
-                query_parameters = next(csv.reader(f, skipinitialspace=True))
-            except StopIteration:
-                query_parameters = ['']
+            csv = query_parameters.pop().strip()
+            query_parameters = re.split(r'\s*,\s*', csv)
 
         try:
             value = next(

@@ -23,15 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.modules
+from six import iteritems
 
 
 def post_install(pkg):
-    for item, cls in spack.modules.module_types.iteritems():
+    for item, cls in iteritems(spack.modules.module_types):
         generator = cls(pkg.spec)
         generator.write()
 
 
 def post_uninstall(pkg):
-    for item, cls in spack.modules.module_types.iteritems():
+    for item, cls in iteritems(spack.modules.module_types):
         generator = cls(pkg.spec)
         generator.remove()
