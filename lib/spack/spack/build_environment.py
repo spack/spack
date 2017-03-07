@@ -322,30 +322,30 @@ def set_build_environment_variables(pkg, env, dirty=False):
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    # Add bin directories from dependencies to the PATH for the build or run.
+    # Function to add a directory to a list only if
+    # that directory exists and is not already in the list
     def add_dir_to_list(bin_dir, list):
         if os.path.isdir(bin_dir):
             if bin_dir not in list:
                 list.append(bin_dir)
-    build_deps = [ d for d in pkg.spec.dependencies(deptype='build') ]
-    build_bin_dirs = []
-    for bdep in build_deps:
-        add_dir_to_list("%s/bin" % bdep.prefix, build_bin_dirs)
-        for brdep in bdep.traverse(root=False, deptype='run'):
-            add_dir_to_list("%s/bin" % brdep.prefix, build_bin_dirs)
-    build_bin_dirs = filter_system_bin_paths(build_bin_dirs)
-    build_bin_dirs = list(build_bin_dirs)
-    run_bin_dirs = []
-    for d in pkg.spec.traverse(root=False, deptype='run'):
-        add_dir_to_list("%s/bin" % d.prefix, run_bin_dirs)
-    run_bin_dirs = filter(os.path.isdir, ['%s/bin' % d.prefix for d in pkg.spec.traverse(root=False, deptype='run') ])
-    run_bin_dirs = filter_system_bin_paths(run_bin_dirs)
+
+    # Create a list which will contain the bin directories
     bin_dirs = []
-    for bin_dir in build_bin_dirs:
-        bin_dirs.append(bin_dir)
-    for bin_dir in run_bin_dirs:
-        if bin_dir not in bin_dirs:
-            bin_dirs.append(bin_dir)
+
+    # Add all bin directories which build dependencies and their
+    # run dependencies require.
+    for bdep in [ d for d in pkg.spec.dependencies(deptype='build') ]:
+        add_dir_to_list("%s/bin" % bdep.prefix, bin_dirs)
+        for brdep in bdep.traverse(root=False, deptype='run'):
+            add_dir_to_list("%s/bin" % brdep.prefix, bin_dirs)
+
+    # Add all bin directories which run dependencies require.
+    for d in pkg.spec.traverse(root=False, deptype='run'):
+        add_dir_to_list("%s/bin" % d.prefix, bin_dirs)
+
+    bin_dirs = filter_system_bin_paths(bin_dirs)
+
+    # Add all bin directories to the PATH
     for bin_dir in bin_dirs:
         env.prepend_path('PATH', bin_dir)
 
