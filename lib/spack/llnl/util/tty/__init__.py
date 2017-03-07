@@ -29,7 +29,7 @@ import fcntl
 import termios
 import struct
 import traceback
-from StringIO import StringIO
+from six import StringIO
 
 from llnl.util.tty.color import *
 
@@ -93,7 +93,7 @@ def msg(message, *args, **kwargs):
     else:
         cwrite("@*b{%s==>} %s" % (st_text, cescape(message)))
     for arg in args:
-        print indent + str(arg)
+        print(indent + str(arg))
 
 
 def info(message, *args, **kwargs):
@@ -201,7 +201,7 @@ def get_yes_or_no(prompt, **kwargs):
         if not ans:
             result = default_value
             if result is None:
-                print "Please enter yes or no."
+                print("Please enter yes or no.")
         else:
             if ans == 'y' or ans == 'yes':
                 result = True
@@ -239,7 +239,7 @@ def hline(label=None, **kwargs):
     out.write(label)
     out.write(suffix)
 
-    print out.getvalue()
+    print(out.getvalue())
 
 
 def terminal_size():

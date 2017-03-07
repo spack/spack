@@ -29,18 +29,19 @@ import hashlib
 import shutil
 import tempfile
 import getpass
-from urlparse import urljoin
+from six import string_types
+from six import iteritems
+from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 import llnl.util.lock
 from llnl.util.filesystem import *
 
-import spack.util.pattern as pattern
-
 import spack
 import spack.config
-import spack.fetch_strategy as fs
 import spack.error
+import spack.fetch_strategy as fs
+import spack.util.pattern as pattern
 from spack.version import *
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
@@ -84,7 +85,7 @@ def get_tmp_root():
     if _tmp_root is None:
         config = spack.config.get_config('config')
         candidates = config['build_stage']
-        if isinstance(candidates, basestring):
+        if isinstance(candidates, string_types):
             candidates = [candidates]
 
         path = _first_accessible_path(candidates)
@@ -188,7 +189,7 @@ class Stage(object):
         """
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
-        if isinstance(url_or_fetch_strategy, basestring):
+        if isinstance(url_or_fetch_strategy, string_types):
             self.fetcher = fs.from_url(url_or_fetch_strategy)
         elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
@@ -548,7 +549,7 @@ class ResourceStage(Stage):
         if not isinstance(placement, dict):
             placement = {'': placement}
         # Make the paths in the dictionary absolute and link
-        for key, value in placement.iteritems():
+        for key, value in iteritems(placement):
             target_path = join_path(
                 root_stage.source_path, resource.destination)
             destination_path = join_path(target_path, value)
@@ -661,7 +662,7 @@ class DIYStage(object):
 def _get_mirrors():
     """Get mirrors from spack configuration."""
     config = spack.config.get_config('mirrors')
-    return [val for name, val in config.iteritems()]
+    return [val for name, val in iteritems(config)]
 
 
 def ensure_access(file=spack.stage_path):

@@ -27,6 +27,7 @@ import re
 import functools
 import collections
 import inspect
+from six import string_types
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
@@ -80,7 +81,7 @@ def index_by(objects, *funcs):
         return objects
 
     f = funcs[0]
-    if isinstance(f, basestring):
+    if isinstance(f, str):
         f = lambda x: getattr(x, funcs[0])
     elif isinstance(f, tuple):
         f = lambda x: tuple(getattr(x, p) for p in funcs[0])
@@ -326,7 +327,7 @@ def match_predicate(*args):
     """
     def match(string):
         for arg in args:
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 if re.search(arg, string):
                     return True
             elif isinstance(arg, list) or isinstance(arg, tuple):

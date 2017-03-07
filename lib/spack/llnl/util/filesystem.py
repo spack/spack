@@ -175,9 +175,9 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
 def set_install_permissions(path):
     """Set appropriate permissions on the installed file."""
     if os.path.isdir(path):
-        os.chmod(path, 0755)
+        os.chmod(path, 0o755)
     else:
-        os.chmod(path, 0644)
+        os.chmod(path, 0o644)
 
 
 def copy_mode(src, dest):
