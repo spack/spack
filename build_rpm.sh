@@ -19,11 +19,13 @@ mpis=(
     openmpi@2.0.2
     mvapich2@2.2
     mpich@3.2
-    intel-parallel-studio@cluster.2017
+    intel-parallel-studio@cluster.2017+mpi
 )
 
 mpipkgs=(
-  fftw
+  fftw+mpi
+  mdtest
+  simul
 )
 
 icc='%intel@17'
@@ -52,16 +54,18 @@ for compiler in "${compilers[@]}"
 do
 	for mpi in "${mpis[@]}"
 	do
-		s $mpi $compiler
+		if [[ $mpi != "intel"* ]]; then
+			s $mpi $compiler
+		fi
+
 		for pkg in "${mpipkgs[@]}"
 		do
 			if [[ $mpi == "mvapich2"* ]]; then
-				s $pkg$compiler +mpi ^$mpi+debug
+				s $pkg$compiler ^$mpi+debug
 			elif [[ $mpi == "intel"* ]]; then
-				echo ">>> Debug"
-				s $pkg$icc +mpi ^$mpi
+				s $pkg$icc ^$mpi
 			else
-				s $pkg$compiler +mpi ^$mpi
+				s $pkg$compiler ^$mpi
 			fi
 		done
 	done
@@ -70,7 +74,5 @@ done
 # Other packages
 s sga %intel@17
 s sga %gcc@5
-s mdtest %gcc ^openmpi
-s simul %gcc ^openmpi
 s anaconda2 %gcc
 s anaconda3 %gcc
