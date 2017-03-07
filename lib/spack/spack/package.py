@@ -1058,6 +1058,8 @@ class PackageBase(object):
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
         mkdirp(self.prefix.man1)
+        packages_dir = spack.store.layout.build_packages_path(self.spec)
+        dump_packages(self.spec, packages_dir)
 
     def _if_make_target_execute(self, target):
         try:
@@ -1816,7 +1818,7 @@ def dump_packages(spec, path):
     # Note that we copy them in as they are in the *install* directory
     # NOT as they are in the repository, because we want a snapshot of
     # how *this* particular build was done.
-    for node in spec.traverse():
+    for node in spec.traverse(deptype=spack.alldeps):
         if node is not spec:
             # Locate the dependency package in the install tree and find
             # its provenance information.
