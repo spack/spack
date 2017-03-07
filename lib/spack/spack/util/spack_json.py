@@ -68,6 +68,7 @@ def _byteify(data, ignore_dicts=False):
         return dict((_byteify(key, ignore_dicts=True),
                      _byteify(value, ignore_dicts=True)) for key, value in
                     iteritems(data))
+
     # if it's anything else, return it in its original form
     return data
 

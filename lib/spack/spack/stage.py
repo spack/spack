@@ -226,7 +226,7 @@ class Stage(object):
         self._lock = None
         if lock:
             if self.name not in Stage.stage_locks:
-                sha1 = hashlib.sha1(self.name).digest()
+                sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = join_path(spack.stage_path, '.lock')
 
