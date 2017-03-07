@@ -46,7 +46,6 @@ addons:
     packages:
       - gfortran
       - graphviz
-      - libyaml-dev
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
