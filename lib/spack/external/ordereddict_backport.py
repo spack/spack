@@ -8,7 +8,13 @@
 try:
     from thread import get_ident as _get_ident
 except ImportError:
-    from dummy_thread import get_ident as _get_ident
+    try:
+        from dummy_thread import get_ident as _get_ident
+    except ImportError:
+        try:
+            from _dummy_thread import get_ident as _get_ident
+        except ImportError:
+            from threading import get_ident as _get_ident  # nopyqver
 
 try:
     from _abcoll import KeysView, ValuesView, ItemsView

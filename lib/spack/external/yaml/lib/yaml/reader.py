@@ -56,7 +56,8 @@ class Reader(object):
 
     # Yeah, it's ugly and slow.
 
-    def __init__(self, stream, name=None):
+    def __init__(self, stream):
+        self.name = None
         self.stream = None
         self.stream_pointer = 0
         self.eof = True
@@ -69,16 +70,16 @@ class Reader(object):
         self.line = 0
         self.column = 0
         if isinstance(stream, unicode):
-            self.name = "<unicode string>" if name is None else name
+            self.name = "<unicode string>"
             self.check_printable(stream)
             self.buffer = stream+u'\0'
         elif isinstance(stream, str):
-            self.name = "<string>" if name is None else name
+            self.name = "<string>"
             self.raw_buffer = stream
             self.determine_encoding()
         else:
             self.stream = stream
-            self.name = getattr(stream, 'name', "<file>") if name is None else name
+            self.name = getattr(stream, 'name', "<file>")
             self.eof = False
             self.raw_buffer = ''
             self.determine_encoding()

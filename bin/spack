@@ -46,6 +46,13 @@ sys.path.insert(0, SPACK_LIB_PATH)
 SPACK_EXTERNAL_LIBS = os.path.join(SPACK_LIB_PATH, "external")
 sys.path.insert(0, SPACK_EXTERNAL_LIBS)
 
+# Handle vendoring of YAML specially, as it has two versions.
+if sys.version_info[0] == 2:
+    SPACK_YAML_LIBS = os.path.join(SPACK_EXTERNAL_LIBS, "yaml/lib")
+else:
+    SPACK_YAML_LIBS = os.path.join(SPACK_EXTERNAL_LIBS, "yaml/lib3")
+sys.path.insert(0, SPACK_YAML_LIBS)
+
 # Quick and dirty check to clean orphaned .pyc files left over from
 # previous revisions.  These files were present in earlier versions of
 # Spack, were removed, but shadow system modules that Spack still
