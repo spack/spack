@@ -27,9 +27,9 @@
 from __future__ import print_function
 
 import sys
-if (sys.version_info[0] > 2) or (sys.version_info[:2] < (2, 6)):
+if sys.version_info[:2] < (2, 6):
     v_info = sys.version_info[:3]
-    sys.exit("Spack requires Python 2.6 or 2.7. "
+    sys.exit("Spack requires Python 2.6 or higher."
              "This is Python %d.%d.%d." % v_info)
 
 import os

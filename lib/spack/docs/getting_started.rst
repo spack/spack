@@ -11,7 +11,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2.6 or 2.7
+1. Python 2 (2.6 or 2.7) or 3 (3.3 - 3.6)
 2. A C/C++ compiler
 3. The ``git`` and ``curl`` commands.
 
