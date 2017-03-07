@@ -310,7 +310,7 @@ class EnvironmentModifications(object):
         proc.wait()
         if proc.returncode != 0:
             raise RuntimeError('sourcing files returned a non-zero exit code')
-        output = ''.join([line for line in proc.stdout])
+        output = ''.join([line.decode('utf-8') for line in proc.stdout])
 
         # Construct a dictionaries of the environment before and after
         # sourcing the files, so that we can diff them.
