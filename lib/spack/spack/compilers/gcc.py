@@ -42,6 +42,9 @@ class Gcc(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['gfortran']
 
+    # Possible module names
+    module_names = ['gcc']
+
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.

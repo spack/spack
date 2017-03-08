@@ -38,6 +38,9 @@ class Nag(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['nagfor']
 
+    # Possible module names
+    module_names = ['nag']
+
     # Named wrapper links within spack.build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {

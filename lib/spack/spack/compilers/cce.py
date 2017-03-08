@@ -39,6 +39,9 @@ class Cce(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ftn']
 
+    # Possible module names
+    module_names = ['cce']
+
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r'-mp-\d\.\d']
 

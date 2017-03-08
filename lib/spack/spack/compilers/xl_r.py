@@ -42,6 +42,9 @@ class XlR(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['xlf90_r', 'xlf95_r', 'xlf2003_r', 'xlf2008_r']
 
+    # Possible module names
+    module_names = ['xl_r']
+
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'xl_r/xlc_r',
                   'cxx': 'xl_r/xlc++_r',

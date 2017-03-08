@@ -38,6 +38,9 @@ class Pgi(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
+    # Possible module names
+    module_names = ['pgi']
+
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'pgi/pgcc',
                   'cxx': 'pgi/pgc++',

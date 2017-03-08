@@ -83,6 +83,9 @@ class Compiler(object):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = []
 
+    # possible module names
+    module_names = []
+
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains, e.g. 'powerpc-bgq-linux-'
     prefixes = []
