@@ -44,6 +44,7 @@ class Udunits2(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('pkg-config', type='build')
+    depends_on('texinfo', type='build')
 
     def autoreconf(self, spec, prefix):
         # Work around autogen.sh oddities
