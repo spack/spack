@@ -50,7 +50,6 @@ class PkgConfig(Package):
         spack_env.prepend_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
         spack_env.prepend_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")
 
-
     def install(self, spec, prefix):
         args = ["--prefix={0}".format(prefix),
                 "--enable-shared"]
