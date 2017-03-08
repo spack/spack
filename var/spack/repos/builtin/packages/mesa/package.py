@@ -47,10 +47,11 @@ class Mesa(AutotoolsPackage):
     variant('gallium', default=False, description="compile with gallium llvm sw rendering")
     variant('drm', default=True, description="compile with drm")
 
-    depends_on("llvm@3.0", when='@8.0.5~gallium')
+    #depends_on("llvm@3.0", when='@8.0.5~gallium')
     depends_on("libxml2+python", when='@8.0.5~gallium') #
-    depends_on("llvm+link_dylib+utils", when='@9:+gallium')
+    #depends_on("llvm+link_dylib+utils", when='@9:+gallium')
     # depends_on("llvm+shared_libs", when='@9:+gallium')
+    depends_on('llvm', when='+gallium')
 
     # For DRI and hardware acceleration
     depends_on('libpthread-stubs')
