@@ -334,14 +334,14 @@ def set_build_environment_variables(pkg, env, dirty=False):
 
     # Add all bin directories which build dependencies and their
     # run dependencies require.
-    for bdep in [ d for d in pkg.spec.dependencies(deptype='build') ]:
+    for bdep in pkg.spec.dependencies(deptype='build'):
         add_dir_to_list("%s/bin" % bdep.prefix, bin_dirs)
         for brdep in bdep.traverse(root=False, deptype='run'):
             add_dir_to_list("%s/bin" % brdep.prefix, bin_dirs)
 
     # Add all bin directories which run dependencies require.
-    for d in pkg.spec.traverse(root=False, deptype='run'):
-        add_dir_to_list("%s/bin" % d.prefix, bin_dirs)
+    for rdep in pkg.spec.traverse(root=False, deptype='run'):
+        add_dir_to_list("%s/bin" % rdep.prefix, bin_dirs)
 
     bin_dirs = filter_system_bin_paths(bin_dirs)
 
