@@ -497,7 +497,7 @@ class Python(AutotoolsPackage):
 
         setup_py('install', '--prefix={0}'.format(prefix))"""
 
-        module.python = self.python()
+        module.python = self.python
         module.setup_py = Executable(
             self.executable + ' setup.py --no-user-cfg')
 
