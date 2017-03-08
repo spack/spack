@@ -283,9 +283,12 @@ class OperatingSystem(object):
         # NOTE: we import spack.compilers here to avoid init order cycles
         import spack.compilers
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(lambda cmp_cls:
-                                self.find_compiler(cmp_cls, *filtered_path),
-                                types)
+
+        # We cannot use parmap here because some version searches depend
+        # on the environment for things such as locations of license files
+        compiler_lists = []
+        for single_type in types:
+            compiler_lists.append(self.find_compiler(single_type, *filtered_path))
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
@@ -303,6 +306,8 @@ class OperatingSystem(object):
            prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
            be grouped with g++-mp-4.7 and gfortran-mp-4.7.
         """
+        # We can use parmap here because path search doesn't depend
+        # on env.
         dicts = parmap(
             lambda t: cmp_cls._find_matches_in_path(*t),
             [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
@@ -349,9 +354,24 @@ class OperatingSystem(object):
                     'avail', module_name, output=str, error=str)
                 version_regex = r'(%s)/([\d\.]+[\d])' % module_name
                 matches = re.findall(version_regex, output)
+
                 for name, version in matches:
+                    mod_name = "%s/%s" % (name, version)
+                    tty.debug("Found %s" % (mod_name))
+
+                    # check for conflicts and load required module
+                    # This allows the compiler to find license files
+                    # if need be.
+                    text = modulecmd('show', mod_name, output=str, error=str).split()
+                    for i, word in enumerate(text):
+                        if word == 'conflict':
+                            modulecmd('unload', text[i + 1], output=str, error=str)
+                            tty.debug("Removed module %s" % mod_name)
+                    modulecmd('load', mod_name, output=str, error=str)
+                    tty.debug("Loaded module %s" % mod_name)
+
                     v = version
-                    # Fetch paths
+                    # Fetch paths to search for compilers from the module
                     paths = []
                     text = modulecmd(
                         'show', (name + '/' + v),
@@ -359,7 +379,10 @@ class OperatingSystem(object):
                     for i, word in enumerate(text):
                         if len(re.findall('path', word)) != 0:
                             paths.append(text[i+2])
+
                     # get compilers from paths
+                    # we can use parmap here because the appropriate module
+                    # has already been loaded.
                     dicts = parmap(
                         lambda t: cmp_cls._find_matches_in_path(*t),
                         [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(paths),
