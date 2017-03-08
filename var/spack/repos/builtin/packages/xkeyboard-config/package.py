@@ -40,6 +40,8 @@ class XkeyboardConfig(AutotoolsPackage):
     depends_on('libxslt', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('intltool@0.30:', type='build')
+    depends_on('perl-xml-parser', type='build')
+    depends_on('perl',type='build')
     depends_on('xproto@7.0.20:', type='build')
 
     # TODO: missing dependencies
