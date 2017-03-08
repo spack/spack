@@ -24,7 +24,6 @@
 ##############################################################################
 
 from spack import *
-import os
 
 
 class PlanckLikelihood(Package):
@@ -126,11 +125,11 @@ class PlanckLikelihood(Package):
         for dir in dirs:
             install_tree(dir, join_path(prefix, 'share', 'clik', dir))
 
-    def setup_dependent_environment(self, module, spec, dep_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         prefix = self.prefix
-        os.environ['CLIK_PATH'] = prefix
-        os.environ['CLIK_DATA'] = join_path(prefix, 'share', 'clik')
-        os.environ['CLIK_PLUGIN'] = 'rel2015'
+        spack_env.set('CLIK_PATH', prefix)
+        spack_env.set('CLIK_DATA', join_path(prefix, 'share', 'clik'))
+        spack_env.set('CLIK_PLUGIN', 'rel2015')
 
     def setup_environment(self, spack_env, run_env):
         prefix = self.prefix
