@@ -161,9 +161,8 @@ class Python(AutotoolsPackage):
         self.sysconfigfilename = '_sysconfigdata.py'
         if spec.satisfies('@3.6:'):
             # Python 3.6.0 renamed the sys config file
-            python = Executable(self.executable)
             sc = 'import sysconfig; print(sysconfig._get_sysconfigdata_name())'
-            cf = python('-c', sc, output=str).strip()
+            cf = self.python('-c', sc, output=str).strip()
             self.sysconfigfilename = '{0}.py'.format(cf)
 
         self._save_distutil_vars(prefix)
@@ -345,14 +344,14 @@ class Python(AutotoolsPackage):
         # We need to be careful here. If the user is using an externally
         # installed python, all 3 executables could be in the same directory.
 
-        # Search for `python3` iff using Python 3
-        if (self.spec.satisfies('@3:') and
-                os.path.exists(os.path.join(self.prefix.bin, 'python3'))):
-            exe = 'python3'
         # Search for `python2` iff using Python 2
-        elif (self.spec.satisfies('@:2') and
+        if (self.spec.satisfies('@:2') and
                 os.path.exists(os.path.join(self.prefix.bin, 'python2'))):
             exe = 'python2'
+        # Search for `python3` iff using Python 3
+        elif (self.spec.satisfies('@3:') and
+                os.path.exists(os.path.join(self.prefix.bin, 'python3'))):
+            exe = 'python3'
         # If neither were found, try `python`
         elif os.path.exists(os.path.join(self.prefix.bin, 'python')):
             exe = 'python'
@@ -364,7 +363,51 @@ class Python(AutotoolsPackage):
         # with Homebrew. Since some packages try to determine the
         # location of libraries and headers based on the path,
         # return the realpath
-        return os.path.realpath(join_path(self.prefix.bin, exe))
+        return os.path.realpath(os.path.join(self.prefix.bin, exe))
+
+    def python(self):
+        """Returns the Python executable."""
+
+        return Executable(self.executable)
+
+    def print(self, string):
+        """Returns the appropriate print string depending on the
+        version of Python.
+
+        Examples:
+
+        * Python 2
+
+          >>> self.print('sys.prefix')
+          'print sys.prefix'
+
+        * Python 3
+
+          >>> self.print('sys.prefix')
+          'print(sys.prefix)'
+        """
+        if self.spec.satisfies('@:2'):
+            return 'print {0}'.format(string)
+        else:
+            return 'print({0})'.format(string)
+
+    def get_config_var(self, key):
+        """Returns the value of a single variable. Wrapper around
+        ``distutils.sysconfig.get_config_var()``."""
+
+        cmd = 'from distutils.sysconfig import get_config_var; '
+        cmd += self.print("get_config_var('{0}')".format(key))
+
+        return self.python('-c', cmd, output=str)
+
+    def get_config_h_filename(self):
+        """Returns the full path name of the configuration header.
+        Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
+
+        cmd = 'from distutils.sysconfig import get_config_h_filename; '
+        cmd += self.print('get_config_h_filename()')
+
+        return self.python('-c', cmd, output=str)
 
     @property
     def home(self):
@@ -377,58 +420,41 @@ class Python(AutotoolsPackage):
         ``packages.yaml`` unknowingly. Query the python executable to
         determine exactly where it is installed."""
 
-        if self.spec.satisfies('@:2'):
-            print_statement = 'print sys.prefix'
-        else:
-            print_statement = 'print(sys.prefix)'
-
-        python = Executable(self.executable)
-        prefix = python('-c', 'import sys; {0}'.format(print_statement),
-                        output=str)
-
+        prefix = self.get_config_var('prefix')
         return Prefix(prefix)
 
     @property
     def libs(self):
-        libname = 'libpython{0}'.format(self.version.up_to(2))
-
-        # In Python 3, libraries have an 'm' at the end
-        if self.spec.satisfies('@3:'):
-            libname += 'm'
-
         # Spack installs libraries into lib, except on openSUSE where it
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
-        # to search both directories.
-        for directory in ['lib64', 'lib']:
-            root = join_path(self.home, directory)
+        # to ask Python where its LIBDIR is.
+        libdir = self.get_config_var('LIBDIR')
 
-            # Prefer shared libraries
-            for shared in [True, False]:
-                libs = find_libraries(libname, root=root, shared=shared)
+        # We don't know ahead of time whether shared or static libraries
+        # were built, so check for presence of both.
+        library   = self.get_config_var('LIBRARY')
+        ldlibrary = self.get_config_var('LDLIBRARY')
 
-                if libs:
-                    return libs
-
-        msg = 'Cannot locate python libraries in {0}/lib64 or {0}/lib'
-        raise RuntimeError(msg.format(self.home))
+        # Prefer shared libraries
+        if os.path.exists(os.path.join(libdir, ldlibrary)):
+            return LibraryList(os.path.join(libdir, ldlibrary))
+        elif os.path.exists(os.path.join(libdir, library)):
+            return LibraryList(os.path.join(libdir, library))
+        else:
+            msg = 'Cannot locate python libraries in {0}'
+            raise RuntimeError(msg.format(libdir))
 
     @property
     def headers(self):
-        pythonver = 'python{0}'.format(self.version.up_to(2))
+        config_h = self.get_config_h_filename()
 
-        # In Python 3, the include directory has an 'm' at the end
-        if self.spec.satisfies('@3:'):
-            pythonver += 'm'
-
-        root = join_path(self.home, 'include', pythonver)
-        headers = find_headers('*.h', root=root)
-
-        if headers:
-            return headers
-
-        msg = 'Cannot locate python headers in {0}'
-        raise RuntimeError(msg.format(root))
+        if os.path.exists(config_h):
+            return HeaderList(config_h)
+        else:
+            includepy = self.get_config_var('INCLUDEPY')
+            msg = 'Cannot locate python headers in {0}'
+            raise RuntimeError(msg.format(includepy))
 
     @property
     def python_lib_dir(self):
@@ -471,7 +497,7 @@ class Python(AutotoolsPackage):
 
         setup_py('install', '--prefix={0}'.format(prefix))"""
 
-        module.python = Executable(self.executable)
+        module.python = self.python()
         module.setup_py = Executable(
             self.executable + ' setup.py --no-user-cfg')
 
