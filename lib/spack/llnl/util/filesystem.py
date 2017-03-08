@@ -530,7 +530,7 @@ def find(root, files, recurse=True):
         if True descends top-down from the root
 
     :returns: The files that have been found
-    :rtype: list
+    :rtype: :func:`list`
     """
     if isinstance(files, str):
         files = [files]

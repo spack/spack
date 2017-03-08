@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from glob import glob
 
 
 class Opencv(Package):
@@ -166,8 +165,6 @@ class Opencv(Package):
 
         # Python
         if '+python' in spec:
-            python = spec['python']
-
             python_exe = spec['python'].executable
             python_lib = spec['python'].libs[0]
             python_include_dir = spec['python'].headers.directories[0]

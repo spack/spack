@@ -370,7 +370,7 @@ class Python(AutotoolsPackage):
 
         return Executable(self.executable)
 
-    def print(self, string):
+    def print_string(self, string):
         """Returns the appropriate print string depending on the
         version of Python.
 
@@ -378,12 +378,12 @@ class Python(AutotoolsPackage):
 
         * Python 2
 
-          >>> self.print('sys.prefix')
+          >>> self.print_string('sys.prefix')
           'print sys.prefix'
 
         * Python 3
 
-          >>> self.print('sys.prefix')
+          >>> self.print_string('sys.prefix')
           'print(sys.prefix)'
         """
         if self.spec.satisfies('@:2'):
@@ -396,7 +396,7 @@ class Python(AutotoolsPackage):
         ``distutils.sysconfig.get_config_var()``."""
 
         cmd = 'from distutils.sysconfig import get_config_var; '
-        cmd += self.print("get_config_var('{0}')".format(key))
+        cmd += self.print_string("get_config_var('{0}')".format(key))
 
         return self.python('-c', cmd, output=str)
 
@@ -405,7 +405,7 @@ class Python(AutotoolsPackage):
         Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
 
         cmd = 'from distutils.sysconfig import get_config_h_filename; '
-        cmd += self.print('get_config_h_filename()')
+        cmd += self.print_string('get_config_h_filename()')
 
         return self.python('-c', cmd, output=str)
 
