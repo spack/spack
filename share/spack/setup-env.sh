@@ -220,14 +220,14 @@ fi;
 # build and make available environment-modules
 #
 if [ "${need_module}" = "yes" ]; then
-	#check if environment-modules~X is installed
-	module_prefix=`spack location -i environment-modules~X 2>&1`
-	if [ $? -eq 0 ]; then
-		#activate it!
-		export MODULE_PREFIX=${module_prefix}
-		module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
-	fi;
-
+    #check if environment-modules~X is installed
+    module_prefix=`spack location -i environment-modules~X 2>&1`
+    if [ $? -eq 0 ]; then
+        #activate it!
+        export MODULE_PREFIX=${module_prefix}
+        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
+        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+    fi;
 fi;
 
 #
