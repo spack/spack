@@ -79,7 +79,7 @@ class Elemental(CMakePackage):
     depends_on('python@:2.8', when='+python')
 
     @property
-    def elemental_libs(self):
+    def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
             'libEl', root=self.prefix, shared=shared, recurse=True
