@@ -91,7 +91,6 @@ SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
-_modulecmd = None
 
 
 class MakeExecutable(Executable):
@@ -119,22 +118,14 @@ class MakeExecutable(Executable):
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
-def get_modulecmd():
-    """Create the modulecmd executable with default args"""
-    global _modulecmd
-    if not _modulecmd:
-        _modulecmd = which("modulecmd", required=True)
-        _modulecmd.add_default_arg("python")
-    return _modulecmd
 
-def unload_module(mod):
+def unload_module(mod, modulecmd):
     """Similar to load module, it takes a name and removes the module
     from the environment"""
-
-    modulecmd = get_modulecmd()
     exec(compile(modulecmd("unload", mod, output=str, error=str), "<string>",
         "exec"))
     tty.debug("Unloaded %s module" % mod)
+
 
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
@@ -142,7 +133,8 @@ def load_module(mod):
     modulecmd implementation of modules used in cray and lmod.
     """
     # Create an executable of the module command that will output python code
-    modulecmd = get_modulecmd()
+    modulecmd = which("modulecmd")
+    modulecmd.add_default_arg("python")
 
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
@@ -151,7 +143,7 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            unload_module(text[i + 1])
+            unload_module(text[i + 1], modulecmd)
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))

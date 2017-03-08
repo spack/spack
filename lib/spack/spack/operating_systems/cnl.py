@@ -25,7 +25,6 @@
 import re
 
 from spack.architecture import OperatingSystem
-from spack.build_environment import get_modulecmd
 from spack.util.executable import *
 import spack.spec
 import spack.version
@@ -42,7 +41,8 @@ class Cnl(OperatingSystem):
     """
 
     def detect_crayos_version(self):
-        modulecmd = get_modulecmd()
+        modulecmd = which("modulecmd")
+        modulecmd.add_default_arg("python")
         output = modulecmd("avail", "PrgEnv-gnu", output=str, error=str)
         matches = re.findall(r'PrgEnv-gnu/(\d+).\d+.\d+', output)
         version_set = set(matches)
@@ -73,7 +73,8 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = get_modulecmd()
+            modulecmd = which("modulecmd")
+            modulecmd.add_default_arg("python")
 
             output = modulecmd(
                 'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
