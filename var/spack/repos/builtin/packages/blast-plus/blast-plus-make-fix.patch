@@ -1,0 +1,16 @@
+--- ncbi-blast-2.6.0+-src/c++/src/build-system/Makefile.in.top	2014-11-12 08:41:55.000000000 -0800
++++ ncbi-blast-2.6.0+-src/c++/src/build-system/Makefile.in.top.fix	2017-02-13 15:38:12.345561000 -0800
+@@ -49,9 +49,10 @@
+ 	    for x in *.a; do \
+ 	        $(LN_S) "$$x" "`$(BASENAME) \"$$x\" .a`-static.a"; \
+ 	    done
+-	cd $(includedir0) && find * -name CVS -prune -o -print |\
+-            cpio -pd $(pincludedir)
+-	$(INSTALL) -m 644 $(incdir)/* $(pincludedir)
++	for d in $(includedir0) $(incdir); do \
++		cd $$d && find * -name .svn prune -o -print | \
++			cpio -pd $(pincludedir); \
++	done
+ ## set up appropriate build and status directories somewhere under $(libdir)?
+ 
+ install-gbench:
