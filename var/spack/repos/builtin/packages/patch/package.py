@@ -35,3 +35,5 @@ class Patch(AutotoolsPackage):
     url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.5.tar.xz"
 
     version('2.7.5', 'e3da7940431633fb65a01b91d3b7a27a')
+
+    build_directory = 'spack-build'
