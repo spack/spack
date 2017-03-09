@@ -64,8 +64,7 @@ class BlastPlus(Package):
                        "--with-mt",
                        "--with-64",
                        "--without-debug",
-                       "--with-optimization",
-                       "LDFLAGS=-static"]
+                       "--with-optimization"]
 
         if "+static" in spec:
             config_args.append("--with-static")
