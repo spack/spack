@@ -102,6 +102,7 @@ import ctypes
 import hashlib
 import itertools
 from operator import attrgetter
+import os
 
 import cStringIO
 import llnl.util.tty as tty
@@ -114,7 +115,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from cStringIO import StringIO
-from llnl.util.filesystem import find_libraries
+from llnl.util.filesystem import find, find_headers, find_libraries
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
@@ -753,10 +754,49 @@ class DependencyMap(HashableMap):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
 
 
+def _executable_default_handler(descriptor, spec, cls):
+    """Default handler when looks for 'executable' attribute. The default
+    tries to search for {spec.name} in the ``spec.prefix.bin`` directory.
+
+    :param ForwardQueryToPackage descriptor: descriptor that triggered
+        the call
+    :param Spec spec: spec that is being queried
+    :param type(spec) cls: type of spec, to match the signature of the
+        descriptor `__get__` method
+    """
+    exe = os.path.join(spec.prefix.bin, spec.name)
+
+    if os.path.isfile(exe) and os.access(exe, os.X_OK):
+        return exe
+    else:
+        msg = 'Unable to locate {0} executable in {1}'
+        raise RuntimeError(msg.format(spec.name, spec.prefix.bin))
+
+
+def _headers_default_handler(descriptor, spec, cls):
+    """Default handler when looking for 'headers' attribute. The default
+    tries to search for ``*.h`` files recursively starting from
+    ``spec.prefix.include``.
+
+    :param ForwardQueryToPackage descriptor: descriptor that triggered
+        the call
+    :param Spec spec: spec that is being queried
+    :param type(spec) cls: type of spec, to match the signature of the
+        descriptor `__get__` method
+    """
+    headers = find_headers('*', root=spec.prefix.include, recurse=True)
+
+    if headers:
+        return headers
+    else:
+        msg = 'Unable to locate {0} headers in {1}'
+        raise RuntimeError(msg.format(spec.name, spec.prefix.include))
+
+
 def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for 'libs' attribute. The default
     tries to search for 'lib{spec.name}' recursively starting from
-    `spec.prefix`.
+    ``spec.prefix``.
 
     :param ForwardQueryToPackage descriptor: descriptor that triggered
         the call
@@ -766,22 +806,32 @@ def _libs_default_handler(descriptor, spec, cls):
     """
     name = 'lib' + spec.name
     shared = '+shared' in spec
-    return find_libraries(
-        name, root=spec.prefix, shared=shared, recurse=True
-    )
 
+    if '+shared' in spec:
+        libs = find_libraries(
+            name, root=spec.prefix, shared=True, recurse=True
+        )
+    elif '~shared' in spec:
+        libs = find_libraries(
+            name, root=spec.prefix, shared=False, recurse=True
+        )
+    else:
+        # Prefer shared
+        libs = find_libraries(
+            name, root=spec.prefix, shared=True, recurse=True
+        )
+        if libs:
+            return libs
 
-def _cppflags_default_handler(descriptor, spec, cls):
-    """Default handler when looking for cppflags attribute. The default
-    just returns '-I{spec.prefix.include}'.
+        libs = find_libraries(
+            name, root=spec.prefix, shared=False, recurse=True
+        )
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
-    """
-    return '-I' + spec.prefix.include
+    if libs:
+        return libs
+    else:
+        msg = 'Unable to recursively locate {0} libraries in {1}'
+        raise RuntimeError(msg.format(spec.name, spec.prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -807,7 +857,7 @@ class ForwardQueryToPackage(object):
         """Retrieves the property from Package using a well defined chain
         of responsibility.
 
-        The order of call is :
+        The order of call is:
 
         1. if the query was through the name of a virtual package try to
             search for the attribute `{virtual_name}_{attribute_name}`
@@ -877,15 +927,19 @@ class ForwardQueryToPackage(object):
 
 
 class SpecBuildInterface(ObjectWrapper):
+    executable = ForwardQueryToPackage(
+        'executable',
+        default_handler=_executable_default_handler
+    )
+
+    headers = ForwardQueryToPackage(
+        'headers',
+        default_handler=_headers_default_handler
+    )
 
     libs = ForwardQueryToPackage(
         'libs',
         default_handler=_libs_default_handler
-    )
-
-    cppflags = ForwardQueryToPackage(
-        'cppflags',
-        default_handler=_cppflags_default_handler
     )
 
     def __init__(self, spec, name, query_parameters):

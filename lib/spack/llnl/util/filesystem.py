@@ -574,6 +574,9 @@ class FileList(collections.Sequence):
     """
 
     def __init__(self, files):
+        if isinstance(files, str):
+            files = [files]
+
         self.files = list(dedupe(files))
 
     @property

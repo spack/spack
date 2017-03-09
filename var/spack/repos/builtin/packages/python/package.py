@@ -356,8 +356,8 @@ class Python(AutotoolsPackage):
         elif os.path.exists(os.path.join(self.prefix.bin, 'python')):
             exe = 'python'
         else:
-            msg = 'Cannot locate python executable in {0}'
-            raise RuntimeError(msg.format(self.prefix.bin))
+            msg = 'Unable to locate {0} executable in {1}'
+            raise RuntimeError(msg.format(self.name, self.prefix.bin))
 
         # The python executable may be a symlink if it was installed
         # with Homebrew. Since some packages try to determine the
@@ -443,8 +443,8 @@ class Python(AutotoolsPackage):
         elif os.path.exists(os.path.join(libdir, library)):
             return LibraryList(os.path.join(libdir, library))
         else:
-            msg = 'Cannot locate python libraries in {0}'
-            raise RuntimeError(msg.format(libdir))
+            msg = 'Unable to locate {0} libraries in {1}'
+            raise RuntimeError(msg.format(self.name, libdir))
 
     @property
     def headers(self):
@@ -454,8 +454,8 @@ class Python(AutotoolsPackage):
             return HeaderList(config_h)
         else:
             includepy = self.get_config_var('INCLUDEPY')
-            msg = 'Cannot locate python headers in {0}'
-            raise RuntimeError(msg.format(includepy))
+            msg = 'Unable to locate {0} headers in {1}'
+            raise RuntimeError(msg.format(self.name, includepy))
 
     @property
     def python_lib_dir(self):
