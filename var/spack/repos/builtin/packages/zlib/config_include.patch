@@ -1,0 +1,29 @@
+diff --git a/configure b/configure
+index e974d1f..c9b201b 100755
+--- a/configure
++++ b/configure
+@@ -20,15 +20,15 @@ date >> configure.log
+ 
+ # get source directory
+ SRCDIR=`dirname $0`
+-if test $SRCDIR = "."; then
+-    ZINC=""
+-    ZINCOUT="-I."
+-    SRCDIR=""
+-else
+-    ZINC='-include zconf.h'
+-    ZINCOUT='-I. -I$(SRCDIR)'
+-    SRCDIR="$SRCDIR/"
+-fi
++#if test $SRCDIR = "."; then
++ZINC=""
++ZINCOUT="-I."
++SRCDIR=""
++#else
++#    ZINC='-include zconf.h'
++#    ZINCOUT='-I. -I$(SRCDIR)'
++#    SRCDIR="$SRCDIR/"
++#fi
+ 
+ # set command prefix for cross-compilation
+ if [ -n "${CHOST}" ]; then
