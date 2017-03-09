@@ -33,8 +33,10 @@ class PyPathos(PythonPackage):
 
     version('0.2.0', '7a840ce6c3a67d71e6ad7339034ec53e')
 
+    depends_on('python@2.6:2.8,3.1:')
+
     depends_on('py-setuptools@0.6:', type='build')
-    depends_on('py-multiprocess@0.70.5:', type=('build', 'run'))
-    depends_on('py-pox@0.2.3:', type=('build', 'run'))
-    depends_on('py-ppft@1.6.4.7.1:', type=('build', 'run'))
-    depends_on('py-dill@0.2.6:', type=('build', 'run'))
+    depends_on('py-multiprocess@0.70.4:', type=('build', 'run'))
+    depends_on('py-pox@0.2.2:', type=('build', 'run'))
+    depends_on('py-ppft@1.6.4.5:', type=('build', 'run'))
+    depends_on('py-dill@0.2.5:', type=('build', 'run'))
