@@ -37,7 +37,7 @@ class Libelf(AutotoolsPackage):
     version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
     version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
 
-    provides('elf')
+    provides('elf@0')
 
     def configure_args(self):
         args = ["--enable-shared",

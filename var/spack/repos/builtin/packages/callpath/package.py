@@ -35,7 +35,7 @@ class Callpath(Package):
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
-    depends_on("libelf")
+    depends_on("elf", type="link")
     depends_on("libdwarf")
     depends_on("dyninst")
     depends_on("adept-utils")
@@ -44,6 +44,9 @@ class Callpath(Package):
 
     def install(self, spec, prefix):
         # TODO: offer options for the walker used.
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
+        cmake_args = std_cmake_args
+        if spec.satisfies("^dyninst@9.3.0:"):
+            cmake_args.append("-DCMAKE_CXX_FLAGS='-std=c++11 -fpermissive'")
+        cmake('.', "-DCALLPATH_WALKER=dyninst", *cmake_args)
         make()
         make("install")

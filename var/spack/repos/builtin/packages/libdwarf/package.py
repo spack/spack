@@ -48,37 +48,54 @@ class Libdwarf(Package):
     version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
     version('20130207', '64b42692e947d5180e162e46c689dfbf')
     version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
-    depends_on("libelf")
+    depends_on("elf", type='link')
 
     parallel = False
 
     def install(self, spec, prefix):
-        # dwarf build does not set arguments for ar properly
-        make.add_default_arg('ARFLAGS=rcs')
 
-        # Dwarf doesn't provide an install, so we have to do it.
-        mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
+        # elfutils contains a dwarf.h that conflicts with libdwarf's
+        # TODO: we should remove this when we can modify the include order
+        hide_list = []
+        if spec.satisfies('^elfutils'):
+            dwarf_h = join_path(spec['elfutils'].prefix, 'include/dwarf.h')
+            hide_list.append(dwarf_h)
+        with hide_files(*hide_list):
+            # dwarf build does not set arguments for ar properly
+            make.add_default_arg('ARFLAGS=rcs')
 
-        with working_dir('libdwarf'):
-            configure("--prefix=" + prefix, "--enable-shared")
-            make()
+            # Dwarf doesn't provide an install, so we have to do it.
+            mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
 
-            install('libdwarf.a',  prefix.lib)
-            install('libdwarf.so', prefix.lib)
-            install('libdwarf.h',  prefix.include)
-            install('dwarf.h',     prefix.include)
+            with working_dir('libdwarf'):
+                extra_config_args = []
 
-        if spec.satisfies('@20130126:20130729'):
-            dwarfdump_dir = 'dwarfdump2'
-        else:
-            dwarfdump_dir = 'dwarfdump'
-        with working_dir(dwarfdump_dir):
-            configure("--prefix=" + prefix)
+                # this is to prevent picking up system /usr/include/libelf.h
+                if spec.satisfies('^libelf'):
+                    libelf_inc_dir = join_path(spec['libelf'].prefix,
+                                               'include/libelf')
+                    extra_config_args.append('CFLAGS=-I{0}'.format(
+                                             libelf_inc_dir))
+                configure("--prefix=" + prefix, "--enable-shared",
+                          *extra_config_args)
+                make()
 
-            # This makefile has strings of copy commands that
-            # cause a race in parallel
-            make(parallel=False)
+                install('libdwarf.a',  prefix.lib)
+                install('libdwarf.so', prefix.lib)
+                install('libdwarf.h',  prefix.include)
+                install('dwarf.h',     prefix.include)
 
-            install('dwarfdump',      prefix.bin)
-            install('dwarfdump.conf', prefix.lib)
-            install('dwarfdump.1',    prefix.man1)
+            if spec.satisfies('@20130126:20130729'):
+                dwarfdump_dir = 'dwarfdump2'
+            else:
+                dwarfdump_dir = 'dwarfdump'
+            with working_dir(dwarfdump_dir):
+                configure("--prefix=" + prefix)
+
+                # This makefile has strings of copy commands that
+                # cause a race in parallel
+                make(parallel=False)
+
+                install('dwarfdump',      prefix.bin)
+                install('dwarfdump.conf', prefix.lib)
+                install('dwarfdump.1',    prefix.man1)

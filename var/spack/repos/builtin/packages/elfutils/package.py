@@ -43,7 +43,7 @@ class Elfutils(AutotoolsPackage):
             git='git://git.fedorahosted.org/git/elfutils.git',
             tag='elfutils-0.163')
 
-    provides('elf')
+    provides('elf@1')
 
     def configure_args(self):
         return ['--enable-maintainer-mode']

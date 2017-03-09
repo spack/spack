@@ -60,7 +60,7 @@ class Openspeedshop(Package):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url      = "https://github.com/OpenSpeedShop"
+    url = "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
     version('2.3', branch='master',
@@ -115,6 +115,8 @@ class Openspeedshop(Package):
     depends_on("bison", type='build')
     depends_on("flex", type='build')
     depends_on("binutils@2.24+krellpatch", type='build')
+    # TODO: when using dyninst@9.3.0:, we will need to use elf
+    # depends_on("elf", type="link")
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
