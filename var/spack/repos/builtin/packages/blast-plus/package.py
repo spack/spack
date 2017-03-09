@@ -69,6 +69,7 @@ class BlastPlus(Package):
 
         if "+static" in spec:
             config_args.append("--with-static")
+            config_args.append("LDFLAGS=-static")
             if not spec.satisfies("platform=linux"):
                 config_args.append("--with-static-exe")
         else:
