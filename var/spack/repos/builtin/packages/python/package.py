@@ -365,6 +365,7 @@ class Python(AutotoolsPackage):
         # return the realpath
         return os.path.realpath(os.path.join(self.prefix.bin, exe))
 
+    @property
     def python(self):
         """Returns the Python executable."""
 
@@ -398,7 +399,7 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_var; '
         cmd += self.print_string("get_config_var('{0}')".format(key))
 
-        return self.python('-c', cmd, output=str)
+        return self.python('-c', cmd, output=str).strip()
 
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
@@ -407,7 +408,7 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_h_filename; '
         cmd += self.print_string('get_config_h_filename()')
 
-        return self.python('-c', cmd, output=str)
+        return self.python('-c', cmd, output=str).strip()
 
     @property
     def home(self):
