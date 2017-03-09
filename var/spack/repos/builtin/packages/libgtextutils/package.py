@@ -31,4 +31,5 @@ class Libgtextutils(AutotoolsPackage):
     homepage = "https://github.com/agordon/libgtextutils"
     url      = "https://github.com/agordon/libgtextutils/releases/download/0.7/libgtextutils-0.7.tar.gz"
 
+    patch('text_line_reader.patch')
     version('0.7', '593c7c62e3c76ec49f5736eed4f96806')
