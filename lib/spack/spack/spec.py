@@ -115,7 +115,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from cStringIO import StringIO
-from llnl.util.filesystem import find, find_headers, find_libraries
+from llnl.util.filesystem import find_headers, find_libraries
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
@@ -805,7 +805,6 @@ def _libs_default_handler(descriptor, spec, cls):
         descriptor `__get__` method
     """
     name = 'lib' + spec.name
-    shared = '+shared' in spec
 
     if '+shared' in spec:
         libs = find_libraries(

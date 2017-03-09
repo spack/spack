@@ -111,9 +111,6 @@ def test_default_queries(database):
     libraries = spec['zmpi'].libs
     assert len(libraries) == 1
 
-    cppflags_expected = '-I' + spec.prefix.include
-    assert spec['zmpi'].cppflags == cppflags_expected
-
 
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
