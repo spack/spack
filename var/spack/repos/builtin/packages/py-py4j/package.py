@@ -34,3 +34,5 @@ class PyPy4j(PythonPackage):
 
     version('0.10.4', 'de1ce072fb8d5bff8aba537b1700ace4')
     version('0.10.3', '6c86aebb4f1cdd4bf192b16c8a8fe8e4')
+
+    depends_on('py-setuptools', type='build')
