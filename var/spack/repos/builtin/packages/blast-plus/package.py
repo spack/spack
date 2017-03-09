@@ -27,7 +27,9 @@ from spack import *
 
 
 class BlastPlus(Package):
-    """FIXME: Put a proper description of your package here."""
+    """BLAST (Basic Local Alignment Search Tool) finds regions of similarity
+    between biological sequences. The program compares nucleotide or protein sequences
+    to sequence databases and calculates the statistical significance"""
 
     homepage = "http://ncbi.nlm.nih.gov/Blast.cgi"
 
