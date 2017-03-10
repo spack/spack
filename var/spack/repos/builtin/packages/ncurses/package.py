@@ -46,9 +46,6 @@ class Ncurses(AutotoolsPackage):
 
     def configure_args(self):
         opts = [
-            # The CPPFLAGS setting works around this bug:
-            # <http://stackoverflow.com/questions/37475222/ncurses-6-0-compilation-error-error-expected-before-int>
-            'CPPFLAGS=-P',
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
@@ -60,6 +57,13 @@ class Ncurses(AutotoolsPackage):
             '--enable-pc-files',
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
+
         if '+symlinks' in self.spec:
-            opts += ["--enable-symlinks"]
+            opts.append('--enable-symlinks')
+
+        # The CPPFLAGS setting works around this bug:
+        # <http://stackoverflow.com/questions/37475222/ncurses-6-0-compilation-error-error-expected-before-int>
+        if self.spec.satisfies('%gcc'):
+            opts.append('CPPFLAGS=-P')
+
         return opts
