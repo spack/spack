@@ -34,4 +34,4 @@ class PyLxml(PythonPackage):
 
     version('2.3', 'a245a015fd59b63e220005f263e1682a')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@0.6c5:', type='build')
