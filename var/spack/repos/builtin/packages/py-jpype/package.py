@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import platform
 
 
 class PyJpype(PythonPackage):
@@ -37,9 +36,9 @@ class PyJpype(PythonPackage):
     version('0.6.1', '468ca2d4b2cff7802138789e951d5d58')
     version('0.6.0', 'f0cbbe1d0c4b563f7e435d2bffc31736')
 
-    plt = platform.system().lower()
+    depends_on('python@2.6:')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
-    if not 'darwin' in plt:
-        depends_on('jdk', type=('build', 'run'))
+    depends_on('jdk', type=('build', 'run'))
+    # extra requirements
+    # depends_on('py-numpy@1.6:', type=('build', 'run'))
