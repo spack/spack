@@ -55,7 +55,10 @@ def config_get(args):
 
 def config_edit(args):
     if not args.scope:
-        args.scope = 'user'
+        if args.section == 'compilers':
+            args.scope = spack.cmd.default_modify_scope
+        else:
+            args.scope = 'user'
     if not args.section:
         args.section = None
     config_file = spack.config.get_config_filename(args.scope, args.section)

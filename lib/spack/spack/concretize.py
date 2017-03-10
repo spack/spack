@@ -315,7 +315,7 @@ class DefaultConcretizer(object):
         def _proper_compiler_style(cspec, aspec):
             return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
 
-        all_compilers = spack.compilers.all_compilers()
+        all_compilers = spack.compilers.all_compiler_specs()
 
         if (spec.compiler and
             spec.compiler.concrete and
