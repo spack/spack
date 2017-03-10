@@ -33,7 +33,7 @@ class PyPydot(PythonPackage):
 
     version('1.2.3', '5b50fd8cf022811d8718562ebc8aefb2')
     version('1.2.2', 'fad67d9798dbb33bb3dca3e6d4c47665')
-    # version('1.2.0', 'd60ac7abf544ea3651f5208a530921af') not in pypi.org
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pyparsing@2.1.4:', type=('build', 'run'))
+    depends_on('graphviz', type=('build', 'run'))
