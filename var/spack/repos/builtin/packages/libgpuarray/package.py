@@ -22,37 +22,36 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install libgpuarray
+#
+# You can edit this file again by typing:
+#
+#     spack edit libgpuarray
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
-class Jasper(AutotoolsPackage):
-    """Library for manipulating JPEG-2000 images"""
 
-    homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
-    url = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip"
+class Libgpuarray(CMakePackage):
+    """Make a common GPU ndarray(n dimensions array) that can be reused by all
+    projects that is as future proof as possible, while keeping it easy to use
+    for simple need/quick test."""
 
-    version('1.900.1', 'a342b2b4495b3e1394e161eb5d85d754')
+    homepage = "http://deeplearning.net/software/libgpuarray/"
+    url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
 
-    variant('shared', default=True,
-            description='Builds shared versions of the libraries')
-    variant('debug', default=False,
-            description='Builds debug versions of the libraries')
+    version('0.6.1', 'cfcd1b54447f9d55b05514df62c70ae2')
+    version('0.6.0', '98a4ec1b4c8f225f0b89c18b899a000b')
 
-    depends_on('libjpeg-turbo')
+    depends_on('cuda')
+    depends_on('python')
 
-    # Fixes a bug (still in upstream as of v.1.900.1) where an assertion fails
-    # when certain JPEG-2000 files with an alpha channel are processed
-    # see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=469786
-    patch('fix_alpha_channel_assert_fail.patch')
-
-    def configure_args(self):
-        spec = self.spec
-        args = ['--mandir={0}'.format(spec.prefix.man)]
-
-        if '+shared' in spec:
-            args.append('--enable-shared')
-
-        if '+debug' not in spec:
-            args.append('--disable-debug')
-
-        return args
+    extends('python')

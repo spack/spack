@@ -22,37 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
-class Jasper(AutotoolsPackage):
-    """Library for manipulating JPEG-2000 images"""
 
-    homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
-    url = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip"
+class PyKeras(PythonPackage):
+    """Keras is a high-level neural networks library, written in Python and 
+    capable of running on top of either TensorFlow or Theano. It was developed
+    with a focus on enabling fast experimentation. Being able to go from idea
+    to result with the least possible delay is key to doing good research."""
 
-    version('1.900.1', 'a342b2b4495b3e1394e161eb5d85d754')
+    homepage = "http://keras.io"
+    url      = "https://github.com/fchollet/keras/archive/1.2.2.tar.gz"
 
-    variant('shared', default=True,
-            description='Builds shared versions of the libraries')
-    variant('debug', default=False,
-            description='Builds debug versions of the libraries')
+    version('1.2.2', 'ed044936528c9818e95bef4c57187725')
+    version('1.2.1', 'd565724240f11913d70efb2d169c9708')
+    version('1.2.0', '5739309012b7450b80519d8fcb9b499e')
+    version('1.1.2', '5bbf8710be7e0ca5a5c3a1623111a164')
+    version('1.1.1', '8e912a380bf563f88b7aefc0cf18f390')
+    version('1.1.0', 'f554dff743ac331fb6c4b089b6f52799')
+    version('1.0.8', '46f2b12322a62658e4ff5ddf6aef526f')
+    version('1.0.7', 'fd9080b40654c43c8a986a22d35b792f')
+    version('1.0.6', 'f48b1fd85d927d58a2d297325b9a844c')
+    version('1.0.5', 'a13eecc0cdd031ad5e764c8649e5bb65')
 
-    depends_on('libjpeg-turbo')
+    depends_on('python')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-theano',     type=('build', 'run'))
 
-    # Fixes a bug (still in upstream as of v.1.900.1) where an assertion fails
-    # when certain JPEG-2000 files with an alpha channel are processed
-    # see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=469786
-    patch('fix_alpha_channel_assert_fail.patch')
-
-    def configure_args(self):
-        spec = self.spec
-        args = ['--mandir={0}'.format(spec.prefix.man)]
-
-        if '+shared' in spec:
-            args.append('--enable-shared')
-
-        if '+debug' not in spec:
-            args.append('--disable-debug')
-
-        return args
+    extends('python')
