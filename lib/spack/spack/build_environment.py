@@ -178,6 +178,7 @@ def get_path_from_module(mod):
             path = words[2]
             return path[:path.find('/lib')]
     # Unable to find module path
+    tty.warn("Was unable to the path for module %s" % mod)
     return None
 
 
