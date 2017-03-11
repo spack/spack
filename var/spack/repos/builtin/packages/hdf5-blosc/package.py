@@ -174,9 +174,9 @@ Done.
             with open("check.c", "w") as f:
                 f.write(source)
             if "+mpi" in spec["hdf5"]:
-                cc = which("mpicc")
+                cc = Executable(spec["mpi"].mpicc)
             else:
-                cc = which("cc")
+                cc = Executable(self.compiler.cc)
             # TODO: Automate these path and library settings
             cc("-c", "-I%s" % spec["hdf5"].prefix.include, "check.c")
             cc("-o", "check", "check.o",
