@@ -24,9 +24,11 @@
 ##############################################################################
 
 from spack import *
+from spack.package_test import *
+import os
 
 
-class Pocl(Package):
+class Pocl(CMakePackage):
     """Portable Computing Language (pocl) is an open source implementation
     of the OpenCL standard which can be easily adapted for new targets
     and devices, both for homogeneous CPU and heterogeneous
@@ -35,50 +37,72 @@ class Pocl(Package):
     homepage = "http://portablecl.org"
     url = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
 
+    version("master", git="https://github.com/pocl/pocl.git")
+    version("0.14-rc",
+            git="https://github.com/pocl/pocl.git", branch="release_0_14")
     version("0.13", "344480864d4269f2f63f1509395898bd")
     version("0.12", "e197ba3aa01a35f40581c48e053330dd")
     version("0.11", "9be0640cde2983062c47393d9e8e8fe7")
     version("0.10", "0096be4f595c7b5cbfa42430c8b3af6a")
-    version("0.9", "f95f4a9e7870854c60be2d2269c3ebec")
 
     # This is Github's pocl/pocl#373
-    patch("uint.patch")
-    patch("vecmathlib.patch")
+    patch("uint.patch", when="@:0.13")
+    patch("vecmathlib.patch", when="@:0.13")
 
+    depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
-    depends_on("libtool")       # yes, this is a run-time dependency
-    # We don't request LLVM's shared libraries because these fail to
-    # build for us; see #1616
+    # Yes, libtool is a run-time dependency
+    depends_on("libtool")
+    # We don't request LLVM's shared libraries because these are not
+    # enabled by default, and also because they fail to build for us
+    # (see #1616)
     depends_on("llvm +clang")
     depends_on("pkg-config", type="build")
 
+    # These are the supported LLVM versions
+    depends_on("llvm @3.7:3.9", when="@master")
+    depends_on("llvm @3.7:3.9", when="@0.14")
+    depends_on("llvm @3.7:3.8", when="@0.13")
+    depends_on("llvm @3.2:3.7", when="@0.12")
+    depends_on("llvm @3.2:3.6", when="@0.11")
+    depends_on("llvm @3.2:3.5", when="@0.10")
+
+    variant("distro", default=False,
+            description=("Support several CPU architectures, " +
+                         "suitable e.g. in a build that will be made " +
+                         "available for download"))
+    variant("icd", default=False,
+            description="Support a system-wide ICD loader")
+
+    def cmake_args(self):
+        spec = self.spec
+        args = ["-DINSTALL_OPENCL_HEADERS=ON"]
+        if "~shared" in spec["llvm"]:
+            args += ["-DSTATIC_LLVM"]
+        if "+distro" in spec:
+            args += ["-DKERNELLIB_HOST_CPU_VARIANTS=distro"]
+        args += ["-DENABLE_ICD=%s" % ("ON" if "+icd" in spec else "OFF")]
+        return args
+
     def install(self, spec, prefix):
-        llvm_config_path = join_path(spec["llvm"].prefix.bin, "llvm-config")
-        llvm_config = Executable(llvm_config_path)
-        llvm_libs = llvm_config("--libs", return_output=True).rstrip()
-        llvm_system_libs = (
-            llvm_config("--system-libs", return_output=True).rstrip())
+        with working_dir(self.build_directory):
+            make(*self.install_targets)
+            os.symlink("OpenCL", join_path(self.prefix.include, "CL"))
 
-        configure = Executable(join_path(self.stage.source_path, "configure"))
-
-        # Disable building examples and tests
-        filter_file(r"examples tests", "", "Makefile.in")
-
-        with working_dir("spack-build", create=True):
-            # Could switch to cmake build
-            configure(
-                "--prefix=%s" % prefix,
-                "--disable-icd", "--enable-direct-linkage",
-                # We use static linking againste the LLVM libraries
-                # because we didn't request LLVM's shared libraries
-                "--enable-static-llvm",
-                "--enable-static",
-                "--enable-shared=no",
-                "CFLAGS=-std=gnu99",
-                "LIBS=%s %s" % (llvm_libs, llvm_system_libs),
-                "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
-                "HWLOC_LIBS=-L%s -lhwloc" % spec["hwloc"].prefix.lib,
-                "LLVM_CONFIG=%s" % llvm_config_path,
-                "CLANGXX_FLAGS=-std=gnu++11")
-            make()
-            make("install")
+    @run_after('install')
+    def check_install(self):
+        # Build and run a small program to test the installed OpenCL library
+        spec = self.spec
+        print("Checking pocl installation...")
+        checkdir = "spack-check"
+        with working_dir(checkdir, create=True):
+            source = join_path(os.path.dirname(self.module.__file__),
+                               "example1.c")
+            cflags = spec["pocl"].cppflags.split()
+            # ldflags = spec["pocl"].libs.ld_flags.split()
+            ldflags = ["-L%s" % spec["pocl"].prefix.lib,
+                       "-lOpenCL", "-lpoclu"]
+            output = compile_c_and_execute(source, cflags, ldflags)
+            compare_output_file(output,
+                                join_path(os.path.dirname(self.module.__file__),
+                                          "example1.out"))
