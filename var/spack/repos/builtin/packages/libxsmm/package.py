@@ -75,7 +75,7 @@ class Libxsmm(Package):
     def manual_install(self, prefix):
         spec = self.spec
         install_tree('include', prefix.include)
-        if '~header-only' in spec and '@1.6.2:' in spec:
+        if not ('+header-only' in spec and '@1.6.2:' in spec):
             install_tree('lib', prefix.lib)
         doc_path = prefix.share + '/libxsmm/doc'
         mkdirp(doc_path)
