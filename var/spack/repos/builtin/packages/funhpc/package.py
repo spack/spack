@@ -23,12 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+
 from spack import *
 
 class Funhpc(CMakePackage):
     """FunHPC: Functional HPC Programming"""
     homepage = "https://github.com/eschnett/FunHPC.cxx"
-    url= "https://github.com/eschnett/FunHPC.cxx/archive/version/0.1.0.tar.gz"
+    url = "https://github.com/eschnett/FunHPC.cxx/archive/version/0.1.0.tar.gz"
 
     version('1.1.1', '7b9ef638b02fffe35b75517e8eeff580')
     version('1.1.0', '897bd968c42cd4f14f86fcf67da70444')
