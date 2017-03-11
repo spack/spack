@@ -35,8 +35,7 @@ class Bison(AutotoolsPackage):
 
     version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
 
-    # This is a run-time dependency as well
-    depends_on('m4')
+    depends_on('m4', type=('build', 'run'))
 
     patch('pgi.patch', when='@3.0.4')
 
