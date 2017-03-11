@@ -31,6 +31,6 @@ class Pdsh(AutotoolsPackage):
     """
 
     homepage = "https://github.com/grondo/pdsh"
-    url      = "https://github.com/grondo/pdsh/releases/tag/pdsh-2.31"
+    url      = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
 
-    version('2.31', 'e6920eddd009082b143126204b0562a8')
+    version('2.31', 'cab34b0ca78f3cf596fd648b265223ed')
