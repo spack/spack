@@ -33,6 +33,12 @@ from six import string_types
 ignore_modules = [r'^\.#', '~$']
 
 
+class classproperty(property):
+    """classproperty decorator: like property but for classmethods."""
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+
+
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
        set of objects on unique values of the supplied functions.
