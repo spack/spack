@@ -101,11 +101,6 @@ class Python(AutotoolsPackage):
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
 
-    @when('@:2.6,3.0:3.3')
-    def patch(self):
-        # See https://github.com/LLNL/spack/issues/1490
-        pass
-
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
         prefix = self.prefix
