@@ -38,6 +38,8 @@ modules:
       - PKG_CONFIG_PATH
     lib64/pkgconfig:
       - PKG_CONFIG_PATH
+    lib/python*.*/site-packages:
+      - PYTHONPATH
     '':
       - CMAKE_PREFIX_PATH
 

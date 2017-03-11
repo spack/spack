@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
+import glob
 import inspect
 import json
 import os
@@ -550,8 +551,12 @@ def inspect_path(root, inspections, exclude=None):
     for relative_path, variables in inspections.items():
         expected = os.path.join(root, relative_path)
 
-        if os.path.isdir(expected) and not exclude(expected):
-            for variable in variables:
-                env.prepend_path(variable, expected)
+        for expected_path in glob.glob(expected):
+            if exclude(expected_path):
+                continue
+
+            if os.path.isdir(expected_path):
+                for variable in variables:
+                    env.prepend_path(variable, expected_path)
 
     return env
