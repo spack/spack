@@ -42,6 +42,14 @@ class PkgConfig(Package):
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch')
 
+    @when("platform=cray")
+    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+        """spack built pkg-config on cray's requires adding /usr/local/
+        and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
+        files."""
+        spack_env.prepend_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
+        spack_env.prepend_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")
+
     def install(self, spec, prefix):
         args = ["--prefix={0}".format(prefix),
                 "--enable-shared"]
