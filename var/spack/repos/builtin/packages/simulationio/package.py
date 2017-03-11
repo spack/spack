@@ -28,6 +28,7 @@ from spack import *
 import glob
 import os
 
+
 class Simulationio(CMakePackage):
     """SimulationIO: Efficient and convenient I/O for large PDE simulations"""
     homepage = "https://github.com/eschnett/SimulationIO"
