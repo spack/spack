@@ -118,3 +118,11 @@ def test_virtual_dep_match(builtin_mock):
 
     pkg = spack.repo.get('multimethod^mpich@1.0')
     assert pkg.different_by_virtual_dep() == 1
+
+
+def test_multimethod_with_base_class(builtin_mock):
+    pkg = spack.repo.get('multimethod@3')
+    assert pkg.base_method() == "subclass_method"
+
+    pkg = spack.repo.get('multimethod@1')
+    assert pkg.base_method() == "base_method"
