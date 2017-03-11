@@ -56,7 +56,7 @@ class Libxsmm(Package):
 
     variant('debug', default=False,
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
-    variant('header-only', default=True,
+    variant('header-only', default=False,
             description='Produce header-only installation')
 
     def patch(self):
@@ -75,9 +75,7 @@ class Libxsmm(Package):
     def manual_install(self, prefix):
         spec = self.spec
         install_tree('include', prefix.include)
-        if '+header-only' in spec and '@1.6.2:' in spec:
-            pass
-        else:
+        if '~header-only' in spec and '@1.6.2:' in spec:
             install_tree('lib', prefix.lib)
         doc_path = prefix.share + '/libxsmm/doc'
         mkdirp(doc_path)
