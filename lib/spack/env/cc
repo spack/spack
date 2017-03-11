@@ -58,7 +58,7 @@ parameters=(
 # The default compiler flags are passed from these variables:
 #   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
 #   SPACK_LDFLAGS, SPACK_LDLIBS
-# Debug env var is optional; set to true for debug logging:
+# Debug env var is optional; set to "TRUE" for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
