@@ -41,6 +41,7 @@ class Binutils(Package):
     depends_on('m4', type='build')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
+    depends_on('gettext')
 
     # Add a patch that creates binutils libiberty_pic.a which is preferred by
     # OpenSpeedShop and cbtf-krell
