@@ -56,6 +56,8 @@ class Libxsmm(Package):
 
     variant('debug', default=False,
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
+    variant('header-only', default=True,
+            description='Produce header-only installation')
 
     def patch(self):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
@@ -71,8 +73,12 @@ class Libxsmm(Package):
         makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
 
     def manual_install(self, prefix):
+        spec = self.spec
         install_tree('include', prefix.include)
-        install_tree('lib', prefix.lib)
+        if '+header-only' in spec and '@1.6.2:' in spec:
+            pass
+        else:
+            install_tree('lib', prefix.lib)
         doc_path = prefix.share + '/libxsmm/doc'
         mkdirp(doc_path)
         for doc_file in glob('documentation/*.md'):
@@ -85,6 +91,9 @@ class Libxsmm(Package):
     def install(self, spec, prefix):
         # include symbols by default
         make_args = ['SYM=1']
+
+        if '+header-only' in spec and '@1.6.2:' in spec:
+            make_args += ['header-only']
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
 #       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
