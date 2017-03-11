@@ -86,7 +86,6 @@ class OrderedLineLoader(Loader):
     def construct_yaml_str(self, node):
         value = self.construct_scalar(node)
         value = syaml_str(value)
-
         mark(value, node)
         return value
 
@@ -149,11 +148,11 @@ class OrderedLineLoader(Loader):
 
 # register above new constructors
 OrderedLineLoader.add_constructor(
-    u'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
+    'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
 OrderedLineLoader.add_constructor(
-    u'tag:yaml.org,2002:seq', OrderedLineLoader.construct_yaml_seq)
+    'tag:yaml.org,2002:seq', OrderedLineLoader.construct_yaml_seq)
 OrderedLineLoader.add_constructor(
-    u'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
+    'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
 
 
 class OrderedLineDumper(Dumper):

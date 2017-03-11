@@ -49,7 +49,6 @@ from bisect import bisect_left
 from functools import wraps
 from six import string_types
 
-from functools_backport import total_ordering
 from spack.util.spack_yaml import syaml_dict
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
@@ -112,7 +111,6 @@ def _numeric_lt(self0, other):
     """Compares two versions, knowing they're both numeric"""
 
 
-@total_ordering
 class Version(object):
     """Class to represent versions"""
 
@@ -330,8 +328,21 @@ class Version(object):
         return (other is not None and
                 type(other) == Version and self.version == other.version)
 
+    @coerced
     def __ne__(self, other):
         return not (self == other)
+
+    @coerced
+    def __le__(self, other):
+        return self == other or self < other
+
+    @coerced
+    def __ge__(self, other):
+        return not (self < other)
+
+    @coerced
+    def __gt__(self, other):
+        return not (self == other) and not (self < other)
 
     def __hash__(self):
         return hash(self.version)
@@ -378,7 +389,6 @@ class Version(object):
             return VersionList()
 
 
-@total_ordering
 class VersionRange(object):
 
     def __init__(self, start, end):
@@ -421,8 +431,21 @@ class VersionRange(object):
                 type(other) == VersionRange and
                 self.start == other.start and self.end == other.end)
 
+    @coerced
     def __ne__(self, other):
         return not (self == other)
+
+    @coerced
+    def __le__(self, other):
+        return self == other or self < other
+
+    @coerced
+    def __ge__(self, other):
+        return not (self < other)
+
+    @coerced
+    def __gt__(self, other):
+        return not (self == other) and not (self < other)
 
     @property
     def concrete(self):
@@ -568,7 +591,6 @@ class VersionRange(object):
         return out
 
 
-@total_ordering
 class VersionList(object):
     """Sorted, non-redundant list of Versions and VersionRanges."""
 
@@ -761,12 +783,25 @@ class VersionList(object):
     def __eq__(self, other):
         return other is not None and self.versions == other.versions
 
+    @coerced
     def __ne__(self, other):
         return not (self == other)
 
     @coerced
     def __lt__(self, other):
         return other is not None and self.versions < other.versions
+
+    @coerced
+    def __le__(self, other):
+        return self == other or self < other
+
+    @coerced
+    def __ge__(self, other):
+        return not (self < other)
+
+    @coerced
+    def __gt__(self, other):
+        return not (self == other) and not (self < other)
 
     def __hash__(self):
         return hash(tuple(self.versions))
