@@ -146,8 +146,8 @@ class ProviderIndex(object):
                     if p_spec.satisfies(vspec, deps=False):
                         providers.update(spec_set)
 
-        # Return providers in order
-        return sorted(providers)
+        # Return providers in order. Defensively copy.
+        return sorted(s.copy() for s in providers)
 
     # TODO: this is pretty darned nasty, and inefficient, but there
     # are not that many vdeps in most specs.

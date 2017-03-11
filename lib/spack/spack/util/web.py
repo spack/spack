@@ -36,6 +36,7 @@ try:
 except ImportError:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
+
     # Also, HTMLParseError is deprecated and never raised.
     class HTMLParseError:
         pass

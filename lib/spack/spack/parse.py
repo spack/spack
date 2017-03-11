@@ -48,9 +48,8 @@ class Token:
     def is_a(self, type):
         return self.type == type
 
-    def __cmp__(self, other):
-        return cmp((self.type, self.value),
-                   (other.type, other.value))
+    def __eq__(self, other):
+        return (self.type == other.type) and (self.value == other.value)
 
 
 class Lexer(object):
