@@ -60,6 +60,7 @@ class Cuda(Package):
         runfile(
             '--silent',   # disable interactive prompts
             '--verbose',  # create verbose log file
+            '--override', # override compiler version checks
             '--toolkit',  # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )
