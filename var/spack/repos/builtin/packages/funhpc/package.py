@@ -26,6 +26,7 @@
 
 from spack import *
 
+
 class Funhpc(CMakePackage):
     """FunHPC: Functional HPC Programming"""
     homepage = "https://github.com/eschnett/FunHPC.cxx"
