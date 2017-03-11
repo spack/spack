@@ -128,10 +128,16 @@ class SpecMultiMethod(object):
 
         if self.default:
             return self.default(package_self, *args, **kwargs)
+
         else:
-            raise NoSuchMethodError(
-                type(package_self), self.__name__, spec,
-                [m[0] for m in self.method_list])
+            superclass = super(package_self.__class__, package_self)
+            superclass_fn = getattr(superclass, self.__name__, None)
+            if callable(superclass_fn):
+                return superclass_fn(*args, **kwargs)
+            else:
+                raise NoSuchMethodError(
+                    type(package_self), self.__name__, spec,
+                    [m[0] for m in self.method_list])
 
     def __str__(self):
         return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
