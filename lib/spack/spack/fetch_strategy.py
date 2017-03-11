@@ -90,7 +90,6 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
     enabled = False  # Non-abstract subclasses should be enabled.
     required_attributes = None  # Attributes required in version() args.
 
-
     def __init__(self):
         # The stage is initialized late, so that fetch strategies can be
         # constructed at package construction time.  This is where things

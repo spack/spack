@@ -78,7 +78,6 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version

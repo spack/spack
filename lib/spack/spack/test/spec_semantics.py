@@ -293,7 +293,7 @@ class TestSpecSematics(object):
         copy = spec.copy()
         for s in spec.traverse():
             assert s.satisfies(copy[s.name])
-            assert copy[s.name].satisfies(s) 
+            assert copy[s.name].satisfies(s)
 
     def test_unsatisfiable_compiler_flag_mismatch(self):
         # No matchi in specs

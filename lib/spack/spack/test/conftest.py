@@ -168,16 +168,19 @@ def configuration_dir(tmpdir_factory, linux_os):
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
+    spack.package_prefs.PackagePrefs.clear_caches()
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
     spack.config.config_scopes = ordereddict_backport.OrderedDict()
     spack.config.ConfigScope('site', str(configuration_dir.join('site')))
     spack.config.ConfigScope('user', str(configuration_dir.join('user')))
     Config = collections.namedtuple('Config', ['real', 'mock'])
+
     yield Config(real=real_scope, mock=spack.config.config_scopes)
+
     spack.config.config_scopes = real_scope
     spack.config.clear_config_caches()
-
+    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 @pytest.fixture(scope='module')
