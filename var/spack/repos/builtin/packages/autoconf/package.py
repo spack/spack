@@ -38,7 +38,7 @@ class Autoconf(AutotoolsPackage):
 
     # Note: m4 is not a build-time dependency of autoconf! m4 is
     # needed when autoconf runs, not when autoconf is built.
-    depends_on('m4@1.4.6:')
+    depends_on('m4@1.4.6:', type=('build', 'run'))
 
     build_directory = 'spack-build'
 
