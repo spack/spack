@@ -87,8 +87,10 @@ class Libxsmm(Package):
         install('LICENSE', doc_path)
 
     def install(self, spec, prefix):
-        if '+header-only' in spec and not '@1.6.2:' in spec:
-            raise InstallError("The variant +header-only is only available for versions @1.6.2:")
+        if '+header-only' in spec and '@1.6.2:' not in spec:
+            raise InstallError(
+                "The variant +header-only is only available " +
+                "for versions @1.6.2:")
 
         # include symbols by default
         make_args = ['SYM=1']
