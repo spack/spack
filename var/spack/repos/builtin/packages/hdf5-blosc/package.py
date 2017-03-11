@@ -71,13 +71,6 @@ class Hdf5Blosc(Package):
 
         libtool = Executable(join_path(spec["libtool"].prefix.bin, "libtool"))
 
-        # TODO: these vars are not used.
-        # if "+mpi" in spec["hdf5"]:
-        #     cc = "mpicc"
-        # else:
-        #     cc = "cc"
-        # shlibext = "so" if sys.platform != "darwin" else "dylib"
-
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
 
@@ -174,7 +167,11 @@ Done.
             with open("check.c", "w") as f:
                 f.write(source)
             if "+mpi" in spec["hdf5"]:
-                cc = which("mpicc")
+                for dep in spec["hdf5"].dependencies():
+                    if dep.package.provides("mpi"):
+                        mpi = dep
+                        break
+                cc = Executable(dep.mpicc)
             else:
                 cc = which("cc")
             # TODO: Automate these path and library settings
