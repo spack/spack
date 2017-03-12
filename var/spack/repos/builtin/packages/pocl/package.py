@@ -68,7 +68,9 @@ class Pocl(CMakePackage):
     depends_on("llvm @3.2:3.5", when="@0.10")
 
     variant("distro", default=False,
-            description="Support several CPU architectures, suitable e.g. in a build that will be made available for download")
+            description=("Support several CPU architectures, "
+                         "suitable e.g. in a build "
+                         "that will be made available for download"))
     variant("icd", default=False,
             description="Support a system-wide ICD loader")
 
