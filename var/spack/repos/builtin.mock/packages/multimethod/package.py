@@ -25,8 +25,10 @@
 from spack import *
 import spack.architecture
 
+from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
 
-class Multimethod(Package):
+
+class Multimethod(MultimethodBase):
     """This package is designed for use with Spack's multimethod test.
        It has a bunch of test cases for the @when decorator that the
        test uses.
@@ -132,3 +134,11 @@ class Multimethod(Package):
     @when('^mpi@2:')
     def different_by_virtual_dep(self):
         return 2
+
+    #
+    # Make sure methods with a default implementation in a superclass
+    # will invoke that method when none in the subclass match.
+    #
+    @when("@2:")
+    def base_method(self):
+        return "subclass_method"
