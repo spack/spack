@@ -31,8 +31,7 @@ import sys
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
     homepage = "http://julialang.org"
-    url      = ("https://github.com/JuliaLang/julia/releases/download/"
-                "v0.4.3/julia-0.4.3-full.tar.gz")
+    url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
 
     version('master',
             git='https://github.com/JuliaLang/julia.git', branch='master')
