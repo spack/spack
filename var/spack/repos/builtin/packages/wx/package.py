@@ -46,7 +46,9 @@ class Wx(AutotoolsPackage):
 
     depends_on('gtkplus')
 
-    parallel = False
+    @when('@:3.0.2')
+    def build(self, spec, prefix):
+        make(parallel=False)
 
     def configure_args(self):
         spec = self.spec
