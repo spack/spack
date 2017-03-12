@@ -68,9 +68,7 @@ class Pocl(CMakePackage):
     depends_on("llvm @3.2:3.5", when="@0.10")
 
     variant("distro", default=False,
-            description=("Support several CPU architectures, " +
-                         "suitable e.g. in a build that will be made " +
-                         "available for download"))
+            description="Support several CPU architectures, suitable e.g. in a build that will be made available for download")
     variant("icd", default=False,
             description="Support a system-wide ICD loader")
 
@@ -84,9 +82,9 @@ class Pocl(CMakePackage):
         args += ["-DENABLE_ICD=%s" % ("ON" if "+icd" in spec else "OFF")]
         return args
 
-    def install(self, spec, prefix):
+    @run_after('install')
+    def symlink_opencl(self):
         with working_dir(self.build_directory):
-            make(*self.install_targets)
             os.symlink("OpenCL", join_path(self.prefix.include, "CL"))
 
     @run_after('install')
