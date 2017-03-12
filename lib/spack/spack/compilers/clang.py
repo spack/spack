@@ -172,7 +172,10 @@ class Clang(Compiler):
         # to clang version, but there could be multiple clang
         # versions that work for a single gcc/gfortran version
         if sys.platform == 'darwin':
-            clangversionfromgcc = {'6.2.0': '8.0.0-apple'}
+            clangversionfromgcc = {
+                '6.2.0': '8.0.0-apple',
+                '6.3.0': '8.0.0-apple'
+            }
         else:
             clangversionfromgcc = {}
         if version in clangversionfromgcc:
