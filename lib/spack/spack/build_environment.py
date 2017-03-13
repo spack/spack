@@ -135,8 +135,8 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            exec(compile(modulecmd("unload", text[i+1], outout=str, error=str),
-                "<string", "exec"))
+            exec(compile(modulecmd("unload", text[i + 1], output=str, 
+                error=str), "<string", "exec"))
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
