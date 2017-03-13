@@ -119,14 +119,6 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
-def unload_module(mod, modulecmd):
-    """Similar to load module, it takes a name and removes the module
-    from the environment"""
-    exec(compile(modulecmd("unload", mod, output=str, error=str), "<string>",
-        "exec"))
-    tty.debug("Unloaded %s module" % mod)
-
-
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the
@@ -143,7 +135,8 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            unload_module(text[i + 1], modulecmd)
+            exec(compile(modulecmd("unload", text[i+1], outout=str, error=str),
+                "<string", "exec"))
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
@@ -154,7 +147,8 @@ def get_path_from_module(mod):
     at which the library supported by said module can be found.
     """
     # Create a modulecmd executable
-    modulecmd = get_modulecmd()
+    modulecmd = which("modulecmd")
+    modulecmd.add_default_arg("python")
 
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
