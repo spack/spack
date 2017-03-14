@@ -103,3 +103,16 @@ compilers:
       fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe/bin/ifort
     spec: intel@17.0.1
     target: x86_64
+- compiler:
+    environment: {}
+    flags: {}
+    extra_rpaths: []
+    modules: []
+    operating_system: centos7
+    paths:
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf/16.10/bin/pgcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf/16.10/bin/pgc++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf/16.10/bin/pgfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf/16.10/bin/pgfortran
+    spec: pgi@16.10
+    target: x86_64
