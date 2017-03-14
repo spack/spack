@@ -17,11 +17,10 @@ packages:
   all:
     compiler: [gcc@6, intel@17]
     providers:
-      mpi: [openmpi, mvapich2, mpich, intel-parallel-studio]
-      blas: [openblas, intel-parallel-studio]
-      lapack: [openblas, intel-parallel-studio]
-      scalapack: [intel-parallel-stuido, netlib-scalapack]
-    variants: +debug +verbs
+      mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
+      blas: [openblas, intel-parallel-studio+mkl]
+      lapack: [openblas, intel-parallel-studio+mkl]
+      scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
 
   openmpi:
     variants: +pmi +slurm +verbs
@@ -43,6 +42,23 @@ packages:
 
   fftw:
     variants: +float +long_double +mpi +openmp
+
+  jdk:
+    paths:
+       jdk@8u92-linux-x64%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u92-linux-x64-3zsegzpewm7rdx4zcfgckqwpao4xz535
+    buildable: False
+
+  gradle:
+    paths:
+       gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-fzjszdrqb4eq6lblg36wzzcerybvji4t
+    buildable: False
+
+  cuda:
+    paths:
+       cuda@6.5.14%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-6.5.14-3avyaldl2uzrhqtgwe7lgw27zzjmwcmt
+       cuda@7.5.18%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-7.5.18-gyoxeh2obvptfuv4n42uwutqcdqcycco
+       cuda@8.0.44%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-8.0.44-qlfv2l4lqkjs55vleyvcnbj6jkfbecqe 
+    buildable: False
 
   intel-parallel-studio:
     paths:
