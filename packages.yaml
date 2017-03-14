@@ -15,7 +15,7 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc@6, intel@17]
+    compiler: [gcc@6, intel@17, pgi@16]
     providers:
       mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
       blas: [openblas, intel-parallel-studio+mkl]
@@ -58,6 +58,11 @@ packages:
        cuda@6.5.14%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-6.5.14-3avyaldl2uzrhqtgwe7lgw27zzjmwcmt
        cuda@7.5.18%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-7.5.18-gyoxeh2obvptfuv4n42uwutqcdqcycco
        cuda@8.0.44%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-8.0.44-qlfv2l4lqkjs55vleyvcnbj6jkfbecqe 
+    buildable: False
+
+  pgi:
+    paths:
+       pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
     buildable: False
 
   intel-parallel-studio:
