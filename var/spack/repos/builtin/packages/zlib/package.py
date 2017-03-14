@@ -25,13 +25,15 @@
 from spack import *
 
 
-class Zlib(AutotoolsPackage):
+# Although zlib comes with a configure script, it does not use Autotools
+# The AutotoolsPackage causes zlib to fail to build with PGI
+class Zlib(Package):
     """A free, general-purpose, legally unencumbered lossless
        data-compression library."""
 
     homepage = "http://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://zlib.net/fossils/zlib-1.2.10.tar.gz"
+    url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
 
     version('1.2.11', '1c9f62f0778697a09d36121ead88e08e')
     # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be
@@ -47,8 +49,13 @@ class Zlib(AutotoolsPackage):
         if '+pic' in self.spec:
             spack_env.set('CFLAGS', self.compiler.pic_flag)
 
-    def configure_args(self):
+    def install(self, spec, prefix):
         config_args = []
-        if '+shared' not in self.spec:
+        if '~shared' in spec:
             config_args.append('--static')
-        return config_args
+        configure('--prefix={0}'.format(prefix), *config_args)
+
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
