@@ -22,62 +22,54 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-Test Spack's FileCache.
-"""
+"""Test Spack's FileCache."""
 import os
-import shutil
-import tempfile
-import unittest
 
+import pytest
 from spack.file_cache import FileCache
 
 
-class FileCacheTest(unittest.TestCase):
-    """Ensure that a file cache can properly write to a file and recover its
-       contents."""
+@pytest.fixture()
+def file_cache(tmpdir):
+    """Returns a properly initialized FileCache instance"""
+    return FileCache(str(tmpdir))
 
-    def setUp(self):
-        self.scratch_dir = tempfile.mkdtemp()
-        self.cache = FileCache(self.scratch_dir)
 
-    def tearDown(self):
-        shutil.rmtree(self.scratch_dir)
+def test_write_and_read_cache_file(file_cache):
+    """Test writing then reading a cached file."""
+    with file_cache.write_transaction('test.yaml') as (old, new):
+        assert old is None
+        assert new is not None
+        new.write("foobar\n")
 
-    def test_write_and_read_cache_file(self):
-        """Test writing then reading a cached file."""
-        with self.cache.write_transaction('test.yaml') as (old, new):
-            self.assertTrue(old is None)
-            self.assertTrue(new is not None)
-            new.write("foobar\n")
+    with file_cache.read_transaction('test.yaml') as stream:
+        text = stream.read()
+        assert text == "foobar\n"
 
-        with self.cache.read_transaction('test.yaml') as stream:
-            text = stream.read()
-            self.assertEqual("foobar\n", text)
 
-    def test_remove(self):
-        """Test removing an entry from the cache."""
-        self.test_write_and_write_cache_file()
+def test_write_and_remove_cache_file(file_cache):
+    """Test two write transactions on a cached file. Then try to remove an
+    entry from it.
+    """
 
-        self.cache.remove('test.yaml')
+    with file_cache.write_transaction('test.yaml') as (old, new):
+        assert old is None
+        assert new is not None
+        new.write("foobar\n")
 
-        self.assertFalse(os.path.exists(self.cache.cache_path('test.yaml')))
-        self.assertFalse(os.path.exists(self.cache._lock_path('test.yaml')))
+    with file_cache.write_transaction('test.yaml') as (old, new):
+        assert old is not None
+        text = old.read()
+        assert text == "foobar\n"
+        assert new is not None
+        new.write("barbaz\n")
 
-    def test_write_and_write_cache_file(self):
-        """Test two write transactions on a cached file."""
-        with self.cache.write_transaction('test.yaml') as (old, new):
-            self.assertTrue(old is None)
-            self.assertTrue(new is not None)
-            new.write("foobar\n")
+    with file_cache.read_transaction('test.yaml') as stream:
+        text = stream.read()
+        assert text == "barbaz\n"
 
-        with self.cache.write_transaction('test.yaml') as (old, new):
-            self.assertTrue(old is not None)
-            text = old.read()
-            self.assertEqual("foobar\n", text)
-            self.assertTrue(new is not None)
-            new.write("barbaz\n")
+    file_cache.remove('test.yaml')
 
-        with self.cache.read_transaction('test.yaml') as stream:
-            text = stream.read()
-            self.assertEqual("barbaz\n", text)
+    # After removal both the file and the lock file should not exist
+    assert not os.path.exists(file_cache.cache_path('test.yaml'))
+    assert not os.path.exists(file_cache._lock_path('test.yaml'))
