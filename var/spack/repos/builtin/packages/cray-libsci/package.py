@@ -37,6 +37,7 @@
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
 #
+from llnl.util.filesystem import LibraryList
 from spack import *
 
 
@@ -47,7 +48,11 @@ class CrayLibsci(Package):
     homepage = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
     url      = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
 
+    version("16.11.1")
+    version("16.09.1")
     version('16.07.1')
+    version("16.06.1")
+    version("16.03.1")
 
     provides("blas")
     provides("lapack")
@@ -56,7 +61,7 @@ class CrayLibsci(Package):
     # NOTE: Cray compiler wrappers already include linking for the following
     @property
     def blas_libs(self):
-        return self.prefix.lib
+        return LibraryList([self.prefix.lib])
 
     @property
     def lapack_libs(self):
