@@ -183,18 +183,20 @@ class CDashSimpleTestSuite(object):
         template.set('BuildStamp', self.buildstamp)
         template.set('CompilerName', str(self.spec.compiler.name)) 
         template.set('CompilerVersion', str(self.spec.compiler.version))
-        template.set('OSName', platform.system())
         if "linux" in platform.system().lower():
             linuxInfo = '.'.join(platform.linux_distribution())
             template.set('Hostname', linuxInfo)
             template.set('Name', linuxInfo)
+            template.set('OSName', platform.system())
         elif "darwin" in platform.system().lower():
             macInfo = "OS X " + platform.mac_ver()[0]
             template.set('Hostname', macInfo)
             template.set('Name', macInfo)
+            template.set('OSName', "Mac")
         else:
             template.set('Name', platform.node())
             template.set('Hostname', platform.node())
+            template.set('OSName', platform.system())
         #template.set('Type', self.slot)
         return template
 
@@ -375,18 +377,20 @@ class CDashCompleteTestSuite(object):
         template.set('BuildStamp', self.buildstamp)
         template.set('CompilerName', str(self.spec.compiler.name)) 
         template.set('CompilerVersion', str(self.spec.compiler.version))
-        template.set('OSName', platform.system())
         if "linux" in platform.system().lower():
             linuxInfo = '.'.join(platform.linux_distribution())
             template.set('Hostname', linuxInfo)
             template.set('Name', linuxInfo)
+            template.set('OSName', platform.system())
         elif "darwin" in platform.system().lower():
             macInfo = "OS X " + platform.mac_ver()[0]
             template.set('Hostname', macInfo)
             template.set('Name', macInfo)
+            template.set('OSName', "Mac")
         else:
             template.set('Name', platform.node())
             template.set('Hostname', platform.node())
+            template.set('OSName', platform.system())
         #template.set('Type', self.slot)
         return template
 
