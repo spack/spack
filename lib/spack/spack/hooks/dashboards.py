@@ -183,9 +183,18 @@ class CDashSimpleTestSuite(object):
         template.set('BuildStamp', self.buildstamp)
         template.set('CompilerName', str(self.spec.compiler.name)) 
         template.set('CompilerVersion', str(self.spec.compiler.version))
-        template.set('Name', platform.node())
         template.set('OSName', platform.system())
-        template.set('Hostname', platform.node())
+        if "linux" in platform.system().lower():
+            linuxInfo = '.'.join(platform.linux_distribution())
+            template.set('Hostname', linuxInfo)
+            template.set('Name', linuxInfo)
+        elif "darwin" in platform.system().lower():
+            macInfo = "OS X " + platform.mac_ver()[0]
+            template.set('Hostname', macInfo)
+            template.set('Name', macInfo)
+        else:
+            template.set('Name', platform.node())
+            template.set('Hostname', platform.node())
         #template.set('Type', self.slot)
         return template
 
@@ -366,9 +375,18 @@ class CDashCompleteTestSuite(object):
         template.set('BuildStamp', self.buildstamp)
         template.set('CompilerName', str(self.spec.compiler.name)) 
         template.set('CompilerVersion', str(self.spec.compiler.version))
-        template.set('Name', platform.node())
         template.set('OSName', platform.system())
-        template.set('Hostname', platform.node())
+        if "linux" in platform.system().lower():
+            linuxInfo = '.'.join(platform.linux_distribution())
+            template.set('Hostname', linuxInfo)
+            template.set('Name', linuxInfo)
+        elif "darwin" in platform.system().lower():
+            macInfo = "OS X " + platform.mac_ver()[0]
+            template.set('Hostname', macInfo)
+            template.set('Name', macInfo)
+        else:
+            template.set('Name', platform.node())
+            template.set('Hostname', platform.node())
         #template.set('Type', self.slot)
         return template
 
