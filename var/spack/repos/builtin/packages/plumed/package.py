@@ -99,7 +99,7 @@ class Plumed(AutotoolsPackage):
         plumed.stdin.write(choice)
         plumed.wait()
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
         module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
 

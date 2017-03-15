@@ -53,7 +53,7 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
         arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
