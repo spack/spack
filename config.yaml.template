@@ -1,3 +1,21 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 config:
   build_stage:
   - SPACKSTAGE
@@ -11,3 +29,40 @@ config:
     tcl: $spack/share/spack/modules
   source_cache: SPACKSOURCECACHE
   verify_ssl: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,20 +9,20 @@ if [ -z $1 ]; then
 	echo "- --install: Build and install."
 	exit 1
 fi
-echo "Scope => $1"
 
-echo "Determine the CPU architecture; sandybridge, haswell, knightlanding."
+# PLATFORM, SPACK_ROOT, SPACKPREFIX, SPACKSTAGE, SPACKCACHE, SPACKSOURCECACHE
+echo 'Determine the PLATFORM sandybridge, haswell, knightlanding.'
 if [[ $HOST == "*knl*" ]]; then
 	PLATFORM="knightlanding"
 elif [[ $HOST == "*nv*" ]]; then
 	PLATFORM="haswell"
+elif [[ $HOST == "*uv*" ]]; then
+	PLATFORM="ivybridge"
 else
 	PLATFORM="sandybridge"
 fi
-echo "Architecture => $PLATFORM"
 
 SPACK_ROOT=`pwd`
-echo "SPACK_ROOT => $SPACK_ROOT"
 
 echo "Check if the user is rpm(system builder)."
 if [ $1 = "system" ]; then
@@ -30,44 +30,51 @@ if [ $1 = "system" ]; then
 elif [ $1 = "rpm" ]; then 
 	SPACKPREFIX=/lustre/spack/$PLATFORM
 else
-	SPACKPREFIX="$SPACK_ROOT"
+	SPACKPREFIX=$SPACK_ROOT/opt
 fi
 
-export SPACKSTAGE=/tmp/`whoami`/pytest-of-rpm/pytest-4/test_fetch0/tmp
-export SPACKCACHE=/tmp/`whoami`/spack_misc_cache
+export SPACKSTAGE=/tmp/`whoami`/spack_stage
+export SPACKCACHE=/tmp/`whoami`/spack_cache
 export SPACKSOURCECACHE=/tmp/`whoami`/spack_source_cache
 
-cat << EOF > $SPACK_ROOT/etc/spack/config.yaml
-config:
-  build_stage:
-  - $SPACKSTAGE
-  checksum: true
-  dirty: false
-  install_tree: $SPACKPREFIX
-  misc_cache: $SPACKCACHE
-  module_roots:
-    dotkit: \$spack/share/spack/dotkit
-    lmod: \$spack/share/spack/lmod
-    tcl: \$spack/share/spack/modules
-  source_cache: $SPACKSOURCECACHE
-  verify_ssl: true
-EOF
+#Summarizing
+echo ">>>"
+for var in PLATFORM SPACK_ROOT SPACKPREFIX SPACKSTAGE SPACKCACHE SPACKSOURCECACHE
+do
+	echo "$var => ${!var}"
+done
+echo ">>>"
 
-rm -f ~/.spack/config.yaml
-cp -f compilers.yaml  $SPACK_ROOT/etc/spack/compilers.yaml
-if [ $1 = "system" ]; then
-	cp -f packages_system.yaml   $SPACK_ROOT/etc/spack/packages.yaml
+# Rendering CONFIG_YAML 
+for var in SPACKSTAGE SPACKPREFIX SPACKCACHE SPACKSOURCECACHE
+do
+	sed -i s=$var=${!var}=g config.yaml.template
+done
+
+# CONFIG_YAML, COMPILER_YAML, PACKAGE_YAML
+CONFIG_YAML=config.yaml.template
+
+if [[ $HOST == "*uv*" ]]; then
+	COMPILER_YAML="compilers_sgi.yaml"
 else
-	cp -f packages.yaml   $SPACK_ROOT/etc/spack/packages.yaml
+	COMPILER_YAML="compilers.yaml"
 fi
 
-echo "Make Spack configuration take effect."
-echo "SPACKPREFIX => $SPACKPREFIX"
-echo "SPACKSTAGE  => $SPACKSTAGE"
-echo "SPACKCACHE  => $SPACKCACHE"
-echo "SPACKSOURCECACHE => $SPACKSOURCECACHE"
+if [[ $HOST == "*uv*" ]]; then
+	PACKAGE_YAML="packages_sgi.yaml"
+elif [ $1 = "system" ]; then
+	PACKAGE_YAML="packages_system.yaml"
+else
+	PACKAGE_YAML="packages.yaml"
+fi
+
+# Deploying
+cp -f ${CONFIG_YAML} ~/.spack/config.yaml
+cp -f ${PACKAGE_YAML} $SPACK_ROOT/etc/spack/packages.yaml
+cp -f ${COMPILER_YAML} $SPACK_ROOT/etc/spack/compilers.yaml 
 source $SPACK_ROOT/share/spack/setup-env.sh
 
+# Installing packages
 if [[ $2 == "--install" ]]; then
 	echo "Installing packages..."
 	./build_${1}.sh
