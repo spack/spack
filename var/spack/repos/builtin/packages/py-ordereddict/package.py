@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyOrdereddict(Package):
+class PyOrdereddict(PythonPackage):
     """A drop-in substitute for Py2.7's new collections.
     OrderedDict that works in Python 2.4-2.6."""
 
@@ -33,9 +33,3 @@ class PyOrdereddict(Package):
     url      = "https://pypi.python.org/packages/source/o/ordereddict/ordereddict-1.1.tar.gz"
 
     version('1.1', 'a0ed854ee442051b249bfad0f638bbec')
-
-    extends('python')
-    depends_on('python@2.4:2.6.999')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

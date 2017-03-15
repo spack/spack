@@ -41,7 +41,10 @@ class Python(Package):
 
     homepage = "http://www.python.org"
     url = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
+    list_url = "https://www.python.org/downloads/"
+    list_depth = 2
 
+    version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
     version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
@@ -49,7 +52,8 @@ class Python(Package):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.12', '88d61f82e3616a4be952828b3694109d', preferred=True)
+    version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700', preferred=True)
+    version('2.7.12', '88d61f82e3616a4be952828b3694109d')
     version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
@@ -94,6 +98,11 @@ class Python(Package):
             r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
+
+    @when('@:2.6,3.0:3.3')
+    def patch(self):
+        # See https://github.com/LLNL/spack/issues/1490
+        pass
 
     def install(self, spec, prefix):
         # TODO: The '--no-user-cfg' option for Python installation is only in
@@ -343,7 +352,8 @@ class Python(Package):
         spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
-        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
+        for d in extension_spec.traverse(
+                deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))

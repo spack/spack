@@ -75,7 +75,7 @@ This allows you to develop iteratively: make a change, test that change, make
 another change, test that change, etc. To get a list of all available unit
 tests, run:
 
-.. command-output:: spack test --list
+.. command-output:: spack test --collect-only
 
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider

@@ -124,9 +124,11 @@ class MockPackageDb(object):
 def mock_fetch_log(path):
     return []
 
+
 specX = MockSpec('X', '1.2.0')
 specY = MockSpec('Y', '2.3.8')
-specX._dependencies['Y'] = spack.DependencySpec(specY, spack.alldeps)
+specX._dependencies['Y'] = spack.spec.DependencySpec(
+    specX, specY, spack.alldeps)
 pkgX = MockPackage(specX, 'logX')
 pkgY = MockPackage(specY, 'logY')
 specX.package = pkgX

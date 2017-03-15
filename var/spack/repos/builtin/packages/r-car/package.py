@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCar(Package):
+class RCar(RPackage):
     """Functions and Datasets to Accompany J. Fox and S. Weisberg, An R
     Companion to Applied Regression, Second Edition, Sage, 2011."""
 
@@ -35,14 +35,8 @@ class RCar(Package):
 
     version('2.1-2', '0f78ad74ef7130126d319acec23951a0')
 
-    extends('R')
-
-    depends_on('r-mass', type=nolink)
-    depends_on('r-mgcv', type=nolink)
-    depends_on('r-nnet', type=nolink)
-    depends_on('r-pbkrtest', type=nolink)
-    depends_on('r-quantreg', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-mass', type=('build','run'))
+    depends_on('r-mgcv', type=('build','run'))
+    depends_on('r-nnet', type=('build','run'))
+    depends_on('r-pbkrtest', type=('build','run'))
+    depends_on('r-quantreg', type=('build','run'))

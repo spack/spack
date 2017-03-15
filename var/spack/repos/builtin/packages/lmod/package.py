@@ -44,9 +44,9 @@ class Lmod(Package):
     version('6.0.1', '91abf52fe5033bd419ffe2842ebe7af9')
 
     depends_on('lua@5.2:')
-    depends_on('lua-luaposix', type=nolink)
-    depends_on('lua-luafilesystem', type=nolink)
-    depends_on('tcl', type=nolink)
+    depends_on('lua-luaposix', type=('build', 'run'))
+    depends_on('lua-luafilesystem', type=('build', 'run'))
+    depends_on('tcl', type=('build', 'run'))
 
     parallel = False
 

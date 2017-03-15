@@ -23,112 +23,124 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
-from contextlib import contextmanager
+import contextlib
 
-import StringIO
+import cStringIO
+import pytest
 import spack.modules
 import spack.spec
-import llnl.util.filesystem
-from spack.test.mock_packages_test import MockPackagesTest
 
-FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
-
-
-# Monkey-patch open to write module files to a StringIO instance
-@contextmanager
-def mock_open(filename, mode):
-    if not mode == 'w':
-        raise RuntimeError(
-            'test.modules : unexpected opening mode for monkey-patched open')
-
-    FILE_REGISTRY[filename] = StringIO.StringIO()
-
-    try:
-        yield FILE_REGISTRY[filename]
-    finally:
-        handle = FILE_REGISTRY[filename]
-        FILE_REGISTRY[filename] = handle.getvalue()
-        handle.close()
-
-
+# Our "filesystem" for the tests below
+FILE_REGISTRY = collections.defaultdict(cStringIO.StringIO)
 # Spec strings that will be used throughout the tests
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
 libdwarf_spec_string = 'libdwarf arch=x64-linux'
 
 
-class HelperFunctionsTests(MockPackagesTest):
-
-    def test_update_dictionary_extending_list(self):
-        target = {
-            'foo': {
-                'a': 1,
-                'b': 2,
-                'd': 4
-            },
-            'bar': [1, 2, 4],
-            'baz': 'foobar'
-        }
-        update = {
-            'foo': {
-                'c': 3,
-            },
-            'bar': [3],
-            'baz': 'foobaz',
-            'newkey': {
-                'd': 4
-            }
-        }
-        spack.modules.update_dictionary_extending_lists(target, update)
-        self.assertTrue(len(target) == 4)
-        self.assertTrue(len(target['foo']) == 4)
-        self.assertTrue(len(target['bar']) == 4)
-        self.assertEqual(target['baz'], 'foobaz')
-
-    def test_inspect_path(self):
-        env = spack.modules.inspect_path('/usr')
-        names = [item.name for item in env]
-        self.assertTrue('PATH' in names)
-        self.assertTrue('LIBRARY_PATH' in names)
-        self.assertTrue('LD_LIBRARY_PATH' in names)
-        self.assertTrue('CPATH' in names)
-
-
-class ModuleFileGeneratorTests(MockPackagesTest):
+@pytest.fixture()
+def stringio_open(monkeypatch):
+    """Overrides the `open` builtin in spack.modules with an implementation
+    that writes on a StringIO instance.
     """
-    Base class to test module file generators. Relies on child having defined
-    a 'factory' attribute to create an instance of the generator to be tested.
+    @contextlib.contextmanager
+    def _mock(filename, mode):
+        if not mode == 'w':
+            raise RuntimeError('unexpected opening mode for stringio_open')
+
+        FILE_REGISTRY[filename] = cStringIO.StringIO()
+
+        try:
+            yield FILE_REGISTRY[filename]
+        finally:
+            handle = FILE_REGISTRY[filename]
+            FILE_REGISTRY[filename] = handle.getvalue()
+            handle.close()
+
+    monkeypatch.setattr(spack.modules, 'open', _mock, raising=False)
+
+
+def get_modulefile_content(factory, spec):
+    """Writes the module file and returns the content as a string.
+
+    :param factory: module file factory
+    :param spec: spec of the module file to be written
+    :return: content of the module file
+    :rtype: str
     """
-
-    def setUp(self):
-        super(ModuleFileGeneratorTests, self).setUp()
-        self.configuration_instance = spack.modules._module_config
-        self.module_types_instance = spack.modules.module_types
-        spack.modules.open = mock_open
-        spack.modules.mkdirp = lambda x: None
-        # Make sure that a non-mocked configuration will trigger an error
-        spack.modules._module_config = None
-        spack.modules.module_types = {self.factory.name: self.factory}
-
-    def tearDown(self):
-        del spack.modules.open
-        spack.modules.module_types = self.module_types_instance
-        spack.modules._module_config = self.configuration_instance
-        spack.modules.mkdirp = llnl.util.filesystem.mkdirp
-        super(ModuleFileGeneratorTests, self).tearDown()
-
-    def get_modulefile_content(self, spec):
-        spec.concretize()
-        generator = self.factory(spec)
-        generator.write()
-        content = FILE_REGISTRY[generator.file_name].split('\n')
-        generator.remove()
-        return content
+    spec.concretize()
+    generator = factory(spec)
+    generator.write()
+    content = FILE_REGISTRY[generator.file_name].split('\n')
+    generator.remove()
+    return content
 
 
-class TclTests(ModuleFileGeneratorTests):
+def test_update_dictionary_extending_list():
+    target = {
+        'foo': {
+            'a': 1,
+            'b': 2,
+            'd': 4
+        },
+        'bar': [1, 2, 4],
+        'baz': 'foobar'
+    }
+    update = {
+        'foo': {
+            'c': 3,
+        },
+        'bar': [3],
+        'baz': 'foobaz',
+        'newkey': {
+            'd': 4
+        }
+    }
+    spack.modules.update_dictionary_extending_lists(target, update)
+    assert len(target) == 4
+    assert len(target['foo']) == 4
+    assert len(target['bar']) == 4
+    assert target['baz'] == 'foobaz'
 
+
+def test_inspect_path():
+    env = spack.modules.inspect_path('/usr')
+    names = [item.name for item in env]
+    assert 'PATH' in names
+    assert 'LIBRARY_PATH' in names
+    assert 'LD_LIBRARY_PATH' in names
+    assert 'CPATH' in names
+
+
+@pytest.fixture()
+def tcl_factory(tmpdir, monkeypatch):
+    """Returns a factory that writes non-hierarchical TCL module files."""
     factory = spack.modules.TclModule
+    monkeypatch.setattr(factory, 'path', str(tmpdir))
+    monkeypatch.setattr(spack.modules, 'module_types', {factory.name: factory})
+    return factory
+
+
+@pytest.fixture()
+def lmod_factory(tmpdir, monkeypatch):
+    """Returns a factory that writes hierarchical LUA module files."""
+    factory = spack.modules.LmodModule
+    monkeypatch.setattr(factory, 'path', str(tmpdir))
+    monkeypatch.setattr(spack.modules, 'module_types', {factory.name: factory})
+    return factory
+
+
+@pytest.fixture()
+def dotkit_factory(tmpdir, monkeypatch):
+    """Returns a factory that writes DotKit module files."""
+    factory = spack.modules.Dotkit
+    monkeypatch.setattr(factory, 'path', str(tmpdir))
+    monkeypatch.setattr(spack.modules, 'module_types', {factory.name: factory})
+    return factory
+
+
+@pytest.mark.usefixtures('config', 'builtin_mock', 'stringio_open')
+class TestTcl(object):
 
     configuration_autoload_direct = {
         'enable': ['tcl'],
@@ -230,26 +242,26 @@ class TclTests(ModuleFileGeneratorTests):
         }
     }
 
-    def test_simple_case(self):
+    def test_simple_case(self, tcl_factory):
         spack.modules._module_config = self.configuration_autoload_direct
         spec = spack.spec.Spec(mpich_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertTrue('module-whatis "mpich @3.0.4"' in content)
-        self.assertRaises(TypeError, spack.modules.dependencies,
-                          spec, 'non-existing-tag')
+        content = get_modulefile_content(tcl_factory, spec)
+        assert 'module-whatis "mpich @3.0.4"' in content
+        with pytest.raises(TypeError):
+            spack.modules.dependencies(spec, 'non-existing-tag')
 
-    def test_autoload(self):
+    def test_autoload(self, tcl_factory):
         spack.modules._module_config = self.configuration_autoload_direct
         spec = spack.spec.Spec(mpileaks_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
-        self.assertEqual(len([x for x in content if 'module load ' in x]), 2)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'is-loaded' in x]) == 2
+        assert len([x for x in content if 'module load ' in x]) == 2
 
         spack.modules._module_config = self.configuration_autoload_all
         spec = spack.spec.Spec(mpileaks_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 5)
-        self.assertEqual(len([x for x in content if 'module load ' in x]), 5)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'is-loaded' in x]) == 5
+        assert len([x for x in content if 'module load ' in x]) == 5
 
         # dtbuild1 has
         # - 1 ('run',) dependency
@@ -258,9 +270,9 @@ class TclTests(ModuleFileGeneratorTests):
         # Just make sure the 'build' dependency is not there
         spack.modules._module_config = self.configuration_autoload_direct
         spec = spack.spec.Spec('dtbuild1')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
-        self.assertEqual(len([x for x in content if 'module load ' in x]), 2)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'is-loaded' in x]) == 2
+        assert len([x for x in content if 'module load ' in x]) == 2
 
         # dtbuild1 has
         # - 1 ('run',) dependency
@@ -269,95 +281,85 @@ class TclTests(ModuleFileGeneratorTests):
         # Just make sure the 'build' dependency is not there
         spack.modules._module_config = self.configuration_autoload_all
         spec = spack.spec.Spec('dtbuild1')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
-        self.assertEqual(len([x for x in content if 'module load ' in x]), 2)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'is-loaded' in x]) == 2
+        assert len([x for x in content if 'module load ' in x]) == 2
 
-    def test_prerequisites(self):
+    def test_prerequisites(self, tcl_factory):
         spack.modules._module_config = self.configuration_prerequisites_direct
         spec = spack.spec.Spec('mpileaks arch=x86-linux')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'prereq' in x]), 2)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'prereq' in x]) == 2
 
         spack.modules._module_config = self.configuration_prerequisites_all
         spec = spack.spec.Spec('mpileaks arch=x86-linux')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'prereq' in x]), 5)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'prereq' in x]) == 5
 
-    def test_alter_environment(self):
+    def test_alter_environment(self, tcl_factory):
         spack.modules._module_config = self.configuration_alter_environment
         spec = spack.spec.Spec('mpileaks platform=test target=x86_64')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x
-                 for x in content
-                 if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 0)
-        self.assertEqual(
-            len([x for x in content if 'setenv FOO "foo"' in x]), 1)
-        self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 1)
-        self.assertEqual(
-            len([x for x in content if 'setenv MPILEAKS_ROOT' in x]), 1)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content
+                    if x.startswith('prepend-path CMAKE_PREFIX_PATH')
+                    ]) == 0
+        assert len([x for x in content if 'setenv FOO "foo"' in x]) == 1
+        assert len([x for x in content if 'unsetenv BAR' in x]) == 1
+        assert len([x for x in content if 'setenv MPILEAKS_ROOT' in x]) == 1
 
         spec = spack.spec.Spec('libdwarf %clang platform=test target=x86_32')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x
-                 for x in content
-                 if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 0)
-        self.assertEqual(
-            len([x for x in content if 'setenv FOO "foo"' in x]), 0)
-        self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 0)
-        self.assertEqual(
-            len([x for x in content if 'is-loaded foo/bar' in x]), 1)
-        self.assertEqual(
-            len([x for x in content if 'module load foo/bar' in x]), 1)
-        self.assertEqual(
-            len([x for x in content if 'setenv LIBDWARF_ROOT' in x]), 1)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len(
+            [x for x in content if x.startswith('prepend-path CMAKE_PREFIX_PATH')]  # NOQA: ignore=E501
+        ) == 0
+        assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
+        assert len([x for x in content if 'unsetenv BAR' in x]) == 0
+        assert len([x for x in content if 'is-loaded foo/bar' in x]) == 1
+        assert len([x for x in content if 'module load foo/bar' in x]) == 1
+        assert len([x for x in content if 'setenv LIBDWARF_ROOT' in x]) == 1
 
-    def test_blacklist(self):
+    def test_blacklist(self, tcl_factory):
         spack.modules._module_config = self.configuration_blacklist
         spec = spack.spec.Spec('mpileaks ^zmpi')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
-        self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'is-loaded' in x]) == 1
+        assert len([x for x in content if 'module load ' in x]) == 1
         spec = spack.spec.Spec('callpath arch=x86-linux')
         # Returns a StringIO instead of a string as no module file was written
-        self.assertRaises(AttributeError, self.get_modulefile_content, spec)
+        with pytest.raises(AttributeError):
+            get_modulefile_content(tcl_factory, spec)
         spec = spack.spec.Spec('zmpi arch=x86-linux')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
-        self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'is-loaded' in x]) == 1
+        assert len([x for x in content if 'module load ' in x]) == 1
 
-    def test_conflicts(self):
+    def test_conflicts(self, tcl_factory):
         spack.modules._module_config = self.configuration_conflicts
         spec = spack.spec.Spec('mpileaks')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x for x in content if x.startswith('conflict')]), 2)
-        self.assertEqual(
-            len([x for x in content if x == 'conflict mpileaks']), 1)
-        self.assertEqual(
-            len([x for x in content if x == 'conflict intel/14.0.1']), 1)
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if x.startswith('conflict')]) == 2
+        assert len([x for x in content if x == 'conflict mpileaks']) == 1
+        assert len([x for x in content if x == 'conflict intel/14.0.1']) == 1
 
         spack.modules._module_config = self.configuration_wrong_conflicts
-        self.assertRaises(SystemExit, self.get_modulefile_content, spec)
+        with pytest.raises(SystemExit):
+            get_modulefile_content(tcl_factory, spec)
 
-    def test_suffixes(self):
+    def test_suffixes(self, tcl_factory):
         spack.modules._module_config = self.configuration_suffix
         spec = spack.spec.Spec('mpileaks+debug arch=x86-linux')
         spec.concretize()
-        generator = spack.modules.TclModule(spec)
-        self.assertTrue('foo' in generator.use_name)
+        generator = tcl_factory(spec)
+        assert 'foo' in generator.use_name
 
         spec = spack.spec.Spec('mpileaks~debug arch=x86-linux')
         spec.concretize()
-        generator = spack.modules.TclModule(spec)
-        self.assertTrue('bar' in generator.use_name)
+        generator = tcl_factory(spec)
+        assert 'bar' in generator.use_name
 
 
-class LmodTests(ModuleFileGeneratorTests):
-    factory = spack.modules.LmodModule
-
+@pytest.mark.usefixtures('config', 'builtin_mock', 'stringio_open')
+class TestLmod(object):
     configuration_autoload_direct = {
         'enable': ['lmod'],
         'lmod': {
@@ -411,83 +413,74 @@ class LmodTests(ModuleFileGeneratorTests):
         }
     }
 
-    def test_simple_case(self):
+    def test_simple_case(self, lmod_factory):
         spack.modules._module_config = self.configuration_autoload_direct
         spec = spack.spec.Spec(mpich_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertTrue('-- -*- lua -*-' in content)
-        self.assertTrue('whatis([[Name : mpich]])' in content)
-        self.assertTrue('whatis([[Version : 3.0.4]])' in content)
+        content = get_modulefile_content(lmod_factory, spec)
+        assert '-- -*- lua -*-' in content
+        assert 'whatis([[Name : mpich]])' in content
+        assert 'whatis([[Version : 3.0.4]])' in content
 
-    def test_autoload(self):
+    def test_autoload(self, lmod_factory):
         spack.modules._module_config = self.configuration_autoload_direct
         spec = spack.spec.Spec(mpileaks_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x for x in content if 'if not isloaded(' in x]), 2)
-        self.assertEqual(len([x for x in content if 'load(' in x]), 2)
+        content = get_modulefile_content(lmod_factory, spec)
+        assert len([x for x in content if 'if not isloaded(' in x]) == 2
+        assert len([x for x in content if 'load(' in x]) == 2
 
         spack.modules._module_config = self.configuration_autoload_all
         spec = spack.spec.Spec(mpileaks_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x for x in content if 'if not isloaded(' in x]), 5)
-        self.assertEqual(len([x for x in content if 'load(' in x]), 5)
+        content = get_modulefile_content(lmod_factory, spec)
+        assert len([x for x in content if 'if not isloaded(' in x]) == 5
+        assert len([x for x in content if 'load(' in x]) == 5
 
-    def test_alter_environment(self):
+    def test_alter_environment(self, lmod_factory):
         spack.modules._module_config = self.configuration_alter_environment
         spec = spack.spec.Spec('mpileaks platform=test target=x86_64')
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x
-                 for x in content
-                 if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]), 0)
-        self.assertEqual(
-            len([x for x in content if 'setenv("FOO", "foo")' in x]), 1)
-        self.assertEqual(
-            len([x for x in content if 'unsetenv("BAR")' in x]), 1)
+        content = get_modulefile_content(lmod_factory, spec)
+        assert len(
+            [x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]  # NOQA: ignore=E501
+        ) == 0
+        assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 1
+        assert len([x for x in content if 'unsetenv("BAR")' in x]) == 1
 
         spec = spack.spec.Spec('libdwarf %clang platform=test target=x86_32')
-        content = self.get_modulefile_content(spec)
-        print('\n'.join(content))
-        self.assertEqual(
-            len([x
-                 for x in content
-                 if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]), 0)
-        self.assertEqual(
-            len([x for x in content if 'setenv("FOO", "foo")' in x]), 0)
-        self.assertEqual(
-            len([x for x in content if 'unsetenv("BAR")' in x]), 0)
+        content = get_modulefile_content(lmod_factory, spec)
+        assert len(
+            [x for x in content if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]  # NOQA: ignore=E501
+        ) == 0
+        assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 0
+        assert len([x for x in content if 'unsetenv("BAR")' in x]) == 0
 
-    def test_blacklist(self):
+    def test_blacklist(self, lmod_factory):
         spack.modules._module_config = self.configuration_blacklist
         spec = spack.spec.Spec(mpileaks_spec_string)
-        content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x for x in content if 'if not isloaded(' in x]), 1)
-        self.assertEqual(len([x for x in content if 'load(' in x]), 1)
+        content = get_modulefile_content(lmod_factory, spec)
+        assert len([x for x in content if 'if not isloaded(' in x]) == 1
+        assert len([x for x in content if 'load(' in x]) == 1
 
-    def test_no_hash(self):
+    def test_no_hash(self, lmod_factory):
         # Make sure that virtual providers (in the hierarchy) always
         # include a hash. Make sure that the module file for the spec
         # does not include a hash if hash_length is 0.
         spack.modules._module_config = self.configuration_no_hash
         spec = spack.spec.Spec(mpileaks_spec_string)
         spec.concretize()
-        module = spack.modules.LmodModule(spec)
+        module = lmod_factory(spec)
         path = module.file_name
-        mpiSpec = spec['mpi']
+        mpi_spec = spec['mpi']
         mpiElement = "{0}/{1}-{2}/".format(
-            mpiSpec.name, mpiSpec.version, mpiSpec.dag_hash(length=7))
-        self.assertTrue(mpiElement in path)
-        mpileaksSpec = spec
-        mpileaksElement = "{0}/{1}.lua".format(
-            mpileaksSpec.name, mpileaksSpec.version)
-        self.assertTrue(path.endswith(mpileaksElement))
+            mpi_spec.name, mpi_spec.version, mpi_spec.dag_hash(length=7)
+        )
+        assert mpiElement in path
+        mpileaks_spec = spec
+        mpileaks_element = "{0}/{1}.lua".format(
+            mpileaks_spec.name, mpileaks_spec.version)
+        assert path.endswith(mpileaks_element)
 
 
-class DotkitTests(MockPackagesTest):
-
+@pytest.mark.usefixtures('config', 'builtin_mock', 'stringio_open')
+class TestDotkit(object):
     configuration_dotkit = {
         'enable': ['dotkit'],
         'dotkit': {
@@ -497,28 +490,9 @@ class DotkitTests(MockPackagesTest):
         }
     }
 
-    def setUp(self):
-        super(DotkitTests, self).setUp()
-        self.configuration_obj = spack.modules._module_config
-        spack.modules.open = mock_open
-        # Make sure that a non-mocked configuration will trigger an error
-        spack.modules._module_config = None
-
-    def tearDown(self):
-        del spack.modules.open
-        spack.modules._module_config = self.configuration_obj
-        super(DotkitTests, self).tearDown()
-
-    def get_modulefile_content(self, spec):
-        spec.concretize()
-        generator = spack.modules.Dotkit(spec)
-        generator.write()
-        content = FILE_REGISTRY[generator.file_name].split('\n')
-        return content
-
-    def test_dotkit(self):
+    def test_dotkit(self, dotkit_factory):
         spack.modules._module_config = self.configuration_dotkit
         spec = spack.spec.Spec('mpileaks arch=x86-linux')
-        content = self.get_modulefile_content(spec)
-        self.assertTrue('#c spack' in content)
-        self.assertTrue('#d mpileaks @2.3' in content)
+        content = get_modulefile_content(dotkit_factory, spec)
+        assert '#c spack' in content
+        assert '#d mpileaks @2.3' in content

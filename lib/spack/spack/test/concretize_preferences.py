@@ -22,92 +22,152 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import pytest
+
 import spack
-import spack.architecture
-from spack.test.mock_packages_test import *
-from tempfile import mkdtemp
+import spack.util.spack_yaml as syaml
+from spack.spec import Spec
+from spack.package_prefs import PreferredPackages
 
 
-class ConcretizePreferencesTest(MockPackagesTest):
-    """Test concretization preferences are being applied correctly.
-    """
+@pytest.fixture()
+def concretize_scope(config, tmpdir):
+    """Adds a scope for concretization preferences"""
+    tmpdir.ensure_dir('concretize')
+    spack.config.ConfigScope(
+        'concretize', str(tmpdir.join('concretize'))
+    )
+    yield
+    # This is kind of weird, but that's how config scopes are
+    # set in ConfigScope.__init__
+    spack.config.config_scopes.pop('concretize')
+    spack.package_prefs._pkgsort = PreferredPackages()
 
-    def setUp(self):
-        """Create config section to store concretization preferences
-        """
-        super(ConcretizePreferencesTest, self).setUp()
-        self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
-        spack.config.ConfigScope('concretize',
-                                 os.path.join(self.tmp_dir, 'concretize'))
+    # reset provider index each time, too
+    spack.repo._provider_index = None
 
-    def tearDown(self):
-        super(ConcretizePreferencesTest, self).tearDown()
-        shutil.rmtree(self.tmp_dir, True)
-        spack.pkgsort = spack.PreferredPackages()
 
-    def concretize(self, abstract_spec):
-        return Spec(abstract_spec).concretized()
+def concretize(abstract_spec):
+    return Spec(abstract_spec).concretized()
 
-    def update_packages(self, pkgname, section, value):
-        """Update config and reread package list"""
-        conf = {pkgname: {section: value}}
-        spack.config.update_config('packages', conf, 'concretize')
-        spack.pkgsort = spack.PreferredPackages()
 
-    def assert_variant_values(self, spec, **variants):
-        concrete = self.concretize(spec)
-        for variant, value in variants.items():
-            self.assertEqual(concrete.variants[variant].value, value)
+def update_packages(pkgname, section, value):
+    """Update config and reread package list"""
+    conf = {pkgname: {section: value}}
+    spack.config.update_config('packages', conf, 'concretize')
+    spack.package_prefs._pkgsort = PreferredPackages()
 
+
+def assert_variant_values(spec, **variants):
+    concrete = concretize(spec)
+    for variant, value in variants.items():
+        assert concrete.variants[variant].value == value
+
+
+@pytest.mark.usefixtures('concretize_scope', 'builtin_mock')
+class TestConcretizePreferences(object):
     def test_preferred_variants(self):
         """Test preferred variants are applied correctly
         """
-        self.update_packages('mpileaks', 'variants',
-                             '~debug~opt+shared+static')
-        self.assert_variant_values('mpileaks', debug=False, opt=False,
-                                   shared=True, static=True)
+        update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
+        assert_variant_values(
+            'mpileaks', debug=False, opt=False, shared=True, static=True
+        )
+        update_packages(
+            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
+        )
+        assert_variant_values(
+            'mpileaks', debug=True, opt=True, shared=False, static=False
+        )
 
-        self.update_packages('mpileaks', 'variants',
-                             ['+debug', '+opt', '~shared', '-static'])
-        self.assert_variant_values('mpileaks', debug=True, opt=True,
-                                   shared=False, static=False)
-
-    def test_preferred_compilers(self):
+    def test_preferred_compilers(self, refresh_builtin_mock):
         """Test preferred compilers are applied correctly
         """
-        self.update_packages('mpileaks', 'compiler', ['clang@3.3'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.compiler, spack.spec.CompilerSpec('clang@3.3'))
+        update_packages('mpileaks', 'compiler', ['clang@3.3'])
+        spec = concretize('mpileaks')
+        assert spec.compiler == spack.spec.CompilerSpec('clang@3.3')
 
-        self.update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.compiler, spack.spec.CompilerSpec('gcc@4.5.0'))
+        update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
+        spec = concretize('mpileaks')
+        assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
         """
-        self.update_packages('mpileaks', 'version', ['2.3'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.version, spack.spec.Version('2.3'))
+        update_packages('mpileaks', 'version', ['2.3'])
+        spec = concretize('mpileaks')
+        assert spec.version == spack.spec.Version('2.3')
 
-        self.update_packages('mpileaks', 'version', ['2.2'])
-        spec = self.concretize('mpileaks')
-        self.assertEqual(spec.version, spack.spec.Version('2.2'))
+        update_packages('mpileaks', 'version', ['2.2'])
+        spec = concretize('mpileaks')
+        assert spec.version == spack.spec.Version('2.2')
 
     def test_preferred_providers(self):
-        """Test preferred providers of virtual packages are applied correctly
+        """Test preferred providers of virtual packages are
+        applied correctly
         """
-        self.update_packages('all', 'providers', {'mpi': ['mpich']})
-        spec = self.concretize('mpileaks')
-        self.assertTrue('mpich' in spec)
+        update_packages('all', 'providers', {'mpi': ['mpich']})
+        spec = concretize('mpileaks')
+        assert 'mpich' in spec
 
-        self.update_packages('all', 'providers', {'mpi': ['zmpi']})
-        spec = self.concretize('mpileaks')
-        self.assertTrue('zmpi', spec)
+        update_packages('all', 'providers', {'mpi': ['zmpi']})
+        spec = concretize('mpileaks')
+        assert 'zmpi' in spec
 
     def test_develop(self):
-        """Test conretization with develop version
-        """
+        """Test concretization with develop version"""
         spec = Spec('builtin.mock.develop-test')
         spec.concretize()
-        self.assertEqual(spec.version, spack.spec.Version('0.2.15'))
+        assert spec.version == spack.spec.Version('0.2.15')
+
+    def test_no_virtuals_in_packages_yaml(self):
+        """Verify that virtuals are not allowed in packages.yaml."""
+
+        # set up a packages.yaml file with a vdep as a key.  We use
+        # syaml.load here to make sure source lines in the config are
+        # attached to parsed strings, as the error message uses them.
+        conf = syaml.load("""\
+mpi:
+    paths:
+      mpi-with-lapack@2.1: /path/to/lapack
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # now when we get the packages.yaml config, there should be an error
+        with pytest.raises(spack.package_prefs.VirtualInPackagesYAMLError):
+            spack.package_prefs.get_packages_config()
+
+    def test_all_is_not_a_virtual(self):
+        """Verify that `all` is allowed in packages.yaml."""
+        conf = syaml.load("""\
+all:
+        variants: [+mpi]
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # should be no error for 'all':
+        spack.package_prefs._pkgsort = PreferredPackages()
+        spack.package_prefs.get_packages_config()
+
+    def test_external_mpi(self):
+        # make sure this doesn't give us an external first.
+        spec = Spec('mpi')
+        spec.concretize()
+        assert not spec['mpi'].external
+
+        # load config
+        conf = syaml.load("""\
+all:
+    providers:
+        mpi: [mpich]
+mpich:
+    buildable: false
+    paths:
+        mpich@3.0.4: /dummy/path
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # ensure that once config is in place, external is used
+        spec = Spec('mpi')
+        spec.concretize()
+        assert spec['mpich'].external == '/dummy/path'

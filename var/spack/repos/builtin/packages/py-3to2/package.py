@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Py3to2(Package):
+class Py3to2(PythonPackage):
     """lib3to2 is a set of fixers that are intended to backport code written
     for Python version 3.x into Python version 2.x."""
 
@@ -33,8 +33,3 @@ class Py3to2(Package):
     url      = "https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip"
 
     version('1.1.1', 'cbeed28e350dbdaef86111ace3052824')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

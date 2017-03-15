@@ -49,6 +49,9 @@ def setup_parser(subparser):
              'installed [+], missing and needed by an installed package [-], '
              'or not installed (no annotation).')
     subparser.add_argument(
+        '-t', '--types', action='store_true', default=False,
+        help='Show dependency types.')
+    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
@@ -59,6 +62,7 @@ def spec(parser, args):
               'format': name_fmt + '$@$%@+$+$=',
               'hashes': args.long or args.very_long,
               'hashlen': None if args.very_long else 7,
+              'show_types': args.types,
               'install_status': args.install_status}
 
     for spec in spack.cmd.parse_specs(args.specs):

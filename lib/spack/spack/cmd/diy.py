@@ -31,7 +31,6 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
 
 description = "Do-It-Yourself: build from an existing source directory."
@@ -68,15 +67,8 @@ def diy(self, args):
 
     spec = specs[0]
     if not spack.repo.exists(spec.name):
-        tty.warn("No such package: %s" % spec.name)
-        create = tty.get_yes_or_no("Create this package?", default=False)
-        if not create:
-            tty.msg("Exiting without creating.")
-            sys.exit(1)
-        else:
-            tty.msg("Running 'spack edit -f %s'" % spec.name)
-            edit_package(spec.name, spack.repo.first_repo(), None, True)
-            return
+        tty.die("No package for '{0}' was found.".format(spec.name),
+                "  Use `spack create` to create a new package")
 
     if not spec.versions.concrete:
         tty.die(

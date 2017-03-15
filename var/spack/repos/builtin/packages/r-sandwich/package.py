@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RSandwich(Package):
+class RSandwich(RPackage):
     """Model-robust standard error estimators for cross-sectional, time series,
     and longitudinal data."""
 
@@ -35,10 +35,4 @@ class RSandwich(Package):
 
     version('2.3-4', 'a621dbd8a57b6e1e036496642aadc2e5')
 
-    extends('R')
-
-    depends_on('r-zoo', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-zoo', type=('build', 'run'))

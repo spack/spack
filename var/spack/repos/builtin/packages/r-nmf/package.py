@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNmf(Package):
+class RNmf(RPackage):
     """Provides a framework to perform Non-negative Matrix Factorization (NMF).
     The package implements a set of already published algorithms and seeding
     methods, and provides a framework to test, develop and plug new/custom
@@ -39,22 +39,16 @@ class RNmf(Package):
 
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 
-    extends('R')
-
-    depends_on('r-pkgmaker', type=nolink)
-    depends_on('r-registry', type=nolink)
-    depends_on('r-rngtools', type=nolink)
-    depends_on('r-cluster', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-gridbase', type=nolink)
-    depends_on('r-colorspace', type=nolink)
-    depends_on('r-rcolorbrewer', type=nolink)
-    depends_on('r-foreach', type=nolink)
-    depends_on('r-doparallel', type=nolink)
-    depends_on('r-ggplot2', type=nolink)
-    depends_on('r-reshape2', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r-registry', type=('build', 'run'))
+    depends_on('r-rngtools', type=('build', 'run'))
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-gridbase', type=('build', 'run'))
+    depends_on('r-colorspace', type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))
+    depends_on('r-doparallel', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))

@@ -53,7 +53,7 @@ class GoBootstrap(Package):
 
     provides('golang@:1.4-bootstrap-20161024')
 
-    depends_on('git', type='alldeps')
+    depends_on('git', type=('build', 'link', 'run'))
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the
@@ -86,6 +86,9 @@ class GoBootstrap(Package):
                 shutil.copytree(f, os.path.join(prefix, f))
             else:
                 shutil.copy2(f, os.path.join(prefix, f))
+
+    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+        spack_env.set('GOROOT_BOOTSTRAP', self.spec.prefix)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)

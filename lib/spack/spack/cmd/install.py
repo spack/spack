@@ -321,36 +321,36 @@ def install(parser, args, **kwargs):
 
     # Spec from cli
     specs = spack.cmd.parse_specs(args.package, concretize=True)
-    if len(specs) != 1:
-        tty.error('only one spec can be installed at a time.')
-    spec = specs.pop()
+    if len(specs) == 0:
+        tty.error('The `spack install` command requires a spec to install.')
 
-    # Check if we were asked to produce some log for dashboards
-    if args.log_format is not None:
-        # Compute the filename for logging
-        log_filename = args.log_file
-        if not log_filename:
-            log_filename = default_log_file(spec)
-        # Create the test suite in which to log results
-        test_suite = TestSuite(spec)
-        # Decorate PackageBase.do_install to get installation status
-        PackageBase.do_install = junit_output(
-            spec, test_suite
-        )(PackageBase.do_install)
+    for spec in specs:
+        # Check if we were asked to produce some log for dashboards
+        if args.log_format is not None:
+            # Compute the filename for logging
+            log_filename = args.log_file
+            if not log_filename:
+                log_filename = default_log_file(spec)
+            # Create the test suite in which to log results
+            test_suite = TestSuite(spec)
+            # Decorate PackageBase.do_install to get installation status
+            PackageBase.do_install = junit_output(
+                spec, test_suite
+            )(PackageBase.do_install)
 
-    # Do the actual installation
-    if args.things_to_install == 'dependencies':
-        # Install dependencies as-if they were installed
-        # for root (explicit=False in the DB)
-        kwargs['explicit'] = False
-        for s in spec.dependencies():
-            p = spack.repo.get(s)
-            p.do_install(**kwargs)
-    else:
-        package = spack.repo.get(spec)
-        kwargs['explicit'] = True
-        package.do_install(**kwargs)
+        # Do the actual installation
+        if args.things_to_install == 'dependencies':
+            # Install dependencies as-if they were installed
+            # for root (explicit=False in the DB)
+            kwargs['explicit'] = False
+            for s in spec.dependencies():
+                p = spack.repo.get(s)
+                p.do_install(**kwargs)
+        else:
+            package = spack.repo.get(spec)
+            kwargs['explicit'] = True
+            package.do_install(**kwargs)
 
-    # Dump log file if asked to
-    if args.log_format is not None:
-        test_suite.dump(log_filename)
+        # Dump log file if asked to
+        if args.log_format is not None:
+            test_suite.dump(log_filename)

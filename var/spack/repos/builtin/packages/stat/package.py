@@ -50,7 +50,7 @@ class Stat(Package):
     depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
     depends_on('graphlib@2.0.0', when='@2.0.0:2.2.0')
     depends_on('graphlib@3.0.0', when='@3:')
-    depends_on('graphviz', type=alldeps)
+    depends_on('graphviz', type=('build', 'link', 'run'))
     depends_on('launchmon')
     depends_on('mrnet')
     depends_on('python')

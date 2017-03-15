@@ -45,7 +45,7 @@ class Mfem(Package):
     variant('hypre', default=False, description='Activate support for hypre')
     variant('suite-sparse', default=False,
             description='Activate support for SuiteSparse')
-    variant('mpi', default=False, description='Activate support for MPI')
+    variant('mpi', default=True, description='Activate support for MPI')
     variant('superlu-dist', default=False,
             description='Activate support for SuperLU_Dist')
     variant('lapack', default=False, description='Activate support for LAPACK')

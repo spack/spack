@@ -22,11 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+from spack import *
 
 
-class PyMistune(Package):
+class PyMistune(PythonPackage):
     """
     Python markdown parser
     """
@@ -39,8 +38,4 @@ class PyMistune(Package):
     version('0.5.1', '1c6cfce28a4aa90cf125217cd6c6fe6c')
     version('0.5', '997736554f1f95eea78c66ae339b5722')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

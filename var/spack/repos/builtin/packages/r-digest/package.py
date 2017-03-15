@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDigest(Package):
+class RDigest(RPackage):
     """Implementation of a function 'digest()' for the creation of hash digests
     of arbitrary R objects (using the md5, sha-1, sha-256, crc32, xxhash and
     murmurhash algorithms) permitting easy comparison of R language objects, as
@@ -48,9 +48,3 @@ class RDigest(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/digest"
 
     version('0.6.9', '48048ce6c466bdb124716e45ba4a0e83')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

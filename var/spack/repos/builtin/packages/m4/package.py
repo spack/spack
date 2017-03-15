@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
 class M4(AutotoolsPackage):
@@ -52,8 +51,9 @@ class M4(AutotoolsPackage):
             args.append('--without-libsigsegv-prefix')
 
         # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
-        if (sys.platform == 'darwin') and (spec.satisfies('%gcc')) and \
-           (spec.architecture.platform_os.version == '10.12'):
+        arch = spec.architecture
+        if (arch.platform == 'darwin' and arch.platform_os == 'sierra' and
+            '%gcc' in spec):
             args.append('ac_cv_type_struct_sched_param=yes')
 
         return args

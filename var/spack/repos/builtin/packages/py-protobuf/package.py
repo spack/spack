@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyProtobuf(Package):
+class PyProtobuf(PythonPackage):
     """Protocol buffers are Google's language-neutral, platform-neutral,
     extensible mechanism for serializing structured data - think XML, but
     smaller, faster, and simpler. You define how you want your data to be
@@ -42,9 +42,4 @@ class PyProtobuf(Package):
     version('2.4.1', '72f5141d20ab1bcae6b1e00acfb1068a')
     version('2.3.0', 'bb020c962f252fe81bfda8fb433bafdd')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

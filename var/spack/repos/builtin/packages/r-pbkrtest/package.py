@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPbkrtest(Package):
+class RPbkrtest(RPackage):
     """Test in mixed effects models. Attention is on mixed effects models as
     implemented in the 'lme4' package. This package implements a parametric
     bootstrap test and a Kenward Roger modification of F-tests for linear mixed
@@ -38,12 +38,6 @@ class RPbkrtest(Package):
 
     version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
 
-    extends('R')
-
-    depends_on('r-lme4', type=nolink)
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-mass', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lme4', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))

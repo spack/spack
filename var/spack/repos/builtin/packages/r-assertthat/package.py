@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RAssertthat(Package):
+class RAssertthat(RPackage):
     """assertthat is an extension to stopifnot() that makes it easy to declare
     the pre and post conditions that you code should satisfy, while also
     producing friendly error messages so that your users know what they've done
@@ -35,9 +35,3 @@ class RAssertthat(Package):
     url      = "https://cran.r-project.org/src/contrib/assertthat_0.1.tar.gz"
 
     version('0.1', '59f9d7f7c00077ea54d763b78eeb5798')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -55,6 +55,8 @@ class Openblas(MakefilePackage):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
 
+    parallel = False
+
     @property
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
@@ -90,11 +92,14 @@ class Openblas(MakefilePackage):
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
+
         make_defs = [
             'CC={0}'.format(spack_cc),
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
+        if self.spec.satisfies('%gcc@:4.8.4'):
+            make_defs += ['NO_AVX2=1']
         if '~shared' in self.spec:
             if '+pic' in self.spec:
                 make_defs.extend([

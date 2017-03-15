@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNlme(Package):
+class RNlme(RPackage):
     """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
 
     homepage = "https://cran.r-project.org/package=nlme"
@@ -34,10 +34,4 @@ class RNlme(Package):
 
     version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
 
-    extends('R')
-
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lattice', type=('build', 'run'))

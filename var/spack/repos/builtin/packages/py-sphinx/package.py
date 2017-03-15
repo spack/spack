@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySphinx(Package):
+class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
     homepage = "http://sphinx-doc.org"
     url      = "https://pypi.python.org/packages/source/S/Sphinx/Sphinx-1.3.1.tar.gz"
@@ -38,17 +38,14 @@ class PySphinx(Package):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-sphinx requires py-setuptools during runtime as well.
-    depends_on('py-setuptools',              type=nolink)
+    depends_on('py-setuptools',              type=('build', 'run'))
 
-    depends_on('py-six@1.4:',                type=nolink)
-    depends_on('py-jinja2@2.3:',             type=nolink)
-    depends_on('py-pygments@2.0:',           type=nolink)
-    depends_on('py-docutils@0.11:',          type=nolink)
-    depends_on('py-snowballstemmer@1.1:',    type=nolink)
-    depends_on('py-babel@1.3:',              type=nolink)  # not 2.0
-    depends_on('py-alabaster@0.7:',          type=nolink)
-    depends_on('py-imagesize', when='@1.4:', type=nolink)
-    depends_on('py-sphinx-rtd-theme@0.1:',   type=nolink)  # optional as of 1.4
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    depends_on('py-six@1.4:',                type=('build', 'run'))
+    depends_on('py-jinja2@2.3:',             type=('build', 'run'))
+    depends_on('py-pygments@2.0:',           type=('build', 'run'))
+    depends_on('py-docutils@0.11:',          type=('build', 'run'))
+    depends_on('py-snowballstemmer@1.1:',    type=('build', 'run'))
+    depends_on('py-babel@1.3:',              type=('build', 'run'))  # not 2.0
+    depends_on('py-alabaster@0.7:',          type=('build', 'run'))
+    depends_on('py-imagesize', when='@1.4:', type=('build', 'run'))
+    depends_on('py-sphinx-rtd-theme@0.1:',   type=('build', 'run'))  # optional as of 1.4

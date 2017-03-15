@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMultcomp(Package):
+class RMultcomp(RPackage):
     """Simultaneous tests and confidence intervals for general linear
     hypotheses in parametric models, including linear, generalized linear,
     linear mixed effects, and survival models. The package includes demos
@@ -38,14 +38,8 @@ class RMultcomp(Package):
 
     version('1.4-6', 'f1353ede2ed78b23859a7f1f1f9ebe88')
 
-    extends('R')
-
-    depends_on('r-mvtnorm', type=nolink)
-    depends_on('r-survival', type=nolink)
-    depends_on('r-thdata', type=nolink)
-    depends_on('r-sandwich', type=nolink)
-    depends_on('r-codetools', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-mvtnorm', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-thdata', type=('build', 'run'))
+    depends_on('r-sandwich', type=('build', 'run'))
+    depends_on('r-codetools', type=('build', 'run'))

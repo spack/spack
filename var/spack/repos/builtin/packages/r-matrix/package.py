@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMatrix(Package):
+class RMatrix(RPackage):
     """Classes and methods for dense and sparse matrices and operations on them
     using 'LAPACK' and 'SuiteSparse'."""
 
@@ -35,10 +35,4 @@ class RMatrix(Package):
 
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
 
-    extends('R')
-
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lattice', type=('build', 'run'))

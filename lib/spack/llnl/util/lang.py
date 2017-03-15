@@ -342,38 +342,6 @@ def match_predicate(*args):
     return match
 
 
-def DictWrapper(dictionary):
-    """Returns a class that wraps a dictionary and enables it to be used
-       like an object."""
-    class wrapper(object):
-
-        def __getattr__(self, name):
-            return dictionary[name]
-
-        def __setattr__(self, name, value):
-            dictionary[name] = value
-
-        def setdefault(self, *args):
-            return dictionary.setdefault(*args)
-
-        def get(self, *args):
-            return dictionary.get(*args)
-
-        def keys(self):
-            return dictionary.keys()
-
-        def values(self):
-            return dictionary.values()
-
-        def items(self):
-            return dictionary.items()
-
-        def __iter__(self):
-            return iter(dictionary)
-
-    return wrapper()
-
-
 def dedupe(sequence):
     """Yields a stable de-duplication of an hashable sequence
 
@@ -394,3 +362,15 @@ class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
+
+
+def duplicate_stream(original):
+    """Duplicates a stream  at the os level.
+
+    :param stream original: original stream to be duplicated. Must have a
+        `fileno` callable attribute.
+
+    :return: duplicate of the original stream
+    :rtype: file like object
+    """
+    return os.fdopen(os.dup(original.fileno()))

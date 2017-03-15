@@ -53,7 +53,7 @@ class Fftw(Package):
         description='Produces a quad precision version of the library '
                     '(works only with GCC and libquadmath)')
     variant('openmp', default=False, description="Enable OpenMP support.")
-    variant('mpi', default=False, description='Activate MPI support')
+    variant('mpi', default=True, description='Activate MPI support')
     variant(
         'pfft_patches', default=False,
         description='Add extra transpose functions for PFFT compatibility')

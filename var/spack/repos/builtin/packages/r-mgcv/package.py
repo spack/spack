@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMgcv(Package):
+class RMgcv(RPackage):
     """GAMs, GAMMs and other generalized ridge regression with multiple
     smoothing parameter estimation by GCV, REML or UBRE/AIC. Includes a gam()
     function, a wide variety of smoothers, JAGS support and distributions
@@ -37,11 +37,5 @@ class RMgcv(Package):
 
     version('1.8-13', '30607be3aaf44b13bd8c81fc32e8c984')
 
-    extends('R')
-
-    depends_on('r-nlme', type=nolink)
-    depends_on('r-matrix', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))

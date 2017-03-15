@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPbr(Package):
+class PyPbr(PythonPackage):
     """PBR is a library that injects some useful and sensible default
        behaviors into your setuptools run."""
     homepage = "https://pypi.python.org/pypi/pbr"
@@ -33,9 +33,4 @@ class PyPbr(Package):
 
     version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

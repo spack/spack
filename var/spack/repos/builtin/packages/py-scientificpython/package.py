@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyScientificpython(Package):
+class PyScientificpython(PythonPackage):
     """ScientificPython is a collection of Python modules for
        scientific computing. It contains support for geometry,
        mathematical functions, statistics, physical units, IO,
@@ -36,8 +36,3 @@ class PyScientificpython(Package):
     version('2.8.1', '73ee0df19c7b58cdf2954261f0763c77')
 
     depends_on('py-numpy')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

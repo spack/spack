@@ -30,7 +30,8 @@ description = 'Stops at build stage when installing a package, if possible'
 
 build_system_to_phase = {
     CMakePackage: 'build',
-    AutotoolsPackage: 'build'
+    AutotoolsPackage: 'build',
+    PythonPackage: 'build'
 }
 
 

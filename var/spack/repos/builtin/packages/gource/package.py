@@ -47,7 +47,7 @@ class Gource(Package):
     depends_on('libpng')
     depends_on('pcre')
     depends_on('sdl2')
-    depends_on('sdl2_image')
+    depends_on('sdl2-image')
 
     def install(self, spec, prefix):
         make_args = ['--prefix=%s' % prefix,

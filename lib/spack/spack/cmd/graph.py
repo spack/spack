@@ -84,7 +84,7 @@ def graph(parser, args):
         setup_parser.parser.print_help()
         return 1
 
-    deptype = nobuild
+    deptype = alldeps
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
         validate_deptype(deptype)

@@ -41,6 +41,7 @@ spack_file = join_path(spack_root, "bin", "spack")
 
 # spack directory hierarchy
 lib_path       = join_path(spack_root, "lib", "spack")
+external_path  = join_path(lib_path, "external")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 platform_path  = join_path(module_path, 'platforms')
@@ -76,7 +77,7 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.preferred_packages import PreferredPackages
+from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
@@ -87,7 +88,7 @@ from spack.util.path import canonicalize_path
 # Initialize various data structures & objects at the core of Spack.
 #-----------------------------------------------------------------------------
 # Version information
-spack_version = Version("0.9.1")
+spack_version = Version("0.10.0")
 
 
 # Set up the default packages database.
@@ -96,11 +97,6 @@ try:
     sys.meta_path.append(repo)
 except spack.error.SpackError, e:
     tty.die('while initializing Spack RepoPath:', e.message)
-
-
-# PreferredPackages controls preference sort order during concretization.
-# More preferred packages are sorted first.
-pkgsort = PreferredPackages()
 
 
 # Tests ABI compatibility between packages
@@ -157,23 +153,25 @@ dirty = _config.get('dirty', False)
 #       for packages.
 #
 #-----------------------------------------------------------------------------
-__all__ = ['PackageBase',
-           'Package',
-           'CMakePackage',
-           'AutotoolsPackage',
-           'MakefilePackage',
-           'Version',
-           'when',
-           'ver',
-           'alldeps',
-           'nolink']
-from spack.package import Package, PackageBase, ExtensionConflictError
+__all__ = []
+
+from spack.package import Package
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.python import PythonPackage
+from spack.build_systems.r import RPackage
+__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
+            'PythonPackage', 'RPackage']
+
 from spack.version import Version, ver
-from spack.spec import DependencySpec, alldeps, nolink
+__all__ += ['Version', 'ver']
+
+from spack.spec import Spec, alldeps
+__all__ += ['Spec', 'alldeps']
+
 from spack.multimethod import when
+__all__ += ['when']
 
 import llnl.util.filesystem
 from llnl.util.filesystem import *
@@ -196,3 +194,8 @@ from spack.package import \
 __all__ += [
     'install_dependency_symlinks', 'flatten_dependencies',
     'DependencyConflictError', 'InstallError', 'ExternalPackageError']
+
+# Add default values for attributes that would otherwise be modified from
+# Spack main script
+debug = True
+spack_working_dir = None

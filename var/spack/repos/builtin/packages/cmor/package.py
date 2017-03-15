@@ -47,7 +47,7 @@ class Cmor(AutotoolsPackage):
 
     extends('python', when='+python')
     depends_on('python@:2.7', when='+python')
-    depends_on('py-numpy', type=nolink, when='+python')
+    depends_on('py-numpy', type=('build', 'run'), when='+python')
 
     @AutotoolsPackage.precondition('configure')
     def validate(self):

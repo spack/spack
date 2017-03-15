@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RStanheaders(Package):
+class RStanheaders(RPackage):
     """The C++ header files of the Stan project are provided by this package,
     but it contains no R code, vignettes, or function documentation. There is a
     shared object containing part of the CVODES library, but it is not
@@ -47,9 +47,3 @@ class RStanheaders(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/StanHeaders"
 
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

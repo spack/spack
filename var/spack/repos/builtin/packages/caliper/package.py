@@ -36,7 +36,7 @@ class Caliper(Package):
 
     version('master', git='https://github.com/LLNL/Caliper.git')
 
-    variant('mpi', default=False, description='Enable MPI function wrappers.')
+    variant('mpi', default=True, description='Enable MPI function wrappers.')
 
     depends_on('libunwind')
     depends_on('papi')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RTibble(Package):
+class RTibble(RPackage):
     """Provides a 'tbl_df' class that offers better checking and printing
     capabilities than traditional data frames."""
 
@@ -35,12 +35,6 @@ class RTibble(Package):
 
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    extends('R')
-
-    depends_on('r-assertthat', type=nolink)
-    depends_on('r-lazyeval', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-assertthat', type=('build', 'run'))
+    depends_on('r-lazyeval', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

@@ -36,8 +36,6 @@ class YamlCpp(CMakePackage):
     variant('fpic',    default=False,
             description='Build with position independent code')
 
-    depends_on('cmake', type='build')
-
     depends_on('boost', when='@:0.5.3')
 
     def cmake_args(self):

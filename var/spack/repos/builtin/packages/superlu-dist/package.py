@@ -43,6 +43,9 @@ class SuperluDist(Package):
     version('4.0', 'c0b98b611df227ae050bc1635c6940e0')
     version('3.3', 'f4805659157d93a962500902c219046b')
 
+    variant('int64', default=False,
+            description="Use 64bit integers")
+
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
@@ -66,8 +69,10 @@ class SuperluDist(Package):
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = -fPIC -std=c99 -O2 -I%s -I%s' % (
-                spec['parmetis'].prefix.include, spec['metis'].prefix.include),
+            'CFLAGS       = -fPIC -std=c99 -O2 -I%s -I%s %s' % (
+                spec['parmetis'].prefix.include,
+                spec['metis'].prefix.include,
+                '-D_LONGINT' if '+int64' in spec else ''),
             'NOOPTS       = -fPIC -std=c99',
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
             'F90FLAGS     = -O2',

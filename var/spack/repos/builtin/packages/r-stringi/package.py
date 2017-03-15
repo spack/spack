@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RStringi(Package):
+class RStringi(RPackage):
     """Allows for fast, correct, consistent, portable, as well as convenient
     character string/text processing in every locale and any native encoding.
     Owing to the use of the ICU library, the package provides R users with
@@ -42,10 +42,4 @@ class RStringi(Package):
 
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
-    extends('R')
-
     depends_on('icu4c')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

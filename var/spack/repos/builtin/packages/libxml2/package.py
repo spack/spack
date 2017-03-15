@@ -43,6 +43,8 @@ class Libxml2(Package):
     depends_on('zlib')
     depends_on('xz')
 
+    depends_on('pkg-config@0.9.0:', type='build')
+
     def install(self, spec, prefix):
         if '+python' in spec:
             python_args = [

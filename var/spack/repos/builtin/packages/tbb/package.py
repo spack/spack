@@ -35,6 +35,9 @@ class Tbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # Only version-specific URL's work for TBB
+    # can also use https://github.com/01org/tbb/releases/
+    version('2017.3', '2c451a5bcf6fc31487b98b4b29651c369874277c',
+            url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb2017_20161128oss_src.tgz')
     version('4.4.4', 'd4cee5e4ca75cab5181834877738619c56afeb71',
             url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')
     version('4.4.3', '80707e277f69d9b20eeebdd7a5f5331137868ce1',

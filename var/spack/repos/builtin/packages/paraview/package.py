@@ -37,7 +37,7 @@ class Paraview(Package):
 
     variant('tcl', default=False, description='Enable TCL support')
 
-    variant('mpi', default=False, description='Enable MPI support')
+    variant('mpi', default=True, description='Enable MPI support')
 
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt support')

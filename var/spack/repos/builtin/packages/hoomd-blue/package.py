@@ -46,7 +46,7 @@ class HoomdBlue(Package):
     variant('doc',  default=True, description='Generate documentation')
 
     extends('python')
-    depends_on('py-numpy', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('boost+python')
     depends_on('cmake', type='build')
     depends_on('mpi', when='+mpi')

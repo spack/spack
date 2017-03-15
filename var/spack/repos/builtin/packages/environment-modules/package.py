@@ -36,7 +36,7 @@ class EnvironmentModules(Package):
     version('3.2.10', '8b097fdcb90c514d7540bb55a3cb90fb')
 
     # Dependencies:
-    depends_on('tcl', type=alldeps)
+    depends_on('tcl', type=('build', 'link', 'run'))
 
     def install(self, spec, prefix):
         tcl_spec = spec['tcl']

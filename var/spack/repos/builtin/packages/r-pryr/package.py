@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RPryr(Package):
+class RPryr(RPackage):
     """Useful tools to pry back the covers of R and understand the language
     at a deeper level."""
 
@@ -36,11 +36,5 @@ class RPryr(Package):
 
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 
-    extends('R')
-
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

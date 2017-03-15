@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RRmarkdown(Package):
+class RRmarkdown(RPackage):
     """Convert R Markdown documents into a variety of formats."""
 
     homepage = "http://rmarkdown.rstudio.com/"
@@ -35,16 +35,10 @@ class RRmarkdown(Package):
 
     version('1.0', '264aa6a59e9680109e38df8270e14c58')
 
-    extends('R')
-
-    depends_on('r-knitr', type=nolink)
-    depends_on('r-yaml', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-catools', type=nolink)
-    depends_on('r-evaluate', type=nolink)
-    depends_on('r-base64enc', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-catools', type=('build', 'run'))
+    depends_on('r-evaluate', type=('build', 'run'))
+    depends_on('r-base64enc', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))

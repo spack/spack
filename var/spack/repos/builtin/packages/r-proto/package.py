@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RProto(Package):
+class RProto(RPackage):
     """An object oriented system using object-based, also called
     prototype-based, rather than class-based object oriented ideas."""
 
@@ -34,9 +34,3 @@ class RProto(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/proto"
 
     version('0.3-10', 'd5523943a5be6ca2f0ab557c900f8212')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

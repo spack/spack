@@ -22,71 +22,87 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 import os
+import re
+import argparse
+import pytest
+from StringIO import StringIO
 
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import *
 from llnl.util.tty.colify import colify
 
 import spack
-import spack.test
-from spack.fetch_strategy import FetchError
 
-description = "Run unit tests"
+description = "A thin wrapper around the pytest command."
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'names', nargs='*', help="Names of tests to run.")
+        '-H', '--pytest-help', action='store_true', default=False,
+        help="print full pytest help message, showing advanced options.")
+
+    list_group = subparser.add_mutually_exclusive_group()
+    list_group.add_argument(
+        '-l', '--list', action='store_true', default=False,
+        help="list basic test names.")
+    list_group.add_argument(
+        '-L', '--long-list', action='store_true', default=False,
+        help="list the entire hierarchy of tests.")
     subparser.add_argument(
-        '-l', '--list', action='store_true', dest='list',
-        help="Show available tests")
-    subparser.add_argument(
-        '--createXmlOutput', action='store_true', dest='createXmlOutput',
-        help="Create JUnit XML from test results")
-    subparser.add_argument(
-        '--xmlOutputDir', dest='xmlOutputDir',
-        help="Nose creates XML files in this directory")
-    subparser.add_argument(
-        '-v', '--verbose', action='store_true', dest='verbose',
-        help="verbose output")
+        'tests', nargs=argparse.REMAINDER,
+        help="list of tests to run (will be passed to pytest -k).")
 
 
-class MockCache(object):
+def do_list(args, unknown_args):
+    """Print a lists of tests than what pytest offers."""
+    # Run test collection and get the tree out.
+    old_output = sys.stdout
+    try:
+        sys.stdout = output = StringIO()
+        pytest.main(['--collect-only'])
+    finally:
+        sys.stdout = old_output
 
-    def store(self, copyCmd, relativeDst):
-        pass
+    # put the output in a more readable tree format.
+    lines = output.getvalue().split('\n')
+    output_lines = []
+    for line in lines:
+        match = re.match(r"(\s*)<([^ ]*) '([^']*)'", line)
+        if not match:
+            continue
+        indent, nodetype, name = match.groups()
 
-    def fetcher(self, targetPath, digest, **kwargs):
-        return MockCacheFetcher()
-
-
-class MockCacheFetcher(object):
-
-    def set_stage(self, stage):
-        pass
-
-    def fetch(self):
-        raise FetchError("Mock cache always fails for tests")
-
-    def __str__(self):
-        return "[mock fetcher]"
-
-
-def test(parser, args):
-    if args.list:
-        print "Available tests:"
-        colify(spack.test.list_tests(), indent=2)
-
-    else:
-        if not args.createXmlOutput:
-            outputDir = None
+        # only print top-level for short list
+        if args.list:
+            if not indent:
+                output_lines.append(
+                    os.path.basename(name).replace('.py', ''))
         else:
-            if not args.xmlOutputDir:
-                outputDir = join_path(os.getcwd(), "test-output")
-            else:
-                outputDir = os.path.abspath(args.xmlOutputDir)
+            print indent + name
 
-            if not os.path.exists(outputDir):
-                mkdirp(outputDir)
-        spack.fetch_cache = MockCache()
-        spack.test.run(args.names, outputDir, args.verbose)
+    if args.list:
+        colify(output_lines)
+
+
+def test(parser, args, unknown_args):
+    if args.pytest_help:
+        # make the pytest.main help output more accurate
+        sys.argv[0] = 'spack test'
+        pytest.main(['-h'])
+        return
+
+    # pytest.ini lives in the root of the sapck repository.
+    with working_dir(spack.prefix):
+        # --list and --long-list print the test output better.
+        if args.list or args.long_list:
+            do_list(args, unknown_args)
+            return
+
+        # Allow keyword search without -k if no options are specified
+        if (args.tests and not unknown_args and
+            not any(arg.startswith('-') for arg in args.tests)):
+            return pytest.main(['-k'] + args.tests)
+
+        # Just run the pytest command
+        return pytest.main(unknown_args + args.tests)

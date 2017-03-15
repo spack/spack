@@ -63,12 +63,12 @@ class Openspeedshop(Package):
     url	= "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
-    version('2.2', branch='master',
+    version('2.3', branch='master',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
 
     # Optional mirror template
-    # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.2.tar.gz"
-    # version('2.2', '517a7798507241ad8abd8b0626a4d2cf')
+    # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.3.tar.gz"
+    # version('2.3', '517a7798507241ad8abd8b0626a4d2cf')
 
     parallel = False
 
@@ -118,8 +118,8 @@ class Openspeedshop(Package):
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
-    depends_on("boost@1.50.0:")
-    depends_on("dyninst@9.1.0:")
+    depends_on("boost@1.50.0:1.59.0")
+    depends_on("dyninst@9.2.0")
     depends_on("libxml2+python")
     depends_on("qt@3.3.8b+krellpatch")
 

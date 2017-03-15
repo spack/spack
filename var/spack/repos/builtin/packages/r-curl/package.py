@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCurl(Package):
+class RCurl(RPackage):
     """The curl() and curl_download() functions provide highly configurable
     drop-in replacements for base url() and download.file() with better
     performance, support for encryption (https, ftps), gzip compression,
@@ -43,10 +43,4 @@ class RCurl(Package):
     version('1.0', '93d34926d6071e1fba7e728b482f0dd9')
     version('0.9.7', 'a101f7de948cb828fef571c730f39217')
 
-    extends('R')
-
     depends_on('curl')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

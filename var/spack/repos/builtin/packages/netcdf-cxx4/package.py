@@ -25,7 +25,7 @@
 from spack import *
 
 
-class NetcdfCxx4(Package):
+class NetcdfCxx4(AutotoolsPackage):
     """C++ interface for NetCDF4"""
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "https://www.github.com/unidata/netcdf-cxx4/tarball/v4.3.0"
@@ -34,11 +34,8 @@ class NetcdfCxx4(Package):
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
     depends_on('netcdf')
-    depends_on("autoconf", type='build')
+    depends_on('autoconf', type='build')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         # Rebuild to prevent problems of inconsistency in git repo
         which('autoreconf')('-ivf')
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNcdf4(Package):
+class RNcdf4(RPackage):
     """Provides a high-level R interface to data files written using Unidata's
     netCDF library (version 4 or earlier), which are binary data files that are
     portable across platforms and include metadata information in addition to
@@ -47,10 +47,4 @@ class RNcdf4(Package):
 
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 
-    extends('R')
-
     depends_on('netcdf')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -90,7 +90,7 @@ def topological_sort(spec, reverse=False, deptype=None):
 
     # Work on a copy so this is nondestructive.
     spec = spec.copy(deps=deptype)
-    nodes = spec.index()
+    nodes = spec.index(deptype=deptype)
 
     topo_order = []
     par = dict((name, parents(nodes[name])) for name in nodes.keys())

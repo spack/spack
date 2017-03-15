@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Tcl(Package):
+class Tcl(AutotoolsPackage):
     """Tcl (Tool Command Language) is a very powerful but easy to
        learn dynamic programming language, suitable for a very wide
        range of uses, including web and desktop applications,
@@ -52,10 +52,10 @@ class Tcl(Package):
         env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
                 self.spec.version.up_to(2))))
 
-    def install(self, spec, prefix):
-        with working_dir('unix'):
-            configure("--prefix={0}".format(prefix))
-            make()
-            make("install")
-        with working_dir(prefix.bin):
+    def build_directory(self):
+        return 'unix'
+
+    @AutotoolsPackage.sanity_check('install')
+    def symlink_tclsh(self):
+        with working_dir(self.prefix.bin):
             symlink('tclsh{0}'.format(self.version.up_to(2)), 'tclsh')

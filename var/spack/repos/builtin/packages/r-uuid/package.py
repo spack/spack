@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RUuid(Package):
+class RUuid(RPackage):
     """Tools for generating and handling of UUIDs (Universally Unique
     Identifiers)."""
 
@@ -35,9 +35,3 @@ class RUuid(Package):
     list_url = "https://cran.rstudio.com/src/contrib/Archive/uuid"
 
     version('0.1-2', 'f97d000c0b16bca455fb5bf2cd668ddf')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -27,6 +27,7 @@ import argparse
 import llnl.util.tty as tty
 
 import spack
+import spack.store
 import spack.cmd
 
 description = "Show installed packages that depend on another."
@@ -39,11 +40,14 @@ def setup_parser(subparser):
 
 
 def dependents(parser, args):
-    specs = spack.cmd.parse_specs(args.spec, concretize=True)
+    specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("spack dependents takes only one spec.")
+    spec = spack.cmd.disambiguate_spec(specs[0])
 
-    fmt = '$_$@$%@$+$=$#'
-    deps = [d.format(fmt, color=True)
-            for d in specs[0].package.installed_dependents]
-    tty.msg("Dependents of %s" % specs[0].format(fmt, color=True), *deps)
+    tty.msg("Dependents of %s" % spec.format('$_$@$%@$#', color=True))
+    deps = spack.store.db.installed_dependents(spec)
+    if deps:
+        spack.cmd.display_specs(deps)
+    else:
+        print "No dependents"

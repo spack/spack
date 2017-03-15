@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRcppeigen(Package):
+class RRcppeigen(RPackage):
     """R and 'Eigen' integration using 'Rcpp'. 'Eigen' is a C++ template
     library for linear algebra: matrices, vectors, numerical solvers and
     related algorithms. It supports dense and sparse matrices on integer,
@@ -46,11 +46,5 @@ class RRcppeigen(Package):
 
     version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

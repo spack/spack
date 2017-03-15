@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRaster(Package):
+class RRaster(RPackage):
     """Reading, writing, manipulating, analyzing and modeling of gridded
     spatial data. The package implements basic and high-level functions.
     Processing of very large files is supported."""
@@ -36,11 +36,5 @@ class RRaster(Package):
 
     version('2.5-8', '2a7db931c74d50516e82d04687c0a577')
 
-    extends('R')
-
-    depends_on('r-sp', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

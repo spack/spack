@@ -106,19 +106,22 @@ def split_url_extension(path):
 
           1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
           2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
+          3. https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
 
        In (1), the query string needs to be stripped to get at the
-       extension, but in (2), the filename is IN a single final query
+       extension, but in (2) & (3), the filename is IN a single final query
        argument.
 
        This strips the URL into three pieces: prefix, ext, and suffix.
        The suffix contains anything that was stripped off the URL to
        get at the file extension.  In (1), it will be '?raw=true', but
-       in (2), it will be empty. e.g.:
+       in (2), it will be empty. In (3) the suffix is a parameter that follows
+       after the file extension, e.g.:
 
            1. ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')
            2. ('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin',
                '.tar.gz', None)
+           3. ('https://gitlab.kitware.com/vtk/vtk/repository/archive', '.tar.bz2', '?ref=v7.0.0')
     """
     prefix, ext, suffix = path, '', ''
 
@@ -188,8 +191,12 @@ def parse_version_offset(path, debug=False):
         # e.g. https://github.com/petdance/ack/tarball/1.93_02
         (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
 
+        # Yorick is very special.
+        # e.g. https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz
+        (r'github.com/[^/]+/yorick/archive/y_(\d+(?:_\d+)*)$', path),
+
         # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
-        (r'github.com/[^/]+/[^/]+/archive/v?(\d+(?:\.\d+)*)$', path),
+        (r'github.com/[^/]+/[^/]+/archive/(?:release-)?v?(\w+(?:[.-]\w+)*)$', path),  # noqa
 
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
@@ -198,6 +205,15 @@ def parse_version_offset(path, debug=False):
         # e.g.,
         # https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
         (r'github.com/[^/]+/[^/]+/releases/download/v?([^/]+)/.*$', path),
+
+        # GitLab syntax:
+        #   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
+        #   as with github releases, we hope a version can be found in the
+        #   git tag
+        # Search dotted versions:
+        #   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
+        #   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
+        (r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
 
         # e.g. boost_1_39_0
         (r'((\d+_)+\d+)$', stem),
@@ -262,11 +278,11 @@ def parse_version_offset(path, debug=False):
     raise UndetectableVersionError(original_path)
 
 
-def parse_version(path):
+def parse_version(path, debug=False):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, l = parse_version_offset(path)
+    ver, start, l = parse_version_offset(path, debug=debug)
     return Version(ver)
 
 
@@ -287,6 +303,7 @@ def parse_name_offset(path, v=None, debug=False):
         (r'/([^/]+)/(tarball|zipball)/', path),
         (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
         (r'github.com/[^/]+/([^/]+)/archive', path),
+        (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
 
         (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
         (r'([^/]+)%s' % v, stem),

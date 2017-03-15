@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPng(Package):
+class RPng(RPackage):
     """This package provides an easy and simple way to read, write and display
     bitmap images stored in the PNG format. It can read and write both files
     and in-memory raw vectors."""
@@ -36,10 +36,4 @@ class RPng(Package):
 
     version('0.1-7', '1ebc8b8aa5979b12c5ec2384b30d649f')
 
-    extends('R')
-
     depends_on('libpng')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

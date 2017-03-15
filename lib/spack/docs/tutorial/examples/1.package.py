@@ -22,13 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-# flake8: noqa
-
 from spack import *
 
 
 class Mpileaks(AutotoolsPackage):
-    """Tool to detect and report MPI objects like MPI_Requests and MPI_Datatypes"""
+    """Tool to detect and report MPI objects like MPI_Requests and
+    MPI_Datatypes."""
 
     homepage = "https://github.com/hpc/mpileaks"
     url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
@@ -43,7 +42,7 @@ class Mpileaks(AutotoolsPackage):
     # depends_on('foo')
 
     def configure_args(self):
-       # FIXME: Add arguments other than --prefix
-       # FIXME: If not needed delete the function
-       args = []
-       return args
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete the function
+        args = []
+        return args

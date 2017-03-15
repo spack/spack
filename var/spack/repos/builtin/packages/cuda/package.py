@@ -50,6 +50,8 @@ class Cuda(Package):
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
 
+    version('8.0.44', '6dca912f9b7e2b7569b0074a41713640', expand=False,
+            url="file://%s/cuda_8.0.44_linux.run"    % os.getcwd())
     version('7.5.18', '4b3bcecf0dfc35928a0898793cf3e4c6', expand=False,
             url="file://%s/cuda_7.5.18_linux.run"    % os.getcwd())
     version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,

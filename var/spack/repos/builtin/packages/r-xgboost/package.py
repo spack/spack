@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RXgboost(Package):
+class RXgboost(RPackage):
     """Extreme Gradient Boosting, which is an efficient implementation of
     gradient boosting framework. This package is its R interface. The package
     includes efficient linear model solver and tree learning algorithms. The
@@ -42,13 +42,7 @@ class RXgboost(Package):
 
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-datatable', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-stringr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-datatable', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))

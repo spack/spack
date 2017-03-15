@@ -166,7 +166,7 @@ a file, you can use a file URL like this one:
 
 .. code-block:: none
 
-   file:///Users/gamblin2/spack-mirror-2014-06-24
+   file://~/spack-mirror-2014-06-24
 
 That points to the directory on the local filesystem.  If it were on a
 web server, you could use a URL like this one:
@@ -178,7 +178,7 @@ You can tell your Spack installation to use that mirror like this:
 
 .. code-block:: console
 
-   $ spack mirror add local_filesystem file:///Users/gamblin2/spack-mirror-2014-06-24
+   $ spack mirror add local_filesystem file://~/spack-mirror-2014-06-24
 
 Each mirror has a name so that you can refer to it again later.
 
@@ -193,7 +193,7 @@ To see all the mirrors Spack knows about, run ``spack mirror list``:
 .. code-block:: console
 
    $ spack mirror list
-   local_filesystem    file:///Users/gamblin2/spack-mirror-2014-06-24
+   local_filesystem    file://~/spack-mirror-2014-06-24
 
 .. _spack-mirror-remove:
 
@@ -218,7 +218,7 @@ Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``:
 .. code-block:: yaml
 
    mirrors:
-     local_filesystem: file:///Users/gamblin2/spack-mirror-2014-06-24
+     local_filesystem: file://~/spack-mirror-2014-06-24
      remote_server: https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
 
 If you want to change the order in which mirrors are searched for

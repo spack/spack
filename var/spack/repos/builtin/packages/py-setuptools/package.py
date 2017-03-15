@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySetuptools(Package):
+class PySetuptools(PythonPackage):
     """A Python utility that aids in the process of downloading, building,
        upgrading, installing, and uninstalling Python packages."""
 
@@ -41,8 +41,3 @@ class PySetuptools(Package):
     version('18.1', 'f72e87f34fbf07f299f6cb46256a0b06')
     version('16.0', '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
-
-    extends('python')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

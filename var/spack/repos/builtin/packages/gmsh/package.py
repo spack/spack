@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gmsh(Package):
+class Gmsh(CMakePackage):
     """Gmsh is a free 3D finite element grid generator with a built-in CAD engine
     and post-processor. Its design goal is to provide a fast, light and
     user-friendly meshing tool with parametric input and advanced visualization
@@ -38,6 +38,7 @@ class Gmsh(Package):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
 
+    version('2.15.0', '992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
@@ -45,7 +46,7 @@ class Gmsh(Package):
             description='Enables the build of shared libraries')
     variant('debug',       default=False,
             description='Builds the library in debug mode')
-    variant('mpi',         default=False,
+    variant('mpi',         default=True,
             description='Builds MPI support for parser and solver')
     variant('fltk',        default=False,
             description='Enables the build of the FLTK GUI')
@@ -71,15 +72,14 @@ class Gmsh(Package):
     depends_on('slepc', when='+slepc+petsc')
     depends_on('zlib',  when='+compression')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         options = []
-        options.extend(std_cmake_args)
 
         # Make sure native file dialogs are used
         options.extend(['-DENABLE_NATIVE_FILE_CHOOSER=ON'])
-
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
 
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
@@ -135,7 +135,4 @@ class Gmsh(Package):
         if '+compression' in spec:
             options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
 
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
-            make()
-            make('install')
+        return options

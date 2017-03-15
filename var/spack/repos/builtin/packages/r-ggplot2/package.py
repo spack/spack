@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGgplot2(Package):
+class RGgplot2(RPackage):
     """An implementation of the grammar of graphics in R. It combines the
     advantages of both base and lattice graphics: conditioning and shared axes
     are handled automatically, and you can still build up a plot step by step
@@ -40,15 +40,9 @@ class RGgplot2(Package):
 
     version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
 
-    extends('R')
-
-    depends_on('r-digest', type=nolink)
-    depends_on('r-gtable', type=nolink)
-    depends_on('r-mass', type=nolink)
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-reshape2', type=nolink)
-    depends_on('r-scales', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-gtable', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))

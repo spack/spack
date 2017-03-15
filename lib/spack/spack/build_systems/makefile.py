@@ -34,9 +34,10 @@ class MakefilePackage(PackageBase):
     """Specialized class for packages that are built using editable Makefiles
 
     This class provides three phases that can be overridden:
-    - edit
-    - build
-    - install
+
+    * edit
+    * build
+    * install
 
     It is necessary to override the 'edit' phase, while 'build' and 'install'
     have sensible defaults.
@@ -58,12 +59,12 @@ class MakefilePackage(PackageBase):
         tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
-        """Default build phase : call make passing build_args"""
+        """Make the build targets"""
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Default install phase : call make passing install_args"""
+        """Make the install targets"""
         with working_dir(self.build_directory()):
             inspect.getmodule(self).make(*self.install_targets)
 

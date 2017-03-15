@@ -46,6 +46,8 @@ class Hypre(Package):
     # SuperluDist have conflicting headers with those in Hypre
     variant('internal-superlu', default=True,
             description="Use internal Superlu routines")
+    variant('int64', default=False,
+            description="Use 64bit integers")
 
     depends_on("mpi")
     depends_on("blas")
@@ -67,6 +69,9 @@ class Hypre(Package):
             '--with-blas-libs=%s' % ' '.join(blas.names),
             '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
+
+        if '+int64' in self.spec:
+            configure_args.append('--enable-bigint')
 
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")

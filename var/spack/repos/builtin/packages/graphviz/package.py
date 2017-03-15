@@ -48,7 +48,8 @@ class Graphviz(AutotoolsPackage):
     depends_on("python")
     depends_on("ghostscript")
     depends_on("freetype")
-    depends_on("libtool", type='build')
+    depends_on("expat")
+    depends_on("libtool")
     depends_on("pkg-config", type='build')
 
     def configure_args(self):
@@ -62,7 +63,6 @@ class Graphviz(AutotoolsPackage):
         #       include <X11/Xlib.h>
         if sys.platform == 'darwin':
             options.append('CFLAGS=-I/opt/X11/include')
-        options.append('--with-ltdl-lib=%s/lib' % self.spec['libtool'].prefix)
 
         # A hack to patch config.guess in the libltdl sub directory
         shutil.copyfile('./config/config.guess', 'libltdl/config/config.guess')

@@ -85,7 +85,7 @@ class Octave(Package):
     depends_on('glpk',         when='+glpk')
     depends_on('gl2ps',        when='+gl2ps')
     depends_on('gnuplot',      when='+gnuplot')
-    depends_on('ImageMagick',  when='+magick')
+    depends_on('image-magick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
     depends_on('jdk',          when='+jdk')
     depends_on('llvm',         when='+llvm')
@@ -162,7 +162,7 @@ class Octave(Package):
 
         if '+magick' in spec:
             config_args.append("--with-magick=%s"
-                               % spec['ImageMagick'].prefix.lib)
+                               % spec['image-magick'].prefix.lib)
 
         if '+hdf5' in spec:
             config_args.extend([
