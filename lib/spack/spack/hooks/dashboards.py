@@ -184,7 +184,7 @@ class CDashSimpleTestSuite(object):
         template.set('CompilerName', str(self.spec.compiler.name)) 
         template.set('CompilerVersion', str(self.spec.compiler.version))
         if "linux" in platform.system().lower():
-            linuxInfo = '.'.join(platform.linux_distribution())
+            linuxInfo = str(platform.linux_distribution()[0])+"."+str(platform.linux_distribution()[1])
             template.set('Hostname', linuxInfo)
             template.set('Name', linuxInfo)
             template.set('OSName', platform.system())
@@ -378,7 +378,7 @@ class CDashCompleteTestSuite(object):
         template.set('CompilerName', str(self.spec.compiler.name)) 
         template.set('CompilerVersion', str(self.spec.compiler.version))
         if "linux" in platform.system().lower():
-            linuxInfo = '.'.join(platform.linux_distribution())
+            linuxInfo = str(platform.linux_distribution()[0])+"."+str(platform.linux_distribution()[1])
             template.set('Hostname', linuxInfo)
             template.set('Name', linuxInfo)
             template.set('OSName', platform.system())
