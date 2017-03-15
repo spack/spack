@@ -39,9 +39,6 @@ class Xsdk(Package):
     # removed when metapackage is available
     url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
 
-    # Spack can not handle both the support and 0.2.0 so
-    # comment out the 0.2.0 version
-    # this is for testing with the master of each package
     version('develop', '941a541bdf625856be18c9752249146d')
     # this is for next planned release
     version('xsdk-0.2.0', '941a541bdf625856be18c9752249146d')
