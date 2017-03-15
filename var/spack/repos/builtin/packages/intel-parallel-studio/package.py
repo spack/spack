@@ -39,6 +39,10 @@ class IntelParallelStudio(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('professional.2017.2', '70e54b33d940a1609ff1d35d3c56e3b3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
+    version('cluster.2017.2',      '70e54b33d940a1609ff1d35d3c56e3b3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
     version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
     version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542',
