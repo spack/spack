@@ -427,14 +427,21 @@ class Python(AutotoolsPackage):
         # to ask Python where its LIBDIR is.
         libdir = self.get_config_var('LIBDIR')
 
+        # The system Python installation on macOS and Homebrew installations
+        # install libraries into a Frameworks directory
+        frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+
         # We don't know ahead of time whether shared or static libraries
-        # were built, so check for presence of both.
+        # were built, so check for the presence of both.
         library   = self.get_config_var('LIBRARY')
         ldlibrary = self.get_config_var('LDLIBRARY')
 
         # Prefer shared libraries
         if os.path.exists(os.path.join(libdir, ldlibrary)):
             return LibraryList(os.path.join(libdir, ldlibrary))
+        elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
+            return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+        # Accept static if shared not found
         elif os.path.exists(os.path.join(libdir, library)):
             return LibraryList(os.path.join(libdir, library))
         else:
