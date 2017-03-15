@@ -287,5 +287,5 @@ class Dealii(CMakePackage):
 
         return options
 
-    def setup_environment(self, spack_env, env):
-        env.set('DEAL_II_DIR', self.prefix)
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('DEAL_II_DIR', self.prefix)
