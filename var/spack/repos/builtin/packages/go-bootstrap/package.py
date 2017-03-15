@@ -87,7 +87,7 @@ class GoBootstrap(Package):
             else:
                 shutil.copy2(f, os.path.join(prefix, f))
 
-    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('GOROOT_BOOTSTRAP', self.spec.prefix)
 
     def setup_environment(self, spack_env, run_env):

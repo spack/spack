@@ -71,7 +71,7 @@ class Rust(Package):
             make()
             make("install")
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """
         Called before python modules' install() methods.
 

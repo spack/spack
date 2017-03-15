@@ -53,8 +53,8 @@ class Fastqc(Package):
 
     # In theory the 'run' dependency on 'jdk' above should take
     # care of this for me. In practice, it does not.
-    def setup_environment(self, spack_env, env):
+    def setup_environment(self, spack_env, run_env):
         """Add <prefix> to the path; the package has a script at the
            top level.
         """
-        env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))
+        run_env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))

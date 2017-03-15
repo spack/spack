@@ -128,10 +128,10 @@ class Qt(Package):
     def setup_environment(self, spack_env, run_env):
         run_env.set('QTDIR', self.prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('QTDIR', self.prefix)
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
 
     def patch(self):

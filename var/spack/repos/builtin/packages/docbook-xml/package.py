@@ -42,7 +42,7 @@ class DocbookXml(Package):
             else:
                 install(src, dst)
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         catalog = os.path.join(self.spec.prefix, 'catalog.xml')
         spack_env.set('XML_CATALOG_FILES', catalog, separator=' ')
 

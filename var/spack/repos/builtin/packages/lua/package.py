@@ -86,9 +86,9 @@ class Lua(Package):
         paths.append(os.path.join(path, '?', 'init.lua'))
         cpaths.append(os.path.join(path, '?.so'))
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         lua_paths = []
-        for d in extension_spec.traverse(
+        for d in dependent_spec.traverse(
                 deptypes=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
@@ -111,9 +111,9 @@ class Lua(Package):
         # Add LUA to PATH for dependent packages
         spack_env.prepend_path('PATH', self.prefix.bin)
 
-        # For run time environment set only the path for extension_spec and
+        # For run time environment set only the path for dependent_spec and
         # prepend it to LUAPATH
-        if extension_spec.package.extends(self.spec):
+        if dependent_spec.package.extends(self.spec):
             run_env.prepend_path('LUA_PATH', ';'.join(lua_patterns),
                                  separator=';')
             run_env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
@@ -149,7 +149,7 @@ class Lua(Package):
     def lua_share_dir(self):
         return os.path.join('share', 'lua', self.version.up_to(2))
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """
         Called before lua modules's install() methods.
 
