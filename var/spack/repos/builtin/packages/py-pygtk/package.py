@@ -33,14 +33,21 @@ class PyPygtk(AutotoolsPackage):
 
     version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
 
+    variant('X', default=True,
+            description='Enable cairo X11 dependency')
+
     extends('python')
     depends_on("libffi")
     depends_on('cairo')
+    depends_on('cairo+X', when='+X')
+    depends_on('cairo~X', when='~X')
     depends_on('glib')
     # for GTK 3.X use pygobject 3.X instead of pygtk
     depends_on('gtkplus+X@2.24:2.99')
     depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
     depends_on('py-py2cairo', type=('build', 'run'))
+    depends_on('py-py2cairo+X', when='+X')
+    depends_on('py-py2cairo~X', when='~X')
 
     def install(self, spec, prefix):
         make('install', parallel=False)
