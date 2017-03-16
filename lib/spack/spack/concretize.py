@@ -406,11 +406,9 @@ class DefaultConcretizer(object):
         for flag in compiler.flags:
             config_flags = set(compiler.flags.get(flag, []))
             flags = set(spec.compiler_flags.get(flag, []))
+            spec.compiler_flags[flag] = list(config_flags | flags)
             if (config_flags - flags):
-                spec.compiler_flags[flag] = list(config_flags | flags)
                 ret = True
-            elif flag not in spec.compiler_flags:
-                spec.compiler_flags[flag] = list()
 
         return ret
 
