@@ -20,6 +20,7 @@ s gcc@6.3.0 $cc
 s llvm 	$cc
 s jdk 	$cc
 s gradle $cc
+s ant $cc
 s bazel	$cc
 s maven	$cc
 s lua-jit	$cc
