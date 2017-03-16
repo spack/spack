@@ -50,6 +50,7 @@ class Hpx5(AutotoolsPackage):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('cxx11', default=False, description='Enable C++11 hpx++ interface')
     variant('debug', default=False, description='Build debug version of HPX-5')
+    variant('instrumentation', default=False, description='Enable instrumentation (may affect performance)')
     variant('metis', default=False, description='Enable METIS support')
     variant('mpi', default=False, description='Enable MPI support')
     variant('opencl', default=False, description='Enable OpenCL support')
@@ -64,10 +65,12 @@ class Hpx5(AutotoolsPackage):
     depends_on("libffi")
     depends_on("libtool", type='build')
     # depends_on("lz4")   # hpx5 always builds its own lz4
+    depends_on("m4", type='build')
     depends_on("metis", when='+metis')
     depends_on("mpi", when='+mpi')
     depends_on("mpi", when='+photon')
     depends_on("opencl", when='+opencl')
+    # depends_on("papi")
     depends_on("pkg-config", type='build')
 
     configure_directory = "hpx"
@@ -82,7 +85,8 @@ class Hpx5(AutotoolsPackage):
             # '--enable-rebalancing',   # this seems broken
             '--with-hwloc=hwloc',
             '--with-jemalloc=jemalloc',
-            '--with-libffi=libffi',
+            '--with-libffi=system',   # doesn't take a packge name as argument
+            # '--with-papi=papi',   # currently disabled in HPX
         ]
 
         if '+cuda' in spec:
@@ -95,6 +99,9 @@ class Hpx5(AutotoolsPackage):
 
         if '+debug' in spec:
             args += ['--enable-debug']
+
+        if '+instrumentation' in spec:
+            args += ['--enable-instrumentation']
 
         if '+mpi' in spec or '+photon' in spec:
             # photon requires mpi
