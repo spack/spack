@@ -41,14 +41,14 @@ class Ncurses(AutotoolsPackage):
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
+    depends_on("gawk", type='build')
+
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
 
     def configure_args(self):
         opts = [
-            # The CPPFLAGS setting works around this bug:
-            # <http://stackoverflow.com/questions/37475222/ncurses-6-0-compilation-error-error-expected-before-int>
-            'CPPFLAGS=-P',
+            'AWK=gawk',
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
@@ -60,6 +60,8 @@ class Ncurses(AutotoolsPackage):
             '--enable-pc-files',
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
+
         if '+symlinks' in self.spec:
-            opts += ["--enable-symlinks"]
+            opts.append('--enable-symlinks')
+
         return opts

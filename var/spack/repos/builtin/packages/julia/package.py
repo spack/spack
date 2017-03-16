@@ -37,7 +37,8 @@ class Julia(Package):
             git='https://github.com/JuliaLang/julia.git', branch='master')
     version('release-0.5',
             git='https://github.com/JuliaLang/julia.git', branch='release-0.5')
-    version('0.5.0', 'b61385671ba74767ab452363c43131fb', preferred=True)
+    version('0.5.1', 'bce119b98f274e0f07ce01498c463ad5', preferred=True)
+    version('0.5.0', 'b61385671ba74767ab452363c43131fb')
     version('release-0.4',
             git='https://github.com/JuliaLang/julia.git', branch='release-0.4')
     version('0.4.7', '75a7a7dd882b7840829d8f165e9b9078')
@@ -53,6 +54,7 @@ class Julia(Package):
             description="Install Julia plotting packages")
     variant("python", default=False,
             description="Install Julia Python package")
+    variant("simd", default=False, description="Install Julia SIMD package")
 
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
@@ -232,5 +234,9 @@ using UnicodePlots
 unicodeplots()
 plot(x->sin(x)*cos(x), linspace(0, 2pi))
 """)
+
+        # Install SIMD
+        if "+simd" in spec:
+            julia("-e", 'Pkg.add("SIMD"); using SIMD')
 
         julia("-e", 'Pkg.status()')

@@ -33,13 +33,7 @@ class Dyninst(Package):
     url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
 
-    # version 9.2.1b was the latest git commit when trying to port to a
-    # ppc64le system to get fixes in computeAddrWidth independent of 
-    # endianness. This version can be removed if the next release includes
-    # this change. The actual commit was
-    # b8596ad4023ec40ac07e669ff8ea3ec06e262703
-    version('9.2.1b', git='https://github.com/dyninst/dyninst.git',
-            commit='859cb778e20b619443c943c96dd1851da763142b')
+    version('9.3.0', 'edde7847dc673ca69bd59412af572450')
     version('9.2.0', 'ad023f85e8e57837ed9de073b59d6bab',
             url="https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz")
     version('9.1.0', '5c64b77521457199db44bec82e4988ac',
@@ -54,7 +48,8 @@ class Dyninst(Package):
     variant('stat_dysect', default=False,
             description="patch for STAT's DySectAPI")
 
-    depends_on("libelf")
+    depends_on("elf@0", type='link', when='@:9.2.99')
+    depends_on("elf@1", type='link', when='@9.3.0:')
     depends_on("libdwarf")
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
@@ -70,7 +65,7 @@ class Dyninst(Package):
             make("install")
             return
 
-        libelf = spec['libelf'].prefix
+        libelf = spec['elf'].prefix
         libdwarf = spec['libdwarf'].prefix
 
         with working_dir('spack-build', create=True):

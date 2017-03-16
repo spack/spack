@@ -1,0 +1,11 @@
+--- a/docs/doc2x.h      2017-03-10 13:55:51.719850190 -0500
++++ b/docs/doc2x.h      2017-03-10 13:56:17.569826925 -0500
+@@ -69,7 +69,7 @@
+ # ifdef ALL_TERM_DOC
+ #  include "allterm.h"
+ # else
+-#  include "term.h"
++#  include "src/term.h"
+ # endif
+     NULL
+ };
