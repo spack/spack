@@ -139,7 +139,7 @@ class Openmpi(AutotoolsPackage):
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')

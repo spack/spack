@@ -209,7 +209,7 @@ class Mvapich2(Package):
            self.version > Version('2.0'):
             run_env.set('SLURM_MPI_TYPE', 'pmi2')
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
         spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
@@ -221,7 +221,7 @@ class Mvapich2(Package):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
         self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')

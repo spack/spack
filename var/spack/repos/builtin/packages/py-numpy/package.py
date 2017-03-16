@@ -53,7 +53,7 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
         arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
@@ -96,11 +96,11 @@ class PyNumpy(PythonPackage):
                     # FIXME: as of @1.11.2, numpy does not work with separately
                     # specified threading and interface layers. A workaround is
                     # a terribly bad idea to use mkl_rt. In this case Spack
-                    # won't no longer be able to guarantee that one and the
+                    # will no longer be able to guarantee that one and the
                     # same variant of Blas/Lapack (32/64bit, threaded/serial)
                     # is used within the DAG. This may lead to a lot of
                     # hard-to-debug segmentation faults on user's side. Users
-                    # may also break working installation by (unconciously)
+                    # may also break working installation by (unconsciously)
                     # setting environment variable to switch between different
                     # interface and threading layers dynamically. From this
                     # perspective it is no different from throwing away RPATH's
