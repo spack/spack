@@ -27,10 +27,12 @@ import os
 
 
 class Lua(Package):
-    """ The Lua programming language interpreter and library """
-    homepage = "http://www.lua.org"
-    url = "http://www.lua.org/ftp/lua-5.1.5.tar.gz"
+    """The Lua programming language interpreter and library."""
 
+    homepage = "http://www.lua.org"
+    url = "http://www.lua.org/ftp/lua-5.3.4.tar.gz"
+
+    version('5.3.4', '53a9c68bcc0eda58bdc2095ad5cdfc63')
     version('5.3.2', '33278c2ab5ee3c1a875be8d55c1ca2a1')
     version('5.3.1', '797adacada8d85761c079390ff1d9961')
     version('5.3.0', 'a1b0a7e92d0c85bbff7a8d27bf29f8af')
