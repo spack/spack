@@ -49,6 +49,10 @@ class Pocl(CMakePackage):
     patch("uint.patch", when="@:0.13")
     patch("vecmathlib.patch", when="@:0.13")
 
+    # Note: We should describe correctly which pocl versions provide
+    # what OpenCL version
+    provides('opencl@:2.0')
+
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
     depends_on("libtool", type=("build", "run"))
