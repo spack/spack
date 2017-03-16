@@ -51,18 +51,10 @@ class Simulationio(CMakePackage):
     depends_on('python@2.7.0:2.999.999', when='+python', type=('build', 'run'))
     depends_on('swig', type='build')
 
+    extends('python')
+
     def cmake_args(self):
         spec = self.spec
-        pythonpath = (
-            glob.glob(join_path(spec['py-h5py'].prefix, "lib", "python2.7",
-                                "site-packages", "h5py-*")) +
-            glob.glob(join_path(spec['py-numpy'].prefix, "lib", "python2.7",
-                                "site-packages", "numpy-*")))
-        try:
-            pythonpath.append(os.environ["PYTHONPATH"])
-        except KeyError:
-            pass
-        os.environ["PYTHONPATH"] = ":".join(pythonpath)
         options = []
         if '+pic' in spec:
             options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true")
