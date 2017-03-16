@@ -70,14 +70,12 @@ class Hpx5(AutotoolsPackage):
     depends_on("opencl", when='+opencl')
     depends_on("pkg-config", type='build')
 
-    @property
-    def configure_directory(self):
-        return join_path(self.stage.source_path, "hpx")
+    configure_directory = "hpx"
+    build_directory = "spack-build"
 
     def configure_args(self):
         spec = self.spec
         args = [
-            '--prefix=%s' % self.prefix,
             '--enable-agas',          # make this a variant?
             '--enable-jemalloc',      # make this a variant?
             '--enable-percolation',   # make this a variant?
@@ -89,6 +87,8 @@ class Hpx5(AutotoolsPackage):
 
         if '+cuda' in spec:
             args += ['--enable-cuda']
+        else:
+            args += ['--disable-cuda']
 
         if '+cxx11' in spec:
             args += ['--enable-hpx++']
@@ -108,6 +108,8 @@ class Hpx5(AutotoolsPackage):
                 args += ['--with-mpi=mvapich2-cxx']
             else:
                 args += ['--with-mpi=system']
+        else:
+            args += ['--disable-mpi']
 
         # METIS does not support pkg-config; HPX will pick it up automatically
         # if '+metis' in spec:
@@ -119,6 +121,8 @@ class Hpx5(AutotoolsPackage):
                 args += ['--with-opencl=pocl']
             else:
                 args += ['--with-opencl=system']
+        else:
+            args += ['--disable-opencl']
 
         if '+photon' in spec:
             args += ['--enable-photon']
