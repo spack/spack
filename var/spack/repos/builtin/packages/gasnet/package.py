@@ -45,7 +45,6 @@ class Gasnet(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            "--prefix=%s" % self.spec.prefix,
             # TODO: factor IB suport out into architecture description.
             "--enable-ibv" if '+ibv' in self.spec else '--disable-ibv',
             "--enable-mpi" if '+mpi' in self.spec else '--disable-mpi',
