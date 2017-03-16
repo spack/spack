@@ -38,8 +38,8 @@ class Gasnet(AutotoolsPackage):
     version('1.28.0', 'b44446d951d3d8954aa1570e3556ba61')
     version('1.24.0', 'c8afdf48381e8b5a7340bdb32ca0f41a')
 
-    variant('ibv', default=False)
-    variant('mpi', default=False)
+    variant('ibv', default=False, description="Support InfiniBand")
+    variant('mpi', default=False, description="Support MPI"
 
     depends_on('mpi', when='+mpi')
 
