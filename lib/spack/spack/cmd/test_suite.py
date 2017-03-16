@@ -24,7 +24,6 @@ import traceback
 concreteTests = []
 
 
-
 description = "Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."
 
 def setup_parser(subparser):
@@ -243,7 +242,6 @@ def test_suite(parser, args):
                     removeTests.append(test)
         for test in removeTests:
             tests.remove(test)
-    concreteTests = []
     #setting up tests for contretizing
     for test in tests:
         spec = Spec(test)
@@ -251,7 +249,6 @@ def test_suite(parser, args):
         if len(spack.store.db.query(spec)) != 0:
             tty.msg(spack.store.db.query(spec))
         #uninstall all packages before installing. This will reduce the number of skipped package installs.
-<<<<<<< HEAD
         if (len(spack.store.db.query(spec)) > 0):
             spec,exception = uninstallSpec(spec)
             if exception is "PackageStillNeededError":
@@ -264,33 +261,6 @@ def test_suite(parser, args):
         if not failure:
             tty.msg("Failure did not occur, uninstalling " + str(spec))
             spec,exception = uninstallSpec(spec)
-=======
-        while (len(spack.store.db.query(spec)) > 0):
-            try:
-                spec.concretize()
-                tty.msg("uninstalling " + str(spec))
-                pkg = spack.repo.get(spec)
-                pkg.do_uninstall()
-            except Exception as ex:
-                template = "An exception of type {0} occured. Arguments:\n{1!r}"
-                message = template.format(type(ex).__name__, ex.args)
-                tty.msg(message)
-                pass
-        #concretize, failing can occur if the package uses the wrong compiler which would produce a failure for cdash
-        try:
-            spec.concretize()
-            concreteTests.append(spec.to_yaml())
-            parser = argparse.ArgumentParser()
-            install.setup_parser(parser)
-            args = parser.parse_args([cdash]) #use cdash-complete if you want configure, build and test output.
-            args.package = test
-            install.install(parser, args)
-        except Exception as ex:
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            tty.msg(message)
-            pass
->>>>>>> 5326e82... added try except
     #Path contains xml files produced during the test run.
     if path is "": # if no path given in test yaml file. Uses default location.
         path = spack.prefix+cdash_root
