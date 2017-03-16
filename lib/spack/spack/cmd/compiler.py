@@ -95,8 +95,8 @@ def compiler_find(args):
     new_compilers = []
     for c in compilers:
         arch_spec = ArchSpec(None, c.operating_system, c.target)
-        same_specs = spack.compilers.compilers_for_spec(c.spec,
-                                                        arch_spec)
+        same_specs = spack.compilers.compilers_for_spec(
+            c.spec, arch_spec, init_config=False)
 
         if not same_specs:
             new_compilers.append(c)
