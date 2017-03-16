@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class IntelGpuTools(AutotoolsPackage):
@@ -41,7 +42,7 @@ class IntelGpuTools(AutotoolsPackage):
     version('1.16', '3996f10fc86a28ec59e1cf7b227dad78')
 
     depends_on('libdrm@2.4.64:')
-    depends_on('libpciaccess@0.10:')
+    depends_on('libpciaccess@0.10:', when=(sys.platform != 'darwin'))
     depends_on('cairo@1.12.0:')
     depends_on('glib')
 

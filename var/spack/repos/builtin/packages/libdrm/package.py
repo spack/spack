@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Libdrm(Package):
@@ -37,7 +38,7 @@ class Libdrm(Package):
     version('2.4.59', '105ac7af1afcd742d402ca7b4eb168b6')
     version('2.4.33', '86e4e3debe7087d5404461e0032231c8')
 
-    depends_on('libpciaccess@0.10:')
+    depends_on('libpciaccess@0.10:', when=(sys.platform != 'darwin'))
     depends_on('libpthread-stubs')
 
     def install(self, spec, prefix):
