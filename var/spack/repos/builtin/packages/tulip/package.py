@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,34 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install tulip
-#
-# You can edit this file again by typing:
-#
-#     spack edit tulip
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
+import os
 
 
 class Tulip(CMakePackage):
     """Tulip is an information visualization framework dedicated to
         the analysis and visualization of relational data."""
 
-    extends('python')
-
     homepage = "http://tulip.labri.fr/"
-    url      = "https://sourceforge.net/projects/auber/files/tulip/tulip-4.10.0/tulip-4.10.0_src.tar.gz"
+    url = "https://sourceforge.net/projects/auber/files/tulip/tulip-4.10.0/tulip-4.10.0_src.tar.gz"
 
     version('4.10.0', '8c6ac45b8125a2a68eb1e165511e340b')
+
+    extends('python')
+    depends_on('python@2.5:2.8')
 
     depends_on('qt')
     depends_on('freetype')
@@ -60,5 +47,13 @@ class Tulip(CMakePackage):
     depends_on('doxygen')
     depends_on('libxml2')
     depends_on('py-pyqt')
-    depends_on('python@2.5:2.8')
 
+    @run_after('install')
+    def relocate_python(self):
+        """Move tulip's python installatoin into pythonX.y/site-packages."""
+        tulip_python_dir = os.path.join(self.prefix, 'lib', 'python')
+        for f in os.listdir(tulip_python_dir):
+            src = os.path.join(tulip_python_dir, f)
+            dest = os.path.join(site_packages_dir, f)
+            move(src, dest)
+        rmtree(tulip_python_dir)
