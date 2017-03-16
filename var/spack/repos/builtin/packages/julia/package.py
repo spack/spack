@@ -54,6 +54,7 @@ class Julia(Package):
             description="Install Julia plotting packages")
     variant("python", default=False,
             description="Install Julia Python package")
+    variant("simd", default=False, description="Install Julia SIMD package")
 
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
@@ -233,5 +234,9 @@ using UnicodePlots
 unicodeplots()
 plot(x->sin(x)*cos(x), linspace(0, 2pi))
 """)
+
+        # Install SIMD
+        if "+simd" in spec:
+            julia("-e", 'Pkg.add("SIMD"); using SIMD')
 
         julia("-e", 'Pkg.status()')
