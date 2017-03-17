@@ -24,6 +24,7 @@
 ##############################################################################
 import ast
 import os
+import platform
 import re
 from contextlib import closing
 
@@ -114,9 +115,9 @@ class Python(AutotoolsPackage):
                       'user configurations are present.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
-        spack_env['PYTHONHOME'] = prefix
-        spack_env['PYTHONPATH'] = prefix
-        spack_env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
+        spack_env.set('PYTHONHOME', prefix)
+        spack_env.set('PYTHONPATH', prefix)
+        spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
     def configure_args(self):
         spec = self.spec
@@ -433,8 +434,8 @@ class Python(AutotoolsPackage):
 
         # We don't know ahead of time whether shared or static libraries
         # were built, so check for the presence of both.
-        library   = self.get_config_var('LIBRARY')
         ldlibrary = self.get_config_var('LDLIBRARY')
+        library   = self.get_config_var('LIBRARY')
 
         # Prefer shared libraries
         if os.path.exists(os.path.join(libdir, ldlibrary)):
