@@ -25,29 +25,18 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
-    """Optimizing compiler for evaluating mathematical expressions on CPUs
-    and GPUs."""
+class Libgpuarray(CMakePackage):
+    """Make a common GPU ndarray(n dimensions array) that can be reused by all
+    projects that is as future proof as possible, while keeping it easy to use
+    for simple need/quick test."""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "http://deeplearning.net/software/libgpuarray/"
+    url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
 
-    version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
+    version('0.6.2', '7f163bd5f48f399cd6e608ee3d528ee4')
+    version('0.6.1', 'cfcd1b54447f9d55b05514df62c70ae2')
+    version('0.6.0', '98a4ec1b4c8f225f0b89c18b899a000b')
 
-    variant('gpu', default=False, 
-            description='Builds with support for GPUs via CUDA and cuDNN')
+    depends_on('cuda')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
-    depends_on('py-scipy@0.11:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-
-    depends_on('blas')
-
-    depends_on('cuda', when='+gpu')
-    depends_on('libgpuarray', when='+gpu')
-    # test requirements
-    # depends_on('py-nose@1.3.0:', type=('build', 'run'))
-    # depends_on('py-nose-parameterized@0.5.0:', type=('build', 'run'))
+    extends('python')
