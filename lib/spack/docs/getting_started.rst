@@ -85,18 +85,8 @@ Check Installation
 With Spack installed, you should be able to run some basic Spack
 commands.  For example:
 
-.. code-block:: console
+.. command-output:: spack spec netcdf
 
-    $ spack spec netcdf
-      ...
-      netcdf@4.4.1%gcc@5.3.0~hdf4+mpi arch=linux-SuSE11-x86_64
-          ^curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-              ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-              ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
-          ^hdf5@1.10.0-patch1%gcc@5.3.0+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=linux-SuSE11-x86_64
-              ^openmpi@1.10.1%gcc@5.3.0~mxm~pmi~psm~psm2~slurm~sqlite3~thread_multiple~tm+verbs+vt arch=linux-SuSE11-x86_64
-          ^m4@1.4.17%gcc@5.3.0+sigsegv arch=linux-SuSE11-x86_64
-              ^libsigsegv@2.10%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
@@ -225,7 +215,7 @@ If you want to see specifics on a particular compiler, you can run
        f77 = /usr/local/bin/ifort-15.0.090
        fc  = /usr/local/bin/ifort-15.0.090
      modules = []
-     operating system = centos6
+     operating_system = centos6
    ...
 
 This shows which C, C++, and Fortran compilers were detected by Spack.
@@ -712,19 +702,22 @@ example:
 
     $ curl -O https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz
 
-The recommended way to tell Spack to use the system-supplied OpenSSL is
-to add the following to ``packages.yaml``.  Note that the ``@system``
-"version" means "I don't care what version it is, just use what is
-there."  This is reasonable for OpenSSL, which has a stable API.
+To tell Spack to use the system-supplied OpenSSL, first determine what
+version you have:
 
+.. code-block:: console
+
+   $ openssl version
+   OpenSSL 1.0.2g  1 Mar 2016
+
+Then add the following to ``~/.spack/packages.yaml``:
 
 .. code-block:: yaml
 
     packages:
         openssl:
             paths:
-                openssl@system: /usr
-            version: [system]
+                openssl@1.0.2g: /usr
             buildable: False
 
 
@@ -740,8 +733,7 @@ to add the following to ``packages.yaml``:
     packages:
         netlib-lapack:
             paths:
-                netlib-lapack@system: /usr
-            version: [system]
+                netlib-lapack@3.6.1: /usr
             buildable: False
         all:
             providers:
@@ -750,11 +742,9 @@ to add the following to ``packages.yaml``:
 
 .. note::
 
-   The ``@system`` "version" means "I don't care what version it is,
-   just use what is there." Above we pretend that the system-provided
-   Blas/Lapack is ``netlib-lapack`` only because it is the only BLAS / LAPACK
-   provider which use standard names for libraries (as opposed to, for example,
-   `libopenblas.so`).
+   Above we pretend that the system-provided BLAS / LAPACK is ``netlib-lapack``
+   only because it is the only BLAS / LAPACK provider which use standard names
+   for libraries (as opposed to, for example, ``libopenblas.so``).
 
    Although we specify external package in ``/usr``, Spack is smart enough not
    to add ``/usr/lib`` to RPATHs, where it could cause unrelated system
@@ -909,7 +899,6 @@ with Spack:
              tcl:
                  paths:
                      tcl@8.5: /usr
-                 version: [8.5]
                  buildable: False
 
 #. Install with:
