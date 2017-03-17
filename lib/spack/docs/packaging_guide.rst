@@ -3156,37 +3156,6 @@ Version Lists
 
 Spack packages should list supported versions with the newest first.
 
-^^^^^^^^^^^^^^^^
-Special Versions
-^^^^^^^^^^^^^^^^
-
-The following *special* version names may be used when building a package:
-
-"""""""""""
-``@system``
-"""""""""""
-
-Indicates a hook to the OS-installed version of the
-package.  This is useful, for example, to tell Spack to use the
-OS-installed version in ``packages.yaml``:
-
-.. code-block:: yaml
-
-   openssl:
-     paths:
-       openssl@system: /usr
-     buildable: False
-
-Certain Spack internals look for the ``@system`` version and do
-appropriate things in that case.
-
-""""""""""
-``@local``
-""""""""""
-
-Indicates the version was built manually from some source
-tree of unknown provenance (see ``spack setup``).
-
 ---------------------------
 Packaging workflow commands
 ---------------------------
