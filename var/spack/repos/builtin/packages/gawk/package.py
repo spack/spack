@@ -49,3 +49,5 @@ class Gawk(AutotoolsPackage):
     depends_on('readline')
     depends_on('mpfr')
     depends_on('gmp')
+
+    build_directory = 'spack-build'
