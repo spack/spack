@@ -26,14 +26,15 @@
 from spack import *
 
 
-class Vtk(Package):
+class Vtk(CMakePackage):
     """The Visualization Toolkit (VTK) is an open-source, freely
     available software system for 3D computer graphics, image
     processing and visualization. """
 
     homepage = "http://www.vtk.org"
-    base_url = "http://www.vtk.org/files/release"
+    url      = "http://www.vtk.org/files/release/7.1/VTK-7.1.0.tar.gz"
 
+    version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
     version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
     version('6.3.0', '0231ca4840408e9dd60af48b314c5b6d')
     version('6.1.0', '25e4dfb3bad778722dcaec80cd5dab7d')
@@ -42,58 +43,54 @@ class Vtk(Package):
     variant('opengl2', default=True, description='Build with OpenGL2 instead of OpenGL as rendering backend')
     variant('python', default=False, description='Build the python modules')
 
-    patch('gcc.patch')
+    patch('gcc.patch', when='@6.1.0')
 
-    depends_on('cmake', type='build')
     depends_on('qt')
 
     extends('python', when='+python')
-    depends_on('python', when='+python')
 
-    def url_for_version(self, ver):
-        return '{0}/{1}/VTK-{2}.tar.gz'.format(Vtk.base_url, ver.up_to(2), ver)
+    def url_for_version(self, version):
+        url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
 
-    def install(self, spec, prefix):
-        def feature_to_bool(feature, on='ON', off='OFF'):
-            return on if '+{0}'.format(feature) in spec else off
+    def cmake_args(self):
+        spec = self.spec
 
-        with working_dir('spack-build', create=True):
-            opengl_ver = 'OpenGL{0}'.format('2' if '+opengl2' in spec else '')
-            qt_ver = spec['qt'].version.up_to(1)
-            qt_bin = spec['qt'].prefix.bin
+        opengl_ver = 'OpenGL{0}'.format('2' if '+opengl2' in spec else '')
+        qt_ver = spec['qt'].version.up_to(1)
+        qt_bin = spec['qt'].prefix.bin
 
-            cmake_args = std_cmake_args[:]
+        cmake_args = std_cmake_args[:]
+        cmake_args.extend([
+            '-DBUILD_SHARED_LIBS=ON',
+            '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
+
+            # Enable/Disable wrappers for Python.
+            '-DVTK_WRAP_PYTHON={0}'.format(
+                'ON' if '+python' in spec else 'OFF'),
+
+            # Disable wrappers for other languages.
+            '-DVTK_WRAP_JAVA=OFF',
+            '-DVTK_WRAP_TCL=OFF',
+
+            # Enable Qt support here.
+            '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
+            '-DQT_QMAKE_EXECUTABLE:PATH={0}/qmake'.format(qt_bin),
+            '-DVTK_Group_Qt:BOOL=ON',
+        ])
+
+        # NOTE: The following definitions are required in order to allow
+        # VTK to build with qt~webkit versions (see the documentation for
+        # more info: http://www.vtk.org/Wiki/VTK/Tutorials/QtSetup).
+        if '~webkit' in spec['qt']:
             cmake_args.extend([
-                '-DBUILD_SHARED_LIBS=ON',
-                '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
-
-                # Enable/Disable wrappers for Python.
-                '-DVTK_WRAP_PYTHON={0}'.format(feature_to_bool('python')),
-
-                # Disable wrappers for other languages.
-                '-DVTK_WRAP_JAVA=OFF',
-                '-DVTK_WRAP_TCL=OFF',
-
-                # Enable Qt support here.
-                '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
-                '-DQT_QMAKE_EXECUTABLE:PATH={0}/qmake'.format(qt_bin),
-                '-DVTK_Group_Qt:BOOL=ON',
+                '-DVTK_Group_Qt:BOOL=OFF',
+                '-DModule_vtkGUISupportQt:BOOL=ON',
+                '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
             ])
 
-            # NOTE: The following definitions are required in order to allow
-            # VTK to build with qt~webkit versions (see the documentation for
-            # more info: http://www.vtk.org/Wiki/VTK/Tutorials/QtSetup).
-            if '~webkit' in spec['qt']:
-                cmake_args.extend([
-                    '-DVTK_Group_Qt:BOOL=OFF',
-                    '-DModule_vtkGUISupportQt:BOOL=ON',
-                    '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
-                ])
+        if spec.satisfies('@:6.1.0'):
+            cmake_args.append('-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY')
+            cmake_args.append('-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY')
 
-            if spec.satisfies('@:6.1.0'):
-                cmake_args.append('-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY')
-                cmake_args.append('-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY')
-
-            cmake('..', *cmake_args)
-            make()
-            make('install')
+        return cmake_args
