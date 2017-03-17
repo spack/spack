@@ -150,8 +150,10 @@ class Julia(Package):
         make("install")
 
         # Julia's package manager needs a certificate
+        cacert_dir = join_path(prefix, "etc", "curl")
+        mkdirp(cacert_dir)
+        cacert_file = join_path(cacert_dir, "cacert.pem")
         curl = which("curl")
-        cacert_file = join_path(prefix, "etc", "curl", "cacert.pem")
         curl("--create-dirs",
              "--output", cacert_file,
              "https://curl.haxx.se/ca/cacert.pem")
