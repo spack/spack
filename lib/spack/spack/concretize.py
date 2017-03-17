@@ -377,41 +377,26 @@ class DefaultConcretizer(object):
             # running.
             return True
 
+        compiler_match = lambda other: (
+            spec.compiler == other.compiler and
+            spec.architecture == other.architecture)
+
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
+            if flag not in spec.compiler_flags:
+                spec.compiler_flags[flag] = list()
             try:
                 nearest = next(p for p in spec.traverse(direction='parents')
-                               if ((p.compiler == spec.compiler and
-                                    p is not spec) and
+                               if (compiler_match(p) and
+                                   (p is not spec) and
                                    flag in p.compiler_flags))
-                if flag not in spec.compiler_flags or \
-                        not (sorted(spec.compiler_flags[flag]) >=
-                             sorted(nearest.compiler_flags[flag])):
-                    if flag in spec.compiler_flags:
-                        spec.compiler_flags[flag] = list(
-                            set(spec.compiler_flags[flag]) |
-                            set(nearest.compiler_flags[flag]))
-                    else:
-                        spec.compiler_flags[
-                            flag] = nearest.compiler_flags[flag]
+                nearest_flags = set(nearest.compiler_flags.get(flag, []))
+                flags = set(spec.compiler_flags.get(flag, []))
+                if (nearest_flags - flags):
+                    spec.compiler_flags[flag] = list(nearest_flags | flags)
                     ret = True
-
             except StopIteration:
-                if (flag in spec.root.compiler_flags and
-                    ((flag not in spec.compiler_flags) or
-                     sorted(spec.compiler_flags[flag]) !=
-                     sorted(spec.root.compiler_flags[flag]))):
-                    if flag in spec.compiler_flags:
-                        spec.compiler_flags[flag] = list(
-                            set(spec.compiler_flags[flag]) |
-                            set(spec.root.compiler_flags[flag]))
-                    else:
-                        spec.compiler_flags[
-                            flag] = spec.root.compiler_flags[flag]
-                    ret = True
-                else:
-                    if flag not in spec.compiler_flags:
-                        spec.compiler_flags[flag] = []
+                pass
 
         # Include the compiler flag defaults from the config files
         # This ensures that spack will detect conflicts that stem from a change
@@ -419,19 +404,11 @@ class DefaultConcretizer(object):
         compiler = spack.compilers.compiler_for_spec(
             spec.compiler, spec.architecture)
         for flag in compiler.flags:
-            if flag not in spec.compiler_flags:
-                spec.compiler_flags[flag] = compiler.flags[flag]
-                if compiler.flags[flag] != []:
-                    ret = True
-            else:
-                if ((sorted(spec.compiler_flags[flag]) !=
-                     sorted(compiler.flags[flag])) and
-                    (not set(spec.compiler_flags[flag]) >=
-                     set(compiler.flags[flag]))):
-                    ret = True
-                    spec.compiler_flags[flag] = list(
-                        set(spec.compiler_flags[flag]) |
-                        set(compiler.flags[flag]))
+            config_flags = set(compiler.flags.get(flag, []))
+            flags = set(spec.compiler_flags.get(flag, []))
+            spec.compiler_flags[flag] = list(config_flags | flags)
+            if (config_flags - flags):
+                ret = True
 
         return ret
 
