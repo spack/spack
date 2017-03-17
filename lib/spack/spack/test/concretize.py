@@ -221,6 +221,16 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
+    def test_no_matching_compiler_specs(self):
+        s = Spec('a %gcc@0.0.0')
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s.concretize()
+
+    def test_no_compilers_for_arch(self):
+        s = Spec('a arch=linux-rhel0-x86_64')
+        with pytest.raises(spack.concretize.NoCompilersForArchError):
+            s.concretize()
+
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
