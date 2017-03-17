@@ -50,7 +50,7 @@ class Tulip(CMakePackage):
 
     @run_after('install')
     def relocate_python(self):
-        """Move tulip's python installatoin into pythonX.y/site-packages."""
+        """Move tulip's python installation into pythonX.y/site-packages."""
         tulip_python_dir = os.path.join(self.prefix, 'lib', 'python')
         for f in os.listdir(tulip_python_dir):
             src = os.path.join(tulip_python_dir, f)
