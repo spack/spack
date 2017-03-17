@@ -315,11 +315,16 @@ class DefaultConcretizer(object):
         def _proper_compiler_style(cspec, aspec):
             return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
 
-        all_compilers = spack.compilers.all_compiler_specs()
+        all_compiler_specs = spack.compilers.all_compiler_specs()
+        if not all_compiler_specs:
+            raise spack.compilers.NoCompilersError()
 
         if (spec.compiler and
             spec.compiler.concrete and
-                spec.compiler in all_compilers):
+                spec.compiler in all_compiler_specs):
+            if not _proper_compiler_style(spec.compiler, spec.architecture):
+                _compiler_concretization_failure(
+                    spec.compiler, spec.architecture)
             return False
 
         # Find the another spec that has a compiler, or the root if none do
@@ -332,22 +337,23 @@ class DefaultConcretizer(object):
         assert(other_spec)
 
         # Check if the compiler is already fully specified
-        if other_compiler in all_compilers:
+        if other_compiler in all_compiler_specs:
             spec.compiler = other_compiler.copy()
+            if not _proper_compiler_style(spec.compiler, spec.architecture):
+                _compiler_concretization_failure(
+                    spec.compiler, spec.architecture)
             return True
 
         # Filter the compilers into a sorted list based on the compiler_order
         # from spackconfig
-        compiler_list = all_compilers if not other_compiler else \
+        compiler_list = all_compiler_specs if not other_compiler else \
             spack.compilers.find(other_compiler)
+        if not compiler_list:
+            # No compiler with a satisfactory spec was found
+            raise UnavailableCompilerVersionError(other_compiler)
         cmp_compilers = partial(
             pkgsort().compiler_compare, other_spec.name)
         matches = sorted(compiler_list, cmp=cmp_compilers)
-        if not matches:
-            arch = spec.architecture
-            raise UnavailableCompilerVersionError(other_compiler,
-                                                  arch.platform_os,
-                                                  arch.target)
 
         # copy concrete version into other_compiler
         try:
@@ -355,10 +361,9 @@ class DefaultConcretizer(object):
                 c for c in matches
                 if _proper_compiler_style(c, spec.architecture)).copy()
         except StopIteration:
-            raise UnavailableCompilerVersionError(
-                spec.compiler, spec.architecture.platform_os,
-                spec.architecture.target
-            )
+            # No compiler with a satisfactory spec has a suitable arch
+            _compiler_concretization_failure(
+                other_compiler, spec.architecture)
 
         assert(spec.compiler.concrete)
         return True  # things changed.
@@ -443,17 +448,53 @@ def find_spec(spec, condition):
     return None   # Nothing matched the condition.
 
 
+def _compiler_concretization_failure(compiler_spec, arch):
+    # Distinguish between the case that there are compilers for
+    # the arch but not with the given compiler spec and the case that
+    # there are no compilers for the arch at all
+    if not spack.compilers.compilers_for_arch(arch):
+        available_os_targets = set(
+            (c.operating_system, c.target) for c in
+            spack.compilers.all_compilers())
+        raise NoCompilersForArchError(arch, available_os_targets)
+    else:
+        raise UnavailableCompilerVersionError(compiler_spec, arch)
+
+
+class NoCompilersForArchError(spack.error.SpackError):
+    def __init__(self, arch, available_os_targets):
+        err_msg = ("No compilers found"
+                   " for operating system %s and target %s." 
+                   "\nIf previous installations have succeeded, the"
+                   " operating system may have been updated." %
+                   (arch.platform_os, arch.target))
+
+        available_os_target_strs = list()
+        for os, t in available_os_targets:
+            os_target_str = "%s-%s" % (os, t) if t else os
+            available_os_target_strs.append(os_target_str)
+        err_msg += (
+            "\nCompilers are defined for the following"
+            " operating systems and targets:\n\t" +
+            "\n\t".join(available_os_target_strs))
+
+        super(NoCompilersForArchError, self).__init__(
+            err_msg, "Run 'spack compiler find' to add compilers.")
+
+
 class UnavailableCompilerVersionError(spack.error.SpackError):
 
     """Raised when there is no available compiler that satisfies a
        compiler spec."""
 
-    def __init__(self, compiler_spec, operating_system, target):
+    def __init__(self, compiler_spec, arch=None):
+        err_msg = "No compilers with spec %s found" % compiler_spec
+        if arch:
+            err_msg += (" for operating system %s and target %s." %
+                        (compiler_spec, arch.platform_os, arch.target))
+
         super(UnavailableCompilerVersionError, self).__init__(
-            "No available compiler version matches '%s' on operating_system "
-            "'%s' for target '%s'"
-            % (compiler_spec, operating_system, target),
-            "Run 'spack compilers' to see available compiler Options.")
+            err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class NoValidVersionError(spack.error.SpackError):

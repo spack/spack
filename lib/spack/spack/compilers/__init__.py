@@ -230,8 +230,13 @@ def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
     for cspec in matches:
-        compilers.extend(get_compilers(cspec, config, arch_spec))
+        compilers.extend(get_compilers(config, cspec, arch_spec))
     return compilers
+
+
+def compilers_for_arch(arch_spec, scope=None):
+    config = all_compilers_config(scope)
+    return list(get_compilers(config, arch_spec=arch_spec))
 
 
 def compiler_from_config_entry(items):
@@ -266,12 +271,12 @@ def compiler_from_config_entry(items):
                environment, extra_rpaths, **compiler_flags)
 
 
-def get_compilers(cspec, config, arch_spec=None):
+def get_compilers(config, cspec=None, arch_spec=None):
     compilers = []
 
     for items in config:
         items = items['compiler']
-        if items['spec'] != str(cspec):
+        if cspec and items['spec'] != str(cspec):
             continue
 
         # If an arch spec is given, confirm that this compiler
