@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Mvapich2(Package):
@@ -94,7 +95,7 @@ class Mvapich2(Package):
 
     # FIXME : CUDA support is missing
     depends_on('bison')
-    depends_on('libpciaccess')
+    depends_on('libpciaccess', when=(sys.platform != 'darwin'))
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"

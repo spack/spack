@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libpciaccess(Package):
+class Libpciaccess(AutotoolsPackage):
     """Generic PCI access library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
@@ -36,15 +36,3 @@ class Libpciaccess(Package):
     depends_on('libtool', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        # libpciaccess does not support OS X
-        if spec.satisfies('platform=darwin'):
-            # create a dummy directory
-            mkdir(prefix.lib)
-            return
-
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
