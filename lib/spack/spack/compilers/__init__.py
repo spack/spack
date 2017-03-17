@@ -110,6 +110,16 @@ def get_compiler_config(scope=None, init_config=True):
         return []  # Return empty list which we will later append to.
 
 
+def compiler_config_files():
+    config_files = list()
+    for scope in spack.config.config_scopes:
+        config = spack.config.get_config('compilers', scope=scope)
+        if config:
+            config_files.append(spack.config.config_scopes[scope]
+                                .get_section_filename('compilers'))
+    return config_files
+
+
 def add_compilers_to_config(compilers, scope=None, init_config=True):
     """Add compilers to the config for the specified architecture.
 

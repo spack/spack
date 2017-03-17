@@ -112,6 +112,8 @@ def compiler_find(args):
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
+    tty.msg("Compilers are defined in the following files:")
+    colify(spack.compilers.compiler_config_files(), indent=4)
 
 
 def compiler_remove(args):
