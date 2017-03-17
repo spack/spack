@@ -45,7 +45,7 @@ class PyH5py(PythonPackage):
     depends_on('hdf5@1.8.4:')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
-    depends_on('py-mpi4py', when='+mpi')
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
     # Build and runtime dependencies
     depends_on('py-numpy@1.6.1:', type=('build', 'run'))
