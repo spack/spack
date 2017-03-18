@@ -37,7 +37,7 @@ class PySymengine(PythonPackage):
     # Build dependencies
     depends_on('python@2.7:2.8,3.3:')
     depends_on('py-setuptools',     type='build')
-    depends_on('py-cython@0.19.1:')
+    depends_on('py-cython@0.19.1:', type='build')
     depends_on('cmake@2.8.7:',      type='build')
     depends_on('symengine@0.2.0:')
 

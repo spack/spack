@@ -35,17 +35,17 @@ class Caffe(CMakePackage):
 
     version('rc5', '692bd3580b7576485cde6b1e03eb5a6d')
 
-    variant('gpu', default=False, 
+    variant('gpu', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
-    variant('opencv', default=True, 
+    variant('opencv', default=True,
             description='Build with OpenCV support')
-    variant('leveldb', default=True, 
+    variant('leveldb', default=True,
             description="Build with levelDB")
-    variant('lmdb', default=True, 
+    variant('lmdb', default=True,
             description="Build with lmdb")
-    variant('python', default=False, 
+    variant('python', default=False,
             description='Build python wrapper and caffe python layer')
-    variant('matlab', default=False, 
+    variant('matlab', default=False,
             description='Build Matlab wrapper')
 
     depends_on('boost')
@@ -62,7 +62,7 @@ class Caffe(CMakePackage):
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('python@2.7:', when='+python')
-    depends_on('py-numpy@1.7:', when='+python')
+    depends_on('py-numpy@1.7:', when='+python', type=('build', 'run'))
     depends_on('matlab', when='+matlab')
 
     extends('python', when='+python')

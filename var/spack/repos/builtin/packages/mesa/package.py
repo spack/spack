@@ -36,7 +36,7 @@ class Mesa(AutotoolsPackage):
 
     # General dependencies
     depends_on('python@2.6.4:')
-    depends_on('py-mako@0.3.4:')
+    depends_on('py-mako@0.3.4:', type=('build', 'run'))
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
 
