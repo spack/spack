@@ -26,6 +26,9 @@ packages:
   pgi:
     variants: +network +nvidia
 
+  intel:
+      buildable: False
+
   intel-parallel-studio:
     variants: +ipp +mkl +mpi +openmp
     version: [cluster]
