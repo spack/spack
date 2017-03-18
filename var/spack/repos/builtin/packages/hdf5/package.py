@@ -196,12 +196,12 @@ HDF5 version {version} {version}
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
-                cc = which(spec['mpi'].mpicc)
+                cc = Executable(spec['mpi'].mpicc)
             else:
-                cc = which(self.compiler.cc)
+                cc = Executable(self.compiler.cc)
             cc(*(['-c', "check.c"] + spec['hdf5'].cppflags.split()))
             cc(*(['-o', "check", "check.o"] +
-                 spec['hdf5'].libs.ld_flags.split() ))
+                 spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
                 output = check(return_output=True)
