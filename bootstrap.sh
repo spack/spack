@@ -12,11 +12,11 @@ fi
 
 # PLATFORM, SPACK_ROOT, SPACKPREFIX, SPACKSTAGE, SPACKCACHE, SPACKSOURCECACHE
 echo 'Determine the PLATFORM sandybridge, haswell, knightlanding.'
-if [[ $HOST == "*knl*" ]]; then
+if [[ $HOST == *"knl"* ]]; then
 	PLATFORM="knightlanding"
-elif [[ $HOST == "*nv*" ]]; then
+elif [[ $HOST == *"nv"* ]]; then
 	PLATFORM="haswell"
-elif [[ $HOST == "*uv*" ]]; then
+elif [[ $HOST == *"uv"* ]]; then
 	PLATFORM="ivybridge"
 else
 	PLATFORM="sandybridge"
@@ -54,13 +54,13 @@ done
 # CONFIG_YAML, COMPILER_YAML, PACKAGE_YAML
 CONFIG_YAML=config.yaml.template
 
-if [[ $HOST == "*uv*" ]]; then
+if [[ $HOST == *"uv"* ]]; then
 	COMPILER_YAML="compilers_sgi.yaml"
 else
 	COMPILER_YAML="compilers.yaml"
 fi
 
-if [[ $HOST == "*uv*" ]]; then
+if [[ $HOST == *"uv"* ]]; then
 	PACKAGE_YAML="packages_sgi.yaml"
 elif [ $1 = "system" ]; then
 	PACKAGE_YAML="packages_system.yaml"
@@ -79,3 +79,6 @@ if [[ $2 == "--install" ]]; then
 	echo "Installing packages..."
 	./build_${1}.sh
 fi
+
+# Reset config.yaml.template
+git co -- config.yaml.template
