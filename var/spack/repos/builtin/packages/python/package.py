@@ -127,12 +127,16 @@ class Python(AutotoolsPackage):
         dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
         config_args = [
             '--with-threads',
-            '--enable-shared',
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
-        if spec.satisfies("platform=darwin") and ('%gcc' in spec):
-            config_args.append('--disable-toolbox-glue')
+        if spec.satisfies('platform=darwin'):
+            if '%gcc' in spec:
+                config_args.append('--disable-toolbox-glue')
+        else:
+            # --enable-shared causes problems on macOS and is not recommended:
+            # http://bugs.python.org/issue29846
+            config_args.append('--enable-shared')
 
         if '+ucs4' in spec:
             if spec.satisfies('@:2.7'):
