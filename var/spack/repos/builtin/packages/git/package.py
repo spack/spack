@@ -26,31 +26,26 @@ import sys
 from spack import *
 
 
-class Git(Package):
+class Git(AutotoolsPackage):
     """Git is a free and open source distributed version control
-       system designed to handle everything from small to very large
-       projects with speed and efficiency."""
-    homepage = "http://git-scm.com"
-    url      = "https://github.com/git/git/tarball/v2.7.1"
+    system designed to handle everything from small to very large
+    projects with speed and efficiency."""
 
-    # See here for info on vulnerable Git versions:
-    # http://www.theregister.co.uk/2016/03/16/git_server_client_patch_now/
-    # All the following are vulnerable
-    # version('2.6.3', 'b711be7628a4a2c25f38d859ee81b423')
-    # version('2.6.2', 'da293290da69f45a86a311ad3cd43dc8')
-    # version('2.6.1', '4c62ee9c5991fe93d99cf2a6b68397fd')
-    # version('2.6.0', 'eb76a07148d94802a1745d759716a57e')
-    # version('2.5.4', '3eca2390cf1fa698b48e2a233563a76b')
-    # version('2.2.1', 'ff41fdb094eed1ec430aed8ee9b9849c')
+    homepage = "http://git-scm.com"
+    url      = "https://github.com/git/git/archive/v2.12.0.tar.gz"
 
     # In order to add new versions here, add a new list entry with:
-    #       * version: versionnumber
-    #       * md5: the md5sum of the v<versionnumber>.tar.gz
-    #       * md5_manpages: the md5sum of the corresponding manpage from
-    #                       https://www.kernel.org/pub/software/scm/git/
-    #                                               git-manpages-{}.tar.xz
+    # * version: {version}
+    # * md5: the md5sum of the v{version}.tar.gz
+    # * md5_manpages: the md5sum of the corresponding manpage from
+    #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
 
     releases = [
+        {
+            'version': '2.12.0',
+            'md5': '11a440ce0ed02098adf554c797facfd3',
+            'md5_manpages': '4d11e05068231e37d7e42935e9cc43a1',
+        },
         {
             'version': '2.11.1',
             'md5': '2cf960f19e56f27248816809ae896794',
@@ -121,45 +116,56 @@ class Git(Package):
     for release in releases:
         version(release['version'], release['md5'])
         resource(
-            name="git-manpages",
-            url="https://www.kernel.org/pub/software/scm/git/"
-            "git-manpages-{0}.tar.xz".format(release['version']),
+            name='git-manpages',
+            url="https://www.kernel.org/pub/software/scm/git/git-manpages-{0}.tar.xz".format(
+                release['version']),
             md5=release['md5_manpages'],
-            placement="git-manpages",
-            when="@{0}".format(release['version']))
+            placement='git-manpages',
+            when='@{0}'.format(release['version']))
 
-    depends_on("autoconf", type='build')
-    depends_on("curl")
-    depends_on("expat")
-    depends_on("gettext")
-    depends_on("libiconv")
-    depends_on("openssl")
-    depends_on("pcre")
-    depends_on("perl")
-    depends_on("zlib")
+    depends_on('curl')
+    depends_on('expat')
+    depends_on('gettext')
+    depends_on('libiconv')
+    depends_on('openssl')
+    depends_on('pcre')
+    depends_on('perl')
+    depends_on('zlib')
 
-    def install(self, spec, prefix):
-        env['LDFLAGS'] = "-L%s" % spec['gettext'].prefix.lib + " -lintl"
-        configure_args = [
-            "--prefix=%s" % prefix,
-            "--with-curl=%s" % spec['curl'].prefix,
-            "--with-expat=%s" % spec['expat'].prefix,
-            "--with-iconv=%s" % spec['libiconv'].prefix,
-            "--with-libpcre=%s" % spec['pcre'].prefix,
-            "--with-openssl=%s" % spec['openssl'].prefix,
-            "--with-perl=%s" % join_path(spec['perl'].prefix.bin, 'perl'),
-            "--with-zlib=%s" % spec['zlib'].prefix,
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('LDFLAGS', '-L{0} -lintl'.format(
+            self.spec['gettext'].prefix.lib))
+
+    def configure_args(self):
+        spec = self.spec
+
+        return [
+            '--with-curl={0}'.format(spec['curl'].prefix),
+            '--with-expat={0}'.format(spec['expat'].prefix),
+            '--with-iconv={0}'.format(spec['libiconv'].prefix),
+            '--with-libpcre={0}'.format(spec['pcre'].prefix),
+            '--with-openssl={0}'.format(spec['openssl'].prefix),
+            '--with-perl={0}'.format(
+                join_path(spec['perl'].prefix.bin, 'perl')),
+            '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 
-        which('autoreconf')('-i')
-        configure(*configure_args)
-        if sys.platform == "darwin":
+    @run_after('configure')
+    def filter_rt(self):
+        if sys.platform == 'darwin':
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
-        make()
-        make("install")
 
-        with working_dir("git-manpages"):
-            install_tree("man1", prefix.share_man1)
-            install_tree("man5", prefix.share_man5)
-            install_tree("man7", prefix.share_man7)
+    @run_after('install')
+    def install_manpages(self):
+        prefix = self.prefix
+
+        with working_dir('git-manpages'):
+            install_tree('man1', prefix.share_man1)
+            install_tree('man5', prefix.share_man5)
+            install_tree('man7', prefix.share_man7)

@@ -25,29 +25,15 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
-    """Optimizing compiler for evaluating mathematical expressions on CPUs
-    and GPUs."""
+class PyFuture(PythonPackage):
+    """Clean single-source support for Python 3 and 2"""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "https://python-future.org/"
+    url = "https://pypi.io/packages/source/f/future/future-0.16.0.tar.gz"
 
-    version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
-
-    variant('gpu', default=False, 
-            description='Builds with support for GPUs via CUDA and cuDNN')
-
-    depends_on('python@2.6:2.8,3.3:')
+    version('0.16.0', '3e8e88a2bda48d54b1da7634d04760d7')
+    version('0.15.2', 'a68eb3c90b3b76714c5ceb8c09ea3a06')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-scipy@0.11:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-
-    depends_on('blas')
-
-    depends_on('cuda', when='+gpu')
-    depends_on('libgpuarray', when='+gpu')
-    # test requirements
-    # depends_on('py-nose@1.3.0:', type=('build', 'run'))
-    # depends_on('py-nose-parameterized@0.5.0:', type=('build', 'run'))
+    # depends_on('py-importlib', type=('build', 'run'), when='^python@2.6')
+    # depends_on('py-argparse', type=('build', 'run'), when='^python@2.6')

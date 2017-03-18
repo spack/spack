@@ -25,29 +25,19 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
-    """Optimizing compiler for evaluating mathematical expressions on CPUs
-    and GPUs."""
+class Libbson(AutotoolsPackage):
+    """libbson is a library providing useful routines related to building,
+    parsing, and iterating BSON documents."""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "https://github.com/mongodb/libbson"
+    url      = "https://github.com/mongodb/libbson/releases/download/1.6.1/libbson-1.6.1.tar.gz"
 
-    version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
+    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
 
-    variant('gpu', default=False, 
-            description='Builds with support for GPUs via CUDA and cuDNN')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
-    depends_on('py-scipy@0.11:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-
-    depends_on('blas')
-
-    depends_on('cuda', when='+gpu')
-    depends_on('libgpuarray', when='+gpu')
-    # test requirements
-    # depends_on('py-nose@1.3.0:', type=('build', 'run'))
-    # depends_on('py-nose-parameterized@0.5.0:', type=('build', 'run'))
+    # 1.6.1 tarball is broken
+    force_autoreconf = True

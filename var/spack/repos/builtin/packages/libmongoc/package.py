@@ -25,29 +25,19 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
-    """Optimizing compiler for evaluating mathematical expressions on CPUs
-    and GPUs."""
+class Libmongoc(AutotoolsPackage):
+    """libmongoc is a client library written in C for MongoDB."""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "https://github.com/mongodb/mongo-c-driver"
+    url      = "https://github.com/mongodb/mongo-c-driver/releases/download/1.6.1/mongo-c-driver-1.6.1.tar.gz"
 
-    version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
+    version('1.6.1', '826946de9a15f7f453aefecdc76b1c0d')
 
-    variant('gpu', default=False, 
-            description='Builds with support for GPUs via CUDA and cuDNN')
+    depends_on('libbson')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
-    depends_on('py-scipy@0.11:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-
-    depends_on('blas')
-
-    depends_on('cuda', when='+gpu')
-    depends_on('libgpuarray', when='+gpu')
-    # test requirements
-    # depends_on('py-nose@1.3.0:', type=('build', 'run'))
-    # depends_on('py-nose-parameterized@0.5.0:', type=('build', 'run'))
+    def configure_args(self):
+        args = [
+            '--disable-automatic-init-and-cleanup',
+            '--with-libbson=system'
+        ]
+        return args
