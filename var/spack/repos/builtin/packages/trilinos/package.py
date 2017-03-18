@@ -120,7 +120,7 @@ class Trilinos(CMakePackage):
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@:12.8.1')

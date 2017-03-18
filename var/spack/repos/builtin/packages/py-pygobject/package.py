@@ -40,7 +40,7 @@ class PyPygobject(AutotoolsPackage):
 
     depends_on("libffi")
     depends_on('glib')
-    depends_on('py-py2cairo')
+    depends_on('py-py2cairo', type=('build', 'run'))
     depends_on('gobject-introspection')
 
     patch('pygobject-2.28.6-introspection-1.patch', when='@2.28.3:2.28.6')
