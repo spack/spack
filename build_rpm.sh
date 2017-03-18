@@ -12,14 +12,14 @@ function s {
 
 compilers=(
     %gcc@6.3.0
-    %intel@17.0.1
+    %intel@17.0.2
 )
 
 mpis=(
     openmpi@2.0.2
     mvapich2@2.2
     mpich@3.2
-    intel-parallel-studio@cluster.2017+mpi
+    intel-parallel-studio@cluster.2017.2+mpi
 )
 
 mpipkgs=(

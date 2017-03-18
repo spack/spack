@@ -97,11 +97,11 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe/bin/icc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe/bin/icpc
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe/bin/ifort
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.1-4uy7iwkuftkrg5wx2sg5zi6r5355rqbe/bin/ifort
-    spec: intel@17.0.1
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/ifort
+    spec: intel@17.0.2
     target: x86_64
 - compiler:
     environment: {}

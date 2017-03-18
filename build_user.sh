@@ -12,7 +12,7 @@ function s {
 
 compilers=(
     %gcc@6.3.0
-    %intel@17.0.1
+    %intel@17
 )
 
 s zlib 	%gcc@6.3.0
