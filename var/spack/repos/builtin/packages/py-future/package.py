@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,27 +25,15 @@
 from spack import *
 
 
-class Everytrace(CMakePackage):
-    """Get stack trace EVERY time a program exits."""
+class PyFuture(PythonPackage):
+    """Clean single-source support for Python 3 and 2"""
 
-    homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
+    homepage = "https://python-future.org/"
+    url = "https://pypi.io/packages/source/f/future/future-0.16.0.tar.gz"
 
-    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
-    version('develop',
-            git='https://github.com/citibeth/everytrace.git', branch='develop')
+    version('0.16.0', '3e8e88a2bda48d54b1da7634d04760d7')
+    version('0.15.2', 'a68eb3c90b3b76714c5ceb8c09ea3a06')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=True,
-            description='Enable use with Fortran programs')
-
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    depends_on('py-setuptools', type='build')
+    # depends_on('py-importlib', type=('build', 'run'), when='^python@2.6')
+    # depends_on('py-argparse', type=('build', 'run'), when='^python@2.6')

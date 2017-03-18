@@ -88,7 +88,7 @@ class Octave(AutotoolsPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('image-magick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('jdk',          when='+jdk') # TODO: requires Java 6 ?
+    depends_on('jdk',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
     # depends_on('opengl',      when='+opengl')    # TODO: add package
     depends_on('qhull',        when='+qhull')
@@ -225,7 +225,7 @@ class Octave(AutotoolsPackage):
     # Set up environment to make install easy for Octave extensions.
     # ========================================================================
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before Octave modules' install() methods.
 
         In most cases, extensions will only need to have one line:

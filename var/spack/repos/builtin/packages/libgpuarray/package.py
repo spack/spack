@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,27 +25,18 @@
 from spack import *
 
 
-class Everytrace(CMakePackage):
-    """Get stack trace EVERY time a program exits."""
+class Libgpuarray(CMakePackage):
+    """Make a common GPU ndarray(n dimensions array) that can be reused by all
+    projects that is as future proof as possible, while keeping it easy to use
+    for simple need/quick test."""
 
-    homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
+    homepage = "http://deeplearning.net/software/libgpuarray/"
+    url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
 
-    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
-    version('develop',
-            git='https://github.com/citibeth/everytrace.git', branch='develop')
+    version('0.6.2', '7f163bd5f48f399cd6e608ee3d528ee4')
+    version('0.6.1', 'cfcd1b54447f9d55b05514df62c70ae2')
+    version('0.6.0', '98a4ec1b4c8f225f0b89c18b899a000b')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=True,
-            description='Enable use with Fortran programs')
+    depends_on('cuda')
 
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    extends('python')

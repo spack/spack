@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,27 +25,19 @@
 from spack import *
 
 
-class Everytrace(CMakePackage):
-    """Get stack trace EVERY time a program exits."""
+class Libmongoc(AutotoolsPackage):
+    """libmongoc is a client library written in C for MongoDB."""
 
-    homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
+    homepage = "https://github.com/mongodb/mongo-c-driver"
+    url      = "https://github.com/mongodb/mongo-c-driver/releases/download/1.6.1/mongo-c-driver-1.6.1.tar.gz"
 
-    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
-    version('develop',
-            git='https://github.com/citibeth/everytrace.git', branch='develop')
+    version('1.6.1', '826946de9a15f7f453aefecdc76b1c0d')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=True,
-            description='Enable use with Fortran programs')
+    depends_on('libbson')
 
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    def configure_args(self):
+        args = [
+            '--disable-automatic-init-and-cleanup',
+            '--with-libbson=system'
+        ]
+        return args

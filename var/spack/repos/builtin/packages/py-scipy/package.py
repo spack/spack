@@ -33,6 +33,8 @@ class PyScipy(PythonPackage):
     homepage = "http://www.scipy.org/"
     url = "https://pypi.io/packages/source/s/scipy/scipy-0.18.1.tar.gz"
 
+    version('0.19.0', '91b8396231eec780222a57703d3ec550',
+            url="https://pypi.io/packages/source/s/scipy/scipy-0.19.0.zip")
     version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
     version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
     version('0.15.1', 'be56cd8e60591d6332aac792a5880110')

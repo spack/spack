@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,27 +25,20 @@
 from spack import *
 
 
-class Everytrace(CMakePackage):
-    """Get stack trace EVERY time a program exits."""
+class PyJpype(PythonPackage):
+    """JPype is an effort to allow python programs full access to java class
+    libraries."""
 
-    homepage = "https://github.com/citibeth/everytrace"
-    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
+    homepage = "https://github.com/originell/jpype"
+    url      = "https://pypi.io/packages/source/J/JPype1/JPype1-0.6.2.tar.gz"
 
-    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
-    version('develop',
-            git='https://github.com/citibeth/everytrace.git', branch='develop')
+    version('0.6.2', '16e5ee92b29563dcc63bbc75556810c1')
+    version('0.6.1', '468ca2d4b2cff7802138789e951d5d58')
+    version('0.6.0', 'f0cbbe1d0c4b563f7e435d2bffc31736')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=True,
-            description='Enable use with Fortran programs')
+    depends_on('python@2.6:')
 
-    depends_on('mpi', when='+mpi')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    depends_on('py-setuptools', type='build')
+    depends_on('jdk', type=('build', 'run'))
+    # extra requirements
+    # depends_on('py-numpy@1.6:', type=('build', 'run'))
