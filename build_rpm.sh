@@ -28,7 +28,7 @@ mpipkgs=(
   simul
 )
 
-icc='%intel@17'
+icc='%intel@17.0.2'
 
 # Perl, Python, R, Boost
 for compiler in "${compilers[@]}"
