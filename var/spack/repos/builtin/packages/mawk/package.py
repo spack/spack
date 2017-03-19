@@ -29,7 +29,7 @@ class Mawk(AutotoolsPackage):
     """mawk is an interpreter for the AWK Programming Language."""
 
     homepage = "http://invisible-island.net/mawk/mawk.html"
-    url      = "ftp://invisible-island.net/mawk/mawk-1.3.4.tgz"
+    url      = "http://invisible-mirror.net/archives/mawk/mawk-1.3.4.tgz"
 
     version('1.3.4', 'b1d27324ae80302452d0fa0c98447b65')
 
