@@ -96,7 +96,8 @@ def files_to_be_sourced():
     files = [
         os.path.join(datadir, 'sourceme_first.sh'),
         os.path.join(datadir, 'sourceme_second.sh'),
-        os.path.join(datadir, 'sourceme_parameters.sh intel64')
+        os.path.join(datadir, 'sourceme_parameters.sh intel64'),
+        os.path.join(datadir, 'sourceme_unicode.sh')
     ]
 
     return files
@@ -230,7 +231,6 @@ def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
     the result of sourcing a file.
     """
-
     env = EnvironmentModifications.from_sourcing_files(*files_to_be_sourced)
     modifications = env.group_by_name()
 
@@ -238,7 +238,7 @@ def test_source_files(files_to_be_sourced):
     # spurious entries for things like PS1
     #
     # TODO: figure out how to make a bit more robust.
-    assert len(modifications) >= 4
+    assert len(modifications) >= 5
 
     # Set new variables
     assert len(modifications['NEW_VAR']) == 1
