@@ -105,13 +105,18 @@ class Intel(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    # TODO: can also try the online installer (will download files on demand)
-    version('16.0.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
-        % os.getcwd())
-    version('16.0.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
-        % os.getcwd())
+    version('17.0.2',     '2891ab1ece43eb61b6ab892f07c47f01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
+    version('17.0.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
+    version('17.0.0',     'b67da0065a17a05f110ed1d15c3c6312',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
+    version('16.0.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
+    version('16.0.3',     '3208eeabee951fc27579177b593cefe9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
+    version('16.0.2',     '1133fb831312eb519f7da897fec223fa',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
 
