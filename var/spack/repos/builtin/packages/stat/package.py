@@ -53,7 +53,7 @@ class Stat(Package):
     depends_on('launchmon')
     depends_on('mrnet')
     depends_on('python')
-    depends_on('py-pygtk')
+    depends_on('py-pygtk', type=('build', 'run'))
     depends_on('swig')
     depends_on('mpi', when='+examples')
 
