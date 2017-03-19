@@ -38,17 +38,19 @@ class Ncurses(AutotoolsPackage):
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
     version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1')
 
-    patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
-    patch('sed_pgi.patch',   when='@:6.0')
-
-    depends_on("gawk", type='build')
-
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
 
+    # Use mawk instead of gawk to prevent a circular dependency
+    depends_on('mawk',       type='build')
+    depends_on('pkg-config', type='build')
+
+    patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
+    patch('sed_pgi.patch',   when='@:6.0')
+
     def configure_args(self):
         opts = [
-            'AWK=gawk',
+            'AWK=mawk',
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
