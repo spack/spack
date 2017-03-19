@@ -11,15 +11,19 @@ function s {
 }
 
 compilers=(
-    %gcc@6.3.0
-    %intel@17.0.2
+    gcc@6.3.0
+    intel@17.0.2
 )
 
 mpis=(
-    openmpi@2.0.2
-    mvapich2@2.2
-    mpich@3.2
-    intel-parallel-studio@cluster.2017.2+mpi
+    openmpi@2.0.2%gcc@6.3.0~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm+verbs+vt
+    openmpi@2.0.2%intel@17.0.2~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm+verbs+vt 
+    mpich@3.2%gcc@6.3.0+hydra+pmi+romio+verbs
+    mpich@3.2%intel@17.0.2+hydra+pmi+romio+verbs
+    mpich@3.2%pgi@16.10+hydra+pmi+romio+verbs
+    mvapich2@2.2%gcc@6.3.0~debug~gforker~hydra~mrail~nemesis~nemesisib+nemesisibtcp~psm~remshell+slurm~sock
+    mvapich2@2.2%intel@17.0.2~debug~gforker~hydra~mrail~nemesis~nemesisib+nemesisibtcp~psm~remshell+slurm~sock
+    intel-parallel-studio@cluster.2017.2%intel@17.0.2~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools
 )
 
 mpipkgs=(
@@ -28,42 +32,32 @@ mpipkgs=(
   simul
 )
 
-icc='%intel@17.0.2'
+nonmpipkgs=(
+  python@2.7.13
+  python@3.6.0 
+  anaconda2@4.3.0
+  anaconda3@4.3.0
+  openblas@0.2.19
+  r@3.3.2      
+  boost@1.63	       
+  perl@5.24.1
+  sga@0.10.15
+)
 
-# Perl, Python, R, Boost
+# Non-MPI packages
 for compiler in "${compilers[@]}"
 do
-s python@2.7.13 $compiler
-s python@3.6.0  $compiler
-s r@3.3.2	$compiler
-s boost		$compiler
-s perl		$compiler
-done
-
-# MPI and MPI-dependent Libraries
-for compiler in "${compilers[@]}"
-do
-	for mpi in "${mpis[@]}"
+	for pkg in "${nonmpipkgs[@]}"
 	do
-		if [[ $mpi != "intel"* ]]; then
-			s $mpi $compiler
-		fi
-
-		for pkg in "${mpipkgs[@]}"
-		do
-			if [[ $mpi == "mvapich2"* ]]; then
-				s $pkg$compiler ^$mpi+debug
-			elif [[ $mpi == "intel"* ]]; then
-				s $pkg$icc ^$mpi
-			else
-				s $pkg$compiler ^$mpi
-			fi
-		done
+		s $pkg %$compiler
 	done
 done
 
-# Other packages
-s sga %intel@17
-s sga %gcc@5
-s anaconda2 %gcc
-s anaconda3 %gcc
+# MPI-dependent Libraries
+for mpi in "${mpis[@]}"
+do
+	for pkg in "${mpipkgs[@]}"
+	do
+		s $pkg ^$mpi
+	done
+done

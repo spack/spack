@@ -28,6 +28,9 @@ packages:
       version: [system]
       buildable: False
   
+  r:
+    variants: +external-lapack
+
   openblas:
     variants: +openmp
 
