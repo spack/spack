@@ -12,6 +12,18 @@ function s {
 
 cc=%gcc@4.8.5
 
+compilers=(
+    %gcc@6.3.0
+    %intel@17.0.2
+)
+
+mpis=(
+    openmpi@2.0.2
+    mvapich2@2.2
+    mpich@3.2
+    intel-parallel-studio@cluster.2017.2+mpi
+)
+
 # Compilers
 s pgi $cc
 s gcc@4.9.4 $cc
@@ -24,9 +36,16 @@ s ant $cc
 s bazel	$cc
 s maven	$cc
 s lua-jit	$cc
-rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2016.4$cc +openmp+mpi+mkl+ipp
+
 rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2015.6$cc +openmp+mpi+mkl+ipp
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2015.6%intel@15.0.6 +openmp+mpi+mkl+ipp
+
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2016.4$cc +openmp+mpi+mkl+ipp
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2016.4%intel@16.0.4 +openmp+mpi+mkl+ipp
+
+
 rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2017.2$cc +openmp+mpi+mkl+ipp 
+rm -f /home/rpm/spack/etc/spack/licenses/intel/license.lic; s intel-parallel-studio@cluster.2017.2%intel@17.0.2 +openmp+mpi+mkl+ipp 
 
 # CUDA
 s cuda@8
@@ -39,3 +58,14 @@ s git 		$cc
 s parallel 	$cc	
 s emacs 	$cc	
 s vim 		$cc	
+
+# MPI Libraries
+for compiler in "${compilers[@]}"
+do
+	for mpi in "${mpis[@]}"
+	do
+		if [[ $mpi != "intel"* ]]; then
+			s $mpi $compiler
+		fi
+	done
+done
