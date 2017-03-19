@@ -34,5 +34,5 @@ class PyLazyarray(PythonPackage):
 
     version('0.2.8', '8e0072f0892b9fc0516e7048f96e9d74')
 
-    depends_on('py-numpy@1.3:')
-    depends_on('py-numpy@1.5:', when='^python@3:')
+    depends_on('py-numpy@1.3:', type=('build', 'run'))
+    depends_on('py-numpy@1.5:', type=('build', 'run'), when='^python@3:')

@@ -77,7 +77,7 @@ class Llvm(Package):
 
     # Universal dependency
     depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
-    depends_on('py-lit')
+    depends_on('py-lit', type=('build', 'run'))
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')

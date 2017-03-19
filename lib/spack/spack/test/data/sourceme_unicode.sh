@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -22,17 +24,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 
-
-class PyScientificpython(PythonPackage):
-    """ScientificPython is a collection of Python modules for
-       scientific computing. It contains support for geometry,
-       mathematical functions, statistics, physical units, IO,
-       visualization, and parallelization."""
-
-    homepage = "https://sourcesup.renater.fr/projects/scientific-py/"
-    url      = "https://sourcesup.renater.fr/frs/download.php/file/4411/ScientificPython-2.8.1.tar.gz"
-    version('2.8.1', '73ee0df19c7b58cdf2954261f0763c77')
-
-    depends_on('py-numpy', type=('build', 'run'))
+# Set an environment variable with some unicode in it to ensure that
+# Spack can decode it.
+#
+# This has caused squashed commits on develop to break, as some
+# committers use unicode in their messages, and Travis sets the
+# current commit message in an environment variable.
+export UNICODE_VAR='don\xe2\x80\x99t'

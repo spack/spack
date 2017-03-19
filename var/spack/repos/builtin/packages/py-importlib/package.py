@@ -25,37 +25,10 @@
 from spack import *
 
 
-class Mesa(AutotoolsPackage):
-    """Mesa is an open-source implementation of the OpenGL
-    specification - a system for rendering interactive 3D graphics."""
+class PyImportlib(PythonPackage):
+    """Packaging for importlib from Python 2.7"""
 
-    homepage = "http://www.mesa3d.org"
-    url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    homepage = "https://github.com/brettcannon/importlib"
+    url      = "https://pypi.io/packages/source/i/importlib/importlib-1.0.4.zip"
 
-    version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
-
-    # General dependencies
-    depends_on('python@2.6.4:')
-    depends_on('py-mako@0.3.4:', type=('build', 'run'))
-    depends_on('flex@2.5.35:', type='build')
-    depends_on('bison@2.4.1:', type='build')
-
-    # For DRI and hardware acceleration
-    depends_on('libpthread-stubs')
-    depends_on('libdrm')
-    depends_on('openssl')
-    depends_on('libxcb@1.9.3:')
-    depends_on('libxshmfence@1.1:')
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxdamage')
-    depends_on('libxfixes')
-
-    depends_on('glproto@1.4.14:', type='build')
-    depends_on('dri2proto@2.6:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('presentproto@1.0:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
-
-    # TODO: Add package for systemd, provides libudev
-    # Using the system package manager to install systemd didn't work for me
+    version('1.0.4', '5f9a0803bca7ba95f670d1464984296f')
