@@ -35,6 +35,7 @@ class Gasnet(AutotoolsPackage):
     homepage = "http://gasnet.lbl.gov"
     url      = "http://gasnet.lbl.gov/GASNet-1.24.0.tar.gz"
 
+    version('1.28.2', '6ca0463dc2430570e40646c4d1e97b36')
     version('1.28.0', 'b44446d951d3d8954aa1570e3556ba61')
     version('1.24.0', 'c8afdf48381e8b5a7340bdb32ca0f41a')
 
