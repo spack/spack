@@ -27,6 +27,8 @@ import inspect
 import os
 import os.path
 import shutil
+from os import stat
+from stat import *
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -131,16 +133,8 @@ class AutotoolsPackage(PackageBase):
             path = os.path.join(automake_path, 'config.guess')
             if os.path.exists(path):
                 config_guess = path
-        if config_guess is not None:
-            try:
-                check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                shutil.copyfile(config_guess, my_config_guess)
-                return True
-            except Exception:
-                pass
-
         # Look for the system's config.guess
-        if os.path.exists('/usr/share'):
+        if config_guess is None and os.path.exists('/usr/share'):
             automake_dir = [s for s in os.listdir('/usr/share') if
                             "automake" in s]
             if automake_dir:
@@ -151,6 +145,8 @@ class AutotoolsPackage(PackageBase):
         if config_guess is not None:
             try:
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
+                mod = stat(my_config_guess).st_mode & 0777 | S_IWUSR
+                os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
                 return True
             except Exception:
