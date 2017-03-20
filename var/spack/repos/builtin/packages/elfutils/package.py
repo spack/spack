@@ -34,14 +34,12 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
+    url = 'https://sourceware.org/elfutils/ftp/0.163/elfutils-0.163.tar.bz2'
 
-    depends_on('libtool', type='build')
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
+    version('0.163', '77ce87f259987d2e54e4d87b86cbee41')
 
-    version('0.163',
-            git='git://git.fedorahosted.org/git/elfutils.git',
-            tag='elfutils-0.163')
+    depends_on('flex', type='build')  # needed in maintainer mode
+    depends_on('bison', type='build') # needed in maintainer mode
 
     provides('elf@1')
 
