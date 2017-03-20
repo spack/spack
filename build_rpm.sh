@@ -39,9 +39,8 @@ nonmpipkgs=(
   anaconda3@4.3.0
   openblas@0.2.19
   r@3.3.2      
-  boost@1.63	       
+  boost@1.63.0
   perl@5.24.1
-  sga@0.10.15
 )
 
 # Non-MPI packages
@@ -61,3 +60,7 @@ do
 		s $pkg ^$mpi
 	done
 done
+
+# Other packages
+s sga %intel@17.0.2
+s sga %gcc@5.4.0
