@@ -112,6 +112,8 @@ def compiler_find(args):
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
+    tty.msg("Compilers are defined in the following files:")
+    colify(spack.compilers.compiler_config_files(), indent=4)
 
 
 def compiler_remove(args):
@@ -166,7 +168,8 @@ def compiler_list(args):
     tty.msg("Available compilers")
     index = index_by(spack.compilers.all_compilers(scope=args.scope),
                      lambda c: (c.spec.name, c.operating_system, c.target))
-    for i, (key, compilers) in enumerate(index.items()):
+    ordered_sections = sorted(index.items(), key=lambda (k, v): k)
+    for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:
             print
         name, os, target = key
