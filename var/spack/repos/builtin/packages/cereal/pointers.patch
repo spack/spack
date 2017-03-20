@@ -1,17 +1,3 @@
---- old/sandbox/CMakeLists.txt
-+++ new/sandbox/CMakeLists.txt
-@@ -4,9 +4,11 @@
- add_executable(sandbox_json sandbox_json.cpp)
- add_executable(sandbox_rtti sandbox_rtti.cpp)
-
-+if(Boost_FOUND)
- add_executable(sandbox_vs sandbox_vs.cpp)
- target_link_libraries(sandbox_vs sandbox_vs_dll)
- include_directories(sandbox_shared_lib)
-+endif(Boost_FOUND)
-
- if(Boost_FOUND)
-   add_executable(performance performance.cpp)
 --- old/include/cereal/types/common.hpp
 +++ new/include/cereal/types/common.hpp
 @@ -106,14 +106,16 @@
