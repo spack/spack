@@ -25,12 +25,23 @@
 from spack import *
 
 
-class Mawk(AutotoolsPackage):
-    """mawk is an interpreter for the AWK Programming Language."""
+class Ffmpeg(AutotoolsPackage):
+    """FFmpeg is a complete, cross-platform solution to record,
+    convert and stream audio and video."""
 
-    homepage = "http://invisible-island.net/mawk/mawk.html"
-    url      = "http://invisible-mirror.net/archives/mawk/mawk-1.3.4.tgz"
+    homepage = "https://ffmpeg.org"
+    url      = "http://ffmpeg.org/releases/ffmpeg-3.2.4.tar.bz2"
 
-    version('1.3.4', 'b1d27324ae80302452d0fa0c98447b65')
+    version('3.2.4',   'd3ebaacfa36c6e8145373785824265b4')
 
-    provides('awk')
+    variant('shared', default=True,
+            description='build shared libraries')
+
+    def configure_args(self):
+        spec = self.spec
+        config_args = ['--enable-pic']
+       
+        if '+shared' in spec:
+            config_args.append('--enable-shared') 
+           
+        return config_args
