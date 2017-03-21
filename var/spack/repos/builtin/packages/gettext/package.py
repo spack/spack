@@ -25,8 +25,9 @@
 from spack import *
 
 
-class Gettext(Package):
+class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
+
     homepage = "https://www.gnu.org/software/gettext/"
     url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
 
@@ -60,9 +61,10 @@ class Gettext(Package):
     depends_on('libunistring', when='+libunistring')
     # depends_on('cvs')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--disable-java',
             '--disable-csharp',
             '--with-included-glib',
@@ -97,7 +99,4 @@ class Gettext(Package):
         else:
             config_args.append('--with-included-libunistring')
 
-        configure(*config_args)
-
-        make()
-        make("install")
+        return config_args
