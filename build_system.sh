@@ -15,6 +15,7 @@ cc=%gcc@4.8.5
 compilers=(
     %gcc@6.3.0
     %intel@17.0.2
+    %pgi@16.10
 )
 
 mpis=(
