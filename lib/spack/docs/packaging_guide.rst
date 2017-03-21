@@ -1027,9 +1027,51 @@ possible to describe such a need with the ``resource`` directive :
         destination='cargo'
      )
 
-Based on the keywords present among the arguments the appropriate ``FetchStrategy``
-will be used for the resource. The keyword ``destination`` is relative to the source
-root of the package and should point to where the resource is to be expanded.
+Every file in a resource is moved into a location relative to the root source
+directory. If ``destination`` is set, this relative path is augmented with
+``destination``. So if the root source path is ``/x/`` and resource destination
+is ``y/z``, then every resource file is moved to a location relative to
+``/x/y/z/``
+
+``placement`` is an additional optional parameter which can be used to control
+where resource files are copied in the root source directory. If it is not set
+then it defaults to taking the entire expanded directory (that is, the directory
+itself along with the contents) and moving it to a directory with the same name
+as the expanded resource directory.
+
+If you want to move the entire directory but you want to choose where it goes,
+then you can use ``placement`` as a string:
+
+``placement="destination/path/relative/to/root/"``
+
+If you want to take files inside of the expanded resource directory and relocate
+them then you can use placement as a dictionary. For a given key-value pair, the
+key is the location relative to the expanded resource directory and the value is
+the location to move the file to (relative to the root source directory).
+
+As an example, if a resource expands to a directory "z" and you want to move
+that entire directory as-is into a location in the root's build path, you can
+set:
+
+``destination=x/y/``
+
+At which point after moving the resource the root source directory structure
+will include:
+
+``root-source/x/y/z/``
+
+If a resource expands to "z" and you want to call it "z-renamed" instead you
+can do
+
+.. code-block:: none
+
+  destination=x/y/
+  placement="z-renamed"
+
+Or
+
+``placement="x/y/z-renamed"``
+
 
 .. _license:
 

@@ -422,8 +422,11 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         if os.path.exists(filename):
             os.remove(filename)
 
-        # Symlink to local cached archive.
-        os.symlink(path, filename)
+        if self.expand_archive:
+            # Symlink to local cached archive.
+            os.symlink(path, filename)
+        else:
+            shutil.copy(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.

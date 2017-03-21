@@ -31,7 +31,8 @@ import spack
 import spack.stage
 import spack.util.executable
 from llnl.util.filesystem import join_path
-from spack.stage import Stage
+from spack.resource import Resource
+from spack.stage import Stage, StageComposite, ResourceStage
 
 
 def check_chdir_to_source(stage, stage_name):
@@ -42,7 +43,7 @@ def check_chdir_to_source(stage, stage_name):
     ) == os.getcwd()
 
 
-def check_expand_archive(stage, stage_name, mock_archive):
+def check_setup_source(stage, stage_name, mock_archive):
     stage_path = get_stage_path(stage, stage_name)
     archive_name = 'test-files.tar.gz'
     archive_dir = 'test-files'
@@ -186,6 +187,33 @@ def mock_archive(tmpdir, monkeypatch):
 
 
 @pytest.fixture()
+def mock_noexpand_resource(tmpdir):
+    test_resource = tmpdir.join('resource-no-expand.sh')
+    test_resource.write("an example resource")
+    return str(test_resource)
+
+
+@pytest.fixture()
+def mock_expand_resource(tmpdir):
+    resource_dir = tmpdir.join('resource-expand')
+    archive_name = 'resource.tar.gz'
+    archive = tmpdir.join(archive_name)
+    archive_url = 'file://' + str(archive)
+    test_file = resource_dir.join('resource-file.txt')
+    resource_dir.ensure(dir=True)
+    test_file.write('test content\n')
+    current = tmpdir.chdir()
+    tar = spack.util.executable.which('tar', required=True)
+    tar('czf', str(archive_name), 'resource-expand')
+    current.chdir()
+
+    MockResource = collections.namedtuple(
+        'MockResource', ['url', 'files'])
+
+    return MockResource(archive_url, ['resource-file.txt'])
+
+
+@pytest.fixture()
 def failing_search_fn():
     """Returns a search function that fails! Always!"""
     def _mock():
@@ -239,6 +267,54 @@ class TestStage(object):
         with Stage(mock_archive.url) as stage:
             check_setup(stage, None, mock_archive)
         check_destroy(stage, None)
+
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_noexpand_resource(
+            self, mock_archive, mock_noexpand_resource):
+        composite_stage = StageComposite()
+        root_stage = Stage(mock_archive.url)
+        composite_stage.append(root_stage)
+
+        resource_dst_name = 'resource-dst-name.sh'
+        test_resource_fetcher = spack.fetch_strategy.from_kwargs(
+            url='file://' + mock_noexpand_resource, expand=False)
+        test_resource = Resource(
+            'test_resource', test_resource_fetcher, None, resource_dst_name)
+        resource_stage = ResourceStage(
+            test_resource_fetcher, root_stage, test_resource)
+        composite_stage.append(resource_stage)
+
+        composite_stage.create()
+        composite_stage.fetch()
+        composite_stage.setup_source()
+        assert os.path.exists(
+            join_path(composite_stage.source_path, resource_dst_name))
+
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_expand_resource_empty_existing_destination(
+            self, mock_archive, mock_expand_resource):
+        composite_stage = StageComposite()
+        root_stage = Stage(mock_archive.url)
+        composite_stage.append(root_stage)
+
+        test_resource_fetcher = spack.fetch_strategy.from_kwargs(
+            url=mock_expand_resource.url)
+        test_resource = Resource(
+            'test_resource', test_resource_fetcher, None, 'resource-dir')
+        resource_stage = ResourceStage(
+            test_resource_fetcher, root_stage, test_resource)
+        composite_stage.append(resource_stage)
+
+        composite_stage.create()
+        composite_stage.fetch()
+        root_stage.setup_source()
+        os.mkdir(join_path(root_stage.source_path, 'resource-dir'))
+
+        resource_stage.setup_source()
+        for fname in mock_expand_resource.files:
+            file_path = join_path(
+                root_stage.source_path, 'resource-dir', fname)
+            assert os.path.exists(file_path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_archive):
         with Stage(mock_archive.url) as stage:
@@ -298,32 +374,32 @@ class TestStage(object):
         check_destroy(stage, self.stage_name)
         assert search_fn.performed_search
 
-    def test_expand_archive(self, mock_archive):
+    def test_setup_source(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch()
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
-            stage.expand_archive()
-            check_expand_archive(stage, self.stage_name, mock_archive)
+            stage.setup_source()
+            check_setup_source(stage, self.stage_name, mock_archive)
         check_destroy(stage, self.stage_name)
 
-    def test_expand_archive_with_chdir(self, mock_archive):
+    def test_setup_source_with_chdir(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch()
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
-            stage.expand_archive()
+            stage.setup_source()
             stage.chdir_to_source()
-            check_expand_archive(stage, self.stage_name, mock_archive)
+            check_setup_source(stage, self.stage_name, mock_archive)
             check_chdir_to_source(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
 
     def test_restage(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch()
-            stage.expand_archive()
+            stage.setup_source()
             stage.chdir_to_source()
-            check_expand_archive(stage, self.stage_name, mock_archive)
+            check_setup_source(stage, self.stage_name, mock_archive)
             check_chdir_to_source(stage, self.stage_name)
 
             # Try to make a file in the old archive dir

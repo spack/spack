@@ -936,7 +936,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only stage concrete packages.")
 
         self.do_fetch(mirror_only)
-        self.stage.expand_archive()
+        self.stage.setup_source()
         self.stage.chdir_to_source()
 
     def patch(self):
