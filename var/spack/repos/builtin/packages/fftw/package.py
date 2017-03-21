@@ -36,6 +36,7 @@ class Fftw(Package):
     homepage = "http://www.fftw.org"
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
 
+    version('3.3.6-pl1', '682a0e78d6966ca37c7446d4ab4cc2a1')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
     version('2.1.5', '8d16a84f3ca02a785ef9eb36249ba433')
