@@ -59,9 +59,6 @@ class Gcc(AutotoolsPackage):
     variant('binutils',
             default=sys.platform != 'darwin',
             description="Build via binutils")
-    variant('gold',
-            default=sys.platform != 'darwin',
-            description="Build the gold linker plugin for ld-based LTO")
     variant('piclibs',
             default=False,
             description="Build PIC versions of libgfortran.a and libstdc++.a")
@@ -70,8 +67,7 @@ class Gcc(AutotoolsPackage):
     depends_on("gmp")
     depends_on("mpc", when='@4.5:')
     depends_on("isl", when='@5.0:')
-    depends_on("binutils~libiberty", when='+binutils ~gold')
-    depends_on("binutils~libiberty+gold", when='+binutils +gold')
+    depends_on("binutils~libiberty", when='+binutils')
 
     # TODO: integrate these libraries.
     # depends_on("ppl")
@@ -88,9 +84,6 @@ class Gcc(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         prefix = self.spec.prefix
-        # libjava/configure needs a minor fix to install into spack paths.
-        filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
-                    string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
@@ -112,12 +105,17 @@ class Gcc(AutotoolsPackage):
                             new_header)
 
         # Generic options to compile GCC
-        options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,
-                   "--disable-multilib",
-                   "--enable-languages=" + ','.join(enabled_languages),
-                   "--with-mpc=%s" % spec['mpc'].prefix, "--with-mpfr=%s" %
-                   spec['mpfr'].prefix, "--with-gmp=%s" % spec['gmp'].prefix,
-                   "--enable-lto", "--with-quad"]
+        options = [
+            '--libdir={0}'.format(prefix.lib64),
+            '--disable-multilib',
+            '--enable-languages={0}'.format(','.join(enabled_languages)),
+            '--with-mpc={0}'.format(spec['mpc'].prefix),
+            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+            '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--enable-lto',
+            '--with-quad'
+        ]
+
         # Binutils
         if spec.satisfies('+binutils'):
             static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
@@ -131,6 +129,7 @@ class Gcc(AutotoolsPackage):
                 "--with-as=%s/bin/as" % spec['binutils'].prefix
             ]
             options.extend(binutils_options)
+
         # Isl
         if 'isl' in spec:
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
