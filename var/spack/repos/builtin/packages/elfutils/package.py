@@ -39,9 +39,8 @@ class Elfutils(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
 
-    version('0.163',
-            git='git://git.fedorahosted.org/git/elfutils.git',
-            tag='elfutils-0.163')
+    url      = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
+    version('0.168','52adfa40758d0d39e5d5c57689bf38d6')
 
     provides('elf@1')
 
