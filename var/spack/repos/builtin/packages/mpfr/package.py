@@ -28,6 +28,7 @@ from spack import *
 class Mpfr(AutotoolsPackage):
     """The MPFR library is a C library for multiple-precision
        floating-point computations with correct rounding."""
+
     homepage = "http://www.mpfr.org"
     url      = "https://gforge.inria.fr/frs/download.php/latestfile/159/mpfr-3.1.2.tar.bz2"
 
@@ -36,4 +37,7 @@ class Mpfr(AutotoolsPackage):
     version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
     version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
 
-    depends_on('gmp')  # mpir is a drop-in replacement for this
+    depends_on('gmp@4.1.0:')  # mpir is a drop-in replacement for this
+
+    patch('vasprintf.patch', when='@3.1.5')
+    patch('strtofr.patch',   when='@3.1.5')
