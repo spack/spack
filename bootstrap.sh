@@ -51,7 +51,7 @@ do
 	sed -i s=$var=${!var}=g config.yaml.template
 done
 
-# CONFIG_YAML, COMPILER_YAML, PACKAGE_YAML
+# CONFIG_YAML, COMPILER_YAML, PACKAGE_YAML, MIRRORS_YAML
 CONFIG_YAML=config.yaml.template
 
 if [[ $HOST == *"uv"* ]]; then
@@ -68,10 +68,14 @@ else
 	PACKAGE_YAML="packages.yaml"
 fi
 
+MIRRORS_YAML=mirrors.yaml
+
 # Deploying
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
 cp -f ${PACKAGE_YAML} $SPACK_ROOT/etc/spack/packages.yaml
 cp -f ${COMPILER_YAML} $SPACK_ROOT/etc/spack/compilers.yaml 
+mkdir -p ~/.spack/linux
+cp -f ${MIRRORS_YAML} ~/.spack/linux
 source $SPACK_ROOT/share/spack/setup-env.sh
 
 # Installing packages
