@@ -116,7 +116,6 @@ class Gcc(AutotoolsPackage):
             '--libdir={0}'.format(prefix.lib64),
             '--disable-multilib',
             '--enable-languages={0}'.format(','.join(enabled_languages)),
-            '--with-mpc={0}'.format(spec['mpc'].prefix),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
             '--enable-lto',
@@ -137,14 +136,17 @@ class Gcc(AutotoolsPackage):
             ]
             options.extend(binutils_options)
 
-        # Isl
-        if 'isl' in spec:
-            isl_options = ["--with-isl=%s" % spec['isl'].prefix]
-            options.extend(isl_options)
+        # MPC
+        if 'mpc' in spec:
+            options.append('--with-mpc={0}'.format(spec['mpc'].prefix))
 
+        # ISL
+        if 'isl' in spec:
+            options.append('--with-isl={0}'.format(spec['isl'].prefix))
+
+        # macOS
         if sys.platform == 'darwin':
-            darwin_options = ["--with-build-config=bootstrap-debug"]
-            options.extend(darwin_options)
+            options.append('--with-build-config=bootstrap-debug')
 
         return options
 
