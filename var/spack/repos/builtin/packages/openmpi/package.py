@@ -59,13 +59,17 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.1.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')
+    version('1.10.6', '2e65008c1867b1f47c32f9f814d41706')
+    version('1.10.5', 'd32ba9530a869d9c1eae930882ea1834')
+    version('1.10.4', '9d2375835c5bc5c184ecdeb76c7c78ac')
     version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
