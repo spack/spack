@@ -268,6 +268,27 @@ class RPackageTemplate(PackageTemplate):
         super(RPackageTemplate, self).__init__(name, *args)
 
 
+class PerlPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Perl extensions"""
+    base_class_name = 'PerlPackage'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required.
+    # depends_on('perl-foo', type=('build', 'run'))"""
+
+    body = """\
+    # FIXME: Override install() if necessary."""
+
+    def __init__(self, name, *args):
+        # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
+        if not name.startswith('perl-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to perl-{0}".format(name))
+            name = 'perl-{0}'.format(name)
+
+        super(PerlPackageTemplate, self).__init__(name, *args)
+
+
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
@@ -305,6 +326,7 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
+    'perl':       PerlPackageTemplate,
     'octave':     OctavePackageTemplate,
     'generic':    PackageTemplate
 }
