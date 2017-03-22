@@ -37,4 +37,4 @@ class XcbProto(AutotoolsPackage):
 
     extends('python')
 
-    # NOTE: `make check` fails xmllint validation
+    patch('xcb-proto-1.12-schema-1.patch', when='@1.12')
