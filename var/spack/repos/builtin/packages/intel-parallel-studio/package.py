@@ -341,6 +341,13 @@ class IntelParallelStudio(IntelInstaller):
             # MPI. It is also possible to set the variables in the modules.yaml
             # file if Intel MPI is the dominant, or only, MPI on a system.
             run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
+            # Set mpi environment variables
+            spack_env.set('I_MPI_CC', spack_cc)
+            spack_env.set('I_MPI_CXX', spack_cxx)
+            spack_env.set('I_MPI_F77', spack_f77)
+            spack_env.set('I_MPI_F90', spack_fc)
+            spack_env.set('I_MPI_FC', spack_fc)
+
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
             spack_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
@@ -383,3 +390,17 @@ class IntelParallelStudio(IntelInstaller):
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'ipp', 'lib', 'mic'))
             run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+
+    def setup_dependent_package(self, module, dep_spec):
+        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')):
+            # Check for presence of bin64 or bin directory
+            if os.path.isdir(self.prefix.bin):
+                bindir = self.prefix.bin
+            elif os.path.isdir(join_path(self.prefix, 'bin64')):
+                bindir = join_path(self.prefix, 'bin64')
+            else:
+                raise "No suitable bindir found"
+            self.spec.mpicc = join_path(bindir, 'mpicc')
+            self.spec.mpicxx = join_path(bindir, 'mpic++')
+            self.spec.mpifc = join_path(bindir, 'mpif90')
+            self.spec.mpif77 = join_path(bindir, 'mpif77')
