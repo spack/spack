@@ -72,6 +72,13 @@ class Gcc(AutotoolsPackage):
     # TODO: integrate these libraries.
     # depends_on("ppl")
     # depends_on("cloog")
+
+    # TODO: Add a 'test' deptype
+    # https://github.com/LLNL/spack/issues/1279
+    # depends_on('dejagnu@1.4.4')
+    # depends_on('expect')
+    # depends_on('tcl')
+
     if sys.platform == 'darwin':
         patch('darwin/gcc-4.9.patch1', when='@4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.3')
@@ -148,6 +155,10 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             return ['bootstrap']
         return []
+
+    def check(self):
+        with working_dir('objdir'):
+            make('check')
 
     @property
     def spec_dir(self):
