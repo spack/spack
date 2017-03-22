@@ -46,6 +46,9 @@ class Vtk(CMakePackage):
     patch('gcc.patch', when='@6.1.0')
 
     depends_on('qt')
+    depends_on('hdf5')
+    depends_on('netcdf')
+    depends_on('netcdf-cxx')
 
     extends('python', when='+python')
 
@@ -64,6 +67,11 @@ class Vtk(CMakePackage):
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
+            '-DVTK_USE_SYSTEM_HDF5=ON',
+            '-DVTK_USE_SYSTEM_NETCDF=ON',
+            '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
+            '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
+            '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
             # Enable/Disable wrappers for Python.
             '-DVTK_WRAP_PYTHON={0}'.format(
