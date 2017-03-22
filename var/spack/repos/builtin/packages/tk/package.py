@@ -38,10 +38,8 @@ class Tk(AutotoolsPackage):
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
-    variant('X', default=False, description='Enable X11 support')
-
-    depends_on("tcl")
-    depends_on("libx11", when='+X')
+    depends_on('tcl')
+    depends_on('libx11')
 
     configure_directory = 'unix'
 
@@ -49,7 +47,7 @@ class Tk(AutotoolsPackage):
         base_url = "http://prdownloads.sourceforge.net/tcl"
         return "{0}/tk{1}-src.tar.gz".format(base_url, version)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
