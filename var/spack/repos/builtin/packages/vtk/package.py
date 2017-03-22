@@ -46,8 +46,8 @@ class Vtk(CMakePackage):
     patch('gcc.patch', when='@6.1.0')
 
     depends_on('qt')
-    depends_on('hdf5~mpi')
-    depends_on('netcdf~mpi')
+    depends_on('hdf5')
+    depends_on('netcdf')
     depends_on('netcdf-cxx')
 
     extends('python', when='+python')
