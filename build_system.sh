@@ -70,3 +70,6 @@ do
 		fi
 	done
 done
+
+# Others
+s openmpi@2.0.2 %gcc@5.4.0
