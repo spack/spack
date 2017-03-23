@@ -97,11 +97,7 @@ COMPONENTS=%s
 
 
 class Intel(IntelInstaller):
-    """Intel Compilers.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    """Intel Compilers."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 

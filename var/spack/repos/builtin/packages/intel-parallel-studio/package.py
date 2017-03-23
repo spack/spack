@@ -31,11 +31,7 @@ from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
 
 
 class IntelParallelStudio(IntelInstaller):
-    """Intel Parallel Studio.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    """Intel Parallel Studio."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
@@ -383,3 +379,11 @@ class IntelParallelStudio(IntelInstaller):
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'ipp', 'lib', 'mic'))
             run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+
+        if self.spec.satisfies('+all') or self.spec.satisfies('+tools'):
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix, 'vtune_amplifier_xe',
+                                           'bin64'))
+            run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
+                                 major_ver),
+                                 join_path(self.prefix, 'vtune_amplifier_xe'))
