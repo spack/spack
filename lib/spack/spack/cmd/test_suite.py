@@ -119,18 +119,17 @@ def uninstallSpec(spec):
         return spec, "PackageStillNeededError"
     return spec, ""
 
-def installSpec(spec,cdash,test):
+def installSpec(spec,cdash):
     failure = False
     try:
-        #spec.concretize()
+        spec.concretize()
         tty.msg("installing... " + str(spec))
-        concreteTests.append(spec.to_yaml())
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
         args = parser.parse_args([cdash]) #use cdash-complete if you want configure, build and test output.
         args.command = "install"
         args.no_checksum = True
-        args.package.append(test)
+        args.package.append(spec)
         install.install(parser, args)
     except OSError as err:
         raise   
@@ -138,13 +137,6 @@ def installSpec(spec,cdash,test):
         template = "An exception of type {0} occured. Arguments:\n{1!r} install"
         message = template.format(type(ex).__name__, ex.args)
         tty.msg(message)
-        traceback.print_exc(file=sys.stdout)
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "*** print_tb:"
-        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        print "*** print_exception:"
-        traceback.print_exception(exc_type, exc_value, exc_traceback,
-                              limit=2, file=sys.stdout)
         failure = True
         pass
     return spec,failure
@@ -160,7 +152,6 @@ class CombinatorialSpecSet:
                 spec = Spec(item)
                 if spec.constrain("@" +str(version)):
                     yield spec
-                #str(item)+"@"+str(version)
 
     def combinatorialCompiler(self,packages,compilers):
         for package in packages:
@@ -175,10 +166,11 @@ class CombinatorialSpecSet:
         packages = []
         tests = []
         dashboards = []
+        compilerVersion = []
         schema = spack.schema.test.schema
         for filename in self.yamlFiles: #read yaml files which contains description of tests
             packageVersion = []
-            compilerVersion = []
+            tmpCompilerList = []
             try:
                 tty.debug("Reading config file %s" % filename)
                 with open(filename) as f:
@@ -190,7 +182,12 @@ class CombinatorialSpecSet:
                     for compiler in compilers:
                         for comp in compiler:
                             versions = compiler[comp][0]['versions']
-                            [compilerVersion.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
+                            [tmpCompilerList.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
+                    for compiler in tmpCompilerList:
+                        print type(compiler)
+                        if any(compiler.satisfies(str(cs)) for cs in spack.compilers.all_compiler_specs()): 
+                            compilerVersion.append(compiler)
+                    #print compilerVersion
                     if 'include' in data:
                         includedTests = data['include']
                         for package in packages:
@@ -204,27 +201,24 @@ class CombinatorialSpecSet:
                                 versions = package[pkg][0]['versions']
                                 [packageVersion.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
                     if 'exclude' in data:
+                        removeTests = []
                         excludedTests = data['exclude']
+                        for spec in tests:
+                            for excludedTest in excludedTests:
+                        #for exclusion in exclusions:
+                                if bool(spec.satisfies(excludedTest)):
+                                    removeTests.append(spec)
+                        for test in removeTests:
+                            tests.remove(test)
                     if 'dashboard' in data:
                         dashboards.append(data['dashboard'])
                 [tests.append(Spec(spec)) for spec in self.combinatorialCompiler(packageVersion,compilerVersion)]
-                print tests
-                sys.exit(0)
             except MarkedYAMLError as e:
                 raise ConfigFileError(
                     "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
             except IOError as e:
                 raise ConfigFileError(
                     "Error reading configuration file %s: %s" % (filename, str(e)))
-            #Not sure how to excluse tests
-            #have all packages@versions%compilers@versions 
-            #Do I iterate over all the specs and see if a exclusion satisfies it?
-            #next steps
-            compiler = CompilerSpec('%s@%s' % (comp, version))
-            print spack.compilers.all_compiler_specs()
-            if any(compiler.satisfies(cs) for cs in spack.compilers.all_compiler_specs()): 
-                compilerVersion.append(compiler)
-        
         return tests, dashboards
 
 
@@ -245,36 +239,18 @@ def test_suite(parser, args):
     #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
     sets = CombinatorialSpecSet(args.yamlFile)
     tests,dashboards = sets.readinFiles()
-    #loading test excusions
-    removeTests = []
-    if len(exclusions) != 0:
-        #remove test that match the exclusion
-        #setting up tests for contretizing
-        for test in tests:
-            spec = Spec(test)
-            for exclusion in exclusions:
-            #for exclusion in exclusions:
-                if bool(spec.satisfies(exclusion)):
-                    removeTests.append(test)
-        for test in removeTests:
-            tests.remove(test)
     #setting up tests for contretizing
-    for test in tests:
-        tty.msg(test)
-        spec = Spec(test)
+    for spec in tests:
         tty.msg(spec)
         if len(spack.store.db.query(spec)) != 0:
             tty.msg(spack.store.db.query(spec))
         #uninstall all packages before installing. This will reduce the number of skipped package installs.
+
         if (len(spack.store.db.query(spec)) > 0):
             spec,exception = uninstallSpec(spec)
             if exception is "PackageStillNeededError":
                 continue
-        try:
-            spec,failure = installSpec(spec,cdash,test)
-        except:
-            tty.die("out of disk space, exiting....")
-            sys.exit(1)
+        spec,failure = installSpec(spec,cdash)
         if not failure:
             tty.msg("Failure did not occur, uninstalling " + str(spec))
             spec,exception = uninstallSpec(spec)

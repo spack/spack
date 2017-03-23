@@ -16,7 +16,7 @@ import spack
 import time
 import xml.dom.minidom
 import calendar
-
+import datetime
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 import llnl.util.filesystem as fs
