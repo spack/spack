@@ -241,6 +241,17 @@ class YamlDirectoryLayout(DirectoryLayout):
         return join_path(self.path_for_spec(spec), self.metadata_dir,
                          self.packages_dir)
 
+    def _completion_marker_file(self, spec):
+        return join_path(self.path_for_spec(spec), self.metadata_dir,
+                         'complete')
+
+    def mark_complete(self, spec):
+        with open(self._completion_marker_file(spec), 'wa'):
+            pass
+
+    def completed_install(self, spec):
+        return os.path.exists(self._completion_marker_file(spec))
+
     def create_install_directory(self, spec):
         _check_concrete(spec)
 
@@ -258,6 +269,9 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         if not os.path.isdir(path):
             return None
+        elif not self.completed_install(spec):
+            raise InconsistentInstallDirectoryError(
+                'This prefix {} contains a partial install'.format(path))
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(

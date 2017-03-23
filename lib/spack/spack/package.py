@@ -854,7 +854,7 @@ class PackageBase(object):
 
     @property
     def installed(self):
-        return os.path.isdir(self.prefix)
+        return spack.store.layout.completed_install(self.spec)
 
     @property
     def prefix_lock(self):
@@ -1162,14 +1162,31 @@ class PackageBase(object):
         # Ensure package is not already installed
         layout = spack.store.layout
         with self._prefix_read_lock():
-            if layout.check_installed(self.spec):
+            if (os.path.isdir(self.prefix) and not self.installed and
+                    not keep_prefix):
+                spack.hooks.pre_uninstall(self)
+                self.remove_prefix()
+                try:
+                    spack.store.db.remove(self.spec)
+                except KeyError:
+                    pass
+                spack.hooks.post_uninstall(self)
+                tty.msg("Removed partial install for %s" %
+                        self.spec.short_spec)
+            elif layout.check_installed(self.spec):
                 tty.msg(
                     "%s is already installed in %s" % (self.name, self.prefix))
-                rec = spack.store.db.get_record(self.spec)
-                if (not rec.explicit) and explicit:
-                    with spack.store.db.write_transaction():
-                        rec = spack.store.db.get_record(self.spec)
-                        rec.explicit = True
+                try:
+                    rec = spack.store.db.get_record(self.spec)
+                    if (not rec.explicit) and explicit:
+                        with spack.store.db.write_transaction():
+                            rec = spack.store.db.get_record(self.spec)
+                            rec.explicit = True
+                except KeyError:
+                    tty.msg("Repairing db for %s" % str(self.spec))
+                    spack.store.db.add(self.spec)
+                    rec = spack.store.db.get_record(
+                        self.spec, layout, explicit)
                 return
 
         # Dirty argument takes precedence over dirty config setting.
@@ -1219,6 +1236,10 @@ class PackageBase(object):
             # assigned to sys.stdin. Since we want them to work with the
             # original input stream, we are making the following assignment:
             sys.stdin = input_stream
+
+            if not keep_stage:
+                self.stage.destroy()
+                self.stage.create()
 
             start_time = time.time()
             if not fake:
@@ -1292,6 +1313,7 @@ class PackageBase(object):
             spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
+            spack.store.layout.mark_complete(self.spec)
             # If we installed then we should keep the prefix
             keep_prefix = True if self.last_phase is None else keep_prefix
             # note: PARENT of the build process adds the new package to
