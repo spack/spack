@@ -77,16 +77,18 @@ def test_install_and_uninstall(mock_archive):
         raise
 
 
+def mock_remove_prefix(*args):
+    raise MockInstallError(
+        "Intentional error",
+        "Mock remove_prefix method intentionally fails")
+
+
 @pytest.mark.usefixtures('install_mockery')
 def test_partial_install(mock_archive):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
     fake_fetchify(mock_archive.url, pkg)
-    def mock_remove_prefix(*args):
-        raise MockInstallError(
-            "Intentional error",
-            "Mock remove_prefix method intentionally fails")
     remove_prefix = spack.package.Package.remove_prefix
     try:
         spack.package.Package.remove_prefix = mock_remove_prefix
@@ -98,6 +100,37 @@ def test_partial_install(mock_archive):
         setattr(pkg, 'succeed', True)
         pkg.do_install()
         assert pkg.installed
+    except:
+        spack.package.Package.remove_prefix = remove_prefix
+        raise
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_install_succeeds_but_db_add_fails(mock_archive):
+    """If an installation succeeds but the database is not updated, make sure
+       that the database is updated for a future install."""
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    db_add = spack.store.db.add
+    def mock_db_add(*args, **kwargs):
+        raise MockInstallError(
+            "Intentional error", "Mock db add method intentionally fails")
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        spack.store.db.add = mock_db_add
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        assert pkg.installed
+
+        spack.package.Package.remove_prefix = remove_prefix
+        spack.store.db.add = db_add
+        pkg.do_install()
+        assert spack.store.db.get_record(spec)
     except:
         spack.package.Package.remove_prefix = remove_prefix
         raise

@@ -1183,7 +1183,7 @@ class PackageBase(object):
                             rec = spack.store.db.get_record(self.spec)
                             rec.explicit = True
                 except KeyError:
-                    tty.msg("Repairing db for %s" % str(self.spec))
+                    tty.msg("Repairing db for %s" % self.name)
                     spack.store.db.add(self.spec)
                     rec = spack.store.db.get_record(
                         self.spec, layout, explicit)
