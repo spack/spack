@@ -385,5 +385,5 @@ class IntelParallelStudio(IntelInstaller):
                                  join_path(self.prefix, 'vtune_amplifier_xe',
                                            'bin64'))
             run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
-                                    major_ver),
+                                 major_ver),
                                  join_path(self.prefix, 'vtune_amplifier_xe'))
