@@ -171,9 +171,9 @@ class CDashSimpleTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                timestamp = datetime.now().strftime("%Y-%m-%d")
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
                 directory = 'spack-test-' + timestamp
-                dirname = fs.join_path(os.cwd(), directory)
+                dirname = fs.join_path(os.getcwd(), directory)
                 fs.mkdirp(dirname)
                 return fs.join_path(dirname, basename)
 
@@ -368,9 +368,9 @@ class CDashCompleteTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                timestamp = datetime.now().strftime("%Y-%m-%d")
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
                 directory = 'spack-test-' + timestamp
-                dirname = fs.join_path(os.cwd(), directory)
+                dirname = fs.join_path(os.getcwd(), directory)
                 fs.mkdirp(dirname)
                 return fs.join_path(dirname, basename)
 

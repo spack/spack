@@ -21,8 +21,6 @@ from spack.error import SpackError
 import re
 import sys
 import time
-import traceback
-concreteTests = []
 
 description = "Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."
 
@@ -129,7 +127,7 @@ def installSpec(spec,cdash):
         args = parser.parse_args([cdash]) #use cdash-complete if you want configure, build and test output.
         args.command = "install"
         args.no_checksum = True
-        args.package.append(spec)
+        args.package=str(spec).split()
         install.install(parser, args)
     except OSError as err:
         raise   
@@ -141,6 +139,60 @@ def installSpec(spec,cdash):
         pass
     return spec,failure
 
+
+
+def test_suite(parser, args):
+    """Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."""
+    if not args.yamlFile:
+        tty.die("spack testsuite requires a yaml file as argument.")
+    if args.complete:
+        args.log_format='cdash-complete' #use cdash-complete if you want configure, build and test output.
+        cdash = '--log-format=cdash-complete'
+    else:
+        args.log_format='cdash-simple' #use cdash-complete if you want configure, build and test output.
+        cdash = '--log-format=cdash-simple'
+    
+    cdash_root = "/var/spack/cdash/"
+    data = ""
+    cdashPath = spack.prefix+cdash_root
+    #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
+    sets = CombinatorialSpecSet(args.yamlFile)
+    tests,dashboards = sets.readinFiles()
+    #setting up tests for contretizing
+    for spec in tests:
+        tty.msg(spec)
+        if len(spack.store.db.query(spec)) != 0:
+            tty.msg(spack.store.db.query(spec))
+        #uninstall all packages before installing. This will reduce the number of skipped package installs.
+
+        if (len(spack.store.db.query(spec)) > 0):
+            spec,exception = uninstallSpec(spec)
+            if exception is "PackageStillNeededError":
+                continue
+        try:
+            spec,failure = installSpec(spec,cdash)
+        except Exception as e:
+            print e
+            sys.exit(0)
+        if not failure:
+            tty.msg("Failure did not occur, uninstalling " + str(spec))
+            spec,exception = uninstallSpec(spec)
+    #Path contains xml files produced during the test run.
+
+    if len(dashboards) != 0:
+        for dashboard in dashboards:#allows for multiple dashboards
+            files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
+            for file in files:
+                    if "dstore" not in file: #avoid file found in OSX
+                            with open(file) as fh:
+                                    mydata = fh.read() #using a put request to send xml files to cdash.
+                                    response = requests.put(dashboard,
+                                            data=mydata,
+                                            headers={'content-type':'text/plain'},
+                                            params={'file': cdashPath+file}
+                                            )
+                                    tty.msg(file)
+                                    tty.msg(response.status_code)
 class CombinatorialSpecSet:
 
     def __init__(self,files):
@@ -159,7 +211,6 @@ class CombinatorialSpecSet:
                 spec = Spec(package)
                 if spec.constrain("%"+str(compiler)):
                     yield spec
-
 
     def readinFiles(self):
         compilers = []
@@ -184,7 +235,6 @@ class CombinatorialSpecSet:
                             versions = compiler[comp][0]['versions']
                             [tmpCompilerList.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
                     for compiler in tmpCompilerList:
-                        print type(compiler)
                         if any(compiler.satisfies(str(cs)) for cs in spack.compilers.all_compiler_specs()): 
                             compilerVersion.append(compiler)
                     #print compilerVersion
@@ -221,56 +271,6 @@ class CombinatorialSpecSet:
                     "Error reading configuration file %s: %s" % (filename, str(e)))
         return tests, dashboards
 
-
-def test_suite(parser, args):
-    """Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."""
-    if not args.yamlFile:
-        tty.die("spack testsuite requires a yaml file as argument.")
-    if args.complete:
-        args.log_format='cdash-complete' #use cdash-complete if you want configure, build and test output.
-        cdash = '--log-format=cdash-complete'
-    else:
-        args.log_format='cdash-simple' #use cdash-complete if you want configure, build and test output.
-        cdash = '--log-format=cdash-simple'
-    
-    cdash_root = "/var/spack/cdash/"
-    data = ""
-    cdashPath = spack.prefix+cdash_root
-    #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
-    sets = CombinatorialSpecSet(args.yamlFile)
-    tests,dashboards = sets.readinFiles()
-    #setting up tests for contretizing
-    for spec in tests:
-        tty.msg(spec)
-        if len(spack.store.db.query(spec)) != 0:
-            tty.msg(spack.store.db.query(spec))
-        #uninstall all packages before installing. This will reduce the number of skipped package installs.
-
-        if (len(spack.store.db.query(spec)) > 0):
-            spec,exception = uninstallSpec(spec)
-            if exception is "PackageStillNeededError":
-                continue
-        spec,failure = installSpec(spec,cdash)
-        if not failure:
-            tty.msg("Failure did not occur, uninstalling " + str(spec))
-            spec,exception = uninstallSpec(spec)
-    #Path contains xml files produced during the test run.
-
-    if len(dashboards) != 0:
-        for dashboard in dashboards:#allows for multiple dashboards
-            files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
-            for file in files:
-                    if "dstore" not in file: #avoid file found in OSX
-                            with open(file) as fh:
-                                    mydata = fh.read() #using a put request to send xml files to cdash.
-                                    response = requests.put(dashboard,
-                                            data=mydata,
-                                            headers={'content-type':'text/plain'},
-                                            params={'file': cdashPath+file}
-                                            )
-                                    tty.msg(file)
-                                    tty.msg(response.status_code)
-
 class ConfigError(SpackError):
     pass
 
@@ -280,7 +280,7 @@ class ConfigFileError(ConfigError):
 class PackageStillNeededError(SpackError):
     """Raised when package is still needed by another on uninstall."""
     pass
-    
+
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
 
