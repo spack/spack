@@ -7,6 +7,7 @@ if [ -z $1 ]; then
 	echo "- rpm: For rpm builder to install packages on specific architectures."
 	echo "- user: For Pi users to install packages in ~/spack."
 	echo "- --install: Build and install."
+	echo "- --sync: Sync cached packages to the mirror site."
 	exit 1
 fi
 
@@ -78,11 +79,17 @@ mkdir -p ~/.spack/linux
 cp -f ${MIRRORS_YAML} ~/.spack/linux
 source $SPACK_ROOT/share/spack/setup-env.sh
 
+# Reset config.yaml.template
+git co -- config.yaml.template
+
 # Installing packages
 if [[ $2 == "--install" ]]; then
 	echo "Installing packages..."
 	./build_${1}.sh
 fi
 
-# Reset config.yaml.template
-git co -- config.yaml.template
+# Installing packages
+if [[ $2 == "--sync" ]]; then
+	echo "Sync cached packages to mirror site..."
+	rsync -ar --progress ${SPACKSOURCECACHE}/ ibacct://home/www/spack.pi.sjtu.edu.cn/mirror/
+fi
