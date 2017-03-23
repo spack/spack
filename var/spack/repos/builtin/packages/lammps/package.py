@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import string
 import datetime as dt
 
 
@@ -177,16 +176,17 @@ class Lammps(MakefilePackage):
                         'compute_voronoi_atom.h')
 
     def build(self, spec, prefix):
-        with working_dir('src'):
-            for pkg in self.supported_packages:
-                if '+{0}'.format(pkg) in spec:
-                    _build_pkg_name = 'build_{0}'.format(pkg.replace('-', '_'))
-                    if hasattr(self, _build_pkg_name):
-                        _build_pkg = getattr(self, _build_pkg_name)
-                        _build_pkg()
+        for pkg in self.supported_packages:
+            if '+{0}'.format(pkg) in spec:
+                _build_pkg_name = 'build_{0}'.format(pkg.replace('-', '_'))
+                if hasattr(self, _build_pkg_name):
+                    _build_pkg = getattr(self, _build_pkg_name)
+                    _build_pkg()
 
+                with working_dir('src'):
                     make('yes-{0}'.format(pkg))
 
+        with working_dir('src'):
             make(self.target_name)
 
             if '+lib' in spec:
