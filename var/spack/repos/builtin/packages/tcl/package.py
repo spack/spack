@@ -49,7 +49,7 @@ class Tcl(AutotoolsPackage):
         base_url = 'http://prdownloads.sourceforge.net/tcl'
         return '{0}/tcl{1}-src.tar.gz'.format(base_url, version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
         run_env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
