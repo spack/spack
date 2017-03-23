@@ -59,7 +59,8 @@ exemptions = {
               r'^\s*version\(.*\)',
               r'^\s*variant\(.*\)',
               r'^\s*depends_on\(.*\)',
-              r'^\s*extends\(.*\)'],
+              r'^\s*extends\(.*\)',
+              r'^\s*patch\(.*\)'],
         # Exempt '@when' decorated functions from redefinition errors.
         811: [r'^\s*\@when\(.*\)'],
     },
