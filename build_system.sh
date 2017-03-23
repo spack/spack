@@ -26,7 +26,7 @@ mpis=(
 )
 
 # Compilers
-s pgi $cc
+s pgi@16.10 $cc
 s gcc@4.9.4 $cc
 s gcc@5.4.0 $cc
 s gcc@6.3.0 $cc
