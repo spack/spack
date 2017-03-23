@@ -78,6 +78,32 @@ def test_install_and_uninstall(mock_archive):
 
 
 @pytest.mark.usefixtures('install_mockery')
+def test_partial_install(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    def mock_remove_prefix(*args):
+        raise MockInstallError(
+            "Intentional error",
+            "Mock remove_prefix method intentionally fails")
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        spack.package.Package.remove_prefix = remove_prefix
+        setattr(pkg, 'succeed', True)
+        pkg.do_install()
+        assert pkg.installed
+    except:
+        spack.package.Package.remove_prefix = remove_prefix
+        raise
+
+
+@pytest.mark.usefixtures('install_mockery')
 def test_store(mock_archive):
     spec = Spec('cmake-client').concretized()
 
@@ -102,3 +128,7 @@ def test_failing_build(mock_archive):
     pkg = spec.package
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
+
+
+class MockInstallError(spack.error.SpackError):
+    pass
