@@ -177,15 +177,14 @@ class Lammps(MakefilePackage):
                         'compute_voronoi_atom.h')
 
     def build(self, spec, prefix):
-        for pkg in self.supported_packages:
-            _build_pkg_name = string.replace('build_{0}'.format(pkg), '-', '_')
-            if hasattr(self, _build_pkg_name):
-                _build_pkg = getattr(self, _build_pkg_name)
-                _build_pkg()
-
         with working_dir('src'):
             for pkg in self.supported_packages:
                 if '+{0}'.format(pkg) in spec:
+                    _build_pkg_name = 'build_{0}'.format(pkg.replace('-', '_'))
+                    if hasattr(self, _build_pkg_name):
+                        _build_pkg = getattr(self, _build_pkg_name)
+                        _build_pkg()
+
                     make('yes-{0}'.format(pkg))
 
             make(self.target_name)
