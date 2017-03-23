@@ -11,7 +11,8 @@ from spack.spec import Spec
 import spack.cmd.install as install    
 import spack.cmd.uninstall as uninstall
 import spack.util.spack_yaml as syaml
-import spack.compilers 
+import spack.cmd.compiler
+import spack.compilers
 import spack
 from yaml.error import MarkedYAMLError
 import jsonschema
@@ -22,7 +23,6 @@ import sys
 import time
 import traceback
 concreteTests = []
-
 
 description = "Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."
 
@@ -149,8 +149,86 @@ def installSpec(spec,cdash,test):
         pass
     return spec,failure
 
+class CombinatorialSpecSet:
+
+    def __init__(self,files):
+        self.yamlFiles = files
+
+    def combinatorial(self,items,versions):
+         for item in items:
+             for version in versions:
+                spec = Spec(item)
+                if spec.constrain("@" +str(version)):
+                    yield spec
+                #str(item)+"@"+str(version)
+
+    def combinatorialCompiler(self,packages,compilers):
+        for package in packages:
+            for compiler in compilers:
+                spec = Spec(package)
+                if spec.constrain("%"+str(compiler)):
+                    yield spec
+
+
+    def readinFiles(self):
+        compilers = []
+        packages = []
+        tests = []
+        dashboards = []
+        schema = spack.schema.test.schema
+        for filename in self.yamlFiles: #read yaml files which contains description of tests
+            packageVersion = []
+            compilerVersion = []
+            try:
+                tty.debug("Reading config file %s" % filename)
+                with open(filename) as f:
+                    data = _mark_overrides(syaml.load(f))
+                if data:
+                    validate_section(data, schema)
+                    packages= data['packages'] # list all packages available.
+                    compilers = data['compilers']
+                    for compiler in compilers:
+                        for comp in compiler:
+                            versions = compiler[comp][0]['versions']
+                            [compilerVersion.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
+                    if 'include' in data:
+                        includedTests = data['include']
+                        for package in packages:
+                            for pkg in package:
+                                if pkg in includedTests:
+                                    versions = package[pkg][0]['versions']
+                                    [packageVersion.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
+                    else:
+                        for package in packages:
+                            for pkg in package:
+                                versions = package[pkg][0]['versions']
+                                [packageVersion.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
+                    if 'exclude' in data:
+                        excludedTests = data['exclude']
+                    if 'dashboard' in data:
+                        dashboards.append(data['dashboard'])
+                [tests.append(Spec(spec)) for spec in self.combinatorialCompiler(packageVersion,compilerVersion)]
+                print tests
+                sys.exit(0)
+            except MarkedYAMLError as e:
+                raise ConfigFileError(
+                    "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
+            except IOError as e:
+                raise ConfigFileError(
+                    "Error reading configuration file %s: %s" % (filename, str(e)))
+            #Not sure how to excluse tests
+            #have all packages@versions%compilers@versions 
+            #Do I iterate over all the specs and see if a exclusion satisfies it?
+            #next steps
+            compiler = CompilerSpec('%s@%s' % (comp, version))
+            print spack.compilers.all_compiler_specs()
+            if any(compiler.satisfies(cs) for cs in spack.compilers.all_compiler_specs()): 
+                compilerVersion.append(compiler)
+        
+        return tests, dashboards
+
+
 def test_suite(parser, args):
-    #pdb.set_trace()
     """Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."""
     if not args.yamlFile:
         tty.die("spack testsuite requires a yaml file as argument.")
@@ -162,73 +240,11 @@ def test_suite(parser, args):
         cdash = '--log-format=cdash-simple'
     
     cdash_root = "/var/spack/cdash/"
-    enabledTests = []
-    compilers = []
-    packages = []
-    tests = []
-    testPackages = []
-    versions = []
-    packageVersion = []
-    compilerVersion = []
-    path = ""
-    dashboards = []
     data = ""
-    schema = spack.schema.test.schema
-    all_specs = spack.store.layout.all_specs()
+    cdashPath = spack.prefix+cdash_root
     #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
-    for filename in args.yamlFile: #read yaml files which contains description of tests
-        try:
-            tty.debug("Reading config file %s" % filename)
-            with open(filename) as f:
-                data = _mark_overrides(syaml.load(f))
-
-            if data:
-                validate_section(data, schema)
-            try:
-                enabledTests= data['enable']
-                packages= data['packages'] # list of packages to test. Current libelf, libdwarf, bzip2
-                compilers = data['compilers']
-                exclusions = data['exclusions']
-            except:
-                tty.msg("Testing yaml files must contain atleast enable, packages, exclusions and compilers to produce results. Exclusions can be empty, IE []")
-                sys.exit(1)
-            try:    
-                dashboards  = data['dashboard']
-            except:
-                tty.msg("Dashboard tag not found. Results will be create in " + str(cdash_root))
-                pass
-        except MarkedYAMLError as e:
-            raise ConfigFileError(
-                "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
-        except IOError as e:
-            raise ConfigFileError(
-                "Error reading configuration file %s: %s" % (filename, str(e)))
-    if len(packages) != 0 and len(compilers) != 0:
-        #creating a list of packages 
-        for package in packages:
-            for pkg in package:
-                if pkg in enabledTests:
-                    versions = package[pkg][0]['versions']
-                    for version in versions:
-                        # producing packages at available versions. Sample file contains only checksum'd
-                        packageVersion.append(str(pkg)+"@"+str(version))
-    else:
-        tty.msg("Testing without packages/compilers is no fun. Please add packages/compilers to you yaml file.")
-        sys.exit(1)
-    #creating a list of compilers
-    for compiler in compilers:
-        for comp in compiler:
-            versions = compiler[comp][0]['versions']
-            for version in versions:
-                # producing compilers at available versions. Sample file contains only checksum'd
-                    if bool([s for s in all_specs if s.satisfies("%"+str(comp)+"@"+str(version))]):
-                        compilerVersion.append(str(comp)+"@"+str(version))
-    #reducing compiler list to whats actually available on the system
-    
-    #producing a list of tests with a combination of packages and compilers
-    for pkg in packageVersion:
-        for comp in compilerVersion:
-            tests.append(str(pkg)+"%"+str(comp))
+    sets = CombinatorialSpecSet(args.yamlFile)
+    tests,dashboards = sets.readinFiles()
     #loading test excusions
     removeTests = []
     if len(exclusions) != 0:
@@ -244,6 +260,7 @@ def test_suite(parser, args):
             tests.remove(test)
     #setting up tests for contretizing
     for test in tests:
+        tty.msg(test)
         spec = Spec(test)
         tty.msg(spec)
         if len(spack.store.db.query(spec)) != 0:
@@ -262,19 +279,18 @@ def test_suite(parser, args):
             tty.msg("Failure did not occur, uninstalling " + str(spec))
             spec,exception = uninstallSpec(spec)
     #Path contains xml files produced during the test run.
-    if path is "": # if no path given in test yaml file. Uses default location.
-        path = spack.prefix+cdash_root
+
     if len(dashboards) != 0:
         for dashboard in dashboards:#allows for multiple dashboards
             files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
             for file in files:
-                    if "dstore" not in file:
+                    if "dstore" not in file: #avoid file found in OSX
                             with open(file) as fh:
                                     mydata = fh.read() #using a put request to send xml files to cdash.
                                     response = requests.put(dashboard,
                                             data=mydata,
                                             headers={'content-type':'text/plain'},
-                                            params={'file': path+file}
+                                            params={'file': cdashPath+file}
                                             )
                                     tty.msg(file)
                                     tty.msg(response.status_code)
@@ -285,6 +301,9 @@ class ConfigError(SpackError):
 class ConfigFileError(ConfigError):
     pass
 
+class PackageStillNeededError(SpackError):
+    """Raised when package is still needed by another on uninstall."""
+    pass
     
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""

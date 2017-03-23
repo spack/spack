@@ -171,7 +171,9 @@ class CDashSimpleTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                dirname = fs.join_path(spack.var_path, subdir)
+                timestamp = datetime.now().strftime("%Y-%m-%d")
+                directory = 'spack-test-' + timestamp
+                dirname = fs.join_path(os.cwd(), directory)
                 fs.mkdirp(dirname)
                 return fs.join_path(dirname, basename)
 
@@ -360,14 +362,17 @@ class CDashCompleteTestSuite(object):
         
 
     def create_filename(self, spec, subdir, step):
-        if self.filename is not None:
-            return "%s.%s.xml" % (self.filename, step)
-        else:
-            fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
-            basename = fmt.format(x=spec, hash=spec.dag_hash())
-            dirname = fs.join_path(spack.var_path, subdir)
-            fs.mkdirp(dirname)
-            return fs.join_path(dirname, basename)
+        if "build" in str(step):
+            if self.filename is not None:
+                return "%s.%s.xml" % (self.filename, step)
+            else:
+                fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
+                basename = fmt.format(x=spec, hash=spec.dag_hash())
+                timestamp = datetime.now().strftime("%Y-%m-%d")
+                directory = 'spack-test-' + timestamp
+                dirname = fs.join_path(os.cwd(), directory)
+                fs.mkdirp(dirname)
+                return fs.join_path(dirname, basename)
 
     def create_template(self):
         template = ET.Element('Site')
@@ -407,6 +412,7 @@ class CDashCompleteTestSuite(object):
         self.dump_report(build_report, filename)
         test_report = self.prepare_test_report()
         filename = self.create_filename(self.spec, 'cdash', 'test')
+
         self.dump_report(test_report, filename)
 
     def dump_report(self, report, filename):

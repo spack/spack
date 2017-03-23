@@ -32,8 +32,14 @@ schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack test configuration file schema',
     'type': 'object',
+    "required": [ "packages", 'compilers'],
     'definitions': {
-        'enable': {
+        'include': {
+            'type': 'array',
+            'default': [],
+            'items': {'type': 'string'}
+        },
+        'exclude': {
             'type': 'array',
             'default': [],
             'items': {'type': 'string'}
@@ -75,11 +81,6 @@ schema = {
                     }, 
                 },
             },
-        },
-        'exclusions': {
-            'type': 'array',
-            'default': [],
-            'items': {'type': 'string'}
         },
         'dashboard': {
             'type': 'array',
