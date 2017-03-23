@@ -239,6 +239,17 @@ class YamlDirectoryLayout(DirectoryLayout):
         return join_path(self.path_for_spec(spec), self.metadata_dir,
                          self.packages_dir)
 
+    def _completion_marker_file(self, spec):
+        return join_path(self.path_for_spec(spec), self.metadata_dir,
+                         'complete')
+
+    def mark_complete(self, spec):
+        with open(self._completion_marker_file(spec), 'w'):
+            pass
+
+    def completed_install(self, spec):
+        return os.path.exists(self._completion_marker_file(spec))
+
     def create_install_directory(self, spec):
         _check_concrete(spec)
 
@@ -252,26 +263,34 @@ class YamlDirectoryLayout(DirectoryLayout):
     def check_installed(self, spec):
         _check_concrete(spec)
         path = self.path_for_spec(spec)
-        spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isdir(path):
             return None
+        elif not self.completed_install(spec):
+            raise InconsistentInstallDirectoryError(
+                'The prefix %s contains a partial install' % path)
+
+        self.check_metadata_consistency(spec)
+        return path
+
+    def check_metadata_consistency(self, spec):
+        spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(
                 'Install prefix exists but contains no spec.yaml:',
-                "  " + path)
+                "  " + spec.prefix)
 
         installed_spec = self.read_spec(spec_file_path)
         if installed_spec == spec:
-            return path
+            return
 
         # DAG hashes currently do not include build dependencies.
         #
         # TODO: remove this when we do better concretization and don't
         # ignore build-only deps in hashes.
         elif installed_spec == spec.copy(deps=('link', 'run')):
-            return path
+            return
 
         if spec.dag_hash() == installed_spec.dag_hash():
             raise SpecHashCollisionError(spec, installed_spec)
