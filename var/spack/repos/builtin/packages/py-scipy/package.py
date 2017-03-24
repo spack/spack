@@ -49,6 +49,8 @@ class PyScipy(PythonPackage):
         'scipy.special._precompute'
     ]
 
+    version('0.19.0', '91b8396231eec780222a57703d3ec550',
+            url="https://pypi.io/packages/source/s/scipy/scipy-0.19.0.zip")
     version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')
     version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
     version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
@@ -68,8 +70,15 @@ class PyScipy(PythonPackage):
     # depends_on('py-nose', type='test')
 
     def build_args(self, spec, prefix):
+        args = []
+
         # Build in parallel
-        return ['-j', str(make_jobs)]
+        # Known problems with Python 3
+        # https://github.com/scipy/scipy/issues/7112
+        if not spec.satisfies('^python@3:'):
+            args.extend(['-j', str(make_jobs)])
+
+        return args
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following

@@ -60,7 +60,7 @@ class Openspeedshop(Package):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url	= "https://github.com/OpenSpeedShop"
+    url = "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
     version('2.3', branch='master',
@@ -115,6 +115,8 @@ class Openspeedshop(Package):
     depends_on("bison", type='build')
     depends_on("flex", type='build')
     depends_on("binutils@2.24+krellpatch", type='build')
+    # TODO: when using dyninst@9.3.0:, we will need to use elf
+    # depends_on("elf", type="link")
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
@@ -230,7 +232,7 @@ class Openspeedshop(Package):
         # set the DYNINSTAPI_RT_LIB library which is
         # required for OpenSpeedShop to find loop level
         # performance information
-        dyninst_libdir = find_libraries(['libdyninstAPI_RT'],
+        dyninst_libdir = find_libraries('libdyninstAPI_RT',
                                         root=self.spec['dyninst'].prefix,
                                         shared=True, recurse=True)
 
@@ -238,7 +240,7 @@ class Openspeedshop(Package):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = find_libraries(['libopenss-framework'],
+        oss_libdir = find_libraries('libopenss-framework',
                                     root=self.spec['openspeedshop'].prefix,
                                     shared=True, recurse=True)
         run_env.prepend_path('LD_LIBRARY_PATH',

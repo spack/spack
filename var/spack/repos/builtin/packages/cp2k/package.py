@@ -88,13 +88,11 @@ class Cp2k(Package):
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
-                '-I' + spec['fftw'].prefix.include
+                spec['fftw'].cppflags
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
-            fcflags.extend([
-                '-I' + spec['fftw'].prefix.include
-            ])
-            fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
+            fcflags.append(spec['fftw'].cppflags)
+            fftw = find_libraries('libfftw3', root=spec['fftw'].prefix.lib)
             ldflags = [fftw.search_flags]
             libs = [
                 join_path(spec['libint'].prefix.lib, 'libint.so'),
@@ -154,15 +152,17 @@ class Cp2k(Package):
                     '-D__SCALAPACK'
                 ])
                 fcflags.extend([
+                    # spec['elpa:fortran'].cppflags
                     '-I' + join_path(
                         spec['elpa'].prefix,
                         'include',
                         'elpa-{0}'.format(str(spec['elpa'].version)),
                         'modules'
                     ),
+                    # spec[pexsi:fortran].cppflags
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
-                scalapack = spec['scalapack'].scalapack_libs
+                scalapack = spec['scalapack'].libs
                 ldflags.append(scalapack.search_flags)
                 libs.extend([
                     join_path(spec['elpa'].prefix.lib,
@@ -184,8 +184,8 @@ class Cp2k(Package):
                 libs.extend(self.spec['mpi'].mpicxx_shared_libs)
                 libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
-            lapack = spec['lapack'].lapack_libs
-            blas = spec['blas'].blas_libs
+            lapack = spec['lapack'].libs
+            blas = spec['blas'].libs
 
             ldflags.append((lapack + blas).search_flags)
             libs.extend([str(x) for x in (fftw, lapack, blas)])

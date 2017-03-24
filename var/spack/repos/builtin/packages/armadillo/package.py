@@ -47,17 +47,17 @@ class Armadillo(Package):
     depends_on('hdf5', when='+hdf5')
 
     def install(self, spec, prefix):
-        arpack = find_libraries(['libarpack'], root=spec[
+        arpack = find_libraries('libarpack', root=spec[
                                 'arpack-ng'].prefix.lib, shared=True)
-        superlu = find_libraries(['libsuperlu'], root=spec[
+        superlu = find_libraries('libsuperlu', root=spec[
                                  'superlu'].prefix, shared=False, recurse=True)
         cmake_args = [
             # ARPACK support
             '-DARPACK_LIBRARY={0}'.format(arpack.joined()),
             # BLAS support
-            '-DBLAS_LIBRARY={0}'.format(spec['blas'].blas_libs.joined()),
+            '-DBLAS_LIBRARY={0}'.format(spec['blas'].libs.joined()),
             # LAPACK support
-            '-DLAPACK_LIBRARY={0}'.format(spec['lapack'].lapack_libs.joined()),
+            '-DLAPACK_LIBRARY={0}'.format(spec['lapack'].libs.joined()),
             # SuperLU support
             '-DSuperLU_INCLUDE_DIR={0}'.format(spec['superlu'].prefix.include),
             '-DSuperLU_LIBRARY={0}'.format(superlu.joined()),

@@ -95,9 +95,8 @@ def compiler_find(args):
     new_compilers = []
     for c in compilers:
         arch_spec = ArchSpec(None, c.operating_system, c.target)
-        same_specs = spack.compilers.compilers_for_spec(c.spec,
-                                                        arch_spec,
-                                                        args.scope)
+        same_specs = spack.compilers.compilers_for_spec(
+            c.spec, arch_spec, init_config=False)
 
         if not same_specs:
             new_compilers.append(c)
@@ -113,6 +112,8 @@ def compiler_find(args):
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
+    tty.msg("Compilers are defined in the following files:")
+    colify(spack.compilers.compiler_config_files(), indent=4)
 
 
 def compiler_remove(args):
@@ -165,14 +166,19 @@ def compiler_info(args):
 
 def compiler_list(args):
     tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope), 'name')
-    for i, (name, compilers) in enumerate(index.items()):
+    index = index_by(spack.compilers.all_compilers(scope=args.scope),
+                     lambda c: (c.spec.name, c.operating_system, c.target))
+    ordered_sections = sorted(index.items(), key=lambda (k, v): k)
+    for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:
             print
-
-        cname = "%s{%s}" % (spack.spec.compiler_color, name)
+        name, os, target = key
+        os_str = os
+        if target:
+            os_str += "-%s" % target
+        cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
         tty.hline(colorize(cname), char='-')
-        colify(reversed(sorted(compilers)))
+        colify(reversed(sorted(c.spec for c in compilers)))
 
 
 def compiler(parser, args):

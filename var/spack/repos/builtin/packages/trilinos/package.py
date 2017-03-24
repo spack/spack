@@ -116,10 +116,11 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('superlu+fpic@4.3', when='+superlu')
-    depends_on('hypre~internal-superlu', when='+hypre')
+    # Trilinos can not be built against 64bit int hypre
+    depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
@@ -146,8 +147,8 @@ class Trilinos(CMakePackage):
 
         mpi_bin = spec['mpi'].prefix.bin
         # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
             '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
@@ -373,6 +374,14 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
+
+        # disable due to compiler / config errors:
+        if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            options.extend([
+                '-DTrilinos_ENABLE_Pamgen:BOOL=OFF',
+                '-DTrilinos_ENABLE_Stokhos:BOOL=OFF'
+            ])
+
         if sys.platform == 'darwin':
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'

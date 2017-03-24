@@ -50,6 +50,7 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'hide_files',
     'install',
     'install_tree',
     'is_exe',
@@ -255,6 +256,18 @@ def working_dir(dirname, **kwargs):
     os.chdir(dirname)
     yield
     os.chdir(orig_dir)
+
+
+@contextmanager
+def hide_files(*file_list):
+    try:
+        baks = ['%s.bak' % f for f in file_list]
+        for f, bak in zip(file_list, baks):
+            shutil.move(f, bak)
+        yield
+    finally:
+        for f, bak in zip(file_list, baks):
+            shutil.move(bak, f)
 
 
 def touch(path):
@@ -568,20 +581,22 @@ def find_libraries(args, root, shared=True, recurse=False):
     """Returns an iterable object containing a list of full paths to
     libraries if found.
 
-    Args:
-        args: iterable object containing a list of library names to \
-            search for (e.g. 'libhdf5')
-        root: root folder where to start searching
-        shared: if True searches for shared libraries, otherwise for static
-        recurse: if False search only root folder, if True descends top-down \
-            from the root
+    :param args: Library name(s) to search for
+    :type args: str or collections.Sequence
+    :param str root: The root directory to start searching from
+    :param bool shared: if True searches for shared libraries,
+        otherwise for static
+    :param bool recurse: if False search only root folder,
+        if True descends top-down from the root
 
-    Returns:
-        list of full paths to the libraries that have been found
+    :returns: The libraries that have been found
+    :rtype: LibraryList
     """
-    if not isinstance(args, collections.Sequence) or isinstance(args, str):
-        message = '{0} expects a sequence of strings as first argument'
-        message += ' [got {1} instead]'
+    if isinstance(args, str):
+        args = [args]
+    elif not isinstance(args, collections.Sequence):
+        message = '{0} expects a string or sequence of strings as the '
+        message += 'first argument [got {1} instead]'
         raise TypeError(message.format(find_libraries.__name__, type(args)))
 
     # Construct the right suffix for the library

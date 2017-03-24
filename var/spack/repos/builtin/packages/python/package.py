@@ -335,7 +335,7 @@ class Python(Package):
     def site_packages_dir(self):
         return join_path(self.python_lib_dir, 'site-packages')
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set PYTHONPATH to include site-packages dir for the
         extension and any other python extensions it depends on."""
         # The python executable for version 3 may be python3 or python
@@ -361,7 +361,7 @@ class Python(Package):
         spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
-        for d in extension_spec.traverse(
+        for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
@@ -371,12 +371,12 @@ class Python(Package):
         spack_env.set('PYTHONPATH', pythonpath)
 
         # For run time environment set only the path for
-        # extension_spec and prepend it to PYTHONPATH
-        if extension_spec.package.extends(self.spec):
+        # dependent_spec and prepend it to PYTHONPATH
+        if dependent_spec.package.extends(self.spec):
             run_env.prepend_path('PYTHONPATH', join_path(
-                extension_spec.prefix, self.site_packages_dir))
+                dependent_spec.prefix, self.site_packages_dir))
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
 
         In most cases, extensions will only need to have one line::
@@ -387,6 +387,7 @@ class Python(Package):
             'python{0}'.format('3' if self.spec.satisfies('@3') else '')
         )
 
+        module.python_exe = python_path
         module.python = Executable(python_path)
         module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
 
@@ -397,15 +398,15 @@ class Python(Package):
                 module.setup_py.add_default_env(key, value)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir = join_path(ext_spec.prefix,
+        module.python_lib_dir = join_path(dependent_spec.prefix,
                                           self.python_lib_dir)
-        module.python_include_dir = join_path(ext_spec.prefix,
+        module.python_include_dir = join_path(dependent_spec.prefix,
                                               self.python_include_dir)
-        module.site_packages_dir = join_path(ext_spec.prefix,
+        module.site_packages_dir = join_path(dependent_spec.prefix,
                                              self.site_packages_dir)
 
         # Make the site packages directory for extensions
-        if ext_spec.package.is_extension:
+        if dependent_spec.package.is_extension:
             mkdirp(module.site_packages_dir)
 
     # ========================================================================
