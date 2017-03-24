@@ -115,9 +115,11 @@ def test_install_succeeds_but_db_add_fails(mock_archive):
     fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     db_add = spack.store.db.add
+
     def mock_db_add(*args, **kwargs):
         raise MockInstallError(
             "Intentional error", "Mock db add method intentionally fails")
+
     try:
         spack.package.Package.remove_prefix = mock_remove_prefix
         spack.store.db.add = mock_db_add
