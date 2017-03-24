@@ -78,6 +78,8 @@ class Gcc(AutotoolsPackage):
     # depends_on('dejagnu@1.4.4', type='test')
     # depends_on('expect', type='test')
     # depends_on('tcl', type='test')
+    # depends_on('autogen@5.5.4:', type='test')
+    # depends_on('guile@1.4.1:', type='test')
 
     if sys.platform == 'darwin':
         patch('darwin/gcc-4.9.patch1', when='@4.9.3')
