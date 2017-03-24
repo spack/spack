@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import platform
 import requests
 import spack.package
 import glob
@@ -31,7 +30,6 @@ import argparse
 import llnl.util.tty as tty
 from spack.spec import Spec
 import spack.cmd.install as install    
-import spack.cmd.uninstall as uninstall
 import spack.util.spack_yaml as syaml
 import spack.cmd.compiler
 import spack.compilers
@@ -42,17 +40,18 @@ from jsonschema import Draft4Validator, validators
 from spack.error import SpackError
 import re
 import sys
-import time
 
-description = "Compiles a list of tests from a yaml file. installs packages and provides cdash output."
+description = "Installs packages, provides cdash output."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-c', '--complete', action='store_true', dest='complete',
-        help='Simple is build output. Complete is configure, build and test output.')
+        help='Simple is build only, complete is configure, build and test.')
     subparser.add_argument(
         'yamlFile', nargs=argparse.REMAINDER,
-        help="Yaml file that contains test descriptions. Example yaml file can be found in spack docs.")
+        help="Yaml test descriptions. Example found in spack docs.")
+
 
 def _mark_overrides(data):
     if isinstance(data, list):
@@ -69,6 +68,7 @@ def _mark_overrides(data):
 
     else:
         return data
+
 
 def extend_with_default(validator_class):
     """Add support for the 'default' attr for properties and patternProperties.
@@ -124,6 +124,7 @@ def validate_section(data, schema):
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
+
 def uninstall_spec(spec):
     try:
         spec.concretize()
@@ -131,7 +132,7 @@ def uninstall_spec(spec):
         pkg = spack.repo.get(spec)
         pkg.do_uninstall()
     except Exception as ex:
-        template = "An exception of type {0} occured. Arguments:\n{1!r} uninstall"
+        template = "Exception type: {0} occured in uninstall"
         message = template.format(type(ex).__name__, ex.args)
         tty.msg(message)
         pass
@@ -139,98 +140,103 @@ def uninstall_spec(spec):
         return spec, "PackageStillNeededError"
     return spec, ""
 
-def install_spec(spec,cdash):
+
+def install_spec(spec, cdash):
     failure = False
     try:
         spec.concretize()
         tty.msg("installing... " + str(spec))
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
-        args = parser.parse_args([cdash]) #use cdash-complete if you want configure, build and test output.
+        # use cdash-complete if you want configure, build and test output.
+        args = parser.parse_args([cdash])
         args.command = "install"
         args.no_checksum = True
-        args.package=str(spec).split()
+        args.package = str(spec).split()
         install.install(parser, args)
     except OSError as err:
         raise   
     except Exception as ex:
-        template = "An exception of type {0} occured. Arguments:\n{1!r} install"
+        template = "An exception type: {0} occured in install"
         message = template.format(type(ex).__name__, ex.args)
         tty.msg(message)
         failure = True
         pass
-    return spec,failure
-
+    return spec, failure
 
 
 def test_suite(parser, args):
-    """Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."""
+    """Compiles a list of tests from a yaml file. 
+    Runs Spec and concretize then produces cdash format."""
     if not args.yamlFile:
-        tty.die("spack testsuite requires a yaml file as argument.")
+        tty.die("spack testsuite requires a yaml file.")
     if args.complete:
-        args.log_format='cdash-complete' #use cdash-complete if you want configure, build and test output.
+        # cdash-complete for configure, build and test output.
+        args.log_format = 'cdash-complete' 
         cdash = '--log-format=cdash-complete'
     else:
-        args.log_format='cdash-simple' #use cdash-complete if you want configure, build and test output.
+        args.log_format = 'cdash-simple' 
         cdash = '--log-format=cdash-simple'
     
     cdash_root = "/var/spack/cdash/"
     data = ""
-    cdash_path = spack.prefix+cdash_root
-    #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
+    cdash_path = spack.prefix + cdash_root
     sets = CombinatorialSpecSet(args.yamlFile)
-    tests,dashboards = sets.readinFiles()
-    #setting up tests for contretizing
+    tests, dashboards = sets.readinFiles()
+    # setting up tests for contretizing
     for spec in tests:
         tty.msg(spec)
         if len(spack.store.db.query(spec)) != 0:
             tty.msg(spack.store.db.query(spec))
-        #uninstall all packages before installing. This will reduce the number of skipped package installs.
-
+        # uninstall all packages before installing. 
+        # This will reduce the number of skipped package installs.
         if (len(spack.store.db.query(spec)) > 0):
             spec,exception = uninstall_spec(spec)
             if exception is "PackageStillNeededError":
                 continue
         try:
-            spec,failure = install_spec(spec,cdash)
+            spec, failure = install_spec(spec,cdash)
         except Exception as e:
-            print e
+            tty.die(e)
             sys.exit(0)
         if not failure:
             tty.msg("Failure did not occur, uninstalling " + str(spec))
-            spec,exception = uninstall_spec(spec)
-    #Path contains xml files produced during the test run.
-
+            spec, exception = uninstall_spec(spec)
     if len(dashboards) != 0:
-        for dashboard in dashboards:#allows for multiple dashboards
+        for dashboard in dashboards:
+        # allows for multiple dashboards
             files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
             for file in files:
-                    if "dstore" not in file: #avoid file found in OSX
+                    if "dstore" not in file: 
+                    #a void file found in OSX
                             with open(file) as fh:
-                                    mydata = fh.read() #using a put request to send xml files to cdash.
+                                    mydata = fh.read() 
+                                    # using a put request to send xml files to cdash.
                                     response = requests.put(dashboard,
                                             data=mydata,
                                             headers={'content-type':'text/plain'},
-                                            params={'file': cdash_path+file}
+                                            params={'file': cdash_path + file}
                                             )
                                     tty.msg(file)
                                     tty.msg(response.status_code)
+
+
 class CombinatorialSpecSet:
 
-    def __init__(self,files):
+    def __init__(self, files):
         self.yamlFiles = files
 
-    def combinatorial(self,item,versions):
+    def combinatorial(self, item, versions):
         for version in versions:
             spec = Spec(item)
-            if spec.constrain("@" +str(version)):
+            if spec.constrain("@" + str(version)):
                 yield spec
 
-    def combinatorial_compiler(self,packages,compilers):
+    def combinatorial_compiler(self, packages, compilers):
         for package in packages:
             for compiler in compilers:
                 spec = Spec(package)
-                if spec.constrain("%"+str(compiler)):
+                if spec.constrain("%" + str(compiler)):
                     yield spec
 
     def readinFiles(self):
@@ -240,7 +246,8 @@ class CombinatorialSpecSet:
         dashboards = []
         compiler_version = []
         schema = spack.schema.test.schema
-        for filename in self.yamlFiles: #read yaml files which contains description of tests
+        for filename in self.yamlFiles: 
+        # read yaml files which contains description of tests
             package_version = []
             tmp_compiler_ist = []
             try:
@@ -249,7 +256,7 @@ class CombinatorialSpecSet:
                     data = _mark_overrides(syaml.load(f))
                 if data:
                     validate_section(data, schema)
-                    packages= data['test-suite']['packages'] # list all packages available.
+                    packages= data['test-suite']['packages'] 
                     compilers = data['test-suite']['compilers']
                     for compiler in compilers:
                             versions = compilers[compiler]['versions']
@@ -258,9 +265,9 @@ class CombinatorialSpecSet:
                         if any(compiler.satisfies(str(cs)) for cs in spack.compilers.all_compiler_specs()): 
                             compiler_version.append(compiler)
                     if 'include' in data['test-suite']:
-                        includedTests = data['test-suite']['include']
+                        included_tests = data['test-suite']['include']
                         for package in packages:
-                            if package in includedTests:
+                            if package in included_tests:
                                 versions = packages[package]['versions']
                                 [package_version.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
                     else:
@@ -284,18 +291,22 @@ class CombinatorialSpecSet:
                     "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
             except IOError as e:
                 raise ConfigFileError(
-                    "Error reading configuration file %s: %s" % (filename, str(e)))
+                    "Error reading file %s: %s" % (filename, str(e)))
         return tests, dashboards
+
 
 class ConfigError(SpackError):
     pass
 
+
 class ConfigFileError(ConfigError):
     pass
+
 
 class PackageStillNeededError(SpackError):
     """Raised when package is still needed by another on uninstall."""
     pass
+
 
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
