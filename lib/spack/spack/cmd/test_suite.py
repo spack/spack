@@ -136,7 +136,8 @@ def uninstall_spec(spec):
         message = template.format(type(ex).__name__, ex.args)
         tty.msg(message)
         pass
-    except PackageStillNeededError as e:
+    except PackageStillNeededError as err:
+        tty.msg(err)
         return spec, "PackageStillNeededError"
     return spec, ""
 
@@ -155,6 +156,7 @@ def install_spec(spec, cdash):
         args.package = str(spec).split()
         install.install(parser, args)
     except OSError as err:
+        tty.msg(err)
         raise
     except Exception as ex:
         template = "An exception type: {0} occured in install"
