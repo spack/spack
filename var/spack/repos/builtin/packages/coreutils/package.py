@@ -32,6 +32,9 @@ class Coreutils(AutotoolsPackage):
        operating system.
     """
     homepage = "http://www.gnu.org/software/coreutils/"
-    url      = "http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
+    url      = "http://ftp.gnu.org/gnu/coreutils/coreutils-8.26.tar.xz"
 
+    version('8.26', 'd5aa2072f662d4118b9f4c63b94601a6')
     version('8.23', 'abed135279f87ad6762ce57ff6d89c41')
+
+    build_directory = 'spack-build'
