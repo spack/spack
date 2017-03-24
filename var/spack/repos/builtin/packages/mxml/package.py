@@ -34,6 +34,7 @@ class Mxml(AutotoolsPackage):
     homepage = "http://www.msweet.org"
     url = "http://www.msweet.org/files/project3/mxml-2.9.tar.gz"
 
+    version('2.10', '8804c961a24500a95690ef287d150abe')
     version('2.9', 'e21cad0f7aacd18f942aa0568a8dee19')
     version('2.8', 'd85ee6d30de053581242c4a86e79a5d2')
     version('2.7', '76f2ae49bf0f5745d5cb5d9507774dc9')
