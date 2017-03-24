@@ -63,6 +63,10 @@ class Python(AutotoolsPackage):
 
     extendable = True
 
+    # --enable-shared is known to cause problems for some users on macOS
+    # See http://bugs.python.org/issue29846
+    variant('shared', default=sys.platform != 'darwin',
+            description='Enable shared libraries')
     variant('tk', default=False, description='Provide support for Tkinter')
     variant('ucs4', default=False,
             description='Enable UCS4 (wide) unicode strings')
@@ -130,12 +134,10 @@ class Python(AutotoolsPackage):
             'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
             'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
-        if spec.satisfies('platform=darwin'):
-            if '%gcc' in spec:
-                config_args.append('--disable-toolbox-glue')
-        else:
-            # --enable-shared causes problems on macOS and is not recommended:
-            # http://bugs.python.org/issue29846
+        if spec.satisfies('%gcc platform=darwin'):
+            config_args.append('--disable-toolbox-glue')
+
+        if '+shared' in spec:
             config_args.append('--enable-shared')
 
         if '+ucs4' in spec:
@@ -436,22 +438,26 @@ class Python(AutotoolsPackage):
         # install libraries into a Frameworks directory
         frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
 
-        # We don't know ahead of time whether shared or static libraries
-        # were built, so check for the presence of both.
-        ldlibrary = self.get_config_var('LDLIBRARY')
-        library   = self.get_config_var('LIBRARY')
+        if '+shared' in spec:
+            ldlibrary = self.get_config_var('LDLIBRARY')
 
-        # Prefer shared libraries
-        if os.path.exists(os.path.join(libdir, ldlibrary)):
-            return LibraryList(os.path.join(libdir, ldlibrary))
-        elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
-            return LibraryList(os.path.join(frameworkprefix, ldlibrary))
-        # Accept static if shared not found
-        elif os.path.exists(os.path.join(libdir, library)):
-            return LibraryList(os.path.join(libdir, library))
+            if os.path.exists(os.path.join(libdir, ldlibrary)):
+                return LibraryList(os.path.join(libdir, ldlibrary))
+            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
+                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+            else:
+                msg = 'Unable to locate {0} libraries in {1}'
+                raise RuntimeError(msg.format(self.name, libdir))
         else:
-            msg = 'Unable to locate {0} libraries in {1}'
-            raise RuntimeError(msg.format(self.name, libdir))
+            library = self.get_config_var('LIBRARY')
+
+            if os.path.exists(os.path.join(libdir, library)):
+                return LibraryList(os.path.join(libdir, library))
+            elif os.path.exists(os.path.join(frameworkprefix, library)):
+                return LibraryList(os.path.join(frameworkprefix, library))
+            else:
+                msg = 'Unable to locate {0} libraries in {1}'
+                raise RuntimeError(msg.format(self.name, libdir))
 
     @property
     def headers(self):
