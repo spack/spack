@@ -39,27 +39,27 @@ with versions. Using the enabled field will allow you to focus on specific packa
 To narrow down the scope of a package or compiler, you can use the exclusion field.
 
 .. code-block:: yaml 
-  ---
-  test-suite:
-  enable: [bzip2, libelf, .. ,libdwarf]
 
-  exclusions: []
+   ---
+   test-suite:
+   enable: [bzip2, libelf, .. ,libdwarf]
 
-  packages:
-    - abinit:
-      - versions: [8.0.8b]
-    - ack:
-      - versions: [2.14]
+   exclusions: []
 
-    compilers:
+   packages:
+     - abinit:
+       - versions: [8.0.8b]
+     - ack:
+       - versions: [2.14]
+
+   compilers:
     - gcc:
-      - versions: [4.9.0, ... 4.7.1, 4.6.3, 4.6.1]
+     - versions: [4.9.0, ... 4.7.1, 4.6.3, 4.6.1]
     - clang:
-      - versions: [7.3.0, 3.4, ... 3.1]
+     - versions: [7.3.0, 3.4, ... 3.1]
     
-  dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
+   dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
 
-path: "~/home/username"
 
 exclude examples
 ==================
@@ -76,7 +76,8 @@ Test-suite provides two outputs. One being a simple cdash output that only conta
 Complete contains all stages, configure, build and test. Using the -c or --complete flag will change the output mode.
 Test-suite produces simple by default.
 
-To run test-suite: 
+.. code-block:: console
+
   $ spack test-suite -c /location/of/yamlFile
 
 Currently output files are stored in you current working directory. A folder name spack-test-YYYY-MM-DD this may change in the future.
