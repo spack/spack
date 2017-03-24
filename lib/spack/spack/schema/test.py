@@ -32,60 +32,62 @@ schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack test configuration file schema',
     'type': 'object',
-    "required": [ "packages", 'compilers'],
     'definitions': {
-        'include': {
-            'type': 'array',
-            'default': [],
-            'items': {'type': 'string'}
-        },
-        'exclude': {
-            'type': 'array',
-            'default': [],
-            'items': {'type': 'string'}
-        },
-        'packages': {
-            'type': 'array',
-            'default': [],
-            'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {  
-                    'type':  'array',
-                    'default': [],
-                    'additionalProperties': False,
-                    'properties': {
-                        'versions': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {'type': 'string'}, 
+        'test-suite':{
+            "required": [ "packages", "packages", 'compilers'],
+            'include': {
+                'type': 'array',
+                'default': [],
+                'items': {'type': 'string'}
+            },
+            'exclude': {
+                'type': 'array',
+                'default': [],
+                'items': {'type': 'string'}
+            },
+            'packages': {
+                'type': 'array',
+                'default': [],
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {  
+                        'type':  'array',
+                        'default': [],
+                        'additionalProperties': False,
+                        'properties': {
+                            'versions': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {'type': 'string'}, 
+                            }, 
                         }, 
-                    }, 
+                    },
                 },
             },
-        },
-        'compilers': {
-            'type': 'array',
-            'default': [],
-            'additionalProperties': False,
-            'patternProperties': {
-                r'\w[\w-]*': {  
-                    'type':  'array',
-                    'default': [],
-                    'additionalProperties': False,
-                    'properties': {
-                        'versions': {
-                            'type': 'array',
-                            'default': [],
-                            'items': {'type': 'string'}, 
+            'compilers': {
+                'type': 'array',
+                'default': [],
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {  
+                        'type':  'array',
+                        'default': [],
+                        'additionalProperties': False,
+                        'properties': {
+                            'versions': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {'type': 'string'}, 
+                            }, 
                         }, 
-                    }, 
+                    },
                 },
             },
-        },
-        'dashboard': {
-            'type': 'array',
-            'default': [],
-            'items': {'type': 'string'}
+            'dashboard': {
+                'type': 'array',
+                'default': [],
+                'items': {'type': 'string'}
+            },
         },
     },
 }

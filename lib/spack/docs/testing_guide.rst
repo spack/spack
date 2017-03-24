@@ -34,56 +34,52 @@ The logs contain one test case per package being built.
 using test-suite
 ----------------
 
-Test-suite is designed to read in a yaml file describing all packages and compilers along 
+Test-suite is designed to read in a test suite YAML file describing all packages and compilers along 
 with versions. Using the enabled field will allow you to focus on specific packages.
 To narrow down the scope of a package or compiler, you can use the exclusion field.
 
---Example of a yaml file---
+.. code-block:: yaml 
+  ---
+  test-suite:
+  enable: [bzip2, libelf, .. ,libdwarf]
 
-enable: [bzip2, libelf, .. ,libdwarf]
+  exclusions: []
 
-exclusions: []
+  packages:
+    - abinit:
+      - versions: [8.0.8b]
+    - ack:
+      - versions: [2.14]
 
-packages:
-  - abinit:
-    - versions: [8.0.8b]
-  - ack:
-    - versions: [2.14]
-
-  compilers:
-  - gcc:
-    - versions: [4.9.0, ... 4.7.1, 4.6.3, 4.6.1]
-  - clang:
-    - versions: [7.3.0, 3.4, ... 3.1]
-  
-dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
+    compilers:
+    - gcc:
+      - versions: [4.9.0, ... 4.7.1, 4.6.3, 4.6.1]
+    - clang:
+      - versions: [7.3.0, 3.4, ... 3.1]
+    
+  dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
 
 path: "~/home/username"
 
----exclusion examples---
- 	  pkg%compiler
-    pkg@version
-    pkg@version%compiler@version
-    pkg@version%compiler
-    pkg%compiler@version
-    pkg
-
-If you would like to exclude compilers such as
-    compiler@version
-    compiler
-
-you must include the % in front to indicate its a compiler. 
-Example:
-    %gcc@4.2.1
+exclude examples
+==================
+- pkg%compiler
+- pkg@version
+- pkg@version%compiler@version
+- pkg@version%compiler
+- pkg%compiler@version
+- pkg
+- compiler@version
+- compiler
 
 Test-suite provides two outputs. One being a simple cdash output that only contains the build output.
 Complete contains all stages, configure, build and test. Using the -c or --complete flag will change the output mode.
 Test-suite produces simple by default.
 
 To run test-suite: 
-	$ spack test-suite -c /location/of/yamlFile
+  $ spack test-suite -c /location/of/yamlFile
 
-Currently output files are stored in /spack/var/spack/cdash this may change in the future.
+Currently output files are stored in you current working directory. A folder name spack-test-YYYY-MM-DD this may change in the future.
 If a dashboard field is provided the cdash output will be sent via PUT request, otherwise files will be left in /spack/var/spack/cdash.
 
 ^^^^^

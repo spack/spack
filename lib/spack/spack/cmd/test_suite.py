@@ -1,5 +1,27 @@
-#!/usr/bin/env python
-
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 import os
 import platform
 import requests
@@ -22,15 +44,15 @@ import re
 import sys
 import time
 
-description = "Compiles a list of tests from a yaml file. Runs Spec and concretize then produces cdash format."
+description = "Compiles a list of tests from a yaml file. installs packages and provides cdash output."
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-c', '--complete', action='store_true', dest='complete',
-        help='using this option switches from simple cdash output to compelet: simple is only build, complete is configure, build and test xml output.')
+        help='Simple is build output. Complete is configure, build and test output.')
     subparser.add_argument(
         'yamlFile', nargs=argparse.REMAINDER,
-        help="yaml file that contains a list of tests, example yaml file can be found in /lib/spack/docs/tutorial/examples/test.yaml")
+        help="Yaml file that contains test descriptions. Example yaml file can be found in spack docs.")
 
 def _mark_overrides(data):
     if isinstance(data, list):
@@ -102,7 +124,7 @@ def validate_section(data, schema):
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
-def uninstallSpec(spec):
+def uninstall_spec(spec):
     try:
         spec.concretize()
         tty.msg("uninstalling... " + str(spec))
@@ -117,7 +139,7 @@ def uninstallSpec(spec):
         return spec, "PackageStillNeededError"
     return spec, ""
 
-def installSpec(spec,cdash):
+def install_spec(spec,cdash):
     failure = False
     try:
         spec.concretize()
@@ -154,7 +176,7 @@ def test_suite(parser, args):
     
     cdash_root = "/var/spack/cdash/"
     data = ""
-    cdashPath = spack.prefix+cdash_root
+    cdash_path = spack.prefix+cdash_root
     #designed to use a single file and modify the enabled tests, thus requiring a single file modification.
     sets = CombinatorialSpecSet(args.yamlFile)
     tests,dashboards = sets.readinFiles()
@@ -166,17 +188,17 @@ def test_suite(parser, args):
         #uninstall all packages before installing. This will reduce the number of skipped package installs.
 
         if (len(spack.store.db.query(spec)) > 0):
-            spec,exception = uninstallSpec(spec)
+            spec,exception = uninstall_spec(spec)
             if exception is "PackageStillNeededError":
                 continue
         try:
-            spec,failure = installSpec(spec,cdash)
+            spec,failure = install_spec(spec,cdash)
         except Exception as e:
             print e
             sys.exit(0)
         if not failure:
             tty.msg("Failure did not occur, uninstalling " + str(spec))
-            spec,exception = uninstallSpec(spec)
+            spec,exception = uninstall_spec(spec)
     #Path contains xml files produced during the test run.
 
     if len(dashboards) != 0:
@@ -189,7 +211,7 @@ def test_suite(parser, args):
                                     response = requests.put(dashboard,
                                             data=mydata,
                                             headers={'content-type':'text/plain'},
-                                            params={'file': cdashPath+file}
+                                            params={'file': cdash_path+file}
                                             )
                                     tty.msg(file)
                                     tty.msg(response.status_code)
@@ -198,14 +220,13 @@ class CombinatorialSpecSet:
     def __init__(self,files):
         self.yamlFiles = files
 
-    def combinatorial(self,items,versions):
-         for item in items:
-             for version in versions:
-                spec = Spec(item)
-                if spec.constrain("@" +str(version)):
-                    yield spec
+    def combinatorial(self,item,versions):
+        for version in versions:
+            spec = Spec(item)
+            if spec.constrain("@" +str(version)):
+                yield spec
 
-    def combinatorialCompiler(self,packages,compilers):
+    def combinatorial_compiler(self,packages,compilers):
         for package in packages:
             for compiler in compilers:
                 spec = Spec(package)
@@ -217,52 +238,47 @@ class CombinatorialSpecSet:
         packages = []
         tests = []
         dashboards = []
-        compilerVersion = []
+        compiler_version = []
         schema = spack.schema.test.schema
         for filename in self.yamlFiles: #read yaml files which contains description of tests
-            packageVersion = []
-            tmpCompilerList = []
+            package_version = []
+            tmp_compiler_ist = []
             try:
                 tty.debug("Reading config file %s" % filename)
                 with open(filename) as f:
                     data = _mark_overrides(syaml.load(f))
                 if data:
                     validate_section(data, schema)
-                    packages= data['packages'] # list all packages available.
-                    compilers = data['compilers']
+                    packages= data['test-suite']['packages'] # list all packages available.
+                    compilers = data['test-suite']['compilers']
                     for compiler in compilers:
-                        for comp in compiler:
-                            versions = compiler[comp][0]['versions']
-                            [tmpCompilerList.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
-                    for compiler in tmpCompilerList:
+                            versions = compilers[compiler]['versions']
+                            [tmp_compiler_ist.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
+                    for compiler in tmp_compiler_ist:
                         if any(compiler.satisfies(str(cs)) for cs in spack.compilers.all_compiler_specs()): 
-                            compilerVersion.append(compiler)
-                    #print compilerVersion
-                    if 'include' in data:
-                        includedTests = data['include']
+                            compiler_version.append(compiler)
+                    if 'include' in data['test-suite']:
+                        includedTests = data['test-suite']['include']
                         for package in packages:
-                            for pkg in package:
-                                if pkg in includedTests:
-                                    versions = package[pkg][0]['versions']
-                                    [packageVersion.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
+                            if package in includedTests:
+                                versions = packages[package]['versions']
+                                [package_version.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
                     else:
                         for package in packages:
-                            for pkg in package:
-                                versions = package[pkg][0]['versions']
-                                [packageVersion.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
-                    if 'exclude' in data:
-                        removeTests = []
-                        excludedTests = data['exclude']
+                            versions = packages[package]['versions']
+                            [package_version.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
+                    [tests.append(Spec(spec)) for spec in self.combinatorial_compiler(package_version,compiler_version)]
+                    if 'exclude' in data['test-suite']:
+                        remove_tests = []
+                        excluded_tests = data['test-suite']['exclude']
                         for spec in tests:
-                            for excludedTest in excludedTests:
-                        #for exclusion in exclusions:
-                                if bool(spec.satisfies(excludedTest)):
-                                    removeTests.append(spec)
-                        for test in removeTests:
+                            for excluded_test in excluded_tests:
+                                if bool(spec.satisfies(excluded_test)):
+                                    remove_tests.append(spec)
+                        for test in remove_tests:
                             tests.remove(test)
-                    if 'dashboard' in data:
-                        dashboards.append(data['dashboard'])
-                [tests.append(Spec(spec)) for spec in self.combinatorialCompiler(packageVersion,compilerVersion)]
+                    if 'dashboard' in data['test-suite']:
+                        dashboards.append(data['test-suite']['dashboard'])
             except MarkedYAMLError as e:
                 raise ConfigFileError(
                     "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
