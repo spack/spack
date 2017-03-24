@@ -37,3 +37,7 @@ class Dejagnu(AutotoolsPackage):
 
     depends_on('expect')
     depends_on('tcl@8.5:')
+
+    # DejaGnu 1.4.4 cannot be built in parallel
+    # `make check` also fails but this can be ignored
+    parallel = False
