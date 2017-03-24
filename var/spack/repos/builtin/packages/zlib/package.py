@@ -39,6 +39,7 @@ class Zlib(Package):
     # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be
     # immediately replaced with 1.2.11.
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
+    version('1.2.3', 'debc62758716a169df9f62e6ab2bc634')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
