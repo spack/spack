@@ -29,7 +29,7 @@ class PyDev(PythonPackage):
     """libraries and tools for Python development"""
 
     homepage = "https://pypi.python.org/pypi/dev"
-    url      = "https://pypi.python.org/packages/53/34/e0d4da6c3e9ea8fdcc4657699f2ca62d5c4ac18763a897feb690c2fb0574/dev-0.4.0.tar.gz"
+    url      = "https://pypi.io/packages/source/d/dev/dev-0.4.0.tar.gz"
 
     version('0.4.0', '00449cf0b347c32da9c840adcb4cf24b')
 
