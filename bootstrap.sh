@@ -80,6 +80,7 @@ MIRRORS_YAML=mirrors.yaml
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
 cp -f ${PACKAGE_YAML} $SPACK_ROOT/etc/spack/packages.yaml
 cp -f ${COMPILER_YAML} $SPACK_ROOT/etc/spack/compilers.yaml 
+rm -f ./etc/spack/compilers.yaml
 mkdir -p ~/.spack/linux
 cp -f ${MIRRORS_YAML} ~/.spack/linux
 source $SPACK_ROOT/share/spack/setup-env.sh

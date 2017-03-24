@@ -22,8 +22,8 @@ compilers:
     paths:
       cc: /usr/bin/xlc
       cxx: /usr/bin/xlc++
-      f77: null
-      fc: null
+      f77: /usr/bin/xlf
+      fc: /usr/bin/xlf
     spec: xl@13.1
     target: ppc64le
 - compiler:
@@ -36,7 +36,7 @@ compilers:
     paths:
       cc: /usr/bin/xlc_r
       cxx: /usr/bin/xlC_r
-      f77: null
-      fc: null
+      f77: /usr/bin/xlf_r
+      fc: /usr/bin/xlf_r
     spec: xl_r@13.1
     target: ppc64le
