@@ -30,8 +30,7 @@ class Libunistring(AutotoolsPackage):
     and for manipulating C strings according to the Unicode standard."""
 
     homepage = "https://www.gnu.org/software/libunistring/"
-    url      = "http://ftp.gnu.org/gnu/libunistring/libunistring-0.9.6.tar.xz"
+    url      = "http://ftp.gnu.org/gnu/libunistring/libunistring-0.9.7.tar.xz"
 
+    version('0.9.7', '82e0545363d111bfdfec2ddbfe62ffd3')
     version('0.9.6', 'cb09c398020c27edac10ca590e9e9ef3')
-
-    # NOTE: `make check` fails test-verify
