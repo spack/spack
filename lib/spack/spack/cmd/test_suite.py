@@ -29,7 +29,7 @@ import glob
 import argparse
 import llnl.util.tty as tty
 from spack.spec import Spec
-import spack.cmd.install as install    
+import spack.cmd.install as install
 import spack.util.spack_yaml as syaml
 import spack.cmd.compiler
 import spack.compilers
@@ -155,7 +155,7 @@ def install_spec(spec, cdash):
         args.package = str(spec).split()
         install.install(parser, args)
     except OSError as err:
-        raise   
+        raise
     except Exception as ex:
         template = "An exception type: {0} occured in install"
         message = template.format(type(ex).__name__, ex.args)
@@ -166,20 +166,18 @@ def install_spec(spec, cdash):
 
 
 def test_suite(parser, args):
-    """Compiles a list of tests from a yaml file. 
+    """Compiles a list of tests from a yaml file.
     Runs Spec and concretize then produces cdash format."""
     if not args.yamlFile:
         tty.die("spack testsuite requires a yaml file.")
     if args.complete:
         # cdash-complete for configure, build and test output.
-        args.log_format = 'cdash-complete' 
+        args.log_format = 'cdash-complete'
         cdash = '--log-format=cdash-complete'
     else:
-        args.log_format = 'cdash-simple' 
+        args.log_format = 'cdash-simple'
         cdash = '--log-format=cdash-simple'
-    
     cdash_root = "/var/spack/cdash/"
-    data = ""
     cdash_path = spack.prefix + cdash_root
     sets = CombinatorialSpecSet(args.yamlFile)
     tests, dashboards = sets.readinFiles()
@@ -188,14 +186,14 @@ def test_suite(parser, args):
         tty.msg(spec)
         if len(spack.store.db.query(spec)) != 0:
             tty.msg(spack.store.db.query(spec))
-        # uninstall all packages before installing. 
+        # uninstall all packages before installing.
         # This will reduce the number of skipped package installs.
         if (len(spack.store.db.query(spec)) > 0):
-            spec,exception = uninstall_spec(spec)
+            spec, exception = uninstall_spec(spec)
             if exception is "PackageStillNeededError":
                 continue
         try:
-            spec, failure = install_spec(spec,cdash)
+            spec, failure = install_spec(spec, cdash)
         except Exception as e:
             tty.die(e)
             sys.exit(0)
@@ -204,21 +202,25 @@ def test_suite(parser, args):
             spec, exception = uninstall_spec(spec)
     if len(dashboards) != 0:
         for dashboard in dashboards:
-        # allows for multiple dashboards
-            files = [name for name in glob.glob(os.path.join(path,'*.*')) if os.path.isfile(os.path.join(path,name))]
+            # allows for multiple dashboards
+            files = [name for name in glob.glob(os.path.join(path, '*.*'))
+                     if os.path.isfile(os.path.join(path, name))]
             for file in files:
-                    if "dstore" not in file: 
-                    #a void file found in OSX
-                            with open(file) as fh:
-                                    mydata = fh.read() 
-                                    # using a put request to send xml files to cdash.
-                                    response = requests.put(dashboard,
-                                            data=mydata,
-                                            headers={'content-type':'text/plain'},
-                                            params={'file': cdash_path + file}
-                                            )
-                                    tty.msg(file)
-                                    tty.msg(response.status_code)
+                if "dstore" not in file:
+                        # void file found in OSX
+                    with open(file) as fh:
+                        mydata = fh.read()
+                        # PUT request to send xml files to cdash.
+                        response = requests.put(
+                            dashboard,
+                            data=mydata,
+                            headers={
+                                'content-type': 'text/plain'},
+                            params={
+                                'file': cdash_path + file}
+                        )
+                        tty.msg(file)
+                        tty.msg(response.status_code)
 
 
 class CombinatorialSpecSet:
@@ -246,8 +248,8 @@ class CombinatorialSpecSet:
         dashboards = []
         compiler_version = []
         schema = spack.schema.test.schema
-        for filename in self.yamlFiles: 
-        # read yaml files which contains description of tests
+        for filename in self.yamlFiles:
+            # read yaml files which contains description of tests
             package_version = []
             tmp_compiler_ist = []
             try:
@@ -256,25 +258,33 @@ class CombinatorialSpecSet:
                     data = _mark_overrides(syaml.load(f))
                 if data:
                     validate_section(data, schema)
-                    packages= data['test-suite']['packages'] 
+                    packages = data['test-suite']['packages']
                     compilers = data['test-suite']['compilers']
                     for compiler in compilers:
-                            versions = compilers[compiler]['versions']
-                            [tmp_compiler_ist.append(Spec(spec)) for spec in self.combinatorial(compiler,versions)]
+                        versions = compilers[compiler]['versions']
+                        [tmp_compiler_ist.append(Spec(spec))
+                            for spec in self.combinatorial(compiler, versions)]
                     for compiler in tmp_compiler_ist:
-                        if any(compiler.satisfies(str(cs)) for cs in spack.compilers.all_compiler_specs()): 
+                        if any(compiler.satisfies(str(cs))
+                               for cs in spack.compilers.all_compiler_specs()):
                             compiler_version.append(compiler)
                     if 'include' in data['test-suite']:
                         included_tests = data['test-suite']['include']
                         for package in packages:
                             if package in included_tests:
                                 versions = packages[package]['versions']
-                                [package_version.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
+                                [package_version.append(Spec(spec))
+                                    for spec in self.combinatorial(
+                                        package, versions)]
                     else:
                         for package in packages:
                             versions = packages[package]['versions']
-                            [package_version.append(Spec(spec)) for spec in self.combinatorial(package,versions)]
-                    [tests.append(Spec(spec)) for spec in self.combinatorial_compiler(package_version,compiler_version)]
+                            [package_version.append(Spec(spec))
+                                for spec in self.combinatorial(
+                                    package, versions)]
+                    [tests.append(Spec(spec))
+                     for spec in self.combinatorial_compiler(
+                        package_version, compiler_version)]
                     if 'exclude' in data['test-suite']:
                         remove_tests = []
                         excluded_tests = data['test-suite']['exclude']
@@ -288,10 +298,12 @@ class CombinatorialSpecSet:
                         dashboards.append(data['test-suite']['dashboard'])
             except MarkedYAMLError as e:
                 raise ConfigFileError(
-                    "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
+                    "Error parsing yaml%s: %s" %
+                    (str(e.context_mark), e.problem))
             except IOError as e:
                 raise ConfigFileError(
-                    "Error reading file %s: %s" % (filename, str(e)))
+                    "Error reading file %s: %s" %
+                    (filename, str(e)))
         return tests, dashboards
 
 

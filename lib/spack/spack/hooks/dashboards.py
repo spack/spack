@@ -32,6 +32,7 @@ class TestResult(object):
 
 
 class JUnitTestSuite(object):
+
     def __init__(self, spec, logfile):
         self.spec = spec
         self.root = ET.Element('testsuite')
@@ -119,9 +120,6 @@ class CDashTestCase(object):
         self.element = ET.Element('Test')
         name_element = ET.SubElement(self.element, 'Name')
         name_element.text = name
-
-        #path_element = ET.SubElement(self.element, 'Path')
-        #path_element.text = ""
         cmd_line_element = ET.SubElement(self.element, 'FullCommandLine')
         cmd_line_element.text = "spack install"
         self.result = ET.SubElement(self.element, 'Results')
@@ -156,13 +154,13 @@ class CDashTestCase(object):
 
 
 class CDashSimpleTestSuite(object):
+
     def __init__(self, spec, filename, slot='Experimental'):
         self.spec = spec
         self.slot = slot
         self.tests = []
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.filename = filename
-
 
     def create_filename(self, spec, subdir, step):
         if "build" in str(step):
@@ -181,12 +179,13 @@ class CDashSimpleTestSuite(object):
         template = ET.Element('Site')
         buildName = str(self.spec.short_spec)
         buildName = buildName.split('=')
-        template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
+        template.set('BuildName', str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
-        template.set('CompilerName', str(self.spec.compiler.name)) 
+        template.set('CompilerName', str(self.spec.compiler.name))
         template.set('CompilerVersion', str(self.spec.compiler.version))
         if "linux" in platform.system().lower():
-            linuxInfo = str(platform.linux_distribution()[0])+"."+str(platform.linux_distribution()[1])
+            linuxInfo = str(platform.linux_distribution()[
+                            0]) + "." + str(platform.linux_distribution()[1])
             template.set('Hostname', linuxInfo)
             template.set('Name', linuxInfo)
             template.set('OSName', platform.system())
@@ -199,7 +198,6 @@ class CDashSimpleTestSuite(object):
             template.set('Name', platform.node())
             template.set('Hostname', platform.node())
             template.set('OSName', platform.system())
-        #template.set('Type', self.slot)
         return template
 
     def create_testcase(self, name, spec):
@@ -211,7 +209,6 @@ class CDashSimpleTestSuite(object):
         build_report = self.prepare_build_report()
         filename = self.create_filename(self.spec, 'cdash', 'build')
         self.dump_report(build_report, filename)
-        
 
     def dump_report(self, report, filename):
         with codecs.open(filename, 'wb', 'utf-8') as file:
@@ -220,12 +217,10 @@ class CDashSimpleTestSuite(object):
             file.write(xml_string)
 
     def now(self):
-        #return time.strftime("%a %b %d %H:%M:%S %Z")
         return time.strftime("%b %d %H:%M %Z")
 
     def epoch(self):
         return str(calendar.timegm(time.gmtime()))
-
 
     def prepare_build_report(self):
         report = self.create_template()
@@ -243,8 +238,10 @@ class CDashSimpleTestSuite(object):
         endBuild_element = ET.SubElement(build, 'EndBuildTime')
         endBuild_element.text = self.epoch()
         ElapsedMinutes = ET.SubElement(build, 'ElapsedMinutes')
-        ElapsedMinutes.text = '0' #fix this
+        ElapsedMinutes.text = '0'
+        # fix this
         return report
+
 
 def fetch_text(path):
     if not os.path.exists(path):
@@ -349,6 +346,7 @@ def dashboard_output(spec, test_suite):
 
 
 class CDashCompleteTestSuite(object):
+
     def __init__(self, spec, filename, slot='Experimental'):
         self.spec = spec
         self.slot = slot
@@ -356,10 +354,6 @@ class CDashCompleteTestSuite(object):
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
         self.filename = filename
-        #tempcompiler = spec.short_spec.split('%')[1].split(' ')[0]
-        #self.CompilerName = tempcompiler.split('@')[0]
-        #self.CompilerVersion = tempcompiler.split('@')[1]
-        
 
     def create_filename(self, spec, subdir, step):
         if "build" in str(step):
@@ -378,12 +372,13 @@ class CDashCompleteTestSuite(object):
         template = ET.Element('Site')
         buildName = str(self.spec.short_spec)
         buildName = buildName.split('=')
-        template.set('BuildName',str(buildName[0]) + " " + str(buildName[1]))
+        template.set('BuildName', str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
-        template.set('CompilerName', str(self.spec.compiler.name)) 
+        template.set('CompilerName', str(self.spec.compiler.name))
         template.set('CompilerVersion', str(self.spec.compiler.version))
         if "linux" in platform.system().lower():
-            linuxInfo = str(platform.linux_distribution()[0])+"."+str(platform.linux_distribution()[1])
+            linuxInfo = str(platform.linux_distribution()[
+                            0]) + "." + str(platform.linux_distribution()[1])
             template.set('Hostname', linuxInfo)
             template.set('Name', linuxInfo)
             template.set('OSName', platform.system())
@@ -396,7 +391,6 @@ class CDashCompleteTestSuite(object):
             template.set('Name', platform.node())
             template.set('Hostname', platform.node())
             template.set('OSName', platform.system())
-        #template.set('Type', self.slot)
         return template
 
     def create_testcase(self, name, spec):
@@ -412,7 +406,6 @@ class CDashCompleteTestSuite(object):
         self.dump_report(build_report, filename)
         test_report = self.prepare_test_report()
         filename = self.create_filename(self.spec, 'cdash', 'test')
-
         self.dump_report(test_report, filename)
 
     def dump_report(self, report, filename):
@@ -422,7 +415,6 @@ class CDashCompleteTestSuite(object):
             file.write(xml_string)
 
     def now(self):
-        #return time.strftime("%a %b %d %H:%M:%S %Z")
         return time.strftime("%b %d %H:%M %Z")
 
     def epoch(self):
@@ -446,7 +438,8 @@ class CDashCompleteTestSuite(object):
         endConfigure_element = ET.SubElement(configure, 'EndConfigureTime')
         endConfigure_element.text = self.epoch()
         minutes = ET.SubElement(configure, "ElapsedMinutes")
-        minutes.text = '0'#fix this
+        minutes.text = '0'
+        # fix this
         return report
 
     def prepare_build_report(self):
@@ -465,7 +458,8 @@ class CDashCompleteTestSuite(object):
         endBuild_element = ET.SubElement(build, 'EndBuildTime')
         endBuild_element.text = self.epoch()
         ElapsedMinutes = ET.SubElement(build, 'ElapsedMinutes')
-        ElapsedMinutes.text = '0' #fix this
+        ElapsedMinutes.text = '0'
+        # fix this
         return report
 
     def prepare_test_report(self):
@@ -473,7 +467,6 @@ class CDashCompleteTestSuite(object):
         testing = ET.SubElement(report, 'Testing')
         start_element = ET.SubElement(testing, 'StartDateTime')
         start_element.text = self.now()
-        print type(self.now())
         startTest_element = ET.SubElement(testing, 'StartTestTime')
         startTest_element.text = self.epoch()
         testlist = ET.SubElement(testing, 'TestList')
@@ -486,33 +479,9 @@ class CDashCompleteTestSuite(object):
         endTest_element = ET.SubElement(testing, 'EndTestime')
         endTest_element.text = self.epoch()
         ElapsedMinutes = ET.SubElement(testing, 'ElapsedMinutes')
-        ElapsedMinutes.text = '0' #fix this
+        ElapsedMinutes.text = '0'
+        # fix this
         return report
-
-def fetch_text(path):
-    if not os.path.exists(path):
-        return ''
-
-    with codecs.open(path, 'rb', 'utf-8') as f:
-        return '\n'.join(
-            list(line.strip() for line in f.readlines())
-        )
-
-def dashboard_output(spec, test_suite):
-    # Cycle once and for all on the dependencies and skip
-    # the ones that are already installed. This ensures that
-    # for the same spec, the same number of entries will be
-    # displayed in the XML report
-    for x in spec.traverse(order='post'):
-        package = spack.repo.get(x)
-        if package.installed:
-            test_case = test_suite.create_testcase(package.name, x.short_spec)
-            test_case.set_duration(0.0)
-            test_case.set_result(
-                TestResult.SKIPPED,
-                message='Skipped [already installed]',
-                error_type='already_installed'
-            )
 
     def decorator(func):
         @functools.wraps(func)
@@ -586,11 +555,8 @@ def dashboard_output(spec, test_suite):
                     text=text
                 )
 
-        return wrapper
-    return decorator
-
 
 # announce the existing test suites
 test_suites = {"junit": JUnitTestSuite,
                "cdash-simple": CDashSimpleTestSuite,
-               "cdash-complete": CDashCompleteTestSuite,}
+               "cdash-complete": CDashCompleteTestSuite, }

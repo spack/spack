@@ -33,8 +33,8 @@ schema = {
     'title': 'Spack test configuration file schema',
     'type': 'object',
     'definitions': {
-        'test-suite':{
-            "required": [ "packages", "packages", 'compilers'],
+        'test-suite': {
+            "required": ["packages", "packages", 'compilers'],
             'include': {
                 'type': 'array',
                 'default': [],
@@ -91,4 +91,3 @@ schema = {
         },
     },
 }
-
