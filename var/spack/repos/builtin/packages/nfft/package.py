@@ -37,26 +37,46 @@ class Nfft(AutotoolsPackage):
 
     depends_on('fftw')
 
-    phases = ['autoreconf', 'install']
+    def configure(self, spec, prefix):
+        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+
+        configure = Executable('../configure')
+
+        with working_dir('double', create=True):
+            configure(*options)
+        if '+float' in spec['fftw']:
+            with working_dir('float', create=True):
+                configure('--enable-float', *options)
+        if '+long_double' in spec['fftw']:
+            with working_dir('long-double', create=True):
+                configure('--enable-long-double', *options)
+
+    def build(self, spec, prefix):
+        with working_dir('double'):
+            make()
+        if '+float' in spec['fftw']:
+            with working_dir('float'):
+                make()
+        if '+long_double' in spec['fftw']:
+            with working_dir('long-double'):
+                make()
 
     def install(self, spec, prefix):
-        options = ['--prefix={0}'.format(prefix)]
-
-        configure(*options)
-        make()
-        if self.run_tests:
-            make("check")
-        make("install")
-
+        with working_dir('double'):
+            make("install")
         if '+float' in spec['fftw']:
-            configure('--enable-float', *options)
-            make()
-            if self.run_tests:
-                make("check")
-            make("install")
+            with working_dir('float'):
+                make("install")
         if '+long_double' in spec['fftw']:
-            configure('--enable-long-double', *options)
-            make()
-            if self.run_tests:
+            with working_dir('long-double'):
+                make("install")
+
+    def check(self, spec, prefix):
+        with working_dir('double'):
+            make("check")
+        if '+float' in spec['fftw']:
+            with working_dir('float'):
                 make("check")
-            make("install")
+        if '+long_double' in spec['fftw']:
+            with working_dir('long-double'):
+                make("check")

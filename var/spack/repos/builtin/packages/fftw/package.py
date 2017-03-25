@@ -61,18 +61,17 @@ class Fftw(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
+    depends_on('libtool', type='build', when='+pfft_patches')
 
     # TODO : add support for architecture specific optimizations as soon as
     # targets are supported
 
-    phases = ['autoreconf', 'install']
-
-    def install(self, spec, prefix):
+    def configure(self, spec, prefix):
         options = [
             '--prefix={0}'.format(prefix),
             '--enable-shared',
             '--enable-threads'
-        ]
+        ] + self.configure_args()
 
         # Add support for OpenMP
         if '+openmp' in spec:
@@ -91,27 +90,55 @@ class Fftw(AutotoolsPackage):
             autoreconf = which('autoreconf')
             autoreconf('-ifv')
 
-        configure(*options)
-        make()
-        if self.run_tests:
-            make("check")
-        make("install")
+        configure = Executable('../configure')
 
+        with working_dir('double', create=True):
+            configure(*options)
         if '+float' in spec:
-            configure('--enable-float', *options)
-            make()
-            if self.run_tests:
-                make("check")
-            make("install")
+            with working_dir('float', create=True):
+                configure('--enable-float', *options)
         if '+long_double' in spec:
-            configure('--enable-long-double', *options)
-            make()
-            if self.run_tests:
-                make("check")
-            make("install")
+            with working_dir('long-double', create=True):
+                configure('--enable-long-double', *options)
         if '+quad' in spec:
-            configure('--enable-quad-precision', *options)
+            with working_dir('quad', create=True):
+                configure('--enable-quad-precision', *options)
+
+    def build(self, spec, prefix):
+        with working_dir('double'):
             make()
-            if self.run_tests:
-                make("check")
+        if '+float' in spec:
+            with working_dir('float'):
+                make()
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make()
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make()
+
+    def install(self, spec, prefix):
+        with working_dir('double'):
             make("install")
+        if '+float' in spec:
+            with working_dir('float'):
+                make("install")
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make("install")
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make("install")
+
+    def check(self, spec, prefix):
+        with working_dir('double'):
+            make("check")
+        if '+float' in spec:
+            with working_dir('float'):
+                make("check")
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make("check")
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make("check")
