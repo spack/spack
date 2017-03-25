@@ -65,6 +65,8 @@ class Fftw(AutotoolsPackage):
     # TODO : add support for architecture specific optimizations as soon as
     # targets are supported
 
+    phases = ['autoreconf', 'install']
+
     def install(self, spec, prefix):
         options = [
             '--prefix={0}'.format(prefix),

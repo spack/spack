@@ -37,6 +37,8 @@ class Nfft(AutotoolsPackage):
 
     depends_on('fftw')
 
+    phases = ['autoreconf', 'install']
+
     def install(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]
 

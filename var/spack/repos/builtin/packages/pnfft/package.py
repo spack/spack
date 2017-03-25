@@ -36,6 +36,8 @@ class Pnfft(AutotoolsPackage):
 
     depends_on('pfft')
 
+    phases = ['autoreconf', 'install']
+
     def install(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]
         if not self.compiler.f77 or not self.compiler.fc:

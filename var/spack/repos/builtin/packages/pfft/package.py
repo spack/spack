@@ -39,6 +39,8 @@ class Pfft(AutotoolsPackage):
     depends_on('fftw+mpi+pfft_patches')
     depends_on('mpi')
 
+    phases = ['autoreconf', 'install']
+
     def install(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]
         if not self.compiler.f77 or not self.compiler.fc:
