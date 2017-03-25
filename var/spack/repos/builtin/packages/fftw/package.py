@@ -41,7 +41,7 @@ class Fftw(AutotoolsPackage):
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
     version('2.1.5', '8d16a84f3ca02a785ef9eb36249ba433')
 
-    patch('pfft-3.3.5.patch', when="@3.3.5+pfft_patches", level=0)
+    patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
 
     variant(
