@@ -23,11 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-description = "Run pydoc from within spack."
+description = "run pydoc from within spack"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('entity', help="Run pydoc help on entity")
+    subparser.add_argument('entity', help="run pydoc help on entity")
 
 
 def doc(parser, args):

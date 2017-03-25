@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RGistr(Package):
+class RGistr(RPackage):
     """Work with 'GitHub' 'gists' from 'R'. This package allows the user to
     create new 'gists', update 'gists' with new files, rename files, delete
     files, get and delete 'gists', star and 'un-star' 'gists', fork 'gists',
@@ -40,16 +40,10 @@ class RGistr(Package):
 
     version('0.3.6', '49d548cb3eca0e66711aece37757a2c0')
 
-    extends('R')
-
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-httr', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-assertthat', type=nolink)
-    depends_on('r-knitr', type=nolink)
-    depends_on('r-rmarkdown', type=nolink)
-    depends_on('r-dplyr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-assertthat', type=('build', 'run'))
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-rmarkdown', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))

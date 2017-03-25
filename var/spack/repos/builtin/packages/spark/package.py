@@ -3,7 +3,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Created by Alfredo Gimenez, gimenez1@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 import shutil
@@ -34,7 +33,7 @@ class Spark(Package):
     """
 
     homepage = "http://spark.apache.org"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
+    url      = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
 
     variant('hadoop', default=False,
             description='Build with Hadoop')
@@ -42,6 +41,8 @@ class Spark(Package):
     depends_on('jdk', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
+    version('2.1.0', '21d4471e78250775b1fa7c0e6c3a1326')
+    version('2.0.2', '32110c1bb8f081359738742bd26bced1')
     version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
     version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
     version('1.6.1', 'fcf4961649f15af1fea78c882e65b001')

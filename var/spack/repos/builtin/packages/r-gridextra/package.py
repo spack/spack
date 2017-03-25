@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGridextra(Package):
+class RGridextra(RPackage):
     """Provides a number of user-level functions to work with "grid" graphics,
     notably to arrange multiple grid-based plots on a page, and draw tables."""
 
@@ -35,10 +35,4 @@ class RGridextra(Package):
 
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 
-    extends('R')
-
-    depends_on('r-gtable', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-gtable', type=('build', 'run'))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xmessage(Package):
+class Xmessage(AutotoolsPackage):
     """xmessage displays a message or query in a window.  The user can click
     on an "okay" button to dismiss it or can select one of several buttons
     to answer a question.  xmessage can also exit after a specified time."""
@@ -40,9 +40,3 @@ class Xmessage(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

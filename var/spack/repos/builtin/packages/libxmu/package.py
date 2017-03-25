@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxmu(Package):
+class Libxmu(AutotoolsPackage):
     """This library contains miscellaneous utilities and is not part of the
     Xlib standard.  It contains routines which only use public interfaces so
     that it may be layered on top of any proprietary implementation of Xlib
@@ -43,9 +43,3 @@ class Libxmu(Package):
     depends_on('xextproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

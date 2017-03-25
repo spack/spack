@@ -25,6 +25,7 @@
 from spack import *
 import os
 import sys
+import platform
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -90,8 +91,6 @@ class Trilinos(CMakePackage):
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
 
-    depends_on('cmake', type='build')
-
     # Everything should be compiled with -fpic
     depends_on('blas')
     depends_on('lapack')
@@ -117,10 +116,11 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('superlu+fpic@4.3', when='+superlu')
-    depends_on('hypre~internal-superlu', when='+hypre')
+    # Trilinos can not be built against 64bit int hypre
+    depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
@@ -147,8 +147,8 @@ class Trilinos(CMakePackage):
 
         mpi_bin = spec['mpi'].prefix.bin
         # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
             '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
@@ -159,6 +159,10 @@ class Trilinos(CMakePackage):
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DTPL_FIND_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DTrilinos_LINK_SEARCH_START_STATIC:BOOL=%s' % (
+                'OFF' if '+shared' in spec else 'ON'),
             '-DTPL_ENABLE_MPI:BOOL=ON',
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_BLAS=ON',
@@ -169,9 +173,14 @@ class Trilinos(CMakePackage):
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
+            '-DTPL_ENABLE_Netcdf:BOOL=ON'
         ])
+
+        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+            # use @rpath on Sierra due to limit of dynamic loader
+            options.append('-DCMAKE_MACOSX_RPATH=ON')
+        else:
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Force Trilinos to use the MPI wrappers instead of raw compilers
         # this is needed on Apple systems that require full resolution of
@@ -365,13 +374,21 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
+
+        # disable due to compiler / config errors:
+        if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            options.extend([
+                '-DTrilinos_ENABLE_Pamgen:BOOL=OFF',
+                '-DTrilinos_ENABLE_Stokhos:BOOL=OFF'
+            ])
+
         if sys.platform == 'darwin':
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
         return options
 
-    @CMakePackage.sanity_check('install')
+    @run_after('install')
     def filter_python(self):
         # When trilinos is built with Python, libpytrilinos is included
         # through cmake configure files. Namely, Trilinos_LIBRARIES in

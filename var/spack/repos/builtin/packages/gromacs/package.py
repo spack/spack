@@ -39,7 +39,7 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url = 'ftp://ftp.gromacs.org/pub/gromacs/gromacs-5.1.2.tar.gz'
+    url = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
 
     version('5.1.2', '614d0be372f1a6f1f36382b7a6fcab98')
 
@@ -51,14 +51,14 @@ class Gromacs(CMakePackage):
         'double', default=False,
         description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
+    variant('cuda', default=False, description='Enable CUDA support')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw')
     depends_on('cmake@2.8.8:', type='build')
-
-    # TODO : add GPU support
+    depends_on('cuda', when='+cuda')
 
     def patch(self):
         if '+plumed' in self.spec:
@@ -81,5 +81,10 @@ class Gromacs(CMakePackage):
             options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
         else:
             options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
+
+        if '+cuda' in self.spec:
+            options.append('-DGMX_GPU:BOOL=ON')
+            options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
+                           self.spec['cuda'].prefix)
 
         return options

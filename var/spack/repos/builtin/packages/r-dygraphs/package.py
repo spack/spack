@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDygraphs(Package):
+class RDygraphs(RPackage):
     """An R interface to the 'dygraphs' JavaScript charting library (a copy of
     which is included in the package). Provides rich facilities for charting
     time-series data in R, including highly configurable series- and
@@ -38,13 +38,7 @@ class RDygraphs(Package):
 
     version('0.9', '7f0ce4312bcd3f0a58b8c03b2772f833')
 
-    extends('R')
-
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-zoo', type=nolink)
-    depends_on('r-xts', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))
+    depends_on('r-xts', type=('build', 'run'))

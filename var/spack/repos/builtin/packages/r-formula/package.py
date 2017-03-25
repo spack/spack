@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RFormula(Package):
+class RFormula(RPackage):
     """Infrastructure for extended formulas with multiple parts on the right-hand
     side and/or multiple responses on the left-hand side."""
 
@@ -35,9 +35,3 @@ class RFormula(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/Formula"
 
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

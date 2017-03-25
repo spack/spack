@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
-class PyPillow(Package):
+class PyPillow(PythonPackage):
     """Pillow is a fork of the Python Imaging Library (PIL). It adds image
     processing capabilities to your Python interpreter. This library supports
     many file formats, and provides powerful image processing and graphics
@@ -64,8 +65,7 @@ class PyPillow(Package):
     #         description='Provide improved color quantization')
 
     # Required dependencies
-    extends('python')
-    depends_on('binutils', type='build')
+    depends_on('binutils', type='build', when=sys.platform != 'darwin')
     depends_on('py-setuptools', type='build')
 
     # Recommended dependencies
@@ -82,6 +82,8 @@ class PyPillow(Package):
     # depends_on('webp', when='+webp')
     # depends_on('webpmux', when='+webpmux')
     # depends_on('imagequant', when='+imagequant')
+
+    phases = ['build_ext', 'install']
 
     def patch(self):
         """Patch setup.py to provide lib and include directories
@@ -121,13 +123,10 @@ class PyPillow(Package):
                              spec['openjpeg'].prefix.lib,
                              spec['openjpeg'].prefix.include))
 
-    def install(self, spec, prefix):
+    def build_ext_args(self, spec, prefix):
         def variant_to_flag(variant):
             able = 'enable' if '+{0}'.format(variant) in spec else 'disable'
             return '--{0}-{1}'.format(able, variant)
 
         variants = ['jpeg', 'zlib', 'tiff', 'freetype', 'lcms', 'jpeg2000']
-        build_args = list(map(variant_to_flag, variants))
-
-        setup_py('build_ext', *build_args)
-        setup_py('install', '--prefix={0}'.format(prefix))
+        return list(map(variant_to_flag, variants))

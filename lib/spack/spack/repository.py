@@ -133,7 +133,7 @@ class RepoPath(object):
                          "    spack repo rm %s" % root)
 
     def swap(self, other):
-        """Convenience function to make swapping repostiories easier.
+        """Convenience function to make swapping repositories easier.
 
         This is currently used by mock tests.
         TODO: Maybe there is a cleaner way.
@@ -337,7 +337,15 @@ class RepoPath(object):
         return self.repo_for_pkg(pkg_name).filename_for_package_name(pkg_name)
 
     def exists(self, pkg_name):
+        """Whether package with the give name exists in the path's repos.
+
+        Note that virtual packages do not "exist".
+        """
         return any(repo.exists(pkg_name) for repo in self.repos)
+
+    def is_virtual(self, pkg_name):
+        """True if the package with this name is virtual, False otherwise."""
+        return pkg_name in self.provider_index
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -771,6 +779,10 @@ class Repo(object):
         # Just check whether the file exists.
         filename = self.filename_for_package_name(pkg_name)
         return os.path.exists(filename)
+
+    def is_virtual(self, pkg_name):
+        """True if the package with this name is virtual, False otherwise."""
+        return self.provider_index.contains(pkg_name)
 
     def _get_pkg_module(self, pkg_name):
         """Create a module for a particular package.

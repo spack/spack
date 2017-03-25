@@ -26,7 +26,7 @@
 from spack import *
 
 
-class PyYt(Package):
+class PyYt(PythonPackage):
     """Volumetric Data Analysis
 
        yt is a python package for analyzing and visualizing
@@ -37,6 +37,10 @@ class PyYt(Package):
     homepage = "http://yt-project.org"
     url = "https://bitbucket.org/yt_analysis/yt"
 
+    version("3.3.5", "2ad314ff3d3261e41825d15db027b0e7",
+            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.5.tar.gz")
+    version("3.3.4", "3a84e56dfd82f9dd923f3fb8490e679c",
+            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.4.tar.gz")
     version("3.3.1", hg="https://bitbucket.org/yt_analysis/yt",
             tag="yt-3.3.1", commit="9bc3d0e9b750c923d44d73c447df64fc431f5838")
     version("3.2.3", hg="https://bitbucket.org/yt_analysis/yt",
@@ -54,25 +58,20 @@ class PyYt(Package):
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
 
-    extends("python")
-
-    depends_on("py-astropy", type="nolink", when="+astropy")
-    depends_on("py-cython", type="nolink")
-    depends_on("py-h5py", type="nolink", when="+h5py")
-    depends_on("py-ipython", type="nolink")
-    depends_on("py-matplotlib", type="nolink")
-    depends_on("py-numpy", type="nolink")
-    depends_on("py-scipy", type="nolink", when="+scipy")
+    depends_on("py-astropy", type=('build', 'run'), when="+astropy")
+    depends_on("py-cython", type=('build', 'run'))
+    depends_on("py-h5py", type=('build', 'run'), when="+h5py")
+    depends_on("py-ipython", type=('build', 'run'))
+    depends_on("py-matplotlib", type=('build', 'run'))
+    depends_on("py-numpy", type=('build', 'run'))
+    depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type="build")
-    depends_on("py-sympy", type="nolink")
+    depends_on("py-sympy", type=('build', 'run'))
     depends_on("python @2.7:2.999,3.4:")
 
-    def install(self, spec, prefix):
-        setup_py("install", "--prefix=%s" % prefix)
-        self.check_install(spec, prefix)
-
-    def check_install(self, spec, prefix):
+    @run_after('install')
+    def check_install(self):
         # The Python interpreter path can be too long for this
         # yt = Executable(join_path(prefix.bin, "yt"))
         # yt("--help")
-        python(join_path(prefix.bin, "yt"), "--help")
+        python(join_path(self.prefix.bin, "yt"), "--help")

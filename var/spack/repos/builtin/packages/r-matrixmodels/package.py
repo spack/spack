@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMatrixmodels(Package):
+class RMatrixmodels(RPackage):
     """Modelling with sparse and dense 'Matrix' matrices, using modular
     prediction and response module classes."""
 
@@ -35,10 +35,4 @@ class RMatrixmodels(Package):
 
     version('0.4-1', '65b3ab56650c62bf1046a3eb1f1e19a0')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))

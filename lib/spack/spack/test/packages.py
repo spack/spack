@@ -23,53 +23,92 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
+import pytest
+
 from llnl.util.filesystem import join_path
 from spack.repository import Repo
-from spack.test.mock_packages_test import *
 from spack.util.naming import mod_to_class
+from spack.spec import *
 
 
-class PackagesTest(MockPackagesTest):
-
+@pytest.mark.usefixtures('config', 'builtin_mock')
+class TestPackage(object):
     def test_load_package(self):
         spack.repo.get('mpich')
 
     def test_package_name(self):
         pkg = spack.repo.get('mpich')
-        self.assertEqual(pkg.name, 'mpich')
+        assert pkg.name == 'mpich'
 
     def test_package_filename(self):
         repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
-        self.assertEqual(filename,
-                         join_path(spack.mock_packages_path,
-                                   'packages', 'mpich', 'package.py'))
+        assert filename == join_path(
+            spack.mock_packages_path,
+            'packages',
+            'mpich',
+            'package.py'
+        )
 
     def test_nonexisting_package_filename(self):
         repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
-        self.assertEqual(
-            filename,
-            join_path(spack.mock_packages_path,
-                      'packages', 'some-nonexisting-package', 'package.py'))
+        assert filename == join_path(
+            spack.mock_packages_path,
+            'packages',
+            'some-nonexisting-package',
+            'package.py'
+        )
 
     def test_package_class_names(self):
-        self.assertEqual('Mpich',          mod_to_class('mpich'))
-        self.assertEqual('PmgrCollective', mod_to_class('pmgr_collective'))
-        self.assertEqual('PmgrCollective', mod_to_class('pmgr-collective'))
-        self.assertEqual('Pmgrcollective', mod_to_class('PmgrCollective'))
-        self.assertEqual('_3db',        mod_to_class('3db'))
+        assert 'Mpich' == mod_to_class('mpich')
+        assert 'PmgrCollective' == mod_to_class('pmgr_collective')
+        assert 'PmgrCollective' == mod_to_class('pmgr-collective')
+        assert 'Pmgrcollective' == mod_to_class('PmgrCollective')
+        assert '_3db' == mod_to_class('3db')
 
-    #
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
-    #
-
     def test_import_package(self):
         import spack.pkg.builtin.mock.mpich             # noqa
 
     def test_import_package_as(self):
         import spack.pkg.builtin.mock.mpich as mp       # noqa
+
+        import spack.pkg.builtin.mock                   # noqa
+        import spack.pkg.builtin.mock as m              # noqa
+        from spack.pkg.builtin import mock              # noqa
+
+    def test_inheritance_of_diretives(self):
+        p = spack.repo.get('simple-inheritance')
+
+        # Check dictionaries that should have been filled by directives
+        assert len(p.dependencies) == 3
+        assert 'cmake' in p.dependencies
+        assert 'openblas' in p.dependencies
+        assert 'mpi' in p.dependencies
+        assert len(p.provided) == 2
+
+        # Check that Spec instantiation behaves as we expect
+        s = Spec('simple-inheritance')
+        s.concretize()
+        assert '^cmake' in s
+        assert '^openblas' in s
+        assert '+openblas' in s
+        assert 'mpi' in s
+
+        s = Spec('simple-inheritance~openblas')
+        s.concretize()
+        assert '^cmake' in s
+        assert '^openblas' not in s
+        assert '~openblas' in s
+        assert 'mpi' in s
+
+    def test_dependency_extensions(self):
+        s = Spec('extension2')
+        s.concretize()
+        deps = set(x.name for x in s.package.dependency_activations())
+        assert deps == set(['extension1'])
 
     def test_import_class_from_package(self):
         from spack.pkg.builtin.mock.mpich import Mpich  # noqa

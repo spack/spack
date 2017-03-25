@@ -39,7 +39,6 @@ class Everytrace(CMakePackage):
     variant('fortran', default=True,
             description='Enable use with Fortran programs')
 
-    depends_on('cmake', type='build')
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
@@ -48,5 +47,5 @@ class Everytrace(CMakePackage):
             '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
             '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
 
-    def setup_environment(self, spack_env, env):
-        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))

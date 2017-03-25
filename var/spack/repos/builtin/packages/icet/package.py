@@ -36,7 +36,6 @@ class Icet(CMakePackage):
             git='https://gitlab.kitware.com/icet/icet.git')
     version('2.1.1', '4f971c51105a64937460d482adca2a6c')
 
-    depends_on('cmake', type='build')
     depends_on('mpi')
 
     def url_for_version(self, version):

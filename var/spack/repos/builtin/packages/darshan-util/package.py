@@ -1,3 +1,13 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,7 +32,7 @@ class DarshanUtil(Package):
     log files produced by Darshan (runtime)."""
 
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "ftp://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
 
     version('3.1.0', '439d717323e6265b2612ed127886ae52')
     version('3.0.0', '732577fe94238936268d74d7d74ebd08')

@@ -63,7 +63,7 @@ class Gdal(Package):
     depends_on("libpng")
     depends_on("zlib")
     depends_on("proj")
-    depends_on("py-numpy", type=nolink)
+    depends_on("py-numpy", type=('build', 'run'))
 
     parallel = False
 

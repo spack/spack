@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xlogo(Package):
+class Xlogo(AutotoolsPackage):
     """The xlogo program simply displays the X Window System logo."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xlogo"
@@ -45,9 +45,3 @@ class Xlogo(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPandas(Package):
+class PyPandas(PythonPackage):
     """pandas is a Python package providing fast, flexible, and expressive
        data structures designed to make working with relational or
        labeled data both easy and intuitive. It aims to be the
@@ -36,19 +36,17 @@ class PyPandas(Package):
 
     """
     homepage = "http://pandas.pydata.org/"
-    url      = "https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73"
+    url = "https://pypi.io/packages/source/p/pandas/pandas-0.19.0.tar.gz"
 
-    version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
-    version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
+    version('0.19.0', 'bc9bb7188e510b5d44fbdd249698a2c3')
     version('0.18.0', 'f143762cd7a59815e348adf4308d2cf6')
+    version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
+    version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
 
-    extends('python')
-    depends_on('py-dateutil', type=nolink)
-    depends_on('py-numpy', type=nolink)
+    depends_on('py-dateutil', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytz', type=nolink)
-    depends_on('py-numexpr', type=nolink)
-    depends_on('py-bottleneck', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on('py-cython', type='build')
+    depends_on('py-pytz', type=('build', 'run'))
+    depends_on('py-numexpr', type=('build', 'run'))
+    depends_on('py-bottleneck', type=('build', 'run'))

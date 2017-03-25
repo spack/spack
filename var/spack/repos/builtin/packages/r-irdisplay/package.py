@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RIrdisplay(Package):
+class RIrdisplay(RPackage):
     """An interface to the rich display capabilities of Jupyter front-ends
     (e.g. 'Jupyter Notebook') Designed to be used from a running IRkernel
     session"""
@@ -36,10 +36,4 @@ class RIrdisplay(Package):
 
     version('0.4.4', '5be672fb82185b90f23bd99ac1e1cdb6')
 
-    extends('R')
-
-    depends_on('r-repr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-repr', type=('build', 'run'))

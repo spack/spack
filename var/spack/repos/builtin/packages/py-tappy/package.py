@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyTappy(Package):
+class PyTappy(PythonPackage):
     """Python TAP interface module for unit tests"""
     homepage = "https://github.com/mblayman/tappy"
     # base https://pypi.python.org/pypi/cffi
@@ -33,8 +33,9 @@ class PyTappy(Package):
 
     version('1.6', 'c8bdb93ad66e05f939905172a301bedf')
 
-    extends('python')
-    depends_on('py-setuptools', type='build')
+    extends('python', ignore='bin/nosetests|bin/pygmentize')
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on('python@2.6:2.7,3.2:3.4')
+    depends_on('py-nose', type=('build', 'run'))
+    depends_on('py-pygments', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

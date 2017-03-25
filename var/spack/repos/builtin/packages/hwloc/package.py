@@ -22,10 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import sys
 
 
-class Hwloc(Package):
+class Hwloc(AutotoolsPackage):
     """The Portable Hardware Locality (hwloc) software package
        provides a portable abstraction (across OS, versions,
        architectures, ...) of the hierarchical topology of modern
@@ -42,19 +44,36 @@ class Hwloc(Package):
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 3
 
+    version('1.11.6', 'b4e95eadd2fbdb6d40bbd96be6f03c84')
+    version('1.11.5', '8f5fe6a9be2eb478409ad5e640b2d3ba')
     version('1.11.4', 'b6f23eb59074fd09fdd84905d50b103d')
     version('1.11.3', 'c1d36a9de6028eac1d18ea4782ef958f')
     version('1.11.2', 'e4ca55c2a5c5656da4a4e37c8fc51b23')
     version('1.11.1', 'feb4e416a1b25963ed565d8b42252fdc')
     version('1.9',    '1f9f9155682fe8946a97c08896109508')
 
-    depends_on('libpciaccess')
+    variant('cuda', default=False, description="Support CUDA devices")
+    variant('libxml2', default=True, description="Build with libxml2")
+    variant('pci', default=(sys.platform != 'darwin'),
+            description="Support analyzing devices on PCI bus")
+
+    depends_on('cuda', when='+cuda')
+    depends_on('libpciaccess', when='+pci')
+    depends_on('libxml2', when='+libxml2')
+    depends_on('pkg-config', type='build')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")
+    def configure_args(self):
+        spec = self.spec
+        args = [
+            "--enable-cuda" if '+cuda' in spec else "--disable-cuda",
+            "--enable-libxml2" if '+libxml2' in spec else "--disable-libxml2",
+            "--enable-pci" if '+pci' in spec else "--disable-pci",
+            # Disable OpenCL, since hwloc might pick up an OpenCL
+            # library at build time that is then not found at run time
+            # (Alternatively, we could require OpenCL as dependency.)
+            "--disable-opencl",
+        ]
+        return args

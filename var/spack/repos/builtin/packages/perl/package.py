@@ -31,12 +31,14 @@
 from spack import *
 
 
-class Perl(Package):
+class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
     homepage = "http://www.perl.org"
-    url      = "http://www.cpan.org/src/5.0/perl-5.22.2.tar.gz"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
+    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
     version('5.24.0', 'c5bf7f3285439a2d3b6a488e14503701')
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
     version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
@@ -61,7 +63,12 @@ class Perl(Package):
 
     def install(self, spec, prefix):
         configure = Executable('./Configure')
-        configure("-des", "-Dprefix=" + prefix)
+        configure_args = ["-des", "-Dprefix=" + prefix]
+        # Discussion of -fPIC for Intel at:
+        # https://github.com/LLNL/spack/pull/3081
+        if spec.satisfies('%intel'):
+            configure_args.append("-Accflags=" + self.compiler.pic_flag)
+        configure(*configure_args)
         make()
         if self.run_tests:
             make("test")

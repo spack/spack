@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 import shutil
 
@@ -48,6 +47,7 @@ class Hdf5(AutotoolsPackage):
     version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
     version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
+    version('1.8.14', 'a482686e733514a51cde12d6fe5c5d95')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
     version('1.8.12', 'd804802feb99b87fc668a90e6fa34411')
 
@@ -70,7 +70,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    @AutotoolsPackage.precondition('configure')
+    @run_before('configure')
     def validate(self):
         """
         Checks if incompatible variants have been activated at the same time
@@ -126,7 +126,7 @@ class Hdf5(AutotoolsPackage):
         if '+pic' in spec:
             extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
             extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('FCFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -156,7 +156,21 @@ class Hdf5(AutotoolsPackage):
 
         return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
 
-    @AutotoolsPackage.sanity_check('install')
+    def configure(self, spec, prefix):
+        # Run the default autotools package configure
+        super(Hdf5, self).configure(spec, prefix)
+
+        if '@:1.8.14' in spec:
+            # On Ubuntu14, HDF5 1.8.12 (and maybe other versions)
+            # mysteriously end up with "-l -l" in the postdeps in the
+            # libtool script.  Patch this by removing the spurious -l's.
+            filter_file(
+                r'postdeps="([^"]*)"',
+                lambda m: 'postdeps="%s"' % ' '.join(
+                    arg for arg in m.group(1).split(' ') if arg != '-l'),
+                'libtool')
+
+    @run_after('install')
     def check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
@@ -182,16 +196,12 @@ HDF5 version {version} {version}
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
-                cc = which('%s' % spec['mpi'].mpicc)
+                cc = Executable(spec['mpi'].mpicc)
             else:
-                cc = which('cc')
-            # TODO: Automate these path and library settings
-            cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
-            cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"),
-               "-L%s" % join_path(spec.prefix, "lib64"),
-               "-lhdf5",
-               "-lz")
+                cc = Executable(self.compiler.cc)
+            cc(*(['-c', "check.c"] + spec['hdf5'].cppflags.split()))
+            cc(*(['-o', "check", "check.o"] +
+                 spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
                 output = check(return_output=True)

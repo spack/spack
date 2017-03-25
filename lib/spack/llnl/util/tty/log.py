@@ -30,6 +30,7 @@ import re
 import select
 import sys
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
@@ -147,9 +148,7 @@ class log_output(object):
     def __enter__(self):
         # Sets a daemon that writes to file what it reads from a pipe
         try:
-            fwd_input_stream = os.fdopen(
-                os.dup(self.input_stream.fileno())
-            )
+            fwd_input_stream = lang.duplicate_stream(self.input_stream)
             self.p = multiprocessing.Process(
                 target=self._spawn_writing_daemon,
                 args=(self.read, fwd_input_stream),

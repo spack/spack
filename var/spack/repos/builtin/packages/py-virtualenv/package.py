@@ -25,17 +25,18 @@
 from spack import *
 
 
-class PyVirtualenv(Package):
+class PyVirtualenv(PythonPackage):
     """virtualenv is a tool to create isolated Python environments."""
-    homepage = "http://virtualenv.readthedocs.org/projects/virtualenv/"
-    url      = "https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.11.6.tar.gz"
 
-    version('1.11.6', 'f61cdd983d2c4e6aeabb70b1060d6f49')
-    version('13.0.1', '1ffc011bde6667f0e37ecd976f4934db')
+    homepage = "https://virtualenv.pypa.io/"
+    url      = "https://pypi.io/packages/source/v/virtualenv/virtualenv-15.1.0.tar.gz"
+
+    version('15.1.0', '44e19f4134906fe2d75124427dc9b716')
     version('15.0.1', '28d76a0d9cbd5dc42046dd14e76a6ecc')
+    version('13.0.1', '1ffc011bde6667f0e37ecd976f4934db')
+    version('1.11.6', 'f61cdd983d2c4e6aeabb70b1060d6f49')
 
-    extends('python')
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:')
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    # not just build-time, requires pkg_resources
+    depends_on('py-setuptools', type=('build', 'run'))

@@ -25,16 +25,13 @@
 from spack import *
 
 
-class PyWheel(Package):
+class PyWheel(PythonPackage):
     """A built-package format for Python."""
 
     homepage = "https://pypi.python.org/pypi/wheel"
-    url      = "https://pypi.python.org/packages/source/w/wheel/wheel-0.26.0.tar.gz"
+    url      = "https://pypi.io/packages/source/w/wheel/wheel-0.29.0.tar.gz"
 
+    version('0.29.0', '555a67e4507cedee23a0deb9651e452f')
     version('0.26.0', '4cfc6e7e3dc7377d0164914623922a10')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

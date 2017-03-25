@@ -33,11 +33,10 @@ class EverytraceExample(CMakePackage):
             git='https://github.com/citibeth/everytrace-example.git',
             branch='develop')
 
-    depends_on('cmake', type='build')
     depends_on('everytrace+mpi+fortran')
 
     # Currently the only MPI this everytrace works with.
     depends_on('openmpi')
 
-    def setup_environment(self, spack_env, env):
-        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))

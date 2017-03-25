@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RBoot(Package):
+class RBoot(RPackage):
     """Functions and datasets for bootstrapping from the book "Bootstrap
     Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
     CUP), originally written by Angelo Canty for S."""
@@ -35,9 +35,3 @@ class RBoot(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/boot"
 
     version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

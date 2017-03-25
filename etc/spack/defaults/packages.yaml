@@ -20,4 +20,5 @@ packages:
       mpi: [openmpi, mpich]
       blas: [openblas]
       lapack: [openblas]
+      awk: [gawk]
       pil: [py-pillow]

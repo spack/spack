@@ -38,6 +38,7 @@ class Gmsh(CMakePackage):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
 
+    version('2.16.0', 'e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
     version('2.15.0', '992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
@@ -87,7 +88,7 @@ class Gmsh(CMakePackage):
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        blas_lapack = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        blas_lapack = spec['lapack'].libs + spec['blas'].libs
         options.append(
             '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 

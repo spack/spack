@@ -39,10 +39,10 @@ import spack.store
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify confguration By default modify the *highest*
+# Commands that modify configuration by default modify the *highest*
 # priority scope.
 default_modify_scope = spack.config.highest_precedence_scope().name
-# Commands that list confguration list *all* scopes by default.
+# Commands that list configuration list *all* scopes by default.
 default_list_scope = None
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -62,6 +62,15 @@ for file in os.listdir(command_path):
         cmd = re.sub(r'.py$', '', file)
         commands.append(cmd)
 commands.sort()
+
+
+def remove_options(parser, *options):
+    """Remove some options from a parser."""
+    for option in options:
+        for action in parser._actions:
+            if vars(action)['option_strings'][0] == option:
+                parser._handle_conflict_resolve(None, [(option, action)])
+                break
 
 
 def get_cmd_function_name(name):
@@ -97,9 +106,6 @@ def parse_specs(args, **kwargs):
     """
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
-
-    if isinstance(args, (python_list, tuple)):
-        args = " ".join(args)
 
     try:
         specs = spack.spec.parse(args)
@@ -153,17 +159,6 @@ def disambiguate_spec(spec):
     return matching_specs[0]
 
 
-def ask_for_confirmation(message):
-    while True:
-        tty.msg(message + '[y/n]')
-        choice = raw_input().lower()
-        if choice == 'y':
-            break
-        elif choice == 'n':
-            raise SystemExit('Operation aborted')
-        tty.warn('Please reply either "y" or "n"')
-
-
 def gray_hash(spec, length):
     return colorize('@K{%s}' % spec.dag_hash(length))
 
@@ -209,9 +204,8 @@ def display_specs(specs, **kwargs):
             format = "    %%-%ds%%s" % width
 
             for abbrv, spec in zip(abbreviated, specs):
-                if hashes:
-                    print(gray_hash(spec, hlen), )
-                print(format % (abbrv, spec.prefix))
+                prefix = gray_hash(spec, hlen) if hashes else ''
+                print prefix + (format % (abbrv, spec.prefix))
 
         elif mode == 'deps':
             for spec in specs:

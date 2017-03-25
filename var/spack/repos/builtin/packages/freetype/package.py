@@ -39,6 +39,7 @@ class Freetype(AutotoolsPackage):
 
     depends_on('libpng')
     depends_on('bzip2')
-
+    depends_on('pkg-config@0.9.0:', type='build')
+  
     def configure_args(self):
         return ['--with-harfbuzz=no']

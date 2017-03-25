@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RHtmlwidgets(Package):
+class RHtmlwidgets(RPackage):
     """A framework for creating HTML widgets that render in various contexts
     including the R console, 'R Markdown' documents, and 'Shiny' web
     applications."""
@@ -36,12 +36,6 @@ class RHtmlwidgets(Package):
 
     version('0.6', '7fa522d2eda97593978021bda9670c0e')
 
-    extends('R')
-
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-yaml', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))

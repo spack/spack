@@ -22,33 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-
 import spack.cmd.find
-import unittest
-
 from spack.util.pattern import Bunch
 
 
-class FindTest(unittest.TestCase):
-
-    def test_query_arguments(self):
-        query_arguments = spack.cmd.find.query_arguments
-        # Default arguments
-        args = Bunch(only_missing=False, missing=False,
-                     unknown=False, explicit=False, implicit=False)
-        q_args = query_arguments(args)
-        self.assertTrue('installed' in q_args)
-        self.assertTrue('known' in q_args)
-        self.assertTrue('explicit' in q_args)
-        self.assertEqual(q_args['installed'], True)
-        self.assertEqual(q_args['known'], any)
-        self.assertEqual(q_args['explicit'], any)
-        # Check that explicit works correctly
-        args.explicit = True
-        q_args = query_arguments(args)
-        self.assertEqual(q_args['explicit'], True)
-        args.explicit = False
-        args.implicit = True
-        q_args = query_arguments(args)
-        self.assertEqual(q_args['explicit'], False)
+def test_query_arguments():
+    query_arguments = spack.cmd.find.query_arguments
+    # Default arguments
+    args = Bunch(
+        only_missing=False,
+        missing=False,
+        unknown=False,
+        explicit=False,
+        implicit=False
+    )
+    q_args = query_arguments(args)
+    assert 'installed' in q_args
+    assert 'known' in q_args
+    assert 'explicit' in q_args
+    assert q_args['installed'] is True
+    assert q_args['known'] is any
+    assert q_args['explicit'] is any
+    # Check that explicit works correctly
+    args.explicit = True
+    q_args = query_arguments(args)
+    assert q_args['explicit'] is True
+    args.explicit = False
+    args.implicit = True
+    q_args = query_arguments(args)
+    assert q_args['explicit'] is False

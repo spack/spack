@@ -25,7 +25,6 @@
 #
 # Author: Matteo Giantomassi <matteo.giantomassiNOSPAM AT uclouvain.be>
 # Date: October 11, 2016
-
 from spack import *
 
 
@@ -63,6 +62,10 @@ class Abinit(Package):
     # TODO: To be tested.
     # It was working before the last `git pull` but now all tests crash.
     # For the time being, the default is netcdf3 and the internal fallbacks
+    # FIXME: rename (trio?) and use multivalued variants to cover
+    # --with-trio-flavor={netcdf, none}
+    # Note that Abinit@8: does not support etsf_io anymore because it is not
+    # compatible with HDF5 and MPI-IO
     variant('hdf5', default=False,
             description='Enables HDF5+Netcdf4 with MPI. WARNING: experimental')
 
@@ -124,13 +127,13 @@ class Abinit(Package):
         # BLAS/LAPACK
         if '+scalapack' in spec:
             oapp("--with-linalg-flavor=custom+scalapack")
-            linalg = (spec['scalapack'].scalapack_libs +
-                      spec['lapack'].lapack_libs + spec['blas'].blas_libs)
+            linalg = (spec['scalapack'].libs +
+                      spec['lapack'].libs + spec['blas'].libs)
 
         # elif '+elpa' in spec:
         else:
             oapp("--with-linalg-flavor=custom")
-            linalg = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+            linalg = spec['lapack'].libs + spec['blas'].libs
 
         oapp("--with-linalg-libs=%s" % linalg.ld_flags)
 
@@ -156,6 +159,8 @@ class Abinit(Package):
         # Netcdf4/HDF5
         if "+hdf5" in spec:
             oapp("--with-trio-flavor=netcdf")
+            # Since version 8, Abinit started to use netcdf4 + hdf5 and we have
+            # to link with -lhdf5_hl -lhdf5
             hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib
             options.extend([
                 "--with-netcdf-incs=-I%s" % (
@@ -164,8 +169,9 @@ class Abinit(Package):
                     spec["netcdf-fortran"].prefix.lib, hdf_libs),
             ])
         else:
-            # Use internal fallbacks (netcdf3)
-            oapp("--with-trio-flavor=netcdf-fallback")
+            # In Spack we do our best to avoid building any internally provided
+            # dependencies, such as netcdf3 in this case.
+            oapp("--with-trio-flavor=none")
 
         configure(*options)
         make()

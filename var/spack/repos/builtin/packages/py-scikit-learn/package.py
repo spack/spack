@@ -25,20 +25,20 @@
 from spack import *
 
 
-class PyScikitLearn(Package):
-    """"""
-    homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.python.org/packages/source/s/scikit-learn/scikit-learn-0.15.2.tar.gz"
+class PyScikitLearn(PythonPackage):
+    """A set of python modules for machine learning and data mining."""
 
+    homepage = "https://pypi.python.org/pypi/scikit-learn"
+    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.18.1.tar.gz"
+    list_url = "https://pypi.python.org/pypi/scikit-learn"
+    list_depth = 2
+
+    version('0.18.1', '6b0ff1eaa5010043895dd63d1e3c60c9')
     version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
     version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
     version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
 
-    extends('python')
-
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-scipy', type=nolink)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)
+    depends_on('python@2.6:2.7,3.3:')
+    depends_on('py-setuptools',   type='build')
+    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
+    depends_on('py-scipy@0.9:',   type=('build', 'run'))

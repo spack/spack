@@ -25,63 +25,79 @@
 from spack import *
 
 
-class AdolC(Package):
+class AdolC(AutotoolsPackage):
     """A package for the automatic differentiation of first and higher
     derivatives of vector functions in C and C++ programs by operator
     overloading."""
     homepage = "https://projects.coin-or.org/ADOL-C"
     url      = "http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz"
 
-    version('develop',  svn='https://projects.coin-or.org/svn/ADOL-C/trunk/')
+    version('develop',  git='https://gitlab.com/adol-c/adol-c.git',
+            branch='master')
     version('2.6.2', '0f9547584c99c0673e4f81cf64e8d865')
     version('2.6.1', '1032b28427d6e399af4610e78c0f087b')
 
+    variant('advanced_branching', default=False,
+            description='Enable advanced branching to reduce retaping')
+    variant('atrig_erf', default=True,
+            description='Enable arc-trig and error functions')
     variant('doc',      default=True,  description='Install documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
     variant('tests',    default=True,
             description='Build all included examples as a test case')
 
+    # Build dependencies
+    depends_on('automake', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
+
     patch('openmp_exam_261.patch', when='@2.6.1')
 
-    def install(self, spec, prefix):
-        make_args = ['--prefix=%s' % prefix]
+    def configure_args(self):
+        spec = self.spec
 
-        # --with-cflags=FLAGS     use CFLAGS=FLAGS (default: -O3 -Wall -ansi)
-        # --with-cxxflags=FLAGS   use CXXFLAGS=FLAGS (default: -O3 -Wall)
+        configure_args = []
+
+        if '+advanced_branching' in spec:
+            configure_args.extend([
+                '--enable-advanced-branching'
+            ])
+
+        if '+atrig_erf' in spec:
+            configure_args.extend([
+                '--enable-atrig-erf'
+            ])
 
         if '+openmp' in spec:
-            if spec.satisfies('%gcc'):
-                make_args.extend([
-                    # FIXME: Is this required? -I <path to omp.h> -L <LLVM
-                    # OpenMP library path>
-                    '--with-openmp-flag=-fopenmp'
-                ])
-            else:
-                raise InstallError(
-                    "OpenMP flags for compilers other than GCC "
-                    "are not implemented.")
+            configure_args.extend([
+                '--with-openmp-flag={0}'.format(self.compiler.openmp_flag)
+            ])
 
         if '+sparse' in spec:
-            make_args.extend([
+            configure_args.extend([
                 '--enable-sparse'
             ])
 
         # We can simply use the bundled examples to check
         # whether Adol-C works as expected
         if '+tests' in spec:
-            make_args.extend([
-                '--enable-docexa',  # Documeted examples
+            configure_args.extend([
+                '--enable-docexa',  # Documented examples
                 '--enable-addexa'  # Additional examples
             ])
             if '+openmp' in spec:
-                make_args.extend([
+                configure_args.extend([
                     '--enable-parexa'  # Parallel examples
                 ])
 
-        configure(*make_args)
-        make()
-        make("install")
+        return configure_args
+
+    @run_after('install')
+    def install_additional_files(self):
+        spec = self.spec
+        prefix = self.prefix
 
         # Copy the config.h file, as some packages might require it
         source_directory = self.stage.source_path

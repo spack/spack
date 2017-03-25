@@ -40,7 +40,12 @@ cd "$SPACK_ROOT"
 source "$SPACK_ROOT/share/spack/setup-env.sh"
 spack compilers
 spack config get compilers
-spack install -v libdwarf
 
 # Run unit tests with code coverage
-coverage run bin/spack test "$@"
+if [[ "$TRAVIS_PYTHON_VERSION" == 2.7 ]]; then
+    coverage run bin/spack install -v libdwarf
+    coverage run bin/spack test "$@" && coverage combine
+else
+    spack install -v libdwarf
+    spack test "$@"
+fi

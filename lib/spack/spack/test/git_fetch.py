@@ -24,93 +24,61 @@
 ##############################################################################
 import os
 
+import pytest
 import spack
 from llnl.util.filesystem import *
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockGitRepo
+from spack.spec import Spec
 from spack.version import ver
 
 
-class GitFetchTest(MockPackagesTest):
-    """Tests fetching from a dummy git repository."""
+@pytest.fixture(params=['master', 'branch', 'tag', 'commit'])
+def type_of_test(request):
+    """Returns one of the test type available for the mock_git_repository"""
+    return request.param
 
-    def setUp(self):
-        """Create a git repository with master and two other branches,
-           and one tag, so that we can experiment on it."""
-        super(GitFetchTest, self).setUp()
 
-        self.repo = MockGitRepo()
+def test_fetch(
+        type_of_test,
+        mock_git_repository,
+        config,
+        refresh_builtin_mock
+):
+    """Tries to:
 
-        spec = Spec('git-test')
-        spec.concretize()
-        self.pkg = spack.repo.get(spec, new=True)
+    1. Fetch the repo using a fetch strategy constructed with
+       supplied args (they depend on type_of_test).
+    2. Check if the test_file is in the checked out repository.
+    3. Assert that the repository is at the revision supplied.
+    4. Add and remove some files, then reset the repo, and
+       ensure it's all there again.
+    """
+    # Retrieve the right test parameters
+    t = mock_git_repository.checks[type_of_test]
+    h = mock_git_repository.hash
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec, new=True)
+    pkg.versions[ver('git')] = t.args
+    # Enter the stage directory and check some properties
+    with pkg.stage:
+        pkg.do_stage()
+        assert h('HEAD') == h(t.revision)
 
-    def tearDown(self):
-        """Destroy the stage space used by this test."""
-        super(GitFetchTest, self).tearDown()
-        self.repo.destroy()
+        file_path = join_path(pkg.stage.source_path, t.file)
+        assert os.path.isdir(pkg.stage.source_path)
+        assert os.path.isfile(file_path)
 
-    def assert_rev(self, rev):
-        """Check that the current git revision is equal to the supplied rev."""
-        self.assertEqual(self.repo.rev_hash('HEAD'), self.repo.rev_hash(rev))
+        os.unlink(file_path)
+        assert not os.path.isfile(file_path)
 
-    def try_fetch(self, rev, test_file, args):
-        """Tries to:
+        untracked_file = 'foobarbaz'
+        touch(untracked_file)
+        assert os.path.isfile(untracked_file)
+        pkg.do_restage()
+        assert not os.path.isfile(untracked_file)
 
-        1. Fetch the repo using a fetch strategy constructed with
-           supplied args.
-        2. Check if the test_file is in the checked out repository.
-        3. Assert that the repository is at the revision supplied.
-        4. Add and remove some files, then reset the repo, and
-           ensure it's all there again.
-        """
-        self.pkg.versions[ver('git')] = args
+        assert os.path.isdir(pkg.stage.source_path)
+        assert os.path.isfile(file_path)
 
-        with self.pkg.stage:
-            self.pkg.do_stage()
-            self.assert_rev(rev)
-
-            file_path = join_path(self.pkg.stage.source_path, test_file)
-            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-            self.assertTrue(os.path.isfile(file_path))
-
-            os.unlink(file_path)
-            self.assertFalse(os.path.isfile(file_path))
-
-            untracked_file = 'foobarbaz'
-            touch(untracked_file)
-            self.assertTrue(os.path.isfile(untracked_file))
-            self.pkg.do_restage()
-            self.assertFalse(os.path.isfile(untracked_file))
-
-            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-            self.assertTrue(os.path.isfile(file_path))
-
-            self.assert_rev(rev)
-
-    def test_fetch_master(self):
-        """Test a default git checkout with no commit or tag specified."""
-        self.try_fetch('master', self.repo.r0_file, {
-            'git': self.repo.path
-        })
-
-    def test_fetch_branch(self):
-        """Test fetching a branch."""
-        self.try_fetch(self.repo.branch, self.repo.branch_file, {
-            'git': self.repo.path,
-            'branch': self.repo.branch
-        })
-
-    def test_fetch_tag(self):
-        """Test fetching a tag."""
-        self.try_fetch(self.repo.tag, self.repo.tag_file, {
-            'git': self.repo.path,
-            'tag': self.repo.tag
-        })
-
-    def test_fetch_commit(self):
-        """Test fetching a particular commit."""
-        self.try_fetch(self.repo.r1, self.repo.r1_file, {
-            'git': self.repo.path,
-            'commit': self.repo.r1
-        })
+        assert h('HEAD') == h(t.revision)

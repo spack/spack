@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RPkgmaker(Package):
+class RPkgmaker(RPackage):
     """This package provides some low-level utilities to use for package
     development. It currently provides managers for multiple package specific
     options and registries, vignette, unit test and bibtex related utilities.
@@ -40,14 +40,8 @@ class RPkgmaker(Package):
 
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
 
-    extends('R')
-
-    depends_on('r-registry', type=nolink)
-    depends_on('r-codetools', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-xtable', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-registry', type=('build', 'run'))
+    depends_on('r-codetools', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-xtable', type=('build', 'run'))

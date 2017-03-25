@@ -38,6 +38,8 @@ class Openblas(MakefilePackage):
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
+    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
+
     variant(
         'shared',
         default=True,
@@ -50,25 +52,14 @@ class Openblas(MakefilePackage):
     provides('blas')
     provides('lapack')
 
-    patch('make.patch')
+    patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
 
     parallel = False
 
-    @property
-    def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        return find_libraries(
-            ['libopenblas'], root=self.prefix, shared=shared, recurse=True
-        )
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
-
-    @MakefilePackage.precondition('edit')
+    @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
@@ -126,7 +117,8 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
-    @MakefilePackage.sanity_check('build')
+    @on_package_attributes(run_tests=True)
+    @run_after('build')
     def check_build(self):
         make('tests', *self.make_defs)
 
@@ -138,7 +130,8 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
-    @MakefilePackage.sanity_check('install')
+    @on_package_attributes(run_tests=True)
+    @run_after('install')
     def check_install(self):
         spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack
@@ -149,13 +142,15 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = self.lapack_libs.ld_flags.split()
+        include_flags = spec['openblas'].cppflags
+        link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
-            link_flags.extend(["-lifcore"])
-        link_flags.extend(["-lpthread"])
+            link_flags += ' -lifcore'
+        link_flags += ' -lpthread'
         if '+openmp' in spec:
-            link_flags.extend([self.compiler.openmp_flag])
+            link_flags += ' ' + self.compiler.openmp_flag
 
-        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        output = compile_c_and_execute(
+            source_file, [include_flags], link_flags.split()
+        )
         compare_output_file(output, blessed_file)

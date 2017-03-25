@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xcmsdb(Package):
+class Xcmsdb(AutotoolsPackage):
     """xcmsdb is used to load, query, or remove Device Color Characterization
     data stored in properties on the root window of the screen as
     specified in section 7, Device Color Characterization, of the
@@ -40,9 +40,3 @@ class Xcmsdb(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RThreejs(Package):
+class RThreejs(RPackage):
     """Create interactive 3D scatter plots, network plots, and globes using the
     'three.js' visualization library ("http://threejs.org")."""
 
@@ -35,13 +35,7 @@ class RThreejs(Package):
 
     version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
-    extends('R')
-
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-base64enc', type=nolink)
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-base64enc', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))

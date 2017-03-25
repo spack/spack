@@ -25,24 +25,31 @@
 from spack import *
 
 
-class PySetuptools(Package):
+class PySetuptools(PythonPackage):
     """A Python utility that aids in the process of downloading, building,
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://pypi.python.org/pypi/setuptools"
-    url      = "https://pypi.python.org/packages/source/s/setuptools/setuptools-11.3.tar.gz"
+    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-25.2.0.tar.gz"
 
-    version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c',
-            url="https://pypi.python.org/packages/9f/32/81c324675725d78e7f6da777483a3453611a427db0145dfb878940469692/setuptools-25.2.0.tar.gz")
+    version('34.2.0', '41b630da4ea6cfa5894d9eb3142922be',
+            url="https://pypi.io/packages/source/s/setuptools/setuptools-34.2.0.zip")
+    version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c')
     version('20.7.0', '5d12b39bf3e75e80fdce54e44b255615')
     version('20.6.7', '45d6110f3ec14924e44c33411db64fe6')
-    version('20.5', 'fadc1e1123ddbe31006e5e43e927362b')
-    version('19.2', '78353b1f80375ca5e088f4b4627ffe03')
-    version('18.1', 'f72e87f34fbf07f299f6cb46256a0b06')
-    version('16.0', '0ace0b96233516fc5f7c857d086aa3ad')
+    version('20.5',   'fadc1e1123ddbe31006e5e43e927362b')
+    version('19.2',   '78353b1f80375ca5e088f4b4627ffe03')
+    version('18.1',   'f72e87f34fbf07f299f6cb46256a0b06')
+    version('16.0',   '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
 
-    extends('python')
+    # FIXME: when we use 2.6:2.7, spack spec llvm tries to install non-existing
+    # python@2.7 instead of python@2.7.13
+    depends_on('python@2.6:2.7.99,3.3:')
 
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))
+    # Previously, setuptools vendored all of its dependencies to allow
+    # easy bootstrapping. As of version 34.0.0, this is no longer done
+    # and the dependencies need to be installed externally.
+    depends_on('py-packaging@16.8:', when='@34.0.0:', type=('build', 'run'))
+    depends_on('py-six@1.6.0:',      when='@34.0.0:', type=('build', 'run'))
+    depends_on('py-appdirs@1.4.0:',  when='@34.0.0:', type=('build', 'run'))

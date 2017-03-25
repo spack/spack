@@ -27,7 +27,7 @@ import subprocess
 from spack import *
 
 
-class Plumed(Package):
+class Plumed(AutotoolsPackage):
     """PLUMED is an open source library for free energy calculations in
     molecular systems which works together with some of the most popular
     molecular dynamics engines.
@@ -67,6 +67,8 @@ class Plumed(Package):
     depends_on('gsl', when='+gsl')
 
     depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     # Dictionary mapping PLUMED versions to the patches it provides
     # interactively
@@ -84,6 +86,8 @@ class Plumed(Package):
         }
     }
 
+    force_autoreconf = True
+
     def apply_patch(self, other):
         plumed = subprocess.Popen(
             [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
@@ -95,16 +99,19 @@ class Plumed(Package):
         plumed.stdin.write(choice)
         plumed.wait()
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
         module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
 
-    def install(self, spec, prefix):
+    @run_before('autoreconf')
+    def filter_gslcblas(self):
         # This part is needed to avoid linking with gsl cblas
         # interface which will mask the cblas interface
         # provided by optimized libraries due to linking order
         filter_file('-lgslcblas', '', 'configure.ac')
-        autoreconf('-ivf')
+
+    def configure_args(self):
+        spec = self.spec
 
         # From plumed docs :
         # Also consider that this is different with respect to what some other
@@ -114,8 +121,7 @@ class Plumed(Package):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = ['--prefix=' + prefix]
-
+        configure_opts = []
         # If using MPI then ensure the correct compiler wrapper is used.
         if '+mpi' in spec:
             configure_opts.extend([
@@ -153,6 +159,4 @@ class Plumed(Package):
             configure_opts.extend([
                 '--enable-modules={0}'.format("".join(module_opts))])
 
-        configure(*configure_opts)
-        make()
-        make('install')
+        return configure_opts

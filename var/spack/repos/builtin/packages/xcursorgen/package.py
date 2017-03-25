@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xcursorgen(Package):
+class Xcursorgen(AutotoolsPackage):
     """xcursorgen prepares X11 cursor sets for use with libXcursor."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xcursorgen"
@@ -39,9 +39,3 @@ class Xcursorgen(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

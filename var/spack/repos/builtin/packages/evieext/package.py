@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Evieext(Package):
+class Evieext(AutotoolsPackage):
     """Extended Visual Information Extension (XEVIE).
 
     This extension defines a protocol for a client to determine information
@@ -38,8 +38,3 @@ class Evieext(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

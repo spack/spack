@@ -1,4 +1,3 @@
-# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -58,7 +57,7 @@ class Mpileaks(AutotoolsPackage):
     # depends_on('foo')
 
     def configure_args(self):
-       # FIXME: Add arguments other than --prefix
-       # FIXME: If not needed delete the function
-       args = []
-       return args
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete the function
+        args = []
+        return args

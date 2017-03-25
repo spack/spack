@@ -52,6 +52,9 @@ class NetlibLapack(Package):
     variant('lapacke', default=True,
             description='Activates the build of the LAPACKE C interface')
 
+    patch('ibm-xl.patch', when='@3:6%xl')
+    patch('ibm-xl.patch', when='@3:6%xl_r')
+
     # virtual dependency
     provides('blas', when='~external-blas')
     provides('lapack')
@@ -71,14 +74,14 @@ class NetlibLapack(Package):
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libblas'], root=self.prefix, shared=shared, recurse=True
+            'libblas', root=self.prefix, shared=shared, recurse=True
         )
 
     @property
     def lapack_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['liblapack'], root=self.prefix, shared=shared, recurse=True
+            'liblapack', root=self.prefix, shared=shared, recurse=True
         )
 
     def install_one(self, spec, prefix, shared):
@@ -96,14 +99,21 @@ class NetlibLapack(Package):
             cmake_args.extend(['-DCBLAS=OFF'])
             cmake_args.extend(['-DLAPACKE:BOOL=OFF'])
 
-        # deprecated routines are commonly need by, for example, suitesparse
+        if self.compiler.name == 'xl' or self.compiler.name == 'xl_r':
+            # use F77 compiler if IBM XL
+            cmake_args.extend([
+                '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
+                '-DCMAKE_Fortran_FLAGS=-qzerosize'
+            ])
+
+        # deprecated routines are commonly needed by, for example, suitesparse
         # Note that OpenBLAS spack is built with deprecated routines
         cmake_args.extend(['-DBUILD_DEPRECATED:BOOL=ON'])
 
         if '+external-blas' in spec:
             cmake_args.extend([
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
-                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].blas_libs.joined(';')
+                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].libs.joined(';')
             ])
 
         cmake_args.extend(std_cmake_args)

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xrefresh(Package):
+class Xrefresh(AutotoolsPackage):
     """xrefresh - refresh all or part of an X screen."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xrefresh"
@@ -38,9 +38,3 @@ class Xrefresh(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

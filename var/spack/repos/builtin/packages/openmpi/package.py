@@ -39,6 +39,9 @@ def _verbs_dir():
         # Remove executable name and "bin" directory
         path = os.path.dirname(path)
         path = os.path.dirname(path)
+        # There's usually no "/include" on Unix; use "/usr/include" instead
+        if path == "/":
+            path = "/usr"
         return path
     except:
         return None
@@ -56,12 +59,17 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.1.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')
+    version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')
+    version('1.10.6', '2e65008c1867b1f47c32f9f814d41706')
+    version('1.10.5', 'd32ba9530a869d9c1eae930882ea1834')
+    version('1.10.4', '9d2375835c5bc5c184ecdeb76c7c78ac')
     version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
@@ -72,6 +80,7 @@ class Openmpi(AutotoolsPackage):
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.0:1.10.1")
+    patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
     # Fabrics
     variant('psm', default=False, description='Build support for the PSM library')
@@ -111,6 +120,18 @@ class Openmpi(AutotoolsPackage):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (
             version.up_to(2), version)
 
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpi_cxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recurse=True
+        )
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
@@ -122,7 +143,7 @@ class Openmpi(AutotoolsPackage):
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
@@ -142,7 +163,7 @@ class Openmpi(AutotoolsPackage):
         elif self.spec.satisfies('@1.7:'):
             return 'verbs'
 
-    @AutotoolsPackage.precondition('autoreconf')
+    @run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
@@ -236,7 +257,7 @@ class Openmpi(AutotoolsPackage):
 
         return config_args
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.

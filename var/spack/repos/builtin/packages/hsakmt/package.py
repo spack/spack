@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Hsakmt(Package):
+class Hsakmt(AutotoolsPackage):
     """hsakmt is a thunk library that provides a userspace interface to amdkfd
     (AMD's HSA Linux kernel driver). It is the HSA equivalent of libdrm."""
 
@@ -33,9 +33,3 @@ class Hsakmt(Package):
     url      = "https://www.x.org/archive/individual/lib/hsakmt-1.0.0.tar.gz"
 
     version('1.0.0', '9beb20104e505300daf541266c4c3c3d')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

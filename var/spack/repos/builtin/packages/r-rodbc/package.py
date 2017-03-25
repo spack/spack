@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRodbc(Package):
+class RRodbc(RPackage):
     """An ODBC database interface."""
 
     homepage = "https://cran.rstudio.com/web/packages/RODBC/"
@@ -34,10 +34,4 @@ class RRodbc(Package):
 
     version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')
 
-    extends('R')
-
     depends_on('unixodbc')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

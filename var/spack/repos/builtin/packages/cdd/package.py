@@ -33,7 +33,7 @@ class Cdd(Package):
     a general convex polyhedron given by a system of linear
     inequalities"""
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
-    url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-061a.tar.gz"
+    url      = "http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
 
     version('0.61a', '22c24a7a9349dd7ec0e24531925a02d9')
 
@@ -42,7 +42,7 @@ class Cdd(Package):
     patch("Makefile.spack.patch")
 
     def url_for_version(self, version):
-        url = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-{0}.tar.gz"
+        url = "http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-{0}.tar.gz"
         return url.format(version.joined)
 
     def install(self, spec, prefix):

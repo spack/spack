@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Beforelight(Package):
+class Beforelight(AutotoolsPackage):
     """The beforelight program is a sample implementation of a screen saver
     for X servers supporting the MIT-SCREEN-SAVER extension.   It is only
     recommended for use as a code sample, as it does not include features
@@ -42,9 +42,3 @@ class Beforelight(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLubridate(Package):
+class RLubridate(RPackage):
     """Functions to work with date-times and timespans: fast and user friendly
     parsing of date-time data, extraction and updating of components of a
     date-time (years, months, days, hours, minutes, and seconds), algebraic
@@ -39,10 +39,4 @@ class RLubridate(Package):
 
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 
-    extends('R')
-
-    depends_on('r-stringr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-stringr', type=('build', 'run'))

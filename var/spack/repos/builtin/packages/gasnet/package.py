@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gasnet(Package):
+class Gasnet(AutotoolsPackage):
     """GASNet is a language-independent, low-level networking layer
        that provides network-independent, high-performance communication
        primitives tailored for implementing parallel global address space
@@ -35,26 +35,30 @@ class Gasnet(Package):
     homepage = "http://gasnet.lbl.gov"
     url      = "http://gasnet.lbl.gov/GASNet-1.24.0.tar.gz"
 
+    version('1.28.2', '6ca0463dc2430570e40646c4d1e97b36')
+    version('1.28.0', 'b44446d951d3d8954aa1570e3556ba61')
     version('1.24.0', 'c8afdf48381e8b5a7340bdb32ca0f41a')
 
-    def install(self, spec, prefix):
-        # TODO: don't use paths with @ in them.
-        change_sed_delimiter('@', ';', 'configure')
+    variant('ibv', default=False, description="Support InfiniBand")
+    variant('mpi', default=False, description="Support MPI")
 
-        configure(
-            "--prefix=%s" % prefix,
+    depends_on('mpi', when='+mpi')
+
+    def configure_args(self):
+        args = [
             # TODO: factor IB suport out into architecture description.
-            "--enable-ibv",
-            "--enable-udp",
-            "--disable-mpi",
+            "--enable-ibv" if '+ibv' in self.spec else '--disable-ibv',
+            "--enable-mpi" if '+mpi' in self.spec else '--disable-mpi',
             "--enable-par",
+            "--enable-smp",
+            "--enable-udp",
             "--enable-mpi-compat",
+            "--enable-smp-safe",
             "--enable-segment-fast",
             "--disable-aligned-segments",
             # TODO: make option so Legion can request builds with/without this.
             # See the Legion webpage for details on when to/not to use.
             "--disable-pshm",
-            "--with-segment-mmap-max=64MB")
-
-        make()
-        make("install")
+            "--with-segment-mmap-max=64MB",
+        ]
+        return args

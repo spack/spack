@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXlconnect(Package):
+class RXlconnect(RPackage):
     """Provides comprehensive functionality to read, write and format Excel
     data."""
 
@@ -36,11 +36,5 @@ class RXlconnect(Package):
     version('0.2-12', '3340d05d259f0a41262eab4ed32617ad')
     version('0.2-11', '9d1769a103cda05665df399cc335017d')
 
-    extends('R')
-
-    depends_on('r-xlconnectjars', type=nolink)
-    depends_on('r-rjava', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-xlconnectjars', type=('build', 'run'))
+    depends_on('r-rjava', type=('build', 'run'))

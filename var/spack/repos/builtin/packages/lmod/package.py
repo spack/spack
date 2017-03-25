@@ -26,7 +26,7 @@ from spack import *
 from glob import glob
 
 
-class Lmod(Package):
+class Lmod(AutotoolsPackage):
     """Lmod is a Lua based module system that easily handles the MODULEPATH
     Hierarchical problem. Environment Modules provide a convenient way to
     dynamically change the users' environment through modulefiles. This
@@ -36,17 +36,18 @@ class Lmod(Package):
     """
 
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
-    url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
+    url = 'https://github.com/TACC/Lmod/archive/7.3.tar.gz'
 
+    version('7.3',   '70180ec2ea1fae53aa83350523f6b2b3')
     version('6.4.5', '14f6c58dbc0a5a75574d795eac2c1e3c')
     version('6.4.1', '7978ba777c8aa41a4d8c05fec5f780f4')
     version('6.3.7', '0fa4d5a24c41cae03776f781aa2dedc1')
     version('6.0.1', '91abf52fe5033bd419ffe2842ebe7af9')
 
     depends_on('lua@5.2:')
-    depends_on('lua-luaposix', type=nolink)
-    depends_on('lua-luafilesystem', type=nolink)
-    depends_on('tcl', type=nolink)
+    depends_on('lua-luaposix', type=('build', 'run'))
+    depends_on('lua-luafilesystem', type=('build', 'run'))
+    depends_on('tcl', type=('build', 'run'))
 
     parallel = False
 
@@ -66,7 +67,3 @@ class Lmod(Package):
         if self.spec.version <= Version('6.4.3'):
             for tclscript in glob('src/*.tcl'):
                 filter_file(r'^#!.*tclsh', '#!@path_to_tclsh@', tclscript)
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make('install')

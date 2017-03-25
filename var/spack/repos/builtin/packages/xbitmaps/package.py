@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xbitmaps(Package):
+class Xbitmaps(AutotoolsPackage):
     """The xbitmaps package contains bitmap images used by multiple
     applications built in Xorg."""
 
@@ -36,8 +36,3 @@ class Xbitmaps(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

@@ -300,6 +300,42 @@ Stage objects
 Writing commands
 ----------------
 
+Adding a new command to Spack is easy. Simply add a ``<name>.py`` file to
+``lib/spack/spack/cmd/``, where ``<name>`` is the name of the subcommand.
+At the bare minimum, two functions are required in this file:
+
+^^^^^^^^^^^^^^^^^^
+``setup_parser()``
+^^^^^^^^^^^^^^^^^^
+
+Unless your command doesn't accept any arguments, a ``setup_parser()``
+function is required to define what arguments and flags your command takes.
+See the `Argparse documentation <https://docs.python.org/2.7/library/argparse.html>`_
+for more details on how to add arguments.
+
+Some commands have a set of subcommands, like ``spack compiler find`` or
+``spack module refresh``. You can add subparsers to your parser to handle
+this. Check out ``spack edit --command compiler`` for an example of this.
+
+A lot of commands take the same arguments and flags. These arguments should
+be defined in ``lib/spack/spack/cmd/common/arguments.py`` so that they don't
+need to be redefined in multiple commands.
+
+^^^^^^^^^^^^
+``<name>()``
+^^^^^^^^^^^^
+
+In order to run your command, Spack searches for a function with the same
+name as your command in ``<name>.py``. This is the main method for your
+command, and can call other helper methods to handle common tasks.
+
+Remember, before adding a new command, think to yourself whether or not this
+new command is actually necessary. Sometimes, the functionality you desire
+can be added to an existing command. Also remember to add unit tests for
+your command. If it isn't used very frequently, changes to the rest of
+Spack can cause your command to break without sufficient unit tests to
+prevent this from happening.
+
 ----------
 Unit tests
 ----------
@@ -312,13 +348,120 @@ Unit testing
 Developer commands
 ------------------
 
+.. _cmd-spack-doc:
+
 ^^^^^^^^^^^^^
 ``spack doc``
 ^^^^^^^^^^^^^
 
+.. _cmd-spack-test:
+
 ^^^^^^^^^^^^^^
 ``spack test``
 ^^^^^^^^^^^^^^
+
+.. _cmd-spack-python:
+
+^^^^^^^^^^^^^^^^
+``spack python``
+^^^^^^^^^^^^^^^^
+
+``spack python`` is a command that lets you import and debug things as if
+you were in a Spack interactive shell. Without any arguments, it is similar
+to a normal interactive Python shell, except you can import spack and any
+other Spack modules:
+
+.. code-block:: console
+
+   $ spack python
+   Spack version 0.10.0
+   Python 2.7.13, Linux x86_64
+   >>> from spack.version import Version
+   >>> a = Version('1.2.3')
+   >>> b = Version('1_2_3')
+   >>> a == b
+   True
+   >>> c = Version('1.2.3b')
+   >>> c > a
+   True
+   >>>
+
+You can also run a single command:
+
+.. code-block:: console
+
+   $ spack python -c 'import distro; distro.linux_distribution()'
+   ('Fedora', '25', 'Workstation Edition')
+
+or a file:
+
+.. code-block:: console
+
+   $ spack python ~/test_fetching.py
+
+just like you would with the normal ``python`` command.
+
+.. _cmd-spack-url:
+
+^^^^^^^^^^^^^
+``spack url``
+^^^^^^^^^^^^^
+
+A package containing a single URL can be used to download several different
+versions of the package. If you've ever wondered how this works, all of the
+magic is in :mod:`spack.url`. This module contains methods for extracting
+the name and version of a package from its URL. The name is used by
+``spack create`` to guess the name of the package. By determining the version
+from the URL, Spack can replace it with other versions to determine where to
+download them from.
+
+The regular expressions in ``parse_name_offset`` and ``parse_version_offset``
+are used to extract the name and version, but they aren't perfect. In order
+to debug Spack's URL parsing support, the ``spack url`` command can be used.
+
+"""""""""""""""""""
+``spack url parse``
+"""""""""""""""""""
+
+If you need to debug a single URL, you can use the following command:
+
+.. command-output:: spack url parse http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz
+
+You'll notice that the name and version of this URL are correctly detected,
+and you can even see which regular expressions it was matched to. However,
+you'll notice that when it substitutes the version number in, it doesn't
+replace the ``2.2`` with ``9.9`` where we would expect ``9.9.9b`` to live.
+This particular package may require a ``list_url`` or ``url_for_version``
+function.
+
+This command also accepts a ``--spider`` flag. If provided, Spack searches
+for other versions of the package and prints the matching URLs.
+
+""""""""""""""""""
+``spack url list``
+""""""""""""""""""
+
+This command lists every URL in every package in Spack. If given the
+``--color`` and ``--extrapolation`` flags, it also colors the part of
+the string that it detected to be the name and version. The
+``--incorrect-name`` and ``--incorrect-version`` flags can be used to
+print URLs that were not being parsed correctly.
+
+""""""""""""""""""
+``spack url test``
+""""""""""""""""""
+
+This command attempts to parse every URL for every package in Spack
+and prints a summary of how many of them are being correctly parsed.
+It also prints a histogram showing which regular expressions are being
+matched and how frequently:
+
+.. command-output:: spack url test
+
+This command is essential for anyone adding or changing the regular
+expressions that parse names and versions. By running this command
+before and after the change, you can make sure that your regular
+expression fixes more packages than it breaks.
 
 ---------
 Profiling
