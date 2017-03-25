@@ -25,20 +25,21 @@
 from spack import *
 
 
-class Nfft(AutotoolsPackage):
-    """NFFT is a C subroutine library for computing the nonequispaced discrete
-    Fourier transform (NDFT) in one or more dimensions, of arbitrary input
-    size, and of complex data."""
+class Pnfft(AutotoolsPackage):
+    """PNFFT is a parallel software library for the calculation of
+       three-dimensional nonequispaced FFTs."""
 
-    homepage = "https://www-user.tu-chemnitz.de/~potts/nfft"
-    url = "https://www-user.tu-chemnitz.de/~potts/nfft/download/nfft-3.3.2.tar.gz"
+    homepage = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en"
+    url = "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software/pnfft-1.0.7-alpha.tar.gz"
 
-    version('3.3.2', '550737c06f4d6ea6c156800169d8f0d9')
+    version('1.0.7-alpha', '5caa7f214eed99de2281043ca2367e9e')
 
-    depends_on('fftw')
+    depends_on('pfft')
 
     def configure(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]
+        if not self.compiler.f77 or not self.compiler.fc:
+            options.append("--disable-fortran")
 
         configure = Executable('../configure')
 
