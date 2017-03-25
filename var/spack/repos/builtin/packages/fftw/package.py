@@ -48,6 +48,9 @@ class Fftw(AutotoolsPackage):
         'float', default=True,
         description='Produces a single precision version of the library')
     variant(
+        'double', default=True,
+        description='Produces a double precision version of the library')
+    variant(
         'long_double', default=True,
         description='Produces a long double precision version of the library')
     variant(
@@ -65,13 +68,18 @@ class Fftw(AutotoolsPackage):
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
 
+    def autoreconf(self, spec, prefix):
+        if '+pfft_patches' in spec:
+            autoreconf = which('autoreconf')
+            autoreconf('-ifv')
+
     def configure(self, spec, prefix):
         # Base options
         options = [
             '--prefix={0}'.format(prefix),
             '--enable-shared',
             '--enable-threads'
-        ] + self.configure_args()
+        ]
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
         if spec.satisfies('@:2'):
@@ -91,9 +99,6 @@ class Fftw(AutotoolsPackage):
                 options.insert(0, 'CFLAGS=' + self.compiler.openmp_flag)
         if '+mpi' in spec:
             options.append('--enable-mpi')
-        if '+pfft_patches' in spec:
-            autoreconf = which('autoreconf')
-            autoreconf('-ifv')
 
         # SIMD support
         # TODO: add support for more architectures
@@ -106,8 +111,9 @@ class Fftw(AutotoolsPackage):
         configure = Executable('../configure')
 
         # Build double/float/long double/quad variants
-        with working_dir('double', create=True):
-            configure(*(options + double_options))
+        if '+double' in spec:
+            with working_dir('double', create=True):
+                configure(*(options + double_options))
         if '+float' in spec:
             with working_dir('float', create=True):
                 configure('--enable-float', *(options + float_options))
@@ -119,8 +125,9 @@ class Fftw(AutotoolsPackage):
                 configure('--enable-quad-precision', *options)
 
     def build(self, spec, prefix):
-        with working_dir('double'):
-            make()
+        if '+double' in spec:
+            with working_dir('double'):
+                make()
         if '+float' in spec:
             with working_dir('float'):
                 make()
@@ -130,23 +137,11 @@ class Fftw(AutotoolsPackage):
         if '+quad' in spec:
             with working_dir('quad'):
                 make()
-
-    def install(self, spec, prefix):
-        with working_dir('double'):
-            make("install")
-        if '+float' in spec:
-            with working_dir('float'):
-                make("install")
-        if '+long_double' in spec:
-            with working_dir('long-double'):
-                make("install")
-        if '+quad' in spec:
-            with working_dir('quad'):
-                make("install")
 
     def check(self, spec, prefix):
-        with working_dir('double'):
-            make("check")
+        if '+double' in spec:
+            with working_dir('double'):
+                make("check")
         if '+float' in spec:
             with working_dir('float'):
                 make("check")
@@ -156,3 +151,17 @@ class Fftw(AutotoolsPackage):
         if '+quad' in spec:
             with working_dir('quad'):
                 make("check")
+
+    def install(self, spec, prefix):
+        if '+double' in spec:
+            with working_dir('double'):
+                make("install")
+        if '+float' in spec:
+            with working_dir('float'):
+                make("install")
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make("install")
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make("install")

@@ -38,12 +38,13 @@ class Nfft(AutotoolsPackage):
     depends_on('fftw')
 
     def configure(self, spec, prefix):
-        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        options = ['--prefix={0}'.format(prefix)]
 
         configure = Executable('../configure')
 
-        with working_dir('double', create=True):
-            configure(*options)
+        if '+double' in spec['fftw']:
+            with working_dir('double', create=True):
+                configure(*options)
         if '+float' in spec['fftw']:
             with working_dir('float', create=True):
                 configure('--enable-float', *options)
@@ -52,31 +53,34 @@ class Nfft(AutotoolsPackage):
                 configure('--enable-long-double', *options)
 
     def build(self, spec, prefix):
-        with working_dir('double'):
-            make()
+        if '+double' in spec['fftw']:
+            with working_dir('double'):
+                make()
         if '+float' in spec['fftw']:
             with working_dir('float'):
                 make()
         if '+long_double' in spec['fftw']:
             with working_dir('long-double'):
                 make()
-
-    def install(self, spec, prefix):
-        with working_dir('double'):
-            make("install")
-        if '+float' in spec['fftw']:
-            with working_dir('float'):
-                make("install")
-        if '+long_double' in spec['fftw']:
-            with working_dir('long-double'):
-                make("install")
 
     def check(self, spec, prefix):
-        with working_dir('double'):
-            make("check")
+        if '+double' in spec['fftw']:
+            with working_dir('double'):
+                make("check")
         if '+float' in spec['fftw']:
             with working_dir('float'):
                 make("check")
         if '+long_double' in spec['fftw']:
             with working_dir('long-double'):
                 make("check")
+
+    def install(self, spec, prefix):
+        if '+double' in spec['fftw']:
+            with working_dir('double'):
+                make("install")
+        if '+float' in spec['fftw']:
+            with working_dir('float'):
+                make("install")
+        if '+long_double' in spec['fftw']:
+            with working_dir('long-double'):
+                make("install")
