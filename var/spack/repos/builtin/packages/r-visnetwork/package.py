@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RVisnetwork(Package):
+class RVisnetwork(RPackage):
     """Provides an R interface to the 'vis.js' JavaScript charting library. It
     allows an interactive visualization of networks."""
 
@@ -35,13 +35,7 @@ class RVisnetwork(Package):
 
     version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
 
-    extends('R')
-
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

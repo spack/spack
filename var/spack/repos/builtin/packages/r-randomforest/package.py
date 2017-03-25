@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRandomforest(Package):
+class RRandomforest(RPackage):
     """Classification and regression based on a forest of trees using random
     inputs."""
 
@@ -34,9 +34,3 @@ class RRandomforest(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/randomForest"
 
     version('4.6-12', '071c03af974198e861f1475c5bab9e7a')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

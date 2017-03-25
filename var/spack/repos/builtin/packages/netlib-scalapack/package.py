@@ -62,7 +62,7 @@ class NetlibScalapack(Package):
     def scalapack_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libscalapack'], root=self.prefix, shared=shared, recurse=True
+            'libscalapack', root=self.prefix, shared=shared, recurse=True
         )
 
     def install(self, spec, prefix):
@@ -74,8 +74,8 @@ class NetlibScalapack(Package):
         ]
 
         # Make sure we use Spack's Lapack:
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,

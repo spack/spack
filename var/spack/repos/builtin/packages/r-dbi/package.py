@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDbi(Package):
+class RDbi(RPackage):
     """A database interface definition for communication between R and
     relational database management systems. All classes in this package are
     virtual and need to be extended by the various R/DBMS implementations."""
@@ -35,9 +35,3 @@ class RDbi(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/DBI"
 
     version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

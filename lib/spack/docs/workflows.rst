@@ -33,24 +33,12 @@ possible realization of a particular package, out of combinatorially
 many other realizations.  For example, here is a concrete spec
 instantiated from ``curl``:
 
-.. code-block:: console
-
-   curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+.. command-output:: spack spec curl
 
 Spack's core concretization algorithm generates concrete specs by
 instantiating packages from its repo, based on a set of "hints",
 including user input and the ``packages.yaml`` file.  This algorithm
-may be accessed at any time with the ``spack spec`` command.  For
-example:
-
-.. code-block:: console
-
-   $ spack spec curl
-     curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-         ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-         ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+may be accessed at any time with the ``spack spec`` command.
 
 Every time Spack installs a package, that installation corresponds to
 a concrete spec.  Only a vanishingly small fraction of possible
@@ -68,7 +56,7 @@ variant, compiler, etc.  For example, the following set is consistent:
 .. code-block:: console
 
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@1.0.2k%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
    zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
@@ -77,7 +65,7 @@ The following set is not consistent:
 .. code-block:: console
 
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@1.0.2k%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
    zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
@@ -237,7 +225,7 @@ location --install-dir`` commands.  For example:
 .. code-block:: console
 
    $ spack location --install-dir cmake
-   /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
+   ~/spack/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
 
 This gives the root of the Spack package; relevant binaries may be
 found within it.  For example:
@@ -251,8 +239,8 @@ Standard UNIX tools can find binaries as well.  For example:
 
 .. code-block:: console
 
-   $ find ~/spack2/opt -name cmake | grep bin
-   /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
+   $ find ~/spack/opt -name cmake | grep bin
+   ~/spack/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
 
 These methods are suitable, for example, for setting up build
 processes or GUIs that need to know the location of particular tools.

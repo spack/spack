@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Sowing(Package):
+class Sowing(AutotoolsPackage):
     """Sowing generates Fortran interfaces and documentation for PETSc
        and MPICH.
     """
@@ -36,7 +36,5 @@ class Sowing(Package):
 
     version('1.1.23-p1', '65aaf3ae2a4c0f30d532fec291702e16')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+    def build(self, spec, prefix):
         make('ALL', parallel=False)
-        make("install")

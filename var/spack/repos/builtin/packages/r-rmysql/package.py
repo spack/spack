@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRmysql(Package):
+class RRmysql(RPackage):
     """Implements 'DBI' Interface to 'MySQL' and 'MariaDB' Databases."""
 
     homepage = "https://github.com/rstats-db/rmysql"
@@ -34,11 +34,5 @@ class RRmysql(Package):
 
     version('0.10.9', '3628200a1864ac3005cfd55cc7cde17a')
 
-    extends('R')
-
-    depends_on('r-dbi', type=nolink)
+    depends_on('r-dbi', type=('build', 'run'))
     depends_on('mariadb')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

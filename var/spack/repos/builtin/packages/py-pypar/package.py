@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPypar(Package):
+class PyPypar(PythonPackage):
     """Pypar is an efficient but easy-to-use module that allows programs
        written in Python to run in parallel on multiple processors and
        communicate using MPI."""
@@ -34,13 +34,10 @@ class PyPypar(Package):
 
     version('2.1.5_108', '7a1f28327d2a3b679f9455c843d850b8')
 
-    extends('python')
     depends_on('mpi')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        with working_dir('source'):
-            setup_py('install', '--prefix=%s' % prefix)
+    build_directory = 'source'
 
     def url_for_version(self, version):
         return "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-%s.tgz" % version

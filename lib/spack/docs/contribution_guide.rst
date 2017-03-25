@@ -77,6 +77,9 @@ tests, run:
 
 .. command-output:: spack test --list
 
+A more detailed list of available unit tests can be found by running
+``spack test --long-list``.
+
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider
 adding new unit tests or strengthening existing tests.

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNloptr(Package):
+class RNloptr(RPackage):
     """nloptr is an R interface to NLopt. NLopt is a free/open-source library
     for nonlinear optimization, providing a common interface for a number of
     different free optimization routines available online as well as original
@@ -39,9 +39,3 @@ class RNloptr(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/nloptr"
 
     version('1.0.4', '9af69a613349b236fd377d0a107f484c')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

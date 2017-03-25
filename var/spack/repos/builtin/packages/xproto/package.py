@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xproto(Package):
+class Xproto(AutotoolsPackage):
     """X Window System Core Protocol.
 
     This package provides the headers and specification documents defining
@@ -42,8 +42,3 @@ class Xproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

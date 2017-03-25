@@ -25,10 +25,10 @@
 from spack import *
 
 
-class Ncview(Package):
+class Ncview(AutotoolsPackage):
     """Simple viewer for NetCDF files."""
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
-    url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
+    url      = "https://fossies.org/linux/misc/ncview-2.1.7.tar.gz"
 
     version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
 
@@ -36,9 +36,3 @@ class Ncview(Package):
     depends_on('udunits2')
     depends_on('libpng')
     depends_on('libxaw')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

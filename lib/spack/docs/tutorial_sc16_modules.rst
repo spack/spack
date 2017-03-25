@@ -45,7 +45,7 @@ Add a new compiler
 ^^^^^^^^^^^^^^^^^^
 
 Spack automatically scans the environment to search for available
-compilers on first use. On a Ubuntu 14.04 a fresh clone will show
+compilers on first use. On Ubuntu 14.04, a fresh clone will show
 something like this:
 
 .. code-block:: console
@@ -58,9 +58,10 @@ something like this:
   -- gcc ----------------------------------------------------------
   gcc@4.8
 
-For the purpose of building a limited set of packages with some features
-that will help showcasing the capabilities of
-module customization the first thing we need is to build a new compiler:
+In order to showcase the capabilities of module customization, we will want to
+build a limited set of packages with multiple compilers. If you do not already
+have multiple compilers listed by ``spack compilers``, you should build one
+with Spack:
 
 .. code-block:: console
 
@@ -77,7 +78,7 @@ Then we can use shell support for modules to add it to the list of known compile
   $ module load gcc-6.2.0-gcc-4.8-twd5nqg
 
   $ spack compiler add
-  ==> Added 1 new compiler to /home/mculpo/.spack/linux/compilers.yaml
+  ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
       gcc@6.2.0
 
   $ spack compilers
@@ -85,7 +86,7 @@ Then we can use shell support for modules to add it to the list of known compile
   -- gcc ----------------------------------------------------------
   gcc@6.2.0  gcc@4.8
 
-Note that the final 7 digits hash at the end of the generated module may vary depending
+Note that the 7-digit hash at the end of the generated module may vary depending
 on architecture or package version.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -96,16 +97,11 @@ Next you should install a few modules that will be used in the tutorial:
 
 .. code-block:: console
 
-  $ spack install netlib-scalapack ^openmpi ^openblas
-  # ...
-
-The packages you need to install are:
-
-- ``netlib-scalapack ^openmpi ^openblas``
-- ``netlib-scalapack ^mpich ^openblas``
-- ``netlib-scalapack ^openmpi ^netlib-lapack``
-- ``netlib-scalapack ^mpich ^netlib-lapack``
-- ``py-scipy ^openblas``
+   $ spack install netlib-scalapack ^openmpi ^openblas
+   $ spack install netlib-scalapack ^mpich ^openblas
+   $ spack install netlib-scalapack ^openmpi ^netlib-lapack
+   $ spack install netlib-scalapack ^mpich ^netlib-lapack
+   $ spack install py-scipy ^openblas
 
 In the end your environment should look something like:
 
@@ -113,7 +109,7 @@ In the end your environment should look something like:
 
   $ module avail
 
-  ------------------------------------------------------------------------ /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
+  ------------------------------------------------------------------------ ~/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
      binutils-2.27-gcc-4.8-dz3xevw         libpciaccess-0.13.4-gcc-6.2.0-eo2siet      lzo-2.09-gcc-6.2.0-jcngz72                  netlib-scalapack-2.0.2-gcc-6.2.0-wnimqhw    python-2.7.12-gcc-6.2.0-qu7rc5p
      bzip2-1.0.6-gcc-6.2.0-csoc2mq         libsigsegv-2.10-gcc-4.8-avb6azw            m4-1.4.17-gcc-4.8-iggewke                   netlib-scalapack-2.0.2-gcc-6.2.0-wojunhq    sqlite-3.8.5-gcc-6.2.0-td3zfe7
      cmake-3.5.2-gcc-6.2.0-6poypqg         libsigsegv-2.10-gcc-6.2.0-g3qpmbi          m4-1.4.17-gcc-6.2.0-lhgqa6s                 nettle-3.2-gcc-6.2.0-djdthlh                tcl-8.6.5-gcc-4.8-atddxu7
@@ -139,16 +135,16 @@ look at the ``gcc`` module you'll see something like:
 
   $ module show gcc-6.2.0-gcc-4.8-twd5nqg
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc-6.2.0-gcc-4.8-twd5nqg:
+     ~/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc-6.2.0-gcc-4.8-twd5nqg:
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("gcc @6.2.0 ")
-  prepend_path("PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
-  prepend_path("CMAKE_PREFIX_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
-  prepend_path("MANPATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
-  prepend_path("PKG_CONFIG_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
-  prepend_path("LIBRARY_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
-  prepend_path("LD_LIBRARY_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
-  prepend_path("CPATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/include")
+  prepend_path("PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
+  prepend_path("CMAKE_PREFIX_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
+  prepend_path("MANPATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
+  prepend_path("PKG_CONFIG_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
+  prepend_path("LIBRARY_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
+  prepend_path("LD_LIBRARY_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
+  prepend_path("CPATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/include")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, and Java.
   ]])
@@ -182,8 +178,7 @@ Next you should regenerate all the module files:
 
   ...
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
   ==> Regenerating tcl module files
 
 If you take a look now at the module for ``gcc`` you'll see that the unwanted
@@ -193,14 +188,14 @@ paths have disappeared:
 
   $ module show gcc-6.2.0-gcc-4.8-twd5nqg
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc-6.2.0-gcc-4.8-twd5nqg:
+     ~/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc-6.2.0-gcc-4.8-twd5nqg:
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("gcc @6.2.0 ")
-  prepend_path("PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
-  prepend_path("CMAKE_PREFIX_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
-  prepend_path("MANPATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
-  prepend_path("PKG_CONFIG_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
-  prepend_path("LD_LIBRARY_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
+  prepend_path("PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
+  prepend_path("CMAKE_PREFIX_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
+  prepend_path("MANPATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
+  prepend_path("PKG_CONFIG_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
+  prepend_path("LD_LIBRARY_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, and Java.
   ]])
@@ -246,12 +241,11 @@ and regenerate the module files:
   3cfh3hi gmp@6.1.1     3k4ykbe libxml2@2.9.4        7tb426s ncurses@6.0          djdthlh nettle@3.2              i3rpk4e py-numpy@1.11.1    t5lk6in xz@5.2.2
   3ostwel hwloc@1.11.4  cagoem4 lz4@131              mirer2l netlib-lapack@3.6.1  js33umc openblas@0.2.19         e6uljfi py-scipy@0.18.1    asydrba zlib@1.2.8
 
-  ==> Do you want to proceed ? [y/n]
-  y
+  ==> Do you want to proceed? [y/n] y
 
   $ module avail
 
-  ------------------------------------------------------------------------ /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
+  ------------------------------------------------------------------------ ~/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
      bzip2-1.0.6-gcc-6.2.0-csoc2mq            libsigsegv-2.10-gcc-6.2.0-g3qpmbi    ncurses-6.0-gcc-6.2.0-7tb426s               openmpi-2.0.1-gcc-6.2.0-s3qbtby           sqlite-3.8.5-gcc-6.2.0-td3zfe7
      cmake-3.5.2-gcc-6.2.0-6poypqg            libtool-2.4.6-gcc-6.2.0-kiepac6      netlib-lapack-3.6.1-gcc-6.2.0-mirer2l       openssl-1.0.2j-gcc-6.2.0-hibnfda          util-macros-1.19.0-gcc-6.2.0-uoukuqk
      curl-7.50.3-gcc-6.2.0-2ffacqm            libxml2-2.9.4-gcc-6.2.0-3k4ykbe      netlib-scalapack-2.0.2-gcc-6.2.0-6bqlxqy    pkg-config-0.29.1-gcc-6.2.0-rslsgcs       xz-5.2.2-gcc-6.2.0-t5lk6in
@@ -294,7 +288,7 @@ you'll see that now the module for ``gcc@6.2.0`` has reappeared:
 
   $ module avail gcc-6.2.0-gcc-4.8-twd5nqg
 
-  ------------------------------------------------------------------------ /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
+  ------------------------------------------------------------------------ ~/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
      gcc-6.2.0-gcc-4.8-twd5nqg
 
 -------------------------
@@ -329,7 +323,7 @@ If you try to regenerate the module files now you will get an error:
   $ spack module refresh --module-type tcl --delete-tree -y
   ==> Error: Name clashes detected in module files:
 
-  file : /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/netlib-scalapack-2.0.2-gcc-6.2.0
+  file : ~/spack/share/spack/modules/linux-Ubuntu14-x86_64/netlib-scalapack-2.0.2-gcc-6.2.0
   spec : netlib-scalapack@2.0.2%gcc@6.2.0~fpic+shared arch=linux-Ubuntu14-x86_64
   spec : netlib-scalapack@2.0.2%gcc@6.2.0~fpic+shared arch=linux-Ubuntu14-x86_64
   spec : netlib-scalapack@2.0.2%gcc@6.2.0~fpic+shared arch=linux-Ubuntu14-x86_64
@@ -377,7 +371,7 @@ Regenerating module files now we obtain:
   ==> Regenerating tcl module files
   $ module avail
 
-  ------------------------------------------------------------------------ /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
+  ------------------------------------------------------------------------ ~/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
      bzip2-1.0.6-gcc-6.2.0         libpciaccess-0.13.4-gcc-6.2.0    mpich-3.2-gcc-6.2.0                                  openblas-0.2.19-gcc-6.2.0             python-2.7.12-gcc-6.2.0
      cmake-3.5.2-gcc-6.2.0         libsigsegv-2.10-gcc-6.2.0        ncurses-6.0-gcc-6.2.0                                openmpi-2.0.1-gcc-6.2.0               sqlite-3.8.5-gcc-6.2.0
      curl-7.50.3-gcc-6.2.0         libtool-2.4.6-gcc-6.2.0          netlib-lapack-3.6.1-gcc-6.2.0                        openssl-1.0.2j-gcc-6.2.0              util-macros-1.19.0-gcc-6.2.0
@@ -420,7 +414,7 @@ The final result should look like:
 
   $ module avail
 
-  ------------------------------------------------------------------------ /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
+  ------------------------------------------------------------------------ ~/spack/share/spack/modules/linux-Ubuntu14-x86_64 ------------------------------------------------------------------------
      bzip2/1.0.6-gcc-6.2.0         libpciaccess/0.13.4-gcc-6.2.0    mpich/3.2-gcc-6.2.0                                      openblas/0.2.19-gcc-6.2.0             python/2.7.12-gcc-6.2.0
      cmake/3.5.2-gcc-6.2.0         libsigsegv/2.10-gcc-6.2.0        ncurses/6.0-gcc-6.2.0                                    openmpi/2.0.1-gcc-6.2.0               sqlite/3.8.5-gcc-6.2.0
      curl/7.50.3-gcc-6.2.0         libtool/2.4.6-gcc-6.2.0          netlib-lapack/3.6.1-gcc-6.2.0                            openssl/1.0.2j-gcc-6.2.0              util-macros/1.19.0-gcc-6.2.0
@@ -486,21 +480,21 @@ Regenerating the module files should result in something like:
 
   $ module show gcc
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc/6.2.0-gcc-4.8:
+     ~/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc/6.2.0-gcc-4.8:
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("gcc @6.2.0 ")
-  prepend_path("PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
-  prepend_path("CMAKE_PREFIX_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
-  prepend_path("MANPATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
-  prepend_path("PKG_CONFIG_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
-  prepend_path("LD_LIBRARY_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
-  setenv("GCC_ROOT","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u")
+  prepend_path("PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
+  prepend_path("CMAKE_PREFIX_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
+  prepend_path("MANPATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
+  prepend_path("PKG_CONFIG_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
+  prepend_path("LD_LIBRARY_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
+  setenv("GCC_ROOT","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u")
   conflict("gcc")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, and Java.
   ]])
 
-As you see the ``gcc`` module has the environment variable ``GCC_ROOT`` set.
+As you can see, the ``gcc`` module has the environment variable ``GCC_ROOT`` set.
 
 Sometimes it's also useful to apply environment modifications selectively and target
 only certain packages. You can, for instance set the common variables ``CC``, ``CXX``,
@@ -560,15 +554,15 @@ This time we will be more selective and regenerate only the ``gcc`` and
 
   $ module show gcc
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc/6.2.0-gcc-4.8:
+     ~/spack/share/spack/modules/linux-Ubuntu14-x86_64/gcc/6.2.0-gcc-4.8:
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("gcc @6.2.0 ")
-  prepend_path("PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
-  prepend_path("CMAKE_PREFIX_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
-  prepend_path("MANPATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
-  prepend_path("PKG_CONFIG_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
-  prepend_path("LD_LIBRARY_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
-  setenv("GCC_ROOT","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u")
+  prepend_path("PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/bin")
+  prepend_path("CMAKE_PREFIX_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/")
+  prepend_path("MANPATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/share/man")
+  prepend_path("PKG_CONFIG_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64/pkgconfig")
+  prepend_path("LD_LIBRARY_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u/lib64")
+  setenv("GCC_ROOT","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-4.8/gcc-6.2.0-twd5nqg33hrrssqclcfi5k42eccwxz5u")
   setenv("CC","gcc")
   setenv("CXX","g++")
   setenv("F90","gfortran")
@@ -581,17 +575,17 @@ This time we will be more selective and regenerate only the ``gcc`` and
 
   $ module show openmpi
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64/openmpi/2.0.1-gcc-6.2.0:
+     ~/spack/share/spack/modules/linux-Ubuntu14-x86_64/openmpi/2.0.1-gcc-6.2.0:
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("openmpi @2.0.1 ")
-  prepend_path("PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/bin")
-  prepend_path("CMAKE_PREFIX_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/")
-  prepend_path("LD_LIBRARY_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/lib")
-  prepend_path("PKG_CONFIG_PATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/lib/pkgconfig")
-  prepend_path("MANPATH","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/share/man")
+  prepend_path("PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/bin")
+  prepend_path("CMAKE_PREFIX_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/")
+  prepend_path("LD_LIBRARY_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/lib")
+  prepend_path("PKG_CONFIG_PATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/lib/pkgconfig")
+  prepend_path("MANPATH","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w/share/man")
   setenv("SLURM_MPI_TYPE","pmi2")
   setenv("OMPI_MCA_BTL_OPENIB_WARN_DEFAULT_GID_PREFIX","0")
-  setenv("OPENMPI_ROOT","/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w")
+  setenv("OPENMPI_ROOT","~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/openmpi-2.0.1-s3qbtbyh3y5y4gkchmhcuak7th44l53w")
   conflict("openmpi")
   help([[The Open MPI Project is an open source Message Passing Interface
   implementation that is developed and maintained by a consortium of
@@ -693,10 +687,10 @@ Now the ``py-scipy`` module will be:
       module load py-numpy/1.11.1-gcc-6.2.0-openblas
   }
 
-  prepend-path CMAKE_PREFIX_PATH "/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh/"
-  prepend-path LD_LIBRARY_PATH "/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh/lib"
-  prepend-path PYTHONPATH "/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh/lib/python2.7/site-packages"
-  setenv PY_SCIPY_ROOT "/home/mculpo/wdir/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh"
+  prepend-path CMAKE_PREFIX_PATH "~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh/"
+  prepend-path LD_LIBRARY_PATH "~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh/lib"
+  prepend-path PYTHONPATH "~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh/lib/python2.7/site-packages"
+  setenv PY_SCIPY_ROOT "~/spack/opt/spack/linux-Ubuntu14-x86_64/gcc-6.2.0/py-scipy-0.18.1-e6uljfiffgym4xvj6wveevqxfqnfb3gh"
   conflict py-scipy
 
 and will contain code to autoload all the dependencies:
@@ -727,7 +721,7 @@ Core/Compiler/MPI
 
 The most common hierarchy is the so called ``Core/Compiler/MPI``. To have an idea
 how a hierarchy is organized you may refer to the
-`Lmod guide <https://www.tacc.utexas.edu/research-development/tacc-projects/lmod/user-guide/module-hierarchy>`_.
+`Lmod guide <http://lmod.readthedocs.io/en/latest/080_hierarchy.html>`_.
 Since ``lmod`` is not enabled by default, you need to add it to the list of
 enabled module file generators. The other things you need to do are:
 
@@ -782,9 +776,10 @@ After modifications the configuration file will be:
     purpose of overriding the default list of enabled generators so
     that only ``lmod`` will be active (see :ref:`the reference
     manual <config-overrides>` for a more detailed explanation of
-    config scopes).
+    config scopes). If a single colon is used, it will append instead
+    of override.
 
-The directive ``core_compilers`` accepts a list of compilers : everything built
+The directive ``core_compilers`` accepts a list of compilers; everything built
 using these compilers will create a module in the ``Core`` part of the hierarchy. It is
 common practice to put the OS provided compilers in the list and only build common utilities
 and other compilers in ``Core``.
@@ -800,11 +795,11 @@ list the available modules, you'll see:
 
 .. code-block:: console
 
-  $ module unuse /home/mculpo/wdir/spack/share/spack/modules/linux-Ubuntu14-x86_64
-  $ module use /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core
+  $ module unuse ~/spack/share/spack/modules/linux-Ubuntu14-x86_64
+  $ module use ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core
   $ module avail
 
-  ----------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
+  ----------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
      gcc/6.2.0
 
 The only module visible now is ``gcc``. Loading that you will make
@@ -815,13 +810,13 @@ visible the ``Compiler`` part of the software stack that was built with ``gcc/6.
   $ module load gcc
   $ module avail
 
-  -------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/gcc/6.2.0 ---------------------------------------------------------------------
+  -------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/gcc/6.2.0 ---------------------------------------------------------------------
      binutils/2.27    curl/7.50.3    hwloc/1.11.4           libtool/2.4.6    lzo/2.09       netlib-lapack/3.6.1    openssl/1.0.2j              py-scipy/0.18.1-openblas    util-macros/1.19.0
      bison/3.0.4      expat/2.2.0    libarchive/3.2.1       libxml2/2.9.4    m4/1.4.17      nettle/3.2             pkg-config/0.29.1           py-setuptools/25.2.0        xz/5.2.2
      bzip2/1.0.6      flex/2.6.0     libpciaccess/0.13.4    lz4/131          mpich/3.2      openblas/0.2.19        py-nose/1.3.7               python/2.7.12               zlib/1.2.8
      cmake/3.6.1      gmp/6.1.1      libsigsegv/2.10        lzma/4.32.7      ncurses/6.0    openmpi/2.0.1          py-numpy/1.11.1-openblas    sqlite/3.8.5
 
-  ----------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
+  ----------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
      gcc/6.2.0 (L)
 
 The same holds true for the ``MPI`` part of the stack, that you can enable by loading
@@ -833,16 +828,16 @@ once you'll try switching among different stacks:
   $ module load mpich
   $ module avail
 
-  ----------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/mpich/3.2-5n5xoep/gcc/6.2.0 ------------------------------------------------------------
+  ----------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/mpich/3.2-5n5xoep/gcc/6.2.0 ------------------------------------------------------------
      netlib-scalapack/2.0.2-netlib    netlib-scalapack/2.0.2-openblas (D)
 
-  -------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/gcc/6.2.0 ---------------------------------------------------------------------
+  -------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/gcc/6.2.0 ---------------------------------------------------------------------
      binutils/2.27    curl/7.50.3    hwloc/1.11.4           libtool/2.4.6    lzo/2.09           netlib-lapack/3.6.1    openssl/1.0.2j              py-scipy/0.18.1-openblas    util-macros/1.19.0
      bison/3.0.4      expat/2.2.0    libarchive/3.2.1       libxml2/2.9.4    m4/1.4.17          nettle/3.2             pkg-config/0.29.1           py-setuptools/25.2.0        xz/5.2.2
      bzip2/1.0.6      flex/2.6.0     libpciaccess/0.13.4    lz4/131          mpich/3.2   (L)    openblas/0.2.19        py-nose/1.3.7               python/2.7.12               zlib/1.2.8
      cmake/3.6.1      gmp/6.1.1      libsigsegv/2.10        lzma/4.32.7      ncurses/6.0        openmpi/2.0.1          py-numpy/1.11.1-openblas    sqlite/3.8.5
 
-  ----------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
+  ----------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
      gcc/6.2.0 (L)
 
   $ module load openblas netlib-scalapack/2.0.2-openblas
@@ -937,19 +932,19 @@ you will have something like:
   $ module load openmpi
   $ module avail
 
-  --------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/openblas/0.2.19-js33umc/openmpi/2.0.1-s3qbtby/gcc/6.2.0 ----------------------------------------------
+  --------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/openblas/0.2.19-js33umc/openmpi/2.0.1-s3qbtby/gcc/6.2.0 ----------------------------------------------
      netlib-scalapack/2.0.2
 
-  -------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/openblas/0.2.19-js33umc/gcc/6.2.0 ---------------------------------------------------------
+  -------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/openblas/0.2.19-js33umc/gcc/6.2.0 ---------------------------------------------------------
      py-numpy/1.11.1    py-scipy/0.18.1
 
-  -------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/gcc/6.2.0 ---------------------------------------------------------------------
+  -------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/gcc/6.2.0 ---------------------------------------------------------------------
      binutils/2.27    curl/7.50.3    hwloc/1.11.4           libtool/2.4.6    lzo/2.09       netlib-lapack/3.6.1        openssl/1.0.2j          python/2.7.12         zlib/1.2.8
      bison/3.0.4      expat/2.2.0    libarchive/3.2.1       libxml2/2.9.4    m4/1.4.17      nettle/3.2                 pkg-config/0.29.1       sqlite/3.8.5
      bzip2/1.0.6      flex/2.6.0     libpciaccess/0.13.4    lz4/131          mpich/3.2      openblas/0.2.19     (L)    py-nose/1.3.7           util-macros/1.19.0
      cmake/3.6.1      gmp/6.1.1      libsigsegv/2.10        lzma/4.32.7      ncurses/6.0    openmpi/2.0.1       (L)    py-setuptools/25.2.0    xz/5.2.2
 
-  ----------------------------------------------------------------------- /home/mculpo/wdir/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
+  ----------------------------------------------------------------------- ~/spack/share/spack/lmod/linux-Ubuntu14-x86_64/Core -----------------------------------------------------------------------
      gcc/6.2.0 (L)
 
 Now both the ``MPI`` and the ``LAPACK`` providers are handled by LMod as hierarchies:

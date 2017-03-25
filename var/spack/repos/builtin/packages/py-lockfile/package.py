@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyLockfile(Package):
+class PyLockfile(PythonPackage):
     """The lockfile package exports a LockFile class which provides a
        simple API for locking files. Unlike the Windows msvcrt.locking
        function, the fcntl.lockf and flock functions, and the
@@ -41,8 +41,4 @@ class PyLockfile(Package):
 
     version('0.10.2', '1aa6175a6d57f082cd12e7ac6102ab15')
 
-    extends("python")
     depends_on("py-setuptools", type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

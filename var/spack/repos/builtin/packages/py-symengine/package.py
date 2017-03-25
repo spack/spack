@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PySymengine(Package):
+class PySymengine(PythonPackage):
     """Python wrappers for SymEngine, a symbolic manipulation library."""
 
     homepage = "https://github.com/symengine/symengine.py"
@@ -35,13 +35,11 @@ class PySymengine(Package):
     version('develop', git='https://github.com/symengine/symengine.py.git')
 
     # Build dependencies
-    extends('python')
     depends_on('python@2.7:2.8,3.3:')
     depends_on('py-setuptools',     type='build')
-    depends_on('py-cython@0.19.1:')
+    depends_on('py-cython@0.19.1:', type='build')
     depends_on('cmake@2.8.7:',      type='build')
     depends_on('symengine@0.2.0:')
 
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s --symengine-dir=%s' %
-               (prefix, spec['symengine'].prefix))
+    def build_args(self, spec, prefix):
+        return ['--symengine-dir={0}'.format(spec['symengine'].prefix)]

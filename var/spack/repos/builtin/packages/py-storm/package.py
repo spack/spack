@@ -22,19 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+from spack import *
 
 
-class PyStorm(Package):
+class PyStorm(PythonPackage):
     """Storm is an object-relational mapper (ORM) for Python"""
     homepage = "https://storm.canonical.com/"
     url      = "https://launchpad.net/storm/trunk/0.20/+download/storm-0.20.tar.gz"
 
     version('0.20', '8628503141f0f06c0749d607ac09b9c7')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

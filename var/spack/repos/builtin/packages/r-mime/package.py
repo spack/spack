@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMime(Package):
+class RMime(RPackage):
     """Guesses the MIME type from a filename extension using the data derived
     from /etc/mime.types in UNIX-type systems."""
 
@@ -35,9 +35,3 @@ class RMime(Package):
 
     version('0.5', '87e00b6d57b581465c19ae869a723c4d')
     version('0.4', '789cb33e41db2206c6fc7c3e9fbc2c02')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

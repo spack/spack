@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
-class Wx(Package):
+class Wx(AutotoolsPackage):
     """wxWidgets is a C++ library that lets developers create
        applications for Windows, Mac OS X, Linux and other platforms
        with a single code base. It has popular language bindings for
@@ -35,17 +36,32 @@ class Wx(Package):
        rather than emulating the GUI. It's also extensive, free,
        open-source and mature."""
     homepage = "http://www.wxwidgets.org/"
+    url      = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.0/wxWidgets-3.1.0.tar.bz2"
 
-    version('2.8.12', '2fa39da14bc06ea86fe902579fedc5b1',
-            url="https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz")
-    version('3.0.1', 'dad1f1cd9d4c370cbc22700dc492da31',
-            url="https://sourceforge.net/projects/wxwindows/files/3.0.1/wxWidgets-3.0.1.tar.bz2")
+    version('3.1.0', '2170839cfa9d9322e8ee8368b21a15a2497b4f11')
+    version('3.0.2', '6461eab4428c0a8b9e41781b8787510484dea800')
+    version('3.0.1', '73e58521d6871c9f4d1e7974c6e3a81629fddcf8')
+
+    version('develop', git='https://github.com/wxWidgets/wxWidgets.git', branch='master')
 
     depends_on('gtkplus')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-unicode",
-                  "--disable-precomp-headers")
-
+    @when('@:3.0.2')
+    def build(self, spec, prefix):
         make(parallel=False)
-        make("install")
+
+    def configure_args(self):
+        spec = self.spec
+        options = [
+            '--enable-unicode',
+            '--disable-precomp-headers'
+        ]
+
+        # see http://trac.wxwidgets.org/ticket/17639
+        if spec.satisfies('@:3.1.0') and sys.platform == 'darwin':
+            options.extend([
+                '--disable-qtkit',
+                '--disable-mediactrl'
+            ])
+
+        return options

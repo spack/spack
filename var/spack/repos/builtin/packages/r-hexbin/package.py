@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RHexbin(Package):
+class RHexbin(RPackage):
     """Binning and plotting functions for hexagonal bins. Now uses and relies
     on grid graphics and formal (S4) classes and methods."""
 
@@ -36,10 +36,4 @@ class RHexbin(Package):
 
     version('1.27.1', '7f380390c6511e97df10a810a3b3bb7c')
 
-    extends('R')
-
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lattice', type=('build', 'run'))

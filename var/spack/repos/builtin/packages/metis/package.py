@@ -47,7 +47,7 @@ class Metis(Package):
     variant('debug', default=False, description='Builds the library in debug mode.')
     variant('gdb', default=False, description='Enables gdb support.')
 
-    variant('idx64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
+    variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
     variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
@@ -69,7 +69,7 @@ class Metis(Package):
 
         metis_header.filter(
             r'(\b)(IDXTYPEWIDTH )(\d+)(\b)',
-            r'\1\2{0}\4'.format('64' if '+idx64' in self.spec else '32'),
+            r'\1\2{0}\4'.format('64' if '+int64' in self.spec else '32'),
         )
         metis_header.filter(
             r'(\b)(REALTYPEWIDTH )(\d+)(\b)',
@@ -87,9 +87,9 @@ class Metis(Package):
     @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
-        if any('+{0}'.format(v) in spec for v in ['gdb', 'idx64', 'real64']):
+        if any('+{0}'.format(v) in spec for v in ['gdb', 'int64', 'real64']):
             raise InstallError('METIS@:4 does not support the following '
-                               'variants: gdb, idx64, real64.')
+                               'variants: gdb, int64, real64.')
 
         options = ['COPTIONS=-fPIC']
         if '+debug' in spec:
@@ -186,6 +186,15 @@ class Metis(Package):
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
+        else:
+            # Remove all RPATH options 
+            # (RPATHxxx options somehow trigger cmake to link dynamically)
+            rpath_options = []
+            for o in options:
+                if o.find('RPATH') >= 0:
+                    rpath_options.append(o)
+            for o in rpath_options:
+                options.remove(o)
         if '+debug' in spec:
             options.extend(['-DDEBUG:BOOL=ON',
                             '-DCMAKE_BUILD_TYPE:STRING=Debug'])

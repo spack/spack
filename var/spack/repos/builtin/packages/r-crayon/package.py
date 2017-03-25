@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RCrayon(Package):
+class RCrayon(RPackage):
     """Colored terminal output on terminals that support 'ANSI' color and
     highlight codes. It also works in 'Emacs' 'ESS'. 'ANSI' color support is
     automatically detected. Colors and highlighting can be combined and nested.
@@ -37,9 +37,3 @@ class RCrayon(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/crayon"
 
     version('1.3.2', 'fe29c6204d2d6ff4c2f9d107a03d0cb9')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

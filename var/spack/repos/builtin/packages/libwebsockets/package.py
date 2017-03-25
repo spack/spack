@@ -35,6 +35,5 @@ class Libwebsockets(CMakePackage):
     version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
     version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
 
-    depends_on('cmake', type='build')
     depends_on('zlib')
     depends_on('openssl')

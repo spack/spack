@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLabeling(Package):
+class RLabeling(RPackage):
     """Provides a range of axis labeling algorithms."""
 
     homepage = "https://cran.r-project.org/web/packages/labeling/index.html"
@@ -33,9 +33,3 @@ class RLabeling(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/labeling"
 
     version('0.3', 'ccd7082ec0b211aba8a89d85176bb534')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

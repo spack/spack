@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xfsinfo(Package):
+class Xfsinfo(AutotoolsPackage):
     """xfsinfo is a utility for displaying information about an X font
     server.  It is used to examine the capabilities of a server, the
     predefined values for various parameters used in communicating between
@@ -42,9 +42,3 @@ class Xfsinfo(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Listres(Package):
+class Listres(AutotoolsPackage):
     """The listres program generates a list of X resources for a widget
     in an X client written using a toolkit based on libXt."""
 
@@ -41,9 +41,3 @@ class Listres(Package):
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

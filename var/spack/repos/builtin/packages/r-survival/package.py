@@ -25,21 +25,16 @@
 from spack import *
 
 
-class RSurvival(Package):
+class RSurvival(RPackage):
     """Contains the core survival analysis routines, including definition of
     Surv objects, Kaplan-Meier and Aalen-Johansen (multi-state) curves, Cox
     models, and parametric accelerated failure time models."""
 
     homepage = "https://cran.r-project.org/package=survival"
-    url      = "https://cran.r-project.org/src/contrib/survival_2.39-5.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/survival_2.40-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/survival"
 
+    version('2.40-1', 'a2474b656cd723791268e3114481b8a7')
     version('2.39-5', 'a3cc6b5762e8c5c0bb9e64a276710be2')
 
-    extends('R')
-
-    depends_on('r-matrix', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-matrix', type=('build', 'run'))

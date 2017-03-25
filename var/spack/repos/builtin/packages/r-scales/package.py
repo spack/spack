@@ -25,25 +25,20 @@
 from spack import *
 
 
-class RScales(Package):
+class RScales(RPackage):
     """Graphical scales map data to aesthetics, and provide methods for
     automatically determining breaks and labels for axes and legends."""
 
     homepage = "https://github.com/hadley/scales"
-    url      = "https://cran.r-project.org/src/contrib/scales_0.4.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/scales_0.4.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/scales"
 
+    version('0.4.1', '3fb2218866a7fe4c1f6e66790876f85a')
     version('0.4.0', '7b5602d9c55595901192248bca25c099')
 
-    extends('R')
-
-    depends_on('r-rcolorbrewer', type=nolink)
-    depends_on('r-dichromat', type=nolink)
-    depends_on('r-plyr', type=nolink)
-    depends_on('r-munsell', type=nolink)
-    depends_on('r-labeling', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-dichromat', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-munsell', type=('build', 'run'))
+    depends_on('r-labeling', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

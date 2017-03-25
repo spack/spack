@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxxf86vm(Package):
+class Libxxf86vm(AutotoolsPackage):
     """libXxf86vm - Extension library for the XFree86-VidMode X extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXxf86vm"
@@ -41,9 +41,3 @@ class Libxxf86vm(Package):
     depends_on('xf86vidmodeproto@2.2.99.1:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

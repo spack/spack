@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMaptools(Package):
+class RMaptools(RPackage):
     """Set of tools for manipulating and reading geographic data, in particular
     ESRI shapefiles; C code used from shapelib. It includes binary access to
     GSHHG shoreline files. The package also provides interface wrappers for
@@ -38,12 +38,6 @@ class RMaptools(Package):
 
     version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
 
-    extends('R')
-
-    depends_on('r-sp', type=nolink)
-    depends_on('r-foreign', type=nolink)
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-foreign', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Iceauth(Package):
+class Iceauth(AutotoolsPackage):
     """The iceauth program is used to edit and display the authorization
     information used in connecting with ICE.   It operates very much
     like the xauth program for X11 connection authentication records."""
@@ -40,9 +40,3 @@ class Iceauth(Package):
     depends_on('xproto@7.0.22:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

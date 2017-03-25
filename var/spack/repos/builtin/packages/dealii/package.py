@@ -30,7 +30,7 @@ class Dealii(CMakePackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
-    url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
@@ -42,7 +42,7 @@ class Dealii(CMakePackage):
     version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
     version('8.2.1', '71c728dbec14f371297cd405776ccf08')
     version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
-    version('develop', git='https://github.com/dealii/dealii.git')
+    version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,
@@ -66,6 +66,10 @@ class Dealii(CMakePackage):
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=True,
             description='Compile with Python bindings')
+    variant('int64',    default=False,
+            description='Compile with 64 bit indices support')
+    variant('optflags', default=False,
+            description='Compile using additional optimization flags')
 
     # required dependencies, light version
     depends_on("blas")
@@ -73,6 +77,11 @@ class Dealii(CMakePackage):
     # https://github.com/dealii/dealii/issues/1591
     # Require at least 1.59
     # +python won't affect @:8.4.2
+    # FIXME: once concretizer can unite unconditional and
+    # conditional dependencies, simplify to:
+    # depends_on("boost@1.59.0+thread+system+serialization+iostreams")
+    # depends_on("boost+mpi", when='+mpi')
+    # depends_on("boost+python", when='+python')
     depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
                when='@:8.4.2~mpi')
     depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
@@ -88,7 +97,6 @@ class Dealii(CMakePackage):
         "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
         when='@8.5.0:+mpi+python')
     depends_on("bzip2")
-    depends_on("cmake", type='build')
     depends_on("lapack")
     depends_on("muparser")
     depends_on("suite-sparse")
@@ -102,27 +110,42 @@ class Dealii(CMakePackage):
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
-    depends_on("metis@5:",         when='+metis')
+    # FIXME: concretizer bug. The two lines mimic what comes from PETSc
+    # but we should not need it
+    depends_on("metis@5:+int64",   when='+metis+int64')
+    depends_on("metis@5:~int64",   when='+metis~int64')
     depends_on("netcdf+mpi",       when="+netcdf+mpi")
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi')
+    depends_on("petsc+mpi~int64",  when='+petsc+mpi~int64')
+    depends_on("petsc+mpi+int64",  when='+petsc+mpi+int64')
+    depends_on("petsc@:3.6.4",     when='@:8.4.1+petsc+mpi')
     depends_on('python',           when='@8.5.0:+python')
-    depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi')
-    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi')
+    depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
-    depends_on("trilinos",         when='+trilinos+mpi')
+    depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
+    depends_on("trilinos",         when='+trilinos+mpi~int64')
+    depends_on("trilinos~hypre",   when="+trilinos+mpi+int64")
+
+    # check that the combination of variants makes sense
+    def variants_check(self):
+        for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+                  '+slepc', '+trilinos']:
+            if p in self.spec and '+mpi' not in self.spec:
+                raise RuntimeError('The ' + p + ' variant requires +mpi')
 
     def build_type(self):
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         return 'DebugRelease'
 
     def cmake_args(self):
+        self.variants_check()
         spec = self.spec
         options = []
+        cxx_flags = []
 
-        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
@@ -141,6 +164,16 @@ class Dealii(CMakePackage):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
 
+        # Set recommended flags for maximum (matrix-free) performance, see
+        # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
+        if spec.satisfies('%gcc'):
+            cxx_flags.extend(['-O3', '-march=native'])
+        elif spec.satisfies('%intel'):
+            cxx_flags.extend(['-O3', '-march=native'])
+        elif spec.satisfies('%clang'):
+            cxx_flags.extend(['-O3', '-march=native', '-ffp-contract=fast'])
+
+        # Python bindings
         if spec.satisfies('@8.5.0:'):
             options.extend([
                 '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
@@ -161,8 +194,8 @@ class Dealii(CMakePackage):
         if '+mpi' in spec:
             options.extend([
                 '-DDEAL_II_WITH_MPI:BOOL=ON',
-                '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+                '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             ])
         else:
@@ -170,7 +203,7 @@ class Dealii(CMakePackage):
                 '-DDEAL_II_WITH_MPI:BOOL=OFF',
             ])
 
-        # Optional dependencies for which librariy names are the same as CMake
+        # Optional dependencies for which library names are the same as CMake
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):
@@ -191,7 +224,7 @@ class Dealii(CMakePackage):
         ])
 
         # arpack
-        if '+arpack' in spec:
+        if '+arpack' in spec and '+mpi' in spec:
             options.extend([
                 '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
                 '-DDEAL_II_WITH_ARPACK=ON',
@@ -203,7 +236,7 @@ class Dealii(CMakePackage):
             ])
 
         # since Netcdf is spread among two, need to do it by hand:
-        if '+netcdf' in spec:
+        if '+netcdf' in spec and '+mpi' in spec:
             # take care of lib64 vs lib installed lib locations:
             if os.path.isdir(spec['netcdf-cxx'].prefix.lib):
                 netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib
@@ -241,7 +274,18 @@ class Dealii(CMakePackage):
                 '-DDEAL_II_WITH_OPENCASCADE=OFF'
             ])
 
+        # 64 bit indices
+        options.extend([
+            '-DDEAL_II_WITH_64BIT_INDICES=%s' % ('+int64' in spec)
+        ])
+
+        # collect CXX flags:
+        if len(cxx_flags) > 0 and '+optflags' in spec:
+            options.extend([
+                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (' '.join(cxx_flags))
+            ])
+
         return options
 
-    def setup_environment(self, spack_env, env):
-        env.set('DEAL_II_DIR', self.prefix)
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('DEAL_II_DIR', self.prefix)

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RStringi(Package):
+class RStringi(RPackage):
     """Allows for fast, correct, consistent, portable, as well as convenient
     character string/text processing in every locale and any native encoding.
     Owing to the use of the ICU library, the package provides R users with
@@ -37,15 +37,10 @@ class RStringi(Package):
     etc."""
 
     homepage = "http://www.gagolewski.com/software/stringi/"
-    url      = "https://cran.r-project.org/src/contrib/stringi_1.1.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/stringi"
 
+    version('1.1.2', '0ec2faa62643e1900734c0eaf5096648')
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
-    extends('R')
-
     depends_on('icu4c')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -40,6 +40,7 @@ from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
@@ -60,6 +61,9 @@ def _to_dict(compiler):
     d['paths'] = dict((attr, getattr(compiler, attr, None))
                       for attr in _path_instance_vars)
     d['flags'] = dict((fname, fvals) for fname, fvals in compiler.flags)
+    d['flags'].update(dict((attr, getattr(compiler, attr, None))
+                      for attr in _flags_instance_vars
+                           if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
@@ -104,6 +108,16 @@ def get_compiler_config(scope=None, init_config=True):
         return config
     else:
         return []  # Return empty list which we will later append to.
+
+
+def compiler_config_files():
+    config_files = list()
+    for scope in spack.config.config_scopes:
+        config = spack.config.get_config('compilers', scope=scope)
+        if config:
+            config_files.append(spack.config.config_scopes[scope]
+                                .get_section_filename('compilers'))
+    return config_files
 
 
 def add_compilers_to_config(compilers, scope=None, init_config=True):
@@ -160,7 +174,7 @@ def all_compilers_config(scope=None, init_config=True):
         return _cache_config_file
 
 
-def all_compilers(scope=None, init_config=True):
+def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [spack.spec.CompilerSpec(s['compiler']['spec'])
             for s in all_compilers_config(scope, init_config)]
@@ -196,75 +210,102 @@ def supported(compiler_spec):
 
 
 @_auto_compiler_spec
-def find(compiler_spec, scope=None):
+def find(compiler_spec, scope=None, init_config=True):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an empty list if nothing found."""
-    return [c for c in all_compilers(scope) if c.satisfies(compiler_spec)]
+    return [c for c in all_compiler_specs(scope, init_config)
+            if c.satisfies(compiler_spec)]
+
+
+def all_compilers(scope=None):
+    config = get_compiler_config(scope)
+    compilers = list()
+    for items in config:
+        items = items['compiler']
+        compilers.append(compiler_from_config_entry(items))
+    return compilers
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, arch_spec=None, scope=None):
+def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
+                       use_cache=True, init_config=True):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    config = all_compilers_config(scope)
+    if use_cache:
+        config = all_compilers_config(scope, init_config)
+    else:
+        config = get_compiler_config(scope, init_config)
 
-    def get_compilers(cspec):
-        compilers = []
-
-        for items in config:
-            items = items['compiler']
-            if items['spec'] != str(cspec):
-                continue
-
-            # If an arch spec is given, confirm that this compiler
-            # is for the given operating system
-            os = items.get('operating_system', None)
-            if arch_spec and os != arch_spec.platform_os:
-                continue
-
-            # If an arch spec is given, confirm that this compiler
-            # is for the given target. If the target is 'any', match
-            # any given arch spec. If the compiler has no assigned
-            # target this is an old compiler config file, skip this logic.
-            target = items.get('target', None)
-            if arch_spec and target and (target != arch_spec.target and
-                                         target != 'any'):
-                continue
-
-            if not ('paths' in items and
-                    all(n in items['paths'] for n in _path_instance_vars)):
-                raise InvalidCompilerConfigurationError(cspec)
-
-            cls  = class_for_compiler_name(cspec.name)
-
-            compiler_paths = []
-            for c in _path_instance_vars:
-                compiler_path = items['paths'][c]
-                if compiler_path != 'None':
-                    compiler_paths.append(compiler_path)
-                else:
-                    compiler_paths.append(None)
-
-            mods = items.get('modules')
-            if mods == 'None':
-                mods = []
-
-            alias = items.get('alias', None)
-            compiler_flags = items.get('flags', {})
-            environment = items.get('environment', {})
-            extra_rpaths = items.get('extra_rpaths', [])
-
-            compilers.append(
-                cls(cspec, os, target, compiler_paths, mods, alias,
-                    environment, extra_rpaths, **compiler_flags))
-
-        return compilers
-
-    matches = set(find(compiler_spec, scope))
+    matches = set(find(compiler_spec, scope, init_config))
     compilers = []
     for cspec in matches:
-        compilers.extend(get_compilers(cspec))
+        compilers.extend(get_compilers(config, cspec, arch_spec))
+    return compilers
+
+
+def compilers_for_arch(arch_spec, scope=None):
+    config = all_compilers_config(scope)
+    return list(get_compilers(config, arch_spec=arch_spec))
+
+
+def compiler_from_config_entry(items):
+    cspec = spack.spec.CompilerSpec(items['spec'])
+    os = items.get('operating_system', None)
+    target = items.get('target', None)
+
+    if not ('paths' in items and
+            all(n in items['paths'] for n in _path_instance_vars)):
+        raise InvalidCompilerConfigurationError(cspec)
+
+    cls  = class_for_compiler_name(cspec.name)
+
+    compiler_paths = []
+    for c in _path_instance_vars:
+        compiler_path = items['paths'][c]
+        if compiler_path != 'None':
+            compiler_paths.append(compiler_path)
+        else:
+            compiler_paths.append(None)
+
+    mods = items.get('modules')
+    if mods == 'None':
+        mods = []
+
+    alias = items.get('alias', None)
+    compiler_flags = items.get('flags', {})
+    environment = items.get('environment', {})
+    extra_rpaths = items.get('extra_rpaths', [])
+
+    return cls(cspec, os, target, compiler_paths, mods, alias,
+               environment, extra_rpaths, **compiler_flags)
+
+
+def get_compilers(config, cspec=None, arch_spec=None):
+    compilers = []
+
+    for items in config:
+        items = items['compiler']
+        if cspec and items['spec'] != str(cspec):
+            continue
+
+        # If an arch spec is given, confirm that this compiler
+        # is for the given operating system
+        os = items.get('operating_system', None)
+        if arch_spec and os != arch_spec.platform_os:
+            continue
+
+        # If an arch spec is given, confirm that this compiler
+        # is for the given target. If the target is 'any', match
+        # any given arch spec. If the compiler has no assigned
+        # target this is an old compiler config file, skip this logic.
+        target = items.get('target', None)
+        if arch_spec and target and (target != arch_spec.target and
+                                     target != 'any'):
+            continue
+
+        compilers.append(compiler_from_config_entry(items))
+
     return compilers
 
 
@@ -279,8 +320,26 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
     if len(compilers) > 1:
-        raise CompilerSpecInsufficientlySpecificError(compiler_spec)
+        raise CompilerDuplicateError(compiler_spec, arch_spec)
     return compilers[0]
+
+
+@_auto_compiler_spec
+def get_compiler_duplicates(compiler_spec, arch_spec):
+    config_scopes = spack.config.config_scopes
+    scope_to_compilers = dict()
+    for scope in config_scopes:
+        compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec,
+                                       scope=scope, use_cache=False)
+        if compilers:
+            scope_to_compilers[scope] = compilers
+
+    cfg_file_to_duplicates = dict()
+    for scope, compilers in scope_to_compilers.iteritems():
+        config_file = config_scopes[scope].get_section_filename('compilers')
+        cfg_file_to_duplicates[config_file] = compilers
+
+    return cfg_file_to_duplicates
 
 
 def class_for_compiler_name(compiler_name):
@@ -335,6 +394,24 @@ class NoCompilerForSpecError(spack.error.SpackError):
         super(NoCompilerForSpecError, self).__init__(
             "No compilers for operating system %s satisfy spec %s"
             % (target, compiler_spec))
+
+
+class CompilerDuplicateError(spack.error.SpackError):
+    def __init__(self, compiler_spec, arch_spec):
+        config_file_to_duplicates = get_compiler_duplicates(
+            compiler_spec, arch_spec)
+        duplicate_table = list(
+            (x, len(y)) for x, y in config_file_to_duplicates.iteritems())
+        descriptor = lambda num: 'time' if num == 1 else 'times'
+        duplicate_msg = (
+            lambda cfgfile, count: "{0}: {1} {2}".format(
+                cfgfile, str(count), descriptor(count)))
+        msg = (
+            "Compiler configuration contains entries with duplicate" +
+            " specification ({0}, {1})".format(compiler_spec, arch_spec) +
+            " in the following files:\n\t" +
+            '\n\t'.join(duplicate_msg(x, y) for x, y in duplicate_table))
+        super(CompilerDuplicateError, self).__init__(msg)
 
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):

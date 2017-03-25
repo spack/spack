@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyDecorator(Package):
+class PyDecorator(PythonPackage):
     """The aim of the decorator module it to simplify the usage of decorators
        for the average programmer, and to popularize decorators by showing
        various non-trivial examples."""
@@ -34,9 +34,4 @@ class PyDecorator(Package):
 
     version('4.0.9', 'f12c5651ccd707e12a0abaa4f76cd69a')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix=%s' % prefix)

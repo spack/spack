@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 '''Produce a "view" of a Spack DAG.
 
@@ -69,7 +69,7 @@ import spack
 import spack.cmd
 import llnl.util.tty as tty
 
-description = "Produce a single-rooted directory view of a spec."
+description = "produce a single-rooted directory view of a spec"
 
 
 def setup_parser(sp):
@@ -77,40 +77,40 @@ def setup_parser(sp):
 
     sp.add_argument(
         '-v', '--verbose', action='store_true', default=False,
-        help="Display verbose output.")
+        help="display verbose output")
     sp.add_argument(
         '-e', '--exclude', action='append', default=[],
-        help="Exclude packages with names matching the given regex pattern.")
+        help="exclude packages with names matching the given regex pattern")
     sp.add_argument(
         '-d', '--dependencies', choices=['true', 'false', 'yes', 'no'],
         default='true',
-        help="Follow dependencies.")
+        help="follow dependencies")
 
     ssp = sp.add_subparsers(metavar='ACTION', dest='action')
 
     specs_opts = dict(metavar='spec', nargs='+',
-                      help="Seed specs of the packages to view.")
+                      help="seed specs of the packages to view")
 
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
     file_system_view_actions = [
         ssp.add_parser(
             'symlink', aliases=['add', 'soft'],
-            help='Add package files to a filesystem view via symbolic links.'),
+            help='add package files to a filesystem view via symbolic links'),
         ssp.add_parser(
             'hardlink', aliases=['hard'],
-            help='Add packages files to a filesystem via via hard links.'),
+            help='add packages files to a filesystem via via hard links'),
         ssp.add_parser(
             'remove', aliases=['rm'],
-            help='Remove packages from a filesystem view.'),
+            help='remove packages from a filesystem view'),
         ssp.add_parser(
             'statlink', aliases=['status', 'check'],
-            help='Check status of packages in a filesystem view.')
+            help='check status of packages in a filesystem view')
     ]
     # All these options and arguments are common to every action.
     for act in file_system_view_actions:
         act.add_argument('path', nargs=1,
-                         help="Path to file system view directory.")
+                         help="path to file system view directory")
         act.add_argument('specs', **specs_opts)
 
     return
@@ -248,6 +248,8 @@ def visitor_symlink(specs, args):
     assuredir(path)
     for spec in specs:
         link_one(spec, path, verbose=args.verbose)
+
+
 visitor_add = visitor_symlink
 visitor_soft = visitor_symlink
 
@@ -258,6 +260,8 @@ def visitor_hardlink(specs, args):
     assuredir(path)
     for spec in specs:
         link_one(spec, path, os.link, verbose=args.verbose)
+
+
 visitor_hard = visitor_hardlink
 
 
@@ -267,6 +271,8 @@ def visitor_remove(specs, args):
     for spec in specs:
         remove_one(spec, path, verbose=args.verbose)
     purge_empty_directories(path)
+
+
 visitor_rm = visitor_remove
 
 
@@ -275,6 +281,8 @@ def visitor_statlink(specs, args):
     path = args.path[0]
     for spec in specs:
         check_one(spec, path, verbose=args.verbose)
+
+
 visitor_status = visitor_statlink
 visitor_check = visitor_statlink
 

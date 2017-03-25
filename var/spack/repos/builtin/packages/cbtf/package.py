@@ -57,14 +57,14 @@ class Cbtf(Package):
     # version('1.6', 'c1ef4e5aa4e470dffb042abdba0b9987')
 
     # Use when the git repository is available
-    version('1.6', branch='master',
+    version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf.git')
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
 
     depends_on("cmake@3.0.2:", type='build')
-    depends_on("boost@1.50.0:")
+    depends_on("boost@1.50.0:1.59.0")
     depends_on("mrnet@5.0.1:+lwthreads")
     depends_on("xerces-c@3.1.1:")
     # Work around for spack libxml2 package bug, take off python when fixed

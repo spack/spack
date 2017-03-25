@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RRepr(Package):
+class RRepr(RPackage):
     """String and binary representations of objects for several formats and
     mime types."""
 
@@ -35,9 +35,3 @@ class RRepr(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/repr"
 
     version('0.9', 'db5ff74893063b492f684e42283070bd')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

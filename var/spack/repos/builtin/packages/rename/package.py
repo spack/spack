@@ -33,7 +33,7 @@ class Rename(Package):
 
     version('1.600', '91beb555c93d407420b5dad191069bb3')
 
-    depends_on('perl', type='nolink')
+    depends_on('perl', type=('build', 'run'))
 
     def install(self, spec, prefix):
         Executable('pod2man')('rename', 'rename.1')

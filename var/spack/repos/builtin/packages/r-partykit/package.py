@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RPartykit(Package):
+class RPartykit(RPackage):
     """A toolkit with infrastructure for representing, summarizing, and
     visualizing tree-structured regression and classification models. This
     unified infrastructure can be used for reading/coercing tree models from
@@ -42,11 +42,5 @@ class RPartykit(Package):
 
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
-    extends('R')
-
-    depends_on('r-survival', type=nolink)
-    depends_on('r-formula', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-formula', type=('build', 'run'))

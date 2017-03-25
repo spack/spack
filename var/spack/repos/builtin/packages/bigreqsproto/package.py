@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bigreqsproto(Package):
+class Bigreqsproto(AutotoolsPackage):
     """Big Requests Extension.
 
     This extension defines a protocol to enable the use of requests
@@ -38,8 +38,3 @@ class Bigreqsproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

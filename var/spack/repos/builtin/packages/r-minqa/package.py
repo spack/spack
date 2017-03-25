@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RMinqa(Package):
+class RMinqa(RPackage):
     """Derivative-free optimization by quadratic approximation based on an
     interface to Fortran implementations by M. J. D. Powell."""
 
@@ -35,10 +35,4 @@ class RMinqa(Package):
 
     version('1.2.4', 'bcaae4fdba60a33528f2116e2fd51105')
 
-    extends('R')
-
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rcpp', type=('build', 'run'))

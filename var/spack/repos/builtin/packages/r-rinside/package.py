@@ -26,7 +26,7 @@
 from spack import *
 
 
-class RRinside(Package):
+class RRinside(RPackage):
     """C++ classes to embed R in C++ applications The 'RInside' packages makes
     it easier to have "R inside" your C++ application by providing a C++
     wrapperclass providing the R interpreter. As R itself is embedded into
@@ -48,10 +48,4 @@ class RRinside(Package):
 
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 
-    extends('R')
-
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rcpp', type=('build', 'run'))

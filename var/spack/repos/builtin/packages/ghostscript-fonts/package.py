@@ -30,7 +30,7 @@ class GhostscriptFonts(Package):
     """Ghostscript Fonts"""
 
     homepage = "http://ghostscript.com/"
-    url = "ftp://ftp.imagemagick.org/pub/ImageMagick/delegates/ghostscript-fonts-std-8.11.tar.gz"
+    url = "https://www.imagemagick.org/download/delegates/ghostscript-fonts-std-8.11.tar.gz"
 
     version('8.11', '6865682b095f8c4500c54b285ff05ef6')
 

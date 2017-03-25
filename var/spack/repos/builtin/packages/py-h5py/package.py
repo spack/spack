@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyH5py(Package):
+class PyH5py(PythonPackage):
     """The h5py package provides both a high- and low-level interface to the
     HDF5 library from Python."""
 
@@ -38,8 +38,6 @@ class PyH5py(Package):
 
     variant('mpi', default=True, description='Build with MPI support')
 
-    extends('python')
-
     # Build dependencies
     depends_on('py-cython@0.19:', type='build')
     depends_on('pkg-config', type='build')
@@ -47,19 +45,19 @@ class PyH5py(Package):
     depends_on('hdf5@1.8.4:')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
-    depends_on('py-mpi4py', when='+mpi')
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
     # Build and runtime dependencies
-    depends_on('py-numpy@1.6.1:', type=nolink)
+    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
 
     # Runtime dependencies
-    depends_on('py-six', type=nolink)
+    depends_on('py-six', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
+    phases = ['configure', 'install']
+
+    def configure(self, spec, prefix):
+        self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
 
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
-            setup_py('configure', '--mpi')
-
-        setup_py('install', '--prefix={0}'.format(prefix))
+            self.setup_py('configure', '--mpi')

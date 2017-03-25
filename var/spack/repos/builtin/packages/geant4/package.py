@@ -24,62 +24,81 @@
 ##############################################################################
 
 from spack import *
+import platform
 
 
-class Geant4(Package):
+class Geant4(CMakePackage):
     """Geant4 is a toolkit for the simulation of the passage of particles
     through matter. Its areas of application include high energy, nuclear
     and accelerator physics, as well as studies in medical and space
     science."""
 
     homepage = "http://geant4.cern.ch/"
-    url      = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
+    url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
 
+    version('10.02.p02', '6aae1d0fc743b0edc358c5c8fbe48657')
     version('10.02.p01', 'b81f7082a15f6a34b720b6f15c6289cfe4ddbbbdcef0dc52719f71fac95f7f1c')
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
-    variant('qt', default=False, description='Enable Qt support')
+    variant('qt', default=True, description='Enable Qt support')
+    variant('debug', default=False, description='Build debug version')
 
     depends_on('cmake@3.5:', type='build')
 
+    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02")
     depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01")
     depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03")
     depends_on("expat")
     depends_on("zlib")
+    depends_on("vecgeom")
     depends_on("xerces-c")
     depends_on("qt@4.8:", when="+qt")
 
-    def install(self, spec, prefix):
-        cmake_args = list(std_cmake_args)
-        cmake_args.append('-DXERCESC_ROOT_DIR:STRING=%s' %
-                          spec['xerces-c'].prefix)
-        cmake_args.append('-DGEANT4_BUILD_CXXSTD=c++14')
+    def build_type(self):
+        spec = self.spec
+        if '+debug' in spec:
+            return 'Debug'
+        else:
+            return 'Release'
 
-        cmake_args += ['-DGEANT4_USE_GDML=ON',
-                       '-DGEANT4_USE_SYSTEM_EXPAT=ON',
-                       '-DGEANT4_USE_SYSTEM_ZLIB=ON',
-                       '-DGEANT4_USE_SYSTEM_CLHEP=ON']
+    def cmake_args(self):
+        spec = self.spec
 
-        # fixme: turn off data for now and maybe each data set should
-        # go into a separate package to cut down on disk usage between
-        # different code versions using the same data versions.
-        cmake_args.append('-DGEANT4_INSTALL_DATA=OFF')
+        options = [
+            '-DGEANT4_USE_GDML=ON',
+            '-DGEANT4_USE_SYSTEM_CLHEP=ON',
+            '-DGEANT4_USE_G3TOG4=ON',
+            '-DGEANT4_INSTALL_DATA=ON',
+            '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
+            '-DGEANT4_BUILD_MULTITHREADED=ON',
+            '-DGEANT4_USE_USOLIDS=ON',
+            '-DGEANT4_USE_SYSTEM_EXPAT=ON',
+            '-DGEANT4_USE_SYSTEM_ZLIB=ON',
+            '-DXERCESC_ROOT_DIR:STRING=%s' %
+            spec['xerces-c'].prefix,
+            '-DUSolids_DIR=%s' %
+            join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids')]
 
-        # http://geant4.web.cern.ch/geant4/UserDocumentation/UsersGuides/InstallationGuide/html/ch02s03.html
-        # fixme: likely things that need addressing:
-        # -DGEANT4_USE_OPENGL_X11=ON
+        arch = platform.system().lower()
+        if arch is not 'darwin':
+            options.append('-DGEANT4_USE_OPENGL_X11=ON')
+            options.append('-DGEANT4_USE_XM=ON')
+            options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
+
+        if '+cxx11' in spec:
+            options.append('-DGEANT4_BUILD_CXXSTD=c++11')
+        if '+cxx14' or '+cxx1y' in spec:
+            options.append('-DGEANT4_BUILD_CXXSTD=c++14')
 
         if '+qt' in spec:
-            cmake_args.append('-DGEANT4_USE_QT=ON')
+            options.append('-DGEANT4_USE_QT=ON')
+            options.append(
+                '-DQT_QMAKE_EXECUTABLE=%s' %
+                spec['qt'].prefix + '/bin/qmake'
+            )
 
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *cmake_args)
-            make()
-            make("install")
+        return options
 
     def url_for_version(self, version):
         """Handle Geant4's unusual version string."""
-        return "http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version
+        return ("http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version)

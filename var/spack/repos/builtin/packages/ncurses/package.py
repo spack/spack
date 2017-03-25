@@ -25,14 +25,12 @@
 from spack import *
 
 
-class Ncurses(Package):
+class Ncurses(AutotoolsPackage):
     """The ncurses (new curses) library is a free software emulation of
-       curses in System V Release 4.0, and more. It uses terminfo format,
-       supports pads and color and multiple highlights and forms
-       characters and function-key mapping, and has all the other
-       SYSV-curses enhancements over BSD curses.
-
-    """
+    curses in System V Release 4.0, and more. It uses terminfo format,
+    supports pads and color and multiple highlights and forms
+    characters and function-key mapping, and has all the other
+    SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
     url      = "http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz"
@@ -40,20 +38,32 @@ class Ncurses(Package):
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
     version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1')
 
-    patch('patch_gcc_5.txt', when='%gcc@5.0:')
+    variant('symlinks', default=False,
+            description='Enables symlinks. Needed on AFS filesystem.')
 
-    def install(self, spec, prefix):
+    # Use mawk instead of gawk to prevent a circular dependency
+    depends_on('mawk',       type='build')
+    depends_on('pkg-config', type='build')
+
+    patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
+    patch('sed_pgi.patch',   when='@:6.0')
+
+    def configure_args(self):
         opts = [
-            "--prefix=%s" % prefix,
-            "--with-shared",
-            "--with-cxx-shared",
-            "--enable-widec",
-            "--enable-overwrite",
-            "--disable-lib-suffixes",
-            "--without-ada",
-            "--enable-pc-files",
-            "--with-pkg-config-libdir={0}/lib/pkgconfig".format(prefix)
+            'AWK=mawk',
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+            '--with-shared',
+            '--with-cxx-shared',
+            '--enable-widec',
+            '--enable-overwrite',
+            '--disable-lib-suffixes',
+            '--without-ada',
+            '--enable-pc-files',
+            '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
-        configure(*opts)
-        make()
-        make("install")
+
+        if '+symlinks' in self.spec:
+            opts.append('--enable-symlinks')
+
+        return opts

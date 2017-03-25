@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxprintutil(Package):
+class Libxprintutil(AutotoolsPackage):
     """Xprint application utility routines."""
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXprintUtil/"
@@ -41,9 +41,3 @@ class Libxprintutil(Package):
     depends_on('printproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

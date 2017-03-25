@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRpostgresql(Package):
+class RRpostgresql(RPackage):
     """Database interface and PostgreSQL driver for R This package provides a
     Database Interface (DBI) compliant driver for R to access PostgreSQL
     database systems. In order to build and install this package from source,
@@ -42,11 +42,5 @@ class RRpostgresql(Package):
 
     version('0.4-1', 'e7b22e212afbb2cbb88bab937f93e55a')
 
-    extends('R')
-
-    depends_on('r-dbi', type=nolink)
+    depends_on('r-dbi', type=('build', 'run'))
     depends_on('postgresql')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

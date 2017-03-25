@@ -41,7 +41,7 @@ class Nwchem(Package):
     depends_on('mpi')
     depends_on('scalapack')
 
-    depends_on('python@2.7:2.8', type=nolink)
+    depends_on('python@2.7:2.8', type=('build', 'run'))
 
     # patches for 6.6-27746:
     urls_for_patches = {
@@ -73,9 +73,9 @@ class Nwchem(Package):
             patch(url, when=condition, level=0, md5=md5)
 
     def install(self, spec, prefix):
-        scalapack = spec['scalapack'].scalapack_libs
-        lapack = spec['lapack'].lapack_libs
-        blas = spec['blas'].blas_libs
+        scalapack = spec['scalapack'].libs
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
         # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
         args = []
         args.extend([

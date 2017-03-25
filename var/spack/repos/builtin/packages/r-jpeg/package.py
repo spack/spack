@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RJpeg(Package):
+class RJpeg(RPackage):
     """This package provides an easy and simple way to read, write and display
     bitmap images stored in the JPEG format. It can read and write both files
     and in-memory raw vectors."""
@@ -36,10 +36,4 @@ class RJpeg(Package):
 
     version('0.1-8', '696007451d14395b1ed1d0e9af667a57')
 
-    extends('R')
-
     depends_on('jpeg')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import platform
 import os
 import sys
 
@@ -64,13 +65,13 @@ class Qt(Package):
 
     # Use system openssl for security.
     depends_on("openssl")
-    depends_on("glib")
+    depends_on("glib", when='@4:')
     depends_on("gtkplus", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("dbus", when='@4:+dbus')
     depends_on("libtiff")
-    depends_on("libpng@1.2.56", when='@3')
+    depends_on("libpng@1.2.57", when='@3')
     depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
@@ -128,10 +129,10 @@ class Qt(Package):
     def setup_environment(self, spack_env, run_env):
         run_env.set('QTDIR', self.prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('QTDIR', self.prefix)
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
 
     def patch(self):
@@ -186,7 +187,12 @@ class Qt(Package):
             config_args.append('-no-phonon')
 
         if '+dbus' in self.spec:
+            dbus = self.spec['dbus'].prefix
             config_args.append('-dbus-linked')
+            config_args.append('-I%s/dbus-1.0/include' % dbus.lib)
+            config_args.append('-I%s/dbus-1.0' % dbus.include)
+            config_args.append('-L%s' % dbus.lib)
+            config_args.append('-ldbus-1')
         else:
             config_args.append('-no-dbus')
 
@@ -199,25 +205,30 @@ class Qt(Package):
             ])
 
         if '@4' in self.spec and sys.platform == 'darwin':
+            config_args.append('-cocoa')
+
+            mac_ver = tuple(platform.mac_ver()[0].split('.')[:2])
+            sdkname = 'macosx%s' % '.'.join(mac_ver)
             sdkpath = which('xcrun')('--show-sdk-path',
-                                     # XXX(macos): 10.11 SDK fails to configure
-                                     '--sdk', 'macosx10.9',
+                                     '--sdk', sdkname,
                                      output=str)
             config_args.extend([
                 '-sdk', sdkpath.strip(),
             ])
             use_clang_platform = False
             if self.spec.compiler.name == 'clang' and \
-               str(self.spec.compiler.version).endwith('-apple'):
+               str(self.spec.compiler.version).endswith('-apple'):
                 use_clang_platform = True
             # No one uses gcc-4.2.1 anymore; this is clang.
             if self.spec.compiler.name == 'gcc' and \
                str(self.spec.compiler.version) == '4.2.1':
                 use_clang_platform = True
             if use_clang_platform:
-                config_args.extend([
-                    '-platform', 'unsupported/macx-clang',
-                ])
+                config_args.append('-platform')
+                if mac_ver >= (10, 9):
+                    config_args.append('unsupported/macx-clang-libc++')
+                else:
+                    config_args.append('unsupported/macx-clang')
 
         return config_args
 
@@ -226,8 +237,14 @@ class Qt(Package):
 
     @when('@3')
     def configure(self):
-        # A user reported that this was necessary to link Qt3 on ubuntu
-        os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
+        # A user reported that this was necessary to link Qt3 on ubuntu.
+        # However, if LD_LIBRARY_PATH is not set the qt build fails, check
+        # and set LD_LIBRARY_PATH if not set, update if it is set.
+        if os.environ.get('LD_LIBRARY_PATH'):
+            os.environ['LD_LIBRARY_PATH'] += os.pathsep + os.getcwd() + '/lib'
+        else:
+            os.environ['LD_LIBRARY_PATH'] = os.pathsep + os.getcwd() + '/lib'
+
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',

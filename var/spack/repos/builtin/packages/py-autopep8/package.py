@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyAutopep8(Package):
+class PyAutopep8(PythonPackage):
     """autopep8 automatically formats Python code to conform to the
     PEP 8 style guide."""
 
@@ -38,7 +38,7 @@ class PyAutopep8(Package):
     extends('python', ignore='bin/pep8')
     depends_on('python@2.6:2.7,3.2:')
 
-    depends_on('py-pycodestyle@1.5.7:1.7.0', type=nolink)
+    depends_on('py-pycodestyle@1.5.7:1.7.0', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
 
@@ -48,6 +48,3 @@ class PyAutopep8(Package):
             return url.format('v', version)
         else:
             return url.format('ver', version)
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

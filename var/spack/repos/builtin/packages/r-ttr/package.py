@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RTtr(Package):
+class RTtr(RPackage):
     """Functions and data to construct technical trading rules with R."""
 
     homepage = "https://github.com/joshuaulrich/TTR"
@@ -34,11 +34,5 @@ class RTtr(Package):
 
     version('0.23-1', '35f693ac0d97e8ec742ebea2da222986')
 
-    extends('R')
-
-    depends_on('r-xts', type=nolink)
-    depends_on('r-zoo', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-xts', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))

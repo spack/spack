@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXlsx(Package):
+class RXlsx(RPackage):
     """Provide R functions to read/write/format Excel 2007 and Excel
     97/2000/XP/2003 file formats."""
 
@@ -35,11 +35,5 @@ class RXlsx(Package):
 
     version('0.5.7', '36b1b16f29c54b6089b1dae923180dd5')
 
-    extends('R')
-
-    depends_on('r-rjava', type=nolink)
-    depends_on('r-xlsxjars', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rjava', type=('build', 'run'))
+    depends_on('r-xlsxjars', type=('build', 'run'))

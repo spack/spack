@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRoxygen2(Package):
+class RRoxygen2(RPackage):
     """A 'Doxygen'-like in-source documentation system for Rd, collation, and
     'NAMESPACE' files."""
 
@@ -35,14 +35,8 @@ class RRoxygen2(Package):
 
     version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
 
-    extends('R')
-
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-stringi', type=nolink)
-    depends_on('r-brew', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-brew', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
