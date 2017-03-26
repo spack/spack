@@ -34,6 +34,7 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.1.1', 'f15c6b5dd8c71b1241004cd19818259d')
     version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
     # Alternate location if main server is down.
     # version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
