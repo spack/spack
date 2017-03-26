@@ -63,8 +63,7 @@ def set_dependency(saved_deps):
         pkg = spack.repo.get(pkg_name)
         if pkg_name not in saved_deps:
             saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
-        # Change dep spec
-        # XXX(deptype): handle deptypes.
+
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg.dependency_types[spec.name] = set(deptypes)
     return _mock
@@ -609,6 +608,8 @@ class TestSpecDag(object):
         assert '^mpich2' in s2
 
     def test_construct_spec_with_deptypes(self):
+        """Ensure that it is possible to construct a spec with explicit
+           dependency types."""
         s = Spec('a',
                  Spec('b',
                       ['build'], Spec('c')),
@@ -633,7 +634,12 @@ class TestSpecDag(object):
         assert s['f']._dependents['e'].deptypes == ('run',)
 
     def check_diamond_deptypes(self, spec):
-        """Validate deptypes in dt-diamond spec."""
+        """Validate deptypes in dt-diamond spec.
+
+        This ensures that concretization works properly when two packages
+        depend on the same dependency in different ways.
+
+        """
         assert spec['dt-diamond']._dependencies[
             'dt-diamond-left'].deptypes == ('build', 'link')
 
