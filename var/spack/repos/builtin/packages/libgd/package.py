@@ -38,7 +38,7 @@ class Libgd(AutotoolsPackage):
     """
 
     homepage = "https://github.com/libgd/libgd"
-    url      = 'https://github.com/libgd/libgd/releases/download/gd-2.2.4/libgd-2.2.4.tar.gz'
+    url      = "https://github.com/libgd/libgd/releases/download/gd-2.2.4/libgd-2.2.4.tar.gz"
 
     version('2.2.4', '0a3c307b5075edbe1883543dd1153c02')
     version('2.2.3', 'a67bd15fa33d4aac0a1c7904aed19f49')
@@ -52,6 +52,11 @@ class Libgd(AutotoolsPackage):
     depends_on('gettext', type='build')
     depends_on('pkg-config', type='build')
 
+    depends_on('libiconv')
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('fontconfig')
+
+    def url_for_version(self, version):
+        url = "https://github.com/libgd/libgd/releases/download/gd-{0}/libgd-{0}.tar.gz"
+        return url.format(version)
