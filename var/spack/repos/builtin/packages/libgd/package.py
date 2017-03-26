@@ -38,7 +38,7 @@ class Libgd(AutotoolsPackage):
     """
 
     homepage = "https://github.com/libgd/libgd"
-    url      = "https://github.com/libgd/libgd/releases/download/gd-2.2.4/libgd-2.2.4.tar.gz"
+    url      = 'https://github.com/libgd/libgd/releases/download/gd-2.2.4/libgd-2.2.4.tar.gz'
 
     version('2.2.4', '0a3c307b5075edbe1883543dd1153c02')
     version('2.2.3', 'a67bd15fa33d4aac0a1c7904aed19f49')
