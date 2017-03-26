@@ -32,8 +32,9 @@ class PyPymatgen(PythonPackage):
     analysis code powering the Materials Project."""
 
     homepage = "http://www.pymatgen.org/"
-    url      = "https://pypi.io/packages/source/p/pymatgen/pymatgen-4.6.2.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pymatgen/pymatgen-4.7.2.tar.gz"
 
+    version('4.7.2', '9c3a6e8608671c216e4ef89778646fd6')
     version('4.6.2', '508f77fdc3e783587348e93e4dfed1b8')
 
     depends_on('py-setuptools@18.0:', type='build')
