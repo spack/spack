@@ -26,6 +26,13 @@
 # This is a based largely on the Homebrew science formula:
 # https://github.com/Homebrew/homebrew-science/blob/master/blast.rb
 #
+# There s one tricky bit to be resolved:
+#
+# - HDF5 builds explode, blast's configure script tries to run a program that
+#   uses a variable called 'HOST' but some other bit defines a macro called HOST
+#   that's defined to a string.  Hilarity ensues.
+#
+#
 from spack import *
 
 
@@ -43,6 +50,13 @@ class BlastPlus(AutotoolsPackage):
     version('2.6.0', 'c8ce8055b10c4d774d995f88c7cc6225')
 
     # homebrew sez: Fixed upstream in future version > 2.6
+    # But this bug sez that it will be fixed in 2.6
+    #    https://github.com/Homebrew/homebrew-science/pull/4740
+    # The 2.6.0 src still matches the "before" bit of the patch
+    # so it's probably still "needed".
+    # On the other hand, the `find` command is broken and there
+    # aren't any .svn dirs in the tree, so I've updated their patch
+    # to just comment out the block.
     patch('blast-make-fix2.5.0.diff', when="@:2.6.0")
 
     # No...
@@ -58,6 +72,14 @@ class BlastPlus(AutotoolsPackage):
             description='Build with freetype support')
     # variant('hdf5', default=True,
     #        description='Build with hdf5 support')
+    variant('gnutls', default=True,
+           description='Build with gnutls support')
+    variant('openssl', default=True,
+           description='Build with openssl support')
+    variant('zlib', default=True,
+            description='Build with zlib support')
+    variant('bzip2', default=True,
+            description='Build with bzip2 support')
     variant('lzo', default=True,
             description='Build with lzo support')
     variant('pcre', default=True,
@@ -67,6 +89,10 @@ class BlastPlus(AutotoolsPackage):
     depends_on('libpng', when='+png')
     depends_on('freetype', when='+freetype')
     # depends_on('hdf5', when='+hdf5')
+    depends_on('gnutls', when='+gnutls')
+    depends_on('openssl', when='+openssl')
+    depends_on('zlib', when='+zlib')
+    depends_on('bzip2', when='+bzip2')
     depends_on('lzo', when='+lzo')
     depends_on('pcre', when='+pcre')
 
@@ -80,8 +106,10 @@ class BlastPlus(AutotoolsPackage):
 
         config_args = [
             '--prefix={0}'.format(prefix),
+            '--with-bin-release',
             '--without-debug',
             '--with-mt',
+            '--with-64',
             '--without-boost',
         ]
 
@@ -98,17 +126,17 @@ class BlastPlus(AutotoolsPackage):
             ])
 
         if '+jpeg' in spec:
-            config_args.append('--with-jpeg')
+            config_args.append('--with-jpeg={0}'.format(self.spec['jpeg'].prefix))
         else:
             config_args.append('--without-jpeg')
 
         if '+png' in spec:
-            config_args.append('--with-png')
+            config_args.append('--with-png={0}'.format(self.spec['libpng'].prefix))
         else:
             config_args.append('--without-png')
 
         if '+freetype' in spec:
-            config_args.append('--with-freetype')
+            config_args.append('--with-freetype={0}'.format(self.spec['freetype'].prefix))
         else:
             config_args.append('--without-freetype')
 
@@ -119,13 +147,33 @@ class BlastPlus(AutotoolsPackage):
         # else:
         #     config_args.append('--without-hdf5')
 
+        if '+zlib' in spec:
+            config_args.append('--with-z={0}'.format(self.spec['zlib'].prefix))
+        else:
+            config_args.append('--without-z')
+
+        if '+bzip2' in spec:
+            config_args.append('--with-bz2={0}'.format(self.spec['bzip2'].prefix))
+        else:
+            config_args.append('--without-bz2')
+
         if '+lzo' in spec:
-            config_args.append('--with-lzo')
+            config_args.append('--with-lzo={0}'.format(self.spec['lzo'].prefix))
         else:
             config_args.append('--without-lzo')
 
+        if '+gnutls' in spec:
+            config_args.append('--with-gnutls={0}'.format(self.spec['gnutls'].prefix))
+        else:
+            config_args.append('--without-gnutls')
+
+        if '+openssl' in spec:
+            config_args.append('--with-openssl={0}'.format(self.spec['openssl'].prefix))
+        else:
+            config_args.append('--without-openssl')
+
         if '+pcre' in spec:
-            config_args.append('--with-pcre')
+            config_args.append('--with-pcre={0}'.format(self.spec['pcre'].prefix))
         else:
             config_args.append('--without-pcre')
 
