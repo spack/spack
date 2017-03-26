@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+from __future__ import print_function
 import os
 import shutil
 import sys
@@ -115,7 +115,7 @@ class Hdf5Blosc(Package):
 
     def check_install(self, spec):
         "Build and run a small program to test the installed HDF5 Blosc plugin"
-        print "Checking HDF5-Blosc plugin..."
+        print("Checking HDF5-Blosc plugin...")
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
             source = r"""\
@@ -188,16 +188,16 @@ Done.
                 output = ""
             success = output == expected
             if not success:
-                print "Produced output does not match expected output."
-                print "Expected output:"
-                print "-" * 80
-                print expected
-                print "-" * 80
-                print "Produced output:"
-                print "-" * 80
-                print output
-                print "-" * 80
-                print "Environment:"
+                print("Produced output does not match expected output.")
+                print("Expected output:")
+                print("-" * 80)
+                print(expected)
+                print("-" * 80)
+                print("Produced output:")
+                print("-" * 80)
+                print(output)
+                print("-" * 80)
+                print("Environment:")
                 env = which("env")
                 env()
                 raise RuntimeError("HDF5 Blosc plugin check failed")

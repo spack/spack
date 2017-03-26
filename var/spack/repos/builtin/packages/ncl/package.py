@@ -229,6 +229,6 @@ class Ncl(Package):
             if os.path.exists(filename):
                 try:
                     os.remove(filename)
-                except OSError, e:
+                except OSError as e:
                     raise InstallError('Failed to delete file %s: %s' % (
                         e.filename, e.strerror))
