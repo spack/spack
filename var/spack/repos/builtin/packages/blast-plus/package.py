@@ -22,10 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
-
+#
 # This is a based largely on the Homebrew science formula:
 # https://github.com/Homebrew/homebrew-science/blob/master/blast.rb
+#
+from spack import *
+
+
 class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
@@ -69,7 +72,7 @@ class BlastPlus(AutotoolsPackage):
 
     depends_on('python')
 
-    configure_directory ='c++'
+    configure_directory = 'c++'
 
     def configure_args(self):
         spec   = self.spec
@@ -77,7 +80,6 @@ class BlastPlus(AutotoolsPackage):
 
         config_args = [
             '--prefix={0}'.format(prefix),
-            #--libdir=#{libexec},
             '--without-debug',
             '--with-mt',
             '--without-boost',
