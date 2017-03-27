@@ -46,6 +46,8 @@ class Alquimia(CMakePackage):
     depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('petsc@develop', when='@develop')    
 
+    patch('petsc_arch.patch')
+
     def cmake_args(self):
         spec = self.spec
 
