@@ -47,7 +47,8 @@ class BlastPlus(AutotoolsPackage):
         url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/{0}/ncbi-blast-{0}+-src.tar.gz"
         return url.format(version)
 
-    version('2.6.0', 'c8ce8055b10c4d774d995f88c7cc6225')
+    version('2.6.0',  'c8ce8055b10c4d774d995f88c7cc6225')
+    version('2.2.30', 'f8e9a5eb368173142fe6867208b73715')
 
     # homebrew sez: Fixed upstream in future version > 2.6
     # But this bug sez that it will be fixed in 2.6
@@ -57,7 +58,16 @@ class BlastPlus(AutotoolsPackage):
     # On the other hand, the `find` command is broken and there
     # aren't any .svn dirs in the tree, so I've updated their patch
     # to just comment out the block.
-    patch('blast-make-fix2.5.0.diff', when="@:2.6.0")
+    patch('blast-make-fix2.5.0.diff', when="@2.5.0:2.6.0")
+
+    # See https://github.com/Homebrew/homebrew-science/\
+    # issues/2337#issuecomment-170011511
+    @when('@:2.2.31')
+    def patch(self):
+        filter_file("2.95* | 2.96* | 3.* | 4.* )",
+                    "2.95* | 2.96* | 3.* | 4.* | 5.* )",
+                    "c++/src/build-system/configure",
+                    string=True)
 
     # No...
     # depends_on :mysql => :optional
