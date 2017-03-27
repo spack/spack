@@ -37,6 +37,7 @@ class Gnutls(AutotoolsPackage):
     homepage = "http://www.gnutls.org"
     url      = "http://www.ring.gr.jp/pub/net/gnupg/gnutls/v3.3/gnutls-3.3.9.tar.xz"
 
+    patch("configure.patch")
     version('3.3.9', 'ff61b77e39d09f1140ab5a9cf52c58b6')
 
     # configure sez: Note that this version of gnutls doesn't support nettle 3.0.

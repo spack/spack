@@ -1,0 +1,15 @@
+--- a/configure	2017-03-26 17:49:53.319837010 -0700
++++ b/configure	2017-03-26 17:51:17.284573463 -0700
+@@ -21292,8 +21292,10 @@
+   # only, it does not matter if we skip the link with older autoconf.
+   # Automake 1.10.1 and earlier try to remove GNUmakefile in non-VPATH
+   # builds, so use a shell variable to bypass this.
+-  GNUmakefile=GNUmakefile
+-  ac_config_links="$ac_config_links $GNUmakefile:$GNUmakefile"
++  #
++  # The give a cyclic link, don't bother with it.
++  # GNUmakefile=GNUmakefile
++  # ac_config_links="$ac_config_links $GNUmakefile:$GNUmakefile"
+ 
+ 
+ 
