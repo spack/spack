@@ -41,6 +41,6 @@ class Gnutls(AutotoolsPackage):
 
     # configure sez: Note that this version of gnutls doesn't support 
     # nettle 3.0.
-    depends_on("nettle@:2.7.1")
+    depends_on("nettle@:2.9")
 
     build_directory = 'spack-build'
