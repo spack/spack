@@ -7,7 +7,7 @@
 -  GNUmakefile=GNUmakefile
 -  ac_config_links="$ac_config_links $GNUmakefile:$GNUmakefile"
 +  #
-+  # The give a cyclic link, don't bother with it.
++  # This give a cyclic link, don't bother with it.
 +  # GNUmakefile=GNUmakefile
 +  # ac_config_links="$ac_config_links $GNUmakefile:$GNUmakefile"
  
