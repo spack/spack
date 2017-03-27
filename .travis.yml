@@ -22,6 +22,22 @@ matrix:
       os: linux
       language: python
       env: TEST_SUITE=unit
+    - python: '3.3'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.4'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.5'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
     - python: '2.7'
       os: linux
       language: python
@@ -45,6 +61,7 @@ addons:
   apt:
     packages:
       - gfortran
+      - mercurial
       - graphviz
 
 # Work around Travis's lack of support for Python on OSX
@@ -60,7 +77,6 @@ install:
   - pip install --upgrade codecov
   - pip install --upgrade flake8
   - pip install --upgrade sphinx
-  - pip install --upgrade mercurial
 
 before_script:
   # Need this for the git tests to succeed.

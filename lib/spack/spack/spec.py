@@ -106,7 +106,6 @@ from six import StringIO
 from six import string_types
 from six import iteritems
 
-import llnl.util.tty as tty
 import spack
 import spack.architecture
 import spack.compilers as compilers
@@ -159,6 +158,7 @@ __all__ = [
     'UnsatisfiableDependencySpecError',
     'AmbiguousHashError',
     'InvalidHashError',
+    'NoSuchHashError',
     'RedundantSpecError']
 
 # Valid pattern for an identifier in Spack
@@ -2952,8 +2952,7 @@ class SpecParser(spack.parse.Parser):
                    spec.dag_hash()[:len(self.token.value)] == self.token.value]
 
         if not matches:
-            tty.die("%s does not match any installed packages." %
-                    self.token.value)
+            raise NoSuchHashError(self.token.value)
 
         if len(matches) != 1:
             raise AmbiguousHashError(
@@ -3323,6 +3322,12 @@ class InvalidHashError(SpecError):
         super(InvalidHashError, self).__init__(
             "The spec specified by %s does not match provided spec %s"
             % (hash, spec))
+
+
+class NoSuchHashError(SpecError):
+    def __init__(self, hash):
+        super(NoSuchHashError, self).__init__(
+            "No installed spec matches the hash: '%s'")
 
 
 class RedundantSpecError(SpecError):
