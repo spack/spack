@@ -53,15 +53,15 @@ do
 	sed -i s=$var=${!var}=g config.yaml.template
 done
 
-# CONFIG_YAML, COMPILER_YAML, PACKAGE_YAML, MIRRORS_YAML
+# CONFIG_YAML, COMPILERS_YAML, PACKAGE_YAML, MIRRORS_YAML
 CONFIG_YAML=config.yaml.template
 
 if [[ $HOSTNAME == *"uv"* ]]; then
-	COMPILER_YAML="compilers_sgi.yaml"
+	COMPILERS_YAML="compilers_sgi.yaml"
 elif [[ $HOSTNAME == *"minsky"* ]]; then
-	COMPILER_YAML="compilers_minsky.yaml"
+	COMPILERS_YAML="compilers_minsky.yaml"
 else
-	COMPILER_YAML="compilers.yaml"
+	COMPILERS_YAML="compilers.yaml"
 fi
 
 if [[ $HOSTNAME == *"uv"* ]]; then
@@ -78,12 +78,12 @@ MIRRORS_YAML=mirrors.yaml
 
 # Deploying
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
-cp -f ${PACKAGE_YAML} $SPACK_ROOT/etc/spack/packages.yaml
-cp -f ${COMPILER_YAML} $SPACK_ROOT/etc/spack/compilers.yaml 
+cp -f ${PACKAGE_YAML} ${SPACK_ROOT}/etc/spack/packages.yaml
+cp -f ${COMPILERS_YAML} ${SPACK_ROOT}/etc/spack/compilers.yaml
 rm -f ./etc/spack/compilers.yaml
 mkdir -p ~/.spack/linux
 cp -f ${MIRRORS_YAML} ~/.spack/linux
-source $SPACK_ROOT/share/spack/setup-env.sh
+source ${SPACK_ROOT}/share/spack/setup-env.sh
 
 # Reset config.yaml.template
 git co -- config.yaml.template
