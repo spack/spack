@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fftw(Package):
+class Fftw(AutotoolsPackage):
     """FFTW is a C subroutine library for computing the discrete Fourier
        transform (DFT) in one or more dimensions, of arbitrary input
        size, and of both real and complex data (as well as of even/odd
@@ -41,12 +41,15 @@ class Fftw(Package):
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
     version('2.1.5', '8d16a84f3ca02a785ef9eb36249ba433')
 
-    patch('pfft-3.3.5.patch', when="@3.3.5+pfft_patches", level=0)
+    patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
 
     variant(
         'float', default=True,
         description='Produces a single precision version of the library')
+    variant(
+        'double', default=True,
+        description='Produces a double precision version of the library')
     variant(
         'long_double', default=True,
         description='Produces a long double precision version of the library')
@@ -63,8 +66,14 @@ class Fftw(Package):
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
+    depends_on('libtool', type='build', when='+pfft_patches')
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
+        if '+pfft_patches' in spec:
+            autoreconf = which('autoreconf')
+            autoreconf('-ifv')
+
+    def configure(self, spec, prefix):
         # Base options
         options = [
             '--prefix={0}'.format(prefix),
@@ -90,9 +99,6 @@ class Fftw(Package):
                 options.insert(0, 'CFLAGS=' + self.compiler.openmp_flag)
         if '+mpi' in spec:
             options.append('--enable-mpi')
-        if '+pfft_patches' in spec:
-            autoreconf = which('autoreconf')
-            autoreconf('-ifv')
 
         # SIMD support
         # TODO: add support for more architectures
@@ -102,29 +108,60 @@ class Fftw(Package):
             float_options.append('--enable-sse2')
             double_options.append('--enable-sse2')
 
-        # Build double precision
-        configure(*(options + double_options))
-        make()
-        if self.run_tests:
-            make("check")
-        make("install")
+        configure = Executable('../configure')
 
-        # Build float/long double/quad variants
+        # Build double/float/long double/quad variants
+        if '+double' in spec:
+            with working_dir('double', create=True):
+                configure(*(options + double_options))
         if '+float' in spec:
-            configure('--enable-float', *(options + float_options))
-            make()
-            if self.run_tests:
-                make("check")
-            make("install")
+            with working_dir('float', create=True):
+                configure('--enable-float', *(options + float_options))
         if spec.satisfies('@3:+long_double'):
-            configure('--enable-long-double', *options)
-            make()
-            if self.run_tests:
-                make("check")
-            make("install")
+            with working_dir('long-double', create=True):
+                configure('--enable-long-double', *options)
         if spec.satisfies('@3:+quad'):
-            configure('--enable-quad-precision', *options)
-            make()
-            if self.run_tests:
+            with working_dir('quad', create=True):
+                configure('--enable-quad-precision', *options)
+
+    def build(self, spec, prefix):
+        if '+double' in spec:
+            with working_dir('double'):
+                make()
+        if '+float' in spec:
+            with working_dir('float'):
+                make()
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make()
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make()
+
+    def check(self, spec, prefix):
+        if '+double' in spec:
+            with working_dir('double'):
                 make("check")
-            make("install")
+        if '+float' in spec:
+            with working_dir('float'):
+                make("check")
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make("check")
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make("check")
+
+    def install(self, spec, prefix):
+        if '+double' in spec:
+            with working_dir('double'):
+                make("install")
+        if '+float' in spec:
+            with working_dir('float'):
+                make("install")
+        if '+long_double' in spec:
+            with working_dir('long-double'):
+                make("install")
+        if '+quad' in spec:
+            with working_dir('quad'):
+                make("install")

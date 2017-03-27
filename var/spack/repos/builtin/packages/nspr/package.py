@@ -25,36 +25,21 @@
 from spack import *
 
 
-class Intltool(AutotoolsPackage):
-    """intltool is a set of tools to centralize translation of many different
-    file formats using GNU gettext-compatible PO files."""
+class Nspr(AutotoolsPackage):
+    """Netscape Portable Runtime (NSPR) provides a platform-neutral API
+    for system level and libc-like functions."""
 
-    homepage = 'https://freedesktop.org/wiki/Software/intltool/'
-    url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
-    list_url = 'https://launchpad.net/intltool/+download'
+    homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSPR"
+    url      = "http://ftp.mozilla.org/pub/nspr/releases/v4.13.1/src/nspr-4.13.1.tar.gz"
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('4.13.1', '9c44298a6fc478b3c0a4e98f4f9981ed')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    depends_on('perl', type='build')
 
-    def check(self):
-        # `make check` passes but causes `make install` to fail
-        pass
+    configure_directory = 'nspr'
 
-    def _make_executable(self, name):
-        return Executable(join_path(self.prefix.bin, name))
-
-    def setup_dependent_package(self, module, dependent_spec):
-        # intltool is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = [
-            'intltool-extract',
-            'intltoolize',
-            'intltool-merge',
-            'intltool-prepare',
-            'intltool-update'
+    def configure_args(self):
+        return [
+            '--with-mozilla',
+            '--enable-64bit'  # without this, fails when 32-bit glibc not found
         ]
-
-        for name in executables:
-            setattr(module, name, self._make_executable(name))

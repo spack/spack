@@ -25,36 +25,17 @@
 from spack import *
 
 
-class Intltool(AutotoolsPackage):
-    """intltool is a set of tools to centralize translation of many different
-    file formats using GNU gettext-compatible PO files."""
+class Nccl(MakefilePackage):
+    """Optimized primitives for collective multi-GPU communication."""
 
-    homepage = 'https://freedesktop.org/wiki/Software/intltool/'
-    url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
-    list_url = 'https://launchpad.net/intltool/+download'
+    homepage = "https://github.com/NVIDIA/nccl"
+    url      = "https://github.com/NVIDIA/nccl/archive/v1.3.4-1.tar.gz"
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('1.3.4-1', '5b9ce7fbdce0fde68e0f66318e6ff422')
+    version('1.3.0-1', 'f6fb1d56913a7d212ca0c300e76f01fb')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    depends_on('cuda')
 
-    def check(self):
-        # `make check` passes but causes `make install` to fail
-        pass
-
-    def _make_executable(self, name):
-        return Executable(join_path(self.prefix.bin, name))
-
-    def setup_dependent_package(self, module, dependent_spec):
-        # intltool is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = [
-            'intltool-extract',
-            'intltoolize',
-            'intltool-merge',
-            'intltool-prepare',
-            'intltool-update'
-        ]
-
-        for name in executables:
-            setattr(module, name, self._make_executable(name))
+    @property
+    def install_targets(self):
+        return ['PREFIX={0}'.format(self.prefix), 'install']

@@ -25,36 +25,38 @@
 from spack import *
 
 
-class Intltool(AutotoolsPackage):
-    """intltool is a set of tools to centralize translation of many different
-    file formats using GNU gettext-compatible PO files."""
+class Autogen(AutotoolsPackage):
+    """AutoGen is a tool designed to simplify the creation and maintenance of
+    programs that contain large amounts of repetitious text. It is especially
+    valuable in programs that have several blocks of text that must be kept
+    synchronized."""
 
-    homepage = 'https://freedesktop.org/wiki/Software/intltool/'
-    url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
-    list_url = 'https://launchpad.net/intltool/+download'
+    homepage = "https://www.gnu.org/software/autogen/index.html"
+    url      = "https://ftp.gnu.org/gnu/autogen/rel5.18.12/autogen-5.18.12.tar.gz"
+    list_url = "https://ftp.gnu.org/gnu/autogen"
+    list_depth = 2
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('5.18.12', '551d15ccbf5b5fc5658da375d5003389')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    variant('xml', default=True, description='Enable XML support')
 
-    def check(self):
-        # `make check` passes but causes `make install` to fail
-        pass
+    depends_on('pkg-config@0.9.0:', type='build')
 
-    def _make_executable(self, name):
-        return Executable(join_path(self.prefix.bin, name))
+    depends_on('guile@1.8:2.0')
+    depends_on('libxml2', when='+xml')
 
-    def setup_dependent_package(self, module, dependent_spec):
-        # intltool is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = [
-            'intltool-extract',
-            'intltoolize',
-            'intltool-merge',
-            'intltool-prepare',
-            'intltool-update'
+    def configure_args(self):
+        spec = self.spec
+
+        args = [
+            # `make check` fails without this
+            # Adding a gettext dependency does not help
+            '--disable-nls',
         ]
 
-        for name in executables:
-            setattr(module, name, self._make_executable(name))
+        if '+xml' in spec:
+            args.append('--with-libxml2={0}'.format(spec['libxml2'].prefix))
+        else:
+            args.append('--without-libxml2')
+
+        return args

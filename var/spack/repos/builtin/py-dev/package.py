@@ -25,36 +25,14 @@
 from spack import *
 
 
-class Intltool(AutotoolsPackage):
-    """intltool is a set of tools to centralize translation of many different
-    file formats using GNU gettext-compatible PO files."""
+class PyDev(PythonPackage):
+    """libraries and tools for Python development"""
 
-    homepage = 'https://freedesktop.org/wiki/Software/intltool/'
-    url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
-    list_url = 'https://launchpad.net/intltool/+download'
+    homepage = "https://pypi.python.org/pypi/dev"
+    url      = "https://pypi.io/packages/source/d/dev/dev-0.4.0.tar.gz"
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('0.4.0', '00449cf0b347c32da9c840adcb4cf24b')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    patch('__init__.py.patch')
 
-    def check(self):
-        # `make check` passes but causes `make install` to fail
-        pass
-
-    def _make_executable(self, name):
-        return Executable(join_path(self.prefix.bin, name))
-
-    def setup_dependent_package(self, module, dependent_spec):
-        # intltool is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = [
-            'intltool-extract',
-            'intltoolize',
-            'intltool-merge',
-            'intltool-prepare',
-            'intltool-update'
-        ]
-
-        for name in executables:
-            setattr(module, name, self._make_executable(name))
+    depends_on('py-setuptools', type='build')

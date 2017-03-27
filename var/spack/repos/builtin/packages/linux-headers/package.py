@@ -25,36 +25,21 @@
 from spack import *
 
 
-class Intltool(AutotoolsPackage):
-    """intltool is a set of tools to centralize translation of many different
-    file formats using GNU gettext-compatible PO files."""
+class LinuxHeaders(Package):
+    """The Linux kernel headers."""
 
-    homepage = 'https://freedesktop.org/wiki/Software/intltool/'
-    url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
-    list_url = 'https://launchpad.net/intltool/+download'
+    homepage = "https://www.kernel.org/"
+    url      = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.9.10.tar.xz"
+    list_url = "https://www.kernel.org/pub/linux/kernel"
+    list_depth = 2
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('4.9.10', 'ce5ab2a86c9b880617e36e84aa2deb6c')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    def setup_environment(self, spack_env, run_env):
+        # This variable is used in the Makefile. If it is defined on the
+        # system, it can break the build if there is no build recipe for
+        # that specific ARCH
+        spack_env.unset('ARCH')
 
-    def check(self):
-        # `make check` passes but causes `make install` to fail
-        pass
-
-    def _make_executable(self, name):
-        return Executable(join_path(self.prefix.bin, name))
-
-    def setup_dependent_package(self, module, dependent_spec):
-        # intltool is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = [
-            'intltool-extract',
-            'intltoolize',
-            'intltool-merge',
-            'intltool-prepare',
-            'intltool-update'
-        ]
-
-        for name in executables:
-            setattr(module, name, self._make_executable(name))
+    def install(self, spec, prefix):
+        make('headers_install', 'INSTALL_HDR_PATH={0}'.format(prefix))

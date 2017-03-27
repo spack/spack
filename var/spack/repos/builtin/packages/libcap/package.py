@@ -25,36 +25,27 @@
 from spack import *
 
 
-class Intltool(AutotoolsPackage):
-    """intltool is a set of tools to centralize translation of many different
-    file formats using GNU gettext-compatible PO files."""
+class Libcap(MakefilePackage):
+    """Libcap implements the user-space interfaces to the POSIX 1003.1e
+    capabilities available in Linux kernels. These capabilities are a
+    partitioning of the all powerful root privilege into a set of
+    distinct privileges."""
 
-    homepage = 'https://freedesktop.org/wiki/Software/intltool/'
-    url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
-    list_url = 'https://launchpad.net/intltool/+download'
+    homepage = "https://sites.google.com/site/fullycapable/"
+    url      = "https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.25.tar.gz"
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('2.25', '4b18f7166a121138cca0cdd8ab64df4c')
 
-    # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    patch('libcap-fix-the-libcap-native-building-failure-on-CentOS-6.7.patch')
 
-    def check(self):
-        # `make check` passes but causes `make install` to fail
-        pass
-
-    def _make_executable(self, name):
-        return Executable(join_path(self.prefix.bin, name))
-
-    def setup_dependent_package(self, module, dependent_spec):
-        # intltool is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = [
-            'intltool-extract',
-            'intltoolize',
-            'intltool-merge',
-            'intltool-prepare',
-            'intltool-update'
+    def install(self, spec, prefix):
+        make_args = [
+            'RAISE_SETFCAP=no',
+            'lib=lib',
+            'prefix={0}'.format(prefix),
+            'install'
         ]
+        make(*make_args)
 
-        for name in executables:
-            setattr(module, name, self._make_executable(name))
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix.lib, 'libcap.so'))

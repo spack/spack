@@ -76,8 +76,6 @@ class R(AutotoolsPackage):
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')
-    depends_on('tk+X', when='+X')
-    depends_on('tk~X', when='~X')
     depends_on('libx11', when='+X')
     depends_on('libxt', when='+X')
     depends_on('curl')
