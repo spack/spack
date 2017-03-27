@@ -29,8 +29,8 @@
 # There s one tricky bit to be resolved:
 #
 # - HDF5 builds explode, blast's configure script tries to run a program that
-#   uses a variable called 'HOST' but some other bit defines a macro called HOST
-#   that's defined to a string.  Hilarity ensues.
+#   uses a variable called 'HOST' but some other bit defines a macro called
+#   HOST that's defined to a string.  Hilarity ensues.
 #
 #
 from spack import *
@@ -73,9 +73,9 @@ class BlastPlus(AutotoolsPackage):
     # variant('hdf5', default=True,
     #        description='Build with hdf5 support')
     variant('gnutls', default=True,
-           description='Build with gnutls support')
+            description='Build with gnutls support')
     variant('openssl', default=True,
-           description='Build with openssl support')
+            description='Build with openssl support')
     variant('zlib', default=True,
             description='Build with zlib support')
     variant('bzip2', default=True,
@@ -126,54 +126,74 @@ class BlastPlus(AutotoolsPackage):
             ])
 
         if '+jpeg' in spec:
-            config_args.append('--with-jpeg={0}'.format(self.spec['jpeg'].prefix))
+            config_args.append(
+                '--with-jpeg={0}'.format(self.spec['jpeg'].prefix)
+            )
         else:
             config_args.append('--without-jpeg')
 
         if '+png' in spec:
-            config_args.append('--with-png={0}'.format(self.spec['libpng'].prefix))
+            config_args.append(
+                '--with-png={0}'.format(self.spec['libpng'].prefix)
+            )
         else:
             config_args.append('--without-png')
 
         if '+freetype' in spec:
-            config_args.append('--with-freetype={0}'.format(self.spec['freetype'].prefix))
+            config_args.append(
+                '--with-freetype={0}'.format(self.spec['freetype'].prefix)
+            )
         else:
             config_args.append('--without-freetype')
 
         config_args.append('--without-hdf5')
         # if '+hdf5' in spec:
         #     # FIXME
-        #     config_args.append('--with-hdf5={0}'.format(self.spec['hdf5'].prefix))
+        #     config_args.append(
+        #         '--with-hdf5={0}'.format(self.spec['hdf5'].prefix)
+        #     )
         # else:
         #     config_args.append('--without-hdf5')
 
         if '+zlib' in spec:
-            config_args.append('--with-z={0}'.format(self.spec['zlib'].prefix))
+            config_args.append(
+                '--with-z={0}'.format(self.spec['zlib'].prefix)
+            )
         else:
             config_args.append('--without-z')
 
         if '+bzip2' in spec:
-            config_args.append('--with-bz2={0}'.format(self.spec['bzip2'].prefix))
+            config_args.append(
+                '--with-bz2={0}'.format(self.spec['bzip2'].prefix)
+            )
         else:
             config_args.append('--without-bz2')
 
         if '+lzo' in spec:
-            config_args.append('--with-lzo={0}'.format(self.spec['lzo'].prefix))
+            config_args.append(
+                '--with-lzo={0}'.format(self.spec['lzo'].prefix)
+            )
         else:
             config_args.append('--without-lzo')
 
         if '+gnutls' in spec:
-            config_args.append('--with-gnutls={0}'.format(self.spec['gnutls'].prefix))
+            config_args.append(
+                '--with-gnutls={0}'.format(self.spec['gnutls'].prefix)
+            )
         else:
             config_args.append('--without-gnutls')
 
         if '+openssl' in spec:
-            config_args.append('--with-openssl={0}'.format(self.spec['openssl'].prefix))
+            config_args.append(
+                '--with-openssl={0}'.format(self.spec['openssl'].prefix)
+            )
         else:
             config_args.append('--without-openssl')
 
         if '+pcre' in spec:
-            config_args.append('--with-pcre={0}'.format(self.spec['pcre'].prefix))
+            config_args.append(
+                '--with-pcre={0}'.format(self.spec['pcre'].prefix)
+            )
         else:
             config_args.append('--without-pcre')
 
