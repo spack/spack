@@ -222,7 +222,24 @@ class PythonPackage(PackageBase):
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
-        return ['--prefix={0}'.format(prefix)]
+        args = ['--prefix={0}'.format(prefix)]
+
+        # This option causes python packages (including setuptools) NOT
+        # to create eggs or easy-install.pth files.  Instead, they
+        # install naturally into $prefix/pythonX.Y/site-packages.
+        #
+        # Eggs add an extra level of indirection to sys.path, slowing
+        # down large HPC runs.  They are also deprecated in favor of
+        # wheels, which use a normal layout when installed.
+        #
+        # Spack manages the package directory on its own by symlinking
+        # extensions into the site-packages directory, so we don't really
+        # need the .pth files or egg directories, anyway.
+        if ('py-setuptools' == spec.name or          # this is setuptools, or
+            'py-setuptools' in spec._dependencies):  # it's an immediate dep
+            args += ['--single-version-externally-managed', '--root=/']
+
+        return args
 
     def install_lib(self, spec, prefix):
         """Install all Python modules (extensions and pure Python)."""

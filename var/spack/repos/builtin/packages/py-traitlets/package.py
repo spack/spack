@@ -40,7 +40,6 @@ class PyTraitlets(PythonPackage):
     version('4.0.0', 'b5b95ea5941fd9619b4704dfd8201568')
     version('4.0',   '14544e25ccf8e920ed1cbf833852481f')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
 

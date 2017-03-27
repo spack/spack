@@ -36,7 +36,7 @@ class Npm(AutotoolsPackage):
     version('3.10.9', 'ec1eb22b466ce87cdd0b90182acce07f')
     version('3.10.5', '46002413f4a71de9b0da5b506bf1d992')
 
-    depends_on('node-js')
+    depends_on('node-js', type=('build', 'run'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix

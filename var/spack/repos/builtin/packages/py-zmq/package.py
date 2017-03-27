@@ -33,7 +33,6 @@ class PyZmq(PythonPackage):
     version('16.0.2', '4cf14a2995742253b2b009541f4436f4')
     version('14.7.0', 'bf304fb73d72aee314ff82d3554328c179938ecf')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.16:', type=('build', 'run'))
     depends_on('py-py', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))

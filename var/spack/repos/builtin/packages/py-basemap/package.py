@@ -35,7 +35,6 @@ class PyBasemap(PythonPackage):
 
     version('1.0.7', '48c0557ced9e2c6e440b28b3caff2de8')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
