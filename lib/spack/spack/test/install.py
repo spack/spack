@@ -100,9 +100,38 @@ def test_partial_install(mock_archive):
         setattr(pkg, 'succeed', True)
         pkg.do_install()
         assert pkg.installed
-    except:
+    finally:
         spack.package.Package.remove_prefix = remove_prefix
-        raise
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install_keep_prefix(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        # Don't repair remove_prefix at this point, set keep_prefix so that
+        # Spack continues with a partial install
+        setattr(pkg, 'succeed', True)
+        pkg.do_install(keep_prefix=True)
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
 
 
 @pytest.mark.usefixtures('install_mockery')

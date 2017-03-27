@@ -1159,12 +1159,16 @@ class PackageBase(object):
                     (self.name, self.spec.external))
             return
 
-        self.repair_partial(keep_prefix, keep_stage)
+        self.repair_partial(keep_prefix)
 
         # Ensure package is not already installed
         layout = spack.store.layout
         with self._prefix_read_lock():
-            if layout.check_installed(self.spec):
+            if (keep_prefix and os.path.isdir(self.prefix) and 
+                    (not self.installed)):
+                tty.msg(
+                    "Continuing from partial install of %s" % self.name)
+            elif layout.check_installed(self.spec):
                 tty.msg(
                     "%s is already installed in %s" % (self.name, self.prefix))
                 rec = spack.store.db.get_record(self.spec)
@@ -1291,7 +1295,8 @@ class PackageBase(object):
 
         try:
             # Create the install prefix and fork the build process.
-            spack.store.layout.create_install_directory(self.spec)
+            if (not keep_prefix) or (not os.path.isdir(self.prefix)):
+                spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
             spack.store.layout.mark_complete(self.spec)
@@ -1319,13 +1324,17 @@ class PackageBase(object):
             if not keep_prefix:
                 self.remove_prefix()
 
-    def repair_partial(self, keep_prefix=False, keep_stage=False):
-        """Ensures that the package is 
+    def repair_partial(self, continue_with_partial=False):
+        """If continue_with_partial is not set, this ensures that the package
+           is either fully-installed or that the prefix is removed. If the
+           package is installed but there is no DB entry then this adds a
+           record. If continue_with_partial is not set this also clears the
+           stage directory to start an installation from scratch.
         """
         layout = spack.store.layout
         with self._prefix_read_lock():
             if (os.path.isdir(self.prefix) and not self.installed and
-                    not keep_prefix):
+                    not continue_with_partial):
                 spack.hooks.pre_uninstall(self)
                 self.remove_prefix()
                 try:
@@ -1335,14 +1344,14 @@ class PackageBase(object):
                 spack.hooks.post_uninstall(self)
                 tty.msg("Removed partial install for %s" %
                         self.spec.short_spec)
-            elif layout.check_installed(self.spec):
+            elif self.installed and layout.check_installed(self.spec):
                 try:
                     spack.store.db.get_record(self.spec)
                 except KeyError:
                     tty.msg("Repairing db for %s" % self.name)
                     spack.store.db.add(self.spec)
 
-        if not keep_stage:
+        if not continue_with_partial:
             self.stage.destroy()
             self.stage.create()
 

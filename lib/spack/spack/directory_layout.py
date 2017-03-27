@@ -269,9 +269,6 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         if not os.path.isdir(path):
             return None
-        elif not self.completed_install(spec):
-            raise InconsistentInstallDirectoryError(
-                'The prefix %s contains a partial install' % path)
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(
