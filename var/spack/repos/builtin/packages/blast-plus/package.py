@@ -60,8 +60,7 @@ class BlastPlus(AutotoolsPackage):
     # to just comment out the block.
     patch('blast-make-fix2.5.0.diff', when="@2.5.0:2.6.0")
 
-    # See https://github.com/Homebrew/homebrew-science/\
-    # issues/2337#issuecomment-170011511
+    # See https://github.com/Homebrew/homebrew-science/issues/2337#issuecomment-170011511
     @when('@:2.2.31')
     def patch(self):
         filter_file("2.95* | 2.96* | 3.* | 4.* )",
