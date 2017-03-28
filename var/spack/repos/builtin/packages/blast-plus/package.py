@@ -111,10 +111,8 @@ class BlastPlus(AutotoolsPackage):
 
     def configure_args(self):
         spec   = self.spec
-        prefix = self.prefix
 
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--with-bin-release',
             '--without-debug',
             '--with-mt',
