@@ -35,6 +35,7 @@ class SuperluDist(Package):
 
     version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
     version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0-rc1')    
+    version('5.1.3', 'fec21a9207ef94f57501c9406da78285')
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')
     version('5.1.0', '6bb86e630bd4bd8650243aed8fd92eb9')
     version('5.0.0', '2b53baf1b0ddbd9fcf724992577f0670')
