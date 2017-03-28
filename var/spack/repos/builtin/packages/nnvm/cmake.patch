@@ -1,0 +1,37 @@
+From e2c77bb28f061c5d704a40638263b5553efea858 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Sat, 19 Aug 2017 16:12:21 +0800
+Subject: [PATCH] Build nnvm as a static lib instead of a shared lib.
+
+---
+ CMakeLists.txt | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d40deb5..569300d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -61,7 +61,7 @@ elseif(DMLC_CORE_PATH)
+   include_directories(${DMLC_CORE_PATH}/include)
+ endif()
+ 
+-add_library(nnvm SHARED ${SOURCE})
++add_library(nnvm ${SOURCE})
+ target_link_libraries(nnvm ${nnvm_LINKER_LIBS})
+ 
+ if(INSTALL_INCLUDE_DIR)
+@@ -71,6 +71,11 @@ if(INSTALL_INCLUDE_DIR)
+     )
+ endif()
+ 
++# ---[ Install the archive static lib
++install(TARGETS nnvm ARCHIVE DESTINATION lib LIBRARY DESTINATION lib) 
++install(DIRECTORY include DESTINATION .)
++install(DIRECTORY docs DESTINATION .)
++
+ # ---[ Linter target
+ if(MSVC)
+   find_package(PythonInterp 2)
+-- 
+1.8.3.1
+
