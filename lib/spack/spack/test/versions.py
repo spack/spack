@@ -95,6 +95,16 @@ class VersionsTest(unittest.TestCase):
         self.assert_ver_eq('develop', 'develop')
         self.assert_ver_lt('1.0', 'develop')
         self.assert_ver_gt('develop', '1.0')
+        self.assert_ver_eq('1.develop', '1.develop')
+        self.assert_ver_lt('1.1', '1.develop')
+        self.assert_ver_gt('1.develop', '1.0')
+        self.assert_ver_lt('1.develop', '2.1')
+        self.assert_ver_gt('2.1', '1.develop')
+
+    def test_isdevelop(self):
+        self.assertTrue(ver('develop').isdevelop())
+        self.assertTrue(ver('1.develop').isdevelop())
+        self.assertFalse(ver('1.1').isdevelop())
 
     def test_three_segments(self):
         self.assert_ver_eq('2.0.1', '2.0.1')

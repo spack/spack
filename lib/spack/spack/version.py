@@ -44,6 +44,7 @@ be called on any of the types::
   concrete
 """
 import re
+import sys
 import numbers
 from bisect import bisect_left
 from functools import wraps
@@ -63,6 +64,20 @@ def int_if_int(string):
         return int(string)
     except ValueError:
         return string
+
+
+def infinity_to_int(ver):
+    """Convert input string alias to +infinity-like number. Do nothing if input
+    is integer."""
+
+    # if input is integer, do nothing
+    if isinstance(ver, numbers.Integral):
+        return ver
+
+    if (ver == "develop"):
+        return sys.maxint
+
+    return ver
 
 
 def coerce_versions(a, b):
@@ -105,10 +120,6 @@ def coerced(method):
             ca, cb = coerce_versions(a, b)
             return getattr(ca, method.__name__)(cb, *args, **kwargs)
     return coercing_method
-
-
-def _numeric_lt(self0, other):
-    """Compares two versions, knowing they're both numeric"""
 
 
 @total_ordering
@@ -172,16 +183,17 @@ class Version(object):
             1.1
             1.1a
             1.a.1b
+            develop   == +infinity
+            1.develop == 1.+infinity
         Some non-numeric versions:
-            develop
             system
             myfavoritebranch
         """
-        return isinstance(self.version[0], numbers.Integral)
+        return isinstance(infinity_to_int(self.version[0]), numbers.Integral)
 
     def isdevelop(self):
         """Triggers on the special case of the `@develop` version."""
-        return self.string == 'develop'
+        return "develop" in self.string
 
     @coerced
     def satisfies(self, other):
@@ -257,7 +269,9 @@ class Version(object):
     def _numeric_lt(self, other):
         """Compares two versions, knowing they're both numeric"""
         # Standard comparison of two numeric versions
-        for a, b in zip(self.version, other.version):
+        for a_, b_ in zip(self.version, other.version):
+            a = infinity_to_int(a_)
+            b = infinity_to_int(b_)
             if a == b:
                 continue
             else:
@@ -289,18 +303,6 @@ class Version(object):
         # simple equality test first.
         if self.version == other.version:
             return False
-
-        # First priority: anything < develop
-        sdev = self.isdevelop()
-        if sdev:
-            return False    # source = develop, it can't be < anything
-
-        # Now we know !sdev
-        odev = other.isdevelop()
-        if odev:
-            return True    # src < dst
-
-        # now we know neither self nor other isdevelop().
 
         # Principle: Non-numeric is less than numeric
         # (so numeric will always be preferred by default)
