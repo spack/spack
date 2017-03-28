@@ -37,3 +37,5 @@ class Datamash(AutotoolsPackage):
     version('1.0.7', '9f317bab07454032ba9c068e7f17b04b')
     version('1.0.6', 'ff26fdef0f343cb695cf1853e14a1a5b')
     version('1.0.5', '9a29549dc7feca49fdc5fab696614e11')
+
+    build_directory = 'spack-build'
