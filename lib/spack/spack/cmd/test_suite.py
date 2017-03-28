@@ -293,6 +293,8 @@ class CombinatorialSpecSet:
                         if any(compiler.satisfies(str(cs))
                                for cs in spack.compilers.all_compiler_specs()):
                             compiler_version.append(compiler)
+                        else:
+                            tty.warn("Spack could not find " + str(compiler))
                     if 'include' in data['test-suite']:
                         included_tests = data['test-suite']['include']
                         for package in packages:
