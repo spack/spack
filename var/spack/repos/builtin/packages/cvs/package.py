@@ -22,25 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Gnutls(AutotoolsPackage):
-    """GnuTLS is a secure communications library implementing the SSL,
-       TLS and DTLS protocols and technologies around them. It
-       provides a simple C language application programming interface
-       (API) to access the secure communications protocols as well as
-       APIs to parse and write X.509, PKCS #12, OpenPGP and other
-       required structures. It is aimed to be portable and efficient
-       with focus on security and interoperability."""
+class Cvs(AutotoolsPackage):
+    """CVS a very traditional source control system"""
+    homepage = "http://www.nongnu.org/cvs/"
+    url      = "https://ftp.gnu.org/non-gnu/cvs/source/feature/1.12.13/cvs-1.12.13.tar.bz2"
 
-    homepage = "http://www.gnutls.org"
-    url      = "http://www.ring.gr.jp/pub/net/gnupg/gnutls/v3.3/gnutls-3.3.9.tar.xz"
+    version('1.12.13', '93a8dacc6ff0e723a130835713235863f1f5ada9')
 
-    version('3.3.9', 'ff61b77e39d09f1140ab5a9cf52c58b6')
-
-    # configure sez: Note that this version of gnutls doesn't support 
-    # nettle 3.0.
-    depends_on("nettle@:2.9")
-
-    build_directory = 'spack-build'
+    parallel = False
