@@ -40,6 +40,7 @@ from jsonschema import Draft4Validator, validators
 from spack.error import SpackError
 import re
 import sys
+import datetime
 
 description = "Installs packages, provides cdash output."
 
@@ -179,8 +180,6 @@ def test_suite(parser, args):
     else:
         args.log_format = 'cdash-simple'
         cdash = '--log-format=cdash-simple'
-    cdash_root = "/var/spack/cdash/"
-    cdash_path = spack.prefix + cdash_root
     sets = CombinatorialSpecSet(args.yamlFile)
     tests, dashboards = sets.readinFiles()
     # setting up tests for contretizing
@@ -205,6 +204,9 @@ def test_suite(parser, args):
     if len(dashboards) != 0:
         for dashboard in dashboards:
             # allows for multiple dashboards
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+            path = os.getcwd() + "/spack-test-" + str(timestamp) + "/"
+            # correct in future to be dynamic
             files = [name for name in glob.glob(os.path.join(path, '*.*'))
                      if os.path.isfile(os.path.join(path, name))]
             for file in files:
@@ -219,7 +221,7 @@ def test_suite(parser, args):
                             headers={
                                 'content-type': 'text/plain'},
                             params={
-                                'file': cdash_path + file}
+                                'file': file}
                         )
                         tty.msg(file)
                         tty.msg(response.status_code)
@@ -297,7 +299,7 @@ class CombinatorialSpecSet:
                         for test in remove_tests:
                             tests.remove(test)
                     if 'dashboard' in data['test-suite']:
-                        dashboards.append(data['test-suite']['dashboard'])
+                        dashboards.extend(data['test-suite']['dashboard'])
             except MarkedYAMLError as e:
                 raise ConfigFileError(
                     "Error parsing yaml%s: %s" %
