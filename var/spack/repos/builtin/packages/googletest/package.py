@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Googletest(Package):
+class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""
     homepage = "https://github.com/google/googletest"
     url      = "https://github.com/google/googletest/tarball/release-1.7.0"
@@ -34,17 +34,25 @@ class Googletest(Package):
     version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
     version('1.6.0', '90407321648ab25b067fcd798caf8c78')
 
-    depends_on("cmake", type='build')
+    def cmake_args(self):
+        spec = self.spec
+        if '@1.8.0:' in spec:
+            # New style (contains both Google Mock and Google Test)
+            options = ['-DBUILD_GMOCK=OFF', '-DBUILD_GTEST=ON']
+        else:
+            # Old style (contains only GTest)
+            options = []
+        return options
 
+    @when('@:1.7.0')
     def install(self, spec, prefix):
-        which('cmake')('.', *std_cmake_args)
+        """Make the install targets"""
+        with working_dir(self.build_directory):
+            # Google Test doesn't have a make install
+            # We have to do our own install here.
+            install_tree(join_path(self.stage.source_path, 'include'),
+                         prefix.include)
 
-        make()
-
-        # Google Test doesn't have a make install
-        # We have to do our own install here.
-        install_tree('include', prefix.include)
-
-        mkdirp(prefix.lib)
-        install('./libgtest.a', '%s' % prefix.lib)
-        install('./libgtest_main.a', '%s' % prefix.lib)
+            mkdirp(prefix.lib)
+            install('libgtest.a', prefix.lib)
+            install('libgtest_main.a', prefix.lib)
