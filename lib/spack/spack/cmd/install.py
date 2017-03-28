@@ -89,6 +89,10 @@ the dependencies"""
         default=None,
         help="filename for the log file. if not passed a default will be used"
     )
+    subparser.add_argument(
+        '--site', action='store', type=str, default=None,
+        help="Location testing occurred."
+    )
 
 
 def install(parser, args, **kwargs):
@@ -114,7 +118,6 @@ def install(parser, args, **kwargs):
         'fake': args.fake,
         'dirty': args.dirty
     })
-
     # Spec from cli
     specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) != 1:
@@ -124,7 +127,8 @@ def install(parser, args, **kwargs):
     # Check if we were asked to produce some log for dashboards
     if args.log_format is not None:
         # Create the test suite in which to log results
-        test_suite = test_suites[args.log_format](spec, args.log_file)
+        test_suite = test_suites[args.log_format](
+            spec, args.log_file, args.site)
         # Decorate PackageBase.do_install to get installation status
         PackageBase.do_install = dashboard_output(
             spec, test_suite

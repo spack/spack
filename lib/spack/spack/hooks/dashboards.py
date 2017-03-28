@@ -33,10 +33,11 @@ class TestResult(object):
 
 class JUnitTestSuite(object):
 
-    def __init__(self, spec, logfile):
+    def __init__(self, spec, logfile, site):
         self.spec = spec
         self.root = ET.Element('testsuite')
         self.tests = []
+        self.site = site
         if logfile is not None:
             self.logfile = logfile
         else:
@@ -63,7 +64,7 @@ class JUnitTestSuite(object):
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
         self.root.set('name', str(self.spec))
-        self.root.set('hostname', platform.node())
+        self.root.set('hostname', self.site)
 
         for item in self.tests:
             self.root.append(item.element)
@@ -155,10 +156,13 @@ class CDashTestCase(object):
 
 class CDashSimpleTestSuite(object):
 
-    def __init__(self, spec, filename, slot='Experimental'):
+    def __init__(self, spec, filename, site, slot='Experimental'):
         self.spec = spec
         self.slot = slot
         self.tests = []
+        self.site = site
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.directory = 'spack-test-' + date
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.filename = filename
 
@@ -169,9 +173,7 @@ class CDashSimpleTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-                directory = 'spack-test-' + timestamp
-                dirname = fs.join_path(os.getcwd(), directory)
+                dirname = fs.join_path(os.getcwd(), self.directory)
                 fs.mkdirp(dirname)
                 return fs.join_path(dirname, basename)
 
@@ -183,20 +185,18 @@ class CDashSimpleTestSuite(object):
         template.set('BuildStamp', self.buildstamp)
         template.set('CompilerName', str(self.spec.compiler.name))
         template.set('CompilerVersion', str(self.spec.compiler.version))
+        template.set('Name', self.site)
         if "linux" in platform.system().lower():
             linuxInfo = str(platform.linux_distribution()[
                             0]) + "." + str(platform.linux_distribution()[1])
             template.set('Hostname', linuxInfo)
-            template.set('Name', linuxInfo)
-            template.set('OSName', platform.system())
+            template.set('OSName', linuxInfo)
         elif "darwin" in platform.system().lower():
             macInfo = "OS X " + platform.mac_ver()[0]
             template.set('Hostname', macInfo)
-            template.set('Name', macInfo)
-            template.set('OSName', "Mac")
+            template.set('OSName', macInfo)
         else:
-            template.set('Name', platform.node())
-            template.set('Hostname', platform.node())
+            template.set('Hostname', platform.system())
             template.set('OSName', platform.system())
         return template
 
@@ -261,7 +261,8 @@ def dashboard_output(spec, test_suite):
     for x in spec.traverse(order='post'):
         package = spack.repo.get(x)
         if package.installed:
-            test_case = test_suite.create_testcase(package.name, x.short_spec)
+            test_case = test_suite.create_testcase(
+                package.name, x.short_spec, site)
             test_case.set_duration(0.0)
             test_case.set_result(
                 TestResult.SKIPPED,
@@ -347,10 +348,13 @@ def dashboard_output(spec, test_suite):
 
 class CDashCompleteTestSuite(object):
 
-    def __init__(self, spec, filename, slot='Experimental'):
+    def __init__(self, spec, filename, site, slot='Experimental'):
         self.spec = spec
         self.slot = slot
         self.tests = []
+        self.site = site
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.directory = 'spack-test-' + date
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
         self.filename = filename
@@ -362,9 +366,7 @@ class CDashCompleteTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-                directory = 'spack-test-' + timestamp
-                dirname = fs.join_path(os.getcwd(), directory)
+                dirname = fs.join_path(os.getcwd(), self.directory)
                 fs.mkdirp(dirname)
                 return fs.join_path(dirname, basename)
 
@@ -376,25 +378,23 @@ class CDashCompleteTestSuite(object):
         template.set('BuildStamp', self.buildstamp)
         template.set('CompilerName', str(self.spec.compiler.name))
         template.set('CompilerVersion', str(self.spec.compiler.version))
+        template.set('Name', self.site)
         if "linux" in platform.system().lower():
             linuxInfo = str(platform.linux_distribution()[
                             0]) + "." + str(platform.linux_distribution()[1])
             template.set('Hostname', linuxInfo)
-            template.set('Name', linuxInfo)
-            template.set('OSName', platform.system())
+            template.set('OSName', linuxInfo)
         elif "darwin" in platform.system().lower():
             macInfo = "OS X " + platform.mac_ver()[0]
             template.set('Hostname', macInfo)
-            template.set('Name', macInfo)
-            template.set('OSName', "Mac")
+            template.set('OSName', macInfo)
         else:
-            template.set('Name', platform.node())
-            template.set('Hostname', platform.node())
+            template.set('Hostname', platform.system())
             template.set('OSName', platform.system())
         return template
 
-    def create_testcase(self, name, spec):
-        item = CDashTestCase(name, spec)
+    def create_testcase(self, name, spec, site):
+        item = CDashTestCase(name, spec, site)
         self.tests.append(item)
         return item
 

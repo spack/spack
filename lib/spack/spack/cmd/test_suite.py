@@ -50,6 +50,15 @@ def setup_parser(subparser):
         '-c', '--complete', action='store_true', dest='complete',
         help='Simple is build only, complete is configure, build and test.')
     subparser.add_argument(
+        '-s', '--site', action='store', dest='site',
+        help='Location where testing occurred.')
+    subparser.add_argument(
+        '-d', '--cdash', action='store', dest='cdash',
+        help='URL to cdash.')
+    subparser.add_argument(
+        '-p', '--project', action='store', dest='project',
+        help='project name on cdash')
+    subparser.add_argument(
         'yamlFile', nargs=argparse.REMAINDER,
         help="Yaml test descriptions. Example found in spack docs.")
 
@@ -143,7 +152,7 @@ def uninstall_spec(spec):
     return spec, ""
 
 
-def install_spec(spec, cdash):
+def install_spec(spec, cdash, site):
     failure = False
     try:
         spec.concretize()
@@ -151,7 +160,7 @@ def install_spec(spec, cdash):
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
         # use cdash-complete if you want configure, build and test output.
-        args = parser.parse_args([cdash])
+        args = parser.parse_args([cdash, site])
         args.command = "install"
         args.no_checksum = True
         args.package = str(spec).split()
@@ -169,6 +178,7 @@ def install_spec(spec, cdash):
 
 
 def test_suite(parser, args):
+    spackio_url = "https://spack.io/cdash/submit.php?project="
     """Compiles a list of tests from a yaml file.
     Runs Spec and concretize then produces cdash format."""
     if not args.yamlFile:
@@ -180,6 +190,11 @@ def test_suite(parser, args):
     else:
         args.log_format = 'cdash-simple'
         cdash = '--log-format=cdash-simple'
+    if args.site:
+        site = "--site=" + args.site
+    else:
+        import socket
+        site = "--site=" + socket.gethostname()
     sets = CombinatorialSpecSet(args.yamlFile)
     tests, dashboards = sets.readinFiles()
     # setting up tests for contretizing
@@ -194,13 +209,19 @@ def test_suite(parser, args):
             if exception is "PackageStillNeededError":
                 continue
         try:
-            spec, failure = install_spec(spec, cdash)
+            spec, failure = install_spec(spec, cdash, site)
         except Exception as e:
             tty.die(e)
             sys.exit(0)
         if not failure:
             tty.msg("Failure did not occur, uninstalling " + str(spec))
             spec, exception = uninstall_spec(spec)
+    if args.cdash and args.project:
+        url = args.cdash + "/submit.php?project=" + args.project
+        dashboards.append(url)
+    elif args.project:
+        spackio_url += args.project
+        dashboards.append(spackio_url)
     if len(dashboards) != 0:
         for dashboard in dashboards:
             # allows for multiple dashboards
