@@ -25,34 +25,11 @@
 from spack import *
 
 
-class Googletest(CMakePackage):
-    """Google test framework for C++.  Also called gtest."""
-    homepage = "https://github.com/google/googletest"
-    url      = "https://github.com/google/googletest/tarball/release-1.7.0"
+class Speex(AutotoolsPackage):
+    """Speex is an Open Source/Free Software patent-free 
+    audio compression format designed for speech."""
 
-    version('1.8.0', 'd2edffbe844902d942c31db70c7cfec2')
-    version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
-    version('1.6.0', '90407321648ab25b067fcd798caf8c78')
+    homepage = "https://speex.org"
+    url      = "http://downloads.us.xiph.org/releases/speex/speex-1.2.0.tar.gz"
 
-    def cmake_args(self):
-        spec = self.spec
-        if '@1.8.0:' in spec:
-            # New style (contains both Google Mock and Google Test)
-            options = ['-DBUILD_GMOCK=OFF', '-DBUILD_GTEST=ON']
-        else:
-            # Old style (contains only GTest)
-            options = []
-        return options
-
-    @when('@:1.7.0')
-    def install(self, spec, prefix):
-        """Make the install targets"""
-        with working_dir(self.build_directory):
-            # Google Test doesn't have a make install
-            # We have to do our own install here.
-            install_tree(join_path(self.stage.source_path, 'include'),
-                         prefix.include)
-
-            mkdirp(prefix.lib)
-            install('libgtest.a', prefix.lib)
-            install('libgtest_main.a', prefix.lib)
+    version('1.2.0', '8ab7bb2589110dfaf0ed7fa7757dc49c')

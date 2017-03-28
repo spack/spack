@@ -25,34 +25,13 @@
 from spack import *
 
 
-class Googletest(CMakePackage):
-    """Google test framework for C++.  Also called gtest."""
-    homepage = "https://github.com/google/googletest"
-    url      = "https://github.com/google/googletest/tarball/release-1.7.0"
+class Sph2pipe(CMakePackage):
+    """Sph2pipe is a portable tool for
+    converting SPHERE files to other formats."""
 
-    version('1.8.0', 'd2edffbe844902d942c31db70c7cfec2')
-    version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
-    version('1.6.0', '90407321648ab25b067fcd798caf8c78')
+    homepage = "https://www.ldc.upenn.edu/language-resources/tools/sphere-conversion-tools"
+    url      = "https://www.ldc.upenn.edu/sites/www.ldc.upenn.edu/files/ctools/sph2pipe_v2.5.tar.gz"
 
-    def cmake_args(self):
-        spec = self.spec
-        if '@1.8.0:' in spec:
-            # New style (contains both Google Mock and Google Test)
-            options = ['-DBUILD_GMOCK=OFF', '-DBUILD_GTEST=ON']
-        else:
-            # Old style (contains only GTest)
-            options = []
-        return options
+    version('2.5', '771d9143e9aec0a22c6a14e138974be2')
 
-    @when('@:1.7.0')
-    def install(self, spec, prefix):
-        """Make the install targets"""
-        with working_dir(self.build_directory):
-            # Google Test doesn't have a make install
-            # We have to do our own install here.
-            install_tree(join_path(self.stage.source_path, 'include'),
-                         prefix.include)
-
-            mkdirp(prefix.lib)
-            install('libgtest.a', prefix.lib)
-            install('libgtest_main.a', prefix.lib)
+    patch('cmake.patch')
