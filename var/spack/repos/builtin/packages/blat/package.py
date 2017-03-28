@@ -39,5 +39,5 @@ class Blat(Package):
         spack_env.set('MACHTYPE', 'x86_64')
 
     def install(self, spec, prefix):
-	mkdirp(prefix.bin)
+        mkdirp(prefix.bin)
         make("BINDIR=%s" % prefix.bin)
