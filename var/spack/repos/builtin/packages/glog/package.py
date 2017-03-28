@@ -29,6 +29,7 @@ class Glog(AutotoolsPackage):
     """C++ implementation of the Google logging module."""
 
     homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.3.tar.gz"
+    url      = "https://github.com/google/glog/archive/v0.3.4.tar.gz"
 
+    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
     version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
