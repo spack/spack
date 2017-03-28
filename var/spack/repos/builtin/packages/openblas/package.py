@@ -76,6 +76,12 @@ class Openblas(MakefilePackage):
                 'OpenBLAS does not support OpenMP with clang!'
             )
 
+        spec = self.spec
+        if spec.satisfies('%clang@8.1.0:') and spec.satisfies('@:0.2.19'):
+            raise InstallError(
+                'OpenBLAS @:0.2.19 does not build with Apple clang@8.1.0:'
+            )
+
     @property
     def make_defs(self):
         # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
