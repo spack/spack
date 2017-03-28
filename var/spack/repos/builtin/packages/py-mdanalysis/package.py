@@ -36,3 +36,5 @@ class PyMdanalysis(PythonPackage):
     url      = "https://pypi.python.org/packages/9f/56/a4cae14e45aa893a3578905a97e17a325d663e424736366adbc134e72dce/MDAnalysis-0.15.0.tar.gz#md5=19e5a8e6c2bfe85f6209d1d7a36e4f20"
 
     version('0.15.0', '19e5a8e6c2bfe85f6209d1d7a36e4f20')
+
+    depends_on('py-setuptools', type='build')
