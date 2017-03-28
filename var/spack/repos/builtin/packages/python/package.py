@@ -470,10 +470,14 @@ class Python(Package):
 
         else:
             with closing(open(main_pth, 'w')) as f:
-                f.write("import sys; sys.__plen = len(sys.path)")
+                f.write("import sys; sys.__plen = len(sys.path)\n")
                 for path in paths:
                     f.write("{0}\n".format(path))
-                f.write("import sys; new = sys.path[sys.__plen:]; del sys.path[sys.__plen:]; p = getattr(sys, '__egginsert', 0); sys.path[p:p] = new; sys.__egginsert = p + len(new)")  # noqa: E501
+                f.write("import sys; new=sys.path[sys.__plen:]; "
+                        "del sys.path[sys.__plen:]; "
+                        "p=getattr(sys,'__egginsert',0); "
+                        "sys.path[p:p]=new; "
+                        "sys.__egginsert = p+len(new)\n")
 
     def activate(self, ext_pkg, **args):
         ignore = self.python_ignore(ext_pkg, args)
