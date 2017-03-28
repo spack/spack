@@ -38,6 +38,4 @@ class Datamash(AutotoolsPackage):
     version('1.0.6', 'ff26fdef0f343cb695cf1853e14a1a5b')
     version('1.0.5', '9a29549dc7feca49fdc5fab696614e11')
 
-    @property
-    def build_directory(self):
-        return self.configure_directory + '/build'
+    build_directory = 'spack-build'
