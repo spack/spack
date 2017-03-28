@@ -2166,7 +2166,13 @@ class Spec(object):
 
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
-            pkg = spack.repo.get(self.fullname)
+            try:
+                pkg = spack.repo.get(self.fullname)
+            except spack.repository.PackageLoadError:
+                # If we can't get package info on this spec, don't treat
+                # it as a provider of this vdep.
+                return False
+
             if pkg.provides(other.name):
                 for provided, when_specs in pkg.provided.items():
                     if any(self.satisfies(when_spec, deps=False, strict=strict)
