@@ -30,6 +30,8 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 
+import os
+
 
 @pytest.fixture()
 def install_mockery(tmpdir, config, builtin_mock):
@@ -126,6 +128,33 @@ def test_partial_install_keep_prefix(mock_archive):
         setattr(pkg, 'succeed', True)
         pkg.do_install(keep_prefix=True)
         assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install_keep_prefix_check_metadata(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        os.remove(spack.store.layout.spec_file_path(spec))
+        spack.package.Package.remove_prefix = remove_prefix
+        setattr(pkg, 'succeed', True)
+        pkg.do_install(keep_prefix=True)
+        assert pkg.installed
+        spack.store.layout.check_metadata_consistency(spec)
     finally:
         spack.package.Package.remove_prefix = remove_prefix
         try:

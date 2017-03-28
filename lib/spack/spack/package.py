@@ -1351,6 +1351,12 @@ class PackageBase(object):
                     tty.msg("Repairing db for %s" % self.name)
                     spack.store.db.add(self.spec)
 
+            if continue_with_partial and not self.installed:
+                try:
+                    layout.check_metadata_consistency(self.spec)
+                except directory_layout.DirectoryLayoutError:
+                    self.remove_prefix()
+
         if not continue_with_partial:
             self.stage.destroy()
             self.stage.create()
