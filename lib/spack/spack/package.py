@@ -1061,6 +1061,9 @@ class PackageBase(object):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
+        packages_dir = spack.store.layout.build_packages_path(self.spec)
+        dump_packages(self.spec, packages_dir)
+
     def _if_make_target_execute(self, target):
         try:
             # Check if we have a makefile
@@ -1273,7 +1276,7 @@ class PackageBase(object):
                             with log_redirection:
                                 getattr(self, phase)(
                                     self.spec, self.prefix)
-                    self.log()
+                    self.copy_provenance()
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self)
 
@@ -1329,14 +1332,11 @@ class PackageBase(object):
             tty.die('\'{0}\' is not an allowed phase for package {1}'
                     .format(self.last_phase, self.name))
 
-    def log(self):
+    def copy_provenance(self):
         # Copy provenance into the install directory on success
-        log_install_path = spack.store.layout.build_log_path(
-            self.spec)
-        env_install_path = spack.store.layout.build_env_path(
-            self.spec)
-        packages_dir = spack.store.layout.build_packages_path(
-            self.spec)
+        log_install_path = spack.store.layout.build_log_path(self.spec)
+        env_install_path = spack.store.layout.build_env_path(self.spec)
+        packages_dir = spack.store.layout.build_packages_path(self.spec)
 
         # Remove first if we're overwriting another build
         # (can happen with spack setup)

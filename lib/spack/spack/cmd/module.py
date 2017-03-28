@@ -222,7 +222,7 @@ def refresh(mtype, specs, args):
 
     # Detect name clashes
     writers = [cls(spec) for spec in specs
-               if spack.repo.exists(spec.name)]  # skip unknown packages.
+               if spec.repository.exists(spec.name)]  # skip unknown packages.
     file2writer = collections.defaultdict(list)
     for item in writers:
         file2writer[item.file_name].append(item)
