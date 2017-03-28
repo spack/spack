@@ -31,7 +31,7 @@ from spack import *
 
 class SstDumpi(AutotoolsPackage):
     """The DUMPI package provides libraries to collect and read traces of MPI
-    applications, which are obtained by linking the application with a library
+    applications. Traces are created by linking an application with a library
     that uses the PMPI interface to intercept MPI calls. DUMPI records
     signatures of all MPI-1 and MPI-2 subroutine calls, return values, request
     information, and PAPI counters.
@@ -49,5 +49,4 @@ class SstDumpi(AutotoolsPackage):
           git='https://github.com/sstsimulator/sst-dumpi.git',
           branch='master')
 
-    version('6.1.0', '31c3f40a697dc85bf23dd34270982319',
-          url='https://github.com/sstsimulator/sst-dumpi/archive/6.1.tar.gz')
+    version('6.1.0', '31c3f40a697dc85bf23dd34270982319')

@@ -31,20 +31,21 @@ from spack import *
 
 class SstMacro(AutotoolsPackage):
     """The SST/macro software package provides a simulator for large-scale
-    parallel computer architectures which permits the coarse-grained study of
+    parallel computer architectures for the coarse-grained study of
     distributed-memory applications. The simulator is driven from either a
-    trace file or skeleton application. SST/macro's modular architecture allows
-    it to be easily extended with additional network models, trace file
-    formats, software services, and processor models.
+    trace file or skeleton application. SST/macro's modular architecture can
+    be extended with additional network models, trace file formats,
+    software services, and processor models.
     """
 
     homepage = "http://sst.sandia.gov/about_sstmacro.html"
     url      = "https://github.com/sstsimulator/sst-macro/releases/download/v6.1.0_Final/sstmacro-6.1.0.tar.gz"
 
     depends_on('boost@1.59:')
-    depends_on('autoconf@1.68:', type='build')
-    depends_on('automake@1.11.1:', type='build')
-    depends_on('libtool@1.2.4:', type='build')
+    depends_on('autoconf@1.68:', type='build', when='@master')
+    depends_on('automake@1.11.1:', type='build', when='@master')
+    depends_on('libtool@1.2.4:', type='build', when='@master')
+    depends_on('m4', type='build', when='@master')
 
     version('master',
           git='https://github.com/sstsimulator/sst-macro.git',
@@ -52,6 +53,11 @@ class SstMacro(AutotoolsPackage):
 
     version('6.1.0', '98b737be6326b8bd711de832ccd94d14',
           url='https://github.com/sstsimulator/sst-macro/releases/download/v6.1.0_Final/sstmacro-6.1.0.tar.gz')
+
+    @run_before('autoreconf')
+    def bootstrap(self):
+        if '@master' in self.spec:
+            Executable('./bootstrap.sh')()
 
     def configure_args(self):
         args = ['--disable-regex']
