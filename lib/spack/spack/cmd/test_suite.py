@@ -63,7 +63,7 @@ def setup_parser(subparser):
         '-p', '--project', action='store', dest='project',
         help='project name on cdash')
     subparser.add_argument(
-        'yamlFile', nargs=argparse.REMAINDER,
+        'yaml_files', nargs=argparse.REMAINDER,
         help="Yaml test descriptions. Example found in spack docs.")
 
 

@@ -82,7 +82,7 @@ the dependencies"""
         '--log-format',
         default=None,
         choices=test_suites.keys(),
-        help="format to be used for log files"
+        help="format to be used for log files; default cdash"
     )
     subparser.add_argument(
         '--log-file',
@@ -125,10 +125,14 @@ def install(parser, args, **kwargs):
     spec = specs.pop()
 
     # Check if we were asked to produce some log for dashboards
-    if args.log_format is not None:
+    if args.log_format or args.log_file:
+        if not args.log_format:
+            args.log_format = 'cdash-simple'
+
         # Create the test suite in which to log results
         test_suite = test_suites[args.log_format](
             spec, args.log_file, args.site)
+
         # Decorate PackageBase.do_install to get installation status
         PackageBase.do_install = dashboard_output(
             spec, test_suite
