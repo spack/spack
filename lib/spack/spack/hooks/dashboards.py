@@ -262,7 +262,7 @@ def dashboard_output(spec, test_suite):
         package = spack.repo.get(x)
         if package.installed:
             test_case = test_suite.create_testcase(
-                package.name, x.short_spec, site)
+                package.name, x.short_spec)
             test_case.set_duration(0.0)
             test_case.set_result(
                 TestResult.SKIPPED,
