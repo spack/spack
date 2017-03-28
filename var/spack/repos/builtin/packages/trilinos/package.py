@@ -92,6 +92,7 @@ class Trilinos(CMakePackage):
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
+    variant('tpetra',       default=True, description='Compile with Tpetra')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -187,6 +188,11 @@ class Trilinos(CMakePackage):
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
             options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+
+        if '+tpetra' in spec:
+            options.append('-DTrilinos_ENABLE_Tpetra:BOOL=ON')
+        else:
+            options.append('-DTrilinos_ENABLE_Tpetra:BOOL=OFF')
 
         # Force Trilinos to use the MPI wrappers instead of raw compilers
         # this is needed on Apple systems that require full resolution of

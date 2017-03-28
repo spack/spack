@@ -49,9 +49,9 @@ class Xsdk(Package):
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')    
     depends_on('superlu-dist@develop', when='@develop')    
 
-    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse',
+    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra',
                when='@xsdk-0.2.0')
-    depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse',
+    depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra',
                when='@develop')
 
     depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
@@ -65,8 +65,8 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')    
 
-    depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
-    depends_on('xsdktrilinos@develop', when='@develop')    
+#    depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
+#    depends_on('xsdktrilinos@develop', when='@develop')    
 
     variant('debug', default=False, description='Compile in debug mode')
 
