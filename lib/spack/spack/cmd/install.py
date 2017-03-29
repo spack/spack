@@ -73,7 +73,7 @@ the dependencies"""
         '--fake', action='store_true', dest='fake',
         help="fake install. just remove prefix and create a fake file")
     subparser.add_argument(
-        '--force', '-f', action='store_true', dest='force',
+        '--force', action='store_true', dest='force',
         help='Install again even if package is already installed.')
 
     cd_group = subparser.add_mutually_exclusive_group()
