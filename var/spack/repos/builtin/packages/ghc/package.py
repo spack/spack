@@ -35,7 +35,7 @@ class Ghc(Package):
     version('8.0.2', 'd0afb5ec441b14527a53d2445cc26ec3')
     version('8.0.1', 'c185b8a1f3e67e43533ec590b751c2ff')
 
-    variant('docs', default=False,
+    variant('doc', default=False,
             description='Build/install the documents.')
 
     depends_on('gmp')
@@ -44,7 +44,7 @@ class Ghc(Package):
     depends_on('libedit')       # docs say, but I can't see where.
     depends_on('perl')
     depends_on('python')
-    depends_on('py-sphinx', when='+docs')
+    depends_on('py-sphinx', when='+doc')
 
     def install(self, spec, prefix):
         bootstrap_ghc = which('ghc')
