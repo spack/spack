@@ -35,4 +35,3 @@ class Snakemake(PythonPackage):
 
     depends_on('python@3:')
     depends_on('py-setuptools', type=('build', 'run'))
-
