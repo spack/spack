@@ -28,12 +28,12 @@ from spack import *
 
 class PerlModuleBuild(PerlPackage):
     """Module::Build is a system for building, testing, and installing Perl
-modules. It is meant to be an alternative to ExtUtils::MakeMaker. Developers
-may alter the behavior of the module through subclassing in a much more
-straightforward way than with MakeMaker. It also does not require a make on
-your system - most of the Module::Build code is pure-perl and written in a
-very cross-platform way.
-"""
+    modules. It is meant to be an alternative to ExtUtils::MakeMaker.
+    Developers may alter the behavior of the module through subclassing in a
+    much more straightforward way than with MakeMaker. It also does not
+    require a make on your system - most of the Module::Build code is
+    pure-perl and written in a very cross-platform way.
+    """
 
     homepage = "http://search.cpan.org/perldoc/Module::Build"
     url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/Module-Build-0.4220.tar.gz"
