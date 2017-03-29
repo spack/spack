@@ -559,4 +559,4 @@ class CDashCompleteTestSuite(object):
 # announce the existing test suites
 test_suites = {"junit": JUnitTestSuite,
                "cdash-simple": CDashSimpleTestSuite,
-               "cdash-complete": CDashCompleteTestSuite, }
+               "cdash": CDashCompleteTestSuite, }

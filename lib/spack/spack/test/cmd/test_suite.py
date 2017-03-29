@@ -24,6 +24,9 @@
 ##############################################################################
 import pytest
 import spack.cmd.test_suite as test_suite
+import datetime
+import os
+import unittest
 
 
 @pytest.mark.usefixtures('config')
@@ -31,7 +34,7 @@ class TestCompilers(object):
 
     def test_filename(self):
         ts = test_suite.CombinatorialSpecSet("test.yaml")
-        assert "test.yaml" in ts.yamlFiles
+        assert "test.yaml" in ts.yaml_file
 
     def test_combinatorial(self):
         combinations = []
@@ -51,3 +54,9 @@ class TestCompilers(object):
          for spec in ts.combinatorial_compiler(
             compiler_version, package_versions)]
         assert len(combinations) == 4
+
+    def test_create_path(self):
+        test_suite.create_path()
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+        path = os.getcwd() + "/spack-test-" + str(timestamp) + "/"
+        assert os.path.exists(path)

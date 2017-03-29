@@ -83,10 +83,13 @@ schema = {
                     },
                 },
             },
-            'dashboard': {
+            'cdash': {
                 'type': 'array',
                 'default': [],
                 'items': {'type': 'string'}
+            },
+            'project': {
+                "type": "string"
             },
         },
     },

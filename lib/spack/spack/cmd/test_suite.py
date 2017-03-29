@@ -41,14 +41,18 @@ from spack.error import SpackError
 import re
 import sys
 import datetime
+import errno
 
 description = "Installs packages, provides cdash output."
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-c', '--complete', action='store_true', dest='complete',
-        help='Simple is build only, complete is configure, build and test.')
+        '--log-format',
+        default=None,
+        choices=['cdash', 'cdash-simple'],
+        help="Format to be used for log files."
+    )
     subparser.add_argument(
         '-s', '--site', action='store', dest='site',
         help='Location where testing occurred.')
@@ -177,56 +181,86 @@ def install_spec(spec, cdash, site):
     return spec, failure
 
 
+def create_path():
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+    path = os.getcwd() + "/spack-test-" + str(timestamp) + "/"
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+    return path
+
+
 def test_suite(parser, args):
     spackio_url = "https://spack.io/cdash/submit.php?project="
+    submit = "/submit.php?project="
+    url = []
+    project = ""
     """Compiles a list of tests from a yaml file.
     Runs Spec and concretize then produces cdash format."""
     if not args.yamlFile:
         tty.die("spack testsuite requires a yaml file.")
-    if args.complete:
-        # cdash-complete for configure, build and test output.
-        args.log_format = 'cdash-complete'
-        cdash = '--log-format=cdash-complete'
-    else:
-        args.log_format = 'cdash-simple'
-        cdash = '--log-format=cdash-simple'
+    if not args.log_format:
+        tty.die("spack testsuite requires a log format, cdash, cdash-simple")
+    cdash = '--log-format=' + str(args.log_format)
+    path = create_path()
     if args.site:
         site = "--site=" + args.site
     else:
         import socket
         site = "--site=" + socket.gethostname()
-    sets = CombinatorialSpecSet(args.yamlFile)
-    tests, dashboards = sets.readinFiles()
-    # setting up tests for contretizing
-    for spec in tests:
-        tty.msg(spec)
-        if len(spack.store.db.query(spec)) != 0:
-            tty.msg(spack.store.db.query(spec))
-        # uninstall all packages before installing.
-        # This will reduce the number of skipped package installs.
-        if (len(spack.store.db.query(spec)) > 0):
-            spec, exception = uninstall_spec(spec)
-            if exception is "PackageStillNeededError":
-                continue
-        try:
-            spec, failure = install_spec(spec, cdash, site)
-        except Exception as e:
-            tty.die(e)
-            sys.exit(0)
-        if not failure:
-            tty.msg("Failure did not occur, uninstalling " + str(spec))
-            spec, exception = uninstall_spec(spec)
-    if args.cdash and args.project:
-        url = args.cdash + "/submit.php?project=" + args.project
-        dashboards.append(url)
-    elif args.project:
-        spackio_url += args.project
-        dashboards.append(spackio_url)
-    if len(dashboards) != 0:
-        for dashboard in dashboards:
+    for file in args.yamlFile:
+        sets = CombinatorialSpecSet(file)
+        test_contents = sets.read_in_file()
+        if not test_contents['tests']:
+            tty.msg("No tests found, continuing.")
+            continue
+        # setting up tests for contretizing
+        for spec in test_contents['tests']:
+            tty.msg(spec)
+            if len(spack.store.db.query(spec)) != 0:
+                tty.msg(spack.store.db.query(spec))
+            # uninstall all packages before installing.
+            # This will reduce the number of skipped package installs.
+            if (len(spack.store.db.query(spec)) > 0):
+                spec, exception = uninstall_spec(spec)
+                if exception is "PackageStillNeededError":
+                    continue
+            try:
+                spec, failure = install_spec(spec, cdash, site)
+            except Exception as e:
+                tty.die(e)
+                sys.exit(0)
+            if not failure:
+                tty.msg("Failure did not occur, uninstalling " + str(spec))
+                spec, exception = uninstall_spec(spec)
+        if 'project' in test_contents:
+            project = test_contents['project']
+        if args.cdash and args.project:
+            url.append(args.cdash + submit + args.project)
+        elif args.cdash and project:
+            url.append(args.cdash + submit + project)
+        elif args.project:
+            if test_contents['cdash']:
+                for cdash in test_contents['cdash']:
+                    url.append(cdash + submit + args.project)
+            else:
+                url.append(spackio_url + args.project)
+        elif 'cdash' in test_contents:
+                if test_contents['cdash'] and project:
+                    if len(test_contents['cdash']) > 1:
+                        for cdash in test_contents['cdash']:
+                            url.append(cdash + submit + str(project))
+                    else:
+                        url.append(test_contents['cdash'][0] +
+                                   submit + project)
+                elif project:
+                    url.append(spackio_url + project)
+        for dashboard in url:
+            tty.msg("URL: " + str(dashboard))
             # allows for multiple dashboards
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            path = os.getcwd() + "/spack-test-" + str(timestamp) + "/"
             # correct in future to be dynamic
             files = [name for name in glob.glob(os.path.join(path, '*.*'))
                      if os.path.isfile(os.path.join(path, name))]
@@ -250,8 +284,8 @@ def test_suite(parser, args):
 
 class CombinatorialSpecSet:
 
-    def __init__(self, files):
-        self.yamlFiles = files
+    def __init__(self, file):
+        self.yaml_file = file
 
     def combinatorial(self, item, versions):
         for version in versions:
@@ -266,72 +300,74 @@ class CombinatorialSpecSet:
                 if spec.constrain("%" + str(compiler)):
                     yield spec
 
-    def readinFiles(self):
+    def read_in_file(self):
         compilers = []
         packages = []
         tests = []
-        dashboards = []
         compiler_version = []
         schema = spack.schema.test.schema
-        for filename in self.yamlFiles:
-            # read yaml files which contains description of tests
-            package_version = []
-            tmp_compiler_ist = []
-            try:
-                tty.debug("Reading config file %s" % filename)
-                with open(filename) as f:
-                    data = _mark_overrides(syaml.load(f))
-                if data:
-                    validate_section(data, schema)
-                    packages = data['test-suite']['packages']
-                    compilers = data['test-suite']['compilers']
-                    for compiler in compilers:
-                        versions = compilers[compiler]['versions']
-                        [tmp_compiler_ist.append(Spec(spec))
-                            for spec in self.combinatorial(compiler, versions)]
-                    for compiler in tmp_compiler_ist:
-                        if any(compiler.satisfies(str(cs))
-                               for cs in spack.compilers.all_compiler_specs()):
-                            compiler_version.append(compiler)
-                        else:
-                            tty.warn("Spack could not find " + str(compiler))
-                    if 'include' in data['test-suite']:
-                        included_tests = data['test-suite']['include']
-                        for package in packages:
-                            if package in included_tests:
-                                versions = packages[package]['versions']
-                                [package_version.append(Spec(spec))
-                                    for spec in self.combinatorial(
-                                        package, versions)]
+        package_version = []
+        tmp_compiler_ist = []
+        test_contents = {}
+        try:
+            # read yaml file which contains description of tests
+            tty.debug("Reading config file %s" % self.yaml_file)
+            with open(self.yaml_file) as f:
+                data = _mark_overrides(syaml.load(f))
+            if data:
+                validate_section(data, schema)
+                packages = data['test-suite']['packages']
+                compilers = data['test-suite']['compilers']
+                for compiler in compilers:
+                    versions = compilers[compiler]['versions']
+                    [tmp_compiler_ist.append(Spec(spec))
+                        for spec in self.combinatorial(compiler, versions)]
+                for compiler in tmp_compiler_ist:
+                    if any(compiler.satisfies(str(cs))
+                           for cs in spack.compilers.all_compiler_specs()):
+                        compiler_version.append(compiler)
                     else:
-                        for package in packages:
+                        tty.warn("Spack could not find " + str(compiler))
+                if 'include' in data['test-suite']:
+                    included_tests = data['test-suite']['include']
+                    for package in packages:
+                        if package in included_tests:
                             versions = packages[package]['versions']
                             [package_version.append(Spec(spec))
                                 for spec in self.combinatorial(
                                     package, versions)]
-                    [tests.append(Spec(spec))
-                     for spec in self.combinatorial_compiler(
-                        package_version, compiler_version)]
-                    if 'exclude' in data['test-suite']:
-                        remove_tests = []
-                        excluded_tests = data['test-suite']['exclude']
-                        for spec in tests:
-                            for excluded_test in excluded_tests:
-                                if bool(spec.satisfies(excluded_test)):
-                                    remove_tests.append(spec)
-                        for test in remove_tests:
-                            tests.remove(test)
-                    if 'dashboard' in data['test-suite']:
-                        dashboards.extend(data['test-suite']['dashboard'])
-            except MarkedYAMLError as e:
-                raise ConfigFileError(
-                    "Error parsing yaml%s: %s" %
-                    (str(e.context_mark), e.problem))
-            except IOError as e:
-                raise ConfigFileError(
-                    "Error reading file %s: %s" %
-                    (filename, str(e)))
-        return tests, dashboards
+                else:
+                    for package in packages:
+                        versions = packages[package]['versions']
+                        [package_version.append(Spec(spec))
+                            for spec in self.combinatorial(
+                                package, versions)]
+                [tests.append(Spec(spec))
+                 for spec in self.combinatorial_compiler(
+                    package_version, compiler_version)]
+                if 'exclude' in data['test-suite']:
+                    remove_tests = []
+                    excluded_tests = data['test-suite']['exclude']
+                    for spec in tests:
+                        for excluded_test in excluded_tests:
+                            if bool(spec.satisfies(excluded_test)):
+                                remove_tests.append(spec)
+                    for test in remove_tests:
+                        tests.remove(test)
+                test_contents['tests'] = tests
+                if 'cdash' in data['test-suite']:
+                    test_contents['cdash'] = data['test-suite']['cdash']
+                if 'project' in data['test-suite']:
+                    test_contents['project'] = data['test-suite']['project']
+            return test_contents
+        except MarkedYAMLError as e:
+            raise ConfigFileError(
+                "Error parsing yaml%s: %s" %
+                (str(e.context_mark), e.problem))
+        except IOError as e:
+            raise ConfigFileError(
+                "Error reading file %s: %s" %
+                (filename, str(e)))
 
 
 class ConfigError(SpackError):
