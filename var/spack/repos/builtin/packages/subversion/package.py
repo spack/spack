@@ -33,51 +33,73 @@ class Subversion(Package):
     version('1.8.13',    '8065b3698d799507fb72dd7926ed32b6')
     version('1.9.3',     'a92bcfaec4e5038f82c74a7b5bbd2f46')
 
+    variant('python', default=False, description='Provide python bindings')
+    variant('perl', default=False, description='Provide Perl bindings')
+    # variant('ruby', default=False, description='Provide ruby bindings')
+
     depends_on('apr')
     depends_on('apr-util')
     depends_on('zlib')
     depends_on('sqlite')
     depends_on('serf')
+    depends_on('expat')
+    depends_on('swig@:2.99')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('pkg-config', type='build')
 
-    # Optional: We need swig if we want the Perl, Python or Ruby
-    # bindings.
-    # depends_on('swig')
-    # depends_on('python')
-    # depends_on('perl')
-    # depends_on('ruby')
+    # Optional: We need swig if we want the Perl, Python or Ruby bindings.
+    extends('python', when='+python')
+    depends_on('perl@5.8:', when='+perl')
+    # depends_on('ruby', when='+ruby')
 
     # Installation has race cases.
     parallel = False
 
+    # helper function to locate python's site-packages directory.
+    def python_sp_dir(self):
+        python_version = 'python' + self.spec['python'].version.up_to(2)
+        return join_path(spec['python'].prefix.lib, python_version,
+                         'site-packages')
+
     def install(self, spec, prefix):
 
+        # Pre-configure setup
+        sh = which('sh')
+        sh('./autogen.sh')
+
         # configure, build, install:
-        # Ref:
-        # http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
         options = ['--prefix=%s' % prefix]
         options.append('--with-apr=%s' % spec['apr'].prefix)
         options.append('--with-apr-util=%s' % spec['apr-util'].prefix)
         options.append('--with-zlib=%s' % spec['zlib'].prefix)
         options.append('--with-sqlite=%s' % spec['sqlite'].prefix)
         options.append('--with-serf=%s' % spec['serf'].prefix)
-        # options.append('--with-swig=%s' % spec['swig'].prefix)
+        options.append('--with-expat=%s:%s:expat' %
+                       (spec['expat'].prefix.include,
+                        spec['expat'].prefix.lib))
+        options.append('--with-swig=%s' % spec['swig'].prefix)
 
         configure(*options)
         make()
         make('install')
 
         # python bindings
-        # make('swig-py',
-        #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
-        #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
-        # make('install-swig-py',
-        #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
-        #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
+        if '+python' in spec:
+            site_packages_dir = self.python_sp_dir
+            make('swig-py')
+            make('install-swig-py',
+                 'swig-pydir=%s/libsvn' % site_packages_dir,
+                 'swig_pydir_extra=%s/svn' % site_packages_dir)
 
         # perl bindings
-        # make('swig-pl')
-        # make('install-swig-pl')
+        if '+perl' in spec:
+            make('swig-pl')
+            # make('check-swig-pl')
+            make('install-swig-pl')
 
         # ruby bindings
-        # make('swig-rb')
-        # make('isntall-swig-rb')
+        # if '+ruby' in spec:
+            # make('swig-rb')
+            # make('install-swig-rb')
