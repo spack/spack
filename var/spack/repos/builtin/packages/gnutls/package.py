@@ -37,10 +37,22 @@ class Gnutls(AutotoolsPackage):
     homepage = "http://www.gnutls.org"
     url      = "http://www.ring.gr.jp/pub/net/gnupg/gnutls/v3.3/gnutls-3.3.9.tar.xz"
 
+    version('3.5.9', '0ab25eb6a1509345dd085bc21a387951')
     version('3.3.9', 'ff61b77e39d09f1140ab5a9cf52c58b6')
 
-    # configure sez: Note that this version of gnutls doesn't support 
+    # configure sez: Note that version 3.3.9 of gnutls doesn't support
     # nettle 3.0.
-    depends_on("nettle@:2.9")
+    depends_on("nettle@:2.9", when='@3.3.9')
+    depends_on("nettle", when='@3.5:')
+    depends_on("zlib", when='@3.5:')
 
     build_directory = 'spack-build'
+
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies('@3.5:'):
+            # use shipped libraries, might be turned into variants
+            args.append('--with-included-libtasn1')
+            args.append('--with-included-unistring')
+            args.append('--without-p11-kit')  # p11-kit@0.23.1: ...
+        return args
