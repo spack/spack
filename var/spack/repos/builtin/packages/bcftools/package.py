@@ -38,7 +38,7 @@ class Bcftools(Package):
     version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
 
     depends_on('zlib')
-    depends_on('bzip2', when="@1.4")
+    depends_on('bzip2', when="@1.4:")
 
     def install(self, spec, prefix):
         make("prefix=%s" % prefix, "all")
