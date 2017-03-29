@@ -274,10 +274,21 @@ class PerlPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on('perl-foo', type=('build', 'run'))"""
+    # depends_on('perl-foo')
+    # depends_on('barbaz', type=('build', 'link', 'run'))
+    """
 
     body = """\
-    # FIXME: Override install() if necessary."""
+    # FIXME: Select appropriate perl build method:
+    # build_method = 'Makefile.PL' # Default
+    # build_method = 'Build.PL'    # Needed by some packages
+
+    # FIXME: If non-standard arguments are used for configure step:
+    # def configure_args(self):
+    #     return ['my', 'configure', 'args']
+
+    # FIXME: in unusual cases, override configure(), build() or install()
+    """
 
     def __init__(self, name, *args):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
