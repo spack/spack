@@ -33,6 +33,7 @@ class PyBokeh(PythonPackage):
 
     version('0.12.2', '2d1621bffe6e2ab9d42efbf733861c4f')
 
+    depends_on('python@2.6:')
     depends_on('py-six@1.5.2:',       type=('build', 'run'))
     depends_on('py-requests@1.2.3:',  type=('build', 'run'))
     depends_on('py-pyyaml@3.10:',     type=('build', 'run'))
@@ -40,3 +41,5 @@ class PyBokeh(PythonPackage):
     depends_on('py-jinja2@2.7:',      type=('build', 'run'))
     depends_on('py-numpy@1.7.1:',     type=('build', 'run'))
     depends_on('py-tornado@4.3:',     type=('build', 'run'))
+    depends_on('py-futures@3.0.3:',   type=('build', 'run'),
+        when='^python@2.7:2.8')
