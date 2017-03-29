@@ -61,13 +61,18 @@ def processCMakeCacheFile(cache_file):
         cmake_arg_contents = ""
         selectFrom = cmake_cache_dict
         cmake_arg_contents += "    def cmake_args(self):\n        args = [ '"
+        hitLoop = False
         for option_name, option_traits in selectFrom.iteritems():
+            hitLoop = True
             variant_definitions += "    variant('" + option_name + "', default =" + (
                 formatArgumentForSpackPackage(option_traits["value"])) + ")\n"
             cmake_arg_contents += '-D' + option_name + ":" + \
                 option_traits["type"] + "=%s' % self.spec.variants['" + \
                 option_name + "'].value,\n                 '"
-        cmake_arg_contents = cmake_arg_contents[:-3]  # trim last ",\n'"
+        if(hitLoop):
+            cmake_arg_contents = cmake_arg_contents[:-3]  # trim last ",\n'"
+        else:
+            cmake_arg_contents = cmake_arg_contents[:-1]  # trim last ",\n'"
         cmake_arg_contents += "]\n        return args"
         return (variant_definitions, cmake_arg_contents)
     cache_file_lines = map(lambda line: line.strip("\n"),
