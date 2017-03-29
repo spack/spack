@@ -203,12 +203,12 @@ class CMakePackageTemplate(PackageTemplate):
             variant_stage.path
             with spack.working_dir(variant_stage.source_path + "/build", create=True):
                 my_cmake = which('cmake')
-                my_cmake("..")
-                with open("CMakeCache.txt", "r") as cmake_cache_file:
-                    (variant_string, cmake_args) = spack.build_systems.cmake.processCMakeCacheFile(
-                        cmake_cache_file)
-                self.body = variant_string + cmake_args
-
+                if my_cmake is not None:
+                    my_cmake("..")
+                    with open("CMakeCache.txt", "r") as cmake_cache_file:
+                        (variant_string, cmake_args) = spack.build_systems.cmake.processCMakeCacheFile(
+                            cmake_cache_file)
+                    self.body = variant_string + cmake_args
 
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""

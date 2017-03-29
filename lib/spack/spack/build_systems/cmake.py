@@ -49,14 +49,6 @@ def processCMakeCacheFile(cache_file):
         cacheLineDict = {}
         cacheLineDict = dict((key, {"value": value, "type": cmake_type}) for key, cmake_type, value in
                              re.findall(r'^([^#/:]*):(?:([^=]*)=)?([^\s]*)$', "\n".join(lines), re.M))
-        print cacheLineDict
-        # for line in lines:
-
-        #    name = line[:line.find(":")]
-        #    cmaketype = line[line.find(":") + 1:line.find("=")]
-        #    cmakevals = line[line.find("=") + 1:]
-        #    cacheLineDict[name] = {"type": cmaketype,
-        #                           "value": cmakevals}
         return cacheLineDict
 
     def formatArgumentForSpackPackage(arg):
