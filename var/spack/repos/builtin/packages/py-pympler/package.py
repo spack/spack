@@ -38,3 +38,5 @@ class PyPympler(PythonPackage):
     version('0.4.1', '2d54032a6da91ff438f48d5f36b719a6')
     version('0.4',   '68e4a8aa4a268996fa6a321b664918af')
     version('0.3.1', '906ce437f46fb30991007671a59d4319')
+
+    depends_on('python@2.5:')
