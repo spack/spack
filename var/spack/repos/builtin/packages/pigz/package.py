@@ -26,7 +26,8 @@ from spack import *
 
 
 class Pigz(Package):
-    """A parallel implementation of gzip for modern multi-processor, multi-core machines."""
+    """A parallel implementation of gzip for modern multi-processor, 
+       multi-core machines."""
 
     homepage = "http://zlib.net/pigz/"
     url      = "http://zlib.net/pigz/pigz-2.3.4.tar.gz"
