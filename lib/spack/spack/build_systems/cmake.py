@@ -34,21 +34,13 @@ from spack.package import PackageBase, run_after
 
 
 def processCMakeCacheFile(cache_file):
-    def determineLineInterest(line):
-        return not line.startswith("//") \
-            and not line.startswith("#") \
-            and len(line) > 1 \
-            and not ":INTERNAL" in line \
-            and not ":PATH" in line \
-            and not ":FILEPATH" in line \
-            and not ":STATIC" in line \
-            and not "CMAKE_" in line \
-            and line.count("/") < 4  # *really* don't want to capture paths
-
     def dictionaryFromLines(lines):
-        cacheLineDict = {}
+        omit_types = ('INTERNAL', 'PATH', 'FILEPATH', 'STATIC')
         cacheLineDict = dict((key, {"value": value, "type": cmake_type}) for key, cmake_type, value in
-                             re.findall(r'^([^#/:]*):(?:([^=]*)=)?([^\s]*)$', "\n".join(lines), re.M))
+                             re.findall(
+                                 r'^([^#/:]*):(?:([^=]*)=)?([^\s]*)$', "".join(lines), re.M)
+                             if cmake_type not in omit_types and not value.count("/") > 4 and "CMAKE_" not in key
+                             )
         return cacheLineDict
 
     def formatArgumentForSpackPackage(arg):
@@ -73,11 +65,7 @@ def processCMakeCacheFile(cache_file):
             cmake_arg_contents = cmake_arg_contents[:-1]  # trim last ",\n'"
         cmake_arg_contents += "]\n        return args"
         return (variant_definitions, cmake_arg_contents)
-    #cache_file_lines = map(lambda line: line.strip("\n"),
-    #                       cache_file.readlines())
-    #lines_to_process = filter(determineLineInterest, cache_file_lines)
-    lines_to_process = [l.strip("\n") for l in cache_file.readlines() if determineLineInterest(l)]
-    cmake_cache_dict = dictionaryFromLines(lines_to_process)
+    cmake_cache_dict = dictionaryFromLines(cache_file.readlines())
     return spackContentsFromCacheDict(cmake_cache_dict)
 
 
