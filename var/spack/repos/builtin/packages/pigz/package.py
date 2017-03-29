@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Pigz(Package):
+class Pigz(MakefilePackage):
     """A parallel implementation of gzip for modern multi-processor, 
        multi-core machines."""
 
@@ -36,8 +36,10 @@ class Pigz(Package):
 
     depends_on('zlib')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make()
+
+    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.man1)
         install('pigz', "%s/pigz" % prefix.bin)
