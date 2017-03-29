@@ -26,7 +26,8 @@ from spack import *
 
 
 class Blat(Package):
-    """BLAT (BLAST-like alignment tool) is a pairwise sequence alignment algorithm."""
+    """BLAT (BLAST-like alignment tool) is a pairwise sequence 
+       alignment algorithm."""
 
     homepage = "https://genome.ucsc.edu/FAQ/FAQblat.html"
     url      = "https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip"
