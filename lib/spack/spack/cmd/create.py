@@ -209,8 +209,6 @@ class CMakePackageTemplate(PackageTemplate):
                         cmake_cache_file)
                 self.body = variant_string + cmake_args
 
-        print("My URL is " + url)
-
 
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
