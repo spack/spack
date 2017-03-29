@@ -43,7 +43,7 @@ class PySphinx(PythonPackage):
     depends_on('py-six@1.4:',                type=('build', 'run'))
     depends_on('py-jinja2@2.3:',             type=('build', 'run'))
     depends_on('py-pygments@2.0:',           type=('build', 'run'))
-    depends_on('py-docutils@0.11:',          type=('build', 'run'))
+    depends_on('py-docutils@0.11:0.12',      type=('build', 'run'))
     depends_on('py-snowballstemmer@1.1:',    type=('build', 'run'))
     depends_on('py-babel@1.3:',              type=('build', 'run'))  # not 2.0
     depends_on('py-alabaster@0.7:',          type=('build', 'run'))

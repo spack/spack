@@ -32,7 +32,11 @@ class Ghc(Package):
     homepage = "https://www.haskell.org/ghc/"
     url      = "http://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-src.tar.xz"
 
+    version('8.0.2', 'd0afb5ec441b14527a53d2445cc26ec3')
     version('8.0.1', 'c185b8a1f3e67e43533ec590b751c2ff')
+
+    variant('docs', default=False,
+            description='Build/install the documents.')
 
     depends_on('gmp')
     depends_on('ncurses')
@@ -40,7 +44,7 @@ class Ghc(Package):
     depends_on('libedit')       # docs say, but I can't see where.
     depends_on('perl')
     depends_on('python')
-    depends_on('py-sphinx')
+    depends_on('py-sphinx', when='+docs')
 
     def install(self, spec, prefix):
         bootstrap_ghc = which('ghc')

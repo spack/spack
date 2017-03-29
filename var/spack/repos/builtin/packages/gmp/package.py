@@ -40,7 +40,8 @@ class Gmp(AutotoolsPackage):
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
     # This old version is needed to support a binary package in
     # ghc-bootstrap.
-    version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
+    version('4.3.2',  'dd60683d7057917e34630b4a787932e8',
+            url="https://gmplib.org/download/gmp/archive/gmp-4.3.2.tar.bz2")
 
     depends_on('m4', type='build')
 
