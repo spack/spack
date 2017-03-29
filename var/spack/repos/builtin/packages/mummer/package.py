@@ -36,15 +36,16 @@ class Mummer(Package):
     depends_on('gnuplot')
 
     def install(self, spec, prefix):
-        make('check')
+        if self.run_tests:
+            make('check')
         make('install')
-	mkdirp(prefix.bin)
+        mkdirp(prefix.bin)
 
-        bins = ["show-tiling", "show-snps", "show-coords", "show-aligns", "show-diff",
-                "delta-filter", "combineMUMs", "mummer", "repeat-match",
-                "annotate", "mgaps", "gaps", "dnadiff", "nucmer2xfig", "run-mummer3",
-                "mummerplot", "promer", "run-mummer1", "nucmer", "mapview",
-                "exact-tandems" ]
+        bins = ["show-tiling", "show-snps", "show-coords", "show-aligns", 
+                "show-diff", "delta-filter", "combineMUMs", "mummer", 
+                "repeat-match", "annotate", "mgaps", "gaps", "dnadiff", 
+                "nucmer2xfig", "run-mummer3", "mummerplot", "promer", 
+                "run-mummer1", "nucmer", "mapview", "exact-tandems"]
         aux_bins = ["aux_bin/postnuc", "aux_bin/postpro",
                     "aux_bin/prenuc", "aux_bin/prepro"]
                   
