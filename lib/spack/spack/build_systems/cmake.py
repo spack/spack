@@ -37,7 +37,7 @@ def processCMakeCacheFile(cache_file):
     def determineLineInterest(line):
         return not line.startswith("//") \
             and not line.startswith("#") \
-            and len(line) > 0 \
+            and len(line) > 1 \
             and not ":INTERNAL" in line \
             and not ":PATH" in line \
             and not ":FILEPATH" in line \
@@ -81,9 +81,10 @@ def processCMakeCacheFile(cache_file):
             cmake_arg_contents = cmake_arg_contents[:-1]  # trim last ",\n'"
         cmake_arg_contents += "]\n        return args"
         return (variant_definitions, cmake_arg_contents)
-    cache_file_lines = map(lambda line: line.strip("\n"),
-                           cache_file.readlines())
-    lines_to_process = filter(determineLineInterest, cache_file_lines)
+    #cache_file_lines = map(lambda line: line.strip("\n"),
+    #                       cache_file.readlines())
+    #lines_to_process = filter(determineLineInterest, cache_file_lines)
+    lines_to_process = [l.strip("\n") for l in cache_file.readlines() if determineLineInterest(l)]
     cmake_cache_dict = dictionaryFromLines(lines_to_process)
     return spackContentsFromCacheDict(cmake_cache_dict)
 
