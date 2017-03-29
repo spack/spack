@@ -25,18 +25,12 @@
 from spack import *
 
 
-class PyCdo(PythonPackage):
-    """The cdo package provides an interface to the Climate Data
-    Operators from Python."""
+class PyHtml2text(PythonPackage):
+    """Turn HTML into equivalent Markdown-structured text."""
 
-    homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
+    homepage = "https://github.com/Alir3z4/html2text/"
+    url      = "https://pypi.io/packages/source/h/html2text/html2text-2016.9.19.tar.gz"
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
-            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
-
-    depends_on('cdo')
+    version('2016.9.19', 'd6b07e32ed21f186496f012691e02dd5')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf4', type=('build', 'run'))
