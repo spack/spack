@@ -33,9 +33,14 @@ class PyPy2cairo(Package):
 
     version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
 
+    variant('X', default=True,
+            description='Enable cairo X11 dependency')
+
     extends('python')
 
-    depends_on('cairo+X')
+    # depends_on('cairo')
+    depends_on('cairo+X', when='+X')
+    depends_on('cairo~X', when='~X')
     depends_on('pixman')
 
     def install(self, spec, prefix):
