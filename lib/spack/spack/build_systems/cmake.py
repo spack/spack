@@ -36,7 +36,7 @@ from spack.package import PackageBase, run_after
 def processCMakeCacheFile(cache_file):
     def dictionaryFromLines(lines):
         omit_types = ('INTERNAL', 'PATH', 'FILEPATH', 'STATIC')
-        cacheLineDict = dict((key, {"value": value, "type": cmake_type}) for key, cmake_type, value in
+        cacheLineDict = dict((key.strip("\n"), {"value": value, "type": cmake_type}) for key, cmake_type, value in
                              re.findall(
                                  r'^([^#/:]*):(?:([^=]*)=)?([^\s]*)$', "".join(lines), re.M)
                              if cmake_type not in omit_types and not value.count("/") > 4 and "CMAKE_" not in key
