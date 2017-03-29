@@ -117,6 +117,8 @@ parser.add_argument('-s', '--stacktrace', action='store_true',
                     help="add stacktrace information to all printed statements")
 parser.add_argument('-V', '--version', action='version',
                     version="%s" % spack.spack_version)
+parser.add_argument('-c', '--config', dest='configs', action='append', default=[],
+                    help="Add project config scopes (highest precedence last)")
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
