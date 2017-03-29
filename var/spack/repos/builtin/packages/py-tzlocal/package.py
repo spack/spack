@@ -25,18 +25,14 @@
 from spack import *
 
 
-class PyCdo(PythonPackage):
-    """The cdo package provides an interface to the Climate Data
-    Operators from Python."""
+class PyTzlocal(PythonPackage):
+    """tzinfo object for the local timezone."""
 
-    homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
+    homepage = "https://github.com/regebro/tzlocal"
+    url      = "https://pypi.io/packages/source/t/tzlocal/tzlocal-1.3.tar.gz"
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
-            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
-
-    depends_on('cdo')
+    version('1.3', '3cb544b3975b59f91a793850a072d4a8')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf4', type=('build', 'run'))
+
+    depends_on('py-pytz', type=('build', 'run'))

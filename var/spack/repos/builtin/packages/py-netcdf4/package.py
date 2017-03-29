@@ -25,18 +25,19 @@
 from spack import *
 
 
-class PyCdo(PythonPackage):
-    """The cdo package provides an interface to the Climate Data
-    Operators from Python."""
+class PyNetcdf4(PythonPackage):
+    """Python interface to the netCDF Library."""
 
-    homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
+    homepage = "https://github.com/Unidata/netcdf4-python"
+    url      = "https://pypi.io/packages/source/n/netCDF4/netCDF4-1.2.7.tar.gz"
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
-            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
+    version('1.2.7',   '77b357d78f9658dd973dee901f6d86f8')
+    version('1.2.3.1', '24fc0101c7c441709c230e76af611d53')
 
-    depends_on('cdo')
+    depends_on('py-setuptools',   type='build')
+    depends_on('py-cython@0.19:', type='build')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf4', type=('build', 'run'))
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
+
+    depends_on('netcdf')
+    depends_on('hdf5@1.8.0:')

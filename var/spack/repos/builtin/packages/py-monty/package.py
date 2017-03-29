@@ -25,14 +25,13 @@
 from spack import *
 
 
-class PyNetcdf(PythonPackage):
-    """Python interface to the netCDF Library."""
-    homepage = "http://unidata.github.io/netcdf4-python"
-    url      = "https://github.com/Unidata/netcdf4-python/tarball/v1.2.3.1rel"
+class PyMonty(PythonPackage):
+    """Monty is the missing complement to Python."""
 
-    version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
+    homepage = "https://github.com/materialsvirtuallab/monty"
+    url      = "https://pypi.io/packages/source/m/monty/monty-0.9.6.tar.gz"
 
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cython', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('netcdf')
+    version('0.9.6', '406ea69fdd112feacfdf208624d56903')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=('build', 'run'))

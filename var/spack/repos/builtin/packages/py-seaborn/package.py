@@ -25,18 +25,22 @@
 from spack import *
 
 
-class PyCdo(PythonPackage):
-    """The cdo package provides an interface to the Climate Data
-    Operators from Python."""
+class PySeaborn(PythonPackage):
+    """Seaborn: statistical data visualization.
 
-    homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
+    Seaborn is a library for making attractive and informative statistical
+    graphics in Python. It is built on top of matplotlib and tightly
+    integrated with the PyData stack, including support for numpy and pandas
+    data structures and statistical routines from scipy and statsmodels."""
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
-            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
+    homepage = "http://seaborn.pydata.org/"
+    url      = "https://pypi.io/packages/source/s/seaborn/seaborn-0.7.1.tar.gz"
 
-    depends_on('cdo')
+    version('0.7.1', 'ef07e29e0f8a1f2726abe506c1a36e93')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf4', type=('build', 'run'))
+
+    depends_on('py-numpy',      type=('build', 'run'))
+    depends_on('py-scipy',      type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-pandas',     type=('build', 'run'))
