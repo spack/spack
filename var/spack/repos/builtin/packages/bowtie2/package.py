@@ -27,12 +27,20 @@ from glob import glob
 
 
 class Bowtie2(Package):
-    """Description"""
+    """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
+       sequencing reads to long reference sequences"""
     homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
-    version('2.2.5', '51fa97a862d248d7ee660efc1147c75f',
-            url="http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.5/bowtie2-2.2.5-source.zip")
+    version('2.3.1', 'b4efa22612e98e0c23de3d2c9f2f2478')
+    version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
 
-    patch('bowtie2-2.5.patch', when='@2.2.5', level=0)
+    depends_on('tbb', when='@2.3.1')
+
+    patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
+    patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
+
+    def url_for_version(self, version):
+        url="http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/{0}/bowtie2-{0}-source.zip"
+        return url.format(version)
 
     def install(self, spec, prefix):
         make()
