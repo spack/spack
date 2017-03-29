@@ -33,6 +33,7 @@ class Samtools(Package):
     homepage = "www.htslib.org"
     url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
+    version('1.4', '8cbd7d2a0ec16d834babcd6c6d85d691')
     version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
     version('1.2', '988ec4c3058a6ceda36503eebecd4122')
 
