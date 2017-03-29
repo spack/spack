@@ -26,7 +26,9 @@ from spack import *
 
 
 class PyPynn(PythonPackage):
-    """A Python package for simulator-independent specification of neuronal network models"""
+    """A Python package for simulator-independent specification of neuronal
+        network models
+    """
 
     homepage = "http://neuralensemble.org/PyNN/"
     url      = "https://pypi.io/packages/source/P/PyNN/PyNN-0.8.3.tar.gz"
