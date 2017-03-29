@@ -38,7 +38,6 @@ class PyPy2cairo(Package):
 
     extends('python')
 
-    # depends_on('cairo')
     depends_on('cairo+X', when='+X')
     depends_on('cairo~X', when='~X')
     depends_on('pixman')
