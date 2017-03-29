@@ -29,9 +29,11 @@ class Snakemake(PythonPackage):
     """Snakemake is an MIT-licensed workflow management system."""
 
     homepage = "https://snakemake.readthedocs.io/en/stable/"
-    url      = "https://bitbucket.org/snakemake/snakemake/get/v3.11.2.tar.gz"
+    url      = "https://pypi.io/packages/source/s/snakemake/snakemake-3.11.2.tar.gz"
 
-    version('3.11.2', '6bab8c29b7307ac972a402ad3e3c5463')
+    version('3.11.2', '6bf834526078522b38d271fdf73e6b22')
 
-    depends_on('python@3:')
+    depends_on('python@3.3:')
+    depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-wrapt', type=('build', 'run'))
