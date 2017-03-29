@@ -23,16 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from urlparse import urlparse
+from os.path import split
 
 
-class PyNetcdf(PythonPackage):
-    """Python interface to the netCDF Library."""
-    homepage = "http://unidata.github.io/netcdf4-python"
-    url      = "https://github.com/Unidata/netcdf4-python/tarball/v1.2.3.1rel"
+class Miniconda2(Package):
+    """The minimalist bootstrap toolset for conda and Python2."""
 
-    version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
+    homepage = "https://conda.io/miniconda.html"
+    url      = "https://repo.continuum.io/miniconda/Miniconda2-4.3.11-Linux-x86_64.sh"
 
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cython', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('netcdf')
+    version('4.3.11', 'd573980fe3b5cdf80485add2466463f5', expand=False)
+
+    def install(self, spec, prefix):
+        # peel the name of the script out of the url
+        result = urlparse(self.url)
+        dir, script = split(result.path)
+        bash = which('bash')
+        bash(script, '-b', '-f', '-p', self.prefix)

@@ -1,0 +1,10 @@
+diff -ruN sph2pipe_v2.5.ori/CMakeLists.txt sph2pipe_v2.5/CMakeLists.txt
+--- sph2pipe_v2.5.ori/CMakeLists.txt    1970-01-01 08:00:00.000000000 +0800
++++ sph2pipe_v2.5/CMakeLists.txt        2017-03-27 17:33:27.000000000 +0800
+@@ -0,0 +1,6 @@
++PROJECT (SPH2PIPE)
++SET(SRC_LIST file_headers.c shorten_x.c sph2pipe.c)
++ADD_EXECUTABLE(sph2pipe ${SRC_LIST})
++TARGET_LINK_LIBRARIES(sph2pipe m)
++INSTALL(TARGETS sph2pipe
++       RUNTIME DESTINATION bin)
