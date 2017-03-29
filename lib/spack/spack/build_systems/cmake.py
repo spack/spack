@@ -27,6 +27,7 @@ import inspect
 import platform
 
 import spack.build_environment
+import re
 from llnl.util.filesystem import working_dir, join_path
 from spack.directives import depends_on
 from spack.package import PackageBase, run_after
@@ -46,13 +47,18 @@ def processCMakeCacheFile(cache_file):
 
     def dictionaryFromLines(lines):
         cacheLineDict = {}
-        for line in lines:
-            name = line[:line.find(":")]
-            cmaketype = line[line.find(":") + 1:line.find("=")]
-            cmakevals = line[line.find("=") + 1:]
-            cacheLineDict[name] = {"type": cmaketype,
-                                   "value": cmakevals}
+        cacheLineDict = dict((key, {"value": value, "type": cmake_type}) for key, cmake_type, value in
+                             re.findall(r'^([^#/:]*):(?:([^=]*)=)?([^\s]*)$', "\n".join(lines), re.M))
+        print cacheLineDict
+        # for line in lines:
+
+        #    name = line[:line.find(":")]
+        #    cmaketype = line[line.find(":") + 1:line.find("=")]
+        #    cmakevals = line[line.find("=") + 1:]
+        #    cacheLineDict[name] = {"type": cmaketype,
+        #                           "value": cmakevals}
         return cacheLineDict
+
     def formatArgumentForSpackPackage(arg):
         return '"' + arg + '"'
 
@@ -80,6 +86,7 @@ def processCMakeCacheFile(cache_file):
     lines_to_process = filter(determineLineInterest, cache_file_lines)
     cmake_cache_dict = dictionaryFromLines(lines_to_process)
     return spackContentsFromCacheDict(cmake_cache_dict)
+
 
 class CMakePackage(PackageBase):
     """Specialized class for packages built using CMake
