@@ -29,11 +29,16 @@ class Httpie(PythonPackage):
     """Modern command line HTTP client."""
 
     homepage = "https://httpie.org/"
-    url      = "https://github.com/jakubroztocil/httpie/archive/0.9.8.tar.gz"
+    url      = "https://pypi.io/packages/source/h/httpie/httpie-0.9.8.tar.gz"
 
-    version('0.9.8', '425a1c92590d9b906a7369f5c17990a4')
+    version('0.9.8', 'e0d1af07d0959a2e081e7954797ce260')
 
-    depends_on('py-setuptools',   type=('build', 'run'))
-    depends_on('py-pygments',     type=('build', 'run'))
-    depends_on('py-requests',     type=('build', 'run'))
-    depends_on('py-pysocks',      type=('build', 'run'))
+    variant('socks', default=True,
+            description='Enable SOCKS proxy support')
+
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-pygments@2.1.3:', type=('build', 'run'))
+    depends_on('py-requests@2.11.0:', type=('build', 'run'))
+    depends_on('py-pysocks', type=('build', 'run'), when="+socks")
+    depends_on('py-argparse@1.2.1:', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
+
