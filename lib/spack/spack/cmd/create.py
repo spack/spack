@@ -28,7 +28,10 @@ import os
 import re
 
 import llnl.util.tty as tty
+
 import spack
+import spack.build_systems.cmake
+import spack.stage
 import spack.cmd
 import spack.cmd.checksum
 import spack.url
@@ -184,7 +187,6 @@ class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
     base_class_name = 'CMakePackage'
-
     body = """\
     def cmake_args(self):
         # FIXME: Add arguments other than
@@ -192,6 +194,22 @@ class CMakePackageTemplate(PackageTemplate):
         # FIXME: If not needed delete this function
         args = []
         return args"""
+    def __init__(self, name, url, versions):
+        PackageTemplate.__init__(self, name, url, versions)
+        with spack.stage.Stage(url, name) as variant_stage:
+            variant_stage.fetch()
+            variant_stage.expand_archive()
+
+            variant_stage.path
+            with spack.working_dir(variant_stage.source_path + "/build", create=True):
+                my_cmake = which('cmake')
+                my_cmake("..")
+                with open("CMakeCache.txt", "r") as cmake_cache_file:
+                    (variant_string, cmake_args) = spack.build_systems.cmake.processCMakeCacheFile(
+                        cmake_cache_file)
+                self.body = variant_string + cmake_args
+
+        print("My URL is " + url)
 
 
 class SconsPackageTemplate(PackageTemplate):
@@ -517,7 +535,6 @@ def get_build_system(args, guesser):
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(template))
-
     return template
 
 
@@ -568,7 +585,7 @@ def create(parser, args):
     url = get_url(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
-
+              
     # Create the package template object
     PackageClass = templates[build_system]
     package = PackageClass(name, url, versions)

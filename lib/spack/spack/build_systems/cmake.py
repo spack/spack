@@ -32,6 +32,50 @@ from spack.directives import depends_on
 from spack.package import PackageBase, run_after
 
 
+def processCMakeCacheFile(cache_file):
+    def determineLineInterest(line):
+        return not line.startswith("//") \
+            and not line.startswith("#") \
+            and len(line) > 0 \
+            and not ":INTERNAL" in line \
+            and not ":PATH" in line \
+            and not ":FILEPATH" in line \
+            and not ":STATIC" in line \
+            and not "CMAKE_" in line \
+            and line.count("/") < 4  # *really* don't want to capture paths
+
+    def dictionaryFromLines(lines):
+        cacheLineDict = {}
+        for line in lines:
+            name = line[:line.find(":")]
+            cmaketype = line[line.find(":") + 1:line.find("=")]
+            cmakevals = line[line.find("=") + 1:]
+            cacheLineDict[name] = {"type": cmaketype,
+                                   "value": cmakevals}
+        return cacheLineDict
+    def formatArgumentForSpackPackage(arg):
+        return '"' + arg + '"'
+
+    def spackContentsFromCacheDict(cmake_cache_dict):
+        variant_definitions = ""
+        cmake_arg_contents = ""
+        selectFrom = cmake_cache_dict
+        cmake_arg_contents += "    def cmake_args(self):\n        args = [ '"
+        for option_name, option_traits in selectFrom.iteritems():
+            variant_definitions += "    variant('" + option_name + "', default =" + (
+                formatArgumentForSpackPackage(option_traits["value"])) + ")\n"
+            cmake_arg_contents += '-D' + option_name + ":" + \
+                option_traits["type"] + "=%s' % self.spec.variants['" + \
+                option_name + "'].value,\n                 '"
+        cmake_arg_contents = cmake_arg_contents[:-3]  # trim last ",\n'"
+        cmake_arg_contents += "]\n        return args"
+        return (variant_definitions, cmake_arg_contents)
+    cache_file_lines = map(lambda line: line.strip("\n"),
+                           cache_file.readlines())
+    lines_to_process = filter(determineLineInterest, cache_file_lines)
+    cmake_cache_dict = dictionaryFromLines(lines_to_process)
+    return spackContentsFromCacheDict(cmake_cache_dict)
+
 class CMakePackage(PackageBase):
     """Specialized class for packages built using CMake
 
