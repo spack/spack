@@ -26,7 +26,8 @@ from spack import *
 
 
 class StadenIoLib(AutotoolsPackage):
-    """Io_lib is a library for reading/writing various bioinformatics file formats."""
+    """Io_lib is a library for reading/writing various bioinformatics 
+       file formats."""
 
     homepage = "http://staden.sourceforge.net/"
     url      = "https://sourceforge.net/projects/staden/files/io_lib/1.14.8/io_lib-1.14.8.tar.gz/download"
@@ -34,4 +35,3 @@ class StadenIoLib(AutotoolsPackage):
     version('1.14.8', 'fe5ee6aaec8111a5bc3ac584a0c0c0c7')
 
     depends_on('zlib')
-
