@@ -41,4 +41,3 @@ class Httpie(PythonPackage):
     depends_on('py-requests@2.11.0:', type=('build', 'run'))
     depends_on('py-pysocks', type=('build', 'run'), when="+socks")
     depends_on('py-argparse@1.2.1:', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
-
