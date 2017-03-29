@@ -39,6 +39,7 @@ class PyPynn(PythonPackage):
     version('0.8.1', '7fb165ed5af35a115cb9c60991645ae6')
     version('0.7.5', 'd8280544e4c9b34b40fd372b16342841')
 
+    depends_on('python@2.6:2.8,3.3:')
     depends_on('py-lazyarray@0.2.9:',   type=('build', 'run'))
     depends_on('py-neo@:0.3',           type=('build', 'run'))
     depends_on('py-numpy@:1.5',         type=('build', 'run'))
