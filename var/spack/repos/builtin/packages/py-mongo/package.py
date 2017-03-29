@@ -32,3 +32,7 @@ class PyMongo(PythonPackage):
     url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.3.0.tar.gz"
 
     version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+
+    depends_on('python@2.6:2.8,3.3:')
+
+    depends_on('setuptools', type='build')
