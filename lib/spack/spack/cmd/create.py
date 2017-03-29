@@ -385,7 +385,9 @@ class BuildSystemGuesser:
             (r'/SConstruct$',        'scons'),
             (r'/setup.py$',          'python'),
             (r'/NAMESPACE$',         'r'),
-            (r'/WORKSPACE$',         'bazel')
+            (r'/WORKSPACE$',         'bazel'),
+            (r'/Makefile.PL$',       'perl'),
+            (r'/Build.PL$',          'perl')
         ]
 
         # Peek inside the compressed file.
