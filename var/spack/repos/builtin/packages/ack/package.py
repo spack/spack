@@ -35,6 +35,7 @@ class Ack(Package):
     homepage = "http://beyondgrep.com/"
     url      = "http://beyondgrep.com/ack-2.14-single-file"
 
+    version('2.16', '7085b5a5c76fda43ff049410870c8535', expand=False)
     version('2.14', 'e74150a1609d28a70b450ef9cc2ed56b', expand=False)
 
     depends_on('perl')
