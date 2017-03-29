@@ -28,7 +28,6 @@ from spack import *
 class Httpie(PythonPackage):
     """Modern command line HTTP client."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://httpie.org/"
     url      = "https://github.com/jakubroztocil/httpie/archive/0.9.8.tar.gz"
 
@@ -38,4 +37,3 @@ class Httpie(PythonPackage):
     depends_on('py-pygments',     type=('build', 'run'))
     depends_on('py-requests',     type=('build', 'run'))
     depends_on('py-pysocks',      type=('build', 'run'))
-
