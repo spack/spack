@@ -268,6 +268,45 @@ class RPackageTemplate(PackageTemplate):
         super(RPackageTemplate, self).__init__(name, *args)
 
 
+class PerlmakePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Perl extensions
+    that come with a Makefile.PL"""
+    base_class_name = 'PerlPackage'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required:
+    # depends_on('perl-foo')
+    # depends_on('barbaz', type=('build', 'link', 'run'))"""
+
+    body = """\
+    # FIXME: If non-standard arguments are used for configure step:
+    # def configure_args(self):
+    #     return ['my', 'configure', 'args']
+
+    # FIXME: in unusual cases, it may be necessary to override methods for
+    #        configure(), build(), check() or install()."""
+
+    def __init__(self, name, *args):
+        # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
+        if not name.startswith('perl-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to perl-{0}".format(name))
+            name = 'perl-{0}'.format(name)
+
+        super(PerlmakePackageTemplate, self).__init__(name, *args)
+
+
+class PerlbuildPackageTemplate(PerlmakePackageTemplate):
+    """Provides appropriate overrides for Perl extensions
+    that come with a Build.PL instead of a Makefile.PL"""
+    dependencies = """\
+    depends_on('perl-module-build', type='build')
+
+    # FIXME: Add additional dependencies if required:
+    # depends_on('perl-foo')
+    # depends_on('barbaz', type=('build', 'link', 'run'))"""
+
+
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
@@ -305,6 +344,8 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
+    'perlmake':   PerlmakePackageTemplate,
+    'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'generic':    PackageTemplate
 }
@@ -363,7 +404,9 @@ class BuildSystemGuesser:
             (r'/SConstruct$',        'scons'),
             (r'/setup.py$',          'python'),
             (r'/NAMESPACE$',         'r'),
-            (r'/WORKSPACE$',         'bazel')
+            (r'/WORKSPACE$',         'bazel'),
+            (r'/Build.PL$',          'perlbuild'),
+            (r'/Makefile.PL$',       'perlmake'),
         ]
 
         # Peek inside the compressed file.

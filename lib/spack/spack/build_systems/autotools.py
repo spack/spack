@@ -49,7 +49,8 @@ class AutotoolsPackage(PackageBase):
         4. :py:meth:`~.AutotoolsPackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override the helper method :py:meth:`.configure_args`.
+    necessary will be to override the helper method
+    :py:meth:`~.AutotoolsPackage.configure_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
@@ -234,7 +235,7 @@ class AutotoolsPackage(PackageBase):
         appropriately, otherwise raises an error.
 
         :raises RuntimeError: if a configure script is not found in
-            :py:meth:`~.configure_directory`
+            :py:meth:`~AutotoolsPackage.configure_directory`
         """
         # Check if a configure script is there. If not raise a RuntimeError.
         if not os.path.exists(self.configure_abs_path):
@@ -255,7 +256,8 @@ class AutotoolsPackage(PackageBase):
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in :py:meth:`.configure_args`
+        """Runs configure with the arguments specified in
+        :py:meth:`~.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
