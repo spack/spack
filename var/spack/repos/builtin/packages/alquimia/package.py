@@ -31,7 +31,7 @@ class Alquimia(CMakePackage):
 
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
 
-    version('xsdk-0.2.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.2.0-rc1')
+    version('xsdk-0.2.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.2.0-rc2')
     version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')    
 
     variant('shared', default=True,
@@ -45,8 +45,6 @@ class Alquimia(CMakePackage):
     depends_on('pflotran@develop', when='@develop')    
     depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('petsc@develop', when='@develop')    
-
-    patch('petsc_arch.patch', when='@xsdk-0.2.0')
 
     def cmake_args(self):
         spec = self.spec
