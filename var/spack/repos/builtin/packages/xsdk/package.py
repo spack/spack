@@ -65,8 +65,10 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')    
 
-#    depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
-#    depends_on('xsdktrilinos@develop', when='@develop')    
+    # Since xsdktrilinos depends on tpetra which is currently disabled in the trilinos build
+    # xsdktrilinos is currently disabled
+    # depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
+    # depends_on('xsdktrilinos@develop', when='@develop')    
 
     variant('debug', default=False, description='Compile in debug mode')
 
