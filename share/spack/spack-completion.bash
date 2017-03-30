@@ -589,8 +589,8 @@ function _spack_providers {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "blas daal elf golang ipp lapack mkl
-                    mpe mpi openfoam pil scalapack" -- "$cur"
+        compgen -W "awk blas daal elf golang ipp lapack mkl
+                    mpe mpi opencl openfoam pil scalapack" -- "$cur"
     fi
 }
 

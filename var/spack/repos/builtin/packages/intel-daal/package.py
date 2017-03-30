@@ -28,7 +28,7 @@ import os
 from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Daal(IntelInstaller):
+class IntelDaal(IntelInstaller):
     """Intel Data Analytics Acceleration Library.
 
     Note: You will have to add the download file to a
@@ -43,6 +43,8 @@ class Daal(IntelInstaller):
             url="file://%s/l_daal_2016.2.181.tgz" % os.getcwd())
     version('2016.3.210', 'ad747c0dd97dace4cad03cf2266cad28',
             url="file://%s/l_daal_2016.3.210.tgz" % os.getcwd())
+
+    provides('daal')
 
     def install(self, spec, prefix):
 
