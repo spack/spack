@@ -29,29 +29,28 @@ from spack.directives import extends
 from spack.package import PackageBase, run_after, InstallError
 from spack.util.executable import Executable
 
+import os
+
 
 class PerlPackage(PackageBase):
-    """Specialized class for packages that are built using Perl
+    """Specialized class for packages that are built using Perl.
 
-    This class provides three phases that can be overridden:
+    This class provides four phases that can be overridden if required:
 
         1. :py:meth:`~.PerlPackage.configure`
         2. :py:meth:`~.PerlPackage.build`
-        3. :py:meth:`~.PerlPackage.install`
+        3. :py:meth:`~.PerlPackage.check`
+        4. :py:meth:`~.PerlPackage.install`
 
-    They all have sensible defaults. Some packages may also need to override:
+    The default methods use, in order of preference:
+        (1) Makefile.PL,
+        (2) Build.PL.
 
-        +-----------------------------------------+--------------------------+
-        | **Method**                              | **Purpose**              |
-        +=========================================+==========================+
-        | :py:attr:`~.PerlPackage.build_method    | Perl build method:       |
-        |                                         | 'Makefile.PL' (default)  |
-        |                                         | or 'Build.PL'            |
-        +-----------------------------------------+--------------------------+
-        | :py:meth:`~.PerlPackage.configure_args` | List of arguments for    |
-        |                                         | Makefile.PL or Build.PL  |
-        |                                         | (excluding prefix)       |
-        +-----------------------------------------+--------------------------+
+    Some packages may need to override
+        :py:meth:`~.PerlPackage.configure_args`,
+    which produces a list of arguments for the configure method.
+    Arguments should exclude the installation base directory or prefix,
+    because these are defined by the configure method.
     """
     #: Phases of a Perl package
     phases = ['configure', 'build', 'install']
@@ -60,9 +59,8 @@ class PerlPackage(PackageBase):
     #: system base class
     build_system_class = 'PerlPackage'
 
-    #: This attribute is used to select the perl build method.
-    #: Supported types are 'Makefile.PL' and 'Build.PL'.
-    build_method = 'Makefile.PL'
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['check']
 
     extends('perl')
 
@@ -78,40 +76,38 @@ class PerlPackage(PackageBase):
         """Runs Makefile.PL or Build.PL with the arguments specified in
         :py:meth:`.configure_args` and an appropriate installation prefix.
         """
+        if os.path.isfile('Makefile.PL'):
+            self.build_method = 'Makefile.PL'
+            self.build_executable = inspect.getmodule(self).make
+        elif os.path.isfile('Makefile.PL'):
+            self.build_method = 'Build.PL'
+            self.build_executable = Executable( 
+                join_path(self.stage.source_path, 'Build'))
+        else:
+            raise InstallError('Unknown build_method for perl package')
+
         if self.build_method == 'Makefile.PL':
             options = ['Makefile.PL', 'INSTALL_BASE={0}'.format(prefix)]
         elif self.build_method == 'Build.PL':
             options = ['Build.PL', '--install_base', prefix]
-        else:
-            raise InstallError('Unknown build_method for perl package')
         options += self.configure_args()
+
         inspect.getmodule(self).perl(*options)
 
     def build(self, spec, prefix):
         """Builds a Perl package."""
-        if self.build_method == 'Makefile.PL':
-            makex = inspect.getmodule(self).make
-            makex()
-            if self.run_tests:
-                makex('test')
-        elif self.build_method == 'Build.PL':
-            Buildx = Executable('./Build')
-            Buildx()
-            if self.run_tests:
-                Buildx('test')
-        else:
-            raise InstallError('Unknown build_method for perl package')
+        self.build_executable()
+
+    # Ensure that tests run after build (if requested):
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+
+    def check(self):
+        """Runs built-in tests of a Perl package."""
+        self.build_executable('test')
 
     def install(self, spec, prefix):
         """Installs a Perl package."""
-        if self.build_method == 'Makefile.PL':
-            makex = inspect.getmodule(self).make
-            makex('install')
-        elif self.build_method == 'Build.PL':
-            Buildx = Executable('./Build')
-            Buildx('install')
-        else:
-            raise InstallError('Unknown build_method for perl package')
+        self.build_executable('install')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
