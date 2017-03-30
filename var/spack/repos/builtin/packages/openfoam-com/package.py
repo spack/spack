@@ -628,6 +628,9 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
         compiler_rule = join_path('wmake', 'rules', archCompiler)
         generate_mplib_rules(general_rule, self.spec)
         generate_compiler_rules(compiler_rule, compileOpt, self.rpath_info)
+        # Record the spack spec information
+        with open("log.spack-spec", 'w') as outfile:
+            outfile.write(spec.tree())
 
     def build(self, spec, prefix):
         """Build using the OpenFOAM Allwmake script, with a wrapper to source
