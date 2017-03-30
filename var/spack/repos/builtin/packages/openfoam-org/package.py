@@ -1,13 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017 Mark Olesen, OpenCFD Ltd.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
+# and is released as part of spack under the LGPL license.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the LICENSE file for the LLNL notice and the LGPL.
 #
 # License
 # -------
@@ -38,19 +37,22 @@
 ##############################################################################
 #
 # Notes
-# - mpi handling: WM_MPLIB=USER and provide wmake rules for special purpose
-#   'USER and 'USERMPI' mpi implementations.
-#   The choice of 'USER' vs 'USERMPI' may change in the future.
+# - The openfoam-org package is a modified version of the openfoam-com package.
+#   If changes are needed here, consider if they should also be applied there.
 #
-# Changes
-# 2017-03-28 Mark Olesen <mark.olesen@esi-group.com>
-#  - avoid installing intermediate targets.
-#  - reworked to mirror the openfoam-com package.
-#    If changes are needed here, consider if they need applying there too.
+# - Building with boost/cgal is not included, since some of the logic is not
+#   entirely clear and thus untested.
+# - Resolution of flex, zlib needs more attention (within OpenFOAM)
+#
+# - mpi handling: WM_MPLIB=SYSTEMMPI and use spack to populate the prefs.sh
+#   for it.
+#   Also provide wmake rules for special purpose 'USER' and 'USERMPI'
+#   mpi implementations, in case these are required.
 #
 ##############################################################################
 from spack import *
 from spack.environment import *
+import llnl.util.tty as tty
 
 import multiprocessing
 import glob
@@ -61,38 +63,27 @@ from os.path import isdir, isfile
 from spack.pkg.builtin.openfoam_com import *
 
 
-class FoamExtend(Package):
-    """The Extend Project is a fork of the OpenFOAM opensource library
-    for Computational Fluid Dynamics (CFD).
+class OpenfoamOrg(Package):
+    """OpenFOAM is a GPL-opensource C++ CFD-toolbox.
+    The openfoam.org release is managed by the OpenFOAM Foundation Ltd as
+    a licensee of the OPENFOAM trademark.
     This offering is not approved or endorsed by OpenCFD Ltd,
     producer and distributor of the OpenFOAM software via www.openfoam.com,
     and owner of the OPENFOAM trademark.
     """
 
-    homepage = "http://www.extend-project.de/"
+    homepage = "http://www.openfoam.org/"
+    baseurl  = "https://github.com/OpenFOAM"
+    url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
 
-    version('4.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-4.0')
-    version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2')
-    version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1')
-    version('3.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.0')
+    version('4.1', '318a446c4ae6366c7296b61184acd37c',
+            url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
 
-    # variant('int64', default=False,
-    #         description='Compile with 64-bit labels')
+    variant('int64', default=False,
+            description='Compile with 64-bit labels')
     variant('float32', default=False,
             description='Compile with 32-bit scalar (single-precision)')
 
-    variant('paraview', default=False,
-            description='Build paraview plugins (eg, paraFoam)')
-    variant('scotch', default=True,
-            description='With scotch for decomposition')
-    variant('ptscotch', default=True,
-            description='With ptscotch for decomposition')
-    variant('metis', default=True,
-            description='With metis for decomposition')
-    variant('parmetis', default=True,
-            description='With parmetis for decomposition')
-    variant('parmgridgen', default=True,
-            description='With parmgridgen support')
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
@@ -102,26 +93,28 @@ class FoamExtend(Package):
 
     provides('openfoam')
     depends_on('mpi')
-    depends_on('python')
     depends_on('zlib')
     depends_on('flex@:2.6.1')  # <- restriction due to scotch
     depends_on('cmake', type='build')
 
-    depends_on('scotch~metis',     when='~ptscotch+scotch')
-    depends_on('scotch~metis+mpi', when='+ptscotch')
-    depends_on('metis@5:',         when='+metis')
-    depends_on('parmetis',         when='+parmetis')
-    depends_on('parmgridgen',      when='+parmgridgen')
-    depends_on('paraview@:5.0.1',  when='+paraview')
+    # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
+    depends_on('scotch~int64+mpi', when='~int64')
+    depends_on('scotch+int64+mpi', when='+int64')
+
+    # General patches
+    patch('openfoam-site.patch')
+
+    # Version-specific patches
+    patch('openfoam-etc-41.patch')
 
     # Some user settings, to be adjusted manually or via variants
     foam_cfg = {
         'WM_COMPILER':        'Gcc',  # <- %compiler
         'WM_ARCH_OPTION':     '64',   # (32/64-bit on x86_64)
-        # FUTURE? 'WM_LABEL_SIZE':      '32',  # <- +int64
+        'WM_LABEL_SIZE':      '32',   # <- +int64
         'WM_PRECISION_OPTION': 'DP',  # <- +float32
         'WM_COMPILE_OPTION':  'SPACKOpt',   # Do not change
-        'WM_MPLIB':           'USER',       # USER | USERMPI
+        'WM_MPLIB':           'SYSTEMMPI',  # Use system mpi for spack
     }
 
     # The system description is frequently needed
@@ -141,14 +134,16 @@ class FoamExtend(Package):
     # phases = ['configure', 'build', 'install']
     # build_system_class = 'OpenfoamCom'
 
+    # Add symlinks into bin/, lib/ (eg, for other applications)
+    extra_symlinks = False
+
     def setup_environment(self, spack_env, run_env):
-        run_env.set('FOAM_INST_DIR', self.prefix)
         run_env.set('WM_PROJECT_DIR', self.projectdir)
 
     @property
     def _canonical(self):
         """Canonical name for this package and version"""
-        return 'foam-extend-{0}'.format(self.version.up_to(2))
+        return 'OpenFOAM-{0}'.format(self.version)
 
     @property
     def projectdir(self):
@@ -163,14 +158,12 @@ class FoamExtend(Package):
     @property
     def archbin(self):
         """Relative location of architecture-specific executables"""
-        wm_options = self.set_openfoam()
-        return join_path('applications', 'bin', wm_options)
+        return join_path('platforms', self.wm_options, 'bin')
 
     @property
     def archlib(self):
         """Relative location of architecture-specific libraries"""
-        wm_options = self.set_openfoam()
-        return join_path('lib', wm_options)
+        return join_path('platforms', self.wm_options, 'lib')
 
     @property
     def wm_options(self):
@@ -239,7 +232,6 @@ class FoamExtend(Package):
             comp += 'KNL'
         return comp
 
-    # For foam-extend: does not yet support +int64
     def set_openfoam(self):
         """Populate foam_cfg, foam_sys according to
         variants, architecture, compiler.
@@ -267,15 +259,16 @@ class FoamExtend(Package):
                 "WM_COMPILE_OPTION={0} is not type '*Opt'".format(compileOpt))
 
         # Adjust for variants
-        # FUTURE? self.foam_cfg['WM_LABEL_SIZE'] = (
-        # FUTURE?     '64' if '+int64'   in self.spec else '32'
-        # FUTURE? )
+        self.foam_cfg['WM_LABEL_SIZE'] = (
+            '64' if '+int64'   in self.spec else '32'
+        )
         self.foam_cfg['WM_PRECISION_OPTION'] = (
             'SP' if '+float32' in self.spec else 'DP'
         )
 
         # ----
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
+        # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
+        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_LABEL_OPTION$WM_COMPILE_OPTION
         # ----
         self.foam_sys['WM_ARCH']     = wm_arch
         self.foam_sys['WM_COMPILER'] = wm_compiler
@@ -284,7 +277,7 @@ class FoamExtend(Package):
             wm_arch,
             wm_compiler,
             self.foam_cfg['WM_PRECISION_OPTION'],
-            # FUTURE? 'Int', self.foam_cfg['WM_LABEL_SIZE'],  # Int32/Int64
+            'Int', self.foam_cfg['WM_LABEL_SIZE'],  # Int32/Int64
             compileOpt
         ])
         return self.foam_sys['WM_OPTIONS']
@@ -295,43 +288,47 @@ class FoamExtend(Package):
         """
         self.set_openfoam()  # May need foam_cfg/foam_sys information
 
-        # Adjust ParMGridGen - this is still a mess
-        files = [
-            'src/dbns/Make/options',
-            'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options'  # noqa: E501
-        ]
-        for f in files:
-            filter_file(r'-lMGridGen', r'-lmgrid', f, backup=False)
+        # This is fairly horrible.
+        # The github tarfiles have weird names that do not correspond to the
+        # canonical name. We need to rename these, but leave a symlink for
+        # spack to work with.
+        #
+        # Note that this particular OpenFOAM release requires absolute
+        # directories to build correctly!
+        parent   = os.path.dirname(self.stage.source_path)
+        original = os.path.basename(self.stage.source_path)
+        target   = self._canonical
+        with working_dir(parent):
+            if original != target and not os.path.lexists(target):
+                os.rename(original, target)
+                os.symlink(target, original)
+                tty.info('renamed {0} -> {1}'.format(original, target))
 
-        # Adjust for flex version check
-        files = [
-            'src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L',  # noqa: E501
-            'src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L',  # noqa: E501
-            'src/meshTools/triSurface/triSurface/interfaces/STL/readSTLASCII.L',  # noqa: E501
-            'applications/utilities/preProcessing/fluentDataToFoam/fluentDataToFoam.L',  # noqa: E501
-            'applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L',  # noqa: E501
-            'applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L',  # noqa: E501
-            'applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L',  # noqa: E501
-            'applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L',  # noqa: E501
-            'applications/utilities/mesh/conversion/fluent3DMeshToElmer/fluent3DMeshToElmer.L'  # noqa: E501
-        ]
-        for f in files:
-            filter_file(
-                r'#if YY_FLEX_SUBMINOR_VERSION < 34',
-                r'#if YY_FLEX_MAJOR_VERSION <= 2 && YY_FLEX_MINOR_VERSION <= 5 && YY_FLEX_SUBMINOR_VERSION < 34',   # noqa: E501
-                f, backup=False
-            )
+        # Avoid WM_PROJECT_INST_DIR for ThirdParty, site or jobControl.
+        # Use openfoam-site.patch to handle jobControl, site.
+        #
+        # Filter (not patch) bashrc,cshrc for additional flexibility
+        wm_setting = {
+            'WM_THIRD_PARTY_DIR':
+            r'$WM_PROJECT_DIR/ThirdParty #SPACK: No separate third-party',
+            'WM_VERSION': self.version,    # consistency
+            'FOAMY_HEX_MESH': '',          # This is horrible (unset variable?)
+        }
+
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            wm_setting,
+            posix=join_path('etc', 'bashrc'),
+            cshell=join_path('etc', 'cshrc'))
 
         # Build wrapper script
         with open(self.build_script, 'w') as out:
             out.write(
                 """#!/bin/bash
-export FOAM_INST_DIR=$(cd .. && pwd -L)
 . $PWD/etc/bashrc ''  # No arguments
 mkdir -p $FOAM_APPBIN $FOAM_LIBBIN 2>/dev/null  # Allow interrupt
 echo Build openfoam with SPACK
 echo WM_PROJECT_DIR = $WM_PROJECT_DIR
-./Allwmake            # No arguments
+./Allwmake $@
 #
 """)
         set_executable(self.build_script)
@@ -345,100 +342,61 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
         """
         self.set_openfoam()  # Need foam_cfg/foam_sys information
 
+        # Some settings for filtering bashrc, cshrc
+        wm_setting = {}
+        wm_setting.update(self.foam_cfg)
+
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            wm_setting,
+            posix=join_path('etc', 'bashrc'),
+            cshell=join_path('etc', 'cshrc'))
+
+        # MPI content, with absolute paths
+        content = mplib_content(spec)
+
         # Content for etc/prefs.{csh,sh}
         self.etc_prefs = {
-            '000': {  # Sort first
-                'compilerInstall': 'System',
-            },
-            '001': {},
-            'cmake': {
-                'CMAKE_DIR':     spec['cmake'].prefix,
-                'CMAKE_BIN_DIR': spec['cmake'].prefix.bin,
-            },
-            'python': {
-                'PYTHON_DIR':     spec['python'].prefix,
-                'PYTHON_BIN_DIR': spec['python'].prefix.bin,
-            },
-            'flex': {
-                'FLEX_SYSTEM': 1,
-                'FLEX_DIR':    spec['flex'].prefix,
-            },
-            'bison': {
-                'BISON_SYSTEM': 1,
-                'BISON_DIR':    spec['flex'].prefix,
-            },
-            'zlib': {
-                'ZLIB_SYSTEM': 1,
-                'ZLIB_DIR':    spec['zlib'].prefix,
-            },
+            r'MPI_ROOT': spec['mpi'].prefix,  # Absolute
+            r'MPI_ARCH_FLAGS': '"%s"' % content['FLAGS'],
+            r'MPI_ARCH_INC':   '"%s"' % content['PINC'],
+            r'MPI_ARCH_LIBS':  '"%s"' % content['PLIBS'],
         }
-        # Adjust configuration via prefs - sort second
-        self.etc_prefs['001'].update(self.foam_cfg)
 
-        if '+scotch' in spec or '+ptscotch' in spec:
-            pkg = spec['scotch'].prefix
-            self.etc_prefs['scotch'] = {
-                'SCOTCH_SYSTEM': 1,
-                'SCOTCH_DIR': pkg,
-                'SCOTCH_BIN_DIR': pkg.bin,
-                'SCOTCH_LIB_DIR': pkg.lib,
-                'SCOTCH_INCLUDE_DIR': pkg.include,
-            }
+        # Content for etc/config.{csh,sh}/ files
+        self.etc_config = {
+            'CGAL': {},
+            'scotch': {},
+            'metis': {},
+            'paraview': [],
+        }
 
-        if '+metis' in spec:
-            pkg = spec['metis'].prefix
-            self.etc_prefs['metis'] = {
-                'METIS_SYSTEM': 1,
-                'METIS_DIR': pkg,
-                'METIS_BIN_DIR': pkg.bin,
-                'METIS_LIB_DIR': pkg.lib,
-                'METIS_INCLUDE_DIR': pkg.include,
-            }
-
-        if '+parmetis' in spec:
-            pkg = spec['parmetis'].prefix
-            self.etc_prefs['parametis'] = {
-                'PARMETIS_SYSTEM': 1,
-                'PARMETIS_DIR':     pkg,
-                'PARMETIS_BIN_DIR': pkg.bin,
-                'PARMETIS_LIB_DIR': pkg.lib,
-                'PARMETIS_INCLUDE_DIR': pkg.include,
-            }
-
-        if '+parmgridgen' in spec:
-            pkg = spec['parmgridgen'].prefix
-            self.etc_prefs['parmgridgen'] = {
-                'PARMGRIDGEN_SYSTEM': 1,
-                'PARMGRIDGEN_DIR':     pkg,
-                'PARMGRIDGEN_BIN_DIR': pkg.bin,
-                'PARMGRIDGEN_LIB_DIR': pkg.lib,
-                'PARMGRIDGEN_INCLUDE_DIR': pkg.include,
-            }
-
-        if '+paraview' in self.spec:
-            self.etc_prefs['paraview'] = {
-                'PARAVIEW_SYSTEM':  1,
-                'PARAVIEW_DIR':     spec['paraview'].prefix,
-                'PARAVIEW_BIN_DIR': spec['paraview'].prefix.bin,
-            }
-            self.etc_prefs['qt'] = {
-                'QT_SYSTEM':  1,
-                'QT_DIR':     spec['qt'].prefix,
-                'QT_BIN_DIR': spec['qt'].prefix.bin,
+        if True:
+            self.etc_config['scotch'] = {
+                'SCOTCH_ARCH_PATH': spec['scotch'].prefix,
+                # For src/parallel/decompose/Allwmake
+                'SCOTCH_VERSION': 'scotch-{0}'.format(spec['scotch'].version),
             }
 
         # Write prefs files according to the configuration.
         # Only need prefs.sh for building, but install both for end-users
-        write_environ(
-            self.etc_prefs,
-            posix=join_path('etc', 'prefs.sh'),
-            cshell=join_path('etc', 'prefs.csh'))
+        if self.etc_prefs:
+            write_environ(
+                self.etc_prefs,
+                posix=join_path('etc', 'prefs.sh'),
+                cshell=join_path('etc', 'prefs.csh'))
+
+        # Adjust components to use SPACK variants
+        for component, subdict in self.etc_config.iteritems():
+            write_environ(
+                subdict,
+                posix=join_path('etc', 'config.sh',  component),
+                cshell=join_path('etc', 'config.csh', component))
 
         archCompiler  = self.foam_sys['WM_ARCH'] + self.foam_sys['WM_COMPILER']
         compileOpt    = self.foam_cfg['WM_COMPILE_OPTION']
-        # general_rule  = join_path('wmake', 'rules', 'General')
+        general_rule  = join_path('wmake', 'rules', 'General')
         compiler_rule = join_path('wmake', 'rules', archCompiler)
-        generate_mplib_rules(compiler_rule, self.spec)
+        generate_mplib_rules(general_rule, self.spec)
         generate_compiler_rules(compiler_rule, compileOpt, self.rpath_info)
         # Record the spack spec information
         with open("log.spack-spec", 'w') as outfile:
@@ -461,9 +419,12 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
         self.build(spec, prefix)  # Should be a separate phase
         opts = self.wm_options
 
-        # Fairly ugly since intermediate targets are scattered inside sources
-        appdir = 'applications'
-        mkdirp(self.projectdir, join_path(self.projectdir, appdir))
+        mkdirp(self.projectdir)
+        projdir = os.path.basename(self.projectdir)
+        wm_setting = {
+            'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
+            'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
+        }
 
         # Retain build log file
         out = "spack-build.out"
@@ -474,7 +435,7 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
         if '+source' in spec:
             ignored = re.compile(r'^spack-.*')
         else:
-            ignored = re.compile(r'^(Allclean|Allwmake|spack-).*')
+            ignored = re.compile(r'^(Allwmake|spack-).*')
 
         files = [
             f for f in glob.glob("*") if isfile(f) and not ignored.search(f)
@@ -482,31 +443,50 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
         for f in files:
             install(f, self.projectdir)
 
-        # Install directories. install applications/bin directly
-        for d in ['bin', 'etc', 'wmake', 'lib', join_path(appdir, 'bin')]:
+        # Having wmake without sources is actually somewhat pointless...
+        dirs = ['bin', 'etc', 'wmake']
+        if '+source' in spec:
+            dirs.extend(['applications', 'src', 'tutorials'])
+
+        for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d))
 
+        dirs = ['platforms']
         if '+source' in spec:
-            subitem = join_path(appdir, 'Allwmake')
-            install(subitem, join_path(self.projectdir, subitem))
+            dirs.extend(['doc'])
 
-            ignored = [opts]  # Intermediate targets
-            for d in ['src', 'tutorials']:
-                install_tree(
-                    d,
-                    join_path(self.projectdir, d),
-                    ignore=shutil.ignore_patterns(*ignored))
+        # Install platforms (and doc) skipping intermediate targets
+        ignored = ['src', 'applications', 'html', 'Guides']
+        for d in dirs:
+            install_tree(
+                d,
+                join_path(self.projectdir, d),
+                ignore=shutil.ignore_patterns(*ignored))
 
-            for d in ['solvers', 'utilities']:
-                install_tree(
-                    join_path(appdir, d),
-                    join_path(self.projectdir, appdir, d),
-                    ignore=shutil.ignore_patterns(*ignored))
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            wm_setting,
+            posix=join_path(self.etc, 'bashrc'),
+            cshell=join_path(self.etc, 'cshrc'))
+        self.install_links()
 
     def install_links(self):
         """Add symlinks into bin/, lib/ (eg, for other applications)"""
-        return
+        if not self.extra_symlinks:
+            return
+
+        # ln -s platforms/linux64GccXXX/lib lib
+        with working_dir(self.projectdir):
+            if isdir(self.archlib):
+                os.symlink(self.archlib, 'lib')
+
+        # (cd bin && ln -s ../platforms/linux64GccXXX/bin/* .)
+        with working_dir(join_path(self.projectdir, 'bin')):
+            for f in [
+                f for f in glob.glob(join_path('..', self.archbin, "*"))
+                if isfile(f)
+            ]:
+                os.symlink(f, os.path.basename(f))
 
 # -----------------------------------------------------------------------------
