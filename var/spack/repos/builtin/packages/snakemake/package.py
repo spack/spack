@@ -25,14 +25,15 @@
 from spack import *
 
 
-class PyNetcdf(PythonPackage):
-    """Python interface to the netCDF Library."""
-    homepage = "http://unidata.github.io/netcdf4-python"
-    url      = "https://github.com/Unidata/netcdf4-python/tarball/v1.2.3.1rel"
+class Snakemake(PythonPackage):
+    """Snakemake is an MIT-licensed workflow management system."""
 
-    version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
+    homepage = "https://snakemake.readthedocs.io/en/stable/"
+    url      = "https://pypi.io/packages/source/s/snakemake/snakemake-3.11.2.tar.gz"
 
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cython', type=('build', 'run'))
+    version('3.11.2', '6bf834526078522b38d271fdf73e6b22')
+
+    depends_on('python@3.3:')
+    depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('netcdf')
+    depends_on('py-wrapt', type=('build', 'run'))
