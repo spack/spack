@@ -24,12 +24,12 @@
 ##############################################################################
 
 import inspect
-
-from spack.directives import extends
-from spack.package import PackageBase, run_after, InstallError
-from spack.util.executable import Executable
-
 import os
+
+from llnl.util.filesystem import join_path
+from spack.directives import extends
+from spack.package import PackageBase, run_after
+from spack.util.executable import Executable
 
 
 class PerlPackage(PackageBase):
@@ -75,6 +75,8 @@ class PerlPackage(PackageBase):
     def configure(self, spec, prefix):
         """Runs Makefile.PL or Build.PL with the arguments specified in
         :py:meth:`.configure_args` and an appropriate installation prefix.
+
+        :raise RuntimeError: if neither Makefile.PL or Build.PL exist
         """
         if os.path.isfile('Makefile.PL'):
             self.build_method = 'Makefile.PL'
@@ -84,7 +86,7 @@ class PerlPackage(PackageBase):
             self.build_executable = Executable( 
                 join_path(self.stage.source_path, 'Build'))
         else:
-            raise InstallError('Unknown build_method for perl package')
+            raise RuntimeError('Unknown build_method for perl package')
 
         if self.build_method == 'Makefile.PL':
             options = ['Makefile.PL', 'INSTALL_BASE={0}'.format(prefix)]
