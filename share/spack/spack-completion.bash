@@ -590,7 +590,7 @@ function _spack_providers {
         compgen -W "-h --help" -- "$cur"
     else
         compgen -W "blas daal elf golang ipp lapack mkl
-                    mpe mpi pil scalapack" -- "$cur"
+                    mpe mpi openfoam pil scalapack" -- "$cur"
     fi
 }
 
