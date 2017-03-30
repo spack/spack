@@ -81,7 +81,7 @@ class PerlPackage(PackageBase):
         if os.path.isfile('Makefile.PL'):
             self.build_method = 'Makefile.PL'
             self.build_executable = inspect.getmodule(self).make
-        elif os.path.isfile('Makefile.PL'):
+        elif os.path.isfile('Build.PL'):
             self.build_method = 'Build.PL'
             self.build_executable = Executable( 
                 join_path(self.stage.source_path, 'Build'))
