@@ -41,8 +41,9 @@ class ChomboXsdk(Package):
     # Chombo dependencies for xSDK build
     depends_on('blas')
     depends_on('lapack')
-    # depends_on('mpi', when='+mpi')
-    # depends_on('hdf5+mpi', when='+hdf5+mpi')
+    depends_on('mpi', when='+mpi')
+    depends_on('hdf5+mpi', when='+hdf5+mpi')
+    depends_on('petsc', when='@xsdk-0.2.0')
 
     def install(self, spec, prefix):
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
