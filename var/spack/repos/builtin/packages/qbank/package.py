@@ -78,3 +78,13 @@ class Qbank(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+        if '+doc' in spec:
+            install_tree('doc', join_path(prefix, 'doc'))
+
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        prefix = self.prefix
+
+        if '+doc' in spec:
+            run_env.prepend_path('MANPATH', join_path(prefix, 'doc'))
