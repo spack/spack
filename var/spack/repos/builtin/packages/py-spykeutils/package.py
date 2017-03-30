@@ -33,7 +33,7 @@ class PySpykeutils(PythonPackage):
 
     version('0.4.3', 'cefe4c48ebfdb9bac7a6cbfaf49dd485')
 
-    depends_on('py-setuptools',      type='build')
-    depends_on('py-scipy',           type=('build', 'run'))
-    depends_on('py-quantities',      type=('build', 'run'))
-    depends_on('py-neo@0.2.1:0.4',   type=('build', 'run'))
+    depends_on('py-setuptools',       type='build')
+    depends_on('py-scipy',            type=('build', 'run'))
+    depends_on('py-quantities',       type=('build', 'run'))
+    depends_on('py-neo@0.2.1:0.3.99', type=('build', 'run'))
