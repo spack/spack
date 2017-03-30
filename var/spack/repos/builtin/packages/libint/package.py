@@ -25,25 +25,27 @@
 from spack import *
 
 
-class Libint(Package):
+class Libint(AutotoolsPackage):
     """Libint is a high-performance library for computing
-    Gaussian integrals in quantum mechanics."""
+    Gaussian integrals in quantum mechanics.
+    """
 
     homepage = "https://github.com/evaleev/libint"
-    url      = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
+    url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
+    version('2.2.0', 'da37dab862fb0b97a7ed7d007695ef47')
     version('2.1.0', 'd0dcb985fe32ddebc78fe571ce37e2d6')
     version('1.1.6', '990f67b55f49ecc18f32c58da9240684')
     version('1.1.5', '379b7d0718ff398715d6898807adf628')
 
     # Build dependencies
     depends_on('autoconf@2.52:', type='build')
-    depends_on('automake',       type='build')
-    depends_on('libtool',        type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     # Libint 2 dependencies
     depends_on('boost', when='@2:')
-    depends_on('gmp',   when='@2:')
+    depends_on('gmp', when='@2:')
 
     def url_for_version(self, version):
         base_url = "https://github.com/evaleev/libint/archive"
@@ -54,16 +56,14 @@ class Libint(Package):
         else:
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
-    def install(self, spec, prefix):
-        # Generate configure
+    def autoreconf(self, spec, prefix):
         libtoolize()
         aclocal('-I', 'lib/autoconf')
         autoconf()
 
-        config_args = [
-            '--prefix={0}'.format(prefix),
-            '--enable-shared'
-        ]
+    def configure_args(self):
+
+        config_args = ['--enable-shared']
 
         # Optimizations for the Intel compiler, suggested by CP2K
         optflags = '-O2'
@@ -93,12 +93,4 @@ class Libint(Package):
                 '--with-libint-max-am=5',
                 '--with-libderiv-max-am1=4'
             ])
-
-        configure(*config_args)
-        make()
-
-        # Testing suite was added in libint 2
-        if self.version >= Version('2.0.0'):
-            make('check')
-
-        make('install')
+        return config_args
