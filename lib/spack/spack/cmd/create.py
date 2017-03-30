@@ -268,8 +268,9 @@ class RPackageTemplate(PackageTemplate):
         super(RPackageTemplate, self).__init__(name, *args)
 
 
-class PerlPackageTemplate(PackageTemplate):
-    """Provides appropriate overrides for Perl extensions"""
+class PerlmakePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Perl extensions
+    that come with a Makefile.PL"""
     base_class_name = 'PerlPackage'
 
     dependencies = """\
@@ -292,7 +293,18 @@ class PerlPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
             name = 'perl-{0}'.format(name)
 
-        super(PerlPackageTemplate, self).__init__(name, *args)
+        super(PerlmakePackageTemplate, self).__init__(name, *args)
+
+
+class PerlbuildPackageTemplate(PerlmakePackageTemplate):
+    """Provides appropriate overrides for Perl extensions
+    that come with a Build.PL instead of a Makefile.PL"""
+    dependencies = """\
+    depends_on('perl-module-build', type='build')
+
+    # FIXME: Add additional dependencies if required:
+    # depends_on('perl-foo')
+    # depends_on('barbaz', type=('build', 'link', 'run'))"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -332,7 +344,8 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
-    'perl':       PerlPackageTemplate,
+    'perlmake':   PerlmakePackageTemplate,
+    'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'generic':    PackageTemplate
 }
@@ -392,8 +405,8 @@ class BuildSystemGuesser:
             (r'/setup.py$',          'python'),
             (r'/NAMESPACE$',         'r'),
             (r'/WORKSPACE$',         'bazel'),
-            (r'/Makefile.PL$',       'perl'),
-            (r'/Build.PL$',          'perl')
+            (r'/Makefile.PL$',       'perlmake'),
+            (r'/Build.PL$',          'perlbuild')
         ]
 
         # Peek inside the compressed file.
