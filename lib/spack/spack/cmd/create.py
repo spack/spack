@@ -405,8 +405,8 @@ class BuildSystemGuesser:
             (r'/setup.py$',          'python'),
             (r'/NAMESPACE$',         'r'),
             (r'/WORKSPACE$',         'bazel'),
+            (r'/Build.PL$',          'perlbuild'),
             (r'/Makefile.PL$',       'perlmake'),
-            (r'/Build.PL$',          'perlbuild')
         ]
 
         # Peek inside the compressed file.
