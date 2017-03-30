@@ -35,18 +35,22 @@ class Gnutls(AutotoolsPackage):
        with focus on security and interoperability."""
 
     homepage = "http://www.gnutls.org"
-    url      = "http://www.ring.gr.jp/pub/net/gnupg/gnutls/v3.3/gnutls-3.3.9.tar.xz"
+    url      = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/gnutls-3.5.10.tar.xz"
 
-    version('3.5.9', '0ab25eb6a1509345dd085bc21a387951')
-    version('3.3.9', 'ff61b77e39d09f1140ab5a9cf52c58b6')
+    version('3.5.10', '336c03a71ba90184ffd0388075dde504')
+    version('3.5.9',  '0ab25eb6a1509345dd085bc21a387951')
+    version('3.3.9',  'ff61b77e39d09f1140ab5a9cf52c58b6')
 
-    # configure sez: Note that version 3.3.9 of gnutls doesn't support
-    # nettle 3.0.
+    # Note that version 3.3.9 of gnutls doesn't support nettle 3.0.
     depends_on("nettle@:2.9", when='@3.3.9')
     depends_on("nettle", when='@3.5:')
     depends_on("zlib", when='@3.5:')
 
     build_directory = 'spack-build'
+
+    def url_for_version(self, version):
+        url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v{0}/gnutls-{1}.tar.xz"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = []
