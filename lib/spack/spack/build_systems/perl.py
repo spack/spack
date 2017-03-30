@@ -47,10 +47,10 @@ class PerlPackage(PackageBase):
         (2) Build.PL.
 
     Some packages may need to override
-        :py:meth:`~.PerlPackage.configure_args`,
-    which produces a list of arguments for the configure method.
-    Arguments should exclude the installation base directory or prefix,
-    because these are defined by the configure method.
+    :py:meth:`~.PerlPackage.configure_args`,
+    which produces a list of arguments for
+    :py:meth:`~.PerlPackage.configure`.
+    Arguments should not include the installation base directory.
     """
     #: Phases of a Perl package
     phases = ['configure', 'build', 'install']
@@ -66,15 +66,17 @@ class PerlPackage(PackageBase):
 
     def configure_args(self):
         """Produces a list containing the arguments that must be passed to
-        the configure method. The installation prefix is always prepended.
+        :py:meth:`~.PerlPackage.configure`. Arguments should not include
+        the installation base directory, which is prepended automatically.
 
         :return: list of arguments for Makefile.PL or Build.PL
         """
         return []
 
     def configure(self, spec, prefix):
-        """Runs Makefile.PL or Build.PL with the arguments specified in
-        :py:meth:`.configure_args` and an appropriate installation prefix.
+        """Runs Makefile.PL or Build.PL with arguments consisting of
+        an appropriate installation base directory followed by the
+        list returned by :py:meth:`~.PerlPackage.configure_args`.
 
         :raise RuntimeError: if neither Makefile.PL or Build.PL exist
         """
