@@ -22,23 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.cmd.configure as cfg
-
+#
 from spack import *
 
-description = 'stops at build stage when installing a package, if possible'
 
-build_system_to_phase = {
-    CMakePackage: 'build',
-    AutotoolsPackage: 'build',
-    PythonPackage: 'build',
-    PerlPackage: 'build'
-}
+class PerlModuleBuild(PerlPackage):
+    """Module::Build is a system for building, testing, and installing Perl
+    modules. It is meant to be an alternative to ExtUtils::MakeMaker.
+    Developers may alter the behavior of the module through subclassing in a
+    much more straightforward way than with MakeMaker. It also does not
+    require a make on your system - most of the Module::Build code is
+    pure-perl and written in a very cross-platform way.
+    """
 
+    homepage = "http://search.cpan.org/perldoc/Module::Build"
+    url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/Module-Build-0.4220.tar.gz"
 
-def setup_parser(subparser):
-    cfg.setup_parser(subparser)
-
-
-def build(parser, args):
-    cfg._stop_at_phase_during_install(args, build, build_system_to_phase)
+    version('0.4220', '9df204e188462a4410d496f316c2c531')

@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 #
+# Author: Milton Woods <milton.woods@bom.gov.au>
+# Date: March 22, 2017
 # Author: George Hartzell <hartzell@alerce.com>
 # Date: July 21, 2016
 # Author: Justin Too <justin@doubleotoo.com>
@@ -36,7 +38,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
        27 years of development."""
     homepage = "http://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+    url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
     version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
     version('5.24.0', 'c5bf7f3285439a2d3b6a488e14503701')
@@ -45,6 +47,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # 5.18.4 fails with gcc-5
     # https://rt.perl.org/Public/Bug/Display.html?id=123784
     # version('5.18.4' , '1f9334ff730adc05acd3dd7130d295db')
+
+    extendable = True
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -80,3 +84,42 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 perl('Makefile.PL')
                 make()
                 make('install')
+
+    def setup_environment(self, spack_env, run_env):
+        """Set PERL5LIB to support activation of Perl packages"""
+        run_env.set('PERL5LIB', join_path(self.prefix, 'lib', 'perl5'))
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        """Set PATH and PERL5LIB to include the extension and
+           any other perl extensions it depends on,
+           assuming they were installed with INSTALL_BASE defined."""
+        perl_lib_dirs = []
+        perl_bin_dirs = []
+        for d in extension_spec.traverse(
+                deptype=('build', 'run'), deptype_query='run'):
+            if d.package.extends(self.spec):
+                perl_lib_dirs.append(join_path(d.prefix, 'lib', 'perl5'))
+                perl_bin_dirs.append(join_path(d.prefix, 'bin'))
+        perl_bin_path = ':'.join(perl_bin_dirs)
+        perl_lib_path = ':'.join(perl_lib_dirs)
+        spack_env.prepend_path('PATH', perl_bin_path)
+        spack_env.prepend_path('PERL5LIB', perl_lib_path)
+        run_env.prepend_path('PATH', perl_bin_path)
+        run_env.prepend_path('PERL5LIB', perl_lib_path)
+
+    def setup_dependent_package(self, module, ext_spec):
+        """Called before perl modules' install() methods.
+           In most cases, extensions will only need to have one line:
+           perl('Makefile.PL','INSTALL_BASE=%s' % self.prefix)
+        """
+
+        # perl extension builds can have a global perl executable function
+        module.perl = Executable(join_path(self.spec.prefix.bin, 'perl'))
+
+        # Add variables for library directory
+        module.perl_lib_dir = join_path(ext_spec.prefix, 'lib', 'perl5')
+
+        # Make the site packages directory for extensions,
+        # if it does not exist already.
+        if ext_spec.package.is_extension:
+            mkdirp(module.perl_lib_dir)

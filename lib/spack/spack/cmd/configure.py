@@ -36,7 +36,8 @@ description = 'stops at configuration stage when installing a package, if possib
 
 build_system_to_phase = {
     CMakePackage: 'cmake',
-    AutotoolsPackage: 'configure'
+    AutotoolsPackage: 'configure',
+    PerlPackage: 'configure'
 }
 
 
