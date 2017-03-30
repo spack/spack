@@ -30,26 +30,35 @@ class ShinyServer(Package):
        documents online. Take your shiny apps and share them with your
        organization or the world."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.rstudio.com/products/shiny/shiny-server/"
+    url = "https://github.com/rstudio/shiny-server/archive/v1.5.3.838.tar.gz"
 
-    version('master', git="https://github.com/rstudio/shiny-server")
+    version('1.5.3.838', '96f20fdcdd94c9e9bb851baccb82b97f')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-    depends_on('python@2.7.12') # docs say: "Really.  3.x will not work"
+    depends_on('python@2.7.13') # docs say: "Really.  3.x will not work"
     depends_on('cmake@2.8.10:')
-#    depends_on('gcc')
-    #depends_on('g++')
-    depends_on('R')
+    # depends_on('gcc@5.4.0')
+    depends_on('git')
+    depends_on('r')
     depends_on('openssl')
-#    depends_on('libjpg')
-#    depends_on('libpng')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
+            bash = which('bash')
             cmake('..',
-                  "-DPYTHON=%s" % join_path(spec['python'].prefix.bin,'python'),
+                  "-DPYTHON=%s" % join_path(spec['python'].prefix.bin, 
+                                            'python'),
                   *std_cmake_args)
             make()
+            mkdirp('../build')
+            bash('-c', 'cd .. && ./bin/npm --python="$PYTHON" install')
+            bash('-c', 'cd .. && ./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqa: E501
             make("install")
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH',
+                             join_path(self.prefix, 'shiny-server', 'bin'))
+        # shiny comes with its own pandoc; hook it up...
+        run_env.prepend_path('PATH',
+                             join_path(self.prefix, 'shiny-server', 
+                                       'ext', 'pandoc', 'static'))
