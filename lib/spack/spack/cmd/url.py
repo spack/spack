@@ -317,10 +317,6 @@ def name_parsed_correctly(pkg, name):
     """
     pkg_name = pkg.name
 
-    build_system = 'generic'
-    if pkg_name.startswith('py-'):
-        build_system = 'python'
-
     name = simplify_name(name)
 
     # After determining a name, `spack create` determines a build system.
