@@ -370,6 +370,7 @@ def parse_name_offset(path, v=None):
         (r'/([^/]+)/(tarball|zipball)/', path),
         (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
         (r'github.com/[^/]+/([^/]+)/archive', path),
+        (r'github.com/[^/]+/([^/]+)/releases', path),
         (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
         (r'([^/]+)/download.php', path),
 
