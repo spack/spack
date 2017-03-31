@@ -36,17 +36,22 @@ from spack import *
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
+
     homepage = "http://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
-    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
-    version('5.24.0', 'c5bf7f3285439a2d3b6a488e14503701')
-    version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
+    # Development releases
+    version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
+
+    # Maintenance releases (recommended)
+    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c', preferred=True)
+    version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
+
+    # End of life releases
     version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
-    # 5.18.4 fails with gcc-5
-    # https://rt.perl.org/Public/Bug/Display.html?id=123784
-    # version('5.18.4' , '1f9334ff730adc05acd3dd7130d295db')
+    version('5.18.4', '1f9334ff730adc05acd3dd7130d295db')
+    version('5.16.3', 'eb5c40f2575df6c155bc99e3fe0a9d82')
 
     extendable = True
 
@@ -65,18 +70,42 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         placement="cpanm"
     )
 
-    def install(self, spec, prefix):
-        configure = Executable('./Configure')
-        configure_args = ["-des", "-Dprefix=" + prefix]
+    phases = ['configure', 'build', 'install']
+
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
+        config_args = [
+            '-des',
+            '-Dprefix={0}'.format(prefix)
+        ]
+
         # Discussion of -fPIC for Intel at:
         # https://github.com/LLNL/spack/pull/3081
         if spec.satisfies('%intel'):
-            configure_args.append("-Accflags=" + self.compiler.pic_flag)
-        configure(*configure_args)
+            config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+
+        return config_args
+
+    def configure(self, spec, prefix):
+        configure = Executable('./Configure')
+        configure(*self.configure_args())
+
+    def build(self, spec, prefix):
         make()
-        if self.run_tests:
-            make("test")
-        make("install")
+
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        make('test')
+
+    def install(self, spec, prefix):
+        make('install')
+
+    @run_after('install')
+    def install_cpanm(self):
+        spec = self.spec
+        prefix = self.prefix
 
         if '+cpanm' in spec:
             with working_dir(join_path('cpanm', 'cpanm')):
