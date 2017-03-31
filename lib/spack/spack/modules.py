@@ -422,7 +422,8 @@ class EnvModule(object):
         if not overwrite and os.path.exists(self.file_name):
             message = 'Module file already exists : skipping creation\n'
             message += 'file : {0.file_name}\n'
-            message += 'spec : {0.spec}'
+            if spack.debug:
+                message += 'spec : {0.spec}'
             tty.warn(message.format(self))
             return
 

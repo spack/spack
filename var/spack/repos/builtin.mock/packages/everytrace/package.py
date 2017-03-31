@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,32 +22,36 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from __future__ import print_function
-import spack
-import spack.store
-import spack.package
-import spack.cmd
-import spack.cmd.install as install
-
-description = "Create a configuration script and module, but don't build."
-
-setup_parser = install.setup_common_parser
+from spack import *
 
 
-def get_spconfig_fname(package):
-    return 'spconfig.py'
+def check(condition, msg):
+    """Raise an install error if condition is False."""
+    if not condition:
+        raise InstallError(msg)
 
 
-def setup(self, args):
-    kwargs = install.validate_args(args)
+class Everytrace(CMakePackage):
+    """Get stack trace EVERY time a program exits."""
 
-    # Spec from cli
-    spec = spack.cmd.parse_specs(
-        args.package, concretize=True, allow_multi=False)
-    install.show_spec(spec, args)
+    homepage = "https://github.com/citibeth/everytrace"
+    url = "https://github.com/citibeth/everytrace/tarball/0.2.0"
 
-    with install.setup_logging(spec, args):
-        install.top_install(
-            spec, setup=set([spec.name]),
-            spconfig_fname_fn=get_spconfig_fname,
-            **kwargs)
+    version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
+    version('develop',
+            git='https://github.com/citibeth/everytrace.git', branch='develop')
+
+    variant('mpi', default=False, description='Enables MPI parallelism')
+    variant('fortran', default=False,
+            description='Enable use with Fortran programs')
+
+    depends_on('mpi', when='+mpi')
+
+    def cmake_args(self):
+        spec = self.spec
+        return [
+            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
+            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
+
+    def setup_environment(self, spack_env, env):
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
