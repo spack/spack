@@ -109,13 +109,12 @@ def possible_spack_module_names(python_mod_name):
     return results
 
 
-def simplify_name(name, build_system='generic'):
+def simplify_name(name):
     """Simplifies a name which may include uppercase letters, periods,
     underscores, and pluses. In general, we want our package names to
     only contain lowercase letters, digits, and dashes.
 
     :param str name: The original name of the package
-    :param str build_system: The build system used by the package
     :return: The new name of the package
     :rtype: str
     """
@@ -143,19 +142,6 @@ def simplify_name(name, build_system='generic'):
     # e.g. voro++ -> voropp
     name = name.replace('++', 'pp')
     name = name.replace('+', '-plus')
-
-    # Simplify Python package names
-    # We don't want "py" or "python" to occur multiple times in the name
-    # e.g. netcdf4-python -> py-netcdf4
-    # e.g. python-certifi -> py-certifi
-    # e.g. pyzmq          -> py-zmq
-    # e.g. tap.py         -> py-tap
-    # e.g. py             -> py-py        # don't rename
-    # e.g. numpy          -> py-numpy     # don't rename
-    # e.g. py2cairo       -> py-py2cairo  # don't rename
-    if build_system == 'python':
-        name = re.sub('^py(?:thon)?[-]?([a-zA-Z])', r'\1', name)
-        name = re.sub('-py(thon)?', '', name)
 
     # Simplify Lua package names
     # We don't want "lua" to occur multiple times in the name

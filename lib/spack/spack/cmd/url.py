@@ -321,7 +321,7 @@ def name_parsed_correctly(pkg, name):
     if pkg_name.startswith('py-'):
         build_system = 'python'
 
-    name = simplify_name(name, build_system)
+    name = simplify_name(name)
 
     # After determining a name, `spack create` determines a build system.
     # Some build systems prepend a special string to the front of the name.
