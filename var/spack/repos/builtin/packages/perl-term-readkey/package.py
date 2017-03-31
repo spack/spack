@@ -39,5 +39,3 @@ class PerlTermReadkey(PerlPackage):
     list_url = "http://www.cpan.org/authors/id/J/JS/JSTOWE"
 
     version('2.37', 'e8ea15c16333ac4f8d146d702e83cc0c')
-
-    #depends_on('')
