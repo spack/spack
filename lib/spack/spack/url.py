@@ -158,27 +158,39 @@ def strip_version_suffixes(path):
 
         # Arch
         # Needs to come before and after OS, appears in both orders
+        'ia32',
         'intel',
         'amd64',
         'x64',
         'x86_64',
+        'x86',
         'i[36]86',
+        'ppc64(le)?',
+        'armv?(7l|6l|64)',
 
         # OS
         '[Ll]inux(_64)?',
         '[Uu]ni?x',
+        '[Ss]un[Oo][Ss]',
         '[Mm]ac[Oo][Ss][Xx]?',
         '[Oo][Ss][Xx]',
-        '[Dd]arwin',
+        '[Dd]arwin(64)?',
         '[Aa]pple',
+        '[Ww]in[64|32]?',
+        '[Cc]ygwin[64|32]?',
+        '[Mm]ingw',
 
         # Arch
         # Needs to come before and after OS, appears in both orders
+        'ia32',
         'intel',
         'amd64',
         'x64',
         'x86_64',
+        'x86',
         'i[36]86',
+        'ppc64(le)?',
+        'armv?(7l|6l|64)?',
 
         # PyPI
         '[._-]py[23].*\.whl',
