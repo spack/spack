@@ -86,7 +86,7 @@ class Subversion(Package):
             make('install-swig-pl-lib')
             with working_dir(join_path(
                     'subversion', 'bindings', 'swig', 'perl', 'native')):
-                perl = Executable(join_path(spec['perl'].prefix.bin, 'perl'))
+                perl = which('perl')
                 perl('Makefile.PL', 'INSTALL_BASE=%s' % prefix)
                 make('install')
 
