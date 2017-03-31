@@ -36,9 +36,8 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.3.0', '4834df63d3b56778441246303ab921c4',
-            url='https://www.earthsystemgrid.org/download/fileDownload.html?'
-                'logicalFileId=bec58cb3-cd9b-11e4-bb80-00c0f03d5b7c',
+    version('6.4.0', 'a981848ddcaf1c263279648265f24766',
+            url='https://www.earthsystemgrid.org/download/fileDownload.html?logicalFileId=86b9bec2-fa01-11e6-a976-00c0f03d5b7c',
             extension='tar.gz')
     patch('spack_ncl.patch')
 
@@ -180,6 +179,8 @@ class Ncl(Package):
             'y\n',
             # Build GDAL support (optional) into NCL?
             'y\n' if '+gdal' in self.spec else 'n\n',
+            # Build EEMD support (optional) into NCL?
+            'n\n',
             # Build Udunits-2 support (optional) into NCL?
             'y\n' if '+uduints2' in self.spec else 'n\n',
             # Build Vis5d+ support (optional) into NCL?

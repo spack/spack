@@ -34,6 +34,7 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://pypi.python.org/pypi/matplotlib"
     url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
 
+    version('2.0.0', '7aa54b06327f0e1c4f3877fc2f7d6b17')
     version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')
     version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
@@ -81,7 +82,7 @@ class PyMatplotlib(PythonPackage):
     # --------- Optional dependencies
     depends_on('pkg-config', type='build')    # why not...
     depends_on('pil', when='+image', type=('build', 'run'))
-    depends_on('py-ipython', when='+ipython')
+    depends_on('py-ipython', when='+ipython', type=('build', 'run'))
     depends_on('ghostscript', when='+latex', type='run')
     depends_on('texlive', when='+latex', type='run')
 

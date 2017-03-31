@@ -27,17 +27,23 @@ from spack import *
 
 class Subversion(Package):
     """Apache Subversion - an open source version control system."""
-    homepage  = 'https://subversion.apache.org/'
-    url       = 'http://archive.apache.org/dist/subversion/subversion-1.8.13.tar.gz'
+    homepage = 'https://subversion.apache.org/'
+    url = 'http://archive.apache.org/dist/subversion/subversion-1.8.13.tar.gz'
 
     version('1.8.13',    '8065b3698d799507fb72dd7926ed32b6')
     version('1.9.3',     'a92bcfaec4e5038f82c74a7b5bbd2f46')
+
+    variant('perl', default=False, description='Build with Perl bindings')
 
     depends_on('apr')
     depends_on('apr-util')
     depends_on('zlib')
     depends_on('sqlite')
     depends_on('serf')
+
+    extends('perl', when='+perl')
+    depends_on('swig@1.3.24:3.0.0', when='+perl')
+    depends_on('perl-term-readkey', when='+perl')
 
     # Optional: We need swig if we want the Perl, Python or Ruby
     # bindings.
@@ -60,11 +66,29 @@ class Subversion(Package):
         options.append('--with-zlib=%s' % spec['zlib'].prefix)
         options.append('--with-sqlite=%s' % spec['sqlite'].prefix)
         options.append('--with-serf=%s' % spec['serf'].prefix)
-        # options.append('--with-swig=%s' % spec['swig'].prefix)
+
+        if spec.satisfies('^swig'):
+            options.append('--with-swig=%s' % spec['swig'].prefix)
+        if spec.satisfies('+perl'):
+            options.append(
+                'PERL=%s' % join_path(spec['perl'].prefix.bin, 'perl'))
 
         configure(*options)
         make()
+        if self.run_tests:
+            make('check')
         make('install')
+
+        if spec.satisfies('+perl'):
+            make('swig-pl')
+            if self.run_tests:
+                make('check-swig-pl')
+            make('install-swig-pl-lib')
+            with working_dir(join_path(
+                    'subversion', 'bindings', 'swig', 'perl', 'native')):
+                perl = which('perl')
+                perl('Makefile.PL', 'INSTALL_BASE=%s' % prefix)
+                make('install')
 
         # python bindings
         # make('swig-py',
@@ -73,10 +97,6 @@ class Subversion(Package):
         # make('install-swig-py',
         #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
         #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
-
-        # perl bindings
-        # make('swig-pl')
-        # make('install-swig-pl')
 
         # ruby bindings
         # make('swig-rb')

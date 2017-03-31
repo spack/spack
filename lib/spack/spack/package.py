@@ -42,7 +42,6 @@ import re
 import sys
 import textwrap
 import time
-from StringIO import StringIO
 
 import llnl.util.lock
 import llnl.util.tty as tty
@@ -57,6 +56,7 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
@@ -1053,7 +1053,13 @@ class PackageBase(object):
         touch(join_path(self.prefix.bin, 'fake'))
         mkdirp(self.prefix.include)
         mkdirp(self.prefix.lib)
+        library_name = 'lib' + self.name
+        dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        touch(join_path(self.prefix.lib, library_name + dso_suffix))
+        touch(join_path(self.prefix.lib, library_name + '.a'))
         mkdirp(self.prefix.man1)
+        packages_dir = spack.store.layout.build_packages_path(self.spec)
+        dump_packages(self.spec, packages_dir)
 
     def _if_make_target_execute(self, target):
         try:
@@ -1387,32 +1393,29 @@ class PackageBase(object):
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package.
 
-        `spack_env` and `run_env` are `EnvironmentModifications`
-        objects.  Package authors can call methods on them to alter
+        ``spack_env`` and ``run_env`` are ``EnvironmentModifications``
+        objects. Package authors can call methods on them to alter
         the environment within Spack and at runtime.
 
-        Both `spack_env` and `run_env` are applied within the build
-        process, before this package's `install()` method is called.
+        Both ``spack_env`` and ``run_env`` are applied within the build
+        process, before this package's ``install()`` method is called.
 
-        Modifications in `run_env` will *also* be added to the
+        Modifications in ``run_env`` will *also* be added to the
         generated environment modules for this package.
 
         Default implementation does nothing, but this can be
         overridden if the package needs a particular environment.
 
-        Examples:
+        Example:
 
-            1. Qt extensions need `QTDIR` set.
+        1. Qt extensions need ``QTDIR`` set.
 
-        Args:
-            spack_env (EnvironmentModifications): list of
-                modifications to be applied when this package is built
-                within Spack.
-
-            run_env (EnvironmentModifications): list of environment
-                changes to be applied when this package is run outside
-                of Spack.
-
+        :param EnvironmentModifications spack_env: List of environment
+            modifications to be applied when this package is built
+            within Spack.
+        :param EnvironmentModifications run_env: List of environment
+            modifications to be applied when this package is run outside
+            of Spack. These are added to the resulting module file.
         """
         pass
 
@@ -1425,32 +1428,26 @@ class PackageBase(object):
         others that follow the extension model a way to implement
         common environment or compile-time settings for dependencies.
 
-        By default, this delegates to ``self.setup_environment()``
+        This is useful if there are some common steps to installing
+        all extensions for a certain package.
 
         Example:
 
-            1. Installing python modules generally requires
-               `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
-               directory in the module's install prefix.  This could
-               set that variable.
+        1. Installing python modules generally requires ``PYTHONPATH`` to point
+           to the ``lib/pythonX.Y/site-packages`` directory in the module's
+           install prefix. This method could be used to set that variable.
 
-        Args:
-
-            spack_env (EnvironmentModifications): list of
-                modifications to be applied when the dependent package
-                is bulit within Spack.
-
-            run_env (EnvironmentModifications): list of environment
-                changes to be applied when the dependent package is
-                run outside of Spack.
-
-            dependent_spec (Spec): The spec of the dependent package
-                about to be built. This allows the extendee (self) to
-                query the dependent's state. Note that *this*
-                package's spec is available as `self.spec`.
-
-        This is useful if there are some common steps to installing
-        all extensions for a certain package.
+        :param EnvironmentModifications spack_env: List of environment
+            modifications to be applied when the dependent package is
+            built within Spack.
+        :param EnvironmentModifications run_env: List of environment
+            modifications to be applied when the dependent package is
+            run outside of Spack. These are added to the resulting
+            module file.
+        :param Spec dependent_spec: The spec of the dependent package
+            about to be built. This allows the extendee (self) to query
+            the dependent's state. Note that *this* package's spec is
+            available as ``self.spec``.
         """
         pass
 
@@ -1464,37 +1461,29 @@ class PackageBase(object):
         its extensions. This is useful if there are some common steps
         to installing all extensions for a certain package.
 
-        Example :
+        Examples:
 
-            1. Extensions often need to invoke the `python`
-               interpreter from the Python installation being
-               extended.  This routine can put a 'python' Executable
-               object in the module scope for the extension package to
-               simplify extension installs.
+        1. Extensions often need to invoke the ``python`` interpreter
+           from the Python installation being extended. This routine
+           can put a ``python()`` Executable object in the module scope
+           for the extension package to simplify extension installs.
 
-            2. MPI compilers could set some variables in the
-               dependent's scope that point to `mpicc`, `mpicxx`,
-               etc., allowing them to be called by common names
-               regardless of which MPI is used.
+        2. MPI compilers could set some variables in the dependent's
+           scope that point to ``mpicc``, ``mpicxx``, etc., allowing
+           them to be called by common name regardless of which MPI is used.
 
-            3. BLAS/LAPACK implementations can set some variables
-               indicating the path to their libraries, since these
-               paths differ by BLAS/LAPACK implementation.
+        3. BLAS/LAPACK implementations can set some variables
+           indicating the path to their libraries, since these
+           paths differ by BLAS/LAPACK implementation.
 
-        Args:
+        :param spack.package.PackageBase.module module: The Python ``module``
+            object of the dependent package. Packages can use this to set
+            module-scope variables for the dependent to use.
 
-            module (module): The Python `module` object of the
-                dependent package. Packages can use this to set
-                module-scope variables for the dependent to use.
-
-            dependent_spec (Spec): The spec of the dependent package
-                about to be built. This allows the extendee (self) to
-                query the dependent's state.  Note that *this*
-                package's spec is available as `self.spec`.
-
-        This is useful if there are some common steps to installing
-        all extensions for a certain package.
-
+        :param Spec dependent_spec: The spec of the dependent package
+            about to be built. This allows the extendee (self) to
+            query the dependent's state.  Note that *this*
+            package's spec is available as ``self.spec``.
         """
         pass
 
@@ -1812,7 +1801,7 @@ def dump_packages(spec, path):
     # Note that we copy them in as they are in the *install* directory
     # NOT as they are in the repository, because we want a snapshot of
     # how *this* particular build was done.
-    for node in spec.traverse():
+    for node in spec.traverse(deptype=spack.alldeps):
         if node is not spec:
             # Locate the dependency package in the install tree and find
             # its provenance information.

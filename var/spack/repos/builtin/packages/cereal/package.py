@@ -39,6 +39,7 @@ class Cereal(Package):
     homepage = "http://uscilab.github.io/cereal/"
     url      = "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
 
+    version('1.2.2', '4c56c7b9499dba79404250ef9a040481')
     version('1.2.1', '64476ed74c19068ee543b53ad3992261')
     version('1.2.0', 'e372c9814696481dbdb7d500e1410d2b')
     version('1.1.2', '34d4ad174acbff005c36d4d10e48cbb9')
@@ -47,7 +48,9 @@ class Cereal(Package):
     version('1.0.0', 'd1bacca70a95cec0ddbff68b0871296b')
     version('0.9.1', '8872d4444ff274ce6cd1ed364d0fc0ad')
 
-    patch("Werror.patch")
+    patch("Boost.patch")
+    patch("Boost2.patch", when="@1.2.2:")
+    patch("pointers.patch")
 
     depends_on('cmake@2.6.2:', type='build')
 
@@ -57,7 +60,10 @@ class Cereal(Package):
 
         # configure
         # Boost is only used for self-tests, which we are not running (yet?)
-        cmake('.', '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE', *std_cmake_args)
+        cmake('.',
+              '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE',
+              '-DSKIP_PORTABILITY_TEST=TRUE',
+              *std_cmake_args)
 
         # Build
         make()

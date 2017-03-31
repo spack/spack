@@ -26,6 +26,7 @@ import collections
 import inspect
 import json
 import os
+import sys
 import os.path
 import subprocess
 
@@ -268,8 +269,8 @@ class EnvironmentModifications(object):
         :param \*args: list of files to be sourced
         :rtype: instance of EnvironmentModifications
         """
-
         env = EnvironmentModifications()
+
         # Check if the files are actually there
         files = [line.split(' ')[0] for line in args]
         non_existing = [file for file in files if not os.path.isfile(file)]
@@ -277,6 +278,7 @@ class EnvironmentModifications(object):
             message = 'trying to source non-existing files\n'
             message += '\n'.join(non_existing)
             raise RuntimeError(message)
+
         # Relevant kwd parameters and formats
         info = dict(kwargs)
         info.setdefault('shell', '/bin/bash')
@@ -309,9 +311,17 @@ class EnvironmentModifications(object):
         if proc.returncode != 0:
             raise RuntimeError('sourcing files returned a non-zero exit code')
         output = ''.join([line for line in proc.stdout])
-        # Construct a dictionary with all the variables in the new environment
-        after_source_env = dict(json.loads(output))
+
+        # Construct a dictionaries of the environment before and after
+        # sourcing the files, so that we can diff them.
         this_environment = dict(os.environ)
+        after_source_env = json.loads(output)
+
+        # If we're in python2, convert to str objects instead of unicode
+        # like json gives us.  We can't put unicode in os.environ anyway.
+        if sys.version_info[0] < 3:
+            after_source_env = dict((k.encode('utf-8'), v.encode('utf-8'))
+                                    for k, v in after_source_env.items())
 
         # Filter variables that are not related to sourcing a file
         to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD'
@@ -362,6 +372,7 @@ class EnvironmentModifications(object):
                 start = modified_list.index(remaining_list[0])
                 end = modified_list.index(remaining_list[-1])
                 search = sep.join(modified_list[start:end + 1])
+
                 if search not in current:
                     # We just need to set the variable to the new value
                     env.set(x, after_source_env[x])

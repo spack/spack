@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from glob import glob
-import os
 
 
 class Cuda(Package):
@@ -32,21 +31,10 @@ class Cuda(Package):
     by NVIDIA. It enables dramatic increases in computing performance by
     harnessing the power of the graphics processing unit (GPU).
 
-    Note: NVIDIA does not provide a download URL for CUDA so you will
-    need to download it yourself. Go to
-    https://developer.nvidia.com/cuda-downloads and select your Operating
-    System, Architecture, Distribution, and Version.  For the Installer
-    Type, select runfile and click Download. Spack will search your
-    current directory for this file. Alternatively, add this file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
-
     Note: This package does not currently install the drivers necessary
     to run CUDA. These will need to be installed manually. See:
     http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux for
-    details.
-
-    """
+    details."""
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
 
@@ -58,7 +46,7 @@ class Cuda(Package):
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
     def install(self, spec, prefix):
-        runfile = glob(os.path.join(self.stage.path, 'cuda*run'))[0]
+        runfile = glob(join_path(self.stage.path, 'cuda*run'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)
@@ -70,8 +58,9 @@ class Cuda(Package):
         # for details.
 
         runfile(
-            '--silent',   # disable interactive prompts
-            '--verbose',  # create verbose log file
-            '--toolkit',  # install CUDA Toolkit
+            '--silent',         # disable interactive prompts
+            '--verbose',        # create verbose log file
+            '--override',       # override compiler version checks
+            '--toolkit',        # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )

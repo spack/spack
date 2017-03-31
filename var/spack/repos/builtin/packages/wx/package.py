@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
-class Wx(Package):
+class Wx(AutotoolsPackage):
     """wxWidgets is a C++ library that lets developers create
        applications for Windows, Mac OS X, Linux and other platforms
        with a single code base. It has popular language bindings for
@@ -41,18 +42,26 @@ class Wx(Package):
     version('3.0.2', '6461eab4428c0a8b9e41781b8787510484dea800')
     version('3.0.1', '73e58521d6871c9f4d1e7974c6e3a81629fddcf8')
 
+    version('develop', git='https://github.com/wxWidgets/wxWidgets.git', branch='master')
+
     depends_on('gtkplus')
 
-    def make_wx(self):
-        make()
-
     @when('@:3.0.2')
-    def make_wx(self):
+    def build(self, spec, prefix):
         make(parallel=False)
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-unicode",
-                  "--disable-precomp-headers")
+    def configure_args(self):
+        spec = self.spec
+        options = [
+            '--enable-unicode',
+            '--disable-precomp-headers'
+        ]
 
-        self.make_wx()
-        make("install")
+        # see http://trac.wxwidgets.org/ticket/17639
+        if spec.satisfies('@:3.1.0') and sys.platform == 'darwin':
+            options.extend([
+                '--disable-qtkit',
+                '--disable-mediactrl'
+            ])
+
+        return options

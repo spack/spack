@@ -37,6 +37,7 @@ class Cp2k(Package):
     homepage = 'https://www.cp2k.org'
     url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
 
+    version('4.1', 'b0534b530592de15ac89828b1541185e')
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
@@ -47,14 +48,18 @@ class Cp2k(Package):
     depends_on('lapack')
     depends_on('blas')
     depends_on('fftw')
-    depends_on('libint@:1.2', when='@3.0')
+    depends_on('libint@:1.2', when='@3.0,4.1')
 
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+mpi')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
-    depends_on('pexsi', when='+mpi')
-    depends_on('wannier90', when='+mpi')
+    depends_on('pexsi+fortran', when='+mpi')
+
+    # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
+    # which is only available contacting the developer directly. See INSTALL
+    # in the stage of cp2k@4.1
+    depends_on('wannier90', when='@3.0+mpi')
     depends_on('elpa', when='+mpi')
 
     # TODO : add dependency on libsmm, libxsmm
@@ -88,14 +93,14 @@ class Cp2k(Package):
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
-                '-I' + spec['fftw'].prefix.include
+                spec['fftw'].cppflags
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
-            fcflags.extend([
-                '-I' + spec['fftw'].prefix.include
-            ])
-            fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
+            fcflags.append(spec['fftw'].cppflags)
+            fftw = find_libraries('libfftw3', root=spec['fftw'].prefix.lib)
             ldflags = [fftw.search_flags]
+            if 'superlu-dist@4.3' in spec:
+                ldflags = ['-Wl,--allow-multiple-definition'] + ldflags
             libs = [
                 join_path(spec['libint'].prefix.lib, 'libint.so'),
                 join_path(spec['libint'].prefix.lib, 'libderiv.so'),
@@ -149,25 +154,28 @@ class Cp2k(Package):
                 cppflags.extend([
                     '-D__parallel',
                     '-D__LIBPEXSI',
-                    '-D__WANNIER90',
                     '-D__ELPA3',
                     '-D__SCALAPACK'
                 ])
+                if 'wannier90' in spec:
+                    cppflags.append('-D__WANNIER90')
+
                 fcflags.extend([
+                    # spec['elpa:fortran'].cppflags
                     '-I' + join_path(
                         spec['elpa'].prefix,
                         'include',
                         'elpa-{0}'.format(str(spec['elpa'].version)),
                         'modules'
                     ),
+                    # spec[pexsi:fortran].cppflags
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
-                scalapack = spec['scalapack'].scalapack_libs
+                scalapack = spec['scalapack'].libs
                 ldflags.append(scalapack.search_flags)
                 libs.extend([
                     join_path(spec['elpa'].prefix.lib,
                               'libelpa.{0}'.format(dso_suffix)),
-                    join_path(spec['wannier90'].prefix.lib, 'libwannier.a'),
                     join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
                     join_path(spec['superlu-dist'].prefix.lib,
                               'libsuperlu_dist.a'),
@@ -180,12 +188,19 @@ class Cp2k(Package):
                         'libmetis.{0}'.format(dso_suffix)
                     ),
                 ])
+
+                if 'wannier90' in spec:
+                    wannier = join_path(
+                        spec['wannier90'].prefix.lib, 'libwannier.a'
+                    )
+                    libs.append(wannier)
+
                 libs.extend(scalapack)
                 libs.extend(self.spec['mpi'].mpicxx_shared_libs)
                 libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
-            lapack = spec['lapack'].lapack_libs
-            blas = spec['blas'].blas_libs
+            lapack = spec['lapack'].libs
+            blas = spec['blas'].libs
 
             ldflags.append((lapack + blas).search_flags)
             libs.extend([str(x) for x in (fftw, lapack, blas)])

@@ -79,7 +79,7 @@ class Root(Package):
             make()
             make("install")
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('ROOTSYS', self.prefix)
         spack_env.set('ROOT_VERSION', 'v6')
         spack_env.prepend_path('PYTHONPATH', self.prefix.lib)

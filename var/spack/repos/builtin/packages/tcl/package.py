@@ -46,11 +46,18 @@ class Tcl(AutotoolsPackage):
 
     configure_directory = 'unix'
 
-    def setup_environment(self, spack_env, env):
+    def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
-                self.spec.version.up_to(2))))
+        run_env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
+            self.spec.version.up_to(2))))
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make('install')
+
+            # Some applications like Expect require private Tcl headers.
+            make('install-private-headers')
 
     @run_after('install')
     def symlink_tclsh(self):

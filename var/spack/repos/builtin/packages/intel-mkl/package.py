@@ -83,7 +83,7 @@ class IntelMkl(IntelInstaller):
 
     @property
     def lapack_libs(self):
-        return self.blas_libs
+        return self.libs
 
     @property
     def scalapack_libs(self):
@@ -125,5 +125,5 @@ class IntelMkl(IntelInstaller):
         # set up MKLROOT for everyone using MKL package
         spack_env.set('MKLROOT', self.prefix)
 
-    def setup_environment(self, spack_env, env):
-        env.set('MKLROOT', self.prefix)
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('MKLROOT', self.prefix)

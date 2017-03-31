@@ -88,7 +88,7 @@ class Conduit(Package):
     extends("python", when="+python")
     # TODO: blas and lapack are disabled due to build
     # issues Cyrus experienced on OSX 10.11.6
-    depends_on("py-numpy~blas~lapack", when="+python")
+    depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
 
     #######################
     # I/O Packages
@@ -113,7 +113,7 @@ class Conduit(Package):
     #######################
     # Documentation related
     #######################
-    depends_on("py-sphinx", when="+python+doc")
+    depends_on("py-sphinx", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc")
 
     def install(self, spec, prefix):

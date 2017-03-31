@@ -25,12 +25,13 @@
 from spack import *
 
 
-class Binutils(Package):
+class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
     homepage = "http://www.gnu.org/software/binutils/"
-    url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2"
+    url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.bz2"
 
+    version('2.28', '9e8340c96626b469a603c15c9d843727')
     version('2.27', '2869c9bf3e60ee97c74ac2a6bf4e9d68')
     version('2.26', '64146a0faa3b411ba774f47d41de239f')
     version('2.25', 'd9f3303f802a5b6b0bb73a335ab89d66')
@@ -41,22 +42,26 @@ class Binutils(Package):
     depends_on('m4', type='build')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
+    depends_on('gettext')
 
     # Add a patch that creates binutils libiberty_pic.a which is preferred by
     # OpenSpeedShop and cbtf-krell
     variant('krellpatch', default=False,
             description="build with openspeedshop based patch.")
+    variant('plugins', default=False,
+            description="enable plugins, needed for gold linker")
     variant('gold', default=True, description="build the gold linker")
-    patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
+    patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
     patch('cr16.patch')
     patch('update_symbol-2.26.patch', when='@2.26')
 
     variant('libiberty', default=False, description='Also install libiberty.')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         configure_args = [
-            '--prefix=%s' % prefix,
             '--disable-dependency-tracking',
             '--disable-werror',
             '--enable-interwork',
@@ -69,9 +74,10 @@ class Binutils(Package):
         if '+gold' in spec:
             configure_args.append('--enable-gold')
 
+        if '+plugins' in spec:
+            configure_args.append('--enable-plugins')
+
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')
 
-        configure(*configure_args)
-        make()
-        make("install")
+        return configure_args

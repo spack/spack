@@ -27,7 +27,7 @@ from spack.spec import UnsupportedCompilerError
 
 
 class Elemental(CMakePackage):
-    """Elemental: Distributed-memory dense and sparse-direct linear algebra 
+    """Elemental: Distributed-memory dense and sparse-direct linear algebra
        and optimization library."""
 
     homepage = "http://libelemental.org"
@@ -36,28 +36,28 @@ class Elemental(CMakePackage):
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
-    variant('debug', default=False, 
+    variant('debug', default=False,
             description='Builds a debug version of the libraries')
-    variant('shared', default=True, 
+    variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('hybrid', default=True, 
+    variant('hybrid', default=True,
             description='Make use of OpenMP within MPI packing/unpacking')
     variant('openmp_blas', default=False,
             description='Use OpenMP for threading in the BLAS library')
-    variant('c', default=False, 
+    variant('c', default=False,
             description='Build C interface')
-    variant('python', default=False, 
+    variant('python', default=False,
             description='Install Python interface')
-    variant('parmetis', default=False, 
+    variant('parmetis', default=False,
             description='Enable ParMETIS')
-    variant('quad', default=False, 
+    variant('quad', default=False,
             description='Enable quad precision')
-    variant('int64', default=False, 
+    variant('int64', default=False,
             description='Use 64bit integers')
     # When this variant is set remove the normal dependencies since
     # Elemental has to build BLAS and ScaLAPACK internally
-    variant('int64_blas', default=False, 
-            description='Use 64bit integers for BLAS.' 
+    variant('int64_blas', default=False,
+            description='Use 64bit integers for BLAS.'
             ' Requires local build of BLAS library.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
@@ -79,10 +79,10 @@ class Elemental(CMakePackage):
     depends_on('python@:2.8', when='+python')
 
     @property
-    def elemental_libs(self):
+    def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libEl'], root=self.prefix, shared=shared, recurse=True
+            'libEl', root=self.prefix, shared=shared, recurse=True
         )
 
     def build_type(self):
@@ -127,11 +127,11 @@ class Elemental(CMakePackage):
                     '_64_' if '+int64_blas' in spec else '_')),
                     '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
-            math_libs = (spec['lapack'].lapack_libs +
-                         spec['blas'].blas_libs)
+            math_libs = (spec['lapack'].libs +
+                         spec['blas'].libs)
 
             if '+scalapack' in spec:
-                math_libs = spec['scalapack'].scalapack_libs + math_libs
+                math_libs = spec['scalapack'].libs + math_libs
 
             args.extend([
                 '-DMATH_LIBS:STRING={0}'.format(math_libs.search_flags),

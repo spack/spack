@@ -69,7 +69,7 @@ class Mpich(AutotoolsPackage):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx

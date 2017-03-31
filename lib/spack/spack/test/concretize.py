@@ -175,6 +175,16 @@ class TestConcretize(object):
         assert Spec('builtin.mock.multi-provider-mpi@1.10.0') in providers
         assert Spec('builtin.mock.multi-provider-mpi@1.8.8') in providers
 
+    def test_different_compilers_get_different_flags(self):
+        client = Spec('cmake-client %gcc@4.7.2 platform=test os=fe target=fe' +
+                      ' ^cmake %clang@3.5 platform=test os=fe target=fe')
+        client.concretize()
+        cmake = client['cmake']
+        assert set(client.compiler_flags['cflags']) == set(['-O0'])
+        assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
+        assert set(client.compiler_flags['fflags']) == set(['-O0'])
+        assert not set(cmake.compiler_flags['fflags'])
+
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
         s.concretize()
@@ -209,6 +219,16 @@ class TestConcretize(object):
         """
         s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
         with pytest.raises(spack.spec.MultipleProviderError):
+            s.concretize()
+
+    def test_no_matching_compiler_specs(self):
+        s = Spec('a %gcc@0.0.0')
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s.concretize()
+
+    def test_no_compilers_for_arch(self):
+        s = Spec('a arch=linux-rhel0-x86_64')
+        with pytest.raises(spack.concretize.NoCompilersForArchError):
             s.concretize()
 
     def test_virtual_is_fully_expanded_for_callpath(self):
