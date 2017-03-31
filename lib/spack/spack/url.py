@@ -741,7 +741,7 @@ def wildcard_version(path):
 
     # Replace each version with a generic capture group to find versions
     # and escape everything else so it's not interpreted as a regex
-    result = '(.*)'.join(re.escape(vp) for vp in vparts)
+    result = '(\d.*)'.join(re.escape(vp) for vp in vparts)
 
     return result
 
