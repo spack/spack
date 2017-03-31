@@ -343,19 +343,20 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        dest[:] = source + [x for x in dest if x not in source]
-        return dest
+        ret = source + [x for x in dest if x not in source]
+        return ret
 
     # Source dict is merged into dest.
     elif they_are(dict):
+        ret = copy.copy(dest)
         for sk, sv in source.iteritems():
             if override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
-                dest[sk] = copy.copy(sv)
+                ret[sk] = copy.copy(sv)
             else:
                 # otherwise, merge the YAML
-                dest[sk] = _merge_yaml(dest[sk], source[sk])
-        return dest
+                ret[sk] = _merge_yaml(dest[sk], source[sk])
+        return ret
 
     # In any other case, overwrite with a copy of the source value.
     else:
