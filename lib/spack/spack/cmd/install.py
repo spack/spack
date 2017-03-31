@@ -93,6 +93,10 @@ the dependencies"""
         '--site', action='store', type=str, default=None,
         help="Location testing occurred."
     )
+    subparser.add_argument(
+        '--path', action='store', type=str, default=None,
+        help="path of log file"
+    )
 
 
 def install(parser, args, **kwargs):
@@ -130,9 +134,12 @@ def install(parser, args, **kwargs):
             args.log_format = 'cdash-simple'
 
         # Create the test suite in which to log results
-        test_suite = test_suites[args.log_format](
-            spec, args.log_file, args.site)
-
+        if "cdash" in args.log_format:
+            test_suite = test_suites[args.log_format](
+                spec, args.log_file, args.site, args.path)
+        else:
+            test_suite = test_suites[args.log_format](
+                spec, args.log_file)
         # Decorate PackageBase.do_install to get installation status
         PackageBase.do_install = dashboard_output(
             spec, test_suite

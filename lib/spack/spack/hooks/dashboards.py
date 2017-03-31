@@ -16,7 +16,6 @@ import spack
 import time
 import xml.dom.minidom
 import calendar
-import datetime
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 import llnl.util.filesystem as fs
@@ -33,11 +32,10 @@ class TestResult(object):
 
 class JUnitTestSuite(object):
 
-    def __init__(self, spec, logfile, site):
+    def __init__(self, spec, logfile):
         self.spec = spec
         self.root = ET.Element('testsuite')
         self.tests = []
-        self.site = site
         if logfile is not None:
             self.logfile = logfile
         else:
@@ -64,7 +62,6 @@ class JUnitTestSuite(object):
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
         self.root.set('name', str(self.spec))
-        self.root.set('hostname', self.site)
 
         for item in self.tests:
             self.root.append(item.element)
@@ -134,6 +131,7 @@ class CDashTestCase(object):
 
     def set_result(self, result_type,
                    message=None, error_type=None, text=None):
+        self.result_type = result_type
         self.element.set('Status', CDashTestCase.results[result_type])
         # Completion Status
         completion_status = ET.SubElement(self.result, 'NamedMeasurement')
@@ -156,13 +154,12 @@ class CDashTestCase(object):
 
 class CDashSimpleTestSuite(object):
 
-    def __init__(self, spec, filename, site, slot='Experimental'):
+    def __init__(self, spec, filename, site, path, slot='Experimental'):
         self.spec = spec
         self.slot = slot
         self.tests = []
         self.site = site
-        date = datetime.datetime.now().strftime("%Y-%m-%d")
-        self.directory = 'spack-test-' + date
+        self.directory = path
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.filename = filename
 
@@ -173,8 +170,7 @@ class CDashSimpleTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                dirname = fs.join_path(os.getcwd(), self.directory)
-                fs.mkdirp(dirname)
+                dirname = self.directory
                 return fs.join_path(dirname, basename)
 
     def create_template(self):
@@ -224,6 +220,9 @@ class CDashSimpleTestSuite(object):
 
     def prepare_build_report(self):
         report = self.create_template()
+        for item in self.tests:
+            if item.result_type != TestResult.SKIPPED:
+                report.append(item.element)
         build = ET.SubElement(report, 'Build')
         start_element = ET.SubElement(build, 'StartDateTime')
         start_element.text = self.now()
@@ -285,8 +284,10 @@ def dashboard_output(spec, test_suite):
                 # If already installed set the spec as skipped
                 start_time = time.time()
                 # PackageBase.do_install
-                func(self, *args, **kwargs)
-                duration = time.time() - start_time
+                try:
+                    func(self, *args, **kwargs)
+                finally:
+                    duration = time.time() - start_time
                 test_case.set_duration(duration)
                 test_case.set_result(TestResult.PASSED)
             except InstallError:
@@ -321,16 +322,6 @@ def dashboard_output(spec, test_suite):
                     message='Unable to fetch package',
                     text=text
                 )
-            except Exception:
-                # Anything else is also an error
-                duration = time.time() - start_time
-                test_case.set_duration(duration)
-                text = fetch_text(self.build_log_path)
-                test_case.set_result(
-                    TestResult.ERRORED,
-                    message='Unexpected exception thrown during install',
-                    text=text
-                )
             except:
                 # Anything else is also an error
                 duration = time.time() - start_time
@@ -348,13 +339,12 @@ def dashboard_output(spec, test_suite):
 
 class CDashCompleteTestSuite(object):
 
-    def __init__(self, spec, filename, site, slot='Experimental'):
+    def __init__(self, spec, filename, site, path, slot='Experimental'):
         self.spec = spec
         self.slot = slot
         self.tests = []
         self.site = site
-        date = datetime.datetime.now().strftime("%Y-%m-%d")
-        self.directory = 'spack-test-' + date
+        self.directory = path
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
         self.filename = filename
@@ -366,8 +356,7 @@ class CDashCompleteTestSuite(object):
             else:
                 fmt = '%s-{x.name}-{x.version}-{hash}.xml' % step
                 basename = fmt.format(x=spec, hash=spec.dag_hash())
-                dirname = fs.join_path(os.getcwd(), self.directory)
-                fs.mkdirp(dirname)
+                dirname = self.directory
                 return fs.join_path(dirname, basename)
 
     def create_template(self):
@@ -444,6 +433,9 @@ class CDashCompleteTestSuite(object):
 
     def prepare_build_report(self):
         report = self.create_template()
+        for item in self.tests:
+            if item.result_type != TestResult.SKIPPED:
+                report.append(item.element)
         build = ET.SubElement(report, 'Build')
         start_element = ET.SubElement(build, 'StartDateTime')
         start_element.text = self.now()
@@ -470,6 +462,7 @@ class CDashCompleteTestSuite(object):
         startTest_element = ET.SubElement(testing, 'StartTestTime')
         startTest_element.text = self.epoch()
         testlist = ET.SubElement(testing, 'TestList')
+
         for item in self.tests:
             test_element = ET.SubElement(testlist, "Test")
             test_element.text = item.name
@@ -502,11 +495,13 @@ class CDashCompleteTestSuite(object):
                 duration = time.time() - start_time
                 test_case.set_duration(duration)
                 test_case.set_result(TestResult.PASSED)
+
             except InstallError:
                 # Check if the package relies on dependencies that
                 # did not install
                 duration = time.time() - start_time
                 test_case.set_duration(duration)
+
                 if [x for x in self.spec.dependencies(('link', 'run')) if not spack.repo.get(x).installed]:  # NOQA: ignore=E501
                     test_case.set_duration(0.0)
                     test_case.set_result(
@@ -514,6 +509,7 @@ class CDashCompleteTestSuite(object):
                         message='Skipped [failed dependencies]',
                         error_type='dep_failed'
                     )
+
                 else:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
@@ -523,6 +519,7 @@ class CDashCompleteTestSuite(object):
                         message='Installation failure',
                         text=text
                     )
+
             except FetchError:
                 # A FetchError is considered an error as
                 # we didn't even start building
@@ -534,16 +531,7 @@ class CDashCompleteTestSuite(object):
                     message='Unable to fetch package',
                     text=text
                 )
-            except Exception:
-                # Anything else is also an error
-                duration = time.time() - start_time
-                test_case.set_duration(duration)
-                text = fetch_text(self.build_log_path)
-                test_case.set_result(
-                    TestResult.ERRORED,
-                    message='Unexpected exception thrown during install',
-                    text=text
-                )
+
             except:
                 # Anything else is also an error
                 duration = time.time() - start_time

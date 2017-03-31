@@ -191,7 +191,7 @@ class InstallTestJunitLog(unittest.TestCase):
     def test_installing_both(self):
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
-        args = parser.parse_args(['--log-format=junit', '--site=LLNL', 'X'])
+        args = parser.parse_args(['--log-format=junit', 'X'])
         install.install(parser, args)
         self.assertEqual(len(FILE_REGISTRY), 1)
         for _, content in FILE_REGISTRY.items():
@@ -204,7 +204,7 @@ class InstallTestJunitLog(unittest.TestCase):
         pkgY.installed = True
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
-        args = parser.parse_args(['--log-format=junit', '--site=LLNL', 'X'])
+        args = parser.parse_args(['--log-format=junit', 'X'])
         install.install(parser, args)
         self.assertEqual(len(FILE_REGISTRY), 1)
         for _, content in FILE_REGISTRY.items():

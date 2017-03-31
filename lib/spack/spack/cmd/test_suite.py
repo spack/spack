@@ -39,9 +39,9 @@ import jsonschema
 from jsonschema import Draft4Validator, validators
 from spack.error import SpackError
 import re
-import sys
 import datetime
 import errno
+from spack.package import PackageStillNeededError
 
 description = "Installs packages, provides cdash output."
 
@@ -63,8 +63,8 @@ def setup_parser(subparser):
         '-p', '--project', action='store', dest='project',
         help='project name on cdash')
     subparser.add_argument(
-        'yamlFile', nargs=argparse.REMAINDER,
-        help="Yaml test descriptions. Example found in spack docs.")
+        'yaml_files', nargs=argparse.REMAINDER,
+        help=".yaml test descriptions. Example found in spack docs.")
 
 
 def _mark_overrides(data):
@@ -145,45 +145,37 @@ def uninstall_spec(spec):
         tty.msg("uninstalling... " + str(spec))
         pkg = spack.repo.get(spec)
         pkg.do_uninstall()
-    except Exception as ex:
-        template = "Exception type: {0} occured in uninstall"
-        message = template.format(type(ex).__name__, ex.args)
-        tty.msg(message)
-        pass
+        spec.package.do_uninstall(spec)
     except PackageStillNeededError as err:
         tty.msg(err)
-        return spec, "PackageStillNeededError"
-    return spec, ""
+        raise
+    return spec
 
 
-def install_spec(spec, cdash, site):
-    failure = False
+def install_spec(spec, cdash, site, path):
     try:
         spec.concretize()
         tty.msg("installing... " + str(spec))
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
         # use cdash-complete if you want configure, build and test output.
-        args = parser.parse_args([cdash, site])
+        args = parser.parse_args([cdash, site, path])
         args.command = "install"
-        args.no_checksum = True
         args.package = str(spec).split()
         install.install(parser, args)
     except OSError as err:
-        tty.msg(err)
+        tty.error(err)
         raise
-    except Exception as ex:
-        template = "An exception type: {0} occured in install"
-        message = template.format(type(ex).__name__, ex.args)
-        tty.msg(message)
-        failure = True
-        pass
-    return spec, failure
+    except InstallError as err:
+        tty.error(err)
+        raise
+    return spec
 
 
 def create_path():
+    # create path to store cdash files
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-    path = os.getcwd() + "/spack-test-" + str(timestamp) + "/"
+    path = os.path.join(os.getcwd(), "spack-test-" + str(timestamp))
     if not os.path.exists(path):
         try:
             os.makedirs(path)
@@ -193,6 +185,49 @@ def create_path():
     return path
 
 
+def return_valid_yaml_files(files):
+    return_files = []
+    for file in files:
+        if os.path.isdir(file):
+            files = [name for name in glob.glob(os.path.join(file, '*.yaml'))
+                     if os.path.isfile(os.path.join(file, name))]
+            if files:
+                return_files.extend(files)
+            # user gave path to files, parse and return
+        elif os.path.isfile(file):
+            if file.endswith('.yaml'):
+                return_files.append(file)
+        else:
+            tty.die("Not a valid file or directory.")
+    if not return_files:
+        tty.die(".yaml files not found.")
+    return return_files
+
+
+def send_reports(dashboard, path):
+    tty.msg("URL: " + str(dashboard))
+    # allows for multiple dashboards
+    # correct in future to be dynamic
+    files = [name for name in glob.glob(os.path.join(path, '*.*'))
+             if os.path.isfile(os.path.join(path, name))]
+    for file in files:
+        if "dstore" not in file:
+            # void file found in OSX
+            with open(file) as fh:
+                mydata = fh.read()
+                # PUT request to send xml files to cdash.
+                response = requests.put(
+                    dashboard,
+                    data=mydata,
+                    headers={
+                        'content-type': 'text/plain'},
+                    params={
+                        'file': file}
+                )
+                tty.msg(file)
+                tty.msg(response.status_code)
+
+
 def test_suite(parser, args):
     spackio_url = "https://spack.io/cdash/submit.php?project="
     submit = "/submit.php?project="
@@ -200,48 +235,72 @@ def test_suite(parser, args):
     project = ""
     """Compiles a list of tests from a yaml file.
     Runs Spec and concretize then produces cdash format."""
-    if not args.yamlFile:
-        tty.die("spack testsuite requires a yaml file.")
+    if not args.yaml_files:
+        tty.die("spack testsuite requires a .yaml file.")
+    yaml_files = return_valid_yaml_files(args.yaml_files)
     if not args.log_format:
         tty.die("spack testsuite requires a log format, cdash, cdash-simple")
     cdash = '--log-format=' + str(args.log_format)
     path = create_path()
+    patharg = "--path=" + str(path)
     if args.site:
         site = "--site=" + args.site
     else:
         import socket
         site = "--site=" + socket.gethostname()
-    for file in args.yamlFile:
-        sets = CombinatorialSpecSet(file)
-        test_contents = sets.read_in_file()
-        if not test_contents['tests']:
+    for file in yaml_files:
+        test_contents = {}
+        file_contents = {}
+        try:
+            sets = CombinatorialSpecSet(file)
+            file_contents = sets.read_in_file()
+            # returns contents of valid yaml file
+        except Exception as e:
+            tty.die(e)
+        if file_contents:
+            test_contents = sets.create_tests(file_contents)
+            # returns dict with tests, project and cdash
+        else:
+            tty.msg("No tests found, continuing.")
+            continue
+        if 'tests' not in test_contents:
             tty.msg("No tests found, continuing.")
             continue
         # setting up tests for contretizing
         for spec in test_contents['tests']:
-            tty.msg(spec)
-            if len(spack.store.db.query(spec)) != 0:
-                tty.msg(spack.store.db.query(spec))
             # uninstall all packages before installing.
             # This will reduce the number of skipped package installs.
-            if (len(spack.store.db.query(spec)) > 0):
-                spec, exception = uninstall_spec(spec)
-                if exception is "PackageStillNeededError":
-                    continue
+            if spack.store.db.query(spec):
+                tty.msg(spack.store.db.query(spec))
+                try:
+                    spec = uninstall_spec(spec)
+                except PackageStillNeededError as err:
+                    tty.error(err)
+                    pass
+                except:
+                    pass
             try:
-                spec, failure = install_spec(spec, cdash, site)
-            except Exception as e:
-                tty.die(e)
-                sys.exit(0)
-            if not failure:
-                tty.msg("Failure did not occur, uninstalling " + str(spec))
-                spec, exception = uninstall_spec(spec)
+                spec = install_spec(spec, cdash, site, patharg)
+                try:
+                    spec = uninstall_spec(spec)
+                except PackageStillNeededError as err:
+                    tty.error(err)
+                    pass
+                except:
+                    pass
+            except OSError as err:
+                tty.error(err)
+                pass
+            except InstallError as err:
+                tty.error(err)
+                pass
         if 'project' in test_contents:
             project = test_contents['project']
         if args.cdash and args.project:
             url.append(args.cdash + submit + args.project)
         elif args.cdash and project:
             url.append(args.cdash + submit + project)
+        # shortcut URL + "/submit.php?project=" + project
         elif args.project:
             if test_contents['cdash']:
                 for cdash in test_contents['cdash']:
@@ -249,37 +308,19 @@ def test_suite(parser, args):
             else:
                 url.append(spackio_url + args.project)
         elif 'cdash' in test_contents:
-                if test_contents['cdash'] and project:
-                    if len(test_contents['cdash']) > 1:
-                        for cdash in test_contents['cdash']:
-                            url.append(cdash + submit + str(project))
-                    else:
-                        url.append(test_contents['cdash'][0] +
-                                   submit + project)
-                elif project:
-                    url.append(spackio_url + project)
+            if test_contents['cdash'] and project:
+                if len(test_contents['cdash']) > 1:
+                    # more than 1 cdash given in yaml
+                    for cdash in test_contents['cdash']:
+                        url.append(cdash + submit + str(project))
+                        # shortcut from yaml file
+                else:
+                    url.append(test_contents['cdash'][0] +
+                               submit + project)
+            elif project:
+                url.append(spackio_url + project)
         for dashboard in url:
-            tty.msg("URL: " + str(dashboard))
-            # allows for multiple dashboards
-            # correct in future to be dynamic
-            files = [name for name in glob.glob(os.path.join(path, '*.*'))
-                     if os.path.isfile(os.path.join(path, name))]
-            for file in files:
-                if "dstore" not in file:
-                        # void file found in OSX
-                    with open(file) as fh:
-                        mydata = fh.read()
-                        # PUT request to send xml files to cdash.
-                        response = requests.put(
-                            dashboard,
-                            data=mydata,
-                            headers={
-                                'content-type': 'text/plain'},
-                            params={
-                                'file': file}
-                        )
-                        tty.msg(file)
-                        tty.msg(response.status_code)
+            send_reports(dashboard, path)
 
 
 class CombinatorialSpecSet:
@@ -300,15 +341,91 @@ class CombinatorialSpecSet:
                 if spec.constrain("%" + str(compiler)):
                     yield spec
 
-    def read_in_file(self):
+    def return_all_spack_packages(self, compilers):
+        all_tests = []
+        for pkg in spack.repo.all_package_names():
+            # Fill in the entries one by one
+            pkg_details = spack.repo.get(pkg)
+            version_list = []
+            tests = []
+            for x in pkg_details.versions:
+                version_list.append(str(x).rstrip('\r\n  \n   '))
+            [tests.append(Spec(spec))
+             for spec in self.combinatorial(
+                pkg, version_list)]
+            [all_tests.append(Spec(spec))
+             for spec in self.combinatorial_compiler(
+                tests, compilers)]
+        return all_tests
+
+    def create_tests(self, data, ignore=False):
         compilers = []
         packages = []
         tests = []
+        tests_after_include = []
         compiler_version = []
-        schema = spack.schema.test.schema
         package_version = []
         tmp_compiler_ist = []
         test_contents = {}
+        packages = data['test-suite']['packages']
+        compilers = data['test-suite']['compilers']
+        # compilers
+        for compiler in compilers:
+            versions = compilers[compiler]['versions']
+            [tmp_compiler_ist.append(Spec(spec))
+                for spec in self.combinatorial(compiler, versions)]
+        if not ignore:
+            for compiler in tmp_compiler_ist:
+                if any(compiler.satisfies(str(cs))
+                       for cs in spack.compilers.all_compiler_specs()):
+                    compiler_version.append(compiler)
+                else:
+                    tty.warn("Spack could not find " + str(compiler))
+        elif ignore:
+            compiler_version = tmp_compiler_ist
+        # Packages
+        if type(packages) == dict:
+            for package in packages:
+                versions = packages[package]['versions']
+                [package_version.append(Spec(spec))
+                    for spec in self.combinatorial(
+                        package, versions)]
+            [tests.append(Spec(spec))
+             for spec in self.combinatorial_compiler(
+                package_version, compiler_version)]
+        elif "all" in packages:
+            tests = self.return_all_spack_packages(compiler_version)
+            tests_after_include
+        # Include
+        if 'include' in data['test-suite']:
+            included_tests = data['test-suite']['include']
+            for spec in tests:
+                for included_test in included_tests:
+                    if bool(spec.satisfies(included_test)):
+                        tests_after_include.append(spec)
+            if tests_after_include:
+                tests = tests_after_include
+        # Exclude
+        if 'exclude' in data['test-suite']:
+            remove_tests = []
+            excluded_tests = data['test-suite']['exclude']
+            for spec in tests:
+                for excluded_test in excluded_tests:
+                    if bool(spec.satisfies(excluded_test)):
+                        remove_tests.append(spec)
+            for test in remove_tests:
+                tests.remove(test)
+        test_contents['tests'] = tests
+        # dashboards for cdash
+        if 'cdash' in data['test-suite']:
+            test_contents['cdash'] = data['test-suite']['cdash']
+        # projects shortcut
+        if 'project' in data['test-suite']:
+            test_contents['project'] = data['test-suite']['project']
+        return test_contents
+
+    def read_in_file(self):
+        schema = spack.schema.test.schema
         try:
             # read yaml file which contains description of tests
             tty.debug("Reading config file %s" % self.yaml_file)
@@ -316,50 +433,7 @@ class CombinatorialSpecSet:
                 data = _mark_overrides(syaml.load(f))
             if data:
                 validate_section(data, schema)
-                packages = data['test-suite']['packages']
-                compilers = data['test-suite']['compilers']
-                for compiler in compilers:
-                    versions = compilers[compiler]['versions']
-                    [tmp_compiler_ist.append(Spec(spec))
-                        for spec in self.combinatorial(compiler, versions)]
-                for compiler in tmp_compiler_ist:
-                    if any(compiler.satisfies(str(cs))
-                           for cs in spack.compilers.all_compiler_specs()):
-                        compiler_version.append(compiler)
-                    else:
-                        tty.warn("Spack could not find " + str(compiler))
-                if 'include' in data['test-suite']:
-                    included_tests = data['test-suite']['include']
-                    for package in packages:
-                        if package in included_tests:
-                            versions = packages[package]['versions']
-                            [package_version.append(Spec(spec))
-                                for spec in self.combinatorial(
-                                    package, versions)]
-                else:
-                    for package in packages:
-                        versions = packages[package]['versions']
-                        [package_version.append(Spec(spec))
-                            for spec in self.combinatorial(
-                                package, versions)]
-                [tests.append(Spec(spec))
-                 for spec in self.combinatorial_compiler(
-                    package_version, compiler_version)]
-                if 'exclude' in data['test-suite']:
-                    remove_tests = []
-                    excluded_tests = data['test-suite']['exclude']
-                    for spec in tests:
-                        for excluded_test in excluded_tests:
-                            if bool(spec.satisfies(excluded_test)):
-                                remove_tests.append(spec)
-                    for test in remove_tests:
-                        tests.remove(test)
-                test_contents['tests'] = tests
-                if 'cdash' in data['test-suite']:
-                    test_contents['cdash'] = data['test-suite']['cdash']
-                if 'project' in data['test-suite']:
-                    test_contents['project'] = data['test-suite']['project']
-            return test_contents
+                return(data)
         except MarkedYAMLError as e:
             raise ConfigFileError(
                 "Error parsing yaml%s: %s" %
@@ -378,8 +452,7 @@ class ConfigFileError(ConfigError):
     pass
 
 
-class PackageStillNeededError(SpackError):
-    """Raised when package is still needed by another on uninstall."""
+class InstallError(ConfigError):
     pass
 
 
