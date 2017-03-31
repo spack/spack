@@ -48,11 +48,8 @@ class Qbank(Package):
 
     depends_on('openssl')
 
-    depends_on('perl@5.6:5.16', type=('build', 'run'))
-
-    # TODO: Add packages for these after Perl is made extendable
-    #depends_on('perl-dbi@1.00:', type=('build', 'run'))
-    #depends_on('perl-dbd@1.00:', type=('build', 'run'))
+    depends_on('perl@5.6:5.16',  type=('build', 'run'))
+    depends_on('perl-dbi@1.00:', type=('build', 'run'))
 
     phases = ['configure', 'build', 'install']
 
