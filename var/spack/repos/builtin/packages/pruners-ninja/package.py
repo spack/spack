@@ -22,35 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Archer(Package):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class PrunersNinja(AutotoolsPackage):
+    """NINJA: Noise Inject agent tool to expose subtle and unintended message
+       races."""
+    homepage = "https://github.com/PRUNERS/NINJA"
+    url      = "https://github.com/PRUNERS/NINJA/releases/download/v1.0.0/NINJA-1.0.0.tar.gz"
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+    version("1.0.0", "fee53c4712ac521ebec3cd8692e5185a")
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
-
-    depends_on('cmake', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
-
-    def install(self, spec, prefix):
-
-        with working_dir('spack-build', create=True):
-            cmake_args = std_cmake_args[:]
-            cmake_args.extend([
-                '-G', 'Ninja',
-                '-DCMAKE_C_COMPILER=clang',
-                '-DCMAKE_CXX_COMPILER=clang++',
-                '-DOMP_PREFIX:PATH=%s' % spec['llvm-openmp-ompt'].prefix,
-            ])
-
-            cmake('..', *cmake_args)
-            ninja = Executable('ninja')
-            ninja()
-            ninja('install')
+    depends_on("mpi")
+    depends_on("autoconf", type='build')
+    depends_on("automake", type='build')
+    depends_on("libtool", type='build')
