@@ -35,8 +35,8 @@ class Tinyxml(CMakePackage):
     version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764')
 
     def url_for_version(self, version):
-        return "https://sourceforge.net/projects/tinyxml/files/tinyxml/{0}/tinyxml_{1}.tar.gz".format(
-            version.dotted, version.underscored)
+        url = "https://sourceforge.net/projects/tinyxml/files/tinyxml/{0}/tinyxml_{1}.tar.gz"
+        return url.format(version.dotted, version.underscored)
 
     def patch(self):
         copyfile(join_path(os.path.dirname(__file__),

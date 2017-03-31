@@ -102,6 +102,10 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('dash_0.5.5.1.orig',
                    'dash_0.5.5.1')
 
+    def test_plus(self):
+        self.check('ncbi-blast-2.6.0+-src',
+                   'ncbi-blast-2.6.0')
+
     # License
 
     def test_gpl(self):
@@ -290,6 +294,11 @@ class UrlParseOffsetTest(unittest.TestCase):
         self.check(
             'sionlib', 30, '1.7.1', 59,
             'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1')
+
+    def test_regex_in_name(self):
+        self.check(
+            'voro++', 40, '0.4.6', 47,
+            'http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz')
 
 
 class UrlParseNameAndVersionTest(unittest.TestCase):

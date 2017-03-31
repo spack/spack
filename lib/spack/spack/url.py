@@ -151,6 +151,7 @@ def strip_version_suffixes(path):
         '[Ff]inal',
         'rel',
         'orig',
+        '\+',
 
         # License
         'gpl',
@@ -687,6 +688,22 @@ def cumsum(elts, init=0, fn=lambda x: x):
     return sums
 
 
+def find_all(substring, string):
+    """Returns a list containing the indices of
+    every occurrence of substring in string."""
+
+    occurrences = []
+    index = 0
+    while index < len(string):
+        index = string.find(substring, index)
+        if index == -1:
+            break
+        occurrences.append(index)
+        index += len(substring)
+
+    return occurrences
+
+
 def substitution_offsets(path):
     """This returns offsets for substituting versions and names in the
        provided path.  It is a helper for :func:`substitute_version`.
@@ -704,29 +721,12 @@ def substitution_offsets(path):
         except UndetectableNameError:
             return (None, -1, -1, (), None, -1, -1, ())
 
-    # protect extensions like bz2 from getting inadvertently
-    # considered versions.
-    path = comp.strip_extension(path)
+    # Find the index of every occurrence of name and ver in path
+    name_offsets = find_all(name, path)
+    ver_offsets  = find_all(ver,  path)
 
-    # Construct a case-insensitive regular expression for the package name.
-    name_re = '(%s)' % insensitize(name)
-
-    # Split the string apart by things that match the name so that if the
-    # name contains numbers or things that look like versions, we don't
-    # accidentally substitute them with a version.
-    name_parts = re.split(name_re, path)
-
-    offsets = cumsum(name_parts, 0, len)
-    name_offsets = offsets[1::2]
-
-    ver_offsets = []
-    for i in range(0, len(name_parts), 2):
-        vparts = re.split(ver, name_parts[i])
-        voffsets = cumsum(vparts, offsets[i], len)
-        ver_offsets.extend(voffsets[1::2])
-
-    return (name, ns, nl, tuple(name_offsets),
-            ver,  vs, vl, tuple(ver_offsets))
+    return (name, ns, nl, name_offsets,
+            ver,  vs, vl, ver_offsets)
 
 
 def wildcard_version(path):
@@ -737,7 +737,7 @@ def wildcard_version(path):
     version = parse_version(path)
 
     # Split path by versions
-    vparts = re.split(str(version), path)
+    vparts = path.split(str(version))
 
     # Replace each version with a generic capture group to find versions
     # and escape everything else so it's not interpreted as a regex
