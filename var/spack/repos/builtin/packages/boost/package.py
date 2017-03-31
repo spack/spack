@@ -141,8 +141,8 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
     def url_for_version(self, version):
-        return "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2".format(
-            version.dotted, version.underscored)
+        url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+        return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):

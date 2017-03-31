@@ -29,6 +29,7 @@ class Mfem(Package):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
     homepage = 'http://www.mfem.org'
+    url      = 'https://github.com/mfem/mfem'
 
     # mfem is downloaded from a URL shortener at request of upstream
     # author Tzanio Kolev <tzanio@llnl.gov>.  See here:

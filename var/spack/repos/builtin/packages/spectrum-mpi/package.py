@@ -32,6 +32,7 @@ class SpectrumMpi(Package):
     """
 
     homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+    url = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
     provides('mpi')
 

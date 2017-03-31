@@ -35,6 +35,7 @@ class PyYt(PythonPackage):
        interdisciplinary community.
     """
     homepage = "http://yt-project.org"
+    url = "https://bitbucket.org/yt_analysis/yt"
 
     version("3.3.5", "2ad314ff3d3261e41825d15db027b0e7",
             url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.5.tar.gz")

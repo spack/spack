@@ -31,6 +31,7 @@ class Nwchem(Package):
     """High-performance computational chemistry software"""
 
     homepage = "http://www.nwchem-sw.org"
+    url      = "http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz"
 
     version('6.6', 'c581001c004ea5e5dfacb783385825e3',
             url='http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz')

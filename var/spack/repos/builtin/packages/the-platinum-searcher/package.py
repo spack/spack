@@ -30,6 +30,7 @@ import shutil
 class ThePlatinumSearcher(Package):
     """Fast parallel recursive grep alternative"""
     homepage = "https://github.com/monochromegane/the_platinum_searcher"
+    url = "https://github.com/monochromegane/the_platinum_searcher"
 
     package = 'github.com/monochromegane/the_platinum_searcher/...'
 
