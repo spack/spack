@@ -34,6 +34,10 @@ class PyNose(PythonPackage):
     list_url = "https://pypi.python.org/pypi/nose/"
     list_depth = 2
 
+    import_modules = [
+        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
+    ]
+
     version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
     version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
     version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
