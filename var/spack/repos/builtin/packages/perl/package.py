@@ -118,13 +118,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """Set PERL5LIB to support activation of Perl packages"""
         run_env.set('PERL5LIB', join_path(self.prefix, 'lib', 'perl5'))
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
            assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
         perl_bin_dirs = []
-        for d in extension_spec.traverse(
+        for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(join_path(d.prefix, 'lib', 'perl5'))
@@ -136,7 +136,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         run_env.prepend_path('PATH', perl_bin_path)
         run_env.prepend_path('PERL5LIB', perl_lib_path)
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
            In most cases, extensions will only need to have one line:
            perl('Makefile.PL','INSTALL_BASE=%s' % self.prefix)
@@ -146,9 +146,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         module.perl = Executable(join_path(self.spec.prefix.bin, 'perl'))
 
         # Add variables for library directory
-        module.perl_lib_dir = join_path(ext_spec.prefix, 'lib', 'perl5')
+        module.perl_lib_dir = join_path(dependent_spec.prefix, 'lib', 'perl5')
 
         # Make the site packages directory for extensions,
         # if it does not exist already.
-        if ext_spec.package.is_extension:
+        if dependent_spec.package.is_extension:
             mkdirp(module.perl_lib_dir)
