@@ -647,18 +647,48 @@ class HeaderList(FileList):
     commonly used compiler flags or names
     """
 
+    def __init__(self, files):
+        super(HeaderList, self).__init__(files)
+
+        self._macro_definitions = []
+
     @property
     def headers(self):
         return self.files
 
     @property
-    def cpp_flags(self):
+    def include_flags(self):
         """Include flags
 
         >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
         >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
         """
         return ' '.join(['-I' + x for x in self.directories])
+
+    @property
+    def macro_definitions(self):
+        """Macro definitions
+
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
+        >>> h.add_macro('-DBOOST_DYN_LINK')
+        >>> assert h.macro_definitions == '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'  # noqa
+        """
+        return ' '.join(self._macro_definitions)
+
+    @property
+    def cpp_flags(self):
+        """Include flags + macro definitions
+
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h.add_macro('-DBOOST_DYN_LINK')
+        >>> assert h.macro_definitions == '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+        """
+        return self.include_flags + ' ' + self.macro_definitions
+
+    def add_macro(self, macro):
+        """Add a macro definition"""
+        self._macro_definitions.append(macro)
 
 
 def find_headers(headers, root, recurse=False):

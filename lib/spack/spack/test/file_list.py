@@ -63,15 +63,29 @@ class LibraryListTest(unittest.TestCase):
         self.assertTrue('-L/dir2' in search_flags)
         self.assertTrue('-L/dir3' in search_flags)
         self.assertTrue(isinstance(search_flags, str))
+        self.assertEqual(
+            search_flags,
+            '-L/dir1 -L/dir2 -L/dir3'
+        )
 
         link_flags = self.liblist.link_flags
+        self.assertTrue('-llapack' in link_flags)
+        self.assertTrue('-lfoo'    in link_flags)
+        self.assertTrue('-lblas'   in link_flags)
+        self.assertTrue('-lbar'    in link_flags)
+        self.assertTrue('-lbaz'    in link_flags)
+        self.assertTrue(isinstance(link_flags, str))
         self.assertEqual(
             link_flags,
             '-llapack -lfoo -lblas -lbar -lbaz'
         )
 
         ld_flags = self.liblist.ld_flags
-        self.assertEqual(ld_flags, search_flags + ' ' + link_flags)
+        self.assertTrue(isinstance(ld_flags, str))
+        self.assertEqual(
+            ld_flags,
+            search_flags + ' ' + link_flags
+        )
 
     def test_paths_manipulation(self):
         names = self.liblist.names
@@ -120,7 +134,10 @@ class HeaderListTest(unittest.TestCase):
             '/dir3/core.h',
             'pymem.h'
         ]
-        self.headlist = HeaderList(h)
+        headlist = HeaderList(h)
+        headlist.add_macro('-DBOOST_LIB_NAME=boost_regex')
+        headlist.add_macro('-DBOOST_DYN_LINK')
+        self.headlist = headlist
 
     def test_repr(self):
         x = eval(repr(self.headlist))
@@ -141,14 +158,30 @@ class HeaderListTest(unittest.TestCase):
         )
 
     def test_flags(self):
+        include_flags = self.headlist.include_flags
+        self.assertTrue('-I/dir1' in include_flags)
+        self.assertTrue('-I/dir2' in include_flags)
+        self.assertTrue('-I/dir3' in include_flags)
+        self.assertTrue(isinstance(include_flags, str))
+        self.assertEqual(
+            include_flags,
+            '-I/dir1 -I/dir2 -I/dir3'
+        )
+
+        macros = self.headlist.macro_definitions
+        self.assertTrue('-DBOOST_LIB_NAME=boost_regex' in macros)
+        self.assertTrue('-DBOOST_DYN_LINK' in macros)
+        self.assertTrue(isinstance(macros, str))
+        self.assertEqual(
+            macros,
+            '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'
+        )
+
         cpp_flags = self.headlist.cpp_flags
-        self.assertTrue('-I/dir1' in cpp_flags)
-        self.assertTrue('-I/dir2' in cpp_flags)
-        self.assertTrue('-I/dir3' in cpp_flags)
         self.assertTrue(isinstance(cpp_flags, str))
         self.assertEqual(
             cpp_flags,
-            '-I/dir1 -I/dir2 -I/dir3'
+            include_flags + ' ' + macros
         )
 
     def test_paths_manipulation(self):
