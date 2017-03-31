@@ -26,6 +26,7 @@ import ast
 import os
 import platform
 import re
+import sys
 from contextlib import closing
 
 import spack
