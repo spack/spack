@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import shutil
+import sys
 
 from spack import *
 
@@ -326,18 +328,25 @@ class Llvm(Package):
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
             cmake_args.append('-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF')
+            shutil.rmtree('tools/polly')
 
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
+            shutil.rmtree('tools/clang')
         if '+lldb' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF')
+            shutil.rmtree('tools/lldb')
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
+            shutil.rmtree('projects/libunwind')
         if '+libcxx' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXX_BUILD:Bool=OFF')
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXXABI_BUILD:Bool=OFF')
+            shutil.rmtree('projects/libcxx')
+            shutil.rmtree('projects/libcxxabi')
         if '+compiler-rt' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_COMPILER_RT_BUILD:Bool=OFF')
+            shutil.rmtree('projects/compiler-rt')
 
         if '+shared_libs' in spec:
             cmake_args.append('-DBUILD_SHARED_LIBS:Bool=ON')
