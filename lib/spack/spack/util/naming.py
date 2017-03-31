@@ -27,7 +27,7 @@ from __future__ import absolute_import
 import string
 import itertools
 import re
-from StringIO import StringIO
+from six import StringIO
 
 import spack
 

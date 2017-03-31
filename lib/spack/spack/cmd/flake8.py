@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import re
 import os
 import sys
@@ -175,12 +177,12 @@ def flake8(parser, args):
                 file_list = changed_files()
             shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
-        print '======================================================='
-        print 'flake8: running flake8 code checks on spack.'
-        print
-        print 'Modified files:'
+        print('=======================================================')
+        print('flake8: running flake8 code checks on spack.')
+        print()
+        print('Modified files:')
         for filename in file_list:
-            print "  %s" % filename.strip()
+            print("  %s" % filename.strip())
         print('=======================================================')
 
         # filter files into a temporary directory with exemptions added.
@@ -196,7 +198,7 @@ def flake8(parser, args):
 
         if args.root_relative:
             # print results relative to repo root.
-            print output
+            print(output)
         else:
             # print results relative to current working directory
             def cwd_relative(path):
@@ -204,16 +206,16 @@ def flake8(parser, args):
                     os.path.join(spack.prefix, path.group(1)), os.getcwd())
 
             for line in output.split('\n'):
-                print re.sub(r'^(.*): \[', cwd_relative, line)
+                print(re.sub(r'^(.*): \[', cwd_relative, line))
 
         if flake8.returncode != 0:
-            print "Flake8 found errors."
+            print("Flake8 found errors.")
             sys.exit(1)
         else:
-            print "Flake8 checks were clean."
+            print("Flake8 checks were clean.")
 
     finally:
         if args.keep_temp:
-            print "temporary files are in ", temp
+            print("temporary files are in ", temp)
         else:
             shutil.rmtree(temp, ignore_errors=True)
