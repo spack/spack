@@ -32,10 +32,11 @@ class Libxsmm(Package):
     and small convolutions.'''
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.7.1.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.8.tar.gz'
 
     version('develop', git='https://github.com/hfp/libxsmm.git')
 
+    version('1.8',   '2d513afbdad99e5d04c6c4ab4c9bb25b')
     version('1.7.1', 'a938335b1c2c90616dc72c2c1a5824ab')
     version('1.7',   'cb3aff6d123ba70bd3d4daf575767d14')
     version('1.6.6', '8b45ae022f36b8c212f579a0952b5034')
