@@ -335,7 +335,7 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
             scope_to_compilers[scope] = compilers
 
     cfg_file_to_duplicates = dict()
-    for scope, compilers in scope_to_compilers.iteritems():
+    for scope, compilers in scope_to_compilers.items():
         config_file = config_scopes[scope].get_section_filename('compilers')
         cfg_file_to_duplicates[config_file] = compilers
 
@@ -401,7 +401,7 @@ class CompilerDuplicateError(spack.error.SpackError):
         config_file_to_duplicates = get_compiler_duplicates(
             compiler_spec, arch_spec)
         duplicate_table = list(
-            (x, len(y)) for x, y in config_file_to_duplicates.iteritems())
+            (x, len(y)) for x, y in config_file_to_duplicates.items())
         descriptor = lambda num: 'time' if num == 1 else 'times'
         duplicate_msg = (
             lambda cfgfile, count: "{0}: {1} {2}".format(

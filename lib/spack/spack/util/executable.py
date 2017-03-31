@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
 import re
 import subprocess
+from six import string_types
 
 import llnl.util.tty as tty
 import spack
@@ -68,7 +68,7 @@ class Executable(object):
 
             Raise an exception if the subprocess returns an
             error. Default is True.  When not set, the return code is
-            avaiale as `exe.returncode`.
+            available as `exe.returncode`.
 
           ignore_errors
 
@@ -129,7 +129,7 @@ class Executable(object):
             raise ValueError("Cannot use `str` as input stream.")
 
         def streamify(arg, mode):
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 return open(arg, mode), True
             elif arg is str:
                 return subprocess.PIPE, False
@@ -178,9 +178,9 @@ class Executable(object):
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += out
+                    result += out.decode('utf-8')
                 if error is str:
-                    result += err
+                    result += err.decode('utf-8')
                 return result
 
         except OSError as e:
