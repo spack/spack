@@ -34,7 +34,7 @@ class Autogen(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/autogen/index.html"
     url      = "https://ftp.gnu.org/gnu/autogen/rel5.18.12/autogen-5.18.12.tar.gz"
     list_url = "https://ftp.gnu.org/gnu/autogen"
-    list_depth = 2
+    list_depth = 1
 
     version('5.18.12', '551d15ccbf5b5fc5658da375d5003389')
 

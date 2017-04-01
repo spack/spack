@@ -570,7 +570,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self.list_url = None
 
         if not hasattr(self, 'list_depth'):
-            self.list_depth = 1
+            self.list_depth = 0
 
         # Set default licensing information
         if not hasattr(self, 'license_required'):
@@ -965,6 +965,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.do_fetch(mirror_only)
         self.stage.expand_archive()
         self.stage.chdir_to_source()
+
+    def patch(self):
+        """Default patch implementation is a no-op."""
+        pass
 
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
@@ -1686,9 +1690,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                *self.all_urls,
-                list_url=self.list_url,
-                list_depth=self.list_depth)
+                self.all_urls, self.list_url, self.list_depth)
         except spack.error.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
                     e.message)

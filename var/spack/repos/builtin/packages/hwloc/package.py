@@ -42,7 +42,7 @@ class Hwloc(AutotoolsPackage):
     homepage = "http://www.open-mpi.org/projects/hwloc/"
     url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
-    list_depth = 3
+    list_depth = 2
 
     version('1.11.6', 'b4e95eadd2fbdb6d40bbd96be6f03c84')
     version('1.11.5', '8f5fe6a9be2eb478409ad5e640b2d3ba')

@@ -37,7 +37,7 @@ class Openssl(Package):
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
     list_url = "https://www.openssl.org/source/old/"
-    list_depth = 2
+    list_depth = 1
 
     version('1.1.0e', '51c42d152122e474754aea96f66928c6')
     version('1.1.0d', '711ce3cd5f53a99c0e12a7d5804f0f63')

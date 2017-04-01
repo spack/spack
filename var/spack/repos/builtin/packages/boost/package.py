@@ -40,7 +40,7 @@ class Boost(Package):
     homepage = "http://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
-    list_depth = 2
+    list_depth = 1
 
     version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')

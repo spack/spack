@@ -33,7 +33,7 @@ class Pango(AutotoolsPackage):
     homepage = "http://www.pango.org"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pango/1.40/pango-1.40.3.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
-    list_depth = 2
+    list_depth = 1
 
     version('1.40.3', 'abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3')
     version('1.40.1', 'e27af54172c72b3ac6be53c9a4c67053e16c905e02addcf3a603ceb2005c1a40')
