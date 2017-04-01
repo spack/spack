@@ -37,7 +37,7 @@ class Gcc(AutotoolsPackage):
 
     url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
-    list_depth = 2
+    list_depth = 1
 
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')

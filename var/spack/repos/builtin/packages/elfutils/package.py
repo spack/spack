@@ -37,10 +37,10 @@ class Elfutils(AutotoolsPackage):
 
     url      = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 2
+    list_depth = 1
 
-    version('0.168','52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163','77ce87f259987d2e54e4d87b86cbee41', preferred=True)
+    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
+    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
 
     provides('elf@1')
 
