@@ -41,6 +41,8 @@ filesystem.
 """
 import os
 import socket
+from six import string_types
+from six import iteritems
 
 from yaml.error import MarkedYAMLError, YAMLError
 
@@ -260,7 +262,7 @@ class Database(object):
             raise ValueError("Invalid database format: %s" % format)
 
         try:
-            if isinstance(stream, basestring):
+            if isinstance(stream, string_types):
                 with open(stream, 'r') as f:
                     fdata = load(f)
             else:
@@ -511,7 +513,7 @@ class Database(object):
                 new_spec, path, installed, ref_count=0, explicit=explicit)
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in spec.dependencies_dict(_tracked_deps).iteritems():
+            for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
                 dkey = dep.spec.dag_hash()
                 new_spec._add_dependency(self._data[dkey].spec, dep.deptypes)
                 self._data[dkey].ref_count += 1
@@ -619,13 +621,12 @@ class Database(object):
         Return the specs of all packages that extend
         the given spec
         """
-        for s in self.query():
+        for spec in self.query():
             try:
-                if s.package.extends(extendee_spec):
-                    yield s.package
-            except spack.repository.UnknownPackageError:
+                spack.store.layout.check_activated(extendee_spec, spec)
+                yield spec.package
+            except spack.directory_layout.NoSuchExtensionError:
                 continue
-            # skips unknown packages
             # TODO: conditional way to do this instead of catching exceptions
 
     def query(self, query_spec=any, known=any, installed=True, explicit=any):

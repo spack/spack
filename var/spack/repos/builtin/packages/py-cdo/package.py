@@ -39,4 +39,4 @@ class PyCdo(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf', type=('build', 'run'))
+    depends_on('py-netcdf4', type=('build', 'run'))
