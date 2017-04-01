@@ -33,6 +33,6 @@ class Easybuild(PythonPackage):
 
     version('3.1.2', 'c2d901c2a71f51b24890fa69c3a46383')
 
-    depends_on('py-easybuild-framework@3.1:', when='@3.1', type='run')
-    depends_on('py-easybuild-easyblocks@3.1:', when='@3.1', type='run')
-    depends_on('py-easybuild-easyconfigs@3.1:', when='@3.1', type='run')
+    depends_on('py-easybuild-framework@3.1.2', when='@3.1.2', type='run')
+    depends_on('py-easybuild-easyblocks@3.1.2', when='@3.1.2', type='run')
+    depends_on('py-easybuild-easyconfigs@3.1.2', when='@3.1.2', type='run')
