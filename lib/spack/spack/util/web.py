@@ -28,6 +28,7 @@ import sys
 
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
+from six.moves.urllib.parse import urljoin
 from multiprocessing import Pool
 
 try:
@@ -38,7 +39,7 @@ except ImportError:
     from html.parser import HTMLParser
 
     # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError:
+    class HTMLParseError(Exception):
         pass
 
 import llnl.util.tty as tty
@@ -110,7 +111,7 @@ def _spider(args):
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
-        page = response.read()
+        page = response.read().decode('utf-8')
         pages[response_url] = page
 
         # Parse out the links in the page
@@ -120,7 +121,7 @@ def _spider(args):
 
         while link_parser.links:
             raw_link = link_parser.links.pop()
-            abs_link = urlparse.urljoin(response_url, raw_link.strip())
+            abs_link = urljoin(response_url, raw_link.strip())
 
             links.add(abs_link)
 
