@@ -24,13 +24,12 @@ from spack import *
 
 
 class PyVscInstall(PythonPackage):
-    """
-    Shared setuptools functions and classes
+    """Shared setuptools functions and classes
     for Python libraries developed by HPC-UGent.
     """
 
     homepage = 'https://github.com/hpcugent/vsc-install/'
-    url      = 'https://pypi.python.org/packages/ef/c7/640c6d791ba452321c0d1371b6626486bb495e0645bb896d33c78a09f810/vsc-install-0.10.25.tar.gz'
+    url      = 'https://pypi.io/packages/source/v/vsc-install/vsc-install-0.10.25.tar.gz'
 
     version('0.10.25', 'd1b9453a75cb56dba0deb7a878047b51')
 

@@ -24,17 +24,15 @@ from spack import *
 
 
 class Easybuild(PythonPackage):
-    """
-    EasyBuild is a software build and installation framework
+    """EasyBuild is a software build and installation framework
     for (scientific) software on HPC systems.
     """
 
     homepage = 'http://hpcugent.github.io/easybuild/'
-    url      = 'https://pypi.python.org/packages/7b/74/4132806b35cb6308a8776297cfa7fec5c8cfa3bc94a8701d209ed3fdd18e/easybuild-3.1.2.tar.gz'
+    url      = 'https://pypi.io/packages/source/e/easybuild/easybuild-3.1.2.tar.gz'
 
     version('3.1.2', 'c2d901c2a71f51b24890fa69c3a46383')
 
-    depends_on('python', type='run')
-    depends_on('py-easybuild-framework', type='run')
-    depends_on('py-easybuild-easyblocks', type='run')
-    depends_on('py-easybuild-easyconfigs', type='run')
+    depends_on('py-easybuild-framework@3.1', when='@3.1', type='run')
+    depends_on('py-easybuild-easyblocks@3.1', when='@3.1', type='run')
+    depends_on('py-easybuild-easyconfigs@3.1', when='@3.1', type='run')

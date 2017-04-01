@@ -24,14 +24,13 @@ from spack import *
 
 
 class PyEasybuildEasyblocks(PythonPackage):
-    """
-    Collection of easyblocks for EasyBuild, a software build and
+    """Collection of easyblocks for EasyBuild, a software build and
     installation framework for (scientific) software on HPC systems.
     """
 
     homepage = 'http://hpcugent.github.io/easybuild/'
-    url      = 'https://pypi.python.org/packages/d6/55/9b6634b01fbc26edb9f5af39b06acbe7ec843da438ba5ac3063937934b3e/easybuild-easyblocks-3.1.2.tar.gz'
+    url      = 'https://pypi.io/packages/source/e/easybuild-easyblocks/easybuild-easyblocks-3.1.2.tar.gz'
 
     version('3.1.2', 'be08da30c07e67ed3e136e8d38905fbc')
 
-    depends_on('py-easybuild-framework', type='run')
+    depends_on('py-easybuild-framework@3.1', when='@3.1', type='run')

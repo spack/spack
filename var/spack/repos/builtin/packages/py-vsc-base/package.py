@@ -28,7 +28,7 @@ class PyVscBase(PythonPackage):
     """Common Python libraries tools created by HPC-UGent"""
 
     homepage = 'https://github.com/hpcugent/vsc-base/'
-    url      = 'https://pypi.python.org/packages/f7/66/1ff7ecc4a93ba37e063f5bfbe395e95a547b1dec73b017c2724f4475a958/vsc-base-2.5.8.tar.gz'
+    url      = 'https://pypi.io/packages/source/v/vsc-base/vsc-base-2.5.8.tar.gz'
 
     version('2.5.8', '57f3f49eab7aa15a96be76e6c89a72d8')
 

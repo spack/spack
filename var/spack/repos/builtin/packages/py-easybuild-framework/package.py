@@ -24,17 +24,16 @@ from spack import *
 
 
 class PyEasybuildFramework(PythonPackage):
-    """
-    The core of EasyBuild, a software build and installation framework
+    """The core of EasyBuild, a software build and installation framework
     for (scientific) software on HPC systems.
     """
 
     homepage = 'http://hpcugent.github.io/easybuild/'
-    url      = 'https://pypi.python.org/packages/fa/00/6a47862b38e6d921071d305deab4c494ae2eae58556c90c95e520fea28b9/easybuild-framework-3.1.2.tar.gz'
+    url      = 'https://pypi.io/packages/source/e/easybuild-framework/easybuild-framework-3.1.2.tar.gz'
 
     version('3.1.2', '283bc5f6bdcb90016b32986d52fd04a8')
 
-    depends_on('python', type='run')
+    depends_on('python@2.6:3.0', type='run')
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-vsc-base', type='run')
-    depends_on('py-vsc-install', type='run')  # only requires for tests (python -O -m test.framework.suite)
+    depends_on('py-vsc-base@2.5.4:', when='@2.9:', type='run')
+    depends_on('py-vsc-install', type='run')  # only required for tests (python -O -m test.framework.suite)
