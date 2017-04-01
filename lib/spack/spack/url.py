@@ -513,7 +513,7 @@ def wildcard_version(path):
     name_parts = re.split(name_re, path)
 
     # Even elements in the array did *not* match the name
-    for i in xrange(0, len(name_parts), 2):
+    for i in range(0, len(name_parts), 2):
         # Split each part by things that look like versions.
         vparts = re.split(v.wildcard(), name_parts[i])
 
