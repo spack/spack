@@ -73,13 +73,16 @@ def setup_parser(subparser):
         help="revision to compare to rev1 (default is HEAD)")
 
 
-def get_git():
+def get_git(fatal=True):
     # cd to spack prefix to do git operations
     os.chdir(spack.prefix)
 
     # If this is a non-git version of spack, give up.
     if not os.path.isdir('.git'):
-        tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
+        if fatal:
+            tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
+        else:
+            return None
 
     return which("git", required=True)
 
