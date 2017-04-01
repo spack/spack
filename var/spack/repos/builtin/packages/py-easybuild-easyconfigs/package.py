@@ -33,5 +33,5 @@ class PyEasybuildEasyconfigs(PythonPackage):
 
     version('3.1.2', '13a4a97fe8a5b9a94f885661cf497d13')
 
-    depends_on('py-easybuild-framework@3.1:', when='@3.1', type='run')
+    depends_on('py-easybuild-framework@3.1:', when='@3.1:', type='run')
     depends_on('py-easybuild-easyblocks@3.1.2:', when='@3.1.2', type='run')
