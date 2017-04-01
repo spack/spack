@@ -26,7 +26,7 @@
 variants both in packages and in specs.
 """
 
-import cStringIO
+from six import StringIO
 import csv
 import inspect
 import llnl.util.lang as lang
@@ -194,7 +194,7 @@ class MultiValuedVariant(object):
         # Store a tuple of CSV string representations
         # Tuple is necessary here instead of list because the
         # values need to be hashed
-        f = cStringIO.StringIO(str(value))
+        f = StringIO(str(value))
         try:
             t = next(csv.reader(f, skipinitialspace=True))
         except StopIteration:
@@ -495,7 +495,7 @@ class VariantMap(lang.HashableMap):
         sorted_keys = sorted(self.keys())
 
         # add spaces before and after key/value variants.
-        string = cStringIO.StringIO()
+        string = StringIO()
 
         kv = False
         for key in sorted_keys:
