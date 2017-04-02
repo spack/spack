@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 from os.path import split
 
 

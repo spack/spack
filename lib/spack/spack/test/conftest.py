@@ -27,11 +27,12 @@ import copy
 import os
 import re
 import shutil
+from six import StringIO
 
-import cStringIO
 import llnl.util.filesystem
 import llnl.util.lang
 import ordereddict_backport
+
 import py
 import pytest
 import spack
@@ -56,11 +57,8 @@ def no_stdin_duplication(monkeypatch):
     """Duplicating stdin (or any other stream) returns an empty
     cStringIO object.
     """
-    monkeypatch.setattr(
-        llnl.util.lang,
-        'duplicate_stream',
-        lambda x: cStringIO.StringIO()
-    )
+    monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
+                        lambda x: StringIO())
 
 
 @pytest.fixture(autouse=True)
@@ -170,15 +168,19 @@ def configuration_dir(tmpdir_factory, linux_os):
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
+    spack.package_prefs.PackagePrefs.clear_caches()
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
     spack.config.config_scopes = ordereddict_backport.OrderedDict()
     spack.config.ConfigScope('site', str(configuration_dir.join('site')))
     spack.config.ConfigScope('user', str(configuration_dir.join('user')))
     Config = collections.namedtuple('Config', ['real', 'mock'])
+
     yield Config(real=real_scope, mock=spack.config.config_scopes)
+
     spack.config.config_scopes = real_scope
     spack.config.clear_config_caches()
+    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 @pytest.fixture(scope='module')
@@ -312,7 +314,7 @@ def mock_archive():
             "\ttouch $prefix/dummy_file\n"
             "EOF\n"
         )
-    os.chmod(configure_path, 0755)
+    os.chmod(configure_path, 0o755)
     # Archive it
     current = tmpdir.chdir()
     archive_name = '{0}.tar.gz'.format(repo_name)

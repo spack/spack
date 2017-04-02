@@ -40,7 +40,7 @@ for the results of these tests after submitting a PR, we recommend that you run 
 locally to speed up the review process.
 
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6 and 2.7. We currently perform 3 types of tests:
+against Python 2.6, 2.7, and 3.3-3.6. We currently perform 3 types of tests:
 
 ^^^^^^^^^^
 Unit Tests

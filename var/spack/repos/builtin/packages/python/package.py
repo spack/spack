@@ -45,7 +45,7 @@ class Python(AutotoolsPackage):
     homepage = "http://www.python.org"
     url = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
     list_url = "https://www.python.org/downloads/"
-    list_depth = 2
+    list_depth = 1
 
     version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')

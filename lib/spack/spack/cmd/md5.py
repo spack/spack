@@ -25,7 +25,7 @@
 import argparse
 import hashlib
 import os
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 import llnl.util.tty as tty
 import spack.util.crypto
