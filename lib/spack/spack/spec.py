@@ -1707,6 +1707,18 @@ class Spec(object):
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
+        # Now that the spec is concrete we should check if
+        # there are declared conflicts
+        matches = []
+        for x in self.traverse():
+            for conflict_spec, when_list in x.package.conflicts.items():
+                if x.satisfies(conflict_spec):
+                    for when_spec in when_list:
+                        if x.satisfies(when_spec):
+                            matches.append((x, conflict_spec, when_spec))
+        if matches:
+            raise ConflictsInSpecError(self, matches)
+
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 
@@ -3336,3 +3348,15 @@ class RedundantSpecError(SpecError):
             "Attempting to add %s to spec %s which is already concrete."
             " This is likely the result of adding to a spec specified by hash."
             % (addition, spec))
+
+
+class ConflictsInSpecError(SpecError, RuntimeError):
+    def __init__(self, spec, matches):
+        message = 'Conflicts in concretized spec "{0}"\n'.format(
+            spec.short_spec
+        )
+        long_message = 'List of matching conflicts:\n\n'
+        match_fmt = '{0}. "{1}" conflicts with "{2}" in spec "{3}"\n'
+        for idx, (s, c, w) in enumerate(matches):
+            long_message += match_fmt.format(idx + 1, c, w, s)
+        super(ConflictsInSpecError, self).__init__(message, long_message)
