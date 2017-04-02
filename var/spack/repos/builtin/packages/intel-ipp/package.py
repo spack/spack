@@ -28,7 +28,7 @@ import os
 from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Ipp(IntelInstaller):
+class IntelIpp(IntelInstaller):
     """Intel Integrated Performance Primitives.
 
     Note: You will have to add the download file to a
@@ -41,6 +41,8 @@ class Ipp(IntelInstaller):
             url="file://%s/l_ipp_2017.0.098.tgz" % os.getcwd())
     version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
             url="file://%s/l_ipp_9.0.3.210.tgz" % os.getcwd())
+
+    provides('ipp')
 
     def install(self, spec, prefix):
 
