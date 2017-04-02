@@ -114,6 +114,7 @@ def test_default_queries(database):
     include_flags_expected = '-I' + spec.prefix.include
     assert spec['zmpi'].headers.include_flags == include_flags_expected
 
+
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
     install_path = database.mock.path
