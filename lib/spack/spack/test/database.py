@@ -108,11 +108,15 @@ def test_default_queries(database):
     rec = install_db.get_record('zmpi')
 
     spec = rec.spec
+
     libraries = spec['zmpi'].libs
     assert len(libraries) == 1
 
-    include_flags_expected = '-I' + spec.prefix.include
-    assert spec['zmpi'].headers.include_flags == include_flags_expected
+    headers = spec['zmpi'].headers
+    assert len(headers) == 1
+
+    executable = spec['zmpi'].executable
+    assert os.path.exists(executable)
 
 
 def test_005_db_exists(database):

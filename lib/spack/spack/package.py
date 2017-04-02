@@ -65,6 +65,7 @@ from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
+from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
@@ -1053,17 +1054,22 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return namespace
 
     def do_fake_install(self):
-        """Make a fake install directory containing a 'fake' file in bin."""
-        # FIXME : Make this part of the 'install' behavior ?
-        mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, 'fake'))
+        """Make a fake install directory containing fake executables,
+        headers, and libraries."""
 
-        mkdirp(self.prefix.include)
-        touch(join_path(self.prefix.include, 'fake.h'))
-
-        mkdirp(self.prefix.lib)
+        name = self.name
         library_name = 'lib' + self.name
         dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
+        chmod = which('chmod')
+
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, name))
+        chmod('+x', join_path(self.prefix.bin, name))
+
+        mkdirp(self.prefix.include)
+        touch(join_path(self.prefix.include, name + '.h'))
+
+        mkdirp(self.prefix.lib)
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
 
