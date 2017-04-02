@@ -460,7 +460,7 @@ class VariantMap(lang.HashableMap):
                 if not self[k].compatible(other[k]):
                     raise UnsatisfiableVariantSpecError(self[k], other[k])
                 # If they are compatible merge them
-                changed = self[k].constrain(other[k])
+                changed |= self[k].constrain(other[k])
             else:
                 # If it is not present copy it straight away
                 self[k] = other[k].copy()
