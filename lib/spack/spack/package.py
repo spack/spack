@@ -1051,13 +1051,18 @@ class PackageBase(object):
         # FIXME : Make this part of the 'install' behavior ?
         mkdirp(self.prefix.bin)
         touch(join_path(self.prefix.bin, 'fake'))
+
         mkdirp(self.prefix.include)
+        touch(join_path(self.prefix.include, 'fake.h'))
+
         mkdirp(self.prefix.lib)
         library_name = 'lib' + self.name
-        dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
+
         mkdirp(self.prefix.man1)
+
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 

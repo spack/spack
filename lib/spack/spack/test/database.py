@@ -111,6 +111,8 @@ def test_default_queries(database):
     libraries = spec['zmpi'].libs
     assert len(libraries) == 1
 
+    include_flags_expected = '-I' + spec.prefix.include
+    assert spec['zmpi'].headers.include_flags == include_flags_expected
 
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
