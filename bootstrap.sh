@@ -12,20 +12,21 @@ if [ -z $1 ]; then
 fi
 
 # PLATFORM, SPACK_ROOT, SPACKPREFIX, SPACKSTAGE, SPACKCACHE, SPACKSOURCECACHE
-echo 'Determine the PLATFORM sandybridge, haswell, knightlanding.'
-if [[ $HOST == *"knl"* ]]; then
+echo "Determine ${HOSTNAME} PLATFORM sandybridge, haswell, knightlanding, minsky."
+if [[ $HOSTNAME == *"knl"* ]]; then
 	PLATFORM="knightlanding"
-elif [[ $HOST == *"nv"* ]]; then
+elif [[ $HOSTNAME == *"nv"* ]]; then
 	PLATFORM="haswell"
-elif [[ $HOST == *"uv"* ]]; then
+elif [[ $HOSTNAME == *"uv"* ]]; then
 	PLATFORM="ivybridge"
+elif [[ $HOSTNAME == *"minsky"* ]]; then
+	PLATFORM="powerpc"
 else
 	PLATFORM="sandybridge"
 fi
 
 SPACK_ROOT=`pwd`
 
-echo "Check if the user is rpm(system builder)."
 if [ $1 = "system" ]; then
 	SPACKPREFIX=/lustre/spack/tools
 elif [ $1 = "rpm" ]; then 
@@ -52,17 +53,21 @@ do
 	sed -i s=$var=${!var}=g config.yaml.template
 done
 
-# CONFIG_YAML, COMPILER_YAML, PACKAGE_YAML, MIRRORS_YAML
+# CONFIG_YAML, COMPILERS_YAML, PACKAGE_YAML, MIRRORS_YAML
 CONFIG_YAML=config.yaml.template
 
-if [[ $HOST == *"uv"* ]]; then
-	COMPILER_YAML="compilers_sgi.yaml"
+if [[ $HOSTNAME == *"uv"* ]]; then
+	COMPILERS_YAML="compilers_sgi.yaml"
+elif [[ $HOSTNAME == *"minsky"* ]]; then
+	COMPILERS_YAML="compilers_minsky.yaml"
 else
-	COMPILER_YAML="compilers.yaml"
+	COMPILERS_YAML="compilers.yaml"
 fi
 
-if [[ $HOST == *"uv"* ]]; then
+if [[ $HOSTNAME == *"uv"* ]]; then
 	PACKAGE_YAML="packages_sgi.yaml"
+elif [[ $HOSTNAME == *"minsky"* ]]; then
+	PACKAGE_YAML="packages_minsky.yaml"
 elif [ $1 = "system" ]; then
 	PACKAGE_YAML="packages_system.yaml"
 else
@@ -73,11 +78,12 @@ MIRRORS_YAML=mirrors.yaml
 
 # Deploying
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
-cp -f ${PACKAGE_YAML} $SPACK_ROOT/etc/spack/packages.yaml
-cp -f ${COMPILER_YAML} $SPACK_ROOT/etc/spack/compilers.yaml 
+cp -f ${PACKAGE_YAML} ${SPACK_ROOT}/etc/spack/packages.yaml
+cp -f ${COMPILERS_YAML} ${SPACK_ROOT}/etc/spack/compilers.yaml
+rm -f ./etc/spack/compilers.yaml
 mkdir -p ~/.spack/linux
 cp -f ${MIRRORS_YAML} ~/.spack/linux
-source $SPACK_ROOT/share/spack/setup-env.sh
+source ${SPACK_ROOT}/share/spack/setup-env.sh
 
 # Reset config.yaml.template
 git co -- config.yaml.template

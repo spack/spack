@@ -41,7 +41,8 @@ class Lammps(MakefilePackage):
             vdate.strftime("%d%b%Y"))
 
     supported_packages = ['voronoi', 'rigid', 'user-nc-dump',
-                          'user-atc', 'meam', 'manybody']
+                          'user-atc', 'meam', 'manybody', 'body',
+                          'kspace', 'molecule', 'kokkos', 'reax', 'asphere']
 
     for pkg in supported_packages:
         variant(pkg, default=False,

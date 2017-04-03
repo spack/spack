@@ -1,0 +1,42 @@
+compilers:
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
+      cc: /usr/bin/gcc
+      cxx: /usr/bin/g++
+      f77: /usr/bin/gfortran
+      fc: /usr/bin/gfortran
+    spec: gcc@4.8.5
+    target: ppc64le
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags:
+      fflags: -qzerosize
+    modules: []
+    operating_system: centos7
+    paths:
+      cc: /usr/bin/xlc
+      cxx: /usr/bin/xlc++
+      f77: /usr/bin/xlf
+      fc: /usr/bin/xlf
+    spec: xl@13.1
+    target: ppc64le
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags:
+      fflags: -qzerosize
+    modules: []
+    operating_system: centos7
+    paths:
+      cc: /usr/bin/xlc_r
+      cxx: /usr/bin/xlC_r
+      f77: /usr/bin/xlf_r
+      fc: /usr/bin/xlf_r
+    spec: xl_r@13.1
+    target: ppc64le

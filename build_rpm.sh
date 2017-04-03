@@ -27,7 +27,7 @@ mpis=(
 )
 
 mpipkgs=(
-  fftw+mpi
+  fftw@3.3.6-pl2+mpi
   mdtest
   simul
 )
@@ -64,3 +64,9 @@ done
 # Other packages
 s sga %intel@17.0.2
 s sga %gcc@5.4.0
+s gromacs@5.1.2+mpi         %gcc@5.4.0      ^openmpi@2.0.2
+s gromacs@5.1.2+mpi         %intel@17.0.2   ^openmpi@2.0.2
+s gromacs@5.1.2+mpi         %intel@17.0.2   ^intel-parallel-studio@cluster.2017.2
+s gromacs@5.1.2+mpi+cuda    %gcc@5.4.0      ^openmpi@2.0.2
+s gromacs@5.1.2+mpi+cuda    %intel@17.0.2   ^openmpi@2.0.2
+s gromacs@5.1.2+mpi+cuda    %intel@17.0.2   ^intel-parallel-studio@cluster.2017.2
