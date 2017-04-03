@@ -26,7 +26,7 @@ import pytest
 import spack
 import spack.architecture
 from spack.concretize import find_spec
-from spack.spec import Spec, CompilerSpec
+from spack.spec import Spec, CompilerSpec, ConflictsInSpecError, SpecError
 from spack.version import ver
 
 
@@ -82,9 +82,26 @@ def check_concretize(abstract_spec):
         'mpileaks ^mpi', 'mpileaks ^mpi@:1.1', 'mpileaks ^mpi@2:',
         'mpileaks ^mpi@2.1', 'mpileaks ^mpi@2.2', 'mpileaks ^mpi@2.2',
         'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2'
+        # conflict not triggered
+        'conflict',
+        'conflict%clang~foo',
+        'conflict-parent%gcc'
     ]
 )
 def spec(request):
+    """Spec to be concretized"""
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        'conflict%clang',
+        'conflict%clang+foo',
+        'conflict-parent%clang',
+        'conflict-parent@0.9^conflict~foo'
+    ]
+)
+def conflict_spec(request):
     """Spec to be concretized"""
     return request.param
 
@@ -372,3 +389,11 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpileaks'].satisfies('%clang')
         assert s['dyninst'].satisfies('%gcc')
+
+    def test_conflicts_in_spec(self, conflict_spec):
+        # Check that an exception is raised an caught by the appropriate
+        # exception types.
+        for exc_type in (ConflictsInSpecError, RuntimeError, SpecError):
+            s = Spec(conflict_spec)
+            with pytest.raises(exc_type):
+                s.concretize()

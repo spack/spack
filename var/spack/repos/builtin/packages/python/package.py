@@ -42,7 +42,7 @@ class Python(Package):
     homepage = "http://www.python.org"
     url = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
     list_url = "https://www.python.org/downloads/"
-    list_depth = 2
+    list_depth = 1
 
     version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
@@ -98,11 +98,6 @@ class Python(Package):
             r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
-
-    @when('@:2.6,3.0:3.3')
-    def patch(self):
-        # See https://github.com/LLNL/spack/issues/1490
-        pass
 
     def install(self, spec, prefix):
         # TODO: The '--no-user-cfg' option for Python installation is only in
@@ -470,19 +465,14 @@ class Python(Package):
 
         else:
             with closing(open(main_pth, 'w')) as f:
-                f.write("""
-import sys
-sys.__plen = len(sys.path)
-""")
+                f.write("import sys; sys.__plen = len(sys.path)\n")
                 for path in paths:
                     f.write("{0}\n".format(path))
-                f.write("""
-new = sys.path[sys.__plen:]
-del sys.path[sys.__plen:]
-p = getattr(sys, '__egginsert', 0)
-sys.path[p:p] = new
-sys.__egginsert = p + len(new)
-""")
+                f.write("import sys; new=sys.path[sys.__plen:]; "
+                        "del sys.path[sys.__plen:]; "
+                        "p=getattr(sys,'__egginsert',0); "
+                        "sys.path[p:p]=new; "
+                        "sys.__egginsert = p+len(new)\n")
 
     def activate(self, ext_pkg, **args):
         ignore = self.python_ignore(ext_pkg, args)

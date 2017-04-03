@@ -22,12 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import sys
 import os
 import re
 import argparse
 import pytest
-from StringIO import StringIO
+from six import StringIO
 
 from llnl.util.filesystem import *
 from llnl.util.tty.colify import colify
@@ -79,7 +81,7 @@ def do_list(args, unknown_args):
                 output_lines.append(
                     os.path.basename(name).replace('.py', ''))
         else:
-            print indent + name
+            print(indent + name)
 
     if args.list:
         colify(output_lines)

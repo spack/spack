@@ -46,6 +46,9 @@ import re
 import shutil
 import copy
 from functools import wraps
+from six import string_types
+from six import with_metaclass
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 import spack
@@ -74,20 +77,18 @@ def _needs_stage(fun):
     return wrapper
 
 
-class FetchStrategy(object):
+class FSMeta(type):
+    """This metaclass registers all fetch strategies in a list."""
+    def __init__(cls, name, bases, dict):
+        type.__init__(cls, name, bases, dict)
+        if cls.enabled:
+            all_strategies.append(cls)
 
+
+class FetchStrategy(with_metaclass(FSMeta, object)):
     """Superclass of all fetch strategies."""
     enabled = False  # Non-abstract subclasses should be enabled.
     required_attributes = None  # Attributes required in version() args.
-
-    class __metaclass__(type):
-
-        """This metaclass registers all fetch strategies in a list."""
-
-        def __init__(cls, name, bases, dict):
-            type.__init__(cls, name, bases, dict)
-            if cls.enabled:
-                all_strategies.append(cls)
 
     def __init__(self):
         # The stage is initialized late, so that fetch strategies can be
@@ -319,7 +320,7 @@ class URLFetchStrategy(FetchStrategy):
         # top-level directory.  We ignore hidden files to accomodate
         # these "semi-exploding" tarballs.
         files = os.listdir(tarball_container)
-        non_hidden = filter(lambda f: not f.startswith('.'), files)
+        non_hidden = [f for f in files if not f.startswith('.')]
         if len(non_hidden) == 1:
             expanded_dir = os.path.join(tarball_container, non_hidden[0])
             if os.path.isdir(expanded_dir):
@@ -461,7 +462,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         patterns = kwargs.get('exclude', None)
         if patterns is not None:
-            if isinstance(patterns, basestring):
+            if isinstance(patterns, string_types):
                 patterns = [patterns]
             for p in patterns:
                 tar.add_default_arg('--exclude=%s' % p)
@@ -597,25 +598,33 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
-        args = []
+        args = ''
         if self.commit:
-            args.append('at commit %s' % self.commit)
+            args = 'at commit %s' % self.commit
         elif self.tag:
-            args.append('at tag %s' % self.tag)
+            args = 'at tag %s' % self.tag
         elif self.branch:
-            args.append('on branch %s' % self.branch)
-        tty.msg("Trying to clone git repository:", self.url, *args)
+            args = 'on branch %s' % self.branch
+        tty.msg("Trying to clone git repository: %s %s" % (self.url, args))
 
         if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            self.git('clone', self.url)
+            if spack.debug:
+                self.git('clone', self.url)
+            else:
+                self.git('clone', '--quiet', self.url)
             self.stage.chdir_to_source()
-            self.git('checkout', self.commit)
+            if spack.debug:
+                self.git('checkout', self.commit)
+            else:
+                self.git('checkout', '--quiet', self.commit)
 
         else:
             # Can be more efficient if not checking out a specific commit.
             args = ['clone']
+            if not spack.debug:
+                args.append('--quiet')
 
             # If we want a particular branch ask for it.
             if self.branch:
@@ -652,12 +661,19 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # pull --tags returns a "special" error code of 1 in
                 # older versions that we have to ignore.
                 # see: https://github.com/git/git/commit/19d122b
-                self.git('pull', '--tags', ignore_errors=1)
-                self.git('checkout', self.tag)
+                if spack.debug:
+                    self.git('pull', '--tags', ignore_errors=1)
+                    self.git('checkout', self.tag)
+                else:
+                    self.git('pull', '--quiet', '--tags', ignore_errors=1)
+                    self.git('checkout', '--quiet', self.tag)
 
         # Init submodules if the user asked for them.
         if self.submodules:
-            self.git('submodule', 'update', '--init')
+            if spack.debug:
+                self.git('submodule', 'update', '--init')
+            else:
+                self.git('submodule', '--quiet', 'update', '--init')
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
@@ -665,8 +681,12 @@ class GitFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         self.stage.chdir_to_source()
-        self.git('checkout', '.')
-        self.git('clean', '-f')
+        if spack.debug:
+            self.git('checkout', '.')
+            self.git('clean', '-f')
+        else:
+            self.git('checkout', '--quiet', '.')
+            self.git('clean', '--quiet', '-f')
 
     def __str__(self):
         return "[git] %s" % self.url

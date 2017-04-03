@@ -25,6 +25,8 @@
 import re
 import shlex
 import itertools
+from six import string_types
+
 import spack.error
 
 
@@ -46,9 +48,8 @@ class Token:
     def is_a(self, type):
         return self.type == type
 
-    def __cmp__(self, other):
-        return cmp((self.type, self.value),
-                   (other.type, other.value))
+    def __eq__(self, other):
+        return (self.type == other.type) and (self.value == other.value)
 
 
 class Lexer(object):
@@ -118,7 +119,7 @@ class Parser(object):
     def gettok(self):
         """Puts the next token in the input stream into self.next."""
         try:
-            self.next = self.tokens.next()
+            self.next = next(self.tokens)
         except StopIteration:
             self.next = None
 
@@ -159,7 +160,7 @@ class Parser(object):
             sys.exit(1)
 
     def setup(self, text):
-        if isinstance(text, basestring):
+        if isinstance(text, string_types):
             text = shlex.split(text)
         self.text = text
         self.push_tokens(self.lexer.lex(text))
