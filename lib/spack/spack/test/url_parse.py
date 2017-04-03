@@ -84,6 +84,10 @@ class UrlStripVersionSuffixesTest(unittest.TestCase):
         self.check('gromacs-4.6.1-tar',
                    'gromacs-4.6.1')
 
+    def test_sh(self):
+        self.check('Miniconda2-4.3.11-Linux-x86_64.sh',
+                   'Miniconda2-4.3.11')
+
     # Download version
 
     def test_stable(self):

@@ -145,6 +145,7 @@ def strip_version_suffixes(path):
         'oss',
         'gem',
         'tar',
+        'sh',
 
         # Download version
         'stable',
