@@ -25,13 +25,24 @@
 from spack import *
 
 
-class Jq(AutotoolsPackage):
-    """jq is a lightweight and flexible command-line JSON processor."""
+class Libpfm4(MakefilePackage):
+    """libpfm4 is a userspace library to help
+     setup performance events for use with
+     the perf_events Linux kernel interface."""
 
-    homepage = "https://stedolan.github.io/jq/"
-    url      = "https://github.com/stedolan/jq/archive/jq-1.5.tar.gz"
+    homepage = "http://perfmon2.sourceforge.net"
+    url      = "https://downloads.sourceforge.net/project/perfmon2/libpfm4/libpfm-4.8.0.tar.gz"
 
-    version('1.5', 'c8070bd6ec275404f77db3d2e568c9a3')
+    version('4.8.0', '730383896db92e12fb2cc10f2d41dd43')
 
-    depends_on('oniguruma')
-    depends_on('bison@3.0:', type='build')
+    # Fails to build libpfm4 with intel compiler version 16 and 17
+    conflicts('intel@16:17')
+
+    @property
+    def install_targets(self):
+        return ['DESTDIR={0}'.format(self.prefix),
+                'LIBDIR=/lib',
+                'INCDIR=/include',
+                'MANDIR=/man',
+                'LDCONFIG=true',
+                'install']
