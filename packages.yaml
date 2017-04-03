@@ -64,6 +64,7 @@ packages:
     paths:
        openmpi@2.0.2%gcc@6.3.0~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/gcc-6.3.0/openmpi-2.0.2-wo3vh6hf2b64jhmlbvnapkaxlhkaxc2l
        openmpi@2.0.2%gcc@5.4.0~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/openmpi-2.0.2-sdnvo6to5jle2fufhrne5d57zuppnjzy
+       openmpi@2.0.2%gcc@4.8.5~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/openmpi-2.0.2-n5tkfvldpp6v3onps73oymbkmwfu4qsx 
        openmpi@2.0.2%intel@17.0.2~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.2/openmpi-2.0.2-q6jivijtq2ktnvqqlycldqvcqgjj4if6
     buildable: False
 

@@ -12,7 +12,7 @@ if [ -z $1 ]; then
 fi
 
 # PLATFORM, SPACK_ROOT, SPACKPREFIX, SPACKSTAGE, SPACKCACHE, SPACKSOURCECACHE
-echo "Determine ${HOSTNAME} PLATFORM sandybridge, haswell, knightlanding, minsky."
+echo "Determine ${HOSTNAME} PLATFORM within sandybridge, haswell, knightlanding, minsky."
 if [[ $HOSTNAME == *"knl"* ]]; then
 	PLATFORM="knightlanding"
 elif [[ $HOSTNAME == *"nv"* ]]; then
@@ -77,10 +77,10 @@ fi
 MIRRORS_YAML=mirrors.yaml
 
 # Deploying
+rm -f ~/.spack/linux/compilers.yaml
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
 cp -f ${PACKAGE_YAML} ${SPACK_ROOT}/etc/spack/packages.yaml
 cp -f ${COMPILERS_YAML} ${SPACK_ROOT}/etc/spack/compilers.yaml
-rm -f ./etc/spack/compilers.yaml
 mkdir -p ~/.spack/linux
 cp -f ${MIRRORS_YAML} ~/.spack/linux
 source ${SPACK_ROOT}/share/spack/setup-env.sh
