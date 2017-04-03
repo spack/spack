@@ -33,5 +33,3 @@ class PyPysocks(PythonPackage):
 
     version('1.6.6', '571f4c23982fa86bf0e7a441f1b6c881')
     version('1.5.7', '68f4ad7a8d4fa725656ae3e9dd142d29')
-
-    depends_on('py-setuptools', type='build')
