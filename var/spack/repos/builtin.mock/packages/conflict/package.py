@@ -25,24 +25,22 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class Conflict(Package):
+    homepage = 'https://github.com/tgamblin/callpath'
+    url = 'http://github.com/tgamblin/callpath-1.0.tar.gz'
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    version(0.8, 'foobarbaz')
+    version(0.9, 'foobarbaz')
+    version(1.0, 'foobarbaz')
 
-    url      = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    variant('foo', default=True, description='')
 
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
+    conflicts('%clang', when='+foo')
 
-    provides('elf@1')
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")
 
-    def configure_args(self):
-        return ['--enable-maintainer-mode']
+    def setup_environment(self, senv, renv):
+        renv.set('FOOBAR', self.name)

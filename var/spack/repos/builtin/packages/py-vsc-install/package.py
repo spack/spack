@@ -1,10 +1,8 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Kenneth Hoste
 #
 # This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# Created by Kenneth Hoste, kenneth.hoste@gmail.com
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
@@ -25,13 +23,14 @@
 from spack import *
 
 
-class Glog(AutotoolsPackage):
-    """C++ implementation of the Google logging module."""
+class PyVscInstall(PythonPackage):
+    """Shared setuptools functions and classes
+    for Python libraries developed by HPC-UGent.
+    """
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.4.tar.gz"
+    homepage = 'https://github.com/hpcugent/vsc-install/'
+    url      = 'https://pypi.io/packages/source/v/vsc-install/vsc-install-0.10.25.tar.gz'
 
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('0.10.25', 'd1b9453a75cb56dba0deb7a878047b51')
 
-    depends_on('gflags')
+    depends_on('py-setuptools', type=('build', 'run'))

@@ -1,6 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Kenneth Hoste
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,24 +24,12 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class PyVscBase(PythonPackage):
+    """Common Python libraries tools created by HPC-UGent"""
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    homepage = 'https://github.com/hpcugent/vsc-base/'
+    url      = 'https://pypi.io/packages/source/v/vsc-base/vsc-base-2.5.8.tar.gz'
 
-    url      = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    version('2.5.8', '57f3f49eab7aa15a96be76e6c89a72d8')
 
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
-
-    provides('elf@1')
-
-    def configure_args(self):
-        return ['--enable-maintainer-mode']
+    depends_on('py-setuptools', type=('build', 'run'))

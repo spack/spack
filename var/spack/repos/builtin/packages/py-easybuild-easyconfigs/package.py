@@ -1,10 +1,8 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Kenneth Hoste
 #
 # This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# Created by Kenneth Hoste, kenneth.hoste@gmail.com
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
@@ -25,13 +23,15 @@
 from spack import *
 
 
-class Glog(AutotoolsPackage):
-    """C++ implementation of the Google logging module."""
+class PyEasybuildEasyconfigs(PythonPackage):
+    """Collection of easyconfig files for EasyBuild, a software build and
+    installation framework for (scientific) software on HPC systems.
+    """
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.4.tar.gz"
+    homepage = 'http://hpcugent.github.io/easybuild/'
+    url      = 'https://pypi.io/packages/source/e/easybuild-easyconfigs/easybuild-easyconfigs-3.1.2.tar.gz'
 
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('3.1.2', '13a4a97fe8a5b9a94f885661cf497d13')
 
-    depends_on('gflags')
+    depends_on('py-easybuild-framework@3.1:', when='@3.1:', type='run')
+    depends_on('py-easybuild-easyblocks@3.1.2:', when='@3.1.2', type='run')
