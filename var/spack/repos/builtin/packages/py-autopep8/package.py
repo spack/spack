@@ -30,10 +30,10 @@ class PyAutopep8(PythonPackage):
     PEP 8 style guide."""
 
     homepage = "https://github.com/hhatto/autopep8"
-    url      = "https://github.com/hhatto/autopep8/archive/v1.2.4.tar.gz"
+    url      = "https://pypi.io/packages/source/a/autopep8/autopep8-1.2.4.tar.gz"
 
-    version('1.2.4', '0458db85159a9e1b45f3e71ce6c158da')
-    version('1.2.2', 'def3d023fc9dfd1b7113602e965ad8e1')
+    version('1.2.4', 'fcea19c0c5e505b425e2a78afb771f5c')
+    version('1.2.2', '3d97f9c89d14a0975bffd32a2c61c36c')
 
     extends('python', ignore='bin/pep8')
     depends_on('python@2.6:2.7,3.2:')
@@ -41,10 +41,3 @@ class PyAutopep8(PythonPackage):
     depends_on('py-pycodestyle@1.5.7:1.7.0', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-
-    def url_for_version(self, version):
-        url = "https://github.com/hhatto/autopep8/archive/{0}{1}.tar.gz"
-        if version >= Version('1.2.3'):
-            return url.format('v', version)
-        else:
-            return url.format('ver', version)

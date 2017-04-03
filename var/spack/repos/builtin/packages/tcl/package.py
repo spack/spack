@@ -34,6 +34,7 @@ class Tcl(AutotoolsPackage):
        that is truly cross platform, easily deployed and highly
        extensible."""
     homepage = "http://www.tcl.tk"
+    url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
 
     version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
@@ -44,10 +45,6 @@ class Tcl(AutotoolsPackage):
     depends_on('zlib')
 
     configure_directory = 'unix'
-
-    def url_for_version(self, version):
-        base_url = 'http://prdownloads.sourceforge.net/tcl'
-        return '{0}/tcl{1}-src.tar.gz'.format(base_url, version)
 
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python

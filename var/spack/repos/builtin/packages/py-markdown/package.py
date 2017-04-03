@@ -50,7 +50,3 @@ class PyMarkdown(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.2:3.4')
-
-    def url_for_version(self, version):
-        base_url = "https://github.com/waylan/Python-Markdown/archive"
-        return "{0}/{1}-final.tar.gz".format(base_url, version)

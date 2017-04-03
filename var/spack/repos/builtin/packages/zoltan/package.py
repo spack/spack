@@ -41,7 +41,7 @@ class Zoltan(Package):
     """
 
     homepage = "http://www.cs.sandia.gov/zoltan"
-    base_url = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions"
+    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
 
     version('3.83', '1ff1bc93f91e12f2c533ddb01f2c095f')
     version('3.8', '9d8fba8a990896881b85351d4327c4a9')
@@ -55,9 +55,6 @@ class Zoltan(Package):
     variant('mpi', default=True, description='Enable MPI support.')
 
     depends_on('mpi', when='+mpi')
-
-    def url_for_version(self, version):
-        return '%s/zoltan_distrib_v%s.tar.gz' % (Zoltan.base_url, version)
 
     def install(self, spec, prefix):
         # FIXME: The older Zoltan versions fail to compile the F90 MPI wrappers

@@ -35,10 +35,11 @@ class Rose(Package):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url      = "https://github.com/rose-compiler/edg4x-rose"
+    url      = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
+    version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
     version('master', branch='master',
-            git='https://github.com/rose-compiler/edg4x-rose.git')
+            git='https://github.com/rose-compiler/rose.git')
 
     patch('add_spack_compiler_recognition.patch')
 
@@ -46,7 +47,7 @@ class Rose(Package):
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
     depends_on("boost@1.54.0")
-    depends_on("jdk@8u25-linux-x64")
+    depends_on("jdk@8u25")
 
     def install(self, spec, prefix):
         # Bootstrap with autotools

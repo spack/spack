@@ -89,13 +89,6 @@ class Go(Package):
             r'# \1\2\3',
         )
 
-    @when('@1.5.0:')
-    def patch(self):
-        pass
-
-    def url_for_version(self, version):
-        return "https://storage.googleapis.com/golang/go{0}.src.tar.gz".format(version)
-
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('src'):

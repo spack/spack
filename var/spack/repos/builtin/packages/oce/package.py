@@ -32,6 +32,7 @@ class Oce(Package):
     Open CASCADE library.
     """
     homepage = "https://github.com/tpaviot/oce"
+    url      = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
@@ -45,10 +46,6 @@ class Oce(Package):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')
-
-    def url_for_version(self, version):
-        return 'https://github.com/tpaviot/oce/archive/OCE-%s.tar.gz' % (
-            version.dotted)
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see

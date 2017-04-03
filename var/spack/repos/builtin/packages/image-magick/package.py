@@ -45,9 +45,6 @@ class ImageMagick(Package):
     depends_on('ghostscript')
     depends_on('ghostscript-fonts')
 
-    def url_for_version(self, version):
-        return "https://github.com/ImageMagick/ImageMagick/archive/{0}.tar.gz".format(version)
-
     def install(self, spec, prefix):
         gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
         configure('--prefix={0}'.format(prefix),

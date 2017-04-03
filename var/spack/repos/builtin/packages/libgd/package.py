@@ -56,7 +56,3 @@ class Libgd(AutotoolsPackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('fontconfig')
-
-    def url_for_version(self, version):
-        url = "https://github.com/libgd/libgd/releases/download/gd-{0}/libgd-{0}.tar.gz"
-        return url.format(version)

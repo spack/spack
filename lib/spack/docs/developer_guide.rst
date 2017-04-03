@@ -447,16 +447,16 @@ the string that it detected to be the name and version. The
 ``--incorrect-name`` and ``--incorrect-version`` flags can be used to
 print URLs that were not being parsed correctly.
 
-""""""""""""""""""
-``spack url test``
-""""""""""""""""""
+"""""""""""""""""""""
+``spack url summary``
+"""""""""""""""""""""
 
 This command attempts to parse every URL for every package in Spack
 and prints a summary of how many of them are being correctly parsed.
 It also prints a histogram showing which regular expressions are being
 matched and how frequently:
 
-.. command-output:: spack url test
+.. command-output:: spack url summary
 
 This command is essential for anyone adding or changing the regular
 expressions that parse names and versions. By running this command

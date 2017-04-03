@@ -33,6 +33,7 @@ class Tk(AutotoolsPackage):
        applications that run unchanged across Windows, Mac OS X, Linux
        and more."""
     homepage = "http://www.tcl.tk"
+    url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
 
     version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
@@ -42,10 +43,6 @@ class Tk(AutotoolsPackage):
     depends_on('libx11')
 
     configure_directory = 'unix'
-
-    def url_for_version(self, version):
-        base_url = "http://prdownloads.sourceforge.net/tcl"
-        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
 
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
