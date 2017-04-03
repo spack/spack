@@ -54,7 +54,7 @@ use JUnit.
 CDash
 ^^^^^
 
-`CDash <https://www.cdash.org>`_ is an open source web application from
+`CDash <https://www.cdash.org>`__ is an open source web application from
 `Kitware <https://www.kitware.com>`_ that displays the results of
 software builds and test runs.  Spack can generate output for CDash using
 either of these options to ``spack install``:

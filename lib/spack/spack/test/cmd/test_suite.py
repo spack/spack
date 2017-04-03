@@ -27,7 +27,6 @@ import spack.cmd.test_suite as test_suite
 import datetime
 import os
 import shutil
-import glob
 
 
 @pytest.mark.usefixtures('config')
