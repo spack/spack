@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+from __future__ import print_function
 
+import argparse
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -74,21 +75,21 @@ def spec(parser, args):
         # With -y, just print YAML to output.
         if args.yaml:
             spec.concretize()
-            print spec.to_yaml()
+            print(spec.to_yaml())
             continue
 
         # Print some diagnostic info by default.
-        print "Input spec"
-        print "--------------------------------"
-        print spec.tree(**kwargs)
+        print("Input spec")
+        print("--------------------------------")
+        print(spec.tree(**kwargs))
 
-        print "Normalized"
-        print "--------------------------------"
+        print("Normalized")
+        print("--------------------------------")
         spec_copy = spec.copy()
         spec_copy.normalize()
         print spec_copy.tree(**kwargs)
 
-        print "Concretized"
-        print "--------------------------------"
+        print("Concretized")
+        print("--------------------------------")
         spec.concretize(skip_build=not args.merge_build)
         print spec.tree(**kwargs)

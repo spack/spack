@@ -51,6 +51,7 @@ import functools
 import inspect
 import os.path
 import re
+from six import string_types
 
 import llnl.util.lang
 import spack
@@ -174,7 +175,7 @@ class DirectiveMetaMixin(type):
         """
         global __all__
 
-        if isinstance(dicts, basestring):
+        if isinstance(dicts, string_types):
             dicts = (dicts, )
         if not isinstance(dicts, collections.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
@@ -260,6 +261,33 @@ def _depends_on(pkg, spec, when=None, type=None):
         conditions[when_spec].constrain(dep_spec, deps=False)
     else:
         conditions[when_spec] = dep_spec
+
+
+@directive('conflicts')
+def conflicts(conflict_spec, when=None):
+    """Allows a package to define a conflict, i.e. a concretized configuration
+    that is known to be non-valid.
+
+    For example a package that is known not to be buildable with intel
+    compilers can declare:
+
+    conflicts('%intel')
+
+    To express the same constraint only when the 'foo' variant is activated:
+
+    conflicts('%intel', when='+foo')
+
+    :param conflict_spec: constraint defining the known conflict
+    :param when: optional constraint that triggers the conflict
+    """
+    def _execute(pkg):
+        # If when is not specified the conflict always holds
+        condition = pkg.name if when is None else when
+        when_spec = parse_anonymous_spec(condition, pkg.name)
+
+        when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
+        when_spec_list.append(when_spec)
+    return _execute
 
 
 @directive(('dependencies', 'dependency_types'))

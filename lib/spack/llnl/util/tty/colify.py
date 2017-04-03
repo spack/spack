@@ -25,9 +25,11 @@
 """
 Routines for printing columnar output.  See colify() for more information.
 """
+from __future__ import division
+
 import os
 import sys
-from StringIO import StringIO
+from six import StringIO
 
 from llnl.util.tty import terminal_size
 from llnl.util.tty.color import clen, cextra
@@ -64,18 +66,18 @@ def config_variable_cols(elts, console_width, padding, cols=0):
     # Get a bound on the most columns we could possibly have.
     # 'clen' ignores length of ansi color sequences.
     lengths = [clen(e) for e in elts]
-    max_cols = max(1, console_width / (min(lengths) + padding))
+    max_cols = max(1, console_width // (min(lengths) + padding))
     max_cols = min(len(elts), max_cols)
 
     # Range of column counts to try.  If forced, use the supplied value.
-    col_range = [cols] if cols else xrange(1, max_cols + 1)
+    col_range = [cols] if cols else range(1, max_cols + 1)
 
     # Determine the most columns possible for the console width.
     configs = [ColumnConfig(c) for c in col_range]
     for i, length in enumerate(lengths):
         for conf in configs:
             if conf.valid:
-                col = i / ((len(elts) + conf.cols - 1) / conf.cols)
+                col = i // ((len(elts) + conf.cols - 1) // conf.cols)
                 p = padding if col < (conf.cols - 1) else 0
 
                 if conf.widths[col] < (length + p):
@@ -107,7 +109,7 @@ def config_uniform_cols(elts, console_width, padding, cols=0):
     # 'clen' ignores length of ansi color sequences.
     max_len = max(clen(e) for e in elts) + padding
     if cols == 0:
-        cols = max(1, console_width / max_len)
+        cols = max(1, console_width // max_len)
         cols = min(len(elts), cols)
 
     config = ColumnConfig(cols)
@@ -193,12 +195,12 @@ def colify(elts, **options):
         raise ValueError("method must be one of: " + allowed_methods)
 
     cols = config.cols
-    rows = (len(elts) + cols - 1) / cols
+    rows = (len(elts) + cols - 1) // cols
     rows_last_col = len(elts) % rows
 
-    for row in xrange(rows):
+    for row in range(rows):
         output.write(" " * indent)
-        for col in xrange(cols):
+        for col in range(cols):
             elt = col * rows + row
             width = config.widths[col] + cextra(elts[elt])
             if col < cols - 1:
@@ -233,7 +235,7 @@ def colify_table(table, **options):
     columns = len(table[0])
 
     def transpose():
-        for i in xrange(columns):
+        for i in range(columns):
             for row in table:
                 yield row[i]
 

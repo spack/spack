@@ -36,6 +36,18 @@ class PyNumpy(PythonPackage):
     homepage = "http://www.numpy.org/"
     url      = "https://pypi.io/packages/source/n/numpy/numpy-1.9.1.tar.gz"
 
+    install_time_test_callbacks = ['install_test', 'import_module_test']
+
+    import_modules = [
+        'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
+        'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
+        'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing',
+        'numpy.distutils.command', 'numpy.distutils.fcompiler'
+    ]
+
+    # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
+    # FIXME: Is this expected?
+
     version('1.12.0', '33e5a84579f31829bbbba084fe0a4300',
             url="https://pypi.io/packages/source/n/numpy/numpy-1.12.0.zip")
     version('1.11.2', '03bd7927c314c43780271bf1ab795ebc')
@@ -53,7 +65,11 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    def setup_dependent_package(self, module, dep_spec):
+    # Tests require:
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose@1.0.0:', type='test')
+
+    def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
         arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
@@ -96,11 +112,11 @@ class PyNumpy(PythonPackage):
                     # FIXME: as of @1.11.2, numpy does not work with separately
                     # specified threading and interface layers. A workaround is
                     # a terribly bad idea to use mkl_rt. In this case Spack
-                    # won't no longer be able to guarantee that one and the
+                    # will no longer be able to guarantee that one and the
                     # same variant of Blas/Lapack (32/64bit, threaded/serial)
                     # is used within the DAG. This may lead to a lot of
                     # hard-to-debug segmentation faults on user's side. Users
-                    # may also break working installation by (unconciously)
+                    # may also break working installation by (unconsciously)
                     # setting environment variable to switch between different
                     # interface and threading layers dynamically. From this
                     # perspective it is no different from throwing away RPATH's
@@ -132,3 +148,22 @@ class PyNumpy(PythonPackage):
             args = ['-j', str(make_jobs)]
 
         return args
+
+    def test(self):
+        # `setup.py test` is not supported.  Use one of the following
+        # instead:
+        #
+        # - `python runtests.py`              (to build and test)
+        # - `python runtests.py --no-build`   (to test installed numpy)
+        # - `>>> numpy.test()`           (run tests for installed numpy
+        #                                 from within an interpreter)
+        pass
+
+    def install_test(self):
+        # Change directories due to the following error:
+        #
+        # ImportError: Error importing numpy: you should not try to import
+        #       numpy from its source directory; please exit the numpy
+        #       source tree, and relaunch your python interpreter from there.
+        with working_dir('..'):
+            python('-c', 'import numpy; numpy.test("full", verbose=2)')

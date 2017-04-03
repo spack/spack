@@ -1523,23 +1523,23 @@ properties to be used by dependents.
 
 The function declaration should look like this:
 
-.. code-block:: python
-
-   class Qt(Package):
-       ...
-       def setup_dependent_environment(self, module, spec, dep_spec):
-           """Dependencies of Qt find it using the QTDIR environment variable."""
-           os.environ['QTDIR'] = self.prefix
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_environment
+   :linenos:
 
 Here, the Qt package sets the ``QTDIR`` environment variable so that
 packages that depend on a particular Qt installation will find it.
 
 The arguments to this function are:
 
-* **module**: the module of the dependent package, where global
-  properties can be assigned.
-* **spec**: the spec of the *dependency package* (the one the function is called on).
-* **dep_spec**: the spec of the dependent package (i.e. dep_spec depends on spec).
+* **spack_env**: List of environment modifications to be applied when
+  the dependent package is built within Spack.
+* **run_env**: List of environment modifications to be applied when
+  the dependent package is run outside of Spack. These are added to the
+  resulting module file.
+* **dependent_spec**: The spec of the dependent package about to be
+  built. This allows the extendee (self) to query the dependent's state.
+  Note that *this* package's spec is available as ``self.spec``.
 
 A good example of using these is in the Python package:
 
@@ -1559,6 +1559,28 @@ packages to have a very simple install method, like this:
 Python's ``setup_dependent_environment`` method also sets up some
 other variables, creates a directory, and sets up the ``PYTHONPATH``
 so that dependent packages can find their dependencies at build time.
+
+.. _packaging_conflicts:
+
+---------
+Conflicts
+---------
+
+Sometimes packages have known bugs, or limitations, that would prevent them
+to build e.g. against other dependencies or with certain compilers. Spack
+makes it possible to express such constraints with the ``conflicts`` directive.
+
+Adding the following to a package:
+
+.. code-block:: python
+
+    conflicts('%intel', when='@1.2')
+
+we express the fact that the current package *cannot be built* with the Intel
+compiler when we are trying to install version "1.2". The ``when`` argument can
+be omitted, in which case the conflict will always be active.
+Conflicts are always evaluated after the concretization step has been performed,
+and if any match is found a detailed error message is shown to the user.
 
 .. _packaging_extensions:
 
@@ -2043,6 +2065,10 @@ The classes that are currently provided by Spack are:
     |  :py:class:`.PythonPackage`        | Specialized class for            |
     |                                    | :py:class:`.Python` extensions   |
     +------------------------------------+----------------------------------+
+    |  :py:class:`.PerlPackage`          | Specialized class for            |
+    |                                    | :py:class:`.Perl` extensions     |
+    +------------------------------------+----------------------------------+
+
 
 
 
@@ -2805,11 +2831,8 @@ the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in mvapich2, you'll
 find this:
 
-.. code-block:: python
-
-    def setup_dependent_package(self, module, dep_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
-        # … etc …
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/mvapich2/package.py
+   :pyobject: Mvapich2.setup_dependent_package
 
 That code allows the mvapich2 package to associate an ``mpicc`` property
 with the ``mvapich2`` node in the DAG, so that dependents can access it.
@@ -3158,37 +3181,6 @@ Version Lists
 ^^^^^^^^^^^^^
 
 Spack packages should list supported versions with the newest first.
-
-^^^^^^^^^^^^^^^^
-Special Versions
-^^^^^^^^^^^^^^^^
-
-The following *special* version names may be used when building a package:
-
-"""""""""""
-``@system``
-"""""""""""
-
-Indicates a hook to the OS-installed version of the
-package.  This is useful, for example, to tell Spack to use the
-OS-installed version in ``packages.yaml``:
-
-.. code-block:: yaml
-
-   openssl:
-     paths:
-       openssl@system: /usr
-     buildable: False
-
-Certain Spack internals look for the ``@system`` version and do
-appropriate things in that case.
-
-""""""""""
-``@local``
-""""""""""
-
-Indicates the version was built manually from some source
-tree of unknown provenance (see ``spack setup``).
 
 ---------------------------
 Packaging workflow commands

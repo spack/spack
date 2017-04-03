@@ -59,6 +59,8 @@ class Openblas(MakefilePackage):
 
     parallel = False
 
+    conflicts('%intel@16', when='@0.2.15:0.2.19')
+
     @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
@@ -74,6 +76,12 @@ class Openblas(MakefilePackage):
             # be used with any (!) compiler named clang, bummer.
             raise InstallError(
                 'OpenBLAS does not support OpenMP with clang!'
+            )
+
+        spec = self.spec
+        if spec.satisfies('%clang@8.1.0:') and spec.satisfies('@:0.2.19'):
+            raise InstallError(
+                'OpenBLAS @:0.2.19 does not build with Apple clang@8.1.0:'
             )
 
     @property
@@ -117,6 +125,7 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
+    @on_package_attributes(run_tests=True)
     @run_after('build')
     def check_build(self):
         make('tests', *self.make_defs)
@@ -129,6 +138,7 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
+    @on_package_attributes(run_tests=True)
     @run_after('install')
     def check_install(self):
         spec = self.spec
@@ -140,8 +150,8 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = spec.cppflags
-        link_flags = spec.libs.ld_flags
+        include_flags = spec['openblas'].cppflags
+        link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
             link_flags += ' -lifcore'
         link_flags += ' -lpthread'

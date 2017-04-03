@@ -37,6 +37,10 @@ class PyYt(PythonPackage):
     homepage = "http://yt-project.org"
     url = "https://bitbucket.org/yt_analysis/yt"
 
+    version("3.3.5", "2ad314ff3d3261e41825d15db027b0e7",
+            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.5.tar.gz")
+    version("3.3.4", "3a84e56dfd82f9dd923f3fb8490e679c",
+            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.4.tar.gz")
     version("3.3.1", hg="https://bitbucket.org/yt_analysis/yt",
             tag="yt-3.3.1", commit="9bc3d0e9b750c923d44d73c447df64fc431f5838")
     version("3.2.3", hg="https://bitbucket.org/yt_analysis/yt",

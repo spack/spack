@@ -32,8 +32,9 @@ class Nettle(AutotoolsPackage):
     homepage = "https://www.lysator.liu.se/~nisse/nettle/"
     url      = "http://ftp.gnu.org/gnu/nettle/nettle-2.7.1.tar.gz"
 
-    version('3.2', 'afb15b4764ebf1b4e6d06c62bd4d29e4')
-    version('2.7', '2caa1bd667c35db71becb93c5d89737f')
+    version('3.2',   'afb15b4764ebf1b4e6d06c62bd4d29e4')
+    version('2.7.1', '003d5147911317931dd453520eb234a5')
+    version('2.7',   '2caa1bd667c35db71becb93c5d89737f')
 
     depends_on('gmp')
     depends_on('m4', type='build')

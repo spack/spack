@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,26 +22,54 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This test ensures that all Spack files are Python version 2.6 or less.
+"""Check that Spack complies with minimum supported python versions.
 
-Spack was originally 2.7, but enough systems in 2014 are still using
-2.6 on their frontend nodes that we need 2.6 to get adopted.
+We ensure that all Spack files work with Python2 >= 2.6 and Python3 >= 3.0.
+
+We'd like to drop 2.6 support at some point, but there are still many HPC
+systems that ship with RHEL6/CentOS 6, which have Python 2.6 as the
+default version.  Once those go away, we can likely drop 2.6 and increase
+the minimum supported Python 3 version, as well.
 """
+from __future__ import print_function
+
 import os
+import sys
 import re
 import unittest
 
 import llnl.util.tty as tty
-import pyqver2
 import spack
 
-spack_max_version = (2, 6)
+#
+# This test uses pyqver, by Greg Hewgill, which is a dual-source module.
+# That means we need to do different checks depending on whether we're
+# running Python 2 or Python 3.
+#
+if sys.version_info[0] < 3:
+    import pyqver2 as pyqver
+    spack_min_supported = (2, 6)
+
+    # Exclude Python 3 versions of dual-source modules when using Python 2
+    exclude_paths = [
+        os.path.join(spack.lib_path, 'external', 'yaml', 'lib3'),
+        os.path.join(spack.lib_path, 'external', 'pyqver3.py')]
+
+else:
+    import pyqver3 as pyqver
+    spack_min_supported = (3, 0)
+
+    # Exclude Python 2 versions of dual-source modules when using Python 3
+    exclude_paths = [
+        os.path.join(spack.lib_path, 'external', 'yaml', 'lib'),
+        os.path.join(spack.lib_path, 'external', 'pyqver2.py')]
 
 
 class PythonVersionTest(unittest.TestCase):
 
-    def pyfiles(self, *search_paths):
+    def pyfiles(self, search_paths, exclude=()):
+        """List python search files in a set of search paths, excluding
+        any paths in the exclude list"""
         # first file is the spack script.
         yield spack.spack_file
 
@@ -49,53 +77,71 @@ class PythonVersionTest(unittest.TestCase):
         for path in search_paths:
             for root, dirnames, filenames in os.walk(path):
                 for filename in filenames:
+                    realpath = os.path.realpath(os.path.join(root, filename))
+                    if any(realpath.startswith(p) for p in exclude):
+                        continue
+
                     if re.match(r'^[^.#].*\.py$', filename):
                         yield os.path.join(root, filename)
 
-    def package_py_files(self):
-        for name in spack.repo.all_package_names():
-            yield spack.repo.filename_for_package_name(name)
-
-    def check_python_versions(self, *files):
-        # dict version -> filename -> reasons
+    def check_python_versions(self, files):
+        # This is a dict dict mapping:
+        #   version -> filename -> reasons
+        #
+        # Reasons are tuples of (lineno, string), where the string is the
+        # cause for a version incompatibility.
         all_issues = {}
 
-        for fn in files:
-            with open(fn) as pyfile:
-                versions = pyqver2.get_versions(pyfile.read())
-                for ver, reasons in versions.items():
-                    if ver > spack_max_version:
-                        if ver not in all_issues:
-                            all_issues[ver] = {}
-                        all_issues[ver][fn] = reasons
+        # Parse files and run pyqver on each file.
+        for path in files:
+            with open(path) as pyfile:
+                full_text = pyfile.read()
+            versions = pyqver.get_versions(full_text, path)
 
+            for ver, reasons in versions.items():
+                if ver <= spack_min_supported:
+                    continue
+
+                # Record issues. Mark exceptions with '# nopyqver' comment
+                for lineno, cause in reasons:
+                    lines = full_text.split('\n')
+                    if not re.search(r'#\s*nopyqver\s*$', lines[lineno - 1]):
+                        all_issues.setdefault(ver, {})[path] = reasons
+
+        # Print a message if there are are issues
         if all_issues:
-            tty.error("Spack must run on Python version %d.%d"
-                      % spack_max_version)
+            tty.msg("Spack must remain compatible with Python version %d.%d"
+                    % spack_min_supported)
 
+        # Print out a table showing which files/linenos require which
+        # python version, and a string describing why.
         for v in sorted(all_issues.keys(), reverse=True):
-            msgs = []
-            for fn in sorted(all_issues[v].keys()):
-                short_fn = fn
-                if fn.startswith(spack.prefix):
-                    short_fn = fn[len(spack.prefix):]
+            messages = []
+            for path in sorted(all_issues[v].keys()):
+                short_path = path
+                if path.startswith(spack.prefix):
+                    short_path = path[len(spack.prefix):]
 
-                reasons = [r for r in set(all_issues[v][fn]) if r]
-                for r in reasons:
-                    msgs.append(("%s:%s" % ('spack' + short_fn, r[0]), r[1]))
+                reasons = [r for r in set(all_issues[v][path]) if r]
+                for lineno, cause in reasons:
+                    file_line = "%s:%s" % (short_path.lstrip('/'), lineno)
+                    messages.append((file_line, cause))
 
-            tty.error("These files require version %d.%d:" % v)
-            maxlen = max(len(f) for f, prob in msgs)
+            print()
+            tty.msg("These files require version %d.%d:" % v)
+            maxlen = max(len(f) for f, prob in messages)
             fmt = "%%-%ds%%s" % (maxlen + 3)
-            print fmt % ('File', 'Reason')
-            print fmt % ('-' * (maxlen), '-' * 20)
-            for msg in msgs:
-                print fmt % msg
+            print(fmt % ('File', 'Reason'))
+            print(fmt % ('-' * (maxlen), '-' * 20))
+            for msg in messages:
+                print(fmt % msg)
 
+        # Fail this test if there were issues.
         self.assertTrue(len(all_issues) == 0)
 
     def test_core_module_compatibility(self):
-        self.check_python_versions(*self.pyfiles(spack.lib_path))
+        self.check_python_versions(
+            self.pyfiles([spack.lib_path], exclude=exclude_paths))
 
     def test_package_module_compatibility(self):
-        self.check_python_versions(*self.pyfiles(spack.packages_path))
+        self.check_python_versions(self.pyfiles([spack.packages_path]))

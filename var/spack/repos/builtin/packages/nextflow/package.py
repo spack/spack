@@ -30,11 +30,18 @@ class Nextflow(Package):
 
     homepage = "http://www.nextflow.io"
 
+    version('0.24.1', '80ec8c4fe8e766e0bdd1371a50410d1d',
+            expand=False)
+    version('0.23.3', '71fb69275b6788af1c6f1165f40d362e',
+            expand=False)
     version('0.20.1', '0e4e0e3eca1c2c97f9b4bffd944b923a',
-            url='https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow',
             expand=False)
 
     depends_on('jdk')
+
+    def url_for_version(self, version):
+        base_url = 'https://github.com/nextflow-io/nextflow/releases/download/v{0}/nextflow'
+        return base_url.format(version)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

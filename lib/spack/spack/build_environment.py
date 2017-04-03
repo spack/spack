@@ -58,6 +58,7 @@ import os
 import shutil
 import sys
 import traceback
+from six import iteritems
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -311,7 +312,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     environment = compiler.environment
     if 'set' in environment:
         env_to_set = environment['set']
-        for key, value in env_to_set.iteritems():
+        for key, value in iteritems(env_to_set):
             env.set('SPACK_ENV_SET_%s' % key, value)
             env.set('%s' % key, value)
         # Let shell know which variables to set
@@ -323,9 +324,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(filter(os.path.isdir, [
-        '%s/bin' % d.prefix for d in
-        pkg.spec.check_and_get_run_deps_for_build()]))
+    bin_dirs = reversed(
+        [s.prefix.bin for s in pkg.spec.check_and_get_run_deps_for_build()
+         if os.path.isdir(s.prefix.bin)])
     bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)

@@ -46,8 +46,8 @@ it's never been told about that version before.
 """
 import os
 import re
-from StringIO import StringIO
-from urlparse import urlsplit, urlunsplit
+from six import StringIO
+from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import *
@@ -370,6 +370,7 @@ def parse_name_offset(path, v=None):
         (r'/([^/]+)/(tarball|zipball)/', path),
         (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
         (r'github.com/[^/]+/([^/]+)/archive', path),
+        (r'github.com/[^/]+/([^/]+)/releases', path),
         (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
         (r'([^/]+)/download.php', path),
 
@@ -485,7 +486,7 @@ def substitution_offsets(path):
     name_offsets = offsets[1::2]
 
     ver_offsets = []
-    for i in xrange(0, len(name_parts), 2):
+    for i in range(0, len(name_parts), 2):
         vparts = re.split(ver, name_parts[i])
         voffsets = cumsum(vparts, offsets[i], len)
         ver_offsets.extend(voffsets[1::2])
@@ -512,7 +513,7 @@ def wildcard_version(path):
     name_parts = re.split(name_re, path)
 
     # Even elements in the array did *not* match the name
-    for i in xrange(0, len(name_parts), 2):
+    for i in range(0, len(name_parts), 2):
         # Split each part by things that look like versions.
         vparts = re.split(v.wildcard(), name_parts[i])
 

@@ -47,7 +47,7 @@ class Flux(AutotoolsPackage):
     depends_on("libjson-c")
     depends_on("libxslt")
     depends_on("python")
-    depends_on("py-cffi")
+    depends_on("py-cffi", type=('build', 'run'))
     depends_on("jansson")
 
     depends_on("asciidoc", type='build', when="+docs")

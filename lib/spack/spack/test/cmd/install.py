@@ -22,19 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import StringIO
 import argparse
 import codecs
 import collections
 import contextlib
 import unittest
+from six import StringIO
 
 import llnl.util.filesystem
 import spack
 import spack.cmd
 import spack.cmd.install as install
 
-FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
+FILE_REGISTRY = collections.defaultdict(StringIO)
 
 
 # Monkey-patch open to write module files to a StringIO instance
@@ -44,7 +44,7 @@ def mock_open(filename, mode, *args):
         message = 'test.test_install : unexpected opening mode for mock_open'
         raise RuntimeError(message)
 
-    FILE_REGISTRY[filename] = StringIO.StringIO()
+    FILE_REGISTRY[filename] = StringIO()
 
     try:
         yield FILE_REGISTRY[filename]

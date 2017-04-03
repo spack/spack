@@ -45,7 +45,7 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
-    depends_on('opencv@2.4.13', when='+opencv')
+    depends_on('opencv@3.2.0', when='+opencv')
     depends_on('protobuf@3.0.2')
 
     def build_type(self):
@@ -71,7 +71,7 @@ class Lbann(CMakePackage):
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
-                self.spec['elemental'].elemental_libs),
+                self.spec['elemental'].libs),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']

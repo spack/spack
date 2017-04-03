@@ -64,7 +64,7 @@ class ConstraintAction(argparse.Action):
 
         # return everything for an empty query.
         if not qspecs:
-            return spack.store.db.query()
+            return spack.store.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
         specs = set()
@@ -81,7 +81,7 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
-    default=spack.modules.module_types.keys()[0],
+    default=list(spack.modules.module_types.keys())[0],
     help='type of module files [default: %(default)s]')
 
 _arguments['yes_to_all'] = Args(

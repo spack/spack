@@ -33,24 +33,12 @@ possible realization of a particular package, out of combinatorially
 many other realizations.  For example, here is a concrete spec
 instantiated from ``curl``:
 
-.. code-block:: console
-
-   curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+.. command-output:: spack spec curl
 
 Spack's core concretization algorithm generates concrete specs by
 instantiating packages from its repo, based on a set of "hints",
 including user input and the ``packages.yaml`` file.  This algorithm
-may be accessed at any time with the ``spack spec`` command.  For
-example:
-
-.. code-block:: console
-
-   $ spack spec curl
-     curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-         ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-         ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+may be accessed at any time with the ``spack spec`` command.
 
 Every time Spack installs a package, that installation corresponds to
 a concrete spec.  Only a vanishingly small fraction of possible
@@ -68,7 +56,7 @@ variant, compiler, etc.  For example, the following set is consistent:
 .. code-block:: console
 
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@1.0.2k%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
    zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
@@ -77,7 +65,7 @@ The following set is not consistent:
 .. code-block:: console
 
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@1.0.2k%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
    zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
