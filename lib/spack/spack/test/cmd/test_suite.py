@@ -219,32 +219,6 @@ class TestCompilers(object):
             os.remove(file)  # will remove a test file.
             assert not os.path.exists(file)
 
-    def test_return_valid_directory(self):
-        files = [name for name in glob.glob(
-            os.path.join(os.getcwd(), '*.yaml'))
-            if os.path.isfile(os.path.join(os.getcwd(), name))]
-        test_files = []
-        if not files:
-            # no files found, need to make one
-            test_files.append(os.getcwd() + "/test1.yaml")
-            for file in test_files:
-                if not os.path.exists(file):
-                    open(file, "a")
-            files = [name for name in glob.glob(
-                os.path.join(os.getcwd(), '*.yaml'))
-                if os.path.isfile(os.path.join(os.getcwd(), name))]
-            assert files
-            test_files.append(os.getcwd())
-            assert len(test_suite.return_valid_yaml_files(
-                test_files)) == len(files)
-            for file in test_files:
-                os.remove(file)  # will remove a test file.
-                assert not os.path.exists(file)
-        elif files:
-            test_files.append(os.getcwd())
-            assert len(test_suite.return_valid_yaml_files(
-                test_files)) == len(files)
-
     def test_filename(self):
         ts = test_suite.CombinatorialSpecSet("test.yaml")
         assert "test.yaml" in ts.yaml_file
