@@ -203,7 +203,7 @@ _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 # Add programmable tab completion for Bash
 #
 if [ -n "${BASH_VERSION:-}" ]; then
-    if [ $(echo ${BASH_VERSION:-} | cut -c 1) -gt 3 ]; then
+    if [ "${BASH_VERSION::1}" -gt 3 ]; then
         source $_sp_share_dir/spack-completion.bash
     fi;
 fi
