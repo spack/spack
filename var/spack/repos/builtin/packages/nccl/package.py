@@ -37,5 +37,9 @@ class Nccl(MakefilePackage):
     depends_on('cuda')
 
     @property
+    def build_targets(self):
+        return ['CUDA_HOME={0}'.format(self.spec['cuda'].prefix)]
+
+    @property
     def install_targets(self):
         return ['PREFIX={0}'.format(self.prefix), 'install']
