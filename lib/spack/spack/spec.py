@@ -180,7 +180,7 @@ color_formats = {'%': compiler_color,
                  '+': enabled_variant_color,
                  '~': disabled_variant_color,
                  '^': dependency_color,
-                 '#': hash_color}
+                 '/': hash_color}
 
 """Regex used for splitting by spec field separators."""
 _separators = '[%s]' % ''.join(color_formats.keys())
@@ -1295,13 +1295,13 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
            instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$#')
+        return self.format('$_$@$%@$+$=$/')
 
     @property
     def cshort_spec(self):
         """Returns a version of the spec with the dependencies hashed
            instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$#', color=True)
+        return self.format('$_$@$%@$+$=$/', color=True)
 
     @property
     def prefix(self):
@@ -2548,7 +2548,7 @@ class Spec(object):
                  prefixes as above
             $+   Options
             $=   Architecture prefixed by 'arch='
-            $#   7-char prefix of DAG hash with '-' prefix
+            $/   7-char prefix of DAG hash with '-' prefix
             $$   $
 
         You can also use full-string versions, which elide the prefixes::
@@ -2581,8 +2581,8 @@ class Spec(object):
         *Example:*  ``$_$@$+`` translates to the name, version, and options
         of the package, but no dependencies, arch, or compiler.
 
-        TODO: allow, e.g., ``$6#`` to customize short hash length
-        TODO: allow, e.g., ``$##`` for full hash.
+        TODO: allow, e.g., ``$6/`` to customize short hash length
+        TODO: allow, e.g., ``$//`` for full hash.
         """
         color = kwargs.get('color', False)
         length = len(format_string)
@@ -2629,12 +2629,8 @@ class Spec(object):
                     if self.architecture and str(self.architecture):
                         a_str = ' arch' + c + str(self.architecture)
                         write(fmt % (a_str), c)
-                elif c in ('#','/'):
-                    #sleak support '/' for hashes to prevent breaking 
-                    #    compatibility, but I propose using '#' throughout
-                    #    for better clarity and consistency (and to not have
-                    #    filesystem-confusing '/' char in filenames)
-                    write('#' + fmt % (self.dag_hash(7)), '#')
+                elif c == '/':
+                    write('/' + fmt % (self.dag_hash(7)), '/')
                 elif c == '$':
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
@@ -2861,8 +2857,6 @@ class SpecLexer(spack.parse.Lexer):
 
     def __init__(self):
         super(SpecLexer, self).__init__([
-            (r'#', lambda scanner, val: self.token(HASH,  val)),
-            #sleak: parse '/' too for compatibility
             (r'/', lambda scanner, val: self.token(HASH,  val)),
             (r'\^', lambda scanner, val: self.token(DEP,   val)),
             (r'\@', lambda scanner, val: self.token(AT,    val)),
@@ -3348,7 +3342,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
-        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$#')
+        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$/')
                                          for spec in specs)
         super(AmbiguousHashError, self).__init__(msg + specs_str)
 
