@@ -87,9 +87,9 @@ def spec(parser, args):
         print("--------------------------------")
         spec_copy = spec.copy()
         spec_copy.normalize()
-        print spec_copy.tree(**kwargs)
+        print(spec_copy.tree(**kwargs))
 
         print("Concretized")
         print("--------------------------------")
         spec.concretize(skip_build=not args.merge_build)
-        print spec.tree(**kwargs)
+        print(spec.tree(**kwargs))
