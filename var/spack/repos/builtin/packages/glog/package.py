@@ -33,3 +33,5 @@ class Glog(AutotoolsPackage):
 
     version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
     version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+
+    depends_on('gflags')
