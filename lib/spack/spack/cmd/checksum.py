@@ -26,6 +26,7 @@ from __future__ import print_function
 
 import argparse
 import hashlib
+import os
 
 import llnl.util.tty as tty
 import spack
@@ -96,18 +97,26 @@ def get_checksums(url_dict, name, **kwargs):
     i = 0
     for url, version in zip(urls, versions):
         try:
-            with Stage(url, keep=keep_stage) as stage:
-                # Fetch the archive
-                stage.fetch()
-                if i == 0 and first_stage_function:
-                    # Only run first_stage_function the first time,
-                    # no need to run it every time
-                    first_stage_function(stage, url)
+            if os.path.isfile(url):
+                # Already downloaded manually, don't need to fetch
+                first_stage_function(url, url)
 
                 # Checksum the archive and add it to the list
                 version_hashes.append((version, spack.util.crypto.checksum(
-                    hashlib.md5, stage.archive_file)))
-                i += 1
+                    hashlib.md5, url)))
+            else:
+                with Stage(url, keep=keep_stage) as stage:
+                    # Fetch the archive
+                    stage.fetch()
+                    if i == 0 and first_stage_function:
+                        # Only run first_stage_function the first time,
+                        # no need to run it every time
+                        first_stage_function(stage.archive_file, url)
+
+                    # Checksum the archive and add it to the list
+                    version_hashes.append((version, spack.util.crypto.checksum(
+                        hashlib.md5, stage.archive_file)))
+                    i += 1
         except FailedDownloadError:
             tty.msg("Failed to fetch {0}".format(url))
         except Exception as e:

@@ -81,7 +81,7 @@ package_template = '''\
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
 #
-from spack import *
+{imports}
 
 
 class {class_name}({base_class_name}):
@@ -89,7 +89,7 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
-    url      = "{url}"
+    url      = {url}
 
 {versions}
 
@@ -114,8 +114,9 @@ class PackageTemplate(object):
         make()
         make('install')"""
 
-    def __init__(self, name, url, versions):
+    def __init__(self, name, imports, url, versions):
         self.name       = name
+        self.imports    = imports
         self.class_name = mod_to_class(name)
         self.url        = url
         self.versions   = versions
@@ -126,6 +127,7 @@ class PackageTemplate(object):
         # Write out a template for the file
         with open(pkg_path, "w") as pkg_file:
             pkg_file.write(package_template.format(
+                imports=self.imports,
                 name=self.name,
                 class_name=self.class_name,
                 base_class_name=self.base_class_name,
@@ -382,7 +384,7 @@ class BuildSystemGuesser:
     can take a peek at the fetched tarball and discern the build system it uses
     """
 
-    def __call__(self, stage, url):
+    def __call__(self, archive_file, url):
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
 
@@ -410,17 +412,17 @@ class BuildSystemGuesser:
         ]
 
         # Peek inside the compressed file.
-        if stage.archive_file.endswith('.zip'):
+        if archive_file.endswith('.zip'):
             try:
                 unzip  = which('unzip')
-                output = unzip('-lq', stage.archive_file, output=str)
+                output = unzip('-lq', archive_file, output=str)
             except:
                 output = ''
         else:
             try:
                 tar    = which('tar')
                 output = tar('--exclude=*/*/*', '-tf',
-                             stage.archive_file, output=str)
+                             archive_file, output=str)
             except:
                 output = ''
         lines = output.split('\n')
@@ -478,18 +480,25 @@ def get_url(args):
 
     :param argparse.Namespace args: The arguments given to ``spack create``
 
-    :returns: The URL of the package
+    :returns: The URL of the package, and any necessary imports
     :rtype: str
     """
 
-    # Default URL
-    url = 'http://www.example.com/example-1.2.3.tar.gz'
+    # Default URL if one is not provided
+    url = '"http://www.example.com/example-1.2.3.tar.gz"'
+    imports = 'from spack import *'
 
     if args.url:
-        # Use a user-supplied URL if one is present
-        url = args.url
+        if os.path.isfile(args.url):
+            # Archive has already been downloaded
+            # Perhaps this file can only be downloaded manually?
+            # Search for this file in the current directory by default
+            url = '"file://{{0}}/{0}".format(os.getcwd())'.format(args.url)
+            imports += '\nimport os'
+        else:
+            url = '"{0}"'.format(args.url)
 
-    return url
+    return url, imports
 
 
 def get_versions(args, name):
@@ -608,13 +617,13 @@ def get_repository(args, name):
 def create(parser, args):
     # Gather information about the package to be created
     name = get_name(args)
-    url = get_url(args)
+    url, imports = get_url(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
     PackageClass = templates[build_system]
-    package = PackageClass(name, url, versions)
+    package = PackageClass(name, imports, url, versions)
     tty.msg("Created template for {0} package".format(package.name))
 
     # Create a directory for the new package

@@ -63,5 +63,5 @@ def test_build_systems(url_and_build_system):
     with spack.stage.Stage(url) as stage:
         stage.fetch()
         guesser = spack.cmd.create.BuildSystemGuesser()
-        guesser(stage, url)
+        guesser(stage.archive_file, url)
         assert build_system == guesser.build_system
