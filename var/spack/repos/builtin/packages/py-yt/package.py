@@ -73,12 +73,12 @@ class PyYt(PythonPackage):
     depends_on("python @2.7:2.999,3.4:")
 
     @run_before('install')
-    def prep_yt(self, spec, prefix):
-        if '+rockstar' in spec:
+    def prep_yt(self):
+        if '+rockstar' in self.spec:
             if os.path.exists('rockstar.cfg'):
                 os.remove('rockstar.cfg')
             rockstar_cfg = open('rockstar.cfg', 'w')
-            rockstar_cfg.write(spec.get_dependency('rockstar').spec.prefix)
+            rockstar_cfg.write(self.spec.get_dependency('rockstar').spec.prefix)
             rockstar_cfg.close()
 
     @run_after('install')
