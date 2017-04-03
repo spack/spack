@@ -181,7 +181,7 @@ def get_uninstall_list(args):
     if dependent_list and not args.dependents and not args.force:
         for spec, lst in dependent_list.items():
             tty.error('Will not uninstall {0}'.format(
-                      spec.format("$_$@$%@$#", color=True)))
+                      spec.format("$_$@$%@$/", color=True)))
             print('')
             print('The following packages depend on it:')
             spack.cmd.display_specs(lst, **display_args)

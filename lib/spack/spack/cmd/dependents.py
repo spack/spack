@@ -47,7 +47,7 @@ def dependents(parser, args):
         tty.die("spack dependents takes only one spec.")
     spec = spack.cmd.disambiguate_spec(specs[0])
 
-    tty.msg("Dependents of %s" % spec.format('$_$@$%@$#', color=True))
+    tty.msg("Dependents of %s" % spec.format('$_$@$%@$/', color=True))
     deps = spack.store.db.installed_dependents(spec)
     if deps:
         spack.cmd.display_specs(deps)

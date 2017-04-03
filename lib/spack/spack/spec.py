@@ -2682,7 +2682,7 @@ class Spec(object):
                  prefixes as above
             $+   Options
             $=   Architecture prefixed by 'arch='
-            $#   7-char prefix of DAG hash with '-' prefix
+            $/   7-char prefix of DAG hash with '-' prefix
             $$   $
 
         You can also use full-string versions, which elide the prefixes::
@@ -3435,7 +3435,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
-        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$#')
+        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$/')
                                          for spec in specs)
         super(AmbiguousHashError, self).__init__(msg + specs_str)
 
