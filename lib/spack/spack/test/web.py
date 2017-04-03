@@ -141,7 +141,6 @@ def test_find_versions_of_archive_2():
     assert ver('2.0.0') in versions
 
 
-@pytest.mark.xfail
 def test_find_exotic_versions_of_archive_2():
     versions = find_versions_of_archive(root_tarball, root, list_depth=2)
     # up for grabs to make this better.
@@ -157,7 +156,6 @@ def test_find_versions_of_archive_3():
     assert ver('4.5') in versions
 
 
-@pytest.mark.xfail
 def test_find_exotic_versions_of_archive_3():
     versions = find_versions_of_archive(root_tarball, root, list_depth=3)
     assert ver('2.0.0b2') in versions
