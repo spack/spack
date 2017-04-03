@@ -64,6 +64,7 @@ done
 # Other packages
 s sga %intel@17.0.2
 s sga %gcc@5.4.0
+s boost@1.63.0 %gcc@4.8.5
 s gromacs@5.1.2+mpi         %gcc@5.4.0      ^openmpi@2.0.2
 s gromacs@5.1.2+mpi         %intel@17.0.2   ^openmpi@2.0.2
 s gromacs@5.1.2+mpi         %intel@17.0.2   ^intel-parallel-studio@cluster.2017.2
