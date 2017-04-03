@@ -23,30 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-
-from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Ipp(IntelInstaller):
-    """Intel Integrated Performance Primitives.
+class ConflictParent(Package):
+    homepage = 'https://github.com/tgamblin/callpath'
+    url = 'http://github.com/tgamblin/callpath-1.0.tar.gz'
 
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    version(0.8, 'foobarbaz')
+    version(0.9, 'foobarbaz')
+    version(1.0, 'foobarbaz')
 
-    homepage = "https://software.intel.com/en-us/intel-ipp"
+    depends_on('conflict')
 
-    version('2017.0.098', 'e7be757ebe351d9f9beed7efdc7b7118',
-            url="file://%s/l_ipp_2017.0.098.tgz" % os.getcwd())
-    version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
-            url="file://%s/l_ipp_9.0.3.210.tgz" % os.getcwd())
+    conflicts('^conflict~foo', when='@0.9')
 
     def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")
 
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
-
-        ipp_dir = os.path.join(self.intel_prefix, "ipp")
-        for f in os.listdir(ipp_dir):
-            os.symlink(os.path.join(ipp_dir, f), os.path.join(self.prefix, f))
+    def setup_environment(self, senv, renv):
+        renv.set('FOOBAR', self.name)

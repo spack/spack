@@ -32,7 +32,7 @@ class QtCreator(Package):
     url      = 'http://download.qt.io/official_releases/qtcreator/4.1/4.1.0/qt-creator-opensource-src-4.1.0.tar.gz'
 
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
-    list_depth = 3
+    list_depth = 2
 
     version('4.1.0',  '657727e4209befa4bf5889dff62d9e0a')
 

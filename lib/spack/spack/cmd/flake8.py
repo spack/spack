@@ -129,7 +129,7 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                line += ("  # NOQA: ignore=%d" % code)
+                                line += ("  # NOQA: E%d" % code)
                                 break
 
                 oline = line + '\n'
