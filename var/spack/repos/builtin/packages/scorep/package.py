@@ -32,14 +32,11 @@ class Scorep(Package):
     """
 
     homepage = "http://www.vi-hps.org/projects/score-p"
-    url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-1.2.3.tar.gz"
+    url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz"
 
-    version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888',
-            url='http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz')
-    version('1.4.2', '3b9a042b13bdd5836452354e6567f71e',
-            url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.4.2.tar.gz')
-    version('1.3', '9db6f957b7f51fa01377a9537867a55c',
-            url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.3.tar.gz')
+    version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
+    version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
+    version('1.3',   '9db6f957b7f51fa01377a9537867a55c')
 
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more

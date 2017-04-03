@@ -45,10 +45,10 @@ class Jdk(Package):
         '-H',  # specify required License Agreement cookie
         'Cookie: oraclelicense=accept-securebackup-cookie']
 
-    version('8u66-linux-x64', '88f31f3d642c3287134297b8c10e61bf',
+    version('8u66', '88f31f3d642c3287134297b8c10e61bf',
             url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz",
             curl_options=curl_options)
-    version('8u92-linux-x64', '65a1cc17ea362453a6e0eb4f13be76e4',
+    version('8u92', '65a1cc17ea362453a6e0eb4f13be76e4',
             url="http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.tar.gz",
             curl_options=curl_options)
 

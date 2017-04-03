@@ -36,6 +36,7 @@ class Cryptopp(Package):
     """
 
     homepage = "http://www.cryptopp.com"
+    url      = "http://www.cryptopp.com/cryptopp563.zip"
 
     version('5.6.3', '3c5b70e2ec98b7a24988734446242d07')
     version('5.6.2', '7ed022585698df48e65ce9218f6c6a67')
