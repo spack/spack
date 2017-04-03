@@ -89,10 +89,6 @@ class Go(Package):
             r'# \1\2\3',
         )
 
-    @when('@1.5.0:')
-    def patch(self):
-        pass
-
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('src'):

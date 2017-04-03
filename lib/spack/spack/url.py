@@ -151,6 +151,7 @@ def strip_version_suffixes(path):
         '[Ff]inal',
         'rel',
         'orig',
+        'dist',
         '\+',
 
         # License
@@ -176,8 +177,9 @@ def strip_version_suffixes(path):
         '[Oo][Ss][Xx]',
         '[Dd]arwin(64)?',
         '[Aa]pple',
-        '[Ww]in[64|32]?',
-        '[Cc]ygwin[64|32]?',
+        '[Ww]indows',
+        '[Ww]in(64|32)?',
+        '[Cc]ygwin(64|32)?',
         '[Mm]ingw',
 
         # Arch
