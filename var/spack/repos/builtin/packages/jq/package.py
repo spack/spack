@@ -34,3 +34,4 @@ class Jq(AutotoolsPackage):
     version('1.5', 'c8070bd6ec275404f77db3d2e568c9a3')
 
     depends_on('oniguruma')
+    depends_on('bison@3.0:', type='build')
