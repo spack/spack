@@ -39,8 +39,3 @@ class Htop(AutotoolsPackage):
 
     def configure_args(self):
         return ['--enable-shared']
-
-    @run_after('configure')
-    def patch_makefile(self):
-        # See https://github.com/hishamhm/htop/issues/198
-        filter_file('^(LIBS = .*)', r'\1 -ltinfo', 'Makefile')
