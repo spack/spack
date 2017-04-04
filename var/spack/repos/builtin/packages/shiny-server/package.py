@@ -35,9 +35,9 @@ class ShinyServer(Package):
 
     version('1.5.3.838', '96f20fdcdd94c9e9bb851baccb82b97f')
 
-    depends_on('python@2.7.13') # docs say: "Really.  3.x will not work"
+    # Docs say that it requires 'gcc'.
+    depends_on('python@2.9.99')  # docs say: "Really.  3.x will not work"
     depends_on('cmake@2.8.10:')
-    # depends_on('gcc@5.4.0')
     depends_on('git')
     depends_on('r+X')
     depends_on('openssl')
@@ -46,7 +46,7 @@ class ShinyServer(Package):
         with working_dir('spack-build', create=True):
             bash = which('bash')
             cmake('..',
-                  "-DPYTHON=%s" % join_path(spec['python'].prefix.bin, 
+                  "-DPYTHON=%s" % join_path(spec['python'].prefix.bin,
                                             'python'),
                   *std_cmake_args)
             make()
@@ -60,5 +60,5 @@ class ShinyServer(Package):
                              join_path(self.prefix, 'shiny-server', 'bin'))
         # shiny comes with its own pandoc; hook it up...
         run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'shiny-server', 
+                             join_path(self.prefix, 'shiny-server',
                                        'ext', 'pandoc', 'static'))
