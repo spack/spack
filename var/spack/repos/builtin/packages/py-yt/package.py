@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
 from spack import *
 
 
@@ -76,7 +75,7 @@ class PyYt(PythonPackage):
     def prep_yt(self):
         if '+rockstar' in self.spec:
             with open('rockstar.cfg', 'w') as rockstar_cfg:
-                rockstar_cfg.write(self.spec.get_dependency('rockstar').spec.prefix)
+                rockstar_cfg.write(self.spec['rockstar'].prefix)
 
     @run_after('install')
     def check_install(self):
