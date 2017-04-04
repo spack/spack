@@ -363,9 +363,9 @@ function _spack_find {
     if $list_options
     then
         compgen -W "-h --help -s --short -p --paths -d --deps -l --long
-                    -L --very-long -f --show-flags -e --explicit
-                    -E --implicit -u --unknown -m --missing -v --variants
-                    -M --only-missing -N --namespace" -- "$cur"
+                    -L --very-long -f --show-flags -F --show-full-compiler
+                    -e --explicit -E --implicit -u --unknown -m --missing
+                    -v --variants -M --only-missing -N --namespace" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
