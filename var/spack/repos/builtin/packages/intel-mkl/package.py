@@ -29,26 +29,18 @@ from spack.pkg.builtin.intel import IntelInstaller
 
 
 class IntelMkl(IntelInstaller):
-    """Intel Math Kernel Library.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
-
-    To set the threading layer at run time set MKL_THREADING_LAYER
-    variable to one of the following values: INTEL (default), SEQUENTIAL, PGI.
-    To set interface layer at run time, use set the MKL_INTERFACE_LAYER
-    variable to LP64 (default) or ILP64.
-    """
+    """Intel Math Kernel Library."""
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2017.2.174', 'ef39a12dcbffe5f4a0ef141b8759208c',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11306/l_mkl_2017.2.174.tgz")
     version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
-            url="file://%s/l_mkl_2017.0.098.tgz" % os.getcwd())
-    version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
-            url="file://%s/l_mkl_11.3.2.181.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9662/l_mkl_2017.0.098.tgz")
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
-            url="file://%s/l_mkl_11.3.3.210.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9068/l_mkl_11.3.3.210.tgz")
+    version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8711/l_mkl_11.3.2.181.tgz")
 
     variant('shared', default=True, description='Builds shared library')
     variant('ilp64', default=False, description='64 bit integers')
