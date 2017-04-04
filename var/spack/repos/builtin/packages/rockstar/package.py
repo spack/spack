@@ -28,7 +28,7 @@ import shutil
 from spack import *
 from distutils.dir_util import copy_tree
 
-class Rockstar(Package):
+class Rockstar(MakefilePackage):
     """The Rockstar Halo Finder"""
 
     homepage = "https://bitbucket.org/gfcstanford/rockstar"
@@ -43,21 +43,22 @@ class Rockstar(Package):
 
     depends_on('hdf5', when='+hdf5')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         # Set environment appropriately for HDF5
         if '+hdf5' in spec:
             os.environ['HDF5_INC_DIR'] = spec.get_dependency('hdf5').spec.prefix+"/include"
             os.environ['HDF5_LIB_DIR'] = spec.get_dependency('hdf5').spec.prefix+"/lib"
 
-	# Build depending on whether hdf5 is to be used
+        # Build depending on whether hdf5 is to be used
         if '+hdf5' in spec:
             make('with_hdf5')
         else:
             make()
 
-	# Build rockstar library
+        # Build rockstar library
         make('lib')
 
+    def install(self, spec, prefix):
         # Install all files and directories
         copy_tree(".", prefix)
 
