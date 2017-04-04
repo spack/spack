@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
+import shutil
 
 
 class Cppcheck(Package):
@@ -35,7 +37,8 @@ class Cppcheck(Package):
 
     def install(self, spec, prefix):
         # cppcheck does not have a configure script
-        make()
+        make("CFGDIR=%s" % os.path.join(prefix, 'cfg'))
         # manually install the final cppcheck binary
         mkdirp(prefix.bin)
         install('cppcheck', prefix.bin)
+        shutil.copytree('cfg', os.path.join(prefix, 'cfg'))
