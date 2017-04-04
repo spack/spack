@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from shutil import copyfile
 import os.path
 
 
@@ -30,7 +31,7 @@ class Tinyxml(CMakePackage):
     """Simple, small, efficient, C++ XML parser"""
 
     homepage = "http://grinninglizard.com/tinyxml/"
-    url = "https://sourceforge.net/projects/tinyxml/files/tinyxml/2.6.2/tinyxml_2_6_2.tar.gz"
+    url = "https://downloads.sourceforge.net/project/tinyxml/tinyxml/2.6.2/tinyxml_2_6_2.tar.gz"
 
     version('2.6.2', 'cba3f50dd657cb1434674a03b21394df9913d764')
 
