@@ -589,8 +589,8 @@ function _spack_providers {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "blas daal elf golang ipp lapack mkl
-                    mpe mpi openfoam pil scalapack" -- "$cur"
+        compgen -W "awk blas daal elf golang ipp lapack mkl
+                    mpe mpi opencl openfoam pil scalapack" -- "$cur"
     fi
 }
 
@@ -732,20 +732,21 @@ function _spack_url {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "list parse test" -- "$cur"
+        compgen -W "list parse summary" -- "$cur"
     fi
 }
 
 function _spack_url_list {
-    compgen -W "-h --help -c --color -e --extrapolation -n --incorrect-name
-                -v --incorrect-version" -- "$cur"
+    compgen -W "-h --help -c --color -e --extrapolation
+                -n --incorrect-name -N --correct-name
+                -v --incorrect-version -V --correct-version" -- "$cur"
 }
 
 function _spack_url_parse {
     compgen -W "-h --help -s --spider" -- "$cur"
 }
 
-function _spack_url_test {
+function _spack_url_summary {
     compgen -W "-h --help" -- "$cur"
 }
 

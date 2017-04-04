@@ -61,7 +61,7 @@ class Openmpi(AutotoolsPackage):
     homepage = "http://www.open-mpi.org"
     url = "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
-    list_depth = 3
+    list_depth = 2
 
     version('2.1.0', '4838a5973115c44e14442c01d3f21d52')
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')

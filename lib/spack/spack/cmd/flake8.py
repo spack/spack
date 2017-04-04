@@ -70,7 +70,7 @@ exemptions = {
     # exemptions applied to all files.
     r'.py$': {
         # Exempt lines with URLs from overlong line errors.
-        501: [r'(https?|file)\:']
+        501: [r'(https?|ftp|file)\:']
     },
 }
 
@@ -129,7 +129,7 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                line += ("  # NOQA: ignore=%d" % code)
+                                line += ("  # NOQA: E%d" % code)
                                 break
 
                 oline = line + '\n'
