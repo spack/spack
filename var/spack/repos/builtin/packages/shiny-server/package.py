@@ -30,12 +30,20 @@ class ShinyServer(Package):
        documents online. Take your shiny apps and share them with your
        organization or the world."""
 
+    #
+    # HEADS UP:
+    # 1. The shiny server installation step will download various node
+    #    and npm bits from the net.  They seem to have them well
+    #    constrained ("npm shrinkwrap"?), but this package is not
+    #    "air gappable".
+    # 2. Docs say that it requires 'gcc'.  depends_on() won't do the
+    #    right thing, it's Up To You.
+    #
     homepage = "https://www.rstudio.com/products/shiny/shiny-server/"
     url = "https://github.com/rstudio/shiny-server/archive/v1.5.3.838.tar.gz"
 
     version('1.5.3.838', '96f20fdcdd94c9e9bb851baccb82b97f')
 
-    # Docs say that it requires 'gcc'.
     depends_on('python@2.9.99')  # docs say: "Really.  3.x will not work"
     depends_on('cmake@2.8.10:')
     depends_on('git')
