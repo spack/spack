@@ -1803,7 +1803,7 @@ class Spec(object):
                     " for {0}".format(self.name))
         required_for_build = set(link_deps.itervalues())
         required_for_build.update(
-            spec for (name, spec) in self.build_only_deps.iteritems()
+            spec for (name, spec) in iteritems(self.build_only_deps)
             if name not in common)
         return required_for_build
 
@@ -2463,7 +2463,7 @@ class Spec(object):
         self.external_module = other.external_module
         self.namespace = other.namespace
         self.build_only_deps = dict(
-            (x, y.copy()) for (x, y) in other.build_only_deps.iteritems())
+            (x, y.copy()) for (x, y) in iteritems(other.build_only_deps))
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
