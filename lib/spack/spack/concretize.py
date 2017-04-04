@@ -222,15 +222,19 @@ class DefaultConcretizer(object):
             spec.architecture = spack.spec.ArchSpec(sys_arch)
             spec_changed = True
 
-        default_archs = [root_arch, sys_arch]
-        while not spec.architecture.concrete and default_archs:
-            arch = default_archs.pop(0)
+        default_archs = list(x for x in [root_arch, sys_arch] if x)
+        for arch in default_archs:
+            if spec.architecture.concrete:
+                break
 
             replacement_fields = [k for k, v in iteritems(arch.to_cmp_dict())
                                   if v and not getattr(spec.architecture, k)]
             for field in replacement_fields:
                 setattr(spec.architecture, field, getattr(arch, field))
                 spec_changed = True
+
+        if not spec.architecture.concrete:
+            raise InsufficientArchitectureInfoError(spec, default_archs)
 
         return spec_changed
 
@@ -464,6 +468,17 @@ class NoValidVersionError(spack.error.SpackError):
         super(NoValidVersionError, self).__init__(
             "There are no valid versions for %s that match '%s'"
             % (spec.name, spec.versions))
+
+
+class InsufficientArchitectureInfoError(spack.error.SpackError):
+
+    """Raised when details on architecture cannot be collected from the
+       system"""
+
+    def __init__(self, spec, archs):
+        super(InsufficientArchitectureInfoError, self).__init__(
+            "Cannot determine necessary architecture information for '%s': %s"
+            % (spec.name, str(archs)))
 
 
 class NoBuildError(spack.error.SpackError):
