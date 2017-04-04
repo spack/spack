@@ -22,26 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Cddlib(AutotoolsPackage):
-    """The C-library cddlib is a C implementation of the Double Description
-    Method of Motzkin et al. for generating all vertices (i.e. extreme points)
-    and extreme rays of a general convex polyhedron in R^d given by a system
-    of linear inequalities"""
+class Libpfm4(MakefilePackage):
+    """libpfm4 is a userspace library to help
+     setup performance events for use with
+     the perf_events Linux kernel interface."""
 
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
-    url      = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-094h.tar.gz"
+    homepage = "http://perfmon2.sourceforge.net"
+    url      = "https://downloads.sourceforge.net/project/perfmon2/libpfm4/libpfm-4.8.0.tar.gz"
 
-    version('0.94h', '1467d270860bbcb26d3ebae424690e7c')
+    version('4.8.0', '730383896db92e12fb2cc10f2d41dd43')
 
-    # Note: It should be possible to build cddlib also without gmp
+    # Fails to build libpfm4 with intel compiler version 16 and 17
+    conflicts('%intel@16:17')
 
-    depends_on("gmp")
-    depends_on("libtool", type="build")
-
-    def url_for_version(self, version):
-        url = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-{0}.tar.gz"
-        return url.format(version.joined)
+    @property
+    def install_targets(self):
+        return ['DESTDIR={0}'.format(self.prefix),
+                'LIBDIR=/lib',
+                'INCDIR=/include',
+                'MANDIR=/man',
+                'LDCONFIG=true',
+                'install']

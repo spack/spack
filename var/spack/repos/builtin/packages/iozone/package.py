@@ -22,26 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Cddlib(AutotoolsPackage):
-    """The C-library cddlib is a C implementation of the Double Description
-    Method of Motzkin et al. for generating all vertices (i.e. extreme points)
-    and extreme rays of a general convex polyhedron in R^d given by a system
-    of linear inequalities"""
+class Iozone(MakefilePackage):
+    """IOzone is a filesystem benchmark tool. The benchmark generates and
+    measures a variety of file operations. Iozone has been ported to many
+    machines and runs under many operating systems."""
 
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
-    url      = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-094h.tar.gz"
+    homepage = "http://www.iozone.org/"
+    url      = "http://www.iozone.org/src/current/iozone3_465.tar"
 
-    version('0.94h', '1467d270860bbcb26d3ebae424690e7c')
+    version('3_465', 'c924e5e46fb1cf8145f420e8e57eb954')
 
-    # Note: It should be possible to build cddlib also without gmp
+    # TODO: Add support for other architectures as necessary
+    build_targets = ['linux-AMD64']
 
-    depends_on("gmp")
-    depends_on("libtool", type="build")
+    build_directory = 'src/current'
 
-    def url_for_version(self, version):
-        url = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-{0}.tar.gz"
-        return url.format(version.joined)
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            filter_file(r'^CC\t= cc',
+                        r'CC\t= {0}'.format(spack_cc),
+                        'makefile')
+
+    def install(self, spec, prefix):
+        install_tree('docs', join_path(prefix, 'docs'))
+
+        with working_dir(self.build_directory):
+            install_tree('.', prefix.bin)

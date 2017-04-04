@@ -194,35 +194,6 @@ class Version(object):
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
 
-    def wildcard(self):
-        """Create a regex that will match variants of this version string."""
-        def a_or_n(seg):
-            if type(seg) == int:
-                return r'[0-9]+'
-            else:
-                return r'[a-zA-Z]+'
-
-        version = self.version
-
-        # Use a wildcard for separators, in case a version is written
-        # two different ways (e.g., boost writes 1_55_0 and 1.55.0)
-        sep_re = '[_.-]'
-        separators = ('',) + (sep_re,) * len(self.separators)
-
-        version += (version[-1],) * 2
-        separators += (sep_re,) * 2
-
-        segments = [a_or_n(seg) for seg in version]
-
-        wc = segments[0]
-        for i in range(1, len(separators)):
-            wc += '(?:' + separators[i] + segments[i]
-
-        # Add possible alpha or beta indicator at the end of each segemnt
-        # We treat these specially b/c they're so common.
-        wc += '(?:[a-z]|alpha|beta)?)?' * (len(segments) - 1)
-        return wc
-
     def __iter__(self):
         return iter(self.version)
 

@@ -268,6 +268,14 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         # part, not the full path.
         url_regex = os.path.basename(url_regex)
 
+        # We need to add a / to the beginning of the regex to prevent
+        # Spack from picking up similarly named packages like:
+        #   https://cran.r-project.org/src/contrib/pls_2.6-0.tar.gz
+        #   https://cran.r-project.org/src/contrib/enpls_5.7.tar.gz
+        #   https://cran.r-project.org/src/contrib/autopls_1.3.tar.gz
+        #   https://cran.r-project.org/src/contrib/matrixpls_1.0.4.tar.gz
+        url_regex = '/' + url_regex
+
         # We need to add a $ anchor to the end of the regex to prevent
         # Spack from picking up signature files like:
         #   .asc
@@ -275,7 +283,9 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        regexes.append(url_regex + '(\/download)?$')
+        url_regex += '(\/download)?$'
+
+        regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
     versions = {}
