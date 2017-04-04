@@ -251,14 +251,14 @@ class TestConcretize(object):
         assert Spec('builtin.mock.multi-provider-mpi@1.8.8') in providers
 
     def test_different_compilers_get_different_flags(self):
-        client = Spec('cmake-client %gcc@4.7.2 platform=test os=fe target=fe' +
-                      ' ^cmake %clang@3.5 platform=test os=fe target=fe')
-        client.concretize()
-        cmake = client['cmake']
-        assert set(client.compiler_flags['cflags']) == set(['-O0'])
-        assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
-        assert set(client.compiler_flags['fflags']) == set(['-O0'])
-        assert not set(cmake.compiler_flags['fflags'])
+        top = Spec('dttop %gcc@4.7.2 platform=test os=fe target=fe' +
+                   ' ^dtlink1 %clang@3.5 platform=test os=fe target=fe')
+        top.concretize()
+        dep = top['dtlink1']
+        assert set(top.compiler_flags['cflags']) == set(['-O0'])
+        assert set(dep.compiler_flags['cflags']) == set(['-O3'])
+        assert set(top.compiler_flags['fflags']) == set(['-O0'])
+        assert not set(dep.compiler_flags['fflags'])
 
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
