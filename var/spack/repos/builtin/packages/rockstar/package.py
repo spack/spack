@@ -36,7 +36,7 @@ class Rockstar(Package):
     version('develop', git='https://bitbucket.org/gfcstanford/rockstar.git')
     version('yt', hg='https://bitbucket.org/MatthewTurk/rockstar')
 
-    variant('hdf5', description='Build rockstar with HDF5 support')
+    variant('hdf5', description='Build rockstar with HDF5 support', default=False)
 
     patch('adjust_buildscript.patch')
 
