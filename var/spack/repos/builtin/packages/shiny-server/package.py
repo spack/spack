@@ -60,11 +60,11 @@ class ShinyServer(CMakePackage):
 
         return options
 
+    # Recompile the npm modules included in the project
     @run_after('build')
-    def build_node(self):  # or whatever you want to call it
+    def build_node(self):
         bash = which('bash')
-        mkdirp('../build')
-        # maybe add a comment/docstring explaining what this does/is for?
+        mkdirp('build')
         bash('-c', 'bin/npm --python="$PYTHON" install')
         bash('-c', 'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqa: E501
 
