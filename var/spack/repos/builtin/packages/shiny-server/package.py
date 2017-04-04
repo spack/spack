@@ -25,7 +25,7 @@
 from spack import *
 
 
-class ShinyServer(Package):
+class ShinyServer(CMakePackage):
     """Shiny server lets you put shiny web applications and interactive
        documents online. Take your shiny apps and share them with your
        organization or the world."""
@@ -44,24 +44,29 @@ class ShinyServer(Package):
 
     version('1.5.3.838', '96f20fdcdd94c9e9bb851baccb82b97f')
 
-    depends_on('python@2.9.99')  # docs say: "Really.  3.x will not work"
+    depends_on('python@:2.9.99')  # docs say: "Really.  3.x will not work"
     depends_on('cmake@2.8.10:')
     depends_on('git')
     depends_on('r+X')
     depends_on('openssl')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            bash = which('bash')
-            cmake('..',
-                  "-DPYTHON=%s" % join_path(spec['python'].prefix.bin,
-                                            'python'),
-                  *std_cmake_args)
-            make()
-            mkdirp('../build')
-            bash('-c', 'cd .. && ./bin/npm --python="$PYTHON" install')
-            bash('-c', 'cd .. && ./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqa: E501
-            make("install")
+    def cmake_args(self):
+        spec = self.spec
+        options = []
+
+        options.extend([
+            "-DPYTHON=%s" % join_path(spec['python'].prefix.bin, 'python'),
+        ])
+
+        return options
+
+    @run_after('build')
+    def build_node(self):  # or whatever you want to call it
+        bash = which('bash')
+        mkdirp('../build')
+        # maybe add a comment/docstring explaining what this does/is for?
+        bash('-c', 'bin/npm --python="$PYTHON" install')
+        bash('-c', 'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqab: E501
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH',
