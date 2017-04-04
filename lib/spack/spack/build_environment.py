@@ -59,6 +59,7 @@ import shutil
 import sys
 import traceback
 from six import iteritems
+from six import itervalues
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -493,7 +494,7 @@ def setup_package(pkg, dirty=False):
     for s in pkg.spec.traverse():
         s.package.spec = s
 
-    for dep in spack.spec.traverse_each(pkg.spec.build_only_deps.itervalues()):
+    for dep in spack.spec.traverse_each(itervalues(pkg.spec.build_only_deps)):
         dep.package.spec = dep
 
     set_compiler_environment_variables(pkg, spack_env)
@@ -531,7 +532,7 @@ def deps_to_set_up(spec):
     from_build_deps = spack.spec.traverse_each(
         itertools.chain(
             spec.dependencies(deptype='build'),
-            spec.build_only_deps.itervalues()),
+            itervalues(spec.build_only_deps)),
         deptype='run', order='post')
 
     return from_build_deps

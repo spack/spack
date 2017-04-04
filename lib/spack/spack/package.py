@@ -46,6 +46,7 @@ import time
 from six import StringIO
 from six import string_types
 from six import with_metaclass
+from six import itervalues
 
 import llnl.util.lock
 import llnl.util.tty as tty
@@ -1198,7 +1199,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if install_deps:
             for dep in itertools.chain(
                     self.spec.dependencies(),
-                    self.spec.build_only_deps.itervalues()):
+                    itervalues(self.spec.build_only_deps)):
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,

@@ -105,6 +105,7 @@ from operator import attrgetter
 from six import StringIO
 from six import string_types
 from six import iteritems
+from six import itervalues
 
 import spack
 import spack.architecture
@@ -1775,7 +1776,7 @@ class Spec(object):
         transitive_build = set(traverse_each(
             self.dependencies(deptype='build'), deptype='run'))
         transitive_build_only = set(traverse_each(
-            self.build_only_deps.itervalues(), deptype='run'))
+            itervalues(self.build_only_deps), deptype='run'))
         transitive_build = dict((s.name, s) for s in transitive_build)
         transitive_build_only = dict(
             (s.name, s) for s in transitive_build_only)
@@ -1785,8 +1786,8 @@ class Spec(object):
                 raise SpecError(
                     "Separate concretization of {0}".format(name) +
                     " produced build-time conflict")
-        required_for_build = set(transitive_build.itervalues())
-        required_for_build.update(s for s in transitive_build_only.itervalues()
+        required_for_build = set(itervalues(transitive_build))
+        required_for_build.update(s for s in itervalues(transitive_build_only)
                                   if s.name not in common)
         return required_for_build
 
@@ -1801,7 +1802,7 @@ class Spec(object):
                     "Separate concretization of {0}".format(name) +
                     " produced build-time conflict for PKG_CONFIG_PATH" +
                     " for {0}".format(self.name))
-        required_for_build = set(link_deps.itervalues())
+        required_for_build = set(itervalues(link_deps))
         required_for_build.update(
             spec for (name, spec) in iteritems(self.build_only_deps)
             if name not in common)
@@ -2950,7 +2951,7 @@ class Spec(object):
 
             child_args['base_depth'] = d + 1
             child_args['build_only_dep'] = True
-            for build_dep in node.build_only_deps.itervalues():
+            for build_dep in itervalues(node.build_only_deps):
                 out += build_dep.tree(**child_args)
         return out
 

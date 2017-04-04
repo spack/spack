@@ -80,7 +80,7 @@ def test_install_and_uninstall(mock_archive):
 def set_mock_fetcher(spec, url):
     for s in spec.traverse():
         fake_fetchify(url, s.package)
-        for build_dep in s.build_only_deps.itervalues():
+        for build_dep in s.build_only_deps.values():
             fake_fetchify(url, build_dep.package)
 
 
