@@ -30,6 +30,7 @@ class Cppcheck(Package):
     homepage = "http://cppcheck.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.68/cppcheck-1.68.tar.bz2"
 
+    version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
     version('1.68', 'c015195f5d61a542f350269030150708')
 
     def install(self, spec, prefix):
