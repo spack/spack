@@ -32,4 +32,4 @@ class PyPycparser(PythonPackage):
 
     version('2.13', 'e4fe1a2d341b22e25da0d22f034ef32f')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

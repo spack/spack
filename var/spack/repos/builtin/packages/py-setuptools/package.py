@@ -51,7 +51,7 @@ class PySetuptools(PythonPackage):
 
     # FIXME: when we use 2.6:2.7, spack spec llvm tries to install non-existing
     # python@2.7 instead of python@2.7.13
-    depends_on('python@2.6:2.7.99,3.3:')
+    depends_on('python@2.6:2.7.99,3.3:', type=('build', 'link', 'run'))
 
     # Previously, setuptools vendored all of its dependencies to allow
     # easy bootstrapping. As of version 34.0.0, this is no longer done
