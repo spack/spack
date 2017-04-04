@@ -26,6 +26,7 @@
 import os
 import shutil
 from spack import *
+from distutils.dir_util import copy_tree
 
 class Rockstar(Package):
     """The Rockstar Halo Finder"""
@@ -58,10 +59,10 @@ class Rockstar(Package):
         make('lib')
 
         # Install all files and directories
-        shutil.copytree(".", prefix)
+        copy_tree(".", prefix)
 
-        mkdir(join_path(prefix.bin))
-        mkdir(join_path(prefix.lib))
+        mkdir(prefix.bin)
+        mkdir(prefix.lib)
 
         install('rockstar', join_path(prefix.bin, 'rockstar'))
         install('librockstar.so', join_path(prefix.lib, 'librockstar.so'))
