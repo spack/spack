@@ -39,7 +39,7 @@ class ShinyServer(Package):
     depends_on('cmake@2.8.10:')
     # depends_on('gcc@5.4.0')
     depends_on('git')
-    depends_on('r')
+    depends_on('r+X')
     depends_on('openssl')
 
     def install(self, spec, prefix):
