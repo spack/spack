@@ -28,7 +28,7 @@ import shutil
 from spack import *
 
 class Rockstar(Package):
-    """Description"""
+    """The Rockstar Halo Finder"""
 
     homepage = "https://bitbucket.org/gfcstanford/rockstar"
     url      = "https://bitbucket.org/gfcstanford/rockstar"
