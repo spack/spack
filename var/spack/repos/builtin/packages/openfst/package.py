@@ -45,5 +45,5 @@ class Openfst(AutotoolsPackage):
     version('1.4.1',  'ca8f1730b9b9b281e515611fa9ae23c0')
     version('1.4.0',  '662367ec91084ffab48ee9b5716de39c')
 
-    conflicts('%intel@16:')
-    conflicts('%gcc@6:')
+    conflicts('intel@16:')
+    conflicts('gcc@6:')
