@@ -2248,7 +2248,7 @@ class Spec(object):
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             deps_strict = strict
-            if self.concrete and not other.name:
+            if self._concrete and not other.name:
                 # We're dealing with existing specs
                 deps_strict = True
             return self.satisfies_dependencies(other, strict=deps_strict)
