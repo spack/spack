@@ -66,7 +66,7 @@ class ShinyServer(CMakePackage):
         mkdirp('../build')
         # maybe add a comment/docstring explaining what this does/is for?
         bash('-c', 'bin/npm --python="$PYTHON" install')
-        bash('-c', 'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqab: E501
+        bash('-c', 'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqa: E501
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH',
