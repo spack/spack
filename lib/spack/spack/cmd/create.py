@@ -229,7 +229,7 @@ class PythonPackageTemplate(PackageTemplate):
     body = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete the function
+        # FIXME: If not needed delete this function
         args = []
         return args"""
 
@@ -271,15 +271,14 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on('perl-foo')"""
+    # depends_on('perl-foo', type=('build', 'run'))"""
 
     body = """\
-    # FIXME: If non-standard arguments are used for configure step:
-    # def configure_args(self):
-    #     return ['my', 'configure', 'args']
-
-    # FIXME: in unusual cases, it may be necessary to override methods for
-    #        configure(), build(), check() or install()."""
+    def configure_args(self):
+        # FIXME: Add non-standard arguments
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
@@ -298,7 +297,7 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on('perl-module-build', type='build')
 
     # FIXME: Add additional dependencies if required:
-    # depends_on('perl-foo')"""
+    # depends_on('perl-foo', type=('build', 'run'))"""
 
 
 class OctavePackageTemplate(PackageTemplate):
