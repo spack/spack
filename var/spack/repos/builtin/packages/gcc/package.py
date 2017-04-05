@@ -68,6 +68,7 @@ class Gcc(AutotoolsPackage):
     depends_on("mpc", when='@4.5:')
     depends_on("isl", when='@5.0:')
     depends_on("binutils~libiberty", when='+binutils')
+    depends_on("zip", type='build')
 
     # TODO: integrate these libraries.
     # depends_on("ppl")
