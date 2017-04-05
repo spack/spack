@@ -58,6 +58,11 @@ class Ncl(Package):
     depends_on('netcdf')
     depends_on('cairo')
 
+    # Extra dependencies that may be missing from build system:
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('libiconv')
+
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
 
