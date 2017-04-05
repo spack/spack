@@ -1299,7 +1299,7 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
            instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$/')
+        return self.format('$_$@$%@$+$=')
 
     @property
     def cshort_spec(self):
@@ -2651,7 +2651,7 @@ class Spec(object):
                         write(fmt % str(self.variants), c)
                 elif c == '=':
                     if self.architecture and str(self.architecture):
-                        a_str = ' arch' + c + str(self.architecture) + ' '
+                        a_str = ' arch' + c + str(self.architecture)
                         write(fmt % (a_str), c)
                 elif c == '/':
                     out.write('/' + fmt % (self.dag_hash(7)))
@@ -2711,7 +2711,7 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture) + ' ', ' arch=')
+                        write(fmt % str(self.architecture),' arch=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -2727,7 +2727,7 @@ class Spec(object):
                         hashlen = int(hashlen)
                     else:
                         hashlen = None
-                    out.write('/' + fmt % (self.dag_hash(hashlen)))
+                    out.write(fmt % (self.dag_hash(hashlen)))
 
                 named = False
 

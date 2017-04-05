@@ -126,8 +126,8 @@ def load_module(mod):
     modulecmd implementation of modules used in cray and lmod.
     """
     # Create an executable of the module command that will output python code
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
+    modulecmd = which("modulecmd")
+    modulecmd.add_default_arg("python")
 
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
@@ -136,8 +136,8 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
+            exec(compile(modulecmd("unload", text[i + 1], output=str, 
+                error=str), "<string", "exec"))
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
@@ -148,8 +148,8 @@ def get_path_from_module(mod):
     at which the library supported by said module can be found.
     """
     # Create a modulecmd executable
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
+    modulecmd = which("modulecmd")
+    modulecmd.add_default_arg("python")
 
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
@@ -295,6 +295,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.unset('CPATH')
         env.unset('LD_RUN_PATH')
         env.unset('DYLD_LIBRARY_PATH')
+        env.unset("CRAY_LD_LIBRARY_PATH")
 
         # Remove any macports installs from the PATH.  The macports ld can
         # cause conflicts with the built-in linker on el capitan.  Solves

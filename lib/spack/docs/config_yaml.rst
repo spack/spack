@@ -42,6 +42,39 @@ or with braces to distinguish the variable from surrounding characters:
 The location where Spack will install packages and their dependencies.
 Default is ``$spack/opt/spack``.
 
+---------------------------------------------------
+``install_hash_length`` and ``install_path_scheme``
+---------------------------------------------------
+
+The default Spack package installation path can be difficult to
+comprehend and if very long can also create problems for scripts with
+hardcoded shebangs. There are two parameters to help with that. The
+``install_hash_length`` parameter can set the length of the hash in
+the installation path from 0 to 32. The default uses the full 32 characters.
+
+As well as the simple parameter for the installation hash length it is
+also possible to modify the entire installation scheme. By default
+Spack uses
+``${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}``
+where the tokens that are available for use in this directive are the
+same understood by the ``Spec.format`` method. Using this parameter it
+is possible to use a different package layout or reduce the depth of
+the installation paths. For example
+
+     .. code-block:: yaml
+
+       config:
+         install_path_scheme: '${PACKAGE}/${VERSION}/${HASH:7}'
+
+would install packages into sub-directories using only the package
+name, version and a hash length of 7 characters.
+
+When using either parameter to set the hash length it only affects the
+representation of the hash in the installation directory only. You
+should be aware that the smaller the hash length the more likely
+naming conflicts will occur. These parameters are independent of those
+used to configure module names.
+
 --------------------
 ``module_roots``
 --------------------
