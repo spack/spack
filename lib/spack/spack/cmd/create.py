@@ -141,10 +141,6 @@ class AutotoolsPackageTemplate(PackageTemplate):
 
     base_class_name = 'AutotoolsPackage'
 
-    dependencies = """\
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')"""
-
     body = """\
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
@@ -233,7 +229,7 @@ class PythonPackageTemplate(PackageTemplate):
     body = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete the function
+        # FIXME: If not needed delete this function
         args = []
         return args"""
 
@@ -275,16 +271,14 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on('perl-foo')
-    # depends_on('barbaz', type=('build', 'link', 'run'))"""
+    # depends_on('perl-foo', type=('build', 'run'))"""
 
     body = """\
-    # FIXME: If non-standard arguments are used for configure step:
-    # def configure_args(self):
-    #     return ['my', 'configure', 'args']
-
-    # FIXME: in unusual cases, it may be necessary to override methods for
-    #        configure(), build(), check() or install()."""
+    def configure_args(self):
+        # FIXME: Add non-standard arguments
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
@@ -303,8 +297,7 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on('perl-module-build', type='build')
 
     # FIXME: Add additional dependencies if required:
-    # depends_on('perl-foo')
-    # depends_on('barbaz', type=('build', 'link', 'run'))"""
+    # depends_on('perl-foo', type=('build', 'run'))"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -336,6 +329,19 @@ class OctavePackageTemplate(PackageTemplate):
         super(OctavePackageTemplate, self).__init__(name, *args)
 
 
+class MakefilePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Makefile packages"""
+
+    base_class_name = 'MakefilePackage'
+
+    body = """\
+    def edit(self, spec, prefix):
+        # FIXME: Edit the Makefile if necessary
+        # FIXME: If not needed delete this function
+        # makefile = FileFilter('Makefile')
+        # makefile.filter('CC = .*', 'CC = cc')"""
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
@@ -347,6 +353,7 @@ templates = {
     'perlmake':   PerlmakePackageTemplate,
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
+    'makefile':   MakefilePackageTemplate,
     'generic':    PackageTemplate
 }
 
@@ -401,16 +408,17 @@ class BuildSystemGuesser:
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
         clues = [
-            (r'/configure$',         'autotools'),
-            (r'/configure.(in|ac)$', 'autoreconf'),
-            (r'/Makefile.am$',       'autoreconf'),
-            (r'/CMakeLists.txt$',    'cmake'),
-            (r'/SConstruct$',        'scons'),
-            (r'/setup.py$',          'python'),
-            (r'/NAMESPACE$',         'r'),
-            (r'/WORKSPACE$',         'bazel'),
-            (r'/Build.PL$',          'perlbuild'),
-            (r'/Makefile.PL$',       'perlmake'),
+            ('/configure$',         'autotools'),
+            ('/configure.(in|ac)$', 'autoreconf'),
+            ('/Makefile.am$',       'autoreconf'),
+            ('/CMakeLists.txt$',    'cmake'),
+            ('/SConstruct$',        'scons'),
+            ('/setup.py$',          'python'),
+            ('/NAMESPACE$',         'r'),
+            ('/WORKSPACE$',         'bazel'),
+            ('/Build.PL$',          'perlbuild'),
+            ('/Makefile.PL$',       'perlmake'),
+            ('/(GNU)?[Mm]akefile$', 'makefile'),
         ]
 
         # Peek inside the compressed file.
@@ -465,6 +473,8 @@ def get_name(args):
             tty.die("Couldn't guess a name for this package.",
                     "  Please report this bug. In the meantime, try running:",
                     "  `spack create --name <name> <url>`")
+
+    name = simplify_name(name)
 
     if not valid_fully_qualified_module_name(name):
         tty.die("Package name can only contain a-z, 0-9, and '-'")
@@ -617,7 +627,6 @@ def create(parser, args):
     url = get_url(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
-    name = simplify_name(name)
 
     # Create the package template object
     PackageClass = templates[build_system]
