@@ -50,11 +50,13 @@ class Adios(AutotoolsPackage):
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mxml', default=True, description='Build using external (static) MXML library')
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
+    variant('bzip2', default=False, description='Enable bzip2 transform support')
     variant('szip', default=False, description='Enable szip transform support')
-    variant('zfp', default=False, description='Enable ZFP transform support')
+    variant('zfp', default=True, description='Use external ZFP library')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
 
@@ -69,19 +71,20 @@ class Adios(AutotoolsPackage):
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('mxml@2.9:')
+    depends_on('mxml@2.9:', when='+mxml', type='build')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('szip', when='+szip')
     depends_on('zfp@:0.5.0', when='+zfp')
+
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
 
     build_directory = 'spack-build'
 
     # ADIOS uses the absolute Python path, which is too long and results in
-    # "bad interpreter" errors
-    patch('python.patch')
+    # "bad interpreter" errors - but not applicable for 1.9.0
+    patch('python.patch', when='@1.10.0:')
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/LLNL/spack/issues/1683
@@ -106,9 +109,6 @@ class Adios(AutotoolsPackage):
         # required, otherwise building its python bindings on ADIOS will fail
         extra_args.append("CFLAGS=-fPIC")
 
-        # always build external MXML, even in ADIOS 1.10.0+
-        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
-
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
@@ -124,8 +124,12 @@ class Adios(AutotoolsPackage):
         else:
             extra_args.append('--disable-fortran')
 
+        if '+mxml' in spec:
+            extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
         if '+zlib' in spec:
             extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+        if '+bzip2' in spec:
+            extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix)
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+zfp' in spec:
