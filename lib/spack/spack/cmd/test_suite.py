@@ -42,6 +42,7 @@ import re
 import datetime
 import errno
 from spack.package import PackageStillNeededError
+from spack.util.executable import ProcessError
 
 description = "Installs packages, provides cdash output."
 
@@ -54,13 +55,13 @@ def setup_parser(subparser):
         help="Format to be used for log files."
     )
     subparser.add_argument(
-        '-s', '--site', action='store', dest='site',
+        '--site', action='store', dest='site',
         help='Location where testing occurred.')
     subparser.add_argument(
-        '-d', '--cdash', action='store', dest='cdash',
+        '--cdash', action='store', dest='cdash',
         help='URL to cdash.')
     subparser.add_argument(
-        '-p', '--project', action='store', dest='project',
+        '--project', action='store', dest='project',
         help='project name on cdash')
     subparser.add_argument(
         'yaml_files', nargs=argparse.REMAINDER,
@@ -141,26 +142,20 @@ def validate_section(data, schema):
 
 def uninstall_spec(spec):
     try:
-        spec.concretize()
         tty.msg("uninstalling... " + str(spec))
         pkg = spack.repo.get(spec)
         pkg.do_uninstall()
-        spec.package.do_uninstall(spec)
     except PackageStillNeededError as err:
         tty.msg(err)
         raise
-    return spec
 
 
 def install_spec(spec, cdash, site, path):
     try:
-        spec.concretize()
         tty.msg("installing... " + str(spec))
         parser = argparse.ArgumentParser()
         install.setup_parser(parser)
-        # use cdash-complete if you want configure, build and test output.
         args = parser.parse_args([cdash, site, path])
-        args.command = "install"
         args.package = str(spec).split()
         install.install(parser, args)
     except OSError as err:
@@ -169,7 +164,6 @@ def install_spec(spec, cdash, site, path):
     except InstallError as err:
         tty.error(err)
         raise
-    return spec
 
 
 def create_path():
@@ -219,6 +213,7 @@ def send_reports(dashboard, path):
                 response = requests.put(
                     dashboard,
                     data=mydata,
+                    verify=False,
                     headers={
                         'content-type': 'text/plain'},
                     params={
@@ -270,30 +265,32 @@ def test_suite(parser, args):
         for spec in test_contents['tests']:
             # uninstall all packages before installing.
             # This will reduce the number of skipped package installs.
-            if spack.store.db.query(spec):
-                tty.msg(spack.store.db.query(spec))
-                try:
-                    spec = uninstall_spec(spec)
-                except PackageStillNeededError as err:
-                    tty.error(err)
-                    pass
-                except:
-                    pass
             try:
-                spec = install_spec(spec, cdash, site, patharg)
+                tty.msg(spec)
+                spec.concretize()
+            except (AssertionError, ProcessError, OSError) as err:
+                tty.warn(err)
+                tty.warn('Concretize failed, moving on.')
+                continue
+            else:
+                if spack.store.db.query(spec):
+                    tty.msg(spack.store.db.query(spec))
+                    try:
+                        uninstall_spec(spec)
+                    except PackageStillNeededError as err:
+                        tty.warn(err)
+                        tty.warn('Package still needed, cant uninstall.')
+                        continue
+                    except (OSError, ValueError,
+                            AssertionError, InstallError) as err:
+                        tty.warn(err)
+                        pass
                 try:
-                    spec = uninstall_spec(spec)
-                except PackageStillNeededError as err:
-                    tty.error(err)
-                    pass
-                except:
-                    pass
-            except OSError as err:
-                tty.error(err)
-                pass
-            except InstallError as err:
-                tty.error(err)
-                pass
+                    install_spec(spec, cdash, site, patharg)
+                except (OSError, ValueError, AssertionError) as err:
+                    tty.warn(err)
+                    tty.warn('Install hit exception, moving on.')
+                    continue
         if 'project' in test_contents:
             project = test_contents['project']
         if args.cdash and args.project:
@@ -302,7 +299,7 @@ def test_suite(parser, args):
             url.append(args.cdash + submit + project)
         # shortcut URL + "/submit.php?project=" + project
         elif args.project:
-            if test_contents['cdash']:
+            if 'cdash' in test_contents:
                 for cdash in test_contents['cdash']:
                     url.append(cdash + submit + args.project)
             else:
@@ -383,6 +380,8 @@ class CombinatorialSpecSet:
                     tty.warn("Spack could not find " + str(compiler))
         elif ignore:
             compiler_version = tmp_compiler_ist
+        if not compiler_version:
+            tty.die("no valid compilers found.")
         # Packages
         if type(packages) == dict:
             for package in packages:

@@ -30,6 +30,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 from spack.hooks.dashboards import test_suites, dashboard_output
 from spack.package import PackageBase
+import os
 
 description = "build and install packages"
 section = "build"
@@ -83,6 +84,7 @@ the dependencies"""
         default=None,
         choices=test_suites.keys(),
         help="Format to be used for log files. Default is CDash."
+
     )
     subparser.add_argument(
         '--log-file',
@@ -132,7 +134,8 @@ def install(parser, args, **kwargs):
     if args.log_format or args.log_file:
         if not args.log_format:
             args.log_format = 'cdash-simple'
-
+        if not args.path:
+            args.path = os.getcwd()
         # Create the test suite in which to log results
         if "cdash" in args.log_format:
             test_suite = test_suites[args.log_format](
@@ -144,7 +147,6 @@ def install(parser, args, **kwargs):
         PackageBase.do_install = dashboard_output(
             spec, test_suite
         )(PackageBase.do_install)
-
     # Do the actual installation
     if args.things_to_install == 'dependencies':
         # Install dependencies as-if they were installed
