@@ -185,7 +185,7 @@ class Julia(Package):
             juliarc.write('\n')
 
         # Install some commonly used packages
-        julia = Executable(join_path(prefix.bin, "julia"))
+        julia = Executable(spec['julia'].executable)
         julia("-e", 'Pkg.init(); Pkg.update()')
 
         # Install HDF5

@@ -108,7 +108,7 @@ class Cosmomc(Package):
         else:
             wantmpi = 'BUILD=NOMPI'
             mpif90 = 'MPIF90C='
-        
+
         # Choose BLAS and LAPACK
         lapack = ("LAPACKL=%s" %
                   (spec['lapack'].libs + spec['blas'].libs).ld_flags)
@@ -178,7 +178,7 @@ class Cosmomc(Package):
         os.environ.pop('CLIKPATH', '')
         os.environ.pop('PLANCKLIKE', '')
 
-        exe = join_path(prefix.bin, 'cosmomc')
+        exe = spec['cosmomc'].executable
         args = []
         if '+mpi' in spec:
             # Add mpirun prefix

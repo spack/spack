@@ -118,7 +118,7 @@ class Go(Package):
         shutil.copytree('bin', os.path.join(prefix, '/bin'))
         """
         #  Add a go command/compiler for extensions
-        module.go = Executable(join_path(self.spec.prefix.bin, 'go'))
+        module.go = Executable(self.spec['go'].executable)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.environ.get('GOROOT', False):
