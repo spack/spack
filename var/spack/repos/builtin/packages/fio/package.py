@@ -23,22 +23,34 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
-class Cppcheck(Package):
-    """A tool for static C/C++ code analysis."""
-    homepage = "http://cppcheck.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.68/cppcheck-1.68.tar.bz2"
+class Fio(AutotoolsPackage):
+    """Flexible I/O Tester."""
 
-    version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
-    version('1.68', 'c015195f5d61a542f350269030150708')
+    homepage = "https://github.com/axboe/fio"
+    url      = "https://github.com/axboe/fio/archive/fio-2.19.tar.gz"
 
-    def install(self, spec, prefix):
-        # cppcheck does not have a configure script
-        make("CFGDIR=%s" % os.path.join(prefix, 'cfg'))
-        # manually install the final cppcheck binary
-        mkdirp(prefix.bin)
-        install('cppcheck', prefix.bin)
-        shutil.copytree('cfg', os.path.join(prefix, 'cfg'))
+    version('2.19', '67125b60210a4daa689a4626fc66c612')
+
+    variant('gui', default=False, description='Enable building of gtk gfio')
+    variant('doc', default=False, description='Generate documentation')
+
+    depends_on('gtkplus@2.18:', when='+gui')
+    depends_on('cairo',         when='+gui')
+
+    depends_on('py-sphinx', type='build', when='+doc')
+
+    def configure_args(self):
+        config_args = []
+
+        if '+gui' in self.spec:
+            config_args.append('--enable-gfio')
+
+        return config_args
+
+    @run_after('build')
+    def build_docs(self):
+        if '+doc' in self.spec:
+            make('-C', 'doc', 'html')
+            make('-C', 'doc', 'man')
