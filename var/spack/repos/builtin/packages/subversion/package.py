@@ -30,8 +30,10 @@ class Subversion(Package):
     homepage = 'https://subversion.apache.org/'
     url = 'http://archive.apache.org/dist/subversion/subversion-1.8.13.tar.gz'
 
-    version('1.8.13',    '8065b3698d799507fb72dd7926ed32b6')
+    version('1.9.5',     'ac9f8ee235f1b667dd6506864af8035aaedfc2d9')
     version('1.9.3',     'a92bcfaec4e5038f82c74a7b5bbd2f46')
+    version('1.8.17',    'd1f8d45f97168d6271c58c5b25421cc32954c81b')
+    version('1.8.13',    '8065b3698d799507fb72dd7926ed32b6')
 
     variant('perl', default=False, description='Build with Perl bindings')
 
