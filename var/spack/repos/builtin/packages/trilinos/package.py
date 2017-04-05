@@ -292,14 +292,15 @@ class Trilinos(CMakePackage):
 
         # mumps / scalapack
         if '+mumps' in spec:
+            scalapack = spec['scalapack'].libs
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 # order is important!
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord',
                 '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
-                # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
-                '-DSCALAPACK_LIBRARY_NAMES=scalapack'
+                '-DSCALAPACK_LIBRARY_NAMES=%s' % ';'.join(scalapack.names),
+                '-DSCALAPACK_LIBRARY_DIRS=%s' % ';'.join(scalapack.directories)
             ])
             # see
             # https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS
