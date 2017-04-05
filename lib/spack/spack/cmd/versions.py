@@ -53,6 +53,6 @@ def versions(parser, args):
             tty.debug("Check the list_url and list_depth attribute on the "
                       "package to help Spack find versions.")
         else:
-            print("  Found no unckecksummed versions for %s" % pkg.name)
+            print("  Found no unchecksummed versions for %s" % pkg.name)
     else:
         colify(sorted(remote_versions, reverse=True), indent=2)

@@ -23,30 +23,34 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-
-from spack.pkg.builtin.intel import IntelInstaller
 
 
-class Ipp(IntelInstaller):
-    """Intel Integrated Performance Primitives.
+class Fio(AutotoolsPackage):
+    """Flexible I/O Tester."""
 
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    homepage = "https://github.com/axboe/fio"
+    url      = "https://github.com/axboe/fio/archive/fio-2.19.tar.gz"
 
-    homepage = "https://software.intel.com/en-us/intel-ipp"
+    version('2.19', '67125b60210a4daa689a4626fc66c612')
 
-    version('2017.0.098', 'e7be757ebe351d9f9beed7efdc7b7118',
-            url="file://%s/l_ipp_2017.0.098.tgz" % os.getcwd())
-    version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
-            url="file://%s/l_ipp_9.0.3.210.tgz" % os.getcwd())
+    variant('gui', default=False, description='Enable building of gtk gfio')
+    variant('doc', default=False, description='Generate documentation')
 
-    def install(self, spec, prefix):
+    depends_on('gtkplus@2.18:', when='+gui')
+    depends_on('cairo',         when='+gui')
 
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
+    depends_on('py-sphinx', type='build', when='+doc')
 
-        ipp_dir = os.path.join(self.intel_prefix, "ipp")
-        for f in os.listdir(ipp_dir):
-            os.symlink(os.path.join(ipp_dir, f), os.path.join(self.prefix, f))
+    def configure_args(self):
+        config_args = []
+
+        if '+gui' in self.spec:
+            config_args.append('--enable-gfio')
+
+        return config_args
+
+    @run_after('build')
+    def build_docs(self):
+        if '+doc' in self.spec:
+            make('-C', 'doc', 'html')
+            make('-C', 'doc', 'man')

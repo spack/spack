@@ -39,13 +39,8 @@ from spack import *
 class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
-
     homepage = "http://blast.ncbi.nlm.nih.gov/"
     url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.6.0/ncbi-blast-2.6.0+-src.tar.gz"
-
-    def url_for_version(self, version):
-        url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/{0}/ncbi-blast-{0}+-src.tar.gz"
-        return url.format(version)
 
     version('2.6.0',  'c8ce8055b10c4d774d995f88c7cc6225')
     version('2.2.30', 'f8e9a5eb368173142fe6867208b73715')
