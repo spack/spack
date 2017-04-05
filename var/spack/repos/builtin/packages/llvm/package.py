@@ -340,12 +340,16 @@ class Llvm(Package):
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
-            cmake_args.append('-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF')
+            cmake_args.extend(['-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_TOOL_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_POLLY_LINK_INTO_TOOLS:Bool=OFF'])
 
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:
-            cmake_args.append('-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF')
+            cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF',
+                               '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
         if '+libcxx' not in spec:
