@@ -188,7 +188,7 @@ class TestCompilers(object):
 
     def test_create_tests_no_cdash(self):
         ts = test_suite.CombinatorialSpecSet("test.yaml")
-        test_output = ts.create_tests(self.yaml_file_no_cdash)
+        test_output = ts.create_tests(self.yaml_file_no_cdash, True)
         assert "cdash" not in test_output
 
     def test_return_valid_yaml_files(self):
