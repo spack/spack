@@ -37,8 +37,13 @@ class Libxpm(AutotoolsPackage):
     version('3.5.8', '2d81d6633e67ac5562e2fbee126b2897')
     version('3.5.7', '7bbc8f112f7143ed6961a58ce4e14558')
 
+    depends_on('gettext')
     depends_on('libx11')
 
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('LDFLAGS', '-L{0} -lintl'.format(
+            self.spec['gettext'].prefix.lib))
