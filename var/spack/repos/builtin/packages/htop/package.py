@@ -30,7 +30,12 @@ class Htop(AutotoolsPackage):
 
     homepage = "https://github.com/hishamhm/htop"
     url      = "https://hisham.hm/htop/releases/2.0.2/htop-2.0.2.tar.gz"
+    list_url = "https://hisham.hm/htop/releases"
+    list_depth = 1
 
     version('2.0.2', '7d354d904bad591a931ad57e99fea84a')
 
     depends_on('ncurses')
+
+    def configure_args(self):
+        return ['--enable-shared']

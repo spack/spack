@@ -36,3 +36,4 @@ class Htslib(AutotoolsPackage):
 
     depends_on('zlib')
     depends_on('bzip2', when="@1.4:")
+    depends_on('xz')
