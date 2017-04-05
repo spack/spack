@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree, mkpath
-from distutils.file_util import copy_file
 
 
 class Fastqc(Package):
@@ -41,15 +39,14 @@ class Fastqc(Package):
     patch('fastqc.patch', level=0)
 
     def install(self, spec, prefix):
-        mkpath(self.prefix.bin)
-        mkpath(self.prefix.lib)
-        copy_file('fastqc', self.prefix.bin)
+        mkdirp(self.prefix.bin)
+        mkdirp(self.prefix.lib)
+        install('fastqc', self.prefix.bin)
+        set_executable(join_path(self.prefix.bin, 'fastqc'))
         for j in ['cisd-jhdf5.jar', 'jbzip2-0.9.jar', 'sam-1.103.jar']:
-            copy_file(j, self.prefix.lib)
+            install(j, join_path(self.prefix.lib, j))
         for d in ['Configuration', 'net', 'org', 'Templates', 'uk']:
-            copy_tree(d, join_path(self.prefix.lib, d))
-        chmod = which('chmod')
-        chmod('+x', join_path(self.prefix.bin, 'fastqc'))
+            install_tree(d, join_path(self.prefix.lib, d))
 
     # In theory the 'run' dependency on 'jdk' above should take
     # care of this for me. In practice, it does not.

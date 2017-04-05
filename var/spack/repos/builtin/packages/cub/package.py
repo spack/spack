@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Cub(Package):
@@ -36,4 +35,4 @@ class Cub(Package):
     version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
 
     def install(self, spec, prefix):
-        copy_tree('cub', prefix.include)
+        install_tree('cub', prefix.include)

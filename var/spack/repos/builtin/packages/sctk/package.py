@@ -23,14 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Sctk(Package):
-    """The NIST Scoring Toolkit (SCTK) is a collection of software tools 
-        designed to score benchmark test evaluations of Automatic Speech 
-        Recognition (ASR) Systems. The toolkit is currently used by NIST, 
-        benchmark test participants, and reserchers worldwide to as a 
+    """The NIST Scoring Toolkit (SCTK) is a collection of software tools
+        designed to score benchmark test evaluations of Automatic Speech
+        Recognition (ASR) Systems. The toolkit is currently used by NIST,
+        benchmark test participants, and reserchers worldwide to as a
         common scoring engine."""
 
     homepage = "https://www.nist.gov/itl/iad/mig/tools"
@@ -49,5 +48,4 @@ class Sctk(Package):
         make('config')
         make('all')
         make('install')
-        mkdirp(prefix.bin)
-        copy_tree('bin', prefix.bin)
+        install_tree('bin', prefix.bin)
