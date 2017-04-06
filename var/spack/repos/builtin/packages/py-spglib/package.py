@@ -34,5 +34,7 @@ class PySpglib(PythonPackage):
 
     version('1.9.9.18', 'b8b46268d3aeada7b9b201b11882548f')
 
-    depends_on('py-setuptools@18.0:', type='build')
+    # Most Python packages only require setuptools as a build dependency.
+    # However, spglib requires setuptools during runtime as well.
+    depends_on('py-setuptools@18.0:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
