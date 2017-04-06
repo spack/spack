@@ -47,6 +47,9 @@ def setup_parser(subparser):
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
     subparser.add_argument(
+        '-C', '--concreteness', action='store_true', default=False,
+        help='show whether nodes are concrete')
+    subparser.add_argument(
         '-I', '--install-status', action='store_true', default=False,
         help='show install status of packages. packages can be: '
              'installed [+], missing and needed by an installed package [-], '
@@ -60,7 +63,8 @@ def setup_parser(subparser):
 
 def spec(parser, args):
     name_fmt = '$.' if args.namespaces else '$_'
-    kwargs = {'cover': args.cover,
+    kwargs = {'concreteness': args.concreteness,
+              'cover': args.cover,
               'format': name_fmt + '$@$%@+$+$=',
               'hashlen': None if args.very_long else 7,
               'show_types': args.types,
