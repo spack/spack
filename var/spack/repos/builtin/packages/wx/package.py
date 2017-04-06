@@ -44,6 +44,7 @@ class Wx(AutotoolsPackage):
 
     version('develop', git='https://github.com/wxWidgets/wxWidgets.git', branch='master')
 
+    depends_on('pkg-config', type='build')
     depends_on('gtkplus')
 
     @when('@:3.0.2')
