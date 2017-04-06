@@ -378,6 +378,10 @@ class Concretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
+        # don't modify specs that are already concrete.
+        if spec._hash or spec._concrete:
+            return False
+
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
         if not (spec.architecture.platform_os and spec.architecture.target):
