@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libsplash(Package):
+class Libsplash(CMakePackage):
     """libSplash aims at developing a HDF5-based I/O library for HPC
     simulations. It is created as an easy-to-use frontend for the standard HDF5
     library with support for MPI processes in a cluster environment. While the
@@ -54,11 +54,3 @@ class Libsplash(Package):
     depends_on('hdf5@1.8.6:')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Pngwriter(Package):
+class Pngwriter(CMakePackage):
     """PNGwriter is a very easy to use open source graphics library that uses
     PNG as its output format. The interface has been designed to be as simple
     and intuitive as possible. It supports plotting and reading pixels in the
@@ -49,11 +49,3 @@ class Pngwriter(Package):
     depends_on('libpng')
     depends_on('zlib')
     depends_on('freetype')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')
