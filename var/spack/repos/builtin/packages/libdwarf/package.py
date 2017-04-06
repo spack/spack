@@ -52,6 +52,11 @@ class Libdwarf(Package):
 
     parallel = False
 
+
+    def patch(self):
+        filter_file(r'^typedef struct Elf Elf;$', '', 'libdwarf/libdwarf.h.in')
+
+
     def install(self, spec, prefix):
 
         # elfutils contains a dwarf.h that conflicts with libdwarf's
