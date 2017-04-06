@@ -42,7 +42,7 @@ class Elfutils(AutotoolsPackage):
     version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
     version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
 
-    provides('elf@1')
+    provides('elf')
 
     def configure_args(self):
         return ['--enable-maintainer-mode']

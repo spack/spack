@@ -20,7 +20,7 @@ packages:
       awk: [gawk]
       blas: [openblas]
       daal: [intel-parallel-studio+daal]
-      elf: [elfutils]
+      elf: [libelf]
       golang: [gcc]
       ipp: [intel-parallel-studio+ipp]
       lapack: [openblas]

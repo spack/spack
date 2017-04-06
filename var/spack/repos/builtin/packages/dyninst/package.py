@@ -48,8 +48,11 @@ class Dyninst(Package):
     variant('stat_dysect', default=False,
             description="patch for STAT's DySectAPI")
 
-    depends_on("elf@0", type='link', when='@:9.2.99')
-    depends_on("elf@1", type='link', when='@9.3.0:')
+    # Dyninst used to work with either elfutils or libelf, but requires
+    # elfutils as of 9.3.0
+    depends_on("elf", type='link', when='@:9.2.99')
+    depends_on("elfutils", type='link', when='@9.3.0:')
+
     depends_on("libdwarf")
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
@@ -87,7 +90,7 @@ class Dyninst(Package):
             make()
             make("install")
 
-    @when('@:8.1')
+    @when('@:8.1')  # noqa
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
         make()
