@@ -22,24 +22,38 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install py-seaborn
+#
+# You can edit this file again by typing:
+#
+#     spack edit py-seaborn
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class PyKeras(PythonPackage):
-    """Deep Learning library for Python. Convnets, recurrent neural networks,
-    and more. Runs on Theano or TensorFlow."""
+class PySeaborn(PythonPackage):
+    """Seaborn is a Python visualization library based on
+    matplotlib. It provides a high-level interface for drawing
+    attractive statistical graphics."""
 
-    homepage = "http://keras.io"
-    url      = "https://pypi.io/packages/source/K/Keras/Keras-1.2.2.tar.gz"
+    homepage = "http://seaborn.pydata.org"
+    url      = "https://pypi.python.org/packages/source/S/Seaborn/Seaborn-0.7.1.tar.gz"
 
-    version('1.2.2', '8e26b25bf16494f6eca726887d232319')
-    version('1.2.1', '95525b9faa890267d80d119b13ce2984')
-    version('1.2.0', 'd24d8b72747f8cc38e659ce8fc92ad3c')
-    version('1.1.2', '53027097f240735f873119ee2e8d27ff')
-    version('1.1.1', '4bd8b75e8c6948ec0498cc603bbc6590')
-    version('1.1.0', 'd1711362ac8473238b0d198d2e3a0574')
+    version('0.7.1', 'ef07e29e0f8a1f2726abe506c1a36e93')
 
+    depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
-    depends_on('py-theano', type=('build'))
-    depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-statsmodels', type=('build', 'run'))

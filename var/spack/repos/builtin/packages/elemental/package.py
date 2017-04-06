@@ -67,9 +67,18 @@ class Elemental(CMakePackage):
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
-    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+#    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+#    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas %gcc')
+#    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas %clang')
+#    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas %xl')
+#    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas %intel')
+#    depends_on('intel-mkl', when='%intel@17.0.2:')
+    depends_on('intel-mkl', when='+openmp_blas %intel@17.0.2:')
+    depends_on('intel-mkl +openmp', when='+openmp_blas ~int64_blas %intel@17.0.2:')
+    depends_on('intel-mkl +openmp +ilp64', when='+openmp_blas +int64_blas %intel@17.0.2:')
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('lapack', when='~openmp_blas')
+#    depends_on('lapack', when='~openmp_blas')
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
@@ -97,7 +106,7 @@ class Elemental(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
+        if '@:0.87.7' in spec and '%intel@:17.0.1' in spec:
             raise UnsupportedCompilerError(
                 "Elemental {0} has a known bug with compiler: {1} {2}".format(
                     spec.version, spec.compiler.name, spec.compiler.version))

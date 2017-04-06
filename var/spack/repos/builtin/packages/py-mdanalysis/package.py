@@ -33,8 +33,27 @@ class PyMdanalysis(PythonPackage):
     topology formats.)"""
 
     homepage = "http://www.mdanalysis.org"
-    url      = "https://pypi.python.org/packages/9f/56/a4cae14e45aa893a3578905a97e17a325d663e424736366adbc134e72dce/MDAnalysis-0.15.0.tar.gz#md5=19e5a8e6c2bfe85f6209d1d7a36e4f20"
+    url      = "https://pypi.io/packages/source/M/MDAnalysis/MDAnalysis-0.15.0.tar.gz"
 
     version('0.15.0', '19e5a8e6c2bfe85f6209d1d7a36e4f20')
 
+    variant('analysis', default=True, 
+            description='Enable analysis packages [matplotlib, scipy, seaborn]')
+    variant('amber', default=False,
+            description='Support AMBER netcdf format.')
+
+    depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-cython@0.16:', type='build')
+    depends_on('py-numpy@1.5.0:', type=('build', 'run'))
+    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-biopython@1.59:', type=('build', 'run'))
+    depends_on('py-networkx@1.0:', type=('build', 'run'))
+    depends_on('py-griddataformats@0.3.2:', type=('build', 'run'))
+
+    depends_on('py-matplotlib', when='+analysis', type=('build', 'run'))
+    depends_on('py-scipy', when='+analysis', type=('build', 'run'))
+    depends_on('py-seaborn', when='+analysis', type=('build', 'run'))
+
+    depends_on('py-netcdf@1.0:', when='+amber', type=('build', 'run'))
+    depends_on('hdf5', when='+amber', type=('build', 'run'))
