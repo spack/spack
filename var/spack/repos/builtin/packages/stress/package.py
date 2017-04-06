@@ -22,23 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Otf2(AutotoolsPackage):
-    """The Open Trace Format 2 is a highly scalable, memory efficient event
-       trace data format plus support library.
-    """
+class Stress(AutotoolsPackage):
+    """stress is a deliberately simple workload generator for POSIX systems.
+    It imposes a configurable amount of CPU, memory, I/O, and disk stress on
+    the system. It is written in C, and is free software licensed under the
+    GPLv2."""
 
-    homepage = "http://www.vi-hps.org/projects/score-p"
-    url      = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
+    homepage = "https://people.seas.harvard.edu/~apw/stress/"
+    url      = "https://people.seas.harvard.edu/~apw/stress/stress-1.0.4.tar.gz"
 
-    version('2.0',   '5b546188b25bc1c4e285e06dddf75dfc')
-    version('1.5.1', '16a9df46e0da78e374f5d12c8cdc1109')
-    version('1.4',   'a23c42e936eb9209c4e08b61c3cf5092')
-    version('1.3.1', 'd0ffc4e858455ace4f596f910e68c9f2')
-    version('1.2.1', '8fb3e11fb7489896596ae2c7c83d7fc8')
-
-    def configure_args(self):
-        return ["--enable-shared", "CFLAGS=-fPIC", "CXXFLAGS=-fPIC"]
+    version('1.0.4', '890a4236dd1656792f3ef9a190cf99ef')
