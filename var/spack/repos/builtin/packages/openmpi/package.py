@@ -105,14 +105,14 @@ class Openmpi(AutotoolsPackage):
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
-
-    # TODO: support for CUDA is missing
+    variant('cuda', default=False, description='Enable CUDA support')
 
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
+    depends_on('hwloc +cuda', when='+cuda')
     depends_on('jdk', when='+java')
     depends_on('sqlite', when='+sqlite3')
 
@@ -254,6 +254,16 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--enable-mpi-thread-multiple')
             else:
                 config_args.append('--disable-mpi-thread-multiple')
+
+        # CUDA support
+        if spec.satisfies('@1.6:'):
+            if '+cuda' in spec:
+                config_args.append('--with-cuda={0}'.format(
+                    spec['cuda'].prefix))
+                config_args.append('--with-cuda-libdir={0}'.format(
+                    spec['cuda'].libs.directories))
+            else:
+                config_args.append('--without-cuda')
 
         return config_args
 
