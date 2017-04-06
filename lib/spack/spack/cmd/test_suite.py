@@ -33,6 +33,7 @@ import spack.cmd.install as install
 import spack.util.spack_yaml as syaml
 import spack.cmd.compiler
 import spack.compilers
+import spack.error
 import spack
 from yaml.error import MarkedYAMLError
 import jsonschema
@@ -282,14 +283,19 @@ def test_suite(parser, args):
                         tty.warn('Package still needed, cant uninstall.')
                         continue
                     except (OSError, ValueError,
-                            AssertionError, InstallError) as err:
+                            AssertionError, InstallError, SpackError) as err:
                         tty.warn(err)
                         pass
                 try:
                     install_spec(spec, cdash, site, patharg)
-                except (OSError, ValueError, AssertionError) as err:
+                    uninstall_spec(spec)
+                except (OSError, ValueError,
+                        AssertionError) as err:
                     tty.warn(err)
                     tty.warn('Install hit exception, moving on.')
+                    continue
+                except (InstallError, SpackError) as err:
+                    tty.warn(err)
                     continue
         if 'project' in test_contents:
             project = test_contents['project']
