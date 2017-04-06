@@ -28,10 +28,10 @@ from spack import *
 class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
     homepage = "http://sphinx-doc.org"
-    url      = "https://pypi.python.org/packages/source/S/Sphinx/Sphinx-1.3.1.tar.gz"
+    url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-1.5.5.tar.gz"
 
-    version('1.4.5', '5c2cd2dac45dfa6123d067e32a89e89a',
-            url='https://pypi.python.org/packages/8b/78/eeea2b837f911cdc301f5f05163f9729a2381cadd03ccf35b25afe816c90/Sphinx-1.4.5.tar.gz')
+    version('1.5.5', 'f9581b3556df9722143c47290273bcf8')
+    version('1.4.5', '5c2cd2dac45dfa6123d067e32a89e89a')
     version('1.3.1', '8786a194acf9673464c5455b11fd4332')
 
     extends('python', ignore='bin/(pybabel|pygmentize)')
