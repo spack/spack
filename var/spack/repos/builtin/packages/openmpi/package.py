@@ -257,10 +257,10 @@ class Openmpi(AutotoolsPackage):
 
         # CUDA support
         if spec.satisfies('@1.6:'):
-	    if '+cuda' in spec:
+            if '+cuda' in spec:
                 config_args.append('--with-cuda={0}'.format(spec['cuda'].prefix))
-                config_args.append('--with-cuda-libdir={0}/lib64'.format(spec['cuda'].prefix))
-	    else:
+                config_args.append('--with-cuda-libdir={0}'.format(spec['cuda'].libs.directories))
+            else:
                 config_args.append('--without-cuda')
 
         return config_args
