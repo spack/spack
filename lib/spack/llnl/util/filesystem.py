@@ -394,8 +394,14 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
 
 def set_executable(path):
-    st = os.stat(path)
-    os.chmod(path, st.st_mode | stat.S_IEXEC)
+    mode = os.stat(path).st_mode
+    if mode & stat.S_IRUSR:
+        mode |= stat.S_IXUSR
+    if mode & stat.S_IRGRP:
+        mode |= stat.S_IXGRP
+    if mode & stat.S_IROTH:
+        mode |= stat.S_IXOTH
+    os.chmod(path, mode)
 
 
 def remove_dead_links(root):
