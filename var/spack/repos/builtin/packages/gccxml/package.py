@@ -20,6 +20,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Gccxml(CMakePackage):
@@ -29,8 +30,8 @@ class Gccxml(CMakePackage):
     homepage = "http://gccxml.github.io"
     url      = "https://github.com/gccxml/gccxml/archive/v0.6.x.tar.gz"
 
-    version('develop', git='https://github.com/gccxml/gccxml.git', branch='master', preferred=True)
-    version('0.6.x', '2d3becc5b0390996c07a499320036e93')
+    version('develop', git='https://github.com/gccxml/gccxml.git', branch='master')
+    version('0.6.x', '2d3becc5b0390996c07a499320036e93', preferred=True)
 
-    if spec.satisfies('%gcc') and sys.platform == 'darwin':
-    	patch('darwin-gcc.patch')
+    if sys.platform == 'darwin':
+        patch('darwin-gcc.patch', when="%gcc")
