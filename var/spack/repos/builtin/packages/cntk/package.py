@@ -50,7 +50,7 @@ class Cntk(Package):
     depends_on('openblas')
     depends_on('mpi')
     depends_on('boost')
-    depends_on('protobuf@3.1:')
+    depends_on('protobuf~shared')
     depends_on('kaldi', when='+kaldi')
     depends_on('opencv', when='+opencv')
     depends_on('cuda', when='+cuda')
