@@ -40,3 +40,14 @@ class Protobuf(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+
+    variant('shared', default=True, description='Build shared libraries.')
+
+    def configure_args(self):
+        if '+shared' in self.spec:
+            return ['--enable-shared=yes',
+                    '--enable-static=no']
+        else:
+            return ['--enable-shared=no',
+                    '--enable-static=yes',
+                    '--with-pic=yes']
