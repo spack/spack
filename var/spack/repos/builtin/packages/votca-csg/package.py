@@ -1,6 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -26,19 +25,29 @@
 from spack import *
 
 
-class Otf2(AutotoolsPackage):
-    """The Open Trace Format 2 is a highly scalable, memory efficient event
-       trace data format plus support library.
+class VotcaCsg(CMakePackage):
+    """Versatile Object-oriented Toolkit for Coarse-graining
+       Applications (VOTCA) is a package intended to reduce the amount of
+       routine work when doing systematic coarse-graining of various
+       systems. The core is written in C++.
+
+       This package contains the VOTCA coarse-graining engine.
     """
+    homepage = "http://www.votca.org"
+    url      = "https://github.com/votca/csg/tarball/v1.4"
 
-    homepage = "http://www.vi-hps.org/projects/score-p"
-    url      = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
+    version('develop', git='https://github.com/csg/tools', branch='master')
+    version('1.4', 'd009e761e5e3afd51eed89c420610a67')
 
-    version('2.0',   '5b546188b25bc1c4e285e06dddf75dfc')
-    version('1.5.1', '16a9df46e0da78e374f5d12c8cdc1109')
-    version('1.4',   'a23c42e936eb9209c4e08b61c3cf5092')
-    version('1.3.1', 'd0ffc4e858455ace4f596f910e68c9f2')
-    version('1.2.1', '8fb3e11fb7489896596ae2c7c83d7fc8')
+    variant('debug', default=False, description='Build debug version')
 
-    def configure_args(self):
-        return ["--enable-shared", "CFLAGS=-fPIC", "CXXFLAGS=-fPIC"]
+    depends_on("cmake@2.8:", type='build')
+    depends_on("votca-tools")
+    depends_on("gromacs@5.1:")
+
+    def build_type(self):
+        spec = self.spec
+        if '+debug' in spec:
+            return 'Debug'
+        else:
+            return 'Release'

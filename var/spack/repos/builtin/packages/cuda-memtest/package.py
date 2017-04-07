@@ -25,27 +25,21 @@
 from spack import *
 
 
-class Pngwriter(CMakePackage):
-    """PNGwriter is a very easy to use open source graphics library that uses
-    PNG as its output format. The interface has been designed to be as simple
-    and intuitive as possible. It supports plotting and reading pixels in the
-    RGB (red, green, blue), HSV (hue, saturation, value/brightness) and CMYK
-    (cyan, magenta, yellow, black) colour spaces, basic shapes, scaling,
-    bilinear interpolation, full TrueType antialiased and rotated text support,
-    bezier curves, opening existing PNG images and more.
+class CudaMemtest(CMakePackage):
+    """Maintained and updated fork of cuda_memtest.
+
+    original homepage: http://sourceforge.net/projects/cudagpumemtest .
+
+    This software tests GPU memory for hardware errors and soft errors
+    using CUDA or OpenCL.
     """
 
-    homepage = "http://pngwriter.sourceforge.net/"
-    url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
+    homepage = "https://github.com/ComputationalRadiationPhysics/cuda_memtest"
+    url      = "https://github.com/ComputationalRadiationPhysics/cuda_memtest.git"
 
-    version('dev', branch='dev',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('master', branch='master',
-            git='https://github.com/pngwriter/pngwriter.git')
-    version('0.6.0', '0a19bc55c5f6379fea7343752fd3ffae')
-    version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
+    version('master', branch='dev',
+            git='https://github.com/ComputationalRadiationPhysics/cuda_memtest.git')
 
-    depends_on('cmake', type='build')
-    depends_on('libpng')
-    depends_on('zlib')
-    depends_on('freetype')
+    depends_on('cmake@2.8.5:', type='build')
+    # depends_on('nvml', when='+nvml')
+    depends_on('cuda@5.0:')
