@@ -38,7 +38,7 @@ class PyMdanalysis(PythonPackage):
     version('0.15.0', '19e5a8e6c2bfe85f6209d1d7a36e4f20')
 
     variant('analysis', default=True, 
-            description='Enable analysis packages [matplotlib, scipy, seaborn]')
+            description='Enable analysis packages: matplotlib, scipy, seaborn')
     variant('amber', default=False,
             description='Support AMBER netcdf format.')
 
