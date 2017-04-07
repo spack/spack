@@ -901,15 +901,11 @@ class SpecBuildInterface(ObjectWrapper):
         )
 
         is_virtual = Spec.is_virtual(name)
-        self._query_to_package = QueryState(
+        self.last_query = QueryState(
             name=name,
             extra_parameters=query_parameters,
             isvirtual=is_virtual
         )
-
-    @property
-    def last_query(self):
-        return self._query_to_package
 
 
 @key_ordering

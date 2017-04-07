@@ -35,3 +35,16 @@ class NetcdfFortran(AutotoolsPackage):
     version('4.4.3', 'bfd4ae23a34635b273d3eb0d91cbde9e')
 
     depends_on('netcdf')
+
+    @property
+    def libs(self):
+        libraries = ['libnetcdff']
+
+        # This package installs both shared and static libraries. Permit
+        # clients to query which one they want.
+        query_parameters = self.spec.last_query.extra_parameters
+        shared = 'shared' in query_parameters
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=shared, recurse=True
+        )
