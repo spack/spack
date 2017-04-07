@@ -37,8 +37,6 @@ class Zfp(Package):
 
     homepage = "http://computation.llnl.gov/projects/floating-point-compression"
     url      = "http://computation.llnl.gov/projects/floating-point-compression/download/zfp-0.5.1.tar.gz"
-    list_url = "http://computation.llnl.gov/projects/floating-point-compression/download"
-    list_depth = 1
 
     version('0.5.1', '0ed7059a9b480635e0dd33745e213d17')
     version('0.5.0', '2ab29a852e65ad85aae38925c5003654')
@@ -55,9 +53,7 @@ class Zfp(Package):
     def install(self, spec, prefix):
         make("shared")
 
-        zfp_incdir = 'inc'
-        if spec.satisfies('@0.5.1:'):
-            zfp_incdir = 'include'
+        zfp_incdir = 'include' if spec.satisfies('@0.5.1:') else 'inc'
 
         # No install provided
         mkdirp(prefix.lib)
