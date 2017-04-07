@@ -42,13 +42,14 @@ class Zfp(Package):
     version('0.5.0', '2ab29a852e65ad85aae38925c5003654')
 
     variant('bswtuint8', default=False,
-        description='Build with bit stream word type of uint8')
+            description='Build with bit stream word type of uint8')
 
     def edit(self, spec, prefix):
         config_file = FileFilter('Config')
 
         if '+bswtunit8' in self.spec:
-            config_file.filter('#DEFS += -DBIT_STREAM_WORD_TYPE=uint8)','DEFS += -DBIT_STREAM_WORD_TYPE=uint8')
+            config_file.filter('#DEFS += -DBIT_STREAM_WORD_TYPE=uint8)',
+                               'DEFS += -DBIT_STREAM_WORD_TYPE=uint8')
 
     def install(self, spec, prefix):
         make("shared")
@@ -59,12 +60,12 @@ class Zfp(Package):
         mkdirp(prefix.lib)
         mkdirp(prefix.include)
         install('lib/libzfp.so', prefix.lib)
-        install('%s/zfp.h'%zfp_incdir, prefix.include)
-        install('%s/bitstream.h'%zfp_incdir, prefix.include)
+        install('%s/zfp.h' % zfp_incdir, prefix.include)
+        install('%s/bitstream.h' % zfp_incdir, prefix.include)
         if spec.satisfies('@0.5.1:'):
-            mkdirp('%s/zfp'%prefix.include)
-            install('%s/zfp/system.h'%zfp_incdir, '%s/zfp'%prefix.include)
-            install('%s/zfp/types.h'%zfp_incdir, '%s/zfp'%prefix.include)
+            mkdirp('%s/zfp' % prefix.include)
+            install('%s/zfp/system.h' % zfp_incdir, '%s/zfp' % prefix.include)
+            install('%s/zfp/types.h' % zfp_incdir, '%s/zfp' % prefix.include)
         else:
-            install('%s/types.h'%zfp_incdir, prefix.include)
-            install('%s/system.h'%zfp_incdir, prefix.include)
+            install('%s/types.h' % zfp_incdir, prefix.include)
+            install('%s/system.h' % zfp_incdir, prefix.include)
