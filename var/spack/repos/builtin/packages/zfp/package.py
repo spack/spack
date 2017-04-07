@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Zfp(Package):
+class Zfp(MakefilePackage):
     """zfp is an open source C library for compressed floating-point arrays
        that supports very high throughput read and write random acces,
        target error bounds or bit rates.  Although bit-for-bit lossless
@@ -45,11 +45,11 @@ class Zfp(Package):
             description='Build with bit stream word type of uint8')
 
     def edit(self, spec, prefix):
-        config_file = FileFilter('Config')
-
-        if '+bswtunit8' in self.spec:
-            config_file.filter('#DEFS += -DBIT_STREAM_WORD_TYPE=uint8)',
-                               'DEFS += -DBIT_STREAM_WORD_TYPE=uint8')
+        if '+bswtuint8' in self.spec:
+            config_file = FileFilter('Config')
+            config_file.filter(
+                '^\s*#\s*DEFS\s*\+=\s*-DBIT_STREAM_WORD_TYPE\s*=\s*uint8',
+                'DEFS += -DBIT_STREAM_WORD_TYPE=uint8')
 
     def install(self, spec, prefix):
         make("shared")
