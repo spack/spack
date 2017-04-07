@@ -27,7 +27,7 @@ packages:
           openssl@system: /usr
       version: [system]
       buildable: False
-  
+
   r:
     variants: +external-lapack
 
