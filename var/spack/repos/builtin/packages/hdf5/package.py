@@ -157,6 +157,10 @@ class Hdf5(AutotoolsPackage):
         return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
 
     def configure(self, spec, prefix):
+        # workaround an error:
+        # error: source directory already configured
+        make("distclean")
+
         # Run the default autotools package configure
         super(Hdf5, self).configure(spec, prefix)
 
