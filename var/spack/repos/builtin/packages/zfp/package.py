@@ -50,22 +50,23 @@ class Zfp(MakefilePackage):
             config_file.filter(
                 '^\s*#\s*DEFS\s*\+=\s*-DBIT_STREAM_WORD_TYPE\s*=\s*uint8',
                 'DEFS += -DBIT_STREAM_WORD_TYPE=uint8')
-
-    def install(self, spec, prefix):
+ 
+    def build(self, spec, prefix):
         make("shared")
 
-        zfp_incdir = 'include' if spec.satisfies('@0.5.1:') else 'inc'
+    def install(self, spec, prefix):
+        incdir = 'include' if spec.satisfies('@0.5.1:') else 'inc'
 
         # No install provided
         mkdirp(prefix.lib)
         mkdirp(prefix.include)
         install('lib/libzfp.so', prefix.lib)
-        install('%s/zfp.h' % zfp_incdir, prefix.include)
-        install('%s/bitstream.h' % zfp_incdir, prefix.include)
+        install('%s/zfp.h' % incdir, prefix.include)
+        install('%s/bitstream.h' % incdir, prefix.include)
         if spec.satisfies('@0.5.1:'):
             mkdirp('%s/zfp' % prefix.include)
-            install('%s/zfp/system.h' % zfp_incdir, '%s/zfp' % prefix.include)
-            install('%s/zfp/types.h' % zfp_incdir, '%s/zfp' % prefix.include)
+            install('%s/zfp/system.h' % incdir, '%s/zfp' % prefix.include)
+            install('%s/zfp/types.h' % incdir, '%s/zfp' % prefix.include)
         else:
-            install('%s/types.h' % zfp_incdir, prefix.include)
-            install('%s/system.h' % zfp_incdir, prefix.include)
+            install('%s/types.h' % incdir, prefix.include)
+            install('%s/system.h' % incdir, prefix.include)
