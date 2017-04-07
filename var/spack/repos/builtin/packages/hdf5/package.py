@@ -70,21 +70,80 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    @run_before('configure')
-    def validate(self):
-        """
-        Checks if incompatible variants have been activated at the same time
+    # According to ./configure --help thread-safe capabilities are:
+    # "Not compatible with the high-level library, Fortran, or C++ wrappers."
+    # (taken from hdf5@1.10.0patch1)
+    conflicts('+threadsafe', when='+cxx')
+    conflicts('+threadsafe', when='+fortran')
 
-        :param spec: spec of the package
-        :raises RuntimeError: in case of inconsistencies
+    @property
+    def libs(self):
+        """Hdf5 can be queried for the following parameters:
+        
+        - "hl": high-level interface
+        - "cxx": C++ APIs
+        - "fortran": fortran APIs
+        
+        :return: list of matching libraries
         """
+        query_parameters = self.spec.last_query.extra_parameters
+
+        shared = '+shared' in self.spec
+
+        # This map contains a translation from query_parameters
+        # to the libraries needed
+        query2libraries = {
+            tuple(): ['libhdf5'],
+            ('cxx', 'fortran', 'hl'): [
+                'libhdf5hl_fortran',
+                'libhdf5_hl_cpp',
+                'libhdf5_hl',
+                'libhdf5_fortran',
+                'libhdf5',
+            ],
+            ('cxx', 'hl'): [
+                'libhdf5_hl_cpp',
+                'libhdf5_hl',
+                'libhdf5',
+            ],
+            ('fortran', 'hl'): [
+                'libhdf5hl_fortran',
+                'libhdf5_hl',
+                'libhdf5_fortran',
+                'libhdf5',
+            ],
+            ('hl',): [
+                'libhdf5_hl',
+                'libhdf5',
+            ],
+            ('cxx', 'fortran'): [
+                'libhdf5_fortran',
+                'libhdf5_cpp',
+                'libhdf5',
+            ],
+            ('cxx',): [
+                'libhdf5_cpp',
+                'libhdf5',
+            ],
+            ('fortran',): [
+                'libhdf5_fortran',
+                'libhdf5',
+            ]
+        }
+
+        # Turn the query into the appropriate key
+        key = tuple(sorted(query_parameters))
+        libraries = query2libraries[key]
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=shared, recurse=True
+        )
+
+    @run_before('configure')
+    def fortran_check(self):
         spec = self.spec
         if '+fortran' in spec and not self.compiler.fc:
             msg = 'cannot build a fortran variant without a fortran compiler'
-            raise RuntimeError(msg)
-
-        if '+threadsafe' in spec and ('+cxx' in spec or '+fortran' in spec):
-            msg = 'cannot use variant +threadsafe with either +cxx or +fortran'
             raise RuntimeError(msg)
 
     def configure_args(self):
@@ -156,11 +215,9 @@ class Hdf5(AutotoolsPackage):
 
         return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
 
-    def configure(self, spec, prefix):
-        # Run the default autotools package configure
-        super(Hdf5, self).configure(spec, prefix)
-
-        if '@:1.8.14' in spec:
+    @run_after('configure')
+    def patch_postdeps(self):
+        if '@:1.8.14' in self.spec:
             # On Ubuntu14, HDF5 1.8.12 (and maybe other versions)
             # mysteriously end up with "-l -l" in the postdeps in the
             # libtool script.  Patch this by removing the spurious -l's.
