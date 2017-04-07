@@ -41,9 +41,12 @@ class Mxml(AutotoolsPackage):
     version('2.6', '68977789ae64985dddbd1a1a1652642e')
     version('2.5', 'f706377fba630b39fa02fd63642b17e5')
 
-    # module swap PrgEnv-intel PrgEnv-$COMP
-    # (Can use whatever compiler you want to use)
-    # Case statement to change CC and CXX flags
+    def url_for_version(self, version):
+        if version <= Version('2.7'):
+            return 'https://github.com/michaelrsweet/mxml/archive/release-{0}.tar.gz'.format(version)
+        else:
+            return 'https://github.com/michaelrsweet/mxml/releases/download/release-{0}/mxml-{0}.tar.gz'.format(version)
 
     def configure_args(self):
-        return ['--disable-shared', 'CFLAGS=-static']
+        # Default is non-shared, but avoid any future surprises
+        return ['--disable-shared']
