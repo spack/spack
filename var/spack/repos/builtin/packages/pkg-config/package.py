@@ -49,8 +49,8 @@ class PkgConfig(AutotoolsPackage):
         """spack built pkg-config on cray's requires adding /usr/local/
         and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
         files."""
-        spack_env.prepend_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
-        spack_env.prepend_path('PKG_CONFIG_PATH', '/usr/local/lib64/pkgconfig')
+        spack_env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
+        spack_env.append_path('PKG_CONFIG_PATH', '/usr/local/lib64/pkgconfig')
 
     def configure_args(self):
         config_args = ['--enable-shared']
