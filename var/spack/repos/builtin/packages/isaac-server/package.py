@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,20 +25,24 @@
 from spack import *
 
 
-class Libedit(AutotoolsPackage):
-    """An autotools compatible port of the NetBSD editline library"""
-    homepage = "http://thrysoee.dk/editline/"
-    url      = "http://thrysoee.dk/editline/libedit-20170329-3.1.tar.gz"
+class IsaacServer(CMakePackage):
+    """In Situ Animation of Accelerated Computations: Server"""
 
-    version('3.1-20170329', 'c57a0690e62ef523c083598730272cfd')
-    version('3.1-20160903', '0467d27684c453a351fbcefebbcb16a3')
-    version('3.1-20150325', '43cdb5df3061d78b5e9d59109871b4f6')
+    homepage = "http://computationalradiationphysics.github.io/isaac/"
+    url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
 
-    depends_on('ncurses')
+    root_cmakelists_dir = 'server'
 
-    def url_for_version(self, version):
-        url = "http://thrysoee.dk/editline/libedit-{0}-{1}.tar.gz"
-        return url.format(version[-1], version.up_to(-1))
+    version('develop', branch='dev',
+            git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('master', branch='master',
+            git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('1.3.0', 'c8a794da9bb998ef0e75449bfece1a12')
 
-    def configure_args(self):
-        return ['LIBS=-lncursesw']
+    # variant('gstreamer', default=False, description= \
+    #         'Support for RTP streams, e.g. to Twitch or Youtube')
+
+    depends_on('cmake@3.3:', type='build')
+    depends_on('isaac')
+    depends_on('libwebsockets')
+    # depends_on('gstreamer@1.0', when='+gstreamer')
