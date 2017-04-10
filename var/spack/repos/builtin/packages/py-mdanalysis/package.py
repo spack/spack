@@ -46,7 +46,7 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.16:', type='build')
     depends_on('py-numpy@1.5.0:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-biopython@1.59:', type=('build', 'run'))
     depends_on('py-networkx@1.0:', type=('build', 'run'))
     depends_on('py-griddataformats@0.3.2:', type=('build', 'run'))
@@ -55,5 +55,5 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-scipy', when='+analysis', type=('build', 'run'))
     depends_on('py-seaborn', when='+analysis', type=('build', 'run'))
 
-    depends_on('py-netcdf@1.0:', when='+amber', type=('build', 'run'))
-    depends_on('hdf5', when='+amber', type=('build', 'run'))
+    depends_on('py-netcdf4@1.0:', when='+amber', type=('build', 'run'))
+    depends_on('hdf5', when='+amber', type=('run'))
