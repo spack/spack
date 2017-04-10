@@ -671,9 +671,10 @@ class GitFetchStrategy(VCSFetchStrategy):
         # Init submodules if the user asked for them.
         if self.submodules:
             if spack.debug:
-                self.git('submodule', 'update', '--init')
+                self.git('submodule', 'update', '--init', '--recursive')
             else:
-                self.git('submodule', '--quiet', 'update', '--init')
+                self.git('submodule', '--quiet', 'update', '--init',
+                         '--recursive')
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
