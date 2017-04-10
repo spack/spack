@@ -96,7 +96,7 @@ class IntelParallelStudio(IntelInstaller):
     variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description='OpenMP multithreading layer')
 
-    provides('mpi', when='@cluster:+mpi')
+    provides('mpi', when='@cluster.0:cluster.9999+mpi')
     provides('mkl', when='+mkl')
     provides('daal', when='+daal')
     provides('ipp', when='+ipp')
@@ -120,12 +120,7 @@ class IntelParallelStudio(IntelInstaller):
             root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
             shared=shared
         )
-        system_libs = [
-            'libpthread.{0}'.format(suffix),
-            'libm.{0}'.format(suffix),
-            'libdl.{0}'.format(suffix)
-        ]
-        return mkl_libs + system_libs
+        return mkl_libs
 
     @property
     def lapack_libs(self):
