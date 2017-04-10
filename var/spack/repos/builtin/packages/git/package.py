@@ -24,6 +24,7 @@
 ##############################################################################
 import sys
 from spack import *
+from distutils.dir_util import copy_tree
 
 
 class Git(AutotoolsPackage):
@@ -168,12 +169,7 @@ class Git(AutotoolsPackage):
 
     @run_after('install')
     def install_completions(self):
-        prefix = self.prefix
-        mkdirp(prefix.share)
-        with working_dir('contrib/completion'):
-            for f in ['git-completion.bash', 'git-completion.tcsh',
-                      'git-completion.zsh', 'git-prompt.sh']:
-                install(f, join_path(prefix.share, f))
+        copy_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):
