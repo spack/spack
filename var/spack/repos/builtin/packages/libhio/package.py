@@ -35,6 +35,6 @@ class Libhio(AutotoolsPackage):
 
     version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
 
-    depends_on("libjson-c")
+    depends_on("json-c")
     depends_on("bzip2")
     depends_on("pkg-config", type="build")
