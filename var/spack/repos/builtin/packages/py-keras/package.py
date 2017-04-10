@@ -40,6 +40,6 @@ class PyKeras(PythonPackage):
     version('1.1.0', 'd1711362ac8473238b0d198d2e3a0574')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-theano', type=('build'))
+    depends_on('py-theano', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
