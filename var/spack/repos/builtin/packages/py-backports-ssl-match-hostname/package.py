@@ -33,4 +33,6 @@ class PyBackportsSslMatchHostname(PythonPackage):
 
     version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
 
-    depends_on('py-setuptools', type='build')
+    # newer setuptools version mess with "namespace" packages in an
+    # incompatible way cf. https://github.com/pypa/setuptools/issues/900
+    depends_on('py-setuptools@:30.999.999', type='build')
