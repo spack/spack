@@ -1438,75 +1438,116 @@ so you can rely on it for your libdwarf build.
 Dependency specs
 ^^^^^^^^^^^^^^^^
 
-``depends_on`` doesn't just take the name of another package.  It
-takes a full spec.  This means that you can restrict the versions or
+``depends_on`` doesn't just take the name of another package. It can
+take a full spec as well. This means that you can restrict the versions or
 other configuration options of ``libelf`` that ``libdwarf`` will build
-with.  Here's an example.  Suppose that in the ``libdwarf`` package
-you write:
+with. For example, suppose that in the ``libdwarf`` package you write:
 
 .. code-block:: python
 
-   depends_on("libelf@0.8:")
+   depends_on('libelf@0.8')
 
-Now ``libdwarf`` will require a version of ``libelf`` version ``0.8``
-or higher in order to build.  If some versions of ``libelf`` are
-installed but they are all older than this, then Spack will build a
-new version of ``libelf`` that satisfies the spec's version
-constraint, and it will build ``libdwarf`` with that one.  You could
-just as easily provide a version range:
+Now ``libdwarf`` will require ``libelf`` at *exactly* version ``0.8``.
+You can also specify a requirement for a particular variant or for
+specific compiler flags:
 
 .. code-block:: python
 
-   depends_on("libelf@0.8.2:0.8.4:")
-
-Or a requirement for a particular variant or compiler flags:
-
-.. code-block:: python
-
-   depends_on("libelf@0.8+debug")
+   depends_on('libelf@0.8+debug')
    depends_on('libelf debug=True')
    depends_on('libelf cppflags="-fPIC"')
 
 Both users *and* package authors can use the same spec syntax to refer
-to different package configurations.  Users use the spec syntax on the
+to different package configurations. Users use the spec syntax on the
 command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
 
-Additionally, dependencies may be specified for specific use cases:
+^^^^^^^^^^^^^^
+Version Ranges
+^^^^^^^^^^^^^^
+
+Although some packages require a specific version for their dependencies,
+most can be built with a range of version. For example, if you are
+writing a package for a legacy Python module that only works with Python
+2.4 through 2.6, this would look like:
 
 .. code-block:: python
 
-   depends_on("cmake", type="build")
-   depends_on("libelf", type=("build", "link"))
-   depends_on("python", type="run")
+   depends_on('python@2.4:2.6')
 
-The dependency types are:
+Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
+greater than or equal to ``2.4`` and up to and including ``2.6``. If you
+want to specify that a package works with any version of Python 3, this
+would look like:
 
-  * **"build"**: made available during the project's build. The package will
-    be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-    Other projects which depend on this one will not have these modified
-    (building project X doesn't need project Y's build dependencies).
-  * **"link"**: the project is linked to by the project. The package will be
-    added to the current package's ``rpath``.
-  * **"run"**: the project is used by the project at runtime. The package will
-    be added to ``PATH`` and ``PYTHONPATH``.
+.. code-block:: python
 
-Additional hybrid dependency types are (note the lack of quotes):
+   depends_on('python@3:')
 
-  * **<not specified>**: ``type`` assumed to be ``("build",
-    "link")``. This is the common case for compiled language usage.
+Here we leave out the upper bound. If you want to say that a package
+requires Python 2, you can similarly leave out the lower bound:
 
-"""""""""""""""""""
-Dependency Formulas
-"""""""""""""""""""
+.. code-block:: python
 
-This section shows how to write appropriate ``depends_on()``
-declarations for some common cases.
+   depends_on('python@:2.9')
 
-* Python 2 only: ``depends_on('python@:2.8')``
-* Python 2.7 only: ``depends_on('python@2.7:2.8')``
-* Python 3 only: ``depends_on('python@3:')``
+Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
+``@:3`` means "up to and including 3".
+
+What if a package can only be built with Python 2.6? You might be
+inclined to use:
+
+.. code-block:: python
+
+   depends_on('python@2.6')
+
+However, this would be wrong. Spack assumes that all version constraints
+are absolute, so it would try to install Python at exactly ``2.6``. The
+correct way to specify this would be:
+
+.. code-block:: python
+
+   depends_on('python@2.6.0:2.6.999')
+
+
+^^^^^^^^^^^^^^^^
+Dependency Types
+^^^^^^^^^^^^^^^^
+
+Not all dependencies are created equal, and Spack allows you to specify
+exactly what kind of a dependency you need. For example:
+
+.. code-block:: python
+
+   depends_on('cmake', type='build')
+   depends_on('py-numpy', type=('build', 'run'))
+   depends_on('libelf', type=('build', 'link'))
+
+The following dependency types are available:
+
+* **"build"**: made available during the project's build. The package will
+  be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
+  Other projects which depend on this one will not have these modified
+  (building project X doesn't need project Y's build dependencies).
+* **"link"**: the project is linked to by the project. The package will be
+  added to the current package's ``rpath``.
+* **"run"**: the project is used by the project at runtime. The package will
+  be added to ``PATH`` and ``PYTHONPATH``.
+
+One of the advantages of the ``build`` dependency type is that although the
+dependency needs to be installed in order for the package to be built, it
+can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
+this because uninstalling the dependency would break the package.
+
+If the dependency type is not specified, Spack uses a default of
+``('build', 'link')``. This is the common case for compiler languages.
+Non-compiled packages like Python modules commonly use
+``('build', 'run')``. This means that the compiler wrappers don't need to
+inject the dependency's ``prefix/lib`` directory, but the package needs to
+be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
+a user wants to run the package.
+
 
 .. _setup-dependent-environment:
 
