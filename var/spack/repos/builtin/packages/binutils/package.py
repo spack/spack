@@ -69,6 +69,7 @@ class Binutils(AutotoolsPackage):
             '--enable-shared',
             '--enable-64-bit-bfd',
             '--enable-targets=all',
+            '--disable-nls',
             '--with-sysroot=/']
 
         if '+gold' in spec:
