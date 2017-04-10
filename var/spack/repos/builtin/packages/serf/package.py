@@ -36,6 +36,7 @@ class Serf(Package):
 
     depends_on('apr')
     depends_on('apr-util')
+    depends_on('python', type='build')
     depends_on('scons', type='build')
     depends_on('expat')
     depends_on('openssl')
