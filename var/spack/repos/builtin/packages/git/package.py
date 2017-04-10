@@ -167,6 +167,15 @@ class Git(AutotoolsPackage):
             filter_file(r' -lrt$', '', 'Makefile')
 
     @run_after('install')
+    def install_completions(self):
+        prefix = self.prefix
+        mkdirp(prefix.share)
+        with working_dir('contrib/completion'):
+            for f in ['git-completion.bash', 'git-completion.tcsh',
+                      'git-completion.zsh', 'git-prompt.sh']:
+                install(f, join_path(prefix.share, f))
+
+    @run_after('install')
     def install_manpages(self):
         prefix = self.prefix
 
