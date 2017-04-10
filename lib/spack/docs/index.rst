@@ -51,6 +51,7 @@ or refer to the full manual below.
    basic_usage
    workflows
    tutorial_sc16
+   known_issues
 
 .. toctree::
    :maxdepth: 2
