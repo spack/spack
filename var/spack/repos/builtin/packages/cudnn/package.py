@@ -23,16 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class PyBackportsSslMatchHostname(PythonPackage):
-    """The ssl.match_hostname() function from Python 3.5"""
+class Cudnn(Package):
+    """NVIDIA cuDNN is a GPU-accelerated library of primitives for deep
+    neural networks"""
 
-    homepage = "https://pypi.python.org/pypi/backports.ssl_match_hostname"
-    url      = "https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
+    homepage = "https://developer.nvidia.com/cudnn"
 
-    version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
+    version('6.0', '4aacb7acb93c5e4dfa9db814df496219',
+            url='http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-8.0-linux-x64-v6.0.tgz')
+    version('5.1', '406f4ac7f7ee8aa9e41304c143461a69',
+            url='http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-linux-x64-v5.1.tgz')
 
-    # newer setuptools version mess with "namespace" packages in an
-    # incompatible way cf. https://github.com/pypa/setuptools/issues/900
-    depends_on('py-setuptools@:30.999.999', type='build')
+    depends_on('cuda@8:')
+
+    def install(self, spec, prefix):
+        copy_tree('.', prefix)

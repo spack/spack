@@ -25,14 +25,18 @@
 from spack import *
 
 
-class PyBackportsSslMatchHostname(PythonPackage):
-    """The ssl.match_hostname() function from Python 3.5"""
+class Hstr(AutotoolsPackage):
+    """hstr(hh) is a shell history suggest box for Bash and Zsh,
+    which enables easy viewing, searching and using
+    your command history."""
 
-    homepage = "https://pypi.python.org/pypi/backports.ssl_match_hostname"
-    url      = "https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
+    homepage = "https://github.com/dvorka/hstr"
+    url      = "https://github.com/dvorka/hstr/archive/1.22.tar.gz"
 
-    version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
+    version('1.22', '620dab922fadf2858938fbe36d9f99fd')
 
-    # newer setuptools version mess with "namespace" packages in an
-    # incompatible way cf. https://github.com/pypa/setuptools/issues/900
-    depends_on('py-setuptools@:30.999.999', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+    depends_on('ncurses@5.9')
