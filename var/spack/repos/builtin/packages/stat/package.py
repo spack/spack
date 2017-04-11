@@ -25,12 +25,14 @@
 from spack import *
 
 
-class Stat(Package):
+class Stat(AutotoolsPackage):
     """Library to create, manipulate, and export graphs Graphlib."""
 
     homepage = "http://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/lee218llnl/stat/archive/v2.0.0.tar.gz"
 
+    version('3.0.1', 'dac6f23c3639a0b21f923dc6219ba385',
+            url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip')
     version('3.0.0', 'a97cb235c266371c4a26329112de48a2',
             url='https://github.com/LLNL/STAT/releases/download/v3.0.0/STAT-3.0.0.tar.gz')
     version('2.2.0', '26bd69dd57a15afdd5d0ebdb0b7fb6fc')
@@ -52,27 +54,25 @@ class Stat(Package):
     depends_on('graphviz', type=('build', 'link', 'run'))
     depends_on('launchmon')
     depends_on('mrnet')
-    depends_on('python')
+    depends_on('python@:2.8')
     depends_on('py-pygtk', type=('build', 'run'))
     depends_on('swig')
     depends_on('mpi', when='+examples')
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 
-    def install(self, spec, prefix):
-        configure_args = [
-            "--enable-gui",
-            "--prefix=%s" % prefix,
+    def configure_args(self):
+        spec = self.spec
+        args = [
             "--with-launchmon=%s"   % spec['launchmon'].prefix,
             "--with-mrnet=%s"       % spec['mrnet'].prefix,
             "--with-graphlib=%s"    % spec['graphlib'].prefix,
             "--with-stackwalker=%s" % spec['dyninst'].prefix,
-            "--with-libdwarf=%s"    % spec['libdwarf'].prefix
+            "--with-libdwarf=%s"    % spec['libdwarf'].prefix,
+            "--with-python=%s/bin/python" % spec['python'].prefix
         ]
         if '+dysect' in spec:
-            configure_args.append('--enable-dysectapi')
+            args.append('--enable-dysectapi')
         if '~examples' in spec:
-            configure_args.append('--disable-examples')
-        configure(*configure_args)
-
-        make("install")
+            args.append('--disable-examples')
+        return args
