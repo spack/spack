@@ -31,8 +31,9 @@ class Ccache(AutotoolsPackage):
     again."""
 
     homepage = "https://ccache.samba.org/"
-    url      = "https://www.samba.org/ftp/ccache/ccache-3.3.3.tar.gz"
+    url      = "https://www.samba.org/ftp/ccache/ccache-3.3.4.tar.gz"
 
+    version('3.3.4', '61326f1edac7cd211a7018458dfe2d86')
     version('3.3.3', 'ea1f95303749b9ac136c617d1b333eef')
     version('3.3.2', 'b966d56603e1fad2bac22930e5f01830')
     version('3.3.1', '7102ef024cff09d353b3f4c48379b40b')
