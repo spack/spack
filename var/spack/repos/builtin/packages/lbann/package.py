@@ -46,7 +46,7 @@ class Lbann(CMakePackage):
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@3.2.0', when='+opencv')
-    depends_on('protobuf@3.0.2')
+    depends_on('protobuf@3.0.2:')
 
     def build_type(self):
         if '+debug' in self.spec:
