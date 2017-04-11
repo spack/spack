@@ -83,8 +83,8 @@ class Gcc(AutotoolsPackage):
     # depends_on('guile@1.4.1:', type='test')
 
     if sys.platform == 'darwin':
-        patch('darwin/gcc-4.9.patch1', when='@4.9.3')
-        patch('darwin/gcc-4.9.patch2', when='@4.9.3')
+        patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
+        patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
     else:
         provides('golang', when='@4.7.1:')
 
