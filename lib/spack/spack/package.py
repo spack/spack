@@ -42,6 +42,9 @@ import re
 import sys
 import textwrap
 import time
+from six import StringIO
+from six import string_types
+from six import with_metaclass
 
 import llnl.util.lock
 import llnl.util.tty as tty
@@ -56,7 +59,7 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
-from StringIO import StringIO
+
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
@@ -238,7 +241,7 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
-class PackageBase(object):
+class PackageBase(with_metaclass(PackageMeta, object)):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -475,7 +478,6 @@ class PackageBase(object):
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
     """
-    __metaclass__ = PackageMeta
     #
     # These are default values for instance variables.
     #
@@ -568,7 +570,7 @@ class PackageBase(object):
             self.list_url = None
 
         if not hasattr(self, 'list_depth'):
-            self.list_depth = 1
+            self.list_depth = 0
 
         # Set default licensing information
         if not hasattr(self, 'license_required'):
@@ -964,6 +966,10 @@ class PackageBase(object):
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
+    def patch(self):
+        """Default patch implementation is a no-op."""
+        pass
+
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
            haven't been applied already."""
@@ -1115,6 +1121,13 @@ class PackageBase(object):
         finally:
             self.prefix_lock.release_write()
 
+    @contextlib.contextmanager
+    def _stage_and_write_lock(self):
+        """Prefix lock nested in a stage."""
+        with self.stage:
+            with self._prefix_write_lock():
+                yield
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1233,7 +1246,7 @@ class PackageBase(object):
 
             self.stage.keep = keep_stage
 
-            with contextlib.nested(self.stage, self._prefix_write_lock()):
+            with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
@@ -1265,9 +1278,10 @@ class PackageBase(object):
                         input_stream=input_stream
                     )
                     with redirection_context as log_redirection:
-                        for phase_name, phase in zip(self.phases, self._InstallPhase_phases):  # NOQA: ignore=E501
+                        for phase_name, phase in zip(
+                                self.phases, self._InstallPhase_phases):
                             tty.msg(
-                                'Executing phase : \'{0}\''.format(phase_name)  # NOQA: ignore=E501
+                                'Executing phase : \'{0}\''.format(phase_name)
                             )
                             # Redirect stdout and stderr to daemon pipe
                             with log_redirection:
@@ -1355,7 +1369,7 @@ class PackageBase(object):
         """This function checks whether install succeeded."""
 
         def check_paths(path_list, filetype, predicate):
-            if isinstance(path_list, basestring):
+            if isinstance(path_list, string_types):
                 path_list = [path_list]
 
             for path in path_list:
@@ -1676,9 +1690,7 @@ class PackageBase(object):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                *self.all_urls,
-                list_url=self.list_url,
-                list_depth=self.list_depth)
+                self.all_urls, self.list_url, self.list_depth)
         except spack.error.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
                     e.message)

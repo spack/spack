@@ -44,7 +44,7 @@ class Trilinos(CMakePackage):
     A unique design feature of Trilinos is its focus on packages.
     """
     homepage = "https://trilinos.org/"
-    base_url = "https://github.com/trilinos/Trilinos/archive"
+    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
     version('develop',
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
@@ -62,10 +62,6 @@ class Trilinos(CMakePackage):
     version('11.14.3', 'dea62e57ebe51a886bee0b10a2176969')
     version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
     version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
-
-    def url_for_version(self, version):
-        return '%s/trilinos-release-%s.tar.gz' % \
-            (Trilinos.base_url, version.dashed)
 
     variant('xsdkflags',        default=False,
             description='Compile using the default xSDK configuration')
@@ -124,6 +120,10 @@ class Trilinos(CMakePackage):
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
+
+    def url_for_version(self, version):
+        url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
+        return url.format(version.dashed)
 
     # check that the combination of variants makes sense
     def variants_check(self):
@@ -292,14 +292,15 @@ class Trilinos(CMakePackage):
 
         # mumps / scalapack
         if '+mumps' in spec:
+            scalapack = spec['scalapack'].libs
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 # order is important!
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord',
                 '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
-                # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
-                '-DSCALAPACK_LIBRARY_NAMES=scalapack'
+                '-DSCALAPACK_LIBRARY_NAMES=%s' % ';'.join(scalapack.names),
+                '-DSCALAPACK_LIBRARY_DIRS=%s' % ';'.join(scalapack.directories)
             ])
             # see
             # https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS

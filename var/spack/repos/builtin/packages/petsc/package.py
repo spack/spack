@@ -74,6 +74,13 @@ class Petsc(Package):
     variant('int64', default=False,
             description='Compile with 64bit indices')
 
+    # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
+    # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
+    # the patch is an adaptation of the original commit to 3.7.5
+    if sys.platform == "darwin":
+        patch('macos-clang-8.1.0.diff',
+              when='@3.7.5%clang@8.1.0:')
+
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')
@@ -166,9 +173,21 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        # Help PETSc pick up Scalapack from MKL:
+        if 'scalapack' in spec:
+            scalapack = spec['scalapack'].libs
+            options.extend([
+                '--with-scalapack-lib=%s' % scalapack.joined(),
+                '--with-scalapack=1'
+            ])
+        else:
+            options.extend([
+                '--with-scalapack=0'
+            ])
+
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'scalapack'):
+                        'mumps'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))

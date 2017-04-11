@@ -11,7 +11,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2.6 or 2.7
+1. Python 2 (2.6 or 2.7) or 3 (3.3 - 3.6)
 2. A C/C++ compiler
 3. The ``git`` and ``curl`` commands.
 
@@ -774,7 +774,7 @@ This problem is related to OpenSSL, and in some cases might be solved
 by installing a new version of ``git`` and ``openssl``:
 
 #. Run ``spack install git``
-#. Add the output of ``spack module loads git`` to your ``.bahsrc``.
+#. Add the output of ``spack module loads git`` to your ``.bashrc``.
 
 If this doesn't work, it is also possible to disable checking of SSL
 certificates by using:

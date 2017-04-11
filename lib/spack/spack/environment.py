@@ -291,7 +291,7 @@ class EnvironmentModifications(object):
         shell_options = '{shell_options}'.format(**info)
         source_file = '{source_command} {file} {concatenate_on_success}'
 
-        dump_cmd = "import os, json; print json.dumps(dict(os.environ))"
+        dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
         dump_environment = 'python -c "%s"' % dump_cmd
 
         # Construct the command that will be executed
@@ -310,7 +310,7 @@ class EnvironmentModifications(object):
         proc.wait()
         if proc.returncode != 0:
             raise RuntimeError('sourcing files returned a non-zero exit code')
-        output = ''.join([line for line in proc.stdout])
+        output = ''.join([line.decode('utf-8') for line in proc.stdout])
 
         # Construct a dictionaries of the environment before and after
         # sourcing the files, so that we can diff them.

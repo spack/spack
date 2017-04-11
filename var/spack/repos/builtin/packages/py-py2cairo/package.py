@@ -35,7 +35,7 @@ class PyPy2cairo(Package):
 
     extends('python')
 
-    depends_on('cairo+X')
+    depends_on('cairo')
     depends_on('pixman')
 
     def install(self, spec, prefix):

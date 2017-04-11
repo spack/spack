@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 
 import argparse
@@ -71,13 +73,16 @@ def setup_parser(subparser):
         help="revision to compare to rev1 (default is HEAD)")
 
 
-def get_git():
+def get_git(fatal=True):
     # cd to spack prefix to do git operations
     os.chdir(spack.prefix)
 
     # If this is a non-git version of spack, give up.
     if not os.path.isdir('.git'):
-        tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
+        if fatal:
+            tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
+        else:
+            return None
 
     return which("git", required=True)
 
@@ -118,13 +123,13 @@ def pkg_diff(args):
     u1, u2 = diff_packages(args.rev1, args.rev2)
 
     if u1:
-        print "%s:" % args.rev1
+        print("%s:" % args.rev1)
         colify(sorted(u1), indent=4)
         if u1:
-            print
+            print()
 
     if u2:
-        print "%s:" % args.rev2
+        print("%s:" % args.rev2)
         colify(sorted(u2), indent=4)
 
 

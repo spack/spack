@@ -23,7 +23,8 @@ See the
 [Feature Overview](http://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
-To install spack and install your first package:
+To install spack and install your first package, make sure you have
+Python (2 or 3).  Then:
 
     $ git clone https://github.com/llnl/spack.git
     $ cd spack/bin

@@ -4,8 +4,12 @@
    contain the root `toctree` directive.
 
 ===================
-Spack Documentation
+Spack
 ===================
+
+.. epigraph::
+
+   `These are docs for the Spack package manager. For sphere packing, see` `pyspack <https://pyspack.readthedocs.io>`_.
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -47,6 +51,7 @@ or refer to the full manual below.
    basic_usage
    workflows
    tutorial_sc16
+   known_issues
 
 .. toctree::
    :maxdepth: 2

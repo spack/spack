@@ -33,6 +33,7 @@ class Vtk(CMakePackage):
 
     homepage = "http://www.vtk.org"
     url      = "http://www.vtk.org/files/release/7.1/VTK-7.1.0.tar.gz"
+    list_url = "http://www.vtk.org/download/"
 
     version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
     version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
