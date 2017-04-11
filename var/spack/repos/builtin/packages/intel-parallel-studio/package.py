@@ -126,7 +126,7 @@ class IntelParallelStudio(IntelInstaller):
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
             root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
-            shared='+shared' in spec
+            shared='+shared' in self.spec
         )
 
         return mkl_libs
