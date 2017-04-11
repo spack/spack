@@ -202,7 +202,7 @@ class AutotoolsPackage(PackageBase):
             return
         # Else try to regenerate it
         autotools = ['m4', 'autoconf', 'automake', 'libtool']
-        missing = [x for x in autotools if x not in spec]
+        missing = [x for x in autotools if x not in spec.build_only_deps]
         if missing:
             msg = 'Cannot generate configure: missing dependencies {0}'
             raise RuntimeError(msg.format(missing))
