@@ -25,16 +25,18 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class PyGriddataformats(PythonPackage):
+    """The gridDataFormats package provides classes to unify reading
+    and writing n-dimensional datasets. One can read grid data from
+    files, make them available as a Grid object, and write out the
+    data again."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "http://www.mdanalysis.org/GridDataFormats"
+    url      = "https://pypi.io/packages/source/G/GridDataFormats/GridDataFormats-0.3.3.tar.gz"
 
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('0.3.3', '5c83d3bdd421eebcee10111942c5a21f')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('python@2.7:')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.0.3:', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
