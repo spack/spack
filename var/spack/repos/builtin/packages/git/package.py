@@ -24,6 +24,7 @@
 ##############################################################################
 import sys
 from spack import *
+from distutils.dir_util import copy_tree
 
 
 class Git(AutotoolsPackage):
@@ -165,6 +166,10 @@ class Git(AutotoolsPackage):
         if sys.platform == 'darwin':
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
+
+    @run_after('install')
+    def install_completions(self):
+        copy_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):
