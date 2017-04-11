@@ -32,16 +32,12 @@ class Xsdktrilinos(CMakePackage):
     Trilinos.
     """
     homepage = "https://trilinos.org/"
-    base_url = "https://github.com/trilinos/xSDKTrilinos/archive"
+    url      = "https://github.com/trilinos/xSDKTrilinos/archive/trilinos-release-12-8-1.tar.gz"
 
     version('develop', git='https://github.com/trilinos/xSDKTrilinos.git', tag='master')
     version('xsdk-0.2.0', git='https://github.com/trilinos/xSDKTrilinos.git', tag='xsdk-0.2.0-rc1')
     version('12.8.1', '9cc338ded17d1e10ea6c0dc18b22dcd4')
     version('12.6.4', '44c4c54ccbac73bb8939f68797b9454a')
-
-    def url_for_version(self, version):
-        return '%s/trilinos-release-%s.tar.gz' % \
-            (Xsdktrilinos.base_url, version.dashed)
 
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')
@@ -62,6 +58,10 @@ class Xsdktrilinos(CMakePackage):
     depends_on('trilinos@12.8.1', when='@12.8.1')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('trilinos@develop', when='@develop')    
+
+    def url_for_version(self, version):
+        url = "https://github.com/trilinos/xSDKTrilinos/archive/trilinos-release-{0}.tar.gz"
+        return url.format(version.dashed)
 
     def cmake_args(self):
         spec = self.spec

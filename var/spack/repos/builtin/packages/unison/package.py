@@ -34,7 +34,7 @@ class Unison(Package):
        other."""
 
     homepage = "https://www.cis.upenn.edu/~bcpierce/unison/"
-    url      = "https://www.seas.upenn.edu/~bcpierce/unison//download/releases/stable/unison-2.48.3.tar.gz"
+    url      = "https://www.seas.upenn.edu/~bcpierce/unison//download/releases/stable/unison-2.48.4.tar.gz"
 
     version('2.48.4', '5334b78c7e68169df7de95f4c6c4b60f')
 

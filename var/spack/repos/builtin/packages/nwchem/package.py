@@ -68,7 +68,7 @@ class Nwchem(Package):
         ]
     }
     # Iterate over patches
-    for condition, urls in urls_for_patches.iteritems():
+    for condition, urls in urls_for_patches.items():
         for url, md5 in urls:
             patch(url, when=condition, level=0, md5=md5)
 

@@ -56,6 +56,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')
     version('1.8',   '7743960c968760437b6e39093cfe6f67')
     version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
     version('1.7.4', '49c1076428a5d3b5ad7ac65233fcca2f')
@@ -88,13 +89,6 @@ class Go(Package):
             r'^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$',
             r'# \1\2\3',
         )
-
-    @when('@1.5.0:')
-    def patch(self):
-        pass
-
-    def url_for_version(self, version):
-        return "https://storage.googleapis.com/golang/go{0}.src.tar.gz".format(version)
 
     def install(self, spec, prefix):
         bash = which('bash')

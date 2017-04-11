@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+from __future__ import print_function
 
+import argparse
 import llnl.util.tty as tty
 
 import spack
@@ -96,5 +97,5 @@ def graph(parser, args):
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
         graph_ascii(specs[0], debug=spack.debug, deptype=deptype)
         for spec in specs[1:]:
-            print  # extra line bt/w independent graphs
+            print()  # extra line bt/w independent graphs
             graph_ascii(spec, debug=spack.debug)

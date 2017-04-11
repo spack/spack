@@ -187,6 +187,18 @@ class Petsc(Package):
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
 	    
+        # Help PETSc pick up Scalapack from MKL:
+        if 'scalapack' in spec:
+            scalapack = spec['scalapack'].libs
+            options.extend([
+                '--with-scalapack-lib=%s' % scalapack.joined(),
+                '--with-scalapack=1'
+            ])
+        else:
+            options.extend([
+                '--with-scalapack=0'
+            ])
+
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'scalapack', 'trilinos'):

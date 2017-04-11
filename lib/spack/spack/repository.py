@@ -26,7 +26,6 @@ import os
 import stat
 import shutil
 import errno
-import exceptions
 import sys
 import inspect
 import imp
@@ -558,7 +557,7 @@ class Repo(object):
 
                 return yaml_data['repo']
 
-        except exceptions.IOError:
+        except IOError:
             tty.die("Error reading %s when opening %s"
                     % (self.config_file, self.root))
 

@@ -78,7 +78,6 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
@@ -96,7 +95,7 @@ spack_version = Version("0.10.0")
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.error.SpackError, e:
+except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
@@ -162,6 +161,7 @@ from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
+from spack.build_systems.perl import PerlPackage
 
 __all__ += [
     'run_before',
@@ -172,7 +172,8 @@ __all__ += [
     'AutotoolsPackage',
     'MakefilePackage',
     'PythonPackage',
-    'RPackage'
+    'RPackage',
+    'PerlPackage'
 ]
 
 from spack.version import Version, ver

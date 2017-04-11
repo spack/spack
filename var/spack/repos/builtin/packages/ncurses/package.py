@@ -57,7 +57,6 @@ class Ncurses(AutotoolsPackage):
             '--with-cxx-shared',
             '--enable-widec',
             '--enable-overwrite',
-            '--disable-lib-suffixes',
             '--without-ada',
             '--enable-pc-files',
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)

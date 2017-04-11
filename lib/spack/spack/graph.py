@@ -63,6 +63,7 @@ can take a number of specs as input.
 """
 
 from heapq import *
+from six import iteritems
 
 from llnl.util.lang import *
 from llnl.util.tty.color import *
@@ -562,7 +563,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
                 continue
 
             # Add edges for each depends_on in the package.
-            for dep_name, dep in spec.package.dependencies.iteritems():
+            for dep_name, dep in iteritems(spec.package.dependencies):
                 deps.add((spec.name, dep_name))
 
             # If the package provides something, add an edge for that.
