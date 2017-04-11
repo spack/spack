@@ -39,9 +39,4 @@ class Cscope(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('pkg-config', type='build')
 
-    def configure_args(self):
-        return [
-            'LIBS=-lncursesw',
-            '--with-ncurses={0}'.format(self.spec['ncurses'].prefix),
-            '--with-flex',
-        ]
+    build_targets = ['CURSES_LIBS=-lncursesw']
