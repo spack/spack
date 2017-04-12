@@ -78,7 +78,7 @@ class Hpl(MakefilePackage):
             'LIBdir       = $(TOPdir)/lib/$(ARCH)',
             'HPLlib       = $(LIBdir)/libhpl.a',
             # Message Passing library (MPI)
-            'MPinc        = -I{0}'.format(spec['mpi'].prefix.include),
+            'MPinc        = {0}'.format(spec['mpi'].prefix.include),
             'MPlib        = -L{0}'.format(spec['mpi'].prefix.lib),
             # Linear Algebra library (BLAS or VSIPL)
             'LAinc        = {0}'.format(spec['blas'].prefix.include),

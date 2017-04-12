@@ -108,15 +108,19 @@ class IntelParallelStudio(IntelInstaller):
 
     @property
     def blas_libs(self):
-        if '+ilp64' in self.spec:
+        spec = self.spec
+        prefix = self.prefix
+        shared = '+shared' in spec
+
+        if '+ilp64' in spec:
             mkl_integer = ['libmkl_intel_ilp64']
         else:
             mkl_integer = ['libmkl_intel_lp64']
 
         mkl_threading = ['libmkl_sequential']
 
-        if '+openmp' in self.spec:
-            if '%intel' in self.spec:
+        if '+openmp' in spec:
+            if '%intel' in spec:
                 mkl_threading = ['libmkl_intel_thread', 'libiomp5']
             else:
                 mkl_threading = ['libmkl_gnu_thread']
@@ -125,11 +129,17 @@ class IntelParallelStudio(IntelInstaller):
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
-            shared='+shared' in self.spec
+            root=join_path(prefix, 'mkl', 'lib', 'intel64'),
+            shared=shared
         )
 
-        return mkl_libs
+        # Intel MKL link line advisor recommends these system libraries
+        system_libs = find_system_libraries(
+            ['libpthread', 'libm', 'libdl'],
+            shared=shared
+        )
+
+        return mkl_libs + system_libs
 
     @property
     def lapack_libs(self):
