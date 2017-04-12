@@ -27,7 +27,8 @@ from spack import *
 
 class Nginx(AutotoolsPackage):
     """nginx [engine x] is an HTTP and reverse proxy server, a mail proxy
-    server, and a generic TCP/UDP proxy server ..."""
+    server, and a generic TCP/UDP proxy server, originally written by Igor
+    Sysoev."""
 
     homepage = "https://nginx.org/en/"
     url      = "https://nginx.org/download/nginx-1.12.0.tar.gz"
