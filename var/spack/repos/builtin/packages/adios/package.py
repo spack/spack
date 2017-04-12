@@ -73,7 +73,7 @@ class Adios(AutotoolsPackage):
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('szip', when='+szip')
-    depends_on('zfp', when='+zfp')
+    depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
 
