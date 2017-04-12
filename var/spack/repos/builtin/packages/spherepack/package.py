@@ -22,24 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Ccache(AutotoolsPackage):
-    """ccache is a compiler cache. It speeds up recompilation by caching
-    previous compilations and detecting when the same compilation is being done
-    again."""
+class Spherepack(Package):
+    """SPHEREPACK - A Package for Modeling Geophysical Processes"""
 
-    homepage = "https://ccache.samba.org/"
-    url      = "https://www.samba.org/ftp/ccache/ccache-3.3.4.tar.gz"
+    homepage = "https://www2.cisl.ucar.edu/resources/legacy/spherepack"
+    url      = "https://www2.cisl.ucar.edu/sites/default/files/spherepack3.2.tar"
 
-    version('3.3.4', '61326f1edac7cd211a7018458dfe2d86')
-    version('3.3.3', 'ea1f95303749b9ac136c617d1b333eef')
-    version('3.3.2', 'b966d56603e1fad2bac22930e5f01830')
-    version('3.3.1', '7102ef024cff09d353b3f4c48379b40b')
-    version('3.3', 'b7ac8fdd556f93831618483325fbb1ef')
-    version('3.2.9', '8f3f6e15e75a0e6020166927d41bd0b3')
+    version('3.2', '283627744f36253b4260efd7dfb7c762')
 
-    depends_on('gperf')
-    depends_on('libxslt')
-    depends_on('zlib')
+    def install(self, spec, prefix):
+        if self.compiler.fc is None:
+            raise InstallError("SPHEREPACK requires a Fortran 90 compiler")
+        make("MAKE=make", "F90=f90 -O2", "AR=ar", "libspherepack")
+        make("MAKE=make", "F90=f90 -O2", "AR=ar", "testspherepack")
+        install_tree("lib", prefix.lib)

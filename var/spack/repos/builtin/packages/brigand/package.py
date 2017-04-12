@@ -22,24 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Ccache(AutotoolsPackage):
-    """ccache is a compiler cache. It speeds up recompilation by caching
-    previous compilations and detecting when the same compilation is being done
-    again."""
+class Brigand(Package):
+    """
+    Brigand Meta-programming library
+    """
 
-    homepage = "https://ccache.samba.org/"
-    url      = "https://www.samba.org/ftp/ccache/ccache-3.3.4.tar.gz"
+    homepage = "https://github.com/edouarda/brigand"
+    url      = "https://github.com/edouarda/brigand/archive/1.0.0.tar.gz"
 
-    version('3.3.4', '61326f1edac7cd211a7018458dfe2d86')
-    version('3.3.3', 'ea1f95303749b9ac136c617d1b333eef')
-    version('3.3.2', 'b966d56603e1fad2bac22930e5f01830')
-    version('3.3.1', '7102ef024cff09d353b3f4c48379b40b')
-    version('3.3', 'b7ac8fdd556f93831618483325fbb1ef')
-    version('3.2.9', '8f3f6e15e75a0e6020166927d41bd0b3')
+    version('master', git='https://github.com/edouarda/brigand.git',
+            branch='master')
+    version('1.3.0', '0bea9713b3b712229aed289e218d577b')
+    version('1.2.0', '32c0f73e7e666d33ff123334f5c9c92f')
+    version('1.1.0', '073b7c8e2cbda3a81bbeb1ea5b9ca0eb')
+    version('1.0.0', 'eeab3d437090f0bb7bc4eb69a5cd9c49')
 
-    depends_on('gperf')
-    depends_on('libxslt')
-    depends_on('zlib')
+    def install(self, spec, prefix):
+        install_tree('include', prefix.include)
