@@ -58,6 +58,10 @@ class Valgrind(AutotoolsPackage):
     depends_on("automake", type='build', when='@develop')
     depends_on("libtool", type='build', when='@develop')
 
+    # Apply the patch suggested here:
+    # http://valgrind.10908.n7.nabble.com/Unable-to-compile-on-Mac-OS-X-10-11-td57237.html
+    patch('valgrind_3_12_0_osx.patch', when='@3.12.0 platform=darwin')
+
     def configure_args(self):
         spec = self.spec
         options = []
