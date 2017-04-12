@@ -63,6 +63,8 @@ schema = {
                 'verify_ssl': {'type': 'boolean'},
                 'checksum': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
+                'parallel': {'type': 'boolean'},
+                'jobs': {'type': 'integer', 'minimum': 1},
             }
         },
     },

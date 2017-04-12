@@ -99,8 +99,8 @@ See :ref:`modules` for details.
 ``build_stage``
 --------------------
 
-Spack is designed to run out of a user home directories, and on many
-systems the home directory a (slow) network filesystem.  On most systems,
+Spack is designed to run out of a user home directory, and on many
+systems the home directory is a (slow) network filesystem.  On most systems,
 building in a temporary filesystem results in faster builds than building
 in the home directory.  Usually, there is also more space available in
 the temporary location than in the home directory. So, Spack tries to
@@ -122,11 +122,11 @@ See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used totrack the stage.
+``$spack/var/spack/stage``. This is used to track the stage.
 
 After a package is successfully installed, Spack deletes the temporary
 directory it used to build.  Unsuccessful builds are not deleted, but you
-can manually purge them with :ref:`spack purge --stage
+can manually purge them with :ref:`spack purge ---stage
 <cmd-spack-purge>`.
 
 .. note::
@@ -142,7 +142,7 @@ can manually purge them with :ref:`spack purge --stage
 
 Location to cache downloaded tarballs and repositories.  By default these
 are stored in ``$spack/var/spack/cache``.  These are stored indefinitely
-by default. Can be purged with :ref:`spack purge --downloads
+by default. Can be purged with :ref:`spack purge ---downloads
 <cmd-spack-purge>`.
 
 --------------------
@@ -151,7 +151,7 @@ by default. Can be purged with :ref:`spack purge --downloads
 
 Temporary directory to store long-lived cache files, such as indices of
 packages available in repositories.  Defaults to ``~/.spack/cache``.  Can
-be purged with :ref:`spack purge --misc-cache <cmd-spack-purge>`.
+be purged with :ref:`spack purge ---misc-cache <cmd-spack-purge>`.
 
 --------------------
 ``verify_ssl``
@@ -180,7 +180,31 @@ the way packages build. This includes ``LD_LIBRARY_PATH``, ``CPATH``,
 ``LIBRARY_PATH``, ``DYLD_LIBRARY_PATH``, and others.
 
 By default, builds are ``clean``, but on some machines, compilers and
-other tools may need custom ``LD_LIBRARY_PATH`` setings to run.  You can
+other tools may need custom ``LD_LIBRARY_PATH`` settings to run.  You can
 set ``dirty`` to ``true`` to skip the cleaning step and make all builds
 "dirty" by default.  Be aware that this will reduce the reproducibility
 of builds.
+
+------------
+``parallel``
+------------
+
+When set to ``true``, commands that build software will run in parallel.
+For example, ``spack build`` and ``spack install`` will run commands
+like ``make`` as ``make -j<jobs>`` where jobs is the number of threads to
+use. See ``jobs`` below to change the default number of jobs.
+
+When set to ``false``, all builds will happen in serial.
+
+--------
+``jobs``
+--------
+
+When ``parallel`` is set to ``true``, Spack will build software in parallel.
+The default parallelism is equal to the number of cores on your machine.
+If you work on a shared login node or have a strict ulimit, it may be
+necessary to set the default to a lower value. By setting ``jobs`` to 4, for
+example, commands like ``spack install`` will run ``make -j4`` instead of
+hogging every core.
+
+When ``parallel`` is set to ``false``, this value is ignored.

@@ -482,10 +482,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     # These are default values for instance variables.
     #
     """By default we build in parallel.  Subclasses can override this."""
-    parallel = True
+    parallel = spack.parallel
 
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
-    make_jobs = None
+    make_jobs = spack.jobs
 
     """By default do not run tests within package's install()"""
     run_tests = False
