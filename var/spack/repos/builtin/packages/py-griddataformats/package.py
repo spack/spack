@@ -25,14 +25,18 @@
 from spack import *
 
 
-class PyBackportsSslMatchHostname(PythonPackage):
-    """The ssl.match_hostname() function from Python 3.5"""
+class PyGriddataformats(PythonPackage):
+    """The gridDataFormats package provides classes to unify reading
+    and writing n-dimensional datasets. One can read grid data from
+    files, make them available as a Grid object, and write out the
+    data again."""
 
-    homepage = "https://pypi.python.org/pypi/backports.ssl_match_hostname"
-    url      = "https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
+    homepage = "http://www.mdanalysis.org/GridDataFormats"
+    url      = "https://pypi.io/packages/source/G/GridDataFormats/GridDataFormats-0.3.3.tar.gz"
 
-    version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
+    version('0.3.3', '5c83d3bdd421eebcee10111942c5a21f')
 
-    # newer setuptools version mess with "namespace" packages in an
-    # incompatible way cf. https://github.com/pypa/setuptools/issues/900
-    depends_on('py-setuptools@:30.999.999', type='build')
+    depends_on('python@2.7:')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.0.3:', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))

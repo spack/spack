@@ -23,13 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class LibjsonC(AutotoolsPackage):
-    """ A JSON implementation in C """
-    homepage = "https://github.com/json-c/json-c/wiki"
-    url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.11.tar.gz"
+class Cudnn(Package):
+    """NVIDIA cuDNN is a GPU-accelerated library of primitives for deep
+    neural networks"""
 
-    parallel = False
+    homepage = "https://developer.nvidia.com/cudnn"
 
-    version('0.11', 'aa02367d2f7a830bf1e3376f77881e98')
+    version('6.0', '4aacb7acb93c5e4dfa9db814df496219',
+            url='http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-8.0-linux-x64-v6.0.tgz')
+    version('5.1', '406f4ac7f7ee8aa9e41304c143461a69',
+            url='http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-linux-x64-v5.1.tgz')
+
+    depends_on('cuda@8:')
+
+    def install(self, spec, prefix):
+        copy_tree('.', prefix)

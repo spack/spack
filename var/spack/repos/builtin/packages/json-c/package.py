@@ -25,14 +25,12 @@
 from spack import *
 
 
-class PyBackportsSslMatchHostname(PythonPackage):
-    """The ssl.match_hostname() function from Python 3.5"""
+class JsonC(AutotoolsPackage):
+    """A JSON implementation in C."""
+    homepage = "https://github.com/json-c/json-c/wiki"
+    url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.12.1.tar.gz"
 
-    homepage = "https://pypi.python.org/pypi/backports.ssl_match_hostname"
-    url      = "https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
+    version('0.12.1', '55f7853f7d8cf664554ce3fa71bf1c7d')
+    version('0.11',   'aa02367d2f7a830bf1e3376f77881e98')
 
-    version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
-
-    # newer setuptools version mess with "namespace" packages in an
-    # incompatible way cf. https://github.com/pypa/setuptools/issues/900
-    depends_on('py-setuptools@:30.999.999', type='build')
+    parallel = False
