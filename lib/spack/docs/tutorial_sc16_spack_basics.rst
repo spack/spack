@@ -1030,7 +1030,7 @@ We can uninstall packages by spec using the same syntax as install.
 We can uninstall packages by referring only to their hash.
 
 
-We can use either ``-f`` (force) or ``-d`` (remove dependents as well) to
+We can use either ``-f`` (force) or ``-R`` (remove dependents as well) to
 remove packages that are required by another installed package.
 
 .. code-block:: console
@@ -1044,7 +1044,7 @@ remove packages that are required by another installed package.
 
 
   ==> Error: You can use spack uninstall --dependents to uninstall these dependencies as well
-  $ spack uninstall -d /4blb
+  $ spack uninstall -R /4blb
   ==> The following packages will be uninstalled :
 
   -- linux-redhat6-x86_64 / intel@16.0.3 --------------------------

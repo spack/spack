@@ -110,6 +110,16 @@ def get_compiler_config(scope=None, init_config=True):
         return []  # Return empty list which we will later append to.
 
 
+def compiler_config_files():
+    config_files = list()
+    for scope in spack.config.config_scopes:
+        config = spack.config.get_config('compilers', scope=scope)
+        if config:
+            config_files.append(spack.config.config_scopes[scope]
+                                .get_section_filename('compilers'))
+    return config_files
+
+
 def add_compilers_to_config(compilers, scope=None, init_config=True):
     """Add compilers to the config for the specified architecture.
 
@@ -200,10 +210,11 @@ def supported(compiler_spec):
 
 
 @_auto_compiler_spec
-def find(compiler_spec, scope=None):
+def find(compiler_spec, scope=None, init_config=True):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an empty list if nothing found."""
-    return [c for c in all_compiler_specs(scope) if c.satisfies(compiler_spec)]
+    return [c for c in all_compiler_specs(scope, init_config)
+            if c.satisfies(compiler_spec)]
 
 
 def all_compilers(scope=None):
@@ -217,20 +228,25 @@ def all_compilers(scope=None):
 
 @_auto_compiler_spec
 def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
-                       use_cache=True):
+                       use_cache=True, init_config=True):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
     if use_cache:
-        config = all_compilers_config(scope)
+        config = all_compilers_config(scope, init_config)
     else:
-        config = get_compiler_config(scope)
+        config = get_compiler_config(scope, init_config)
 
-    matches = set(find(compiler_spec, scope))
+    matches = set(find(compiler_spec, scope, init_config))
     compilers = []
     for cspec in matches:
-        compilers.extend(get_compilers(cspec, config, arch_spec))
+        compilers.extend(get_compilers(config, cspec, arch_spec))
     return compilers
+
+
+def compilers_for_arch(arch_spec, scope=None):
+    config = all_compilers_config(scope)
+    return list(get_compilers(config, arch_spec=arch_spec))
 
 
 def compiler_from_config_entry(items):
@@ -265,12 +281,12 @@ def compiler_from_config_entry(items):
                environment, extra_rpaths, **compiler_flags)
 
 
-def get_compilers(cspec, config, arch_spec=None):
+def get_compilers(config, cspec=None, arch_spec=None):
     compilers = []
 
     for items in config:
         items = items['compiler']
-        if items['spec'] != str(cspec):
+        if cspec and items['spec'] != str(cspec):
             continue
 
         # If an arch spec is given, confirm that this compiler
@@ -319,7 +335,7 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
             scope_to_compilers[scope] = compilers
 
     cfg_file_to_duplicates = dict()
-    for scope, compilers in scope_to_compilers.iteritems():
+    for scope, compilers in scope_to_compilers.items():
         config_file = config_scopes[scope].get_section_filename('compilers')
         cfg_file_to_duplicates[config_file] = compilers
 
@@ -385,7 +401,7 @@ class CompilerDuplicateError(spack.error.SpackError):
         config_file_to_duplicates = get_compiler_duplicates(
             compiler_spec, arch_spec)
         duplicate_table = list(
-            (x, len(y)) for x, y in config_file_to_duplicates.iteritems())
+            (x, len(y)) for x, y in config_file_to_duplicates.items())
         descriptor = lambda num: 'time' if num == 1 else 'times'
         duplicate_msg = (
             lambda cfgfile, count: "{0}: {1} {2}".format(

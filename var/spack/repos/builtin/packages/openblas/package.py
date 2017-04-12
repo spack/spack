@@ -59,6 +59,8 @@ class Openblas(MakefilePackage):
 
     parallel = False
 
+    conflicts('%intel@16', when='@0.2.15:0.2.19')
+
     @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
@@ -74,6 +76,12 @@ class Openblas(MakefilePackage):
             # be used with any (!) compiler named clang, bummer.
             raise InstallError(
                 'OpenBLAS does not support OpenMP with clang!'
+            )
+
+        spec = self.spec
+        if spec.satisfies('%clang@8.1.0:') and spec.satisfies('@:0.2.19'):
+            raise InstallError(
+                'OpenBLAS @:0.2.19 does not build with Apple clang@8.1.0:'
             )
 
     @property

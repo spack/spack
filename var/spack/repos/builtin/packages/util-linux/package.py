@@ -25,20 +25,28 @@
 from spack import *
 
 
-class UtilLinux(Package):
+class UtilLinux(AutotoolsPackage):
     """Util-linux is a suite of essential utilities for any Linux system."""
 
     homepage = "http://freecode.com/projects/util-linux"
-    url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.25/util-linux-2.25.tar.gz"
+    url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.1.tar.gz"
+    list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
+    list_depth = 1
 
-    version('2.25', 'f6d7fc6952ec69c4dc62c8d7c59c1d57')
+    version('2.29.1', 'c7d5c111ef6bc5df65659e0b523ac9d9')
+    version('2.25',   'f6d7fc6952ec69c4dc62c8d7c59c1d57')
 
-    depends_on("python@2.7:")
+    depends_on('python@2.7:')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "PKG_CONFIG_PATH=%s/pkgconfig" % spec['python'].prefix.lib,
-                  "--disable-use-tty-group")
+    def url_for_version(self, version):
+        url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
 
-        make()
-        make("install")
+    def configure_args(self):
+        spec = self.spec
+
+        return [
+            'PKG_CONFIG_PATH={0}'.format(
+                join_path(spec['python'].prefix.lib, 'pkgconfig')),
+            '--disable-use-tty-group',
+        ]

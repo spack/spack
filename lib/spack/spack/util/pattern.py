@@ -61,7 +61,7 @@ def composite(interface=None, method_list=None, container=list):
         # Retrieve the base class of the composite. Inspect its methods and
         # decide which ones will be overridden
         def no_special_no_private(x):
-            return inspect.ismethod(x) and not x.__name__.startswith('_')
+            return callable(x) and not x.__name__.startswith('_')
 
         # Patch the behavior of each of the methods in the previous list.
         # This is done associating an instance of the descriptor below to
@@ -90,42 +90,25 @@ def composite(interface=None, method_list=None, container=list):
                 return getter
 
         dictionary_for_type_call = {}
+
         # Construct a dictionary with the methods explicitly passed as name
         if method_list is not None:
-            # python@2.7: method_list_dict = {name: IterateOver(name) for name
-            # in method_list}
-            method_list_dict = {}
-            for name in method_list:
-                method_list_dict[name] = IterateOver(name)
-            dictionary_for_type_call.update(method_list_dict)
+            dictionary_for_type_call.update(
+                (name, IterateOver(name)) for name in method_list)
+
         # Construct a dictionary with the methods inspected from the interface
         if interface is not None:
-            ##########
-            # python@2.7: interface_methods = {name: method for name, method in
-            # inspect.getmembers(interface, predicate=no_special_no_private)}
-            interface_methods = {}
-            for name, method in inspect.getmembers(
-                    interface, predicate=no_special_no_private):
-                interface_methods[name] = method
-            ##########
-            # python@2.7: interface_methods_dict = {name: IterateOver(name,
-            # method) for name, method in interface_methods.iteritems()}
-            interface_methods_dict = {}
-            for name, method in interface_methods.iteritems():
-                interface_methods_dict[name] = IterateOver(name, method)
-            ##########
-            dictionary_for_type_call.update(interface_methods_dict)
+            dictionary_for_type_call.update(
+                (name, IterateOver(name, method))
+                for name, method in inspect.getmembers(
+                    interface, predicate=no_special_no_private))
+
         # Get the methods that are defined in the scope of the composite
         # class and override any previous definition
-        ##########
-        # python@2.7: cls_method = {name: method for name, method in
-        # inspect.getmembers(cls, predicate=inspect.ismethod)}
-        cls_method = {}
-        for name, method in inspect.getmembers(
-                cls, predicate=inspect.ismethod):
-            cls_method[name] = method
-        ##########
-        dictionary_for_type_call.update(cls_method)
+        dictionary_for_type_call.update(
+            (name, method) for name, method in inspect.getmembers(
+                cls, predicate=inspect.ismethod))
+
         # Generate the new class on the fly and return it
         # FIXME : inherit from interface if we start to use ABC classes?
         wrapper_class = type(cls.__name__, (cls, container),

@@ -37,6 +37,8 @@ class PyYt(PythonPackage):
     homepage = "http://yt-project.org"
     url = "https://bitbucket.org/yt_analysis/yt"
 
+    version("3.3.5", "2ad314ff3d3261e41825d15db027b0e7",
+            url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.5.tar.gz")
     version("3.3.4", "3a84e56dfd82f9dd923f3fb8490e679c",
             url="https://bitbucket.org/yt_analysis/yt/get/yt-3.3.4.tar.gz")
     version("3.3.1", hg="https://bitbucket.org/yt_analysis/yt",
@@ -55,6 +57,7 @@ class PyYt(PythonPackage):
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
+    variant("rockstar", default=False, description="enable rockstar support")
 
     depends_on("py-astropy", type=('build', 'run'), when="+astropy")
     depends_on("py-cython", type=('build', 'run'))
@@ -65,7 +68,14 @@ class PyYt(PythonPackage):
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type="build")
     depends_on("py-sympy", type=('build', 'run'))
+    depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
     depends_on("python @2.7:2.999,3.4:")
+
+    @run_before('install')
+    def prep_yt(self):
+        if '+rockstar' in self.spec:
+            with open('rockstar.cfg', 'w') as rockstar_cfg:
+                rockstar_cfg.write(self.spec['rockstar'].prefix)
 
     @run_after('install')
     def check_install(self):

@@ -24,14 +24,14 @@
 ##############################################################################
 import collections
 import contextlib
+from six import StringIO
 
-import cStringIO
 import pytest
 import spack.modules
 import spack.spec
 
 # Our "filesystem" for the tests below
-FILE_REGISTRY = collections.defaultdict(cStringIO.StringIO)
+FILE_REGISTRY = collections.defaultdict(StringIO)
 # Spec strings that will be used throughout the tests
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
@@ -48,7 +48,7 @@ def stringio_open(monkeypatch):
         if not mode == 'w':
             raise RuntimeError('unexpected opening mode for stringio_open')
 
-        FILE_REGISTRY[filename] = cStringIO.StringIO()
+        FILE_REGISTRY[filename] = StringIO()
 
         try:
             yield FILE_REGISTRY[filename]

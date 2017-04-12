@@ -52,6 +52,7 @@ class Libgd(AutotoolsPackage):
     depends_on('gettext', type='build')
     depends_on('pkg-config', type='build')
 
+    depends_on('libiconv')
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('fontconfig')

@@ -68,6 +68,7 @@ class Elemental(CMakePackage):
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='~openmp_blas')
     depends_on('metis')
