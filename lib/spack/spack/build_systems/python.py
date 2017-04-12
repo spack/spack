@@ -24,6 +24,7 @@
 ##############################################################################
 
 import inspect
+import os
 
 from spack.directives import extends
 from spack.package import PackageBase, run_after
@@ -91,9 +92,25 @@ class PythonPackage(PackageBase):
     # Default phases
     phases = ['build', 'install']
 
+    # Name of modules that the Python package provides
+    # This is used to test whether or not the installation succeeded
+    # These names generally come from running:
+    #
+    # >>> import setuptools
+    # >>> setuptools.find_packages()
+    #
+    # in the source tarball directory
+    import_modules = []
+
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
+
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['test']
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ['import_module_test']
 
     extends('python')
 
@@ -106,19 +123,38 @@ class PythonPackage(PackageBase):
         """The directory containing the ``setup.py`` file."""
         return self.stage.source_path
 
-    def python(self, *args):
-        inspect.getmodule(self).python(*args)
+    def python(self, *args, **kwargs):
+        inspect.getmodule(self).python(*args, **kwargs)
 
-    def setup_py(self, *args):
+    def setup_py(self, *args, **kwargs):
         setup = self.setup_file()
 
         with working_dir(self.build_directory):
-            self.python(setup, '--no-user-cfg', *args)
+            self.python(setup, '--no-user-cfg', *args, **kwargs)
+
+    def _setup_command_available(self, command):
+        """Determines whether or not a setup.py command exists.
+
+        :param str command: The command to look for
+        :return: True if the command is found, else False
+        :rtype: bool
+        """
+        kwargs = {
+            'output': os.devnull,
+            'error':  os.devnull,
+            'fail_on_error': False
+        }
+
+        python = inspect.getmodule(self).python
+        setup = self.setup_file()
+
+        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        return python.returncode == 0
 
     # The following phases and their descriptions come from:
     #   $ python setup.py --help-commands
-    # Only standard commands are included here, but some packages
-    # define extra commands as well
+
+    # Standard commands
 
     def build(self, spec, prefix):
         """Build everything needed to install."""
@@ -305,6 +341,38 @@ class PythonPackage(PackageBase):
     def check_args(self, spec, prefix):
         """Arguments to pass to check."""
         return []
+
+    # Testing
+
+    def test(self):
+        """Run unit tests after in-place build.
+
+        These tests are only run if the package actually has a 'test' command.
+        """
+        if self._setup_command_available('test'):
+            args = self.test_args(self.spec, self.prefix)
+
+            self.setup_py('test', *args)
+
+    def test_args(self, spec, prefix):
+        """Arguments to pass to test."""
+        return []
+
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+
+    def import_module_test(self):
+        """Attempts to import the module that was just installed.
+
+        This test is only run if the package overrides
+        :py:attr:`import_modules` with a list of module names."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the current directory
+        with working_dir('..'):
+            for module in self.import_modules:
+                self.python('-c', 'import {0}'.format(module))
+
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

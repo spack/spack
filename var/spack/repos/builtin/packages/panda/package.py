@@ -29,9 +29,9 @@ from spack import *
 class Panda(Package):
     """PANDA: Parallel AdjaceNcy Decomposition Algorithm"""
     homepage = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/index.html"
-    url      = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/current_panda.tar"
+    url      = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-2016-03-07.tar"
 
-    version('current', 'b06dc312ee56e13eefea9c915b70fcef')
+    version('2016-03-07', 'b06dc312ee56e13eefea9c915b70fcef')
 
     # Note: Panda can also be built without MPI support
 

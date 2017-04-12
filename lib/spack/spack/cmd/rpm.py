@@ -1088,11 +1088,6 @@ class SubspaceConfig(object):
             default_namespace, cfg_store):
 
         self.pkg_to_subspace = resolve_pkg_to_subspace(universal_subspace)
-        # Preferred compilers and versions can be associated with
-        # subspaces. The global preferences object is updated based on
-        # the specified subspace to prefer the desired compiler/version
-        # for the associated package.
-        spack.package_prefs.pkgsort().pkg_to_subspace = self.pkg_to_subspace
         pkg_to_namespace = resolve_pkg_to_namespace(self.pkg_to_subspace)
         if get_namespace_from_specs:
             pkg_to_namespace.update(self.get_namespaces_from_specs(cfg_store))

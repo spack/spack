@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 import sys
 
@@ -41,7 +42,7 @@ class Hwloc(AutotoolsPackage):
     homepage = "http://www.open-mpi.org/projects/hwloc/"
     url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
-    list_depth = 3
+    list_depth = 2
 
     version('1.11.6', 'b4e95eadd2fbdb6d40bbd96be6f03c84')
     version('1.11.5', '8f5fe6a9be2eb478409ad5e640b2d3ba')

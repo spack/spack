@@ -31,6 +31,7 @@ import spack
 from llnl.util import tty
 from spack.url import *
 from spack.util.web import find_versions_of_archive
+from spack.util.naming import simplify_name
 
 description = "debugging tool for url parsing"
 
@@ -66,19 +67,26 @@ def setup_parser(subparser):
         '-n', '--incorrect-name', action='store_true',
         help='only list urls for which the name was incorrectly parsed')
     excl_args.add_argument(
+        '-N', '--correct-name', action='store_true',
+        help='only list urls for which the name was correctly parsed')
+    excl_args.add_argument(
         '-v', '--incorrect-version', action='store_true',
         help='only list urls for which the version was incorrectly parsed')
+    excl_args.add_argument(
+        '-V', '--correct-version', action='store_true',
+        help='only list urls for which the version was correctly parsed')
 
-    # Test
+    # Summary
     sp.add_parser(
-        'test', help='print a summary of how well we are parsing package urls')
+        'summary',
+        help='print a summary of how well we are parsing package urls')
 
 
 def url(parser, args):
     action = {
-        'parse': url_parse,
-        'list':  url_list,
-        'test':  url_test
+        'parse':   url_parse,
+        'list':    url_list,
+        'summary': url_summary
     }
 
     action[args.subcommand](args)
@@ -116,6 +124,10 @@ def url_parse(args):
         tty.msg('Spidering for versions:')
         versions = find_versions_of_archive(url)
 
+        if not versions:
+            print('  Found no versions for {0}'.format(name))
+            return
+
         max_len = max(len(str(v)) for v in versions)
 
         for v in sorted(versions):
@@ -145,7 +157,7 @@ def url_list(args):
     return len(urls)
 
 
-def url_test(args):
+def url_summary(args):
     # Collect statistics on how many URLs were correctly parsed
     total_urls       = 0
     correct_names    = 0
@@ -205,19 +217,19 @@ def url_test(args):
         correct_versions, total_urls, correct_versions / total_urls))
     print()
 
-    tty.msg('Statistics on name regular expresions:')
+    tty.msg('Statistics on name regular expressions:')
 
     print()
-    print('    Index  Count  Regular Expresion')
+    print('    Index  Count  Regular Expression')
     for ni in name_regex_dict:
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             ni, name_count_dict[ni], name_regex_dict[ni]))
     print()
 
-    tty.msg('Statistics on version regular expresions:')
+    tty.msg('Statistics on version regular expressions:')
 
     print()
-    print('    Index  Count  Regular Expresion')
+    print('    Index  Count  Regular Expression')
     for vi in version_regex_dict:
         print('    {0:>3}: {1:>6}   r{2!r}'.format(
             vi, version_count_dict[vi], version_regex_dict[vi]))
@@ -257,22 +269,38 @@ def url_list_parsing(args, urls, url, pkg):
     :rtype: set
     """
     if url:
-        if args.incorrect_name:
-            # Only add URLs whose name was incorrectly parsed
+        if args.correct_name or args.incorrect_name:
+            # Attempt to parse the name
             try:
                 name = parse_name(url)
-                if not name_parsed_correctly(pkg, name):
+                if (args.correct_name and
+                    name_parsed_correctly(pkg, name)):
+                    # Add correctly parsed URLs
+                    urls.add(url)
+                elif (args.incorrect_name and
+                      not name_parsed_correctly(pkg, name)):
+                    # Add incorrectly parsed URLs
                     urls.add(url)
             except UndetectableNameError:
-                urls.add(url)
-        elif args.incorrect_version:
-            # Only add URLs whose version was incorrectly parsed
+                if args.incorrect_name:
+                    # Add incorrectly parsed URLs
+                    urls.add(url)
+        elif args.correct_version or args.incorrect_version:
+            # Attempt to parse the version
             try:
                 version = parse_version(url)
-                if not version_parsed_correctly(pkg, version):
+                if (args.correct_version and
+                    version_parsed_correctly(pkg, version)):
+                    # Add correctly parsed URLs
+                    urls.add(url)
+                elif (args.incorrect_version and
+                      not version_parsed_correctly(pkg, version)):
+                    # Add incorrectly parsed URLs
                     urls.add(url)
             except UndetectableVersionError:
-                urls.add(url)
+                if args.incorrect_version:
+                    # Add incorrectly parsed URLs
+                    urls.add(url)
         else:
             urls.add(url)
 
@@ -288,6 +316,8 @@ def name_parsed_correctly(pkg, name):
     :rtype: bool
     """
     pkg_name = pkg.name
+
+    name = simplify_name(name)
 
     # After determining a name, `spack create` determines a build system.
     # Some build systems prepend a special string to the front of the name.
@@ -311,9 +341,33 @@ def version_parsed_correctly(pkg, version):
     :returns: True if the name was correctly parsed, else False
     :rtype: bool
     """
+    version = remove_separators(version)
+
     # If the version parsed from the URL is listed in a version()
     # directive, we assume it was correctly parsed
     for pkg_version in pkg.versions:
-        if str(pkg_version) == str(version):
+        pkg_version = remove_separators(pkg_version)
+        if pkg_version == version:
             return True
     return False
+
+
+def remove_separators(version):
+    """Removes separator characters ('.', '_', and '-') from a version.
+
+    A version like 1.2.3 may be displayed as 1_2_3 in the URL.
+    Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.
+    Unfortunately, this also means that 1.23 and 12.3 are equal.
+
+    :param version: A version
+    :type version: str or Version
+    :returns: The version with all separator characters removed
+    :rtype: str
+    """
+    version = str(version)
+
+    version = version.replace('.', '')
+    version = version.replace('_', '')
+    version = version.replace('-', '')
+
+    return version

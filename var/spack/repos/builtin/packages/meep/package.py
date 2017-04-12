@@ -30,6 +30,8 @@ class Meep(Package):
     software package developed at MIT to model electromagnetic systems."""
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Meep"
+    url      = "http://ab-initio.mit.edu/meep/meep-1.3.tar.gz"
+    list_url = "http://ab-initio.mit.edu/meep/old"
 
     version('1.3',   '18a5b9e18008627a0411087e0bb60db5')
     version('1.2.1', '9be2e743c3a832ae922de9d955d016c5')

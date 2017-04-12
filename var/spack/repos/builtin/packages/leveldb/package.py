@@ -31,8 +31,9 @@ class Leveldb(Package):
     that provides an ordered mapping from string keys to string values."""
 
     homepage = "https://github.com/google/leveldb"
-    url      = "https://github.com/google/leveldb/archive/v1.18.tar.gz"
+    url      = "https://github.com/google/leveldb/archive/v1.20.tar.gz"
 
+    version('1.20', '298b5bddf12c675d6345784261302252')
     version('1.18', '73770de34a2a5ab34498d2e05b2b7fa0')
 
     depends_on("snappy")
@@ -42,12 +43,28 @@ class Leveldb(Package):
 
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
+        mkdirp(join_path(prefix.lib, 'pkgconfig'))
 
         cp = which('cp')
 
         # cp --preserve=links libleveldb.* prefix/lib
-        args = glob.glob('libleveldb.*')
-        args.append(prefix + '/lib')
+        args = glob.glob('out-shared/libleveldb.*') \
+            + glob.glob('out-static/libleveldb.*')
+        args.append(prefix.lib)
         cp('--preserve=links', *args)
 
-        cp('-r', 'include/leveldb', prefix + '/include')
+        cp('-r', 'include/leveldb', prefix.include)
+
+        with open(join_path(prefix.lib, 'pkgconfig', 'leveldb.pc'), 'w') as f:
+            f.write('prefix={0}\n'.format(prefix))
+            f.write('exec_prefix=${prefix}\n')
+            f.write('libdir={0}\n'.format(prefix.lib))
+            f.write('includedir={0}\n'.format(prefix.include))
+            f.write('\n')
+            f.write('Name: leveldb\n')
+            f.write('Description: LevelDB is a fast key-value storage library'
+                    ' written at Google that provides an ordered mapping from'
+                    ' string keys to string values.\n')
+            f.write('Version: {0}\n'.format(spec.version))
+            f.write('Cflags: -I${includedir}\n')
+            f.write('Libs: -L${libdir} -lleveldb\n')

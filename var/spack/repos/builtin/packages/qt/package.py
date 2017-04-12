@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import platform
 import os
 import sys
 
@@ -32,8 +33,9 @@ class Qt(Package):
     homepage = 'http://qt.io'
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
-    list_depth = 4
+    list_depth = 3
 
+    version('5.7.1',  '031fb3fd0c3cc0f1082644492683f18d')
     version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
     version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5')
@@ -45,13 +47,20 @@ class Qt(Package):
 
     # Add patch for compile issues with qt3 found with use in the
     # OpenSpeedShop project
-    variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
-    variant('mesa',       default=False, description="Depend on mesa.")
-    variant('gtk',        default=False, description="Build with gtkplus.")
-    variant('webkit',     default=False, description="Build the Webkit extension")
-    variant('examples',   default=False, description="Build examples.")
-    variant('dbus',       default=False, description="Build with D-Bus support.")
-    variant('phonon',     default=False, description="Build with phonon support.")
+    variant('krellpatch', default=False,
+            description="Build with openspeedshop based patch.")
+    variant('mesa',       default=False,
+            description="Depend on mesa.")
+    variant('gtk',        default=False,
+            description="Build with gtkplus.")
+    variant('webkit',     default=False,
+            description="Build the Webkit extension")
+    variant('examples',   default=False,
+            description="Build examples.")
+    variant('dbus',       default=False,
+            description="Build with D-Bus support.")
+    variant('phonon',     default=False,
+            description="Build with phonon support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -75,6 +84,9 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
+
+    # QtQml
+    depends_on("python", when='@5.7.0:', type='build')
 
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+mesa')
@@ -175,9 +187,14 @@ class Qt(Package):
             '-optimized-qmake',
             '-no-openvg',
             '-no-pch',
-            # NIS is deprecated in more recent glibc
-            '-no-nis'
         ]
+
+        if '@:5.7.0' in self.spec:
+            config_args.extend([
+                # NIS is deprecated in more recent glibc,
+                # but qt-5.7.1 does not recognize this option
+                '-no-nis',
+            ])
 
         if '~examples' in self.spec:
             config_args.extend(['-nomake', 'examples'])
@@ -186,7 +203,12 @@ class Qt(Package):
             config_args.append('-no-phonon')
 
         if '+dbus' in self.spec:
+            dbus = self.spec['dbus'].prefix
             config_args.append('-dbus-linked')
+            config_args.append('-I%s/dbus-1.0/include' % dbus.lib)
+            config_args.append('-I%s/dbus-1.0' % dbus.include)
+            config_args.append('-L%s' % dbus.lib)
+            config_args.append('-ldbus-1')
         else:
             config_args.append('-no-dbus')
 
@@ -199,32 +221,37 @@ class Qt(Package):
             ])
 
         if '@4' in self.spec and sys.platform == 'darwin':
+            config_args.append('-cocoa')
+
+            mac_ver = tuple(platform.mac_ver()[0].split('.')[:2])
+            sdkname = 'macosx%s' % '.'.join(mac_ver)
             sdkpath = which('xcrun')('--show-sdk-path',
-                                     # XXX(macos): 10.11 SDK fails to configure
-                                     '--sdk', 'macosx10.9',
+                                     '--sdk', sdkname,
                                      output=str)
             config_args.extend([
                 '-sdk', sdkpath.strip(),
             ])
             use_clang_platform = False
             if self.spec.compiler.name == 'clang' and \
-               str(self.spec.compiler.version).endwith('-apple'):
+               str(self.spec.compiler.version).endswith('-apple'):
                 use_clang_platform = True
             # No one uses gcc-4.2.1 anymore; this is clang.
             if self.spec.compiler.name == 'gcc' and \
                str(self.spec.compiler.version) == '4.2.1':
                 use_clang_platform = True
             if use_clang_platform:
-                config_args.extend([
-                    '-platform', 'unsupported/macx-clang',
-                ])
+                config_args.append('-platform')
+                if mac_ver >= (10, 9):
+                    config_args.append('unsupported/macx-clang-libc++')
+                else:
+                    config_args.append('unsupported/macx-clang')
 
         return config_args
 
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
-    @when('@3')
+    @when('@3')  # noqa: F811
     def configure(self):
         # A user reported that this was necessary to link Qt3 on ubuntu.
         # However, if LD_LIBRARY_PATH is not set the qt build fails, check
@@ -241,7 +268,7 @@ class Qt(Package):
                   '-release',
                   '-fast')
 
-    @when('@4')
+    @when('@4')  # noqa: F811
     def configure(self):
         configure('-fast',
                   '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
@@ -249,7 +276,7 @@ class Qt(Package):
                   '-arch', str(self.spec.architecture.target),
                   *self.common_config_args)
 
-    @when('@5.0:5.6')
+    @when('@5.0:5.6')  # noqa: F811
     def configure(self):
         webkit_args = [] if '+webkit' in self.spec else ['-skip', 'qtwebkit']
         configure('-no-eglfs',
@@ -257,7 +284,7 @@ class Qt(Package):
                   '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
                   *(webkit_args + self.common_config_args))
 
-    @when('@5.7:')
+    @when('@5.7:')  # noqa: F811
     def configure(self):
         config_args = self.common_config_args
 

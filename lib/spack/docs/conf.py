@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -51,6 +51,10 @@ from sphinx.apidoc import main as sphinx_apidoc
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
+if sys.version_info[0] < 3:
+    sys.path.insert(0, os.path.abspath('../external/yaml/lib'))
+else:
+    sys.path.insert(0, os.path.abspath('../external/yaml/lib3'))
 sys.path.append(os.path.abspath('..'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
@@ -110,13 +114,13 @@ handling_spack = False
 for line in fileinput.input('spack.rst', inplace=1):
     if handling_spack:
         if not line.startswith('    :noindex:'):
-            print '    :noindex: %s' % ' '.join(spack.__all__)
+            print('    :noindex: %s' % ' '.join(spack.__all__))
         handling_spack = False
 
     if line.startswith('.. automodule::'):
         handling_spack = (line == '.. automodule:: spack\n')
 
-    print line,
+    sys.stdout.write(line)
 
 # Enable todo items
 todo_include_todos = True
@@ -156,7 +160,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spack'
-copyright = u'2013-2015, Lawrence Livermore National Laboratory.'
+copyright = u'2013-2017, Lawrence Livermore National Laboratory.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
