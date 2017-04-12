@@ -25,11 +25,32 @@
 from spack import *
 
 
-class LibjsonC(AutotoolsPackage):
-    """ A JSON implementation in C """
-    homepage = "https://github.com/json-c/json-c/wiki"
-    url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.11.tar.gz"
+class Fio(AutotoolsPackage):
+    """Flexible I/O Tester."""
 
-    parallel = False
+    homepage = "https://github.com/axboe/fio"
+    url      = "https://github.com/axboe/fio/archive/fio-2.19.tar.gz"
 
-    version('0.11', 'aa02367d2f7a830bf1e3376f77881e98')
+    version('2.19', '67125b60210a4daa689a4626fc66c612')
+
+    variant('gui', default=False, description='Enable building of gtk gfio')
+    variant('doc', default=False, description='Generate documentation')
+
+    depends_on('gtkplus@2.18:', when='+gui')
+    depends_on('cairo',         when='+gui')
+
+    depends_on('py-sphinx', type='build', when='+doc')
+
+    def configure_args(self):
+        config_args = []
+
+        if '+gui' in self.spec:
+            config_args.append('--enable-gfio')
+
+        return config_args
+
+    @run_after('build')
+    def build_docs(self):
+        if '+doc' in self.spec:
+            make('-C', 'doc', 'html')
+            make('-C', 'doc', 'man')

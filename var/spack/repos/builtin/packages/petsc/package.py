@@ -173,9 +173,21 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        # Help PETSc pick up Scalapack from MKL:
+        if 'scalapack' in spec:
+            scalapack = spec['scalapack'].libs
+            options.extend([
+                '--with-scalapack-lib=%s' % scalapack.joined(),
+                '--with-scalapack=1'
+            ])
+        else:
+            options.extend([
+                '--with-scalapack=0'
+            ])
+
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'scalapack'):
+                        'mumps'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
