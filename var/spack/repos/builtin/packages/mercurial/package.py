@@ -27,12 +27,25 @@ import llnl.util.tty as tty
 import os
 
 
-class Mercurial(Package):
+class Mercurial(PythonPackage):
     """Mercurial is a free, distributed source control management tool."""
 
     homepage = "https://www.mercurial-scm.org"
-    url      = "https://www.mercurial-scm.org/release/mercurial-3.9.tar.gz"
+    url      = "https://www.mercurial-scm.org/release/mercurial-4.1.2.tar.gz"
 
+    import_modules = [
+        'hgext', 'mercurial', 'hgext3rd', 'hgext.fsmonitor',
+        'hgext.largefiles', 'hgext.convert', 'hgext.zeroconf',
+        'hgext.fsmonitor.pywatchman', 'mercurial.pure',
+        'mercurial.httpclient', 'mercurial.hgweb'
+    ]
+
+    # Imports that crash
+    #
+    # hgext.highlight - requires pygments
+    # mercurial.cffi  - requires cffi
+
+    version('4.1.2', '934c99808bdc8385e074b902d59b0d93')
     version('3.9.1', '3759dd10edb8c1a6dfb8ff0ce82658ce')
     version('3.9',   'e2b355da744e94747daae3a5339d28a0')
     version('3.8.4', 'cec2c3db688cb87142809089c6ae13e9')
@@ -40,16 +53,14 @@ class Mercurial(Package):
     version('3.8.2', 'c38daa0cbe264fc621dc3bb05933b0b3')
     version('3.8.1', '172a8c588adca12308c2aca16608d7f4')
 
-    extends('python')
-    depends_on('python@2.6:2.8')
+    depends_on('python@2.6:')
     depends_on('py-docutils', type='build')
 
-    def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
-
+    @run_after('install')
+    def configure_certificates(self):
         # Configuration of HTTPS certificate authorities
         # https://www.mercurial-scm.org/wiki/CACertificates
-        hgrc_filename = join_path(prefix.etc, 'mercurial', 'hgrc')
+        hgrc_filename = join_path(self.prefix.etc, 'mercurial', 'hgrc')
         mkdirp(os.path.dirname(hgrc_filename))
 
         with open(hgrc_filename, 'w') as hgrc:
@@ -67,3 +78,14 @@ class Mercurial(Package):
                          'connect to an HTTPS server. If your CA certificate '
                          'is in a non-standard location, you should add it to '
                          '{0}'.format(hgrc_filename))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """Sanity-check setup."""
+
+        hg = Executable(join_path(self.prefix.bin, 'hg'))
+
+        hg('debuginstall')
+        hg('version')
+        hg('--version')
