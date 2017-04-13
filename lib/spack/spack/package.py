@@ -1145,22 +1145,24 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         Package implementations should override install() to describe
         their build process.
 
-        :param keep_prefix: Keep install prefix on failure. By default, \
+        :param bool keep_prefix: Keep install prefix on failure. By default,
             destroys it.
-        :param keep_stage: By default, stage is destroyed only if there are \
-            no exceptions during build. Set to True to keep the stage
+        :param bool keep_stage: By default, stage is destroyed only if there
+            are no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param install_deps: Install dependencies before installing this \
+        :param bool install_deps: Install dependencies before installing this
             package
-        :param fake: Don't really build; install fake stub files instead.
-        :param skip_patch: Skip patch stage of build if True.
-        :param verbose: Display verbose build output (by default, suppresses \
-            it)
-        :param dirty: Don't clean the build environment before installing.
-        :param make_jobs: Number of make jobs to use for install. Default is \
-            ncpus
-        :param force: Install again, even if already installed.
-        :param run_tests: Run tests within the package's install()
+        :param bool skip_patch: Skip patch stage of build if True.
+        :param bool verbose: Display verbose build output (by default,
+            suppresses it)
+        :param int make_jobs: Number of make jobs to use for install. Default
+            is ncpus
+        :param bool run_tests: Run tests within the package's install()
+        :param bool fake: Don't really build; install fake stub files instead.
+        :param bool explicit: True if package was explicitly installed, False
+            if package was implicitly installed (as a dependency).
+        :param bool dirty: Don't clean the build environment before installing.
+        :param bool force: Install again, even if already installed.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
