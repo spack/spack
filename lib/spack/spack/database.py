@@ -691,10 +691,10 @@ class Database(object):
 
             if unique:
                 if len(results) > 1:
-                    tty.die('Found more than one spec for {}'.format(query_spec))
+                    tty.die('Found more than one spec for ' + str(query_spec))
                 elif len(results) == 0:
                     # return None
-                    tty.die('Found no spec for {}'.format(query_spec))
+                    tty.die('Found no spec for ' + str(query_spec))
             return sorted(results)
 
     def query_one(self, query_spec, known=any, installed=True):
