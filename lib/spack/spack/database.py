@@ -629,7 +629,7 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(self, query_spec=any, known=any, installed=True, explicit=any):
+    def query(self, query_spec=any, known=any, installed=True, explicit=any, unique=False):
         """Run a query on the database.
 
         ``query_spec``
@@ -689,6 +689,12 @@ class Database(object):
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     results.append(rec.spec)
 
+            if unique:
+                if len(results) > 1:
+                    tty.die('Found more than one spec for {}'.format(query_spec))
+                elif len(results) == 0:
+                    # return None
+                    tty.die('Found no spec for {}'.format(query_spec))
             return sorted(results)
 
     def query_one(self, query_spec, known=any, installed=True):
@@ -698,7 +704,7 @@ class Database(object):
         query. Returns None if no installed package matches.
 
         """
-        concrete_specs = self.query(query_spec, known, installed)
+        concrete_specs = self.query(query_spec, known, installed, unique=True)
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 

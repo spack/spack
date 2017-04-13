@@ -254,7 +254,7 @@ def module(parser, args):
             'installed': True,
             'known': True
         },
-        'load': {
+        'loads': {
             'unique': True
         }
     }

@@ -25,8 +25,6 @@
 
 import argparse
 
-from llnl.util import tty
-
 import spack.cmd
 import spack.store
 import spack.modules
@@ -61,7 +59,7 @@ class ConstraintAction(argparse.Action):
         namespace.constraint = values
         namespace.specs = self._specs
 
-    def _specs(self, unique=False, **kwargs):
+    def _specs(self, **kwargs):
         qspecs = spack.cmd.parse_specs(self.values)
 
         # return everything for an empty query.
@@ -71,12 +69,7 @@ class ConstraintAction(argparse.Action):
         # Return only matching stuff otherwise.
         specs = set()
         for spec in qspecs:
-            db_specs = spack.store.db.query(spec, **kwargs)
-            if unique and len(db_specs) != 1:
-                tty.die('Found multiple installed packages fitting spec ' +
-                    str(spec) + ' choose a more specific spec.\n' +
-                    '\n'.join(str(s) for s in db_specs))
-            for s in db_specs:
+            for s in spack.store.db.query(spec, **kwargs):
                 specs.add(s)
         return sorted(specs)
 
