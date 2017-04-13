@@ -246,7 +246,7 @@ class YamlDirectoryLayout(DirectoryLayout):
                          'complete')
 
     def mark_complete(self, spec):
-        with open(self._completion_marker_file(spec), 'wa'):
+        with open(self._completion_marker_file(spec), 'w'):
             pass
 
     def completed_install(self, spec):
