@@ -255,7 +255,7 @@ def module(parser, args):
             'known': True
         },
     }
-    query_args = constraint_qualifiers.get(args.subparser_name, {})
+    query_args = constraint_qualifiers.get(args.subparser_name, {'unique': True})
     specs = args.specs(**query_args)
     module_type = args.module_type
     constraint = args.constraint
