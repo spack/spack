@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Cub(Package):
@@ -34,6 +33,8 @@ class Cub(Package):
     url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
 
     version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
+    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
 
     def install(self, spec, prefix):
-        copy_tree('cub', prefix.include)
+        mkdirp(prefix.include)
+        install_tree('cub', join_path(prefix.include, 'cub'))
