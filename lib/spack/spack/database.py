@@ -629,7 +629,8 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(self, query_spec=any, known=any, installed=True, explicit=any, unique=False):
+    def query(self, query_spec=any, known=any, installed=True, explicit=any,
+              unique=False):
         """Run a query on the database.
 
         ``query_spec``
@@ -691,7 +692,8 @@ class Database(object):
 
             if unique:
                 if len(results) > 1:
-                    tty.die('Found more than one spec for ' + str(query_spec))
+                    tty.die('Found more than one spec for ' +
+                            str(query_spec))
                 elif len(results) == 0:
                     # return None
                     tty.die('Found no spec for ' + str(query_spec))
