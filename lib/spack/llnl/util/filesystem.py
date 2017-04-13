@@ -624,7 +624,7 @@ def find_system_libraries(args, shared=True):
 
     for library in args:
         for root in search_locations:
-            result = find_libraries(library, root, shared)
+            result = find_libraries(library, root, shared, recurse=True)
             if result:
                 libraries_found += result
                 break

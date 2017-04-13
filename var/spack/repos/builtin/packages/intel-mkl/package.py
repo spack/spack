@@ -73,9 +73,11 @@ class IntelMkl(IntelInstaller):
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
+        mkl_root = join_path(prefix.lib, 'intel64')
+
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(prefix, 'mkl', 'lib', 'intel64'),
+            root=mkl_root,
             shared=shared
         )
 
@@ -89,7 +91,7 @@ class IntelMkl(IntelInstaller):
 
     @property
     def lapack_libs(self):
-        return self.libs
+        return self.blas_libs
 
     @property
     def scalapack_libs(self):
