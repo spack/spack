@@ -1,0 +1,13 @@
+diff --git a/coregrind/m_main.c b/coregrind/m_main.c
+index d008ab3..42d8f30 100644
+--- a/coregrind/m_main.c
++++ b/coregrind/m_main.c
+@@ -4058,7 +4058,7 @@ UWord voucher_mach_msg_set ( UWord arg1 )
+ 
+ #endif
+ 
+-#if defined(VGO_darwin) && DARWIN_VERS == DARWIN_10_10
++#if defined(VGO_darwin)
+ 
+ /* This might also be needed for > DARWIN_10_10, but I have no way
+    to test for that.  Hence '==' rather than '>=' in the version

@@ -22,35 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Xrootd(Package):
-    """The XROOTD project aims at giving high performance, scalable fault
-       tolerant access to data repositories of many kinds."""
-    homepage = "http://xrootd.org"
-    url      = "http://xrootd.org/download/v4.6.0/xrootd-4.6.0.tar.gz"
+class Nginx(AutotoolsPackage):
+    """nginx [engine x] is an HTTP and reverse proxy server, a mail proxy
+    server, and a generic TCP/UDP proxy server, originally written by Igor
+    Sysoev."""
 
-    version('4.6.0', '5d60aade2d995b68fe0c46896bc4a5d1')
-    version('4.5.0', 'd485df3d4a991e1c35efa4bf9ef663d7')
-    version('4.4.1', '72b0842f802ccc94dede4ac5ab2a589e')
-    version('4.4.0', '58f55e56801d3661d753ff5fd33dbcc9')
-    version('4.3.0', '39c2fab9f632f35e12ff607ccaf9e16c')
+    homepage = "https://nginx.org/en/"
+    url      = "https://nginx.org/download/nginx-1.12.0.tar.gz"
 
-    depends_on('cmake', type='build')
+    version('1.12.0', '995eb0a140455cf0cfc497e5bd7f94b3')
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
+    depends_on('openssl')
+    depends_on('pcre')
+    depends_on('zlib')
 
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
-            make()
-            make("install")
+    def configure_args(self):
+        args = ['--with-http_ssl_module']
+        return args
