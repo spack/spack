@@ -83,6 +83,25 @@ def test_remove_and_add_tcl(database, parser):
         assert os.path.exists(item)
 
 
+def test_load_multi_install_package(database, parser, capfd):
+    args = parser.parse_args(['loads', 'mpileaks'])
+    # with pytest.raises(SystemExit):
+    try:
+        module.module(parser, args)
+    except SystemExit:
+        out, err = capfd.readouterr()
+        assert 'Found more than one spec for mpileaks' in err
+
+
+def test_load_non_existing_package(database, parser, capfd):
+    args = parser.parse_args(['loads', 'py-pudb'])
+    try:
+        module.module(parser, args)
+    except SystemExit:
+        out, err = capfd.readouterr()
+        assert 'Found no spec for py-pudb' in err
+
+
 def test_find(database, parser):
     # Try to find a module
     args = parser.parse_args(['find', 'libelf'])
