@@ -254,8 +254,11 @@ def module(parser, args):
             'installed': True,
             'known': True
         },
+        'load': {
+            'unique': True
+        }
     }
-    query_args = constraint_qualifiers.get(args.subparser_name, {'unique': True})
+    query_args = constraint_qualifiers.get(args.subparser_name, {})
     specs = args.specs(**query_args)
     module_type = args.module_type
     constraint = args.constraint
