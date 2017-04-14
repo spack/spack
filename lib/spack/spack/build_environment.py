@@ -225,6 +225,9 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
     for mod in compiler.modules:
+        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
         load_module(mod)
 
     compiler.setup_custom_environment(pkg, env)
