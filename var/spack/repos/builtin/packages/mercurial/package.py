@@ -58,6 +58,27 @@ class Mercurial(PythonPackage):
     depends_on('py-docutils', type='build')
 
     @run_after('install')
+    def post_install(self):
+        prefix = self.prefix
+
+        # Install man pages
+        mkdirp(prefix.man1)
+        mkdirp(prefix.man5)
+        mkdirp(prefix.man8)
+        with working_dir('doc'):
+            install('hg.1', prefix.man1)
+            install('hgignore.5', prefix.man5)
+            install('hgrc.5', prefix.man5)
+            install('hg-ssh.8', prefix.man8)
+
+        # Install completion scripts
+        contrib = join_path(prefix, 'contrib')
+        mkdir(contrib)
+        with working_dir('contrib'):
+            install('bash_completion', join_path(contrib, 'bash_completion'))
+            install('zsh_completion',  join_path(contrib, 'zsh_completion'))
+
+    @run_after('install')
     def configure_certificates(self):
         """Configuration of HTTPS certificate authorities
         https://www.mercurial-scm.org/wiki/CACertificates"""
