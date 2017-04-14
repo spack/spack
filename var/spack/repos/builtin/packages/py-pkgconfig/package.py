@@ -25,39 +25,18 @@
 from spack import *
 
 
-class PyH5py(PythonPackage):
-    """The h5py package provides both a high- and low-level interface to the
-    HDF5 library from Python."""
+class PyPkgconfig(PythonPackage):
+    """Interface Python with pkg-config."""
 
-    homepage = "https://pypi.python.org/pypi/h5py"
-    url      = "https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz"
+    homepage = "http://github.com/matze/pkgconfig"
+    url      = "https://pypi.io/packages/source/p/pkgconfig/pkgconfig-1.2.2.tar.gz"
 
-    version('2.6.0', 'ec476211bd1de3f5ac150544189b0bf4')
-    version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
-    version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
+    version('1.2.2', '81a8f6ef3371831d081e03db39e09683')
 
-    variant('mpi', default=True, description='Build with MPI support')
-
-    # Build dependencies
-    depends_on('py-cython@0.19:', type='build')
-    depends_on('py-pkgconfig', type='build')
+    depends_on('python@2.6:')
     depends_on('py-setuptools', type='build')
-    depends_on('hdf5@1.8.4:')
-    depends_on('hdf5+mpi', when='+mpi')
-    depends_on('mpi', when='+mpi')
-    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
-    # Build and runtime dependencies
-    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
+    depends_on('pkg-config', type=('build', 'run'))
 
-    # Runtime dependencies
-    depends_on('py-six', type=('build', 'run'))
-
-    phases = ['configure', 'install']
-
-    def configure(self, spec, prefix):
-        self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix))
-
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            self.setup_py('configure', '--mpi')
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose@1.0:', type='test')
