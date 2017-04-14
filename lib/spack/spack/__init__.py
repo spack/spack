@@ -54,7 +54,6 @@ hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 repos_path     = join_path(var_path, "repos")
-gpg_keys_path  = join_path(var_path, "gpg")
 share_path     = join_path(spack_root, "share", "spack")
 
 # Paths to built-in Spack repositories.
@@ -67,7 +66,13 @@ user_config_path = os.path.expanduser('~/.spack')
 prefix = spack_root
 opt_path       = join_path(prefix, "opt")
 etc_path       = join_path(prefix, "etc")
-gpg_path       = join_path(opt_path, "spack", "gpg")
+
+
+# GPG paths.
+gpg_keys_path      = join_path(var_path, "gpg")
+mock_gpg_data_path = join_path(var_path, "gpg.mock", "data")
+mock_gpg_keys_path = join_path(var_path, "gpg.mock", "keys")
+gpg_path           = join_path(opt_path, "spack", "gpg")
 
 
 #-----------------------------------------------------------------------------
