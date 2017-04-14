@@ -67,6 +67,7 @@ class Scorep(AutotoolsPackage):
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
+    # https://github.com/LLNL/spack/issues/1609
     conflicts('platform=darwin')
 
     def configure_args(self):
