@@ -65,6 +65,11 @@ class Scorep(AutotoolsPackage):
 
     variant('shmem', default=False, description='Enable shmem tracing')
 
+    # Score-P requires a case-sensitive file system, and therefore
+    # does not work on macOS
+    # https://github.com/LLNL/spack/issues/1609
+    conflicts('platform=darwin')
+
     def configure_args(self):
         spec = self.spec
 
