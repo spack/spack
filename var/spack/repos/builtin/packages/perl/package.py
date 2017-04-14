@@ -58,6 +58,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
+    # Many systems provide a dbm library, which is detected during
+    # installation of perl. But it may be missing or buggy on some systems,
+    # so we provide a way to link with a spack gdbm package.
+    variant('gdbm', default=False,
+            description='Optionally use spack gdbm for ODBM_File package')
+    depends_on('gdbm', when='+gdbm')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing
