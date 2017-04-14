@@ -35,16 +35,11 @@ class Mercurial(PythonPackage):
     url      = "https://www.mercurial-scm.org/release/mercurial-4.1.2.tar.gz"
 
     import_modules = [
-        'hgext', 'mercurial', 'hgext3rd', 'hgext.fsmonitor',
-        'hgext.largefiles', 'hgext.convert', 'hgext.zeroconf',
-        'hgext.fsmonitor.pywatchman', 'mercurial.pure',
-        'mercurial.httpclient', 'mercurial.hgweb'
+        'hgext', 'hgext3rd', 'mercurial', 'hgext.convert', 'hgext.fsmonitor',
+        'hgext.highlight', 'hgext.largefiles', 'hgext.zeroconf',
+        'hgext.fsmonitor.pywatchman', 'mercurial.hgweb',
+        'mercurial.httpclient', 'mercurial.pure'
     ]
-
-    # Imports that crash
-    #
-    # hgext.highlight - requires pygments
-    # mercurial.cffi  - requires cffi
 
     version('4.1.2', '934c99808bdc8385e074b902d59b0d93')
     version('3.9.1', '3759dd10edb8c1a6dfb8ff0ce82658ce')
@@ -56,6 +51,7 @@ class Mercurial(PythonPackage):
 
     depends_on('python@2.6:')
     depends_on('py-docutils', type='build')
+    depends_on('py-pygments', type=('build', 'run'))
 
     @run_after('install')
     def post_install(self):
@@ -87,11 +83,6 @@ class Mercurial(PythonPackage):
         mkdirp(etc_dir)
 
         hgrc_filename = join_path(etc_dir, 'hgrc')
-        dummy_certificate = join_path(etc_dir, 'dummycert.pem')
-
-        # Mercurial comes with a dummy certificate to use on macOS
-        if sys.platform == 'darwin':
-            install('mercurial/dummycert.pem', dummy_certificate)
 
         # Default certificate locations for various operating systems
         certificate_locations = [
@@ -101,8 +92,6 @@ class Mercurial(PythonPackage):
             '/etc/pki/tls/certs/ca-bundle.crt',
             # openSUSE/SLE
             '/etc/ssl/ca-bundle.pem',
-            # Mac OS X 10.6 and higher
-            dummy_certificate,
         ]
 
         # See if a certificate is available
