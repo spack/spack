@@ -25,7 +25,6 @@
 from spack import *
 from llnl.util import tty
 import os
-import sys
 
 
 class Mercurial(PythonPackage):
