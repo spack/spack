@@ -64,8 +64,13 @@ class Mvapich2(AutotoolsPackage):
     #   serialized  - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
     #   multiple    - Fully multi-threaded (MPI_THREAD_MULTIPLE)
     #   runtime     - Alias to "multiple"
-    variant('threads', default='multiple',
-            description='Control the level of thread support')
+    variant(
+        'threads',
+        default='multiple',
+        values=('single', 'funneled', 'serialized', 'multiple'),
+        exclusive=True,
+        description='Control the level of thread support'
+    )
 
     # 32 is needed when job size exceeds 32768 cores
     variant('ch3_rank_bits', default=32,
@@ -83,6 +88,7 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'fabrics',
         description='The fabric enabled for this build',
+        default='psm',
         values=(
             'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp'
         )
