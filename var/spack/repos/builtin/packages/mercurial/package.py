@@ -23,8 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
+from llnl.util import tty
 import os
+import sys
 
 
 class Mercurial(PythonPackage):
@@ -58,26 +59,46 @@ class Mercurial(PythonPackage):
 
     @run_after('install')
     def configure_certificates(self):
-        # Configuration of HTTPS certificate authorities
-        # https://www.mercurial-scm.org/wiki/CACertificates
-        hgrc_filename = join_path(self.prefix.etc, 'mercurial', 'hgrc')
-        mkdirp(os.path.dirname(hgrc_filename))
+        """Configuration of HTTPS certificate authorities
+        https://www.mercurial-scm.org/wiki/CACertificates"""
 
+        etc_dir = join_path(self.prefix.etc, 'mercurial')
+        mkdirp(etc_dir)
+
+        hgrc_filename = join_path(etc_dir, 'hgrc')
+        dummy_certificate = join_path(etc_dir, 'dummycert.pem')
+
+        # Mercurial comes with a dummy certificate to use on macOS
+        if sys.platform == 'darwin':
+            install('mercurial/dummycert.pem', dummy_certificate)
+
+        # Default certificate locations for various operating systems
+        certificate_locations = [
+            # Debian/Ubuntu/Gentoo/Arch Linux
+            '/etc/ssl/certs/ca-certificates.crt',
+            # Fedora/RHEL/CentOS
+            '/etc/pki/tls/certs/ca-bundle.crt',
+            # openSUSE/SLE
+            '/etc/ssl/ca-bundle.pem',
+            # Mac OS X 10.6 and higher
+            dummy_certificate,
+        ]
+
+        # See if a certificate is available
+        certificate = ''
+        for location in certificate_locations:
+            if os.path.exists(location):
+                certificate = location
+                break
+        else:
+            tty.warn('CA certificate not found. You may not be able to '
+                     'connect to an HTTPS server. If your CA certificate '
+                     'is in a non-standard location, you should add it to '
+                     '{0}'.format(hgrc_filename))
+
+        # Write the global mercurial configuration file
         with open(hgrc_filename, 'w') as hgrc:
-            if os.path.exists('/etc/ssl/certs/ca-certificates.crt'):
-                # Debian/Ubuntu/Gentoo/Arch Linux
-                hgrc.write('[web]\ncacerts = /etc/ssl/certs/ca-certificates.crt')  # noqa
-            elif os.path.exists('/etc/pki/tls/certs/ca-bundle.crt'):
-                # Fedora/RHEL/CentOS
-                hgrc.write('[web]\ncacerts = /etc/pki/tls/certs/ca-bundle.crt')
-            elif os.path.exists('/etc/ssl/ca-bundle.pem'):
-                # openSUSE/SLE
-                hgrc.write('[web]\ncacerts = /etc/ssl/ca-bundle.pem')
-            else:
-                tty.warn('CA certificate not found. You may not be able to '
-                         'connect to an HTTPS server. If your CA certificate '
-                         'is in a non-standard location, you should add it to '
-                         '{0}'.format(hgrc_filename))
+            hgrc.write('[web]\ncacerts = {0}\n'.format(certificate))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -88,4 +109,3 @@ class Mercurial(PythonPackage):
 
         hg('debuginstall')
         hg('version')
-        hg('--version')

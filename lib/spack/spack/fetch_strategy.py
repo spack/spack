@@ -829,9 +829,15 @@ class HgFetchStrategy(VCSFetchStrategy):
             args.append('at revision %s' % self.revision)
         tty.msg("Trying to clone Mercurial repository:", self.url, *args)
 
-        args = ['clone', self.url]
+        args = ['clone']
+
+        if spack.insecure:
+            args.append('--insecure')
+
+        args.append(self.url)
+
         if self.revision:
-            args += ['-r', self.revision]
+            args.extend(['-r', self.revision])
 
         self.hg(*args)
 
