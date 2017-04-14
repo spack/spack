@@ -31,7 +31,8 @@ class Gccxml(CMakePackage):
     url      = "https://github.com/gccxml/gccxml/archive/v0.6.x.tar.gz"
 
     version('develop', git='https://github.com/gccxml/gccxml.git', branch='master')
-    version('0.6.x', '2d3becc5b0390996c07a499320036e93', preferred=True)
+    version('latest', git='https://github.com/gccxml/gccxml.git', 
+            commit='3afa8ba5be6866e603dcabe80aff79856b558e24', preferred=True)
 
     if sys.platform == 'darwin':
         patch('darwin-gcc.patch', when="%gcc")
