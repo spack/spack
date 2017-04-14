@@ -51,6 +51,7 @@ class Mercurial(PythonPackage):
     depends_on('python@2.6:')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))
+    depends_on('py-certifi',  type=('build', 'run'))
 
     @run_after('install')
     def post_install(self):
@@ -83,23 +84,15 @@ class Mercurial(PythonPackage):
 
         hgrc_filename = join_path(etc_dir, 'hgrc')
 
-        # Default certificate locations for various operating systems
-        certificate_locations = [
-            # Debian/Ubuntu/Gentoo/Arch Linux
-            '/etc/ssl/certs/ca-certificates.crt',
-            # Fedora/RHEL/CentOS
-            '/etc/pki/tls/certs/ca-bundle.crt',
-            # openSUSE/SLE
-            '/etc/ssl/ca-bundle.pem',
-        ]
+        # Use certifi to find the location of the CA certificate
+        print_str = 'print(certifi.where())'
+        if self.spec['python'].version < Version('2.6'):
+            print_str = 'print certifi.where()'
 
-        # See if a certificate is available
-        certificate = ''
-        for location in certificate_locations:
-            if os.path.exists(location):
-                certificate = location
-                break
-        else:
+        certificate = python('-c', 'import certifi; {0}'.format(print_str),
+                             output=str).strip()
+
+        if not certificate:
             tty.warn('CA certificate not found. You may not be able to '
                      'connect to an HTTPS server. If your CA certificate '
                      'is in a non-standard location, you should add it to '
