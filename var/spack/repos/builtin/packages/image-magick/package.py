@@ -25,7 +25,7 @@
 from spack import *
 
 
-class ImageMagick(Package):
+class ImageMagick(AutotoolsPackage):
     """ImageMagick is a software suite to create, edit, compose,
     or convert bitmap images."""
 
@@ -45,10 +45,9 @@ class ImageMagick(Package):
     depends_on('ghostscript')
     depends_on('ghostscript-fonts')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         gs_font_dir = join_path(spec['ghostscript-fonts'].prefix.share, "font")
-        configure('--prefix={0}'.format(prefix),
-                  '--with-gs-font-dir={0}'.format(gs_font_dir))
-        make()
-        make('check')
-        make('install')
+        return [
+            '--with-gs-font-dir={0}'.format(gs_font_dir)
+        ]
