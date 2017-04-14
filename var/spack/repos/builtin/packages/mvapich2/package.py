@@ -49,6 +49,15 @@ class Mvapich2(Package):
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
 
+    # Accepted values are:
+    #   single      - No threads (MPI_THREAD_SINGLE)
+    #   funneled    - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
+    #   serialized  - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
+    #   multiple    - Fully multi-threaded (MPI_THREAD_MULTIPLE)
+    #   runtime     - Alias to "multiple"
+    variant('threads', default='multiple',
+            description='Control the level of thread support')
+
     ##########
     # TODO : Process managers should be grouped into the same variant,
     # as soon as variant capabilities will be extended See
@@ -252,6 +261,7 @@ class Mvapich2(Package):
             "--enable-shared",
             "--enable-romio",
             "--disable-silent-rules",
+            "--enable-threads={0}".format(spec.variants['threads'].value),
         ]
 
         if self.compiler.f77 and self.compiler.fc:
