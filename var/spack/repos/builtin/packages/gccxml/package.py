@@ -34,5 +34,4 @@ class Gccxml(CMakePackage):
     version('latest', git='https://github.com/gccxml/gccxml.git', 
             commit='3afa8ba5be6866e603dcabe80aff79856b558e24', preferred=True)
 
-    if sys.platform == 'darwin':
-        patch('darwin-gcc.patch', when="%gcc")
+    patch('darwin-gcc.patch', when='%gcc platform=darwin')
