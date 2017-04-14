@@ -46,6 +46,13 @@ class Flecsi(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("legion")
 
+    # drop when #3779 has been fixed
+    def do_fetch(self, mirror_only=True):
+        super(Flecsi, self).do_fetch(mirror_only)
+        git = which("git")
+        git('-C', 'flecsi', 'submodule', 'update', '--init', '--recursive',
+            '--depth=1')
+
     def build_type(self):
         spec = self.spec
         if '+debug' in spec:
