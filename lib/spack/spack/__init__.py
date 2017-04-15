@@ -23,6 +23,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import multiprocessing
 import os
 import sys
 import tempfile
@@ -139,6 +140,11 @@ do_checksum = _config.get('checksum', True)
 # If this is True, spack will not clean the environment to remove
 # potentially harmful variables before builds.
 dirty = _config.get('dirty', False)
+
+
+# The number of jobs to use when building in parallel.
+# By default, use all cores on the machine.
+build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
 #-----------------------------------------------------------------------------

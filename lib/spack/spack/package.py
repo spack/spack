@@ -485,7 +485,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     parallel = True
 
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
-    make_jobs = None
+    make_jobs = spack.build_jobs
 
     """By default do not run tests within package's install()"""
     run_tests = False
