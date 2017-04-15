@@ -808,8 +808,17 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def hg(self):
+        """:returns: The hg executable
+        :rtype: Executable
+        """
         if not self._hg:
             self._hg = which('hg', required=True)
+
+            # When building PythonPackages, Spack automatically sets
+            # PYTHONPATH. This can interfere with hg, which is a Python
+            # script. Unset PYTHONPATH while running hg.
+            self._hg.add_default_env('PYTHONPATH', '')
+
         return self._hg
 
     @property
