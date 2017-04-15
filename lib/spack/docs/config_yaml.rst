@@ -185,26 +185,19 @@ set ``dirty`` to ``true`` to skip the cleaning step and make all builds
 "dirty" by default.  Be aware that this will reduce the reproducibility
 of builds.
 
-------------
-``parallel``
-------------
+--------------
+``build_jobs``
+--------------
 
-When set to ``true``, commands that build software will run in parallel.
-For example, ``spack build`` and ``spack install`` will run commands
-like ``make`` as ``make -j<jobs>`` where jobs is the number of threads to
-use. See ``jobs`` below to change the default number of jobs.
+Unless overridden in a package or on the command line, Spack builds all
+packages in parallel. For a build system that uses Makefiles, this means
+running ``make -j<build_jobs>``, where ``build_jobs`` is the number of
+threads to use.
 
-When set to ``false``, all builds will happen in serial.
-
---------
-``jobs``
---------
-
-When ``parallel`` is set to ``true``, Spack will build software in parallel.
 The default parallelism is equal to the number of cores on your machine.
 If you work on a shared login node or have a strict ulimit, it may be
-necessary to set the default to a lower value. By setting ``jobs`` to 4, for
-example, commands like ``spack install`` will run ``make -j4`` instead of
-hogging every core.
+necessary to set the default to a lower value. By setting ``build_jobs``
+to 4, for example, commands like ``spack install`` will run ``make -j4``
+instead of hogging every core.
 
-When ``parallel`` is set to ``false``, this value is ignored.
+To build all software in serial, set ``build_jobs`` to 1.

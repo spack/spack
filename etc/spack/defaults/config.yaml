@@ -68,12 +68,7 @@ config:
   dirty: false
 
 
-  # If set to true, `spack install` and friends will run `make` in parallel.
-  # If set to false, all builds will run in serial.
-  parallel: true
-
-
   # The default number of jobs to use when running `make` in parallel.
   # If set to 4, for example, `spack install` will run `make -j4`.
   # If not set, all available cores are used by default.
-  # jobs: 4
+  # build_jobs: 4

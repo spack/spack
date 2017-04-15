@@ -142,13 +142,9 @@ do_checksum = _config.get('checksum', True)
 dirty = _config.get('dirty', False)
 
 
-# If this is True, spack will build software in parallel.
-parallel = _config.get('parallel', True)
-
-
 # The number of jobs to use when building in parallel.
 # By default, use all cores on the machine.
-jobs = _config.get('jobs', multiprocessing.cpu_count())
+build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
 #-----------------------------------------------------------------------------
