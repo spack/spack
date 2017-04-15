@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from llnl.util import tty
-import os
 
 
 class Mercurial(PythonPackage):
