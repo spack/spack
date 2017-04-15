@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,16 +25,17 @@
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class Tut(Package):
+    """TUT is a small and portable unit test framework for C++."""
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "http://mrzechonek.github.io/tut-framework/"
+    url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
+
+    extends('python')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+        python('waf', 'configure', '--prefix={0}'.format(prefix))
+        python('waf', 'build')
+        python('waf', 'install')

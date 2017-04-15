@@ -25,16 +25,18 @@
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class PyPkgconfig(PythonPackage):
+    """Interface Python with pkg-config."""
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "http://github.com/matze/pkgconfig"
+    url      = "https://pypi.io/packages/source/p/pkgconfig/pkgconfig-1.2.2.tar.gz"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('1.2.2', '81a8f6ef3371831d081e03db39e09683')
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+    depends_on('python@2.6:')
+    depends_on('py-setuptools', type='build')
+
+    depends_on('pkg-config', type=('build', 'run'))
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose@1.0:', type='test')

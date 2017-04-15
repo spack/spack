@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,19 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class Boostmplcartesianproduct(Package):
+    """Cartesian_product is an extension to the Boost.MPL library and as such
+       requires a version of the Boost libraries on your system.
+    """
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "http://www.organicvectory.com/index.php?option=com_content&view=article&id=75:boostmplcartesianproduct&catid=42:boost&Itemid=78"
+    url      = "https://github.com/quinoacomputing/BoostMPLCartesianProduct/tarball/20161205"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('20161205', 'b0c8534ee807484ffd161723cbc8fc04')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+        install_tree('boost/mpl', join_path(prefix.include, 'boost', 'mpl'))

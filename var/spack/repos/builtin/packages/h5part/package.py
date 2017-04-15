@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,19 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class H5part(AutotoolsPackage):
+    """Portable High Performance Parallel Data Interface to HDF5"""
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "http://vis.lbl.gov/Research/H5Part/"
+    url      = "https://codeforge.lbl.gov/frs/download.php/latestfile/18/H5Part-1.6.6.tar.gz"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('1.6.6', '327c63d198e38a12565b74cffdf1f9d7')
+    patch('mpiio.patch')
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+    depends_on('mpi')
+    depends_on('hdf5+mpi')
+
+    def configure_args(self):
+        args = ['--enable-parallel',
+                '--with-hdf5=%s' % self.spec['hdf5'].prefix,
+                'CC=mpicc',
+                'CXX=mpicxx']
+        return args

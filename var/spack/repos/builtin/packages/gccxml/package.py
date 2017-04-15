@@ -1,6 +1,3 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,16 +22,15 @@
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class Gccxml(CMakePackage):
+    """gccxml dumps an XML description of C++ source code using an extension of
+    the GCC C++ compiler."""
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "http://gccxml.github.io"
+    url      = "https://github.com/gccxml/gccxml/archive/v0.6.x.tar.gz"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('develop', git='https://github.com/gccxml/gccxml.git', branch='master')
+    version('latest', git='https://github.com/gccxml/gccxml.git',
+            commit='3afa8ba5be6866e603dcabe80aff79856b558e24', preferred=True)
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+    patch('darwin-gcc.patch', when='%gcc platform=darwin')

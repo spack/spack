@@ -25,16 +25,18 @@
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class Flash(MakefilePackage):
+    """FLASH (Fast Length Adjustment of SHort reads) is a very
+    fast and accurate software tool to merge paired-end reads
+    from next-generation sequencing experiments."""
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "https://ccb.jhu.edu/software/FLASH/"
+    url      = "https://sourceforge.net/projects/flashpage/files/FLASH-1.2.11.tar.gz"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('1.2.11', 'e4d355023a766afaaab2d62f912b605c')
+
+    depends_on('zlib')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+        mkdirp(prefix.bin)
+        install('flash', prefix.bin)

@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,19 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Cub(Package):
-    """CUB is a C++ header library of cooperative threadblock primitives
-    and other utilities for CUDA kernel programming."""
+class Pstreams(Package):
+    """C++ wrapper for the POSIX.2 functions popen(3) and pclose(3)"""
 
-    homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    homepage = "http://pstreams.sourceforge.net/"
+    url      = "https://superb-sea2.dl.sourceforge.net/project/pstreams/pstreams/Release%201.0/pstreams-1.0.1.tar.gz"
 
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('1.0.1', '23199e3d12a644a2a0c66ec889d4c064')
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        install_tree('cub', join_path(prefix.include, 'cub'))
+        install('pstream.h', prefix.include)
