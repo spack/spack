@@ -804,7 +804,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
-        if self.spec._concrete:
+        if self.spec.concrete:
             return None
         else:
             # If it's not concrete, then return the spec from the
@@ -828,7 +828,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def is_extension(self):
         # if it is concrete, it's only an extension if it actually
         # dependes on the extendee.
-        if self.spec._concrete:
+        if self.spec.concrete:
             return self.extendee_spec is not None
         else:
             # If not, then it's an extension if it *could* be an extension
