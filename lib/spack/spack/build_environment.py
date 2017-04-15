@@ -357,7 +357,7 @@ def set_module_variables_for_package(pkg, module):
        This makes things easier for package writers.
     """
     # number of jobs spack will build with.
-    jobs = multiprocessing.cpu_count()
+    jobs = spack.build_jobs
     if not pkg.parallel:
         jobs = 1
     elif pkg.make_jobs:

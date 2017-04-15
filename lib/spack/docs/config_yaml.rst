@@ -99,8 +99,8 @@ See :ref:`modules` for details.
 ``build_stage``
 --------------------
 
-Spack is designed to run out of a user home directories, and on many
-systems the home directory a (slow) network filesystem.  On most systems,
+Spack is designed to run out of a user home directory, and on many
+systems the home directory is a (slow) network filesystem.  On most systems,
 building in a temporary filesystem results in faster builds than building
 in the home directory.  Usually, there is also more space available in
 the temporary location than in the home directory. So, Spack tries to
@@ -122,7 +122,7 @@ See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used totrack the stage.
+``$spack/var/spack/stage``. This is used to track the stage.
 
 After a package is successfully installed, Spack deletes the temporary
 directory it used to build.  Unsuccessful builds are not deleted, but you
@@ -180,7 +180,24 @@ the way packages build. This includes ``LD_LIBRARY_PATH``, ``CPATH``,
 ``LIBRARY_PATH``, ``DYLD_LIBRARY_PATH``, and others.
 
 By default, builds are ``clean``, but on some machines, compilers and
-other tools may need custom ``LD_LIBRARY_PATH`` setings to run.  You can
+other tools may need custom ``LD_LIBRARY_PATH`` settings to run.  You can
 set ``dirty`` to ``true`` to skip the cleaning step and make all builds
 "dirty" by default.  Be aware that this will reduce the reproducibility
 of builds.
+
+--------------
+``build_jobs``
+--------------
+
+Unless overridden in a package or on the command line, Spack builds all
+packages in parallel. For a build system that uses Makefiles, this means
+running ``make -j<build_jobs>``, where ``build_jobs`` is the number of
+threads to use.
+
+The default parallelism is equal to the number of cores on your machine.
+If you work on a shared login node or have a strict ulimit, it may be
+necessary to set the default to a lower value. By setting ``build_jobs``
+to 4, for example, commands like ``spack install`` will run ``make -j4``
+instead of hogging every core.
+
+To build all software in serial, set ``build_jobs`` to 1.
