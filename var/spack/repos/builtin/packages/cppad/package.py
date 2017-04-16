@@ -34,8 +34,6 @@ class Cppad(CMakePackage):
     version('20170114', '565a534dc813fa1289764222cd8c11ea')
     version('develop', git='https://github.com/coin-or/CppAD.git')
 
-    depends_on('cmake', type='build')
-
     def cmake_args(self):
         # This package does not obey CMAKE_INSTALL_PREFIX
         args = [

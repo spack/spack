@@ -55,10 +55,6 @@ class Symengine(CMakePackage):
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
 
-    # Build dependencies
-    depends_on('cmake',    type='build')
-
-    # Other dependencies
     # NOTE: mpir is a drop-in replacement for gmp
     # NOTE: [mpc,mpfr,flint,piranha] could also be built against mpir
     depends_on('boost',    when='+boostmp')
