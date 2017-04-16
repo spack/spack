@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,14 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class LibjsonC(AutotoolsPackage):
-    """ A JSON implementation in C """
-    homepage = "https://github.com/json-c/json-c/wiki"
-    url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.11.tar.gz"
+class F90cache(AutotoolsPackage):
+    """f90cache is a compiler cache. It acts as a caching pre-processor to
+       Fortran compilers, using the -E compiler switch and a hash to detect
+       when a compilation can be satisfied from cache. This often results in a
+       great speedup in common compilations.
+    """
+    homepage = "https://perso.univ-rennes1.fr/edouard.canot/f90cache/"
+    url      = "https://perso.univ-rennes1.fr/edouard.canot/f90cache/f90cache-0.99.tar.bz2"
 
-    parallel = False
-
-    version('0.11', 'aa02367d2f7a830bf1e3376f77881e98')
+    version('0.99', 'e4767ae876203ed4f3e118e22204cdec')

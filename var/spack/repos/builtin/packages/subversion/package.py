@@ -69,9 +69,9 @@ class Subversion(Package):
         options.append('--with-sqlite=%s' % spec['sqlite'].prefix)
         options.append('--with-serf=%s' % spec['serf'].prefix)
 
-        if spec.satisfies('^swig'):
+        if 'swig' in spec:
             options.append('--with-swig=%s' % spec['swig'].prefix)
-        if spec.satisfies('+perl'):
+        if 'perl' in spec:
             options.append(
                 'PERL=%s' % join_path(spec['perl'].prefix.bin, 'perl'))
 

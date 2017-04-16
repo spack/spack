@@ -4,7 +4,7 @@ function s {
 	spack find $@ | grep 'No package'
 	if [ $? -eq 0 ]
 	then
-		spack install $@
+		spack install -y $@
 	else
 		echo "$@ has been installed."
 	fi

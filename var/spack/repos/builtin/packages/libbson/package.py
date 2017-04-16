@@ -30,14 +30,17 @@ class Libbson(AutotoolsPackage):
     parsing, and iterating BSON documents."""
 
     homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.6.1/libbson-1.6.1.tar.gz"
+    url      = "https://github.com/mongodb/libbson/releases/download/1.6.2/libbson-1.6.2.tar.gz"
 
+    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
     version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
+    depends_on('autoconf', type='build', when='@1.6.1')
+    depends_on('automake', type='build', when='@1.6.1')
+    depends_on('libtool', type='build', when='@1.6.1')
+    depends_on('m4', type='build', when='@1.6.1')
 
-    # 1.6.1 tarball is broken
-    force_autoreconf = True
+    @property
+    def force_autoreconf(self):
+        # 1.6.1 tarball is broken
+        return self.spec.satisfies('@1.6.1')
