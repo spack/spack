@@ -47,7 +47,7 @@ class Mercurial(PythonPackage):
     version('3.8.2', 'c38daa0cbe264fc621dc3bb05933b0b3')
     version('3.8.1', '172a8c588adca12308c2aca16608d7f4')
 
-    depends_on('python@2.6:')
+    depends_on('python@2.6:2.8')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-certifi',  type=('build', 'run'))
@@ -84,22 +84,18 @@ class Mercurial(PythonPackage):
         hgrc_filename = join_path(etc_dir, 'hgrc')
 
         # Use certifi to find the location of the CA certificate
-        print_str = 'print(certifi.where())'
-        if self.spec['python'].version < Version('2.6'):
-            print_str = 'print certifi.where()'
-
-        certificate = python('-c', 'import certifi; {0}'.format(print_str),
-                             output=str).strip()
+        certificate = python('-c', 'import certifi; print certifi.where()',
+                             output=str)
 
         if not certificate:
             tty.warn('CA certificate not found. You may not be able to '
                      'connect to an HTTPS server. If your CA certificate '
                      'is in a non-standard location, you should add it to '
-                     '{0}'.format(hgrc_filename))
+                     '{0}.'.format(hgrc_filename))
 
         # Write the global mercurial configuration file
         with open(hgrc_filename, 'w') as hgrc:
-            hgrc.write('[web]\ncacerts = {0}\n'.format(certificate))
+            hgrc.write('[web]\ncacerts = {0}'.format(certificate))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
