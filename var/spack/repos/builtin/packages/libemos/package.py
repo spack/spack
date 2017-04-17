@@ -32,16 +32,26 @@ class Libemos(Package):
     homepage = "https://software.ecmwf.int/wiki/display/EMOS/Emoslib"
     url      = "https://software.ecmwf.int/wiki/download/attachments/3473472/libemos-4.4.2-Source.tar.gz"
 
+    version('4.4.7', '395dcf21cf06872f772fb6b73d8e67b9')
     version('4.4.2', 'f15a9aff0f40861f3f046c9088197376')
 
+    variant('eccodes', default=False)
+
     depends_on('cmake', type='build')
-    depends_on('grib-api')
+    depends_on('eccodes', when='+eccodes')
+    depends_on('grib-api', when='~eccodes')
+    depends_on('fftw+float+double')
 
     def install(self, spec, prefix):
         options = []
         options.extend(std_cmake_args)
 
-        options.append('-DGRIB_API_PATH=%s' % spec['grib_api'].prefix)
+        if spec.satisfies('+eccodes'):
+            options.append('-DENABLE_ECCODES=ON')
+            options.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
+        else:
+            options.append('-DENABLE_ECCODES=OFF')
+            options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
 
         # To support long pathnames that spack generates
         options.append('-DCMAKE_Fortran_FLAGS=-ffree-line-length-none')
