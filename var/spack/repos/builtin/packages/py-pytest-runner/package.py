@@ -25,17 +25,14 @@
 from spack import *
 
 
-class PyPy(PythonPackage):
-    """library with cross-python path, ini-parsing, io, code, log facilities"""
+class PyPytestRunner(PythonPackage):
+    """Invoke py.test as distutils command with dependency resolution."""
 
-    homepage = "http://pylib.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/py/py-1.4.33.tar.gz"
+    homepage = "https://github.com/pytest-dev/pytest-runner"
+    url      = "https://pypi.io/packages/source/p/pytest-runner/pytest-runner-2.11.1.tar.gz"
 
-    import_modules = [
-        'py', 'py._code', 'py._io', 'py._log', 'py._path', 'py._process',
-    ]
+    import_modules = ['ptr']
 
-    version('1.4.33', '15d7107cbb8b86593bf9afa16e56da65')
-    version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
+    version('2.11.1', 'bdb73eb18eca2727944a2dcf963c5a81')
 
     depends_on('py-setuptools', type='build')
