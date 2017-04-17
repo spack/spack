@@ -59,8 +59,7 @@ class Openblas(MakefilePackage):
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
-    patch('openblas0.2.19.diff',
-           when='@0.2.19')
+    patch('openblas0.2.19.diff', when='@0.2.19')
 
     parallel = False
 
