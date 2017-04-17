@@ -25,17 +25,24 @@
 from spack import *
 
 
-class PyPy(PythonPackage):
-    """library with cross-python path, ini-parsing, io, code, log facilities"""
+class PyFiscalyear(PythonPackage):
+    """fiscalyear is a small, lightweight Python module providing helpful
+    utilities for managing the fiscal calendar. It is designed as an extension
+    of the built-in datetime and calendar modules, adding the ability to query
+    the fiscal year and fiscal quarter of a date or datetime object."""
 
-    homepage = "http://pylib.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/py/py-1.4.33.tar.gz"
+    homepage = "https://github.com/adamjstewart/fiscalyear"
+    url      = "https://pypi.io/packages/source/f/fiscalyear/fiscalyear-0.1.0.tar.gz"
 
-    import_modules = [
-        'py', 'py._code', 'py._io', 'py._log', 'py._path', 'py._process',
-    ]
+    import_modules = ['fiscalyear']
 
-    version('1.4.33', '15d7107cbb8b86593bf9afa16e56da65')
-    version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
+    version('master', branch='master',
+            git='https://github.com/adamjstewart/fiscalyear.git')
+    version('0.1.0', '30e36b259f3e72e4929abbf259335742')
 
+    depends_on('python@2.5:')
     depends_on('py-setuptools', type='build')
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-pytest', type='test')
+    # depends_on('py-pytest-runner', type='test')
