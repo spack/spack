@@ -29,13 +29,22 @@ class Ghostscript(Package):
     """An interpreter for the PostScript language and for PDF."""
 
     homepage = "http://ghostscript.com/"
-    url = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.18.tar.gz"
 
+    version('9.21', '6f60d7fcb5eef6a8bec5abedf21c6a7008a8c0c7')
     version('9.18', '33a47567d7a591c00a253caddd12a88a')
 
     parallel = False
 
     depends_on('libtiff')
+
+    def url_for_version(self, version):
+        if version > Version('9.18'):
+            baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
+            url = baseurl.format(version.joined, version.dotted)
+        else:
+            baseurl = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-{0}.tar.gz"
+            url = baseurl.format(version.dotted)
+        return url
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix),
