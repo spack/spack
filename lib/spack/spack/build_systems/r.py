@@ -47,6 +47,8 @@ class RPackage(PackageBase):
 
     extends('r')
 
+    depends_on('r', type=('build', 'run'))
+
     def install(self, spec, prefix):
         """Installs an R package."""
         inspect.getmodule(self).R(

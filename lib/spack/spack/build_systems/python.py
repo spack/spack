@@ -114,6 +114,8 @@ class PythonPackage(PackageBase):
 
     extends('python')
 
+    depends_on('python', type=('build', 'run'))
+
     def setup_file(self):
         """Returns the name of the setup file to use."""
         return 'setup.py'
