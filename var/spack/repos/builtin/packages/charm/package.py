@@ -53,16 +53,8 @@ class Charm(Package):
 
     # Communication mechanisms (choose exactly one)
     # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
-    variant("mpi", default=True,
-            description="Use MPI as communication mechanism")
-    variant("multicore", default=False,
-            description="Disable inter-node communication")
-    variant("net", default=False,
-            description="Use net communication mechanism")
-    variant("netlrts", default=True,
-            description="Use netlrts communication mechanism")
-    variant("verbs", default=False,
-            description="Use Infiniband as communication mechanism")
+    variant('backend', default='mpi', description=(
+        'Set the backend to use (mpi, multicore, net, netlrts, verbs)'))
 
     # Other options
     # Something is off with PAPI -- there are build errors. Maybe
@@ -73,37 +65,17 @@ class Charm(Package):
                 "Enable SMP parallelism (does not work with +multicore)"))
     variant("tcp", default=False,
             description="Use TCP as transport mechanism (requires +net)")
-    variant("shared", default=False, description="Enable shared link support")
+    variant("shared", default=True, description="Enable shared link support")
 
     # Note: We could add variants for AMPI, LIBS, bigemulator, msa, Tau
 
-    depends_on("mpi", when="+mpi")
+    depends_on('mpi', when='backend=mpi')
     depends_on("papi", when="+papi")
 
     def install(self, spec, prefix):
         target = "charm++"
 
-        # Note: Turn this into a multi-valued variant, once these
-        # exist in Spack
-        if sum(["+mpi" in spec,
-                "+multicore" in spec,
-                "+net" in spec,
-                "+netlrts" in spec,
-                "+verbs" in spec]) != 1:
-            raise InstallError(
-                "Exactly one communication mechanism "
-                "(+mpi, +multicore, +net, +netlrts, or +verbs) "
-                "must be enabled")
-        if "+mpi" in spec:
-            comm = "mpi"
-        if "+multicore" in spec:
-            comm = "multicore"
-        if "+net" in spec:
-            comm = "net"
-        if "+netlrts" in spec:
-            comm = "netlrts"
-        if "+verbs" in spec:
-            comm = "verbs"
+        comm = spec.variants['backend'].value
 
         plat = sys.platform
         if plat.startswith("linux"):
