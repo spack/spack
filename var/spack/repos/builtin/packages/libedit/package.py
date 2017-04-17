@@ -34,11 +34,11 @@ class Libedit(AutotoolsPackage):
     version('3.1-20160903', '0467d27684c453a351fbcefebbcb16a3')
     version('3.1-20150325', '43cdb5df3061d78b5e9d59109871b4f6')
 
-    depends_on('ncurses')
+    depends_on('ncurses~wide')
 
     def url_for_version(self, version):
         url = "http://thrysoee.dk/editline/libedit-{0}-{1}.tar.gz"
         return url.format(version[-1], version.up_to(-1))
 
     def configure_args(self):
-        return ['LIBS=-lncursesw']
+        return ['--enable-widec']

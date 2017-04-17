@@ -38,7 +38,7 @@ class Emacs(AutotoolsPackage):
     variant('toolkit', default='gtk',
             description="Select an X toolkit (gtk, athena)")
 
-    depends_on('ncurses')
+    depends_on('ncurses~wide')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')

@@ -46,7 +46,7 @@ class Ncdu(Package):
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix,
-                  '--with-ncurses=%s' % spec['ncurses'])
+                  '--with-ncursesw=%s' % spec['ncurses'])
 
         make()
         make("install")
