@@ -25,7 +25,7 @@
 
 import inspect
 
-from spack.directives import extends
+from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 
