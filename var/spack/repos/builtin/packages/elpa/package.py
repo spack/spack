@@ -49,6 +49,12 @@ class Elpa(AutotoolsPackage):
             t = 'http://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
         return t.format(str(version))
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libelpa'],root=self.prefix, shared=True, recurse=True
+        )
+
     def setup_environment(self, spack_env, run_env):
 
         spec = self.spec
