@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Flex(AutotoolsPackage):
@@ -38,6 +39,9 @@ class Flex(AutotoolsPackage):
     version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
     version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
     version('2.5.39', '5865e76ac69c05699f476515592750d7')
+
+    variant('lex', default=False,
+            description="Provide symlinks for lex, libl.a and libl.so")
 
     depends_on('bison',         type='build')
     depends_on('gettext@0.19:', type='build')
@@ -61,3 +65,18 @@ class Flex(AutotoolsPackage):
             url += "/archive/flex-{0}.tar.gz".format(version.dashed)
 
         return url
+
+    @run_after('install')
+    def symlink_lex(self):
+        if self.spec.satisfies('+lex'):
+            with working_dir(self.prefix.bin):
+                if (os.path.isfile('flex') and not
+                   os.path.lexists('lex')):
+                    symlink('flex', 'lex')
+            with working_dir(self.prefix.lib):
+                if (os.path.isfile('libfl.a') and not
+                   os.path.lexists('libl.a')):
+                    symlink('libfl.a', 'libl.a')
+                if (os.path.isfile('libfl.so') and not
+                   os.path.lexists('libl.so')):
+                    symlink('libfl.so', 'libl.so')
