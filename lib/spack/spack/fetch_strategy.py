@@ -54,6 +54,7 @@ from llnl.util.filesystem import *
 import spack
 import spack.error
 import spack.util.crypto as crypto
+from spack.util.web import diagnose_curl_error
 from spack.util.executable import *
 from spack.util.string import *
 from spack.version import Version, ver
@@ -251,28 +252,8 @@ class URLFetchStrategy(FetchStrategy):
             if partial_file and os.path.exists(partial_file):
                 os.remove(partial_file)
 
-            if curl.returncode == 22:
-                # This is a 404.  Curl will print the error.
-                raise FailedDownloadError(
-                    self.url, "URL %s was not found!" % self.url)
-
-            elif curl.returncode == 60:
-                # This is a certificate error.  Suggest spack -k
-                raise FailedDownloadError(
-                    self.url,
-                    "Curl was unable to fetch due to invalid certificate. "
-                    "This is either an attack, or your cluster's SSL "
-                    "configuration is bad.  If you believe your SSL "
-                    "configuration is bad, you can try running spack -k, "
-                    "which will not check SSL certificates."
-                    "Use this at your own risk.")
-
-            else:
-                # This is some other curl error.  Curl will print the
-                # error, but print a spack message too
-                raise FailedDownloadError(
-                    self.url,
-                    "Curl failed with error %d" % curl.returncode)
+            raise FailedDownloadError(
+                self.url, diagnose_curl_error(curl.returncode))
 
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle

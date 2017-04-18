@@ -298,3 +298,24 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
                 continue
 
     return versions
+
+
+def diagnose_curl_error(code):
+    """Return text to show a user about a curl error code."""
+    if code == 22:
+        # This is a 404.  Curl will print the error.
+        return "URL %s was not found!" % self.url
+
+    elif code == 60:
+        # This is a certificate error.  Suggest spack -k
+        return (
+            "Curl was unable to connect due to an invalid certificate. "
+            "This is either an attack, or your SSL configuration is bad. "
+            "If you believe your SSL configuration is bad, you can try "
+            "running with spack -k, which will not check SSL certificates. "
+            "Use this at your own risk.")
+
+    else:
+        # This is some other curl error.  Curl will print the
+        # error, but print a spack message too
+        return "Curl failed with error %d" % code
