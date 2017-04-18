@@ -55,6 +55,9 @@ class Elpa(AutotoolsPackage):
             ['libelpa'],root=self.prefix, shared=True, recurse=True
         )
 
+    build_directory = 'spack-build'
+    parallel=False
+
     def setup_environment(self, spack_env, run_env):
 
         spec = self.spec
