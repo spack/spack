@@ -114,7 +114,7 @@ class Espresso(Package):
         configure(*options)
         make('all')
 
-    @when('@:5.4.0')
+    @when('@:5.4.0')  # noqa
     def install(self, spec, prefix):
         self.check_variants(spec)
 
