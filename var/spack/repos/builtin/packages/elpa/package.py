@@ -57,6 +57,7 @@ class Elpa(AutotoolsPackage):
 
     build_directory = 'spack-build'
     parallel = False
+    build_targets = ['V=1']
 
     def setup_environment(self, spack_env, run_env):
 
