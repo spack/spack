@@ -60,7 +60,7 @@ class Ncl(Package):
 
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')
-    depends_on('flex')
+    depends_on('flex+lex')
     depends_on('libiconv')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
