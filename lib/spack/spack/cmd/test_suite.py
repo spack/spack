@@ -231,7 +231,7 @@ def test_suite(parser, args):
                     raise
                 except Exception as e:
                     tty.warn('Unexpected error.')
-                    warn(err)
+                    warn(e)
 
             # do the actual install
             try:
