@@ -24,7 +24,7 @@
 ##############################################################################
 from spack import *
 import re
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 
 class Aspell(AutotoolsPackage):
