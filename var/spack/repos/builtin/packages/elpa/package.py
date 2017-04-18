@@ -60,7 +60,8 @@ class Elpa(AutotoolsPackage):
     build_directory = 'spack-build'
 
     def setup_environment(self, spack_env, run_env):
-
+        # TODO: set optimum flags for platform+compiler combo, see
+        # https://github.com/hfp/xconfigure/tree/master/elpa
         spec = self.spec
 
         spack_env.set('CC', spec['mpi'].mpicc)
