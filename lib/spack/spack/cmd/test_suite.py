@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import requests
 import traceback
 import spack.package
 import glob
@@ -37,6 +36,8 @@ import spack.cmd.install as install
 import spack.cmd.compiler
 import spack.compilers
 import spack.error
+from spack.util.executable import which
+from spack.util.web import diagnose_curl_error
 from spack.util.spec_set import CombinatorialSpecSet
 from spack.package import PackageStillNeededError
 
@@ -128,28 +129,30 @@ def valid_yaml_files(candidates):
 
 
 def send_reports(dashboard, path):
-    tty.msg("URL: " + str(dashboard))
+    tty.msg("Sending reports to " + str(dashboard))
+
     # allows for multiple dashboards
     # correct in future to be dynamic
-    files = [name for name in glob.glob(os.path.join(path, '*.*'))
-             if os.path.isfile(os.path.join(path, name))]
-    for file in files:
-        if "dstore" not in file:
-            # void file found in OSX
-            with open(file) as fh:
-                mydata = fh.read()
-                # PUT request to send xml files to cdash.
-                response = requests.put(
-                    dashboard,
-                    data=mydata,
-                    verify=False,
-                    headers={
-                        'content-type': 'text/plain'},
-                    params={
-                        'file': file}
-                )
-                tty.msg(file)
-                tty.msg(response.status_code)
+    files = glob.glob(os.path.join(path, '*.xml'))
+
+    # use curl to send files to CDash.
+    curl = which('curl', required=True)
+
+    # -f causes curl to fail silently and return an error code.
+    # -L follows redirects.
+    # -k is used when running spack -k, to skip cert checks.
+    curl.add_default_arg('-fL')
+    if spack.insecure:
+        curl.add_default_arg('-k')
+
+    for xml_file in files:
+        if not os.path.isfile(xml_file):
+            continue
+
+        return_code = curl('--upload-file', xml_file, dashboard)
+        if return_code != 0:
+            tty.warn("Uploading %s to %s failed: " % (xml_file, dashboard),
+                     diagnose_curl_error(return_code))
 
 
 def test_suite(parser, args):
