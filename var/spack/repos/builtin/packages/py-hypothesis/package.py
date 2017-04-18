@@ -25,17 +25,21 @@
 from spack import *
 
 
-class PyPy(PythonPackage):
-    """library with cross-python path, ini-parsing, io, code, log facilities"""
+class PyHypothesis(PythonPackage):
+    """A library for property based testing."""
 
-    homepage = "http://pylib.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/py/py-1.4.33.tar.gz"
+    homepage = "https://github.com/HypothesisWorks/hypothesis-python"
+    url      = "https://pypi.io/packages/source/h/hypothesis/hypothesis-3.7.0.tar.gz"
 
     import_modules = [
-        'py', 'py._code', 'py._io', 'py._log', 'py._path', 'py._process',
+        'hypothesis', 'hypothesis.searchstrategy', 'hypothesis.extra',
+        'hypothesis.tools', 'hypothesis.utils', 'hypothesis.vendor',
+        'hypothesis.internal', 'hypothesis.internal.conjecture'
     ]
 
-    version('1.4.33', '15d7107cbb8b86593bf9afa16e56da65')
-    version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
+    # TODO: Add missing dependency required to import hypothesis.extra.django
+
+    version('3.7.0', '4afb25fa6785fceac034b63eaa2dfe28')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-enum34', type=('build', 'run'), when='^python@:2')

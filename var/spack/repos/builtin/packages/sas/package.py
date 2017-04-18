@@ -25,17 +25,32 @@
 from spack import *
 
 
-class PyPy(PythonPackage):
-    """library with cross-python path, ini-parsing, io, code, log facilities"""
+class Sas(CMakePackage):
+    """SAS (Static Analysis Suite) is a powerful tool for running static
+    analysis on C++ code."""
 
-    homepage = "http://pylib.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/py/py-1.4.33.tar.gz"
+    homepage = "https://github.com/dpiparo/SAS"
+    url      = "https://github.com/dpiparo/SAS/archive/0.1.3.tar.gz"
 
-    import_modules = [
-        'py', 'py._code', 'py._io', 'py._log', 'py._path', 'py._process',
-    ]
+    version('0.2.0', 'e6fecfb71d9cdce342c8593f4728c9f0')
+    version('0.1.4', '20d7311258f2a59c9367ae1576c392b6')
+    version('0.1.3', '1e6572afcc03318d16d7321d40eec0fd')
 
-    version('1.4.33', '15d7107cbb8b86593bf9afa16e56da65')
-    version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
+    variant('debug', default=False, description='Build debug version')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:')
+    depends_on('llvm@3.5:')
+    depends_on('cmake@2.8:', type='build')
+
+    def build_type(self):
+        spec = self.spec
+        if '+debug' in spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        args = [
+            '-DLLVM_DEV_DIR=%s' % self.spec['llvm'].prefix
+        ]
+        return args
