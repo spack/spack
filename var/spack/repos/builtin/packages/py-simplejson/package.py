@@ -1,4 +1,4 @@
-##############################################################################
+x##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -37,3 +37,5 @@ class PySimplejson(PythonPackage):
     version('3.8.2',  '53b1371bbf883b129a12d594a97e9a18')
     version('3.8.1',  'b8441f1053edd9dc335ded8c7f98a974')
     version('3.8.0',  '72f3b93a6f9808df81535f79e79565a2')
+
+    depends_on('py-setuptools', type='build')
