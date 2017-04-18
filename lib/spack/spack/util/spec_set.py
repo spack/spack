@@ -108,7 +108,8 @@ class CombinatorialSpecSet:
 
         # return compilers for this platform if asked for everything.
         if data == 'all':
-            return [cspec.copy() for cspec in available_compilers]
+            return [Spec("%" + str(cspec.copy()))
+                    for cspec in available_compilers]
 
         # otherwise create specs from the YAML file.
         cspecs = set([
@@ -150,7 +151,7 @@ class CombinatorialSpecSet:
             'compilers': self._compiler_specs,
             'specs': self._specs
         }
-
+        
         key = next(iter(matrix_dict), None)
         assert key in readers
         return readers[key](matrix_dict[key])
@@ -179,7 +180,7 @@ class CombinatorialSpecSet:
 
             # test each spec for include/exclude
             if (self._include and
-                not any(spec.satisfies(s) for s in self._include)):
+                    not any(spec.satisfies(s) for s in self._include)):
                 continue
 
             if any(spec.satisfies(s) for s in self._exclude):

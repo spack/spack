@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 import traceback
 import spack.package
 import glob
@@ -40,6 +41,7 @@ from spack.util.executable import which
 from spack.util.web import diagnose_curl_error
 from spack.util.spec_set import CombinatorialSpecSet
 from spack.package import PackageStillNeededError
+from spack.build_environment import InstallError
 
 description = "test-installs packages and generates cdash output"
 section = "developer"
@@ -231,7 +233,7 @@ def test_suite(parser, args):
                     raise
                 except Exception as e:
                     tty.warn('Unexpected error.')
-                    warn(err)
+                    warn(e)
 
             # do the actual install
             try:

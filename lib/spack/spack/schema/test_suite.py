@@ -66,18 +66,24 @@ schema = {
             'additionalProperties': False,
             'properties': {
                 'packages': {
-                    '$ref': '#/definitions/objects_with_version_list'
+                    'oneOf': [
+                        {'$ref': '#/definitions/objects_with_version_list'},
+                        {'type': 'string'}
+                    ],
                 },
-            }
+            },
         },
         'compilers': {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
                 'compilers': {
-                    '$ref': '#/definitions/objects_with_version_list'
+                    'oneOf': [
+                        {'$ref': '#/definitions/objects_with_version_list'},
+                        {'type': 'string'}
+                    ],
                 },
-            }
+            },
         },
         'specs': {
             'type': 'object',
@@ -104,7 +110,7 @@ schema = {
                         {'type': 'string'},
                         {'type': 'array',
                          'items': {'type': 'string'}
-                        },
+                         },
                     ],
                 },
                 'project': {
