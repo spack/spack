@@ -455,7 +455,7 @@ class Stage(object):
                      "control system, but it has been archived on a spack "
                      "mirror.  This means we cannot know a checksum for the "
                      "tarball in advance. Be sure that your connection to "
-                     "this mirror is secure!.")
+                     "this mirror is secure!")
         else:
             self.fetcher.check()
 
