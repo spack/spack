@@ -45,8 +45,12 @@ class Ncdu(Package):
     depends_on("ncurses")
 
     def install(self, spec, prefix):
+        curses_lib = '--with-ncurses%s=%s' % (
+            'w' if '+wide' in spec['ncurses'] else '',
+            spec['ncurses'])
+
         configure('--prefix=%s' % prefix,
-                  '--with-ncursesw=%s' % spec['ncurses'])
+                  curses_lib)
 
         make()
         make("install")

@@ -42,7 +42,7 @@ class Ncurses(AutotoolsPackage):
             description='Enables symlinks. Needed on AFS filesystem.')
 
     variant('wide', default=True,
-            description='Enable to build ncuresesw, disable to build ncurses')
+            description='Enable to build ncursesw, disable to build ncurses')
 
     depends_on('pkg-config', type='build')
 
