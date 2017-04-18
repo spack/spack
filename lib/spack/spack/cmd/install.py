@@ -87,7 +87,7 @@ the dependencies"""
     )
     subparser.add_argument(
         '--log-format',
-        default=None,
+        default='cdash-simple',
         choices=test_suites.keys(),
         help="Format to be used for log files. Default is CDash."
 
@@ -131,6 +131,7 @@ def install(parser, args, **kwargs):
         'fake': args.fake,
         'dirty': args.dirty
     })
+
     # Spec from cli
     specs = []
     if args.file:

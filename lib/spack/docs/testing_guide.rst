@@ -143,47 +143,42 @@ Here's an example file:
    #
    test-suite:
        #
-       # Optional include/exclude spec lists.
+       # Optional include/exclude spec lists and upload information.
        #
 
        # Only specs that match a spec in this list will be included in
        # the tests.  If include is missing, all specs are built.
-       [bzip2, libelf, libdwarf]
+       include: [bzip2, libelf, libdwarf]
 
        # Specs that match a spec in this list are excluded.
        # If exclude is missing or empty, all included packages are built.
        exclude: []
 
-       #
-       # List of packages, each with a set of versions to test.
-       #
-       packages:
-         abinit:
-           versions: [8.0.8b]
-         ack:
-           versions: [2.14]
-
-       #
-       # List of compiler versions. Each package is tested with all
-       # compiler versions.
-       #
-       compilers:
-       - gcc:
-           - versions: [4.9.0, 4.7.1, 4.6.3, 4.6.1]
-       - clang:
-           - versions: [7.3.0, 3.4, 3.1]
-
-       #
        # URL of the cdash server where results should be submitted.
        # Optional. Defaults to https://spack.io/cdash
-       #
-       cdash: ["https://spack.io/cdash"]
+       - cdash: ["https://spack.io/cdash"]
 
-       #
        # Project on the cdash server where results should be submitted.
        # Optional. Defaults to 'spack'.
-       #
-       project: spack
+       - project: spack
+
+       # Build matrix.  Spack takes the cartesian product of each dimension
+       # in this section to define a set of specs to build.
+       matrix:
+         # List of packages, each with a set of versions to test.
+         - packages:
+             abinit:
+               versions: [8.0.8b]
+             ack:
+               versions: [2.14]
+
+         # List of compiler versions. Each package is tested with all
+         # compiler versions.
+         - compilers:
+             gcc:
+               versions: [4.9.0, 4.7.1, 4.6.3, 4.6.1]
+             clang:
+               versions: [7.3.0, 3.4, 3.1]
 
 
 All fields *except* ``packages`` and ``compilers`` are optional.  The

@@ -2164,6 +2164,9 @@ class Spec(object):
                     self.variants[v], other.variants[v]
                 )
 
+        if self.name is None and other.name is not None:
+            self.name = other.name
+
         # TODO: Check out the logic here
         sarch, oarch = self.architecture, other.architecture
         if sarch is not None and oarch is not None:
