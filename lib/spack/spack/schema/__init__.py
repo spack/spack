@@ -124,7 +124,7 @@ class FileFormatError(SchemaError):
             parent = get_path(parent_path, data)
             if path[-1] in parent:
                 if isinstance(parent, dict):
-                    keylist = parent.keys()
+                    keylist = list(parent.keys())
                 elif isinstance(parent, list):
                     keylist = parent
                 idx = keylist.index(path[-1])
