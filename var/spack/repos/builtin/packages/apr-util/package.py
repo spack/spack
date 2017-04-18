@@ -33,12 +33,14 @@ class AprUtil(Package):
     version('1.5.4',    '866825c04da827c6e5f53daff5569f42')
 
     depends_on('apr')
+    depends_on('expat')
 
     def install(self, spec, prefix):
 
         # configure, build, install:
         options = ['--prefix=%s' % prefix]
         options.append('--with-apr=%s' % spec['apr'].prefix)
+        options.append('--with-expat=%s' % spec['expat'].prefix)
 
         configure(*options)
         make()
