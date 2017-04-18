@@ -42,8 +42,15 @@ class Openfst(AutotoolsPackage):
     version('1.5.2',  'e9d43874f7cadf791394caab3925eee4')
     version('1.5.1',  '8869e44c5a4af65409ae78b9f482b40e')
     version('1.5.0',  'a24fee5ffe28744c6fb7b1a49e0006c4')
+    version('1.4.1-patch',  'ca8f1730b9b9b281e515611fa9ae23c0',
+            url='http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.4.1.tar.gz')
     version('1.4.1',  'ca8f1730b9b9b281e515611fa9ae23c0')
     version('1.4.0',  '662367ec91084ffab48ee9b5716de39c')
 
     conflicts('%intel@16:')
     conflicts('%gcc@6:')
+
+    # Patch openfst-1.4.1 for kaldi@c024e8
+    # See https://github.com/kaldi-asr/kaldi/blob/c024e8aa0a727bf76c91a318f76a1f8b0b59249e/tools/Makefile#L82-L88
+    patch('openfst-1.4.1.patch', when='@1.4.1-patch')
+    patch('openfst_gcc41up.patch', when='@1.4.1-patch')
