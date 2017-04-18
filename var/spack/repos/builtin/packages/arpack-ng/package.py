@@ -80,6 +80,19 @@ class ArpackNg(Package):
 
     depends_on('mpi', when='+mpi')
 
+    @property
+    def libs(self):
+        # TODO: do we need spec['arpack-ng:parallel'].libs ?
+        # query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libarpack']
+
+        if '+mpi' in self.spec:
+            libraries = ['libparpack'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recurse=True
+        )
+
     @when('@3.4.0:')
     def install(self, spec, prefix):
 
