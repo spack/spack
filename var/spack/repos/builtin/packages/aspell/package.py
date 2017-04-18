@@ -38,14 +38,14 @@ class Aspell(AutotoolsPackage):
 
     # additional dictionaries here: ftp://ftp.gnu.org/gnu/aspell/dict/0index.html
     dicts = [
-        { 'url': 'ftp://ftp.gnu.org/gnu/aspell/dict/en/aspell6-en-2017.01.22-0.tar.bz2',
-          'md5': "a6e002076574de9dc4915967032a1dab",
+        {'url': 'ftp://ftp.gnu.org/gnu/aspell/dict/en/aspell6-en-2017.01.22-0.tar.bz2',
+         'md5': "a6e002076574de9dc4915967032a1dab",
         },
-        { 'url': 'ftp://ftp.gnu.org/gnu/aspell/dict/es/aspell6-es-1.11-2.tar.bz2',
-          'md5': '8406336a89c64e47e96f4153d0af70c4',
+        {'url': 'ftp://ftp.gnu.org/gnu/aspell/dict/es/aspell6-es-1.11-2.tar.bz2',
+         'md5': '8406336a89c64e47e96f4153d0af70c4',
         },
-        { 'url': 'ftp://ftp.gnu.org/gnu/aspell/dict/de/aspell6-de-20030222-1.tar.bz2',
-          'md5': '5950c5c8a36fc93d4d7616591bace6a6',
+        {'url': 'ftp://ftp.gnu.org/gnu/aspell/dict/de/aspell6-de-20030222-1.tar.bz2',
+         'md5': '5950c5c8a36fc93d4d7616591bace6a6',
         },
     ]
     for d in dicts:
@@ -74,10 +74,10 @@ class Aspell(AutotoolsPackage):
         for d in self.dicts:
             if '+{0}'.format(d['name']) in self.spec:
                 with working_dir(d['package']):
-                    bash=which('bash')
-                    make=which('make')
-                    aspell=join_path(prefix.bin, "aspell")
-                    prezip=join_path(prefix.bin, "prezip")
+                    bash = which('bash')
+                    make = which('make')
+                    aspell = join_path(prefix.bin, "aspell")
+                    prezip = join_path(prefix.bin, "prezip")
                     bash('./configure', '--vars', "ASPELL={0}".format(aspell),
                          "PREZIP={0}".format(prezip))
                     make('install')
