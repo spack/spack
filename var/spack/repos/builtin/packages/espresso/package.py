@@ -95,7 +95,12 @@ class Espresso(Package):
                 options.append('--with-elpa=yes')
             else:
                 options.extend([
-                    '--with-elpa-include={0}'.format(spec['elpa'].prefix.include),  # noqa
+                    '--with-elpa-include={0}'.format(
+                        join_path(spec['elpa'].prefix,
+                                  'include',
+                                  'elpa-{0}'.format(str(spec['elpa'].version)),
+                                  'modules')
+                        ),
                     '--with-elpa-lib={0}'.format(spec['elpa'].libs.joined())
                 ])
 
