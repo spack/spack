@@ -49,6 +49,7 @@ class Elpa(AutotoolsPackage):
             t = 'http://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
         return t.format(str(version))
 
+    # override default implementation which returns static lib
     @property
     def libs(self):
         return find_libraries(
@@ -56,8 +57,6 @@ class Elpa(AutotoolsPackage):
         )
 
     build_directory = 'spack-build'
-    parallel = False
-    build_targets = ['V=1']
 
     def setup_environment(self, spack_env, run_env):
 
