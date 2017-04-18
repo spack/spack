@@ -70,12 +70,6 @@ end
 {% endfor %}
 {% endblock %}
 
-{# {% block prerequisite %}
-{% for dep in prerequisite.list %}
-prereq("{{ dep.module.name }}")
-{% endfor %}
-{% endblock %} #}
-{#  #}
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
 {% if command_name == 'PrependPath' %}
@@ -93,5 +87,5 @@ unsetenv("{{ cmd.name }}")
 {% endblock %}
 
 {% block footer %}
-{# In case he module needs to be extended with custom LUA code #}
+{# In case the module needs to be extended with custom LUA code #}
 {% endblock %}

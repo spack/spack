@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,7 +43,7 @@ configuration_registry = {}
 
 
 def make_configuration(spec):
-    """Returns the tcl configuration for spec"""
+    """Returns the lmod configuration for spec"""
     key = spec.dag_hash()
     try:
         return configuration_registry[key]
@@ -70,16 +70,17 @@ class LmodConfiguration(BaseConfiguration):
     def core_compilers(self):
         """Returns the list of "Core" compilers
 
-        :raises CoreCompilersNotFoundError: if the key was not
-            specified in the configuration file or the sequence
-            is empty
+        Raises:
+            CoreCompilersNotFoundError: if the key was not
+                specified in the configuration file or the sequence
+                is empty
         """
         value = configuration.get('core_compilers')
         if value is None:
-            msg = '\'core_compilers\' key not found in configuration file'
+            msg = "'core_compilers' key not found in configuration file"
             raise CoreCompilersNotFoundError(msg)
         if not value:
-            msg = '\'core_compilers\' list cannot be empty'
+            msg = "'core_compilers' list cannot be empty"
             raise CoreCompilersNotFoundError(msg)
         return value
 
@@ -172,6 +173,15 @@ class LmodFileLayout(BaseFileLayout):
     extension = 'lua'
 
     @property
+    def arch_dirname(self):
+        """Returns the root folder for THIS architecture"""
+        arch_folder = str(self.spec.architecture)
+        return os.path.join(
+            self.dirname(),  # root for lmod module files
+            arch_folder,  # architecture relative path
+        )
+
+    @property
     def filename(self):
         """Returns the filename for the current module file"""
 
@@ -187,7 +197,7 @@ class LmodFileLayout(BaseFileLayout):
 
         # Compute the absolute path
         fullname = os.path.join(
-            self.dirname(),  # root for lmod module files
+            self.arch_dirname,  # root for lmod files on this architecture
             hierarchy_name,  # relative path
             '.'.join([self.use_name, self.extension])  # file name
         )
@@ -208,10 +218,12 @@ class LmodFileLayout(BaseFileLayout):
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.
 
-        :param str name: name of the service in the hierarchy
-        :param value: actual provider of the service
-        :return: part of the path associated with the service
-        :rtype: str
+        Args:
+            name (str): name of the service in the hierarchy
+            value: actual provider of the service
+
+        Returns:
+            str: part of the path associated with the service
         """
         # General format for the path part
         path_part_fmt = os.path.join('{token.name}', '{token.version}')
@@ -252,7 +264,9 @@ class LmodFileLayout(BaseFileLayout):
     @property
     def unlocked_paths(self):
         """Returns a dictionary mapping conditions to a list of unlocked
-        paths. The paths that are unconditionally unlocked are under the
+        paths.
+
+        The paths that are unconditionally unlocked are under the
         key 'None'. The other keys represent the list of services you need
         loaded to unlock the corresponding paths.
         """
@@ -285,7 +299,7 @@ class LmodFileLayout(BaseFileLayout):
             l = [x for x in hierarchy if x in item]
             available_combination.append(tuple(l))
             parts = [self.token_to_path(x, available[x]) for x in l]
-            unlocked[None].append(tuple([self.dirname()] + parts))
+            unlocked[None].append(tuple([self.arch_dirname] + parts))
 
         # Deduplicate the list
         unlocked[None] = list(lang.dedupe(unlocked[None]))
@@ -310,7 +324,7 @@ class LmodFileLayout(BaseFileLayout):
                 for x in l:
                     value = token2path(x) if x in available else x
                     parts.append(value)
-                unlocked[m].append(tuple([self.dirname()] + parts))
+                unlocked[m].append(tuple([self.arch_dirname] + parts))
             # Deduplicate the list
             unlocked[m] = list(lang.dedupe(unlocked[m]))
         return unlocked
@@ -396,7 +410,6 @@ class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
     """Error raised if the key 'core_compilers' has not been specified
     in the configuration file.
     """
-    pass
 
 
 class NonVirtualInHierarchyError(spack.error.SpackError, TypeError):

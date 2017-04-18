@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,12 +33,12 @@ This information maps **a single spec** to:
 and is divided among four classes:
 
   * a configuration class that provides a convenient interface to query
-    configuration for the spec under consideration.
+    details about the configuration for the spec under consideration.
 
   * a layout class that provides the information associated with module
     file names and directories
 
-  * a context class that provides the dictionary used byt the template engine
+  * a context class that provides the dictionary used by the template engine
     to generate the module file
 
   * a writer that collects and uses the information above to either write
@@ -76,8 +76,9 @@ prefix_inspections = configuration.get('prefix_inspections', {})
 def update_dictionary_extending_lists(target, update):
     """Updates a dictionary, but extends lists instead of overriding them.
 
-    :param target: dictionary to be updated
-    :param update: update to be applied
+    Args:
+        target: dictionary to be updated
+        update: update to be applied
     """
     for key in update:
         value = target.get(key, None)
@@ -93,11 +94,16 @@ def dependencies(spec, request='all'):
     """Returns the list of dependent specs for a given spec, according to the
     request passed as parameter.
 
-    :param spec: spec to be analyzed
-    :param request: either 'none', 'direct' or 'all'
+    Args:
+        spec: spec to be analyzed
+        request: either 'none', 'direct' or 'all'
 
-    :return: empty list if 'none', direct dependency list if 'direct',
-        all dependencies if 'all'
+    Returns:
+        list of dependencies
+
+        The return list will be empty if request is 'none', will contain
+        the direct dependencies if request is 'direct', or the entire DAG
+        if request is 'all'.
     """
     if request not in ('none', 'direct', 'all'):
         message = "Wrong value for argument 'request' : "
@@ -130,12 +136,13 @@ def merge_config_rules(configuration, spec):
     dictionary containing the actions to be performed on the spec passed as
     an argument.
 
-    :param configuration: module specific configuration (e.g. entries under
-        the top-level 'tcl' key
-    :param spec: spec for which we need to generate a module file
+    Args:
+        configuration: module specific configuration (e.g. entries under
+            the top-level 'tcl' key)
+        spec: spec for which we need to generate a module file
 
-    :return: dictionary with the actions to be taken on the spec passed
-        as an argument
+    Returns:
+        dict: actions to be taken on the spec passed as an argument
     """
 
     # Get the top-level configuration for the module type we are using
@@ -184,8 +191,11 @@ def merge_config_rules(configuration, spec):
 def root_path(name):
     """Returns the root folder for module file installation.
 
-    :param name: name of the module system t be used (e.g. 'tcl')
-    :return: root folder for module file installation
+    Args:
+        name: name of the module system t be used (e.g. 'tcl')
+
+    Returns:
+        root folder for module file installation
     """
     path = roots.get(name, os.path.join(spack.share_path, name))
     return spack.util.path.canonicalize_path(path)
@@ -426,7 +436,12 @@ class BaseContext(tengine.Context):
         docstring = type(self.spec.package).__doc__
         if docstring:
             value = docstring.split('\n\n')[0]
-            return re.sub(r'\s+', ' ', value)
+            # Transform tabs and friends into spaces
+            value = re.sub(r'\s+', ' ', value)
+            # Turn double quotes into single quotes (double quotes are needed
+            # to start and end strings)
+            value = re.sub(r'"', "'", value)
+            return value
         # Otherwise the short description is just the package + version
         return self.spec.format("$_ $@")
 
@@ -571,9 +586,10 @@ class BaseModuleFileWriter(object):
     def write(self, overwrite=False):
         """Writes the module file.
 
-        :param bool overwrite: if True it is fine to overwrite an already
-            existing file. If False the operation is skipped an we print
-            a warning to the user.
+        Args:
+            overwrite (bool): if True it is fine to overwrite an already
+                existing file. If False the operation is skipped an we print
+                a warning to the user.
         """
         # Return immediately if the module is blacklisted
         if self.conf.blacklisted:
