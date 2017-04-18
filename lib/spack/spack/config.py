@@ -50,7 +50,6 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 import copy
 import os
-import re
 import sys
 from six import string_types
 from six import iteritems
@@ -58,7 +57,6 @@ from six import iteritems
 import yaml
 import jsonschema
 from yaml.error import MarkedYAMLError
-from jsonschema import Draft4Validator, validators
 from ordereddict_backport import OrderedDict
 
 import llnl.util.tty as tty
@@ -66,8 +64,9 @@ from llnl.util.filesystem import mkdirp
 
 import spack
 import spack.architecture
-from spack.error import SpackError
 import spack.schema
+from spack.error import SpackError
+
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -94,61 +93,6 @@ def validate_section_name(section):
     if section not in section_schemas:
         tty.die("Invalid config section: '%s'. Options are: %s"
                 % (section, " ".join(section_schemas.keys())))
-
-
-def extend_with_default(validator_class):
-    """Add support for the 'default' attr for properties and patternProperties.
-
-       jsonschema does not handle this out of the box -- it only
-       validates.  This allows us to set default values for configs
-       where certain fields are `None` b/c they're deleted or
-       commented out.
-
-    """
-    validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS[
-        "patternProperties"]
-
-    def set_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                instance.setdefault(property, subschema["default"])
-        for err in validate_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    def set_pp_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                if isinstance(instance, dict):
-                    for key, val in iteritems(instance):
-                        if re.match(property, key) and val is None:
-                            instance[key] = subschema["default"]
-
-        for err in validate_pattern_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    return validators.extend(validator_class, {
-        "properties": set_defaults,
-        "patternProperties": set_pp_defaults
-    })
-
-
-DefaultSettingValidator = extend_with_default(Draft4Validator)
-
-
-def validate_section(data, schema):
-    """Validate data read in from a Spack YAML file.
-
-    This leverages the line information (start_mark, end_mark) stored
-    on Spack YAML structures.
-
-    """
-    try:
-        DefaultSettingValidator(schema).validate(data)
-    except jsonschema.ValidationError as e:
-        raise ConfigFormatError(e, data)
 
 
 class ConfigScope(object):
@@ -186,7 +130,7 @@ class ConfigScope(object):
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                validate_section(data, section_schemas[section])
+                spack.schema.validate(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
         except jsonschema.ValidationError as e:
             raise ConfigSanityError(e, data)
@@ -272,7 +216,7 @@ def _read_config_file(filename, schema):
             data = _mark_overrides(syaml.load(f))
 
         if data:
-            validate_section(data, schema)
+            spack.schema.validate(data, schema)
         return data
 
     except MarkedYAMLError as e:
@@ -469,48 +413,6 @@ class ConfigFileError(ConfigError):
     pass
 
 
-def get_path(path, data):
-    if path:
-        return get_path(path[1:], data[path[0]])
-    else:
-        return data
-
-
-class ConfigFormatError(ConfigError):
-    """Raised when a configuration format does not match its schema."""
-
-    def __init__(self, validation_error, data):
-        # Try to get line number from erroneous instance and its parent
-        instance_mark = getattr(validation_error.instance, '_start_mark', None)
-        parent_mark = getattr(validation_error.parent, '_start_mark', None)
-        path = [str(s) for s in getattr(validation_error, 'path', None)]
-
-        # Try really hard to get the parent (which sometimes is not
-        # set) This digs it out of the validated structure if it's not
-        # on the validation_error.
-        if path and not parent_mark:
-            parent_path = list(path)[:-1]
-            parent = get_path(parent_path, data)
-            if path[-1] in parent:
-                if isinstance(parent, dict):
-                    keylist = parent.keys()
-                elif isinstance(parent, list):
-                    keylist = parent
-                idx = keylist.index(path[-1])
-                parent_mark = getattr(keylist[idx], '_start_mark', None)
-
-        if instance_mark:
-            location = '%s:%d' % (instance_mark.name, instance_mark.line + 1)
-        elif parent_mark:
-            location = '%s:%d' % (parent_mark.name, parent_mark.line + 1)
-        elif path:
-            location = 'At ' + ':'.join(path)
-        else:
-            location = '<unknown line>'
-
-        message = '%s: %s' % (location, validation_error.message)
-        super(ConfigError, self).__init__(message)
-
-
-class ConfigSanityError(ConfigFormatError):
-    """Same as ConfigFormatError, raised when config is written by Spack."""
+class ConfigSanityError(spack.schema.FileFormatError):
+    """Same as spack.schema.FileFormatError, but for configs written by Spack.
+    """

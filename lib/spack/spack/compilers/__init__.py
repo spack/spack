@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -289,17 +289,23 @@ def get_compilers(config, cspec=None, arch_spec=None):
         if cspec and items['spec'] != str(cspec):
             continue
 
+        # make a spec for the architecture of this compiler, to compare
+        # with the specs passed in.
+        comp_arch = spack.spec.ArchSpec(
+            str(spack.architecture.platform()),
+            items.get('operating_system', None),
+            items.get('target', None))
+
         # If an arch spec is given, confirm that this compiler
         # is for the given operating system
-        os = items.get('operating_system', None)
-        if arch_spec and os != arch_spec.platform_os:
+        if (arch_spec and comp_arch.platform_os != arch_spec.platform_os):
             continue
 
         # If an arch spec is given, confirm that this compiler
         # is for the given target. If the target is 'any', match
         # any given arch spec. If the compiler has no assigned
         # target this is an old compiler config file, skip this logic.
-        target = items.get('target', None)
+        target = comp_arch.target
         if arch_spec and target and (target != arch_spec.target and
                                      target != 'any'):
             continue
