@@ -80,6 +80,7 @@ class Ncl(Package):
     # szip support. We introduce this restriction with the following dependency
     # statement.
     depends_on('hdf5+szip')
+    depends_on('szip')
 
     # In Spack, we also do not have an option to compile netcdf without DAP
     # support, so we will tell the ncl configuration script that we have it.
