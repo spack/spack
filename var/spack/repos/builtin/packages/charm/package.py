@@ -73,9 +73,9 @@ class Charm(Package):
                 "Enable SMP parallelism (does not work with +multicore)"))
     variant("tcp", default=False,
             description="Use TCP as transport mechanism (requires +net)")
+    variant("shared", default=False, description="Enable shared link support")
 
     # Note: We could add variants for AMPI, LIBS, bigemulator, msa, Tau
-    # Note: We could support shared libraries
 
     depends_on("mpi", when="+mpi")
     depends_on("papi", when="+papi")
@@ -163,6 +163,8 @@ class Charm(Package):
                     "The +tcp variant requires "
                     "the +net communication mechanism")
             options.append("tcp")
+        if "+shared" in spec:
+            options.append("--build-shared")
 
         # Call "make" via the build script
         # Note: This builds Charm++ in the "tmp" subdirectory of the

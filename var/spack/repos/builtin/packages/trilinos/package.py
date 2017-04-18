@@ -89,6 +89,7 @@ class Trilinos(CMakePackage):
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
     variant('tpetra',       default=True, description='Compile with Tpetra')
+    variant('exodus', default=False, description='Compile with Exodus from SEACAS')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -383,11 +384,20 @@ class Trilinos(CMakePackage):
 
         # disable due to compiler / config errors:
         options.extend([
-            '-DTrilinos_ENABLE_SEACAS=OFF',
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
 
+        # exodus
+        if '+exodus' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF'
+            ])
+ 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
             options.extend([
