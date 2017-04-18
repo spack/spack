@@ -192,8 +192,14 @@ def test_suite(parser, args):
             print(traceback.format_exc())
 
     # iterate over specs from each YAML file.
-    for spec_set in spec_sets:
+    for i, spec_set in enumerate(spec_sets):
         for spec in spec_set:
+            if not spec.name:
+                tty.warn(
+                    "%s defines an unconcretizable spec set." % yaml_files[i],
+                    "Got anonymous spec: " + str(spec))
+                continue
+
             try:
                 concrete = spec.concretized()
 
@@ -201,6 +207,9 @@ def test_suite(parser, args):
                 if args.dry_run:
                     print(concrete.tree(color=sys.stdout.isatty()))
                     continue
+
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 tty.warn('Concretize failed, moving on.')
                 warn(e)
@@ -218,6 +227,8 @@ def test_suite(parser, args):
                     tty.warn('Package still needed, cant uninstall.')
                     warn(err)
                     continue   # note: this skips the install.
+                except KeyboardInterrupt:
+                    raise
                 except Exception as e:
                     tty.warn('Unexpected error.')
                     warn(err)
@@ -227,6 +238,8 @@ def test_suite(parser, args):
                 install_spec(spec, log_format, site, patharg)
                 uninstall_spec(spec)
 
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 tty.warn('Install hit exception, moving on.')
                 warn(e)
