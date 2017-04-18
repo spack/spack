@@ -52,11 +52,11 @@ class Elpa(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ['libelpa'],root=self.prefix, shared=True, recurse=True
+            ['libelpa'], root=self.prefix, shared=True, recurse=True
         )
 
     build_directory = 'spack-build'
-    parallel=False
+    parallel = False
 
     def setup_environment(self, spack_env, run_env):
 

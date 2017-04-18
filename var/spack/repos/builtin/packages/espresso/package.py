@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+from glob import glob
 
 
 class Espresso(Package):
@@ -75,17 +76,15 @@ class Espresso(Package):
         if '+elpa' in spec and ('~mpi' in spec or '~scalapack' in spec):
             raise RuntimeError(error.format(variant='elpa'))
 
-
     @when('@6:')
     def install(self, spec, prefix):
-        from glob import glob
         self.check_variants(spec)
 
         options = ['-prefix=%s' % prefix.bin]
 
-	# TODO:
-	#  --with-hdf5             (no|<path>)
-	options.append('--with-hdf5=no')
+        # TODO:
+        #  --with-hdf5             (no|<path>)
+        options.append('--with-hdf5=no')
 
         if '+mpi' in spec:
             options.append('--enable-parallel')
@@ -98,8 +97,8 @@ class Espresso(Package):
 
         if '+elpa' in spec:
             options.extend([
-              '--with-elpa-include={0}'.format(spec['elpa'].prefix.include),
-              '--with-elpa-lib={0}'.format(spec['elpa'].libs.joined())
+                '--with-elpa-include={0}'.format(spec['elpa'].prefix.include),
+                '--with-elpa-lib={0}'.format(spec['elpa'].libs.joined())
             ])
 
         # Add a list of directories to search
@@ -115,10 +114,8 @@ class Espresso(Package):
         configure(*options)
         make('all')
 
-
     @when('@:5.4.0')
     def install(self, spec, prefix):
-        from glob import glob
         self.check_variants(spec)
 
         options = ['-prefix=%s' % prefix.bin]
