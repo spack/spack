@@ -101,6 +101,12 @@ class Octopus(Package):
                     '--with-parpack={0}'.format(arpack_libs),
                 ])
 
+        if '+scalapack' in spec:
+            args.extend([
+                '--with-blacs=%s' % spec['scalapack'].libs,
+                '--with-scalapack=%s' % spec['scalapack'].libs
+            ])
+
             # --with-etsf-io-prefix=
             # --with-sparskit=${prefix}/lib/libskit.a
             # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
