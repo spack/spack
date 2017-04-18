@@ -1,0 +1,12 @@
+diff -r 73f7ef7169ac liboctave/system/file-stat.cc
+--- a/liboctave/system/file-stat.cc	Thu Feb 23 16:08:44 2017 -0800
++++ b/liboctave/system/file-stat.cc	Fri Feb 24 11:02:36 2017 -0800
+@@ -174,7 +174,7 @@ namespace octave
+           update_internal ();
+       }
+ 
+-    inline file_stat::~file_stat () { }
++    file_stat::~file_stat () { }
+ 
+     void
+     file_stat::update_internal (bool force)
