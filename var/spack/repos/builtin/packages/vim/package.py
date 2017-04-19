@@ -129,3 +129,9 @@ class Vim(AutotoolsPackage):
             configure_args.append("--enable-cscope")
 
         return configure_args
+
+    # Run the install phase with -j 1.  There seems to be a problem with
+    # parallel builds that results in the creation of the links (e.g. view)
+    # to the vim binary silently failing.
+    def install(self, spec, prefix):
+        make('install', parallel=False)
