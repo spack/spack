@@ -68,6 +68,11 @@ class Vim(AutotoolsPackage):
 
     depends_on('ncurses', when="@7.4:")
 
+    # Run the build with -j 1.  There seems to be a problem with parallel
+    # builds that results in the creation of the links (e.g. view) to the
+    # vim binary silently failing.
+    parallel = False
+
     def configure_args(self):
         spec = self.spec
         feature_set = None
