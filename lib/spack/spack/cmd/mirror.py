@@ -141,7 +141,7 @@ def mirror_list(args):
     fmt = "%%-%ds%%s" % (max_len + 4)
 
     for name in mirrors:
-        print fmt % (name, mirrors[name])
+        print(fmt % (name, mirrors[name]))
 
 
 def _read_specs_from_file(filename):
@@ -152,7 +152,7 @@ def _read_specs_from_file(filename):
                 s = Spec(string)
                 s.package
                 specs.append(s)
-            except SpackError, e:
+            except SpackError as e:
                 tty.die("Parse error in %s, line %d:" % (args.file, i + 1),
                         ">>> " + string, str(e))
     return specs

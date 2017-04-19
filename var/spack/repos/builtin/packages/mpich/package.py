@@ -32,7 +32,7 @@ class Mpich(AutotoolsPackage):
     homepage = "http://www.mpich.org"
     url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     list_url = "http://www.mpich.org/static/downloads/"
-    list_depth = 2
+    list_depth = 1
 
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
@@ -69,7 +69,7 @@ class Mpich(AutotoolsPackage):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx

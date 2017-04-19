@@ -57,7 +57,13 @@ class Openblas(MakefilePackage):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
 
+    # Change file comments to work around clang 3.9 assembler bug
+    # https://github.com/xianyi/OpenBLAS/pull/982
+    patch('openblas0.2.19.diff', when='@0.2.19')
+
     parallel = False
+
+    conflicts('%intel@16', when='@0.2.15:0.2.19')
 
     @run_before('edit')
     def check_compilers(self):
@@ -117,6 +123,7 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
+    @on_package_attributes(run_tests=True)
     @run_after('build')
     def check_build(self):
         make('tests', *self.make_defs)
@@ -129,6 +136,7 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
+    @on_package_attributes(run_tests=True)
     @run_after('install')
     def check_install(self):
         spec = self.spec

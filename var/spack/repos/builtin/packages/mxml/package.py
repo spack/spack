@@ -31,18 +31,22 @@ class Mxml(AutotoolsPackage):
     non-standard libraries.
     """
 
-    homepage = "http://www.msweet.org"
-    url = "http://www.msweet.org/files/project3/mxml-2.9.tar.gz"
+    homepage = "http://michaelrsweet.github.io/mxml/"
+    url      = "https://github.com/michaelrsweet/mxml/releases/download/release-2.10/mxml-2.10.tar.gz"
 
+    version('2.10', '8804c961a24500a95690ef287d150abe')
     version('2.9', 'e21cad0f7aacd18f942aa0568a8dee19')
     version('2.8', 'd85ee6d30de053581242c4a86e79a5d2')
     version('2.7', '76f2ae49bf0f5745d5cb5d9507774dc9')
     version('2.6', '68977789ae64985dddbd1a1a1652642e')
     version('2.5', 'f706377fba630b39fa02fd63642b17e5')
 
-    # module swap PrgEnv-intel PrgEnv-$COMP
-    # (Can use whatever compiler you want to use)
-    # Case statement to change CC and CXX flags
+    def url_for_version(self, version):
+        if version <= Version('2.7'):
+            return 'https://github.com/michaelrsweet/mxml/archive/release-{0}.tar.gz'.format(version)
+        else:
+            return 'https://github.com/michaelrsweet/mxml/releases/download/release-{0}/mxml-{0}.tar.gz'.format(version)
 
     def configure_args(self):
-        return ['--disable-shared', 'CFLAGS=-static']
+        # Default is non-shared, but avoid any future surprises
+        return ['--disable-shared']

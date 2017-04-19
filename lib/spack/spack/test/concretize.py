@@ -26,7 +26,7 @@ import pytest
 import spack
 import spack.architecture
 from spack.concretize import find_spec
-from spack.spec import Spec, CompilerSpec
+from spack.spec import Spec, CompilerSpec, ConflictsInSpecError, SpecError
 from spack.version import ver
 
 
@@ -82,9 +82,26 @@ def check_concretize(abstract_spec):
         'mpileaks ^mpi', 'mpileaks ^mpi@:1.1', 'mpileaks ^mpi@2:',
         'mpileaks ^mpi@2.1', 'mpileaks ^mpi@2.2', 'mpileaks ^mpi@2.2',
         'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2'
+        # conflict not triggered
+        'conflict',
+        'conflict%clang~foo',
+        'conflict-parent%gcc'
     ]
 )
 def spec(request):
+    """Spec to be concretized"""
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        'conflict%clang',
+        'conflict%clang+foo',
+        'conflict-parent%clang',
+        'conflict-parent@0.9^conflict~foo'
+    ]
+)
+def conflict_spec(request):
     """Spec to be concretized"""
     return request.param
 
@@ -175,6 +192,16 @@ class TestConcretize(object):
         assert Spec('builtin.mock.multi-provider-mpi@1.10.0') in providers
         assert Spec('builtin.mock.multi-provider-mpi@1.8.8') in providers
 
+    def test_different_compilers_get_different_flags(self):
+        client = Spec('cmake-client %gcc@4.7.2 platform=test os=fe target=fe' +
+                      ' ^cmake %clang@3.5 platform=test os=fe target=fe')
+        client.concretize()
+        cmake = client['cmake']
+        assert set(client.compiler_flags['cflags']) == set(['-O0'])
+        assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
+        assert set(client.compiler_flags['fflags']) == set(['-O0'])
+        assert not set(cmake.compiler_flags['fflags'])
+
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
         s.concretize()
@@ -209,6 +236,16 @@ class TestConcretize(object):
         """
         s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
         with pytest.raises(spack.spec.MultipleProviderError):
+            s.concretize()
+
+    def test_no_matching_compiler_specs(self):
+        s = Spec('a %gcc@0.0.0')
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s.concretize()
+
+    def test_no_compilers_for_arch(self):
+        s = Spec('a arch=linux-rhel0-x86_64')
+        with pytest.raises(spack.concretize.NoCompilersForArchError):
             s.concretize()
 
     def test_virtual_is_fully_expanded_for_callpath(self):
@@ -352,3 +389,11 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpileaks'].satisfies('%clang')
         assert s['dyninst'].satisfies('%gcc')
+
+    def test_conflicts_in_spec(self, conflict_spec):
+        # Check that an exception is raised an caught by the appropriate
+        # exception types.
+        for exc_type in (ConflictsInSpecError, RuntimeError, SpecError):
+            s = Spec(conflict_spec)
+            with pytest.raises(exc_type):
+                s.concretize()

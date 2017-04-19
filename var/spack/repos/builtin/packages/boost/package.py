@@ -40,7 +40,7 @@ class Boost(Package):
     homepage = "http://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
-    list_depth = 2
+    list_depth = 1
 
     version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
@@ -131,7 +131,8 @@ class Boost(Package):
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11120
-    patch('python_jam.patch', when='^python@3:')
+    patch('python_jam.patch', when='@1.56.0: ^python@3:')
+    patch('python_jam_pre156.patch', when='@:1.55.0 ^python@3:')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
     patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
@@ -141,14 +142,8 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
     def url_for_version(self, version):
-        """
-        Handle Boost's weird URLs,
-        which write the version two different ways.
-        """
-        parts = [str(p) for p in Version(version)]
-        dots = ".".join(parts)
-        underscores = "_".join(parts)
-        return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (dots, underscores)
+        url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+        return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):

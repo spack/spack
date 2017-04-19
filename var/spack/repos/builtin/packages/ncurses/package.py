@@ -38,28 +38,28 @@ class Ncurses(AutotoolsPackage):
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
     version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1')
 
-    patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
-    patch('sed_pgi.patch',   when='@:6.0')
-
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
 
+    depends_on('pkg-config', type='build')
+
+    patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
+    patch('sed_pgi.patch',   when='@:6.0')
+
     def configure_args(self):
         opts = [
-            # The CPPFLAGS setting works around this bug:
-            # <http://stackoverflow.com/questions/37475222/ncurses-6-0-compilation-error-error-expected-before-int>
-            'CPPFLAGS=-P',
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
             '--with-cxx-shared',
             '--enable-widec',
             '--enable-overwrite',
-            '--disable-lib-suffixes',
             '--without-ada',
             '--enable-pc-files',
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
+
         if '+symlinks' in self.spec:
-            opts += ["--enable-symlinks"]
+            opts.append('--enable-symlinks')
+
         return opts

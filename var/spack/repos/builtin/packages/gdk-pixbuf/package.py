@@ -32,7 +32,9 @@ class GdkPixbuf(AutotoolsPackage):
        GTK+ 2 but it was split off into a separate package in
        preparation for the change to GTK+ 3."""
     homepage = "https://developer.gnome.org/gdk-pixbuf/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.31/gdk-pixbuf-2.31.1.tar.xz"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.31/gdk-pixbuf-2.31.2.tar.xz"
+    list_url = "http://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
+    list_depth = 2
 
     version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
 

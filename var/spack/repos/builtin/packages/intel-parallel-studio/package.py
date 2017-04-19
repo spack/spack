@@ -31,14 +31,16 @@ from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
 
 
 class IntelParallelStudio(IntelInstaller):
-    """Intel Parallel Studio.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    """Intel Parallel Studio."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('professional.2017.2', '70e54b33d940a1609ff1d35d3c56e3b3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
+    version('cluster.2017.2',      '70e54b33d940a1609ff1d35d3c56e3b3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
+    version('composer.2017.2',     '2891ab1ece43eb61b6ab892f07c47f01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
     version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
     version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542',
@@ -377,3 +379,11 @@ class IntelParallelStudio(IntelInstaller):
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'ipp', 'lib', 'mic'))
             run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+
+        if self.spec.satisfies('+all') or self.spec.satisfies('+tools'):
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix, 'vtune_amplifier_xe',
+                                           'bin64'))
+            run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
+                                 major_ver),
+                                 join_path(self.prefix, 'vtune_amplifier_xe'))

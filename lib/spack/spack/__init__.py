@@ -23,6 +23,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import multiprocessing
 import os
 import sys
 import tempfile
@@ -78,7 +79,6 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
@@ -96,7 +96,7 @@ spack_version = Version("0.10.0")
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.error.SpackError, e:
+except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
@@ -142,6 +142,11 @@ do_checksum = _config.get('checksum', True)
 dirty = _config.get('dirty', False)
 
 
+# The number of jobs to use when building in parallel.
+# By default, use all cores on the machine.
+build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
@@ -162,6 +167,7 @@ from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
+from spack.build_systems.perl import PerlPackage
 
 __all__ += [
     'run_before',
@@ -172,7 +178,8 @@ __all__ += [
     'AutotoolsPackage',
     'MakefilePackage',
     'PythonPackage',
-    'RPackage'
+    'RPackage',
+    'PerlPackage'
 ]
 
 from spack.version import Version, ver

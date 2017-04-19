@@ -38,7 +38,7 @@ class Gdal(Package):
     homepage   = "http://www.gdal.org/"
     url        = "http://download.osgeo.org/gdal/2.1.2/gdal-2.1.2.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
-    list_depth = 2
+    list_depth = 1
 
     version('2.1.2', 'ae85b78888514c75e813d658cac9478e')
     version('2.0.2', '940208e737c87d31a90eaae43d0efd65')

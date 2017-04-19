@@ -50,6 +50,7 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'hide_files',
     'install',
     'install_tree',
     'is_exe',
@@ -174,9 +175,9 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
 def set_install_permissions(path):
     """Set appropriate permissions on the installed file."""
     if os.path.isdir(path):
-        os.chmod(path, 0755)
+        os.chmod(path, 0o755)
     else:
-        os.chmod(path, 0644)
+        os.chmod(path, 0o644)
 
 
 def copy_mode(src, dest):
@@ -255,6 +256,18 @@ def working_dir(dirname, **kwargs):
     os.chdir(dirname)
     yield
     os.chdir(orig_dir)
+
+
+@contextmanager
+def hide_files(*file_list):
+    try:
+        baks = ['%s.bak' % f for f in file_list]
+        for f, bak in zip(file_list, baks):
+            shutil.move(f, bak)
+        yield
+    finally:
+        for f, bak in zip(file_list, baks):
+            shutil.move(bak, f)
 
 
 def touch(path):
@@ -381,8 +394,14 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
 
 def set_executable(path):
-    st = os.stat(path)
-    os.chmod(path, st.st_mode | stat.S_IEXEC)
+    mode = os.stat(path).st_mode
+    if mode & stat.S_IRUSR:
+        mode |= stat.S_IXUSR
+    if mode & stat.S_IRGRP:
+        mode |= stat.S_IXGRP
+    if mode & stat.S_IROTH:
+        mode |= stat.S_IXOTH
+    os.chmod(path, mode)
 
 
 def remove_dead_links(root):

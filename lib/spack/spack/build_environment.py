@@ -57,6 +57,7 @@ import os
 import shutil
 import sys
 import traceback
+from six import iteritems
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -224,6 +225,9 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
     for mod in compiler.modules:
+        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
         load_module(mod)
 
     compiler.setup_custom_environment(pkg, env)
@@ -310,7 +314,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     environment = compiler.environment
     if 'set' in environment:
         env_to_set = environment['set']
-        for key, value in env_to_set.iteritems():
+        for key, value in iteritems(env_to_set):
             env.set('SPACK_ENV_SET_%s' % key, value)
             env.set('%s' % key, value)
         # Let shell know which variables to set
@@ -322,8 +326,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(filter(os.path.isdir, [
-        '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
+    bin_dirs = reversed(
+        [d.prefix.bin for d in pkg.spec.dependencies(deptype='build')
+         if os.path.isdir(d.prefix.bin)])
     bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)
@@ -352,7 +357,7 @@ def set_module_variables_for_package(pkg, module):
        This makes things easier for package writers.
     """
     # number of jobs spack will build with.
-    jobs = multiprocessing.cpu_count()
+    jobs = spack.build_jobs
     if not pkg.parallel:
         jobs = 1
     elif pkg.make_jobs:
