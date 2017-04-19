@@ -24,24 +24,47 @@
 ##############################################################################
 from spack import *
 
-
-class Scr(Package):
+class Scr(CMakePackage):
     """SCR caches checkpoint data in storage on the compute nodes of a
        Linux cluster to provide a fast, scalable checkpoint/restart
        capability for MPI codes"""
 
-    homepage = "https://computation.llnl.gov/project/scr/"
+    homepage = "http://computation.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
 
-    depends_on("mpi")
-#    depends_on("dtcmp")
+    ## NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
+    ## scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
+    # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
+    # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
 
-    version('1.1-7', 'a5930e9ab27d1b7049447c2fd7734ebd',
-            url='http://downloads.sourceforge.net/project/scalablecr/releases/scr-1.1-7.tar.gz')
-    version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e',
-            url='https://github.com/hpc/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz')
+    version('master', git='https://github.com/llnl/scr.git', branch='master')
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--with-scr-config-file=" + prefix + "/etc/scr.conf")
-        make()
-        make("install")
+    depends_on('pdsh')
+    depends_on('zlib')
+    depends_on('mpi')
+
+    variant('dtcmp', default=True, description="DTCMP")
+    depends_on('dtcmp', when="+dtcmp")
+
+    ## YOGRT not yet in spack
+    # variant('yogrt', default=True, description="Lib YOGRT")
+    # depends_on('yogrt', when="+yogrt")
+
+    ## MySQL not yet in spack
+    # variant('mysql', default=True, decription="MySQL database for logging")
+    # depends_on('mysql', when="+mysql")
+
+    def cmake_args(self):
+        args = []
+
+        args.append('-DWITH_PDSH_PREFX={0}'.format(self.spec['pdsh'].prefix))
+
+        if "+dtcmp" in self.spec:
+                args.append('-DWITH_DTCMP_PREFIX={0}'.format(self.spec['dtcmp'].prefix))
+
+        # if "+yogrt" in self.spec:
+                # args.append('-DWITH_YOGRT_PREFIX={0}'.format(self.spec['yogrt'].prefix))
+
+        # if "+mysql" in self.spec:
+                # args.append('-DWITH_MYSQL_PREFIX={0}'.format(self.spec['mysql'].prefix))
+
+        return args
