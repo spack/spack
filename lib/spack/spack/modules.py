@@ -515,6 +515,8 @@ class Dotkit(EnvModule):
     default_naming_format = \
         '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
 
+    path = join_path(spack.share_path, "dotkit")
+
     @property
     def file_name(self):
         return join_path(self.path, self.spec.architecture,
@@ -563,6 +565,8 @@ class TclModule(EnvModule):
 
     default_naming_format = \
         '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+
+    path = join_path(spack.share_path, "modules")
 
     @property
     def file_name(self):
