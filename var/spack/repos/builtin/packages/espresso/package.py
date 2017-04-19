@@ -79,7 +79,9 @@ class Espresso(Package):
     def install(self, spec, prefix):
         self.check_variants(spec)
 
-        options = ['-prefix=%s' % prefix.bin]
+        options = [
+            '-prefix=%s' % prefix.bin if spec.satisfies('@:5.4.0') else prefix
+        ]
 
         if '+mpi' in spec:
             options.append('--enable-parallel')
