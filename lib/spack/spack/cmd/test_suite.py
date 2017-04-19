@@ -41,7 +41,7 @@ from spack.util.executable import which
 from spack.util.web import diagnose_curl_error
 from spack.util.spec_set import CombinatorialSpecSet
 from spack.package import PackageStillNeededError
-
+from spack.build_environment import InstallError
 
 description = "test installation of a suite of packages; generate cdash output"
 
