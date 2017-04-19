@@ -28,7 +28,7 @@ system_paths = ['/', '/usr', '/usr/local']
 
 
 def filter_system_paths(paths):
-    return [p for p in paths if p not in system_paths]
+    return [p for p in paths if os.path.normpath(p) not in system_paths]
 
 
 def get_path(name):
