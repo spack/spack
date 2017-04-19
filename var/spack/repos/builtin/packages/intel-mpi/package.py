@@ -64,6 +64,6 @@ class IntelMpi(IntelInstaller):
             raise "No suitable bindir found"
 
         self.spec.mpicc = join_path(bindir, 'mpicc')
-        self.spec.mpicxx = join_path(bindir, 'mpic++')
+        self.spec.mpicxx = join_path(bindir, 'mpicxx')
         self.spec.mpifc = join_path(bindir, 'mpif90')
         self.spec.mpif77 = join_path(bindir, 'mpif77')
