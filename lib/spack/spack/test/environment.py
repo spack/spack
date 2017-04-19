@@ -66,10 +66,12 @@ def miscellaneous_paths():
         '/usr/opt/lib',
         '/lib',
         '/',
+        '/usr',
         '/usr/',
         '/usr/bin',
         '/bin64',
         '/lib64',
+        '/include',
         '/include/',
         '/opt/some-package/include',
     ]
