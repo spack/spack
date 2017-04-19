@@ -67,8 +67,10 @@ def miscellaneous_paths():
         '/lib',
         '/',
         '/usr/',
+        '/usr/bin',
+        '/bin64',
         '/lib64',
-        '/include',
+        '/include/',
         '/opt/some-package/include',
     ]
 
@@ -122,14 +124,8 @@ def test_filter_system_paths(miscellaneous_paths):
     filtered = filter_system_paths(miscellaneous_paths)
     expected = [
         '/usr/local/Cellar/gcc/5.3.0/lib',
-        '/usr/local/lib',
-        '/usr/local/include',
-        '/usr/local/lib64',
         '/usr/local/opt/some-package/lib',
         '/usr/opt/lib',
-        '/lib',
-        '/lib64',
-        '/include',
         '/opt/some-package/include',
     ]
     assert filtered == expected

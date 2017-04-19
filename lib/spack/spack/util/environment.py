@@ -25,10 +25,13 @@
 import os
 
 system_paths = ['/', '/usr', '/usr/local']
+suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
+system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
+    system_paths
 
 
 def filter_system_paths(paths):
-    return [p for p in paths if os.path.normpath(p) not in system_paths]
+    return [p for p in paths if os.path.normpath(p) not in system_dirs]
 
 
 def get_path(name):
