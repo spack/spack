@@ -58,6 +58,11 @@ class Ncl(Package):
     depends_on('netcdf')
     depends_on('cairo')
 
+    # Extra dependencies that may be missing from build system:
+    depends_on('bison', type='build')
+    depends_on('flex+lex')
+    depends_on('libiconv')
+
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
 
@@ -75,6 +80,7 @@ class Ncl(Package):
     # szip support. We introduce this restriction with the following dependency
     # statement.
     depends_on('hdf5+szip')
+    depends_on('szip')
 
     # In Spack, we also do not have an option to compile netcdf without DAP
     # support, so we will tell the ncl configuration script that we have it.
