@@ -52,7 +52,7 @@ class Aspell(AutotoolsPackage):
         o = urlparse(d['url'])
         p = o.path.split('/')
         d['name'] = p[4]
-        d['package'] = re.sub(r'\.tar.gz', '', p[5])
+        d['package'] = re.sub(r'\.tar.bz2', '', p[5])
 
         variant(d['name'], default=False, description=d['package'])
         resource(
