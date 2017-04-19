@@ -100,7 +100,7 @@ class Espresso(Package):
                                   'include',
                                   'elpa-{0}'.format(str(spec['elpa'].version)),
                                   'modules')
-                        ),
+                    ),
                     '--with-elpa-lib={0}'.format(spec['elpa'].libs.joined())
                 ])
 
