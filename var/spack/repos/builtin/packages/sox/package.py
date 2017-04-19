@@ -33,9 +33,6 @@ class Sox(AutotoolsPackage):
 
     version('14.4.2', 'ba804bb1ce5c71dd484a102a5b27d0dd')
 
-    def url_for_version(self, version):
-        return 'https://downloads.sourceforge.net/project/sox/sox/{0}/sox-{0}.tar.bz2'.format(version)
-
     depends_on('bzip2')
     depends_on('flac')
     depends_on('id3lib')

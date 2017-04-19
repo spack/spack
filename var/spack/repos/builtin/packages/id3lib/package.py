@@ -34,9 +34,6 @@ class Id3lib(AutotoolsPackage):
 
     version('3.8.3', '19f27ddd2dda4b2d26a559a4f0f402a7')
 
-    def url_for_version(self, version):
-        return 'https://downloads.sourceforge.net/project/id3lib/id3lib/{0}/id3lib-{0}.tar.gz'.format(version)
-
     depends_on('zlib')
 
     # http://connie.slackware.com/~alien/slackbuilds/id3lib/build/id3lib-3.8.3_gcc4.diff
@@ -47,7 +44,5 @@ class Id3lib(AutotoolsPackage):
         args = ["--enable-debug=no"]
         return args
 
-    def install(self, spec, prefix):
-        os.environ["LDFLAGS"] = " -lstdc++"
-        make()
-        make("install")
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('LDFLAGS', '-lstdc++')
