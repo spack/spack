@@ -43,8 +43,8 @@ class Octopus(Package):
             description='Compile with ParMETIS')
     variant('netcdf', default=False,
             description='Compile with Netcdf')
-    variant('arpack-ng', default=False,
-            description='Compile with ARPACK-ng')
+    variant('arpack', default=False,
+            description='Compile with ARPACK')
 
     depends_on('blas')
     depends_on('gsl')
@@ -56,15 +56,13 @@ class Octopus(Package):
     depends_on('parmetis', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
-    depends_on('arpack-ng', when='+arpack-ng')
+    depends_on('arpack-ng', when='+arpack')
 
     # optional dependencies:
     # TODO: parmetis, etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft
 
     def install(self, spec, prefix):
-        arpack = find_libraries('libarpack', root=spec[
-                                'arpack-ng'].prefix.lib, shared=True)
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
         args = []
@@ -93,20 +91,25 @@ class Octopus(Package):
                 '--with-netcdf-include=%s' %
                 spec['netcdf-fortran'].prefix.include,
             ])
-        if '+arpack-ng' in spec:
+        if '+arpack' in spec:
+            arpack_libs = spec['arpack-ng'].libs.joined()
             args.extend([
-                '--with-arpack={0}'.format(arpack.joined()),
+                '--with-arpack={0}'.format(arpack_libs),
             ])
+            if '+mpi' in spec['arpack-ng']:
+                args.extend([
+                    '--with-parpack={0}'.format(arpack_libs),
+                ])
+
         if '+scalapack' in spec:
             args.extend([
                 '--with-blacs=%s' % spec['scalapack'].libs,
-                '--with-scalapack=%s' % spec['scalapack'].libs,
+                '--with-scalapack=%s' % spec['scalapack'].libs
             ])
+
             # --with-etsf-io-prefix=
             # --with-sparskit=${prefix}/lib/libskit.a
             # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
-            # --with-parpack=${prefix}/lib/libparpack.dylib
-            # --with-parmetis-prefix=${prefix}
             # --with-berkeleygw-prefix=${prefix}
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted

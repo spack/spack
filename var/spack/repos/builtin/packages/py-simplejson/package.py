@@ -25,30 +25,17 @@
 from spack import *
 
 
-class GitLfs(Package):
-    """Git LFS is a system for managing and versioning large files in
-       association with a Git repository.  Instead of storing the large files
-       within the Git repository as blobs, Git LFS stores special "pointer
-       files" in the repository, while storing the actual file contents on a
-       Git LFS server."""
+class PySimplejson(PythonPackage):
+    """Simplejson is a simple, fast, extensible JSON encoder/decoder for
+    Python"""
 
-    homepage = "https://git-lfs.github.com"
-    git_url  = "https://github.com/github/git-lfs.git"
+    homepage = "https://github.com/simplejson/simplejson"
+    url      = "https://pypi.io/packages/source/s/simplejson/simplejson-3.10.0.tar.gz"
 
-    version('2.0.2', git=git_url, tag='v2.0.2')
-    version('1.4.1', git=git_url, tag='v1.4.1')
-    version('1.3.1', git=git_url, tag='v1.3.1')
+    version('3.10.0', '426a9631d22851a7a970b1a677368b15')
+    version('3.9.0',  '01db2db1b96bd8e59bcab45bca12639b')
+    version('3.8.2',  '53b1371bbf883b129a12d594a97e9a18')
+    version('3.8.1',  'b8441f1053edd9dc335ded8c7f98a974')
+    version('3.8.0',  '72f3b93a6f9808df81535f79e79565a2')
 
-    # TODO: Implement this by following the instructions at this location:
-    # https://github.com/github/git-lfs/blob/master/CONTRIBUTING.md#building
-    # variant('test', default=True, description='Build and run tests as part of the build.')  # NOQA: E501
-
-    depends_on('go@1.5:', type='build')
-    depends_on('git@1.8.2:', type='run')
-
-    def install(self, spec, prefix):
-        bootstrap_script = Executable(join_path('script', 'bootstrap'))
-        bootstrap_script()
-
-        mkdirp(prefix.bin)
-        install(join_path('bin', 'git-lfs'), prefix.bin)
+    depends_on('py-setuptools', type='build')
