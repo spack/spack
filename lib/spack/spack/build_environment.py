@@ -323,9 +323,10 @@ def set_build_environment_variables(pkg, env, dirty=False):
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:
-        bin_dir = os.path.join(prefix, 'bin')
-        if os.path.isdir(bin_dir):
-            env.prepend_path('PATH', bin_dir)
+        for dirname in ['bin', 'bin64']:
+            bin_dir = os.path.join(prefix, dirname)
+            if os.path.isdir(bin_dir):
+                env.prepend_path('PATH', bin_dir)
 
     # Add spack build environment path with compiler wrappers first in
     # the path. We add both spack.env_path, which includes default
