@@ -32,7 +32,8 @@ class Elpa(AutotoolsPackage):
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
-    version('2016.05.004', 'c0dd3a53055536fc3a2a221e78d8b376')
+    version('2016.11.001.pre', '5656fd066cf0dcd071dbcaf20a639b37')
+    version('2016.05.004', 'c0dd3a53055536fc3a2a221e78d8b376', preferred=True)
     version('2016.05.003', '88a9f3f3bfb63e16509dd1be089dcf2c')
     version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6')
 
@@ -49,8 +50,18 @@ class Elpa(AutotoolsPackage):
             t = 'http://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
         return t.format(str(version))
 
-    def setup_environment(self, spack_env, run_env):
+    # override default implementation which returns static lib
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libelpa'], root=self.prefix, shared=True, recurse=True
+        )
 
+    build_directory = 'spack-build'
+
+    def setup_environment(self, spack_env, run_env):
+        # TODO: set optimum flags for platform+compiler combo, see
+        # https://github.com/hfp/xconfigure/tree/master/elpa
         spec = self.spec
 
         spack_env.set('CC', spec['mpi'].mpicc)
