@@ -389,8 +389,7 @@ class Llvm(Package):
                 raise SpackException(
                     'The lldb variant requires the `+clang` variant')
 
-        platform = self.spec.architecture.platform
-        if spec.satisfies('@4.0.0:') and platform == 'linux':
+        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
         with working_dir('spack-build', create=True):
