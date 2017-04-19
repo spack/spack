@@ -38,10 +38,3 @@ class Id3lib(AutotoolsPackage):
     # http://connie.slackware.com/~alien/slackbuilds/id3lib/build/id3lib-3.8.3_gcc4.diff
     # this is due to some changes in the c++ standard library headers
     patch("id3lib-3.8.3_gcc4.diff")
-
-    def configure_args(self):
-        args = ["--enable-debug=no"]
-        return args
-
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('LDFLAGS', '-lstdc++')
