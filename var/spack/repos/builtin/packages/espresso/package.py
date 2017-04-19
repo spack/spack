@@ -80,7 +80,8 @@ class Espresso(Package):
         self.check_variants(spec)
 
         options = [
-            '-prefix=%s' % (prefix.bin if spec.satisfies('@:5.4.0') else prefix)
+            '-prefix=%s' % (prefix.bin if spec.satisfies('@:5.4.0') else
+                            prefix)
         ]
 
         if '+mpi' in spec:
