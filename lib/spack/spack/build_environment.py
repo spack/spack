@@ -225,6 +225,9 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
     for mod in compiler.modules:
+        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
         load_module(mod)
 
     compiler.setup_custom_environment(pkg, env)
@@ -354,7 +357,7 @@ def set_module_variables_for_package(pkg, module):
        This makes things easier for package writers.
     """
     # number of jobs spack will build with.
-    jobs = multiprocessing.cpu_count()
+    jobs = spack.build_jobs
     if not pkg.parallel:
         jobs = 1
     elif pkg.make_jobs:
