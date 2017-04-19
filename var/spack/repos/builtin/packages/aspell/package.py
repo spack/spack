@@ -74,10 +74,9 @@ class Aspell(AutotoolsPackage):
         for d in self.dicts:
             if '+{0}'.format(d['name']) in self.spec:
                 with working_dir(d['package']):
-                    bash = which('bash')
-                    make = which('make')
+                    sh = which('sh')
                     aspell = join_path(prefix.bin, "aspell")
                     prezip = join_path(prefix.bin, "prezip")
-                    bash('./configure', '--vars', "ASPELL={0}".format(aspell),
-                         "PREZIP={0}".format(prezip))
+                    sh('./configure', '--vars', "ASPELL={0}".format(aspell),
+                        "PREZIP={0}".format(prezip))
                     make('install')
