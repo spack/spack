@@ -39,9 +39,8 @@ class GitLfs(Package):
     version('1.4.1', git=git_url, tag='v1.4.1')
     version('1.3.1', git=git_url, tag='v1.3.1')
 
-    # TODO: Implement this by following the instructions at this location:
+    # TODO: Add tests by following the instructions at this location:
     # https://github.com/github/git-lfs/blob/master/CONTRIBUTING.md#building
-    # variant('test', default=True, description='Build and run tests as part of the build.')  # NOQA: E501
 
     depends_on('go@1.5:', type='build')
     depends_on('git@1.8.2:', type='run')
