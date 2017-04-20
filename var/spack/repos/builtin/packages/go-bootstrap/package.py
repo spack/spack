@@ -65,7 +65,7 @@ class GoBootstrap(Package):
             r'# \1\2\3',
         )
 
-    @when('@1.5.0:')
+    @when('@1.5.0:')  # noqa: F811
     def patch(self):
         pass
 
