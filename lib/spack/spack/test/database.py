@@ -89,12 +89,12 @@ def _check_db_sanity(install_db):
     pkg_in_layout = sorted(spack.store.layout.all_specs())
     actual = sorted(install_db.query())
 
-    externals = sorted([x for x in actual if x.external is not None])
+    externals = sorted([x for x in actual if x.external is True])
     nexpected = len(pkg_in_layout) + len(externals)
 
     assert nexpected == len(actual)
 
-    non_external_in_db = sorted([x for x in actual if x.external is None])
+    non_external_in_db = sorted([x for x in actual if x.external is False])
 
     for e, a in zip(pkg_in_layout, non_external_in_db):
         assert e == a
@@ -377,16 +377,16 @@ def test_external_entries_in_db(database):
     install_db = database.mock.db
 
     rec = install_db.get_record('mpileaks ^zmpi')
-    assert rec.spec.external is None
+    assert rec.spec.external_path is None
     assert rec.spec.external_module is None
 
     rec = install_db.get_record('externaltool')
-    assert rec.spec.external == '/path/to/external_tool'
+    assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = install_db.get_record('externaltool')
-    assert rec.spec.external == '/path/to/external_tool'
+    assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True

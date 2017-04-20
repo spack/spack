@@ -1089,8 +1089,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             the user, False if it was pulled in as a dependency of an explicit
             package.
         """
-        message = '{s.name}@{s.version} : externally installed in {path}'
-        tty.msg(message.format(s=self, path=self.spec.external))
+        if self.spec.external_module:
+            message = '{s.name}@{s.version} : has external module in {module}'
+            tty.msg(message.format(s=self, module=self.spec.external_module))
+            message = '{s.name}@{s.version} : is actually installed in {path}'
+            tty.msg(message.format(s=self, path=self.spec.external_path))
+        else:
+            message = '{s.name}@{s.version} : externally installed in {path}'
+            tty.msg(message.format(s=self, path=self.spec.external_path))
         try:
             # Check if the package was already registered in the DB
             # If this is the case, then just exit
