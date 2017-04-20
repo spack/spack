@@ -86,7 +86,7 @@ function spack {
     case "$_sp_subcommand" in
         "cd")
             _sp_arg="${1:-}"; shift
-            if [ "$_sp_arg" == "-h" ]; then
+            if [[ "$_sp_arg" == "-h" ]]; then
                 command spack cd -h
             else
                 LOC="$(spack location "$_sp_arg" "$@")"
@@ -135,7 +135,7 @@ function spack {
             esac
             ;;
         *)
-            command spack "${args[@]:-}"
+            command spack ${args[@]:-}
             ;;
     esac
 }
