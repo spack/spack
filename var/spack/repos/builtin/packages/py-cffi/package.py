@@ -23,15 +23,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class PyCffi(PythonPackage):
     """Foreign Function Interface for Python calling C code"""
     homepage = "http://cffi.readthedocs.org/en/latest/"
-    # base https://pypi.python.org/pypi/cffi
-    url      = "https://pypi.python.org/packages/source/c/cffi/cffi-1.1.2.tar.gz"
+    url      = "https://pypi.io/packages/source/c/cffi/cffi-1.10.0.tar.gz"
 
-    version('1.1.2', 'ca6e6c45b45caa87aee9adc7c796eaea')
+    import_modules = ['cffi']
+
+    version('1.10.0', '2b5fa41182ed0edaf929a789e602a070')
+    version('1.1.2',  'ca6e6c45b45caa87aee9adc7c796eaea')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pycparser', type=('build', 'run'))
@@ -44,4 +47,5 @@ class PyCffi(PythonPackage):
         # other compilation.  We are setting the 'LDSHARED" to the
         # spack compiler wrapper plus a few extra flags necessary for
         # building the shared library.
-        spack_env.set('LDSHARED', "{0} -shared -pthread".format(spack_cc))
+        if not sys.platform == 'darwin':
+            spack_env.set('LDSHARED', "{0} -shared -pthread".format(spack_cc))
