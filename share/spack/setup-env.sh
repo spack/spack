@@ -196,10 +196,8 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 _sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
 _sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")
 _sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
-_sp_lmod_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('lmod')))")
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_lmod_root%/}/$_sp_sys_type"
 
 #
 # Add programmable tab completion for Bash
