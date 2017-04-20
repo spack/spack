@@ -25,20 +25,15 @@
 from spack import *
 
 
-class PyPygments(PythonPackage):
-    """Pygments is a syntax highlighting package written in Python."""
+class Flac(AutotoolsPackage):
+    """Encoder/decoder for the Free Lossless Audio Codec"""
 
-    homepage = "https://pypi.python.org/pypi/pygments"
-    url      = "https://pypi.io/packages/source/P/Pygments/Pygments-2.2.0.tar.gz"
+    homepage = "https://xiph.org/flac/index.html"
+    url      = "http://downloads.xiph.org/releases/flac/flac-1.3.2.tar.xz"
 
-    import_modules = [
-        'pygments', 'pygments.filters', 'pygments.formatters',
-        'pygments.lexers', 'pygments.styles'
-    ]
+    version('1.3.2', '454f1bfa3f93cc708098d7890d0499bd')
+    version('1.3.1', 'b9922c9a0378c88d3e901b234f852698')
+    version('1.3.0', '13b5c214cee8373464d3d65dee362cdd')
 
-    version('2.2.0', '13037baca42f16917cbd5ad2fab50844')
-    version('2.1.3', 'ed3fba2467c8afcda4d317e4ef2c6150')
-    version('2.0.1', 'e0daf4c14a4fe5b630da765904de4d6c')
-    version('2.0.2', '238587a1370d62405edabd0794b3ec4a')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('libvorbis')
+    depends_on('id3lib')

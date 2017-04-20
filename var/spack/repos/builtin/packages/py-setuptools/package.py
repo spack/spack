@@ -32,12 +32,10 @@ class PySetuptools(PythonPackage):
     homepage = "https://pypi.python.org/pypi/setuptools"
     url      = "https://pypi.io/packages/source/s/setuptools/setuptools-25.2.0.tar.gz"
 
-    import_modules = [
-        'pkg_resources', 'setuptools', 'pkg_resources.extern',
-        'pkg_resources._vendor', 'pkg_resources._vendor.packaging',
-        'setuptools.extern', 'setuptools.command'
-    ]
+    import_modules = ['pkg_resources', 'setuptools', 'setuptools.command']
 
+    version('34.4.1', '5f9b07aeaafd29eac2548fc0b89a4934',
+            url="https://pypi.io/packages/source/s/setuptools/setuptools-34.4.1.zip")
     version('34.2.0', '41b630da4ea6cfa5894d9eb3142922be',
             url="https://pypi.io/packages/source/s/setuptools/setuptools-34.2.0.zip")
     version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c')

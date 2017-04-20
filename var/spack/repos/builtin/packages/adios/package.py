@@ -128,6 +128,8 @@ class Adios(AutotoolsPackage):
 
         if '+zlib' in spec:
             extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+        if '+bzip2' in spec:
+            extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix)
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+zfp' in spec:

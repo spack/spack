@@ -25,20 +25,16 @@
 from spack import *
 
 
-class PyPygments(PythonPackage):
-    """Pygments is a syntax highlighting package written in Python."""
+class Id3lib(AutotoolsPackage):
+    """Library for manipulating ID3v1 and ID3v2 tags"""
 
-    homepage = "https://pypi.python.org/pypi/pygments"
-    url      = "https://pypi.io/packages/source/P/Pygments/Pygments-2.2.0.tar.gz"
+    homepage = "http://id3lib.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/id3lib/id3lib/3.8.3/id3lib-3.8.3.tar.gz"
 
-    import_modules = [
-        'pygments', 'pygments.filters', 'pygments.formatters',
-        'pygments.lexers', 'pygments.styles'
-    ]
+    version('3.8.3', '19f27ddd2dda4b2d26a559a4f0f402a7')
 
-    version('2.2.0', '13037baca42f16917cbd5ad2fab50844')
-    version('2.1.3', 'ed3fba2467c8afcda4d317e4ef2c6150')
-    version('2.0.1', 'e0daf4c14a4fe5b630da765904de4d6c')
-    version('2.0.2', '238587a1370d62405edabd0794b3ec4a')
+    depends_on('zlib')
 
-    depends_on('py-setuptools', type='build')
+    # http://connie.slackware.com/~alien/slackbuilds/id3lib/build/id3lib-3.8.3_gcc4.diff
+    # this is due to some changes in the c++ standard library headers
+    patch("id3lib-3.8.3_gcc4.diff")

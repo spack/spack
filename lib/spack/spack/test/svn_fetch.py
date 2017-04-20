@@ -33,12 +33,19 @@ from spack.version import ver
 
 @pytest.fixture(params=['default', 'rev0'])
 def type_of_test(request):
-    """Returns one of the test type available for the mock_hg_repository"""
+    """Returns one of the test type available for the mock_svn_repository"""
+    return request.param
+
+
+@pytest.fixture(params=[True, False])
+def secure(request):
+    """Attempt both secure and insecure fetching"""
     return request.param
 
 
 def test_fetch(
         type_of_test,
+        secure,
         mock_svn_repository,
         config,
         refresh_builtin_mock
@@ -56,13 +63,18 @@ def test_fetch(
     t = mock_svn_repository.checks[type_of_test]
     h = mock_svn_repository.hash
     # Construct the package under test
-    spec = Spec('hg-test')
+    spec = Spec('svn-test')
     spec.concretize()
     pkg = spack.repo.get(spec, new=True)
-    pkg.versions[ver('hg')] = t.args
+    pkg.versions[ver('svn')] = t.args
     # Enter the stage directory and check some properties
     with pkg.stage:
-        pkg.do_stage()
+        try:
+            spack.insecure = secure
+            pkg.do_stage()
+        finally:
+            spack.insecure = False
+
         assert h() == t.revision
 
         file_path = join_path(pkg.stage.source_path, t.file)

@@ -25,20 +25,16 @@
 from spack import *
 
 
-class PyPygments(PythonPackage):
-    """Pygments is a syntax highlighting package written in Python."""
+class Sox(AutotoolsPackage):
+    """SoX, the Swiss Army knife of sound processing programs."""
 
-    homepage = "https://pypi.python.org/pypi/pygments"
-    url      = "https://pypi.io/packages/source/P/Pygments/Pygments-2.2.0.tar.gz"
+    homepage = "http://sox.sourceforge.net/Main/HomePage"
+    url      = "https://downloads.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.bz2"
 
-    import_modules = [
-        'pygments', 'pygments.filters', 'pygments.formatters',
-        'pygments.lexers', 'pygments.styles'
-    ]
+    version('14.4.2', 'ba804bb1ce5c71dd484a102a5b27d0dd')
 
-    version('2.2.0', '13037baca42f16917cbd5ad2fab50844')
-    version('2.1.3', 'ed3fba2467c8afcda4d317e4ef2c6150')
-    version('2.0.1', 'e0daf4c14a4fe5b630da765904de4d6c')
-    version('2.0.2', '238587a1370d62405edabd0794b3ec4a')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('bzip2')
+    depends_on('flac')
+    depends_on('id3lib')
+    depends_on('libvorbis')
+    depends_on('opus')
