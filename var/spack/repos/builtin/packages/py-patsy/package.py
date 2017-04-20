@@ -35,10 +35,11 @@ class PyPatsy(PythonPackage):
     version('0.4.1', '9445f29e3426d1ed30d683a1e1453f84')
 
     variant('splines', description="Offers spline related functions")
-    variant('tests', description="allows nose tests")
 
     depends_on('py-setuptools',  type='build')
     depends_on('py-numpy',       type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'), when="+splines")
-    depends_on('py-nose',        type=('build', 'run'), when="+tests")
     depends_on('py-six',         type=('build', 'run'))
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')

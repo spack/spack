@@ -44,8 +44,7 @@ class AdolC(AutotoolsPackage):
     variant('doc',      default=True,  description='Install documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
-    variant('tests',    default=True,
-            description='Build all included examples as a test case')
+    variant('examples', default=True,  description='Install examples')
 
     # Build dependencies
     depends_on('automake', type='build', when='@develop')
@@ -82,7 +81,7 @@ class AdolC(AutotoolsPackage):
 
         # We can simply use the bundled examples to check
         # whether Adol-C works as expected
-        if '+tests' in spec:
+        if '+examples' in spec:
             configure_args.extend([
                 '--enable-docexa',  # Documented examples
                 '--enable-addexa'  # Additional examples
@@ -110,7 +109,7 @@ class AdolC(AutotoolsPackage):
                          join_path(prefix.share, 'doc'))
 
         # Install examples to {prefix}/share
-        if '+tests' in spec:
+        if '+examples' in spec:
             install_tree(join_path('ADOL-C', 'examples'),
                          join_path(prefix.share, 'examples'))
 

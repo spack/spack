@@ -33,7 +33,6 @@ class PyStatsmodels(PythonPackage):
 
     version('0.8.0', 'b3e5911cc9b00b71228d5d39a880bba0')
 
-    variant('tests',    default=False, description='With nose tests')
     variant('plotting', default=False, description='With matplotlib')
 
     # according to http://www.statsmodels.org/dev/install.html earlier versions
@@ -44,5 +43,7 @@ class PyStatsmodels(PythonPackage):
     depends_on('py-pandas@0.12:',      type=('build', 'run'))
     depends_on('py-patsy@0.2.1:',      type=('build', 'run'))
     depends_on('py-cython@0.24:',      type=('build', 'run'))
-    depends_on('py-nose',              type='run', when='+tests')
     depends_on('py-matplotlib@1.3:',   type='run', when='+plotting')
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
