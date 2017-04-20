@@ -64,6 +64,7 @@ def miscellaneous_paths():
         '/usr/local/lib64',
         '/usr/local/opt/some-package/lib',
         '/usr/opt/lib',
+        '/usr/local/../bin',
         '/lib',
         '/',
         '/usr',
@@ -74,6 +75,7 @@ def miscellaneous_paths():
         '/include',
         '/include/',
         '/opt/some-package/include',
+        '/opt/some-package/local/..',
     ]
 
 
@@ -129,6 +131,7 @@ def test_filter_system_paths(miscellaneous_paths):
         '/usr/local/opt/some-package/lib',
         '/usr/opt/lib',
         '/opt/some-package/include',
+        '/opt/some-package/local/..',
     ]
     assert filtered == expected
 
