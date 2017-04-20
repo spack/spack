@@ -47,7 +47,7 @@ class Trilinos(CMakePackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
     version('xsdk-0.2.0',
-            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0-rc1')
+            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
     version('develop',
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',

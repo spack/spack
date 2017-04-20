@@ -38,9 +38,7 @@ class Petsc(Package):
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
-    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0-rc2')
-    version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
-            commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
+    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
     version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
@@ -118,8 +116,6 @@ class Petsc(Package):
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:~int64', when='@3.7:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.0.0:~int64', when='@for-pflotran-0.1.0+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.0.0:+int64', when='@for-pflotran-0.1.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
