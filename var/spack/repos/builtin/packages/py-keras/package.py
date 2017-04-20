@@ -32,6 +32,7 @@ class PyKeras(PythonPackage):
     homepage = "http://keras.io"
     url      = "https://pypi.io/packages/source/K/Keras/Keras-1.2.2.tar.gz"
 
+    version('2.0.3', '39ce72a65623cd233a8fa4e867dd0c6b')
     version('1.2.2', '8e26b25bf16494f6eca726887d232319')
     version('1.2.1', '95525b9faa890267d80d119b13ce2984')
     version('1.2.0', 'd24d8b72747f8cc38e659ce8fc92ad3c')
