@@ -37,8 +37,15 @@ def type_of_test(request):
     return request.param
 
 
+@pytest.fixture(params=[True, False])
+def secure(request):
+    """Attempt both secure and insecure fetching"""
+    return request.param
+
+
 def test_fetch(
         type_of_test,
+        secure,
         mock_git_repository,
         config,
         refresh_builtin_mock
@@ -62,7 +69,12 @@ def test_fetch(
     pkg.versions[ver('git')] = t.args
     # Enter the stage directory and check some properties
     with pkg.stage:
-        pkg.do_stage()
+        try:
+            spack.insecure = secure
+            pkg.do_stage()
+        finally:
+            spack.insecure = False
+
         assert h('HEAD') == h(t.revision)
 
         file_path = join_path(pkg.stage.source_path, t.file)
