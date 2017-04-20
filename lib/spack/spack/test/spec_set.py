@@ -23,11 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import pytest
+import spack
 
-from spack.spec import Spec
+from spack.spec import Spec, ArchSpec
 from spack.schema import FileFormatError
 from spack.util.spec_set import CombinatorialSpecSet
 
+import spack.compilers as compilers
+import spack.architecture as sarch
 
 pytestmark = pytest.mark.usefixtures('config')
 
@@ -57,6 +60,54 @@ def test_spec_set_basic():
     spec_set = CombinatorialSpecSet(basic_yaml_file, False)
     specs = list(spec for spec in spec_set)
     assert len(specs) == 4
+
+
+def test_spec_set_packages_all():
+    yaml_file = {
+        'test-suite': {
+            'matrix': [
+                {'packages': 'all'},
+                {'compilers': {
+                    'gcc': {
+                        'versions': ['4.2.1', '6.3.0']
+                    }, 'clang': {
+                        'versions': ['8.0', '3.8']
+                    }
+                }},
+            ]
+        }
+    }
+    total_pkgs = 0
+    pkgs = spack.repo.all_package_names()
+    for pkg in pkgs:
+        pkg_details = spack.repo.get(pkg)
+        for version in pkg_details.versions:
+            total_pkgs += 1
+    spec_set = CombinatorialSpecSet(yaml_file, False)
+    specs = list(spec for spec in spec_set)
+    assert len(specs) == 4 * total_pkgs
+
+
+def test_spec_set_compilers_all():
+    yaml_file = {
+        'test-suite': {
+            'matrix': [
+                {'packages': {
+                    'gmake': {
+                        'versions': ['4.0']
+                    }
+                }},
+                {'compilers': 'all'
+                 },
+            ]
+        }
+    }
+    arch = ArchSpec(str(sarch.platform()), 'default_os', 'default_target')
+    available_compilers = [
+        c.spec for c in compilers.compilers_for_arch(arch)]
+    spec_set = CombinatorialSpecSet(yaml_file)
+    specs = list(spec for spec in spec_set)
+    assert len(specs) == len(available_compilers)
 
 
 def test_spec_set_no_include():
