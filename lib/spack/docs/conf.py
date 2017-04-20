@@ -134,6 +134,7 @@ todo_include_todos = True
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.graphviz',
+              'sphinx.ext.napoleon',
               'sphinx.ext.todo',
               'sphinxcontrib.programoutput']
 
