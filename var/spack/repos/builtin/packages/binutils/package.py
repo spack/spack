@@ -39,11 +39,6 @@ class Binutils(AutotoolsPackage):
     version('2.23.2', '4f8fa651e35ef262edc01d60fb45702e')
     version('2.20.1', '2b9dc8f2b7dbd5ec5992c6e29de0b764')
 
-    depends_on('m4', type='build')
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
-
     # Add a patch that creates binutils libiberty_pic.a which is preferred by
     # OpenSpeedShop and cbtf-krell
     variant('krellpatch', default=False,
@@ -51,17 +46,24 @@ class Binutils(AutotoolsPackage):
     variant('plugins', default=False,
             description="enable plugins, needed for gold linker")
     variant('gold', default=True, description="build the gold linker")
+    variant('libiberty', default=False, description='Also install libiberty.')
 
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
     patch('cr16.patch')
     patch('update_symbol-2.26.patch', when='@2.26')
 
-    variant('libiberty', default=False, description='Also install libiberty.')
+    depends_on('zlib')
+
+    depends_on('m4', type='build')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('gettext')
 
     def configure_args(self):
         spec = self.spec
 
         configure_args = [
+            '--with-system-zlib',
             '--disable-dependency-tracking',
             '--disable-werror',
             '--enable-interwork',
@@ -69,7 +71,8 @@ class Binutils(AutotoolsPackage):
             '--enable-shared',
             '--enable-64-bit-bfd',
             '--enable-targets=all',
-            '--with-sysroot=/']
+            '--with-sysroot=/',
+        ]
 
         if '+gold' in spec:
             configure_args.append('--enable-gold')
