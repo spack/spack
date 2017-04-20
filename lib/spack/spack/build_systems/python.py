@@ -26,7 +26,7 @@
 import inspect
 import os
 
-from spack.directives import extends
+from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
@@ -113,6 +113,8 @@ class PythonPackage(PackageBase):
     install_time_test_callbacks = ['import_module_test']
 
     extends('python')
+
+    depends_on('python', type=('build', 'run'))
 
     def setup_file(self):
         """Returns the name of the setup file to use."""
