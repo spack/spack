@@ -1179,7 +1179,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.msg(
                     "Continuing from partial install of %s" % self.name)
             elif layout.check_installed(self.spec):
-                msg= '{0.name} is already installed in {0.prefix}'
+                msg = '{0.name} is already installed in {0.prefix}'
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
                 return self._update_explicit_entry_in_db(rec, explicit)
