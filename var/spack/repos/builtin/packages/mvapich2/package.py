@@ -73,9 +73,13 @@ class Mvapich2(AutotoolsPackage):
     )
 
     # 32 is needed when job size exceeds 32768 cores
-    variant('ch3_rank_bits', default=32,
-            description='Number of bits allocated to the rank field (16 or 32)'
-            )
+    variant(
+        'ch3_rank_bits',
+        default='32',
+        values=('16', '32'),
+        exclusive=True,
+        description='Number of bits allocated to the rank field (16 or 32)'
+    )
 
     variant(
         'process_managers',
