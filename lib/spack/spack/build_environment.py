@@ -242,9 +242,10 @@ def set_build_environment_variables(pkg, env, dirty=False):
     affect the build. It also involves setting environment variables
     used by Spack's compiler wrappers.
 
-    :param pkg: The package we are building
-    :param env: The build environment
-    :param bool dirty: Skip unsetting the user's environment settings
+    Args:
+        pkg: The package we are building
+        env: The build environment
+        dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
     build_deps      = pkg.spec.traverse(root=False, deptype=('build'))
