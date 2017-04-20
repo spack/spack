@@ -100,3 +100,13 @@ class Gettext(AutotoolsPackage):
             config_args.append('--with-included-libunistring')
 
         return config_args
+
+    def check(self):
+        # Test suite fails when run in parallel:
+        #
+        # FAIL: test-verify
+        # =================
+        #
+        # icc: error #10236: File not found:  'test-verify.o'
+        # FAIL test-verify (exit status: 1)
+        make('check', parallel=False)
