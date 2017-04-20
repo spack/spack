@@ -72,9 +72,6 @@ the dependencies"""
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="fake install. just remove prefix and create a fake file")
-    subparser.add_argument(
-        '--force', action='store_true', dest='force',
-        help='Install again even if package is already installed.')
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -322,12 +319,6 @@ def install(parser, args, **kwargs):
         tty.error('The `spack install` command requires a spec to install.')
 
     for spec in specs:
-        if args.force:
-            for s in spec.traverse():
-                if s.package.installed:
-                    tty.msg("Clearing %s for new installation" % s.name)
-                    s.package.do_uninstall(force=True)
-
         # Check if we were asked to produce some log for dashboards
         if args.log_format is not None:
             # Compute the filename for logging
