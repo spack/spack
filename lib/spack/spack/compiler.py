@@ -49,14 +49,15 @@ _version_cache = {}
 
 
 def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
-    if compiler_path not in _version_cache:
+    key = (compiler_path, version_arg, regex)
+    if key not in _version_cache:
         compiler = Executable(compiler_path)
         output = compiler(version_arg, output=str, error=str)
 
         match = re.search(regex, output)
-        _version_cache[compiler_path] = match.group(1) if match else 'unknown'
+        _version_cache[key] = match.group(1) if match else 'unknown'
 
-    return _version_cache[compiler_path]
+    return _version_cache[key]
 
 
 def dumpversion(compiler_path):

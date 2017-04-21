@@ -88,6 +88,16 @@ class Gcc(Compiler):
         return "-fPIC"
 
     @classmethod
+    def default_version(cls, cc):
+        # Skip any gcc versions that are actually clang, like Apple's gcc.
+        # Returning "unknown" makes them not detected by default.
+        # Users can add these manually to compilers.yaml at their own risk.
+        if spack.compilers.clang.Clang.default_version(cc) != 'unknown':
+            return 'unknown'
+
+        return super(Gcc, cls).default_version(cc)
+
+    @classmethod
     def fc_version(cls, fc):
         return get_compiler_version(
             fc, '-dumpversion',
