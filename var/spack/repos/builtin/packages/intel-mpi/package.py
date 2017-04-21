@@ -59,7 +59,7 @@ class IntelMpi(IntelInstaller):
         elif os.path.isdir(join_path(self.prefix, 'bin64')):
             bindir = join_path(self.prefix, 'bin64')
         else:
-            raise "No suitable bindir found"
+            raise RuntimeError('No suitable bindir found')
 
         self.spec.mpicc = join_path(bindir, 'mpicc')
         self.spec.mpicxx = join_path(bindir, 'mpicxx')
