@@ -28,4 +28,4 @@ description = "rebuild Spack's package database"
 
 
 def reindex(parser, args):
-    spack.store.db.reindex(spack.store.layout)
+    spack.store.db.reindex(spack.store.layout, repair_partial=True)

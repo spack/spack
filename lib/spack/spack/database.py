@@ -345,7 +345,7 @@ class Database(object):
 
         self._data = data
 
-    def reindex(self, directory_layout):
+    def reindex(self, directory_layout, repair_partial=False):
         """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
@@ -365,18 +365,23 @@ class Database(object):
             self.lock, _read_suppress_error, self._write, _db_lock_timeout)
 
         with transaction:
+            all_specs = directory_layout.all_specs()
+
             if self._error:
                 tty.warn(
                     "Spack database was corrupt. Will rebuild. Error was:",
                     str(self._error))
                 self._error = None
+            elif repair_partial:
+                for spec in all_specs:
+                    spec.package.repair_partial()
 
             old_data = self._data
             try:
                 self._data = {}
 
                 # Ask the directory layout to traverse the filesystem.
-                for spec in directory_layout.all_specs():
+                for spec in all_specs:
                     # Try to recover explicit value from old DB, but
                     # default it to False if DB was corrupt.
                     explicit = False
