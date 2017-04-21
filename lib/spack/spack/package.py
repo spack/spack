@@ -1353,7 +1353,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         layout = spack.store.layout
         with self._prefix_write_lock():
             try:
-                installed_in_db = spack.store.db.get_record(self.spec)
+                record = spack.store.db.get_record(self.spec)
+                installed_in_db = record.installed if record else False
             except KeyError:
                 installed_in_db = False
 

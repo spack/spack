@@ -85,6 +85,16 @@ def mock_remove_prefix(*args):
         "Mock remove_prefix method intentionally fails")
 
 
+class RemovePrefixChecker(object):
+    def __init__(self, wrapped_rm_prefix):
+        self.removed = False
+        self.wrapped_rm_prefix = wrapped_rm_prefix
+
+    def remove_prefix(self):
+        self.removed = True
+        self.wrapped_rm_prefix()
+
+
 @pytest.mark.usefixtures('install_mockery')
 def test_partial_install(mock_archive):
     spec = Spec('canfail')
@@ -92,15 +102,21 @@ def test_partial_install(mock_archive):
     pkg = spack.repo.get(spec)
     fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
+    instance_rm_prefix = pkg.remove_prefix
+
     try:
         spack.package.Package.remove_prefix = mock_remove_prefix
         try:
             pkg.do_install()
         except MockInstallError:
             pass
-        spack.package.Package.remove_prefix = remove_prefix
+        assert os.path.isdir(pkg.prefix)
+        assert not pkg.installed
+        rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
+        spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
         setattr(pkg, 'succeed', True)
         pkg.do_install()
+        assert rm_prefix_checker.removed
         assert pkg.installed
     finally:
         spack.package.Package.remove_prefix = remove_prefix
