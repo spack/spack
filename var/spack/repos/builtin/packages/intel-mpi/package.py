@@ -46,7 +46,6 @@ class IntelMpi(IntelInstaller):
         self.intel_prefix = prefix
         IntelInstaller.install(self, spec, prefix)
 
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)
         spack_env.set('I_MPI_CXX', spack_cxx)
