@@ -1358,14 +1358,20 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             except KeyError:
                 installed_in_db = False
 
-            # Packages check whether they are installed by looking for a
-            # completion file, but to avoid overwriting packages that were
-            # installed before this check, also check the DB for a record of
-            # installation; if the DB thinks it's installed, then the package
-            # should consider itself installed.
             if not self.installed and installed_in_db:
-                self._mark_installed()
-                layout.check_installed(self.spec)
+                # Packages check whether they are installed by looking for a
+                # completion file, but to avoid overwriting packages that were
+                # installed before this check, also check the DB for a record
+                # of installation; if the DB thinks it's installed, then the
+                # package should consider itself installed.
+                try:
+                    self._mark_installed()
+                    layout.check_installed(self.spec)
+                except directory_layout.DirectoryLayoutError:
+                    tty.msg("Cleaning spec that is out of sync with DB: %s" %
+                            self.spec.short_spec)
+                    spack.store.db.remove(self.spec)
+                    self.remove_prefix()
             elif (os.path.isdir(self.prefix) and
                     not self.installed and
                     not continue_with_partial):

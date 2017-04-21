@@ -244,7 +244,12 @@ class YamlDirectoryLayout(DirectoryLayout):
                          'complete')
 
     def mark_complete(self, spec):
-        with open(self._completion_marker_file(spec), 'w'):
+        completion_file = self._completion_marker_file(spec)
+        if not (os.path.isdir(os.path.dirname(completion_file))):
+            raise DirectoryLayoutError(
+                "Attempted to mark an install complete without a metadata"
+                " directory")
+        with open(completion_file, 'w'):
             pass
 
     def completed_install(self, spec):
