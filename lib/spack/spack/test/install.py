@@ -191,9 +191,30 @@ def test_install_succeeds_but_db_add_fails(mock_archive):
         spack.store.db.add = db_add
         pkg.do_install()
         assert spack.store.db.get_record(spec)
-    except:
+    finally:
         spack.package.Package.remove_prefix = remove_prefix
-        raise
+        spack.store.db.add = db_add
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_installed_in_db_does_not_trigger_reinstall(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+    assert pkg.installed
+
+    os.remove(spack.store.layout._completion_marker_file(spec))
+    assert not pkg.installed
+
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        pkg.do_install()
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
 
 
 @pytest.mark.usefixtures('install_mockery')

@@ -858,6 +858,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def installed(self):
         return spack.store.layout.completed_install(self.spec)
 
+    def _mark_installed(self):
+        spack.store.layout.mark_complete(self.spec)
+
     @property
     def prefix_lock(self):
         """Prefix lock is a byte range lock on the nth byte of a file.
@@ -1315,7 +1318,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
-            spack.store.layout.mark_complete(self.spec)
+            self._mark_installed()
             # If we installed then we should keep the prefix
             keep_prefix = True if self.last_phase is None else keep_prefix
             # note: PARENT of the build process adds the new package to
@@ -1348,8 +1351,22 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            stage directory to start an installation from scratch.
         """
         layout = spack.store.layout
-        with self._prefix_read_lock():
-            if (os.path.isdir(self.prefix) and not self.installed and
+        with self._prefix_write_lock():
+            try:
+                installed_in_db = spack.store.db.get_record(self.spec)
+            except KeyError:
+                installed_in_db = False
+
+            # Packages check whether they are installed by looking for a
+            # completion file, but to avoid overwriting packages that were
+            # installed before this check, also check the DB for a record of
+            # installation; if the DB thinks it's installed, then the package
+            # should consider itself installed.
+            if not self.installed and installed_in_db:
+                self._mark_installed()
+                layout.check_installed(self.spec)
+            elif (os.path.isdir(self.prefix) and
+                    not self.installed and
                     not continue_with_partial):
                 spack.hooks.pre_uninstall(self)
                 self.remove_prefix()
@@ -1360,18 +1377,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 spack.hooks.post_uninstall(self)
                 tty.msg("Removed partial install for %s" %
                         self.spec.short_spec)
-            elif self.installed and layout.check_installed(self.spec):
-                try:
-                    spack.store.db.get_record(self.spec)
-                except KeyError:
-                    tty.msg("Repairing db for %s" % self.name)
-                    spack.store.db.add(self.spec)
-
-            if continue_with_partial and not self.installed:
+            elif not self.installed and continue_with_partial:
                 try:
                     layout.check_metadata_consistency(self.spec)
                 except directory_layout.DirectoryLayoutError:
                     self.remove_prefix()
+            elif self.installed and not installed_in_db:
+                layout.check_installed(self.spec)
+                tty.msg("Repairing db for %s" % self.name)
+                spack.store.db.add(self.spec)
 
         if not continue_with_partial:
             self.stage.destroy()
