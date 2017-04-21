@@ -47,7 +47,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Maintenance releases (recommended)
     version('5.24.1', '765ef511b5b87a164e2531403ee16b3c', preferred=True)
     version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
-    
+
     # Misc releases that people need
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
 
@@ -98,6 +98,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def build(self, spec, prefix):
         make()
 
+    @run_after('build')
     @on_package_attributes(run_tests=True)
     def test(self):
         make('test')

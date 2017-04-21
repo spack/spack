@@ -79,11 +79,11 @@ class Hdf5(AutotoolsPackage):
     @property
     def libs(self):
         """Hdf5 can be queried for the following parameters:
-        
+
         - "hl": high-level interface
         - "cxx": C++ APIs
         - "fortran": fortran APIs
-        
+
         :return: list of matching libraries
         """
         query_parameters = self.spec.last_query.extra_parameters
@@ -228,6 +228,7 @@ class Hdf5(AutotoolsPackage):
                 'libtool')
 
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec

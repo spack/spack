@@ -138,7 +138,8 @@ class Fftw(AutotoolsPackage):
             with working_dir('quad'):
                 make()
 
-    def check(self, spec, prefix):
+    def check(self):
+        spec = self.spec
         if '+double' in spec:
             with working_dir('double'):
                 make("check")

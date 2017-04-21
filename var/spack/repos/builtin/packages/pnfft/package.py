@@ -64,7 +64,8 @@ class Pnfft(AutotoolsPackage):
             with working_dir('long-double'):
                 make()
 
-    def check(self, spec, prefix):
+    def check(self):
+        spec = self.spec
         if '+double' in spec['fftw']:
             with working_dir('double'):
                 make("check")
