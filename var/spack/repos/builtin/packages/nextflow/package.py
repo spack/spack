@@ -37,6 +37,8 @@ class Nextflow(Package):
             expand=False)
     version('0.20.1', '0e4e0e3eca1c2c97f9b4bffd944b923a',
             expand=False)
+    version('0.17.3', '5df00105fb1ce6fd0ba019ae735d9617',
+            expand=False)
 
     depends_on('jdk')
 
