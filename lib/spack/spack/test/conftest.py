@@ -300,6 +300,7 @@ def mock_archive():
     repo_name = 'mock-archive-repo'
     tmpdir.ensure(repo_name, dir=True)
     repodir = tmpdir.join(repo_name)
+
     # Create the configure script
     configure_path = str(tmpdir.join(repo_name, 'configure'))
     with open(configure_path, 'w') as f:
@@ -315,15 +316,21 @@ def mock_archive():
             "EOF\n"
         )
     os.chmod(configure_path, 0o755)
+
     # Archive it
     current = tmpdir.chdir()
     archive_name = '{0}.tar.gz'.format(repo_name)
     tar('-czf', archive_name, repo_name)
     current.chdir()
-    Archive = collections.namedtuple('Archive', ['url', 'path'])
-    url = 'file://' + str(tmpdir.join(archive_name))
+    Archive = collections.namedtuple('Archive',
+                                     ['url', 'path', 'archive_file'])
+    archive_file = str(tmpdir.join(archive_name))
+
     # Return the url
-    yield Archive(url=url, path=str(repodir))
+    yield Archive(
+        url=('file://' + archive_file),
+        archive_file=archive_file,
+        path=str(repodir))
     stage.destroy()
 
 

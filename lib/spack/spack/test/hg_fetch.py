@@ -31,18 +31,8 @@ from spack.spec import Spec
 from spack.version import ver
 
 
-@pytest.fixture(params=['default', 'rev0'])
-def type_of_test(request):
-    """Returns one of the test type available for the mock_hg_repository"""
-    return request.param
-
-
-@pytest.fixture(params=[True, False])
-def secure(request):
-    """Attempt both secure and insecure fetching"""
-    return request.param
-
-
+@pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
+@pytest.mark.parametrize("secure", [True, False])
 def test_fetch(
         type_of_test,
         secure,
@@ -62,11 +52,13 @@ def test_fetch(
     # Retrieve the right test parameters
     t = mock_hg_repository.checks[type_of_test]
     h = mock_hg_repository.hash
+
     # Construct the package under test
     spec = Spec('hg-test')
     spec.concretize()
     pkg = spack.repo.get(spec, new=True)
     pkg.versions[ver('hg')] = t.args
+
     # Enter the stage directory and check some properties
     with pkg.stage:
         try:
