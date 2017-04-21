@@ -180,6 +180,21 @@ def test_partial_install_keep_prefix_check_metadata(mock_archive):
 
 
 @pytest.mark.usefixtures('install_mockery')
+def test_manual_removal_after_install_cleans_db(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+
+    assert spack.store.db.get_record(spec).installed
+    pkg.remove_prefix()
+    pkg.repair_partial()
+    with pytest.raises(KeyError):
+        spack.store.db.get_record(spec)
+
+
+@pytest.mark.usefixtures('install_mockery')
 def test_install_succeeds_but_db_add_fails(mock_archive):
     """If an installation succeeds but the database is not updated, make sure
        that the database is updated for a future install."""
