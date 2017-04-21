@@ -26,16 +26,16 @@ import sys
 import hashlib
 
 """Set of acceptable hashes that Spack will use."""
-_acceptable_hashes = [
-    hashlib.md5,
-    hashlib.sha1,
-    hashlib.sha224,
-    hashlib.sha256,
-    hashlib.sha384,
-    hashlib.sha512]
+hashes = dict((h, getattr(hashlib, h)) for h in [
+    'md5',
+    'sha1',
+    'sha224',
+    'sha256',
+    'sha384',
+    'sha512'])
 
 """Index for looking up hasher for a digest."""
-_size_to_hash = dict((h().digest_size, h) for h in _acceptable_hashes)
+_size_to_hash = dict((h().digest_size, h) for h in hashes.values())
 
 
 def checksum(hashlib_algo, filename, **kwargs):
