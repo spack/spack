@@ -23,6 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
+from os.path import exists, join
+from os import makedirs
+from shutil import copy
 
 
 class Ncurses(AutotoolsPackage):
@@ -95,3 +99,17 @@ class Ncurses(AutotoolsPackage):
          with working_dir('build_ncursesw'):
            make('install')
 
+	 # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
+	 headers = glob(join(prefix.include, '*'))
+         for p_dir in ['ncurses', 'ncursesw']:
+             path = join(prefix.include, p_dir)
+             if not exists(path):
+                 makedirs(path)
+             for header in headers:
+                 copy(header, path)
+
+    @property
+    def libs(self):
+         return find_libraries(
+             ['libncurses', 'libncursesw'], 
+             root=self.prefix.lib)
