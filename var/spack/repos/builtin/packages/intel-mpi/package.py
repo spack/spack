@@ -24,10 +24,8 @@
 ##############################################################################
 from spack import *
 import os
-import re
 
-from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
-    get_all_components
+from spack.pkg.builtin.intel import IntelInstaller
 
 
 class IntelMpi(IntelInstaller):
