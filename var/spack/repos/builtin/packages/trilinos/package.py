@@ -135,7 +135,8 @@ class Trilinos(CMakePackage):
 
     # check that the combination of variants makes sense
     def variants_check(self):
-        if '+superlu-dist' in self.spec and self.spec.satisfies('@11.14.1:11.14.3'):
+        if ('+superlu-dist' in self.spec and
+            self.spec.satisfies('@11.14.1:11.14.3')):
             # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
             # deprecated SuperLUDist v3.3 together with an Amesos patch is
             # working.

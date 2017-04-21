@@ -39,9 +39,8 @@ class Xsdk(Package):
     # removed when metapackage is available
     url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
 
-    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
-    # this is for next planned release
-    version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
+    version('develop', '941a541bdf625856be18c9752249146d')
+    version('xsdk-0.2.0', '941a541bdf625856be18c9752249146d')
 
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
     depends_on('hypre@develop~internal-superlu', when='@develop')    
@@ -65,10 +64,8 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')    
 
-    # Since xsdktrilinos depends on tpetra which is currently disabled in the trilinos build
-    # xsdktrilinos is currently disabled
-    # depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
-    # depends_on('xsdktrilinos@develop', when='@develop')    
+    depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('xsdktrilinos@develop', when='@develop')    
 
     variant('debug', default=False, description='Compile in debug mode')
 
