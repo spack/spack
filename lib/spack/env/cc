@@ -218,7 +218,7 @@ fi
 add_rpaths=true
 if [[ ($mode == ld || $mode == ccld) && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
     for arg in "$@"; do
-        if [[ ($arg == -r && $mode == ld) || ($arg == -Wl,-r && $mode == ccld) ]]; then
+        if [[ ($arg == -r && $mode == ld) || ($arg == -r && $mode == ccld) || ($arg == -Wl,-r && $mode == ccld) ]]; then
             add_rpaths=false
             break
         fi
