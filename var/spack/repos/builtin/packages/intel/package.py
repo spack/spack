@@ -56,12 +56,22 @@ class IntelInstaller(Package):
 
     homepage = "https://software.intel.com/en-us"
     intel_components = "ALL"
-    license_required = True
     license_comment = '#'
     license_files = ['Licenses/license.lic']
     license_vars = ['INTEL_LICENSE_FILE']
     license_url = \
         'https://software.intel.com/en-us/articles/intel-license-manager-faq'
+
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See
+        # https://software.intel.com/en-us/articles/free-mkl
+        if (self.spec.satisfies("intel-mkl@2017.2:") or
+            self.spec.satisfies("intel-daal@2017.2:") or
+            self.spec.satisfies("intel-ipp@2017.2:")):
+            return False
+        return True
 
     @property
     def global_license_file(self):
