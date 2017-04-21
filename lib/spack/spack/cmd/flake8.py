@@ -37,8 +37,6 @@ import spack
 from spack.util.executable import *
 
 description = "runs source code style checks on Spack. requires flake8"
-flake8 = None
-include_untracked = True
 
 """List of directories to exclude from checks."""
 exclude_directories = [spack.external_path]
@@ -53,24 +51,30 @@ exemptions = {
     # exemptions applied only to package.py files.
     r'package.py$': {
         # Exempt lines with urls and descriptions from overlong line errors.
-        501: [r'^\s*homepage\s*=',
-              r'^\s*url\s*=',
-              r'^\s*git\s*=',
-              r'^\s*svn\s*=',
-              r'^\s*hg\s*=',
-              r'^\s*version\(.*\)',
-              r'^\s*variant\(.*\)',
-              r'^\s*depends_on\(.*\)',
-              r'^\s*extends\(.*\)',
-              r'^\s*patch\(.*\)'],
+        'E501': [
+            r'^\s*homepage\s*=',
+            r'^\s*url\s*=',
+            r'^\s*git\s*=',
+            r'^\s*svn\s*=',
+            r'^\s*hg\s*=',
+            r'^\s*version\(.*\)',
+            r'^\s*variant\(.*\)',
+            r'^\s*depends_on\(.*\)',
+            r'^\s*extends\(.*\)',
+            r'^\s*patch\(.*\)',
+        ],
         # Exempt '@when' decorated functions from redefinition errors.
-        811: [r'^\s*\@when\(.*\)'],
+        'F811': [
+            r'^\s*@when\(.*\)',
+        ],
     },
 
     # exemptions applied to all files.
     r'.py$': {
         # Exempt lines with URLs from overlong line errors.
-        501: [r'(https?|ftp|file)\:']
+        'E501': [
+            r'(https?|ftp|file)\:',
+        ]
     },
 }
 
@@ -81,7 +85,7 @@ exemptions = dict((re.compile(file_pattern),
                   for file_pattern, error_dict in exemptions.items())
 
 
-def changed_files():
+def changed_files(args):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
@@ -92,10 +96,11 @@ def changed_files():
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
-        ['diff', '--name-only', '--diff-filter=ACMR']]
+        ['diff', '--name-only', '--diff-filter=ACMR'],
+    ]
 
     # Add new files that are untracked
-    if include_untracked:
+    if args.untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
@@ -129,7 +134,7 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                line += ("  # NOQA: E%d" % code)
+                                line += '  # NOQA: {0}'.format(code)
                                 break
 
                 oline = line + '\n'
@@ -157,10 +162,7 @@ def setup_parser(subparser):
 
 
 def flake8(parser, args):
-    # Just use this to check for flake8 -- we actually execute it with Popen.
-    global flake8, include_untracked
     flake8 = which('flake8', required=True)
-    include_untracked = args.untracked
 
     temp = tempfile.mkdtemp()
     try:
@@ -174,7 +176,7 @@ def flake8(parser, args):
 
         with working_dir(spack.prefix):
             if not file_list:
-                file_list = changed_files()
+                file_list = changed_files(args)
             shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
         print('=======================================================')
@@ -182,7 +184,7 @@ def flake8(parser, args):
         print()
         print('Modified files:')
         for filename in file_list:
-            print("  %s" % filename.strip())
+            print('  {0}'.format(filename.strip()))
         print('=======================================================')
 
         # filter files into a temporary directory with exemptions added.
@@ -202,8 +204,8 @@ def flake8(parser, args):
         else:
             # print results relative to current working directory
             def cwd_relative(path):
-                return '%s: [' % os.path.relpath(
-                    os.path.join(spack.prefix, path.group(1)), os.getcwd())
+                return '{0}: ['.format(os.path.relpath(
+                    os.path.join(spack.prefix, path.group(1)), os.getcwd()))
 
             for line in output.split('\n'):
                 print(re.sub(r'^(.*): \[', cwd_relative, line))
