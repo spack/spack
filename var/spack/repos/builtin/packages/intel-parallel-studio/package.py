@@ -393,6 +393,7 @@ class IntelParallelStudio(IntelInstaller):
         spack_env.set('I_MPI_CXX', spack_cxx)
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
+        spack_env.set('I_MPI_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
         # Check for presence of bin64 or bin directory
