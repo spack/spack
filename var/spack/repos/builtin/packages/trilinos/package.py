@@ -182,7 +182,9 @@ class Trilinos(CMakePackage):
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_Netcdf:BOOL=ON'
+            '-DTPL_ENABLE_Netcdf:BOOL=ON',
+            '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
+                'ON' if '+tpetra' in spec else 'OFF')
         ])
 
         if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
@@ -190,11 +192,6 @@ class Trilinos(CMakePackage):
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
             options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
-
-        if '+tpetra' in spec:
-            options.append('-DTrilinos_ENABLE_Tpetra:BOOL=ON')
-        else:
-            options.append('-DTrilinos_ENABLE_Tpetra:BOOL=OFF')
 
         # Force Trilinos to use the MPI wrappers instead of raw compilers
         # this is needed on Apple systems that require full resolution of

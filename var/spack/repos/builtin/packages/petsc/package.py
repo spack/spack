@@ -122,7 +122,6 @@ class Petsc(Package):
     depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
     depends_on('mumps+mpi', when='+mumps+mpi~int64')
     depends_on('scalapack', when='+mumps+mpi~int64')
-    depends_on('scalapack', when='+mumps+mpi')
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')        

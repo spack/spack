@@ -49,29 +49,26 @@ class Alquimia(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        options = ['-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-                   '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc]
-
-        options.extend([
-            '-DUSE_XSDK_DEFAULTS=YES',
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-            '-DXSDK_ENABLE_DEBUG:STRING=%s' % (
-                'YES' if '+debug' in spec else 'NO'),
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DTPL_ENABLE_MPI:BOOL=ON',
-            '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
-            '-DTPL_ENABLE_HDF5:BOOL=ON',
-            '-DXSDK_WITH_PFLOTRAN:BOOL=ON',
-            # This is not good.
-            # It assumes that the .a file exists and is not a .so
-            '-DTPL_PFLOTRAN_LIBRARIES=%s' % (
-                spec['pflotran'].prefix.lib + "/libpflotranchem.a"),
-            '-DTPL_PFLOTRAN_INCLUDE_DIRS=%s' % spec['pflotran'].prefix.include,
-            '-DTPL_ENABLE_PETSC:BOOL=ON',
-            '-DPETSC_EXECUTABLE_RUNS=ON',
-            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix 
-        ])
-
+        options = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+                   '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+                   '-DUSE_XSDK_DEFAULTS=YES',
+                   '-DCMAKE_BUILD_TYPE:STRING=%s' % (
+                       'DEBUG' if '+debug' in spec else 'RELEASE'),
+                   '-DXSDK_ENABLE_DEBUG:STRING=%s' % (
+                       'YES' if '+debug' in spec else 'NO'),
+                   '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                       'ON' if '+shared' in spec else 'OFF'),
+                   '-DTPL_ENABLE_MPI:BOOL=ON',
+                   '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
+                   '-DTPL_ENABLE_HDF5:BOOL=ON',
+                   '-DXSDK_WITH_PFLOTRAN:BOOL=ON',
+                   # This is not good.
+                   # It assumes that the .a file exists and is not a .so
+                   '-DTPL_PFLOTRAN_LIBRARIES=%s' % (
+                       spec['pflotran'].prefix.lib + "/libpflotranchem.a"),
+                   '-DTPL_PFLOTRAN_INCLUDE_DIRS=%s' % (
+                       spec['pflotran'].prefix.include),
+                   '-DTPL_ENABLE_PETSC:BOOL=ON',
+                   '-DPETSC_EXECUTABLE_RUNS=ON',
+                   '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix] 
         return options

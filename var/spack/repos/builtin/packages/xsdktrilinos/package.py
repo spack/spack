@@ -50,6 +50,7 @@ class Xsdktrilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi')
+    depends_on('hypre~internal-superlu', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')    
     depends_on('petsc@xsdk-0.2.0+mpi~complex', when='@xsdk-0.2.0+petsc')
