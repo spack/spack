@@ -56,8 +56,8 @@ class IntelMpi(IntelInstaller):
         # Check for presence of bin64 or bin directory
         if os.path.isdir(self.prefix.bin):
             bindir = self.prefix.bin
-        elif os.path.isdir(join_path(self.prefix, 'bin64')):
-            bindir = join_path(self.prefix, 'bin64')
+        elif os.path.isdir(self.prefix.bin64):
+            bindir = self.prefix.bin64
         else:
             raise RuntimeError('No suitable bindir found')
 
