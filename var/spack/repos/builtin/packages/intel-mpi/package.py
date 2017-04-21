@@ -43,8 +43,9 @@ class IntelMpi(IntelInstaller):
     provides('mpi')
 
     def install(self, spec, prefix):
-        # FIXME:
-        raise RuntimeError('Install method is not implemented yet')
+        self.intel_prefix = prefix
+        IntelInstaller.install(self, spec, prefix)
+
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)
