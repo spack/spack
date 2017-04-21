@@ -88,6 +88,9 @@ CONTINUE_WITH_OPTIONAL_ERROR=yes
 COMPONENTS=%s
 """ % (self.intel_prefix, self.intel_prefix, self.intel_components))
 
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See
+        # https://software.intel.com/en-us/articles/free-mkl
         if not (spec.satisfies("intel-mkl@2017.2:") or
                 spec.satisfies("intel-daal@2017.2:") or
                 spec.satisfies("intel-ipp@2017.2:")):
