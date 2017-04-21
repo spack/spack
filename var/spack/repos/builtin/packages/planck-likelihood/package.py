@@ -137,8 +137,8 @@ class PlanckLikelihood(Package):
         run_env.set('CLIK_DATA', join_path(prefix, 'share', 'clik'))
         run_env.set('CLIK_PLUGIN', 'rel2015')
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         prefix = self.prefix
         clik_example_C = Executable(join_path(prefix.bin, 'clik_example_C'))
