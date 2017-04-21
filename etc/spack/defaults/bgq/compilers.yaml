@@ -1,0 +1,27 @@
+compilers:
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: cnk
+    paths:
+      cc: /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc
+      cxx: /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++
+      f77: /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gfortran
+      fc: /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gfortran
+    spec: gcc@4.4.7
+    target: ppc64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: cnk
+    paths:
+      cc: /opt/ibmcmp/vacpp/bg/12.1/bin/bgxlc_r
+      cxx: /opt/ibmcmp/vacpp/bg/12.1/bin/bgxlc++_r
+      f77: /opt/ibmcmp/xlf/bg/14.1/bin/bgxlf_r
+      fc: /opt/ibmcmp/xlf/bg/14.1/bin/bgxlf2008_r
+    spec: xl@12.1
+    target: ppc64
