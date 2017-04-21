@@ -41,7 +41,7 @@ class Protobuf(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    conflicts('%gcc@:4.4.7') # Requires c++11
+    conflicts('%gcc@:4.6') # Requires c++11
 
     variant('shared', default=True, description='Build shared libraries.')
 
