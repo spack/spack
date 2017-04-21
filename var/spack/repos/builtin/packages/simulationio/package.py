@@ -45,7 +45,7 @@ class Simulationio(CMakePackage):
     depends_on('julia', when='+julia', type=('build', 'run'))
     depends_on('py-h5py', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('python@2.7.0:2.999.999', when='+python', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     depends_on('swig', type='build')
 
     extends('python')
