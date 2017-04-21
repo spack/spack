@@ -37,7 +37,7 @@ class Ncurses(AutotoolsPackage):
     SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz"
+    url = "http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz"
 
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
     version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1')
@@ -64,7 +64,7 @@ class Ncurses(AutotoolsPackage):
 
         nwide_opts = ['--without-manpages',
                       '--without-progs',
-                      '--without-tests' ]
+                      '--without-tests']
 
         wide_opts = ['--enable-widec']
 
@@ -76,40 +76,39 @@ class Ncurses(AutotoolsPackage):
         configure = Executable('../configure')
 
         with working_dir('build_ncurses', create=True):
-           configure(prefix, *(opts + nwide_opts))
+            configure(prefix, *(opts + nwide_opts))
 
         with working_dir('build_ncursesw', create=True):
-           configure(prefix, *(opts + wide_opts))
+            configure(prefix, *(opts + wide_opts))
 
     def build(self, spec, prefix):
-         with working_dir('build_ncurses'):
-           make()
-         with working_dir('build_ncursesw'):
-           make()
+        with working_dir('build_ncurses'):
+            make()
+        with working_dir('build_ncursesw'):
+            make()
 
     def check(self):
-         with working_dir('build_ncurses'):
-           make('check')
-         with working_dir('build_ncursesw'):
-           make('check')
+        with working_dir('build_ncurses'):
+            make('check')
+        with working_dir('build_ncursesw'):
+            make('check')
 
     def install(self, spec, prefix):
-         with working_dir('build_ncurses'):
-           make('install')
-         with working_dir('build_ncursesw'):
-           make('install')
+        with working_dir('build_ncurses'):
+            make('install')
+        with working_dir('build_ncursesw'):
+            make('install')
 
-	 # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
-	 headers = glob(join(prefix.include, '*'))
-         for p_dir in ['ncurses', 'ncursesw']:
-             path = join(prefix.include, p_dir)
-             if not exists(path):
-                 makedirs(path)
-             for header in headers:
-                 copy(header, path)
+        # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
+        headers = glob(join(prefix.include, '*'))
+        for p_dir in ['ncurses', 'ncursesw']:
+            path = join(prefix.include, p_dir)
+            if not exists(path):
+                makedirs(path)
+            for header in headers:
+                copy(header, path)
 
     @property
     def libs(self):
-         return find_libraries(
-             ['libncurses', 'libncursesw'], 
-             root=self.prefix.lib)
+        return find_libraries(
+            ['libncurses', 'libncursesw'], root=self.prefix.lib)
