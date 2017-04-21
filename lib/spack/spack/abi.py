@@ -29,6 +29,7 @@ import spack.spec
 from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
+from spack.compilers.clang import Clang
 from llnl.util.lang import memoized
 
 
@@ -44,7 +45,7 @@ class ABI(object):
     @memoized
     def _gcc_get_libstdcxx_version(self, version):
         """Returns gcc ABI compatibility info by getting the library version of
-           a compiler's libstdc++.so or libgcc_s.so"""
+           a compiler's libstdc++ or libgcc_s"""
         spec = CompilerSpec("gcc", version)
         compilers = spack.compilers.compilers_for_spec(spec)
         if not compilers:
@@ -62,6 +63,12 @@ class ABI(object):
         else:
             return None
         try:
+            # Some gcc's are actually clang and don't respond properly to
+            # --print-file-name (they just print the filename, not the
+            # full path).  Ignore these and expect them to be handled as clang.
+            if Clang.default_version(rungcc.exe[0]) != 'unknown':
+                return None
+
             output = rungcc("--print-file-name=%s" % libname,
                             return_output=True)
         except ProcessError:

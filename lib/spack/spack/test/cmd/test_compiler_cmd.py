@@ -89,6 +89,4 @@ class TestCompilerCommand(object):
         # Ensure new compiler is in there
         new_compilers = set(spack.compilers.all_compiler_specs())
         new_compiler = new_compilers - old_compilers
-        assert new_compiler
-        assert sum(1 for c in new_compiler if
-                   c.version == Version(test_version)) > 0
+        assert any(c.version == Version(test_version) for c in new_compiler)
