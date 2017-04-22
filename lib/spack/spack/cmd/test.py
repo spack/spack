@@ -104,7 +104,7 @@ def test(parser, args, unknown_args):
         # Allow keyword search without -k if no options are specified
         if (args.tests and not unknown_args and
             not any(arg.startswith('-') for arg in args.tests)):
-            return pytest.main(['-k'] + args.tests)
+            return pytest.main(['-s', '-k'] + args.tests)
 
         # Just run the pytest command
         return pytest.main(unknown_args + args.tests)
