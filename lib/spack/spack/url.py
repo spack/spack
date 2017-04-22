@@ -71,7 +71,7 @@ def find_list_url(url):
 
     url_types = [
         # e.g. https://github.com/llnl/callpath/archive/v1.0.1.tar.gz
-        (r'(.*github\.com/[^/]+/[^/]+)/archive/',
+        (r'(.*github\.com/[^/]+/[^/]+)',
          lambda m: m.group(1) + '/releases')]
 
     for pattern, fun in url_types:
