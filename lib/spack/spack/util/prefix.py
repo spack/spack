@@ -61,6 +61,7 @@ class Prefix(str):
     def __new__(cls, path):
         s = super(Prefix, cls).__new__(cls, path)
         s.bin     = join_path(s, 'bin')
+        s.bin64   = join_path(s, 'bin64')
         s.sbin    = join_path(s, 'sbin')
         s.etc     = join_path(s, 'etc')
         s.include = join_path(s, 'include')
