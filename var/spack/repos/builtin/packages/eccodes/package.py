@@ -36,16 +36,16 @@ class Eccodes(CMakePackage):
     version('2.2.0', 'b27e6f0a3eea5b92dac37372e4c45a62')
 
     variant('netcdf', default=True)
-    variant('openjpeg', default=True)
-    variant('libpng', default=True)
+    variant('jpeg', default=True)
+    variant('png', default=True)
     variant('python', default=False)
     variant('pthreads', default=False)
     variant('openmp', default=False)
     variant('memfs', default=False)
 
     depends_on('netcdf', when='+netcdf')
-    depends_on('openjpeg', when='+openjpeg')
-    depends_on('libpng', when='+libpng')
+    depends_on('openjpeg', when='+jpeg')
+    depends_on('libpng', when='+png')
     extends('python', when='+python')
 
     def cmake_args(self):
@@ -54,11 +54,11 @@ class Eccodes(CMakePackage):
             args.append('-DENABLE_NETCDF=ON')
         else:
             args.append('-DENABLE_NETCDF=OFF')
-        if self.spec.satisfies('+openjpeg'):
+        if self.spec.satisfies('+jpeg'):
             args.append('-DENABLE_JPG=ON')
         else:
             args.append('-DENABLE_JPG=OFF')
-        if self.spec.satisfies('+libpng'):
+        if self.spec.satisfies('+png'):
             args.append('-DENABLE_PNG=ON')
         else:
             args.append('-DENABLE_PNG=OFF')
