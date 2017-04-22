@@ -1531,7 +1531,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 spack.hooks.pre_uninstall(pkg)
 
             # Uninstalling in Spack only requires removing the prefix.
-            if not self.spec.external:
+            if not spec.external:
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
                 spack.store.layout.remove_install_directory(spec)
@@ -1541,9 +1541,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.db.remove(spec)
         tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
-            # TODO: refactor hooks to use specs, not packages.
-            if pkg is not None:
-                spack.hooks.post_uninstall(pkg)
+        # TODO: refactor hooks to use specs, not packages.
+        if pkg is not None:
+            spack.hooks.post_uninstall(pkg)
 
         tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
