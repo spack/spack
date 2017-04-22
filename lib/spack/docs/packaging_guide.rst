@@ -854,7 +854,7 @@ Git fetching is enabled with the following parameters to ``version``:
 * ``tag``: name of a tag to fetch.
 * ``branch``: name of a branch to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
-* ``submodules``: Also fetch submodules when checking out this repository.
+* ``submodules``: Also fetch submodules recursively when checking out this repository.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -917,7 +917,8 @@ Commits
 Submodules
 
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  along with the repository at fetch time.
+  recursively along with the repository at fetch time. For more information
+  about git submodules see the manpage of git: ``man git-submodule``.
 
   .. code-block:: python
 
