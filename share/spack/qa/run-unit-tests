@@ -42,7 +42,9 @@ spack compilers
 spack config get compilers
 
 # Run unit tests with code coverage
-if [[ "$TRAVIS_PYTHON_VERSION" == 2.7 ]]; then
+py_ver=$(python -c 'import platform; print(platform.python_version())')
+if [[ "$py_ver" == 2.7* || "$py_ver" == 3.6* ]];
+then
     coverage run bin/spack install -v libdwarf
     coverage run bin/spack test "$@" && coverage combine
 else
