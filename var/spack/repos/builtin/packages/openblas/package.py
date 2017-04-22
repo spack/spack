@@ -81,6 +81,11 @@ class Openblas(MakefilePackage):
             raise InstallError(
                 'OpenBLAS does not support OpenMP with clang!'
             )
+        # OpenBLAS (0.2.15:0.2.19) does not support Intel compiler version 16
+        if self.spec.satisfies('%intel@16'):
+            raise InstallError(
+                'OpenBLAS does not support Intel compiler version 16!'
+            )
 
     @property
     def make_defs(self):
