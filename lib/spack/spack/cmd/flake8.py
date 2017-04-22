@@ -57,10 +57,14 @@ exemptions = {
             r'^\s*git\s*=',
             r'^\s*svn\s*=',
             r'^\s*hg\s*=',
+            r'^\s*list_url\s*=',
             r'^\s*version\(.*\)',
             r'^\s*variant\(.*\)',
-            r'^\s*depends_on\(.*\)',
+            r'^\s*provides\(.*\)',
             r'^\s*extends\(.*\)',
+            r'^\s*depends_on\(.*\)',
+            r'^\s*conflicts\(.*\)',
+            r'^\s*resource\(.*\)',
             r'^\s*patch\(.*\)',
         ],
         # Exempt '@when' decorated functions from redefinition errors.
@@ -125,7 +129,17 @@ def filter_file(source, dest, output=False):
 
         with open(dest, 'w') as outfile:
             for line in infile:
-                line = line.rstrip()
+                # Only strip newline characters
+                # We still want to catch trailing whitespace warnings
+                line = line.rstrip('\n')
+
+                if line == '# flake8: noqa':
+                    # Entire file is ignored
+                    break
+
+                if line.endswith('# noqa'):
+                    # Line is already ignored
+                    continue
 
                 for file_pattern, errors in exemptions.items():
                     if not file_pattern.search(source):
@@ -134,7 +148,10 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                line += '  # NOQA: {0}'.format(code)
+                                if '# noqa: ' in line:
+                                    line += ',{0}'.format(code)
+                                else:
+                                    line += '  # noqa: {0}'.format(code)
                                 break
 
                 oline = line + '\n'
@@ -211,13 +228,13 @@ def flake8(parser, args):
                 print(re.sub(r'^(.*): \[', cwd_relative, line))
 
         if flake8.returncode != 0:
-            print("Flake8 found errors.")
+            print('Flake8 found errors.')
             sys.exit(1)
         else:
-            print("Flake8 checks were clean.")
+            print('Flake8 checks were clean.')
 
     finally:
         if args.keep_temp:
-            print("temporary files are in ", temp)
+            print('Temporary files are in: ', temp)
         else:
             shutil.rmtree(temp, ignore_errors=True)
