@@ -47,9 +47,12 @@ class Legion(CMakePackage):
     version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
 
     variant('debug', default=False, description='Build debug version')
+    variant('mpi', default=False,
+            description='Build on top of mpi conduit for mpi inoperability')
 
     depends_on("cmake@3.1:", type='build')
-    depends_on("gasnet")
+    depends_on("gasnet", when='~mpi')
+    depends_on("gasnet+mpi", when='+mpi')
 
     def build_type(self):
         spec = self.spec
@@ -59,4 +62,9 @@ class Legion(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        return ['-DLegion_USE_GASNet=ON', '-DLegion_BUILD_EXAMPLES=ON']
+        options = ['-DLegion_USE_GASNet=ON', '-DLegion_BUILD_EXAMPLES=ON']
+
+        if '+mpi' in self.spec:
+            options.append('-DGASNet_CONDUIT=mpi')
+
+        return options
