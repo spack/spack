@@ -92,7 +92,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7', type='build')
+    depends_on('python@2.6:2.8', type='build')
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')

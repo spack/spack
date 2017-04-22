@@ -36,7 +36,7 @@ class PyScikitLearn(PythonPackage):
     version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
     version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
 
-    depends_on('python@2.6:2.7,3.3:')
+    depends_on('python@2.6:2.8,3.3:')
     depends_on('py-setuptools',   type='build')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'))
     depends_on('py-scipy@0.9:',   type=('build', 'run'))

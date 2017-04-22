@@ -56,7 +56,7 @@ class Cosmomc(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('planck-likelihood', when='+planck')
-    depends_on('python @2.7:2.999,3.4:')
+    depends_on('python@2.7:2.8,3.4:')
 
     parallel = False
 

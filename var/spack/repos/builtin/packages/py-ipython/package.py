@@ -41,8 +41,8 @@ class PyIpython(PythonPackage):
 
     # These dependencies breaks concretization
     # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2.999")  # noqa
-    # depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3.999")
+    # depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")  # noqa
+    # depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'))
     depends_on('py-pathlib2',                   type=('build', 'run'))
 

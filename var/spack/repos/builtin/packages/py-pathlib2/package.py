@@ -34,4 +34,4 @@ class PyPathlib2(PythonPackage):
     version('2.1.0', '38e4f58b4d69dfcb9edb49a54a8b28d2')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@:3.3.999')
+    depends_on('python@:3.3')

@@ -33,7 +33,7 @@ class PyPip(PythonPackage):
 
     version('9.0.1', '35f01da33009719497f01a4ba69d63c9')
 
-    depends_on('python@2.6:2.7,3.3:')
+    depends_on('python@2.6:2.8,3.3:')
 
     # Most Python packages only require setuptools as a build dependency.
     # However, pip requires setuptools during runtime as well.

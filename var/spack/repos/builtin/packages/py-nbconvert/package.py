@@ -37,7 +37,7 @@ class PyNbconvert(PythonPackage):
     version('4.0.0', '9661620b1e10a7b46f314588d2d0932f')
 
     depends_on('py-pycurl', type='build')
-    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('python@2.7:2.8,3.3:')
     depends_on('py-mistune', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))

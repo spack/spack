@@ -35,7 +35,7 @@ class PyConfigparser(PythonPackage):
     version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538',
             url="https://pypi.python.org/packages/7c/69/c2ce7e91c89dc073eb1aa74c0621c3eefbffe8216b3f9af9d3885265c01c/configparser-3.5.0.tar.gz")
 
-    depends_on('python@2.6:2.7,3.4:')
+    depends_on('python@2.6:2.8,3.4:')
 
     # This dependency breaks concretization
     # See https://github.com/LLNL/spack/issues/2793
