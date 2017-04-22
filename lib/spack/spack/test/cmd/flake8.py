@@ -78,8 +78,8 @@ def test_changed_files(parser, flake8_package):
 # As of flake8 3.0.0, Python 2.6 and 3.3 are no longer supported
 # http://flake8.pycqa.org/en/latest/release-notes/3.0.0.html
 @pytest.mark.skipif(
-    sys.version_info <= (2, 6) or
-    (3, 0) <= sys.version_info <= (3, 3),
+    sys.version_info[:2] <= (2, 6) or
+    (3, 0) <= sys.version_info[:2] <= (3, 3),
     reason='flake8 no longer supports Python 2.6 or 3.3 and older')
 def test_flake8(parser, flake8_package):
     # Only test the flake8_package that we modified
