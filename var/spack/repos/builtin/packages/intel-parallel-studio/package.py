@@ -403,3 +403,24 @@ class IntelParallelStudio(IntelInstaller):
             run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
                                  major_ver),
                                  join_path(self.prefix, 'vtune_amplifier_xe'))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('I_MPI_CC', spack_cc)
+        spack_env.set('I_MPI_CXX', spack_cxx)
+        spack_env.set('I_MPI_F77', spack_fc)
+        spack_env.set('I_MPI_F90', spack_f77)
+        spack_env.set('I_MPI_FC', spack_fc)
+
+    def setup_dependent_package(self, module, dep_spec):
+        # Check for presence of bin64 or bin directory
+        if os.path.isdir(self.prefix.bin):
+            bindir = self.prefix.bin
+        elif os.path.isdir(self.prefix.bin64):
+            bindir = self.prefix.bin64
+        else:
+            raise RuntimeError('No suitable bindir found')
+
+        self.spec.mpicc = join_path(bindir, 'mpicc')
+        self.spec.mpicxx = join_path(bindir, 'mpic++')
+        self.spec.mpifc = join_path(bindir, 'mpif90')
+        self.spec.mpif77 = join_path(bindir, 'mpif77')
