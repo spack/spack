@@ -29,6 +29,7 @@ class Ghostscript(Package):
     """An interpreter for the PostScript language and for PDF."""
 
     homepage = "http://ghostscript.com/"
+    url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs921/ghostscript-9.21.tar.gz"
 
     version('9.21', '6f60d7fcb5eef6a8bec5abedf21c6a7008a8c0c7')
     version('9.18', '33a47567d7a591c00a253caddd12a88a')
