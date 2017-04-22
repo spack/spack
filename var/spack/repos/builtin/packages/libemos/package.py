@@ -35,7 +35,8 @@ class Libemos(Package):
     version('4.4.7', '395dcf21cf06872f772fb6b73d8e67b9')
     version('4.4.2', 'f15a9aff0f40861f3f046c9088197376')
 
-    variant('eccodes', default=False)
+    variant('eccodes', default=False,
+            description="Use eccodes instead of grib-api for GRIB decoding")
 
     depends_on('cmake', type='build')
     depends_on('eccodes', when='+eccodes')
