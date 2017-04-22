@@ -53,6 +53,7 @@ class Eccodes(CMakePackage):
     depends_on('netcdf', when='+netcdf')
     depends_on('openjpeg', when='+jpeg')
     depends_on('libpng', when='+png')
+    depends_on('py-numpy', when='+python')
     extends('python', when='+python')
 
     def cmake_args(self):
