@@ -65,6 +65,8 @@ class Petsc(Package):
     variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
+    # Mumps is disabled by default, because it depends on Scalapack
+    # which is not portable to all HPC systems
     variant('mumps',   default=False,
             description='Activates support for MUMPS (only parallel'
             ' and 32bit indices)')
