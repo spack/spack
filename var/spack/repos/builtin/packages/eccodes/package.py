@@ -35,13 +35,20 @@ class Eccodes(CMakePackage):
 
     version('2.2.0', 'b27e6f0a3eea5b92dac37372e4c45a62')
 
-    variant('netcdf', default=True)
-    variant('jpeg', default=True)
-    variant('png', default=True)
-    variant('python', default=False)
-    variant('pthreads', default=False)
-    variant('openmp', default=False)
-    variant('memfs', default=False)
+    variant('netcdf', default=True,
+            description="Support GRIB to NetCDF conversion")
+    variant('jpeg', default=True,
+            description="Support JPEG2000 encoding/decoding")
+    variant('png', default=True,
+            description="Support PNG encoding/decoding")
+    variant('python', default=False,
+            description="Build the eccodes Python interface")
+    variant('pthreads', default=False,
+            description="Enable POSIX threads")
+    variant('openmp', default=False,
+            description="Enable OpenMP threads")
+    variant('memfs', default=False,
+            description="Memory based access to definitions/samples")
 
     depends_on('netcdf', when='+netcdf')
     depends_on('openjpeg', when='+jpeg')
