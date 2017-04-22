@@ -89,12 +89,12 @@ def _check_db_sanity(install_db):
     pkg_in_layout = sorted(spack.store.layout.all_specs())
     actual = sorted(install_db.query())
 
-    externals = sorted([x for x in actual if x.external is True])
+    externals = sorted([x for x in actual if x.external])
     nexpected = len(pkg_in_layout) + len(externals)
 
     assert nexpected == len(actual)
 
-    non_external_in_db = sorted([x for x in actual if x.external is False])
+    non_external_in_db = sorted([x for x in actual if not x.external])
 
     for e, a in zip(pkg_in_layout, non_external_in_db):
         assert e == a
