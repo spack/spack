@@ -60,6 +60,14 @@ class Emacs(AutotoolsPackage):
                 '--with-x-toolkit={0}'.format(toolkit)
             ]
         else:
-            args = ['--without-x']
+            args = ['--without-x',
+                    '--with-jpeg=no',
+                    '--with-gif=no',
+                    '--with-tiff=no',
+                    '--with-xpm=no',
+                    '--with-x-toolkit=no',
+                    ]
+            if '+gtkplus' in spec:
+                tty.warn('The variant +gtkplus is ignored if ~X is selected.')
 
         return args
