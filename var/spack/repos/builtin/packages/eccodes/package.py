@@ -56,33 +56,10 @@ class Eccodes(CMakePackage):
     extends('python', when='+python')
 
     def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+netcdf'):
-            args.append('-DENABLE_NETCDF=ON')
-        else:
-            args.append('-DENABLE_NETCDF=OFF')
-        if self.spec.satisfies('+jpeg'):
-            args.append('-DENABLE_JPG=ON')
-        else:
-            args.append('-DENABLE_JPG=OFF')
-        if self.spec.satisfies('+png'):
-            args.append('-DENABLE_PNG=ON')
-        else:
-            args.append('-DENABLE_PNG=OFF')
-        if self.spec.satisfies('+python'):
-            args.append('-DENABLE_PYTHON=ON')
-        else:
-            args.append('-DENABLE_PYTHON=OFF')
-        if self.spec.satisfies('+pthreads'):
-            args.append('-DENABLE_ECCODES_THREADS=ON')
-        else:
-            args.append('-DENABLE_ECCODES_THREADS=OFF')
-        if self.spec.satisfies('+openmp'):
-            args.append('-DENABLE_ECCODES_OMP_THREADS=ON')
-        else:
-            args.append('-DENABLE_ECCODES_OMP_THREADS=OFF')
-        if self.spec.satisfies('+memfs'):
-            args.append('-DENABLE_MEMFS=ON')
-        else:
-            args.append('-DENABLE_MEMFS=OFF')
-        return args
+        variants = ['+netcdf', '+jpeg', '+png', '+python',
+                    '+pthreads', '+openmp', '+memfs']
+        options = ['NETCDF', 'JPG', 'PNG', 'PYTHON',
+                   'ECCODES_THREADS', 'ECCODES_OMP_THREADS', 'MEMFS']
+        return map(lambda variant, option: "-DENABLE_%s=%s" %
+                   (option, 'YES' if variant in self.spec else 'NO'),
+                   variants, options)
