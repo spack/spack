@@ -39,13 +39,8 @@ class Ghostscript(Package):
     depends_on('libtiff')
 
     def url_for_version(self, version):
-        if version > Version('9.18'):
-            baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
-            url = baseurl.format(version.joined, version.dotted)
-        else:
-            baseurl = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-{0}.tar.gz"
-            url = baseurl.format(version.dotted)
-        return url
+        baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
+        return baseurl.format(version.joined, version.dotted)
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix),
