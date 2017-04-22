@@ -25,11 +25,15 @@
 from spack import *
 
 
-class LibjsonC(AutotoolsPackage):
-    """ A JSON implementation in C """
-    homepage = "https://github.com/json-c/json-c/wiki"
-    url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.11.tar.gz"
+class Flac(AutotoolsPackage):
+    """Encoder/decoder for the Free Lossless Audio Codec"""
 
-    parallel = False
+    homepage = "https://xiph.org/flac/index.html"
+    url      = "http://downloads.xiph.org/releases/flac/flac-1.3.2.tar.xz"
 
-    version('0.11', 'aa02367d2f7a830bf1e3376f77881e98')
+    version('1.3.2', '454f1bfa3f93cc708098d7890d0499bd')
+    version('1.3.1', 'b9922c9a0378c88d3e901b234f852698')
+    version('1.3.0', '13b5c214cee8373464d3d65dee362cdd')
+
+    depends_on('libvorbis')
+    depends_on('id3lib')

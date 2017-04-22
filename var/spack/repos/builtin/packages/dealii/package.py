@@ -36,6 +36,7 @@ class Dealii(CMakePackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
     version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')

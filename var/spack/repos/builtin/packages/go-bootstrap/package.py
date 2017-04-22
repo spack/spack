@@ -49,8 +49,6 @@ class GoBootstrap(Package):
     version('1.4-bootstrap-20161024', '76e42c8152e8560ded880a6d1d1f53cb',
             url='https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz')
 
-    variant('test', default=True, description='Build and run tests as part of the build.')
-
     provides('golang@:1.4-bootstrap-20161024')
 
     depends_on('git', type=('build', 'link', 'run'))
@@ -67,7 +65,7 @@ class GoBootstrap(Package):
             r'# \1\2\3',
         )
 
-    @when('@1.5.0:')
+    @when('@1.5.0:')  # noqa: F811
     def patch(self):
         pass
 
@@ -75,7 +73,7 @@ class GoBootstrap(Package):
         env['CGO_ENABLED'] = '0'
         bash = which('bash')
         with working_dir('src'):
-            bash('{0}.bash'.format('all' if '+test' in spec else 'make'))
+            bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
         try:
             os.makedirs(prefix)

@@ -955,15 +955,11 @@ class SpecBuildInterface(ObjectWrapper):
         )
 
         is_virtual = Spec.is_virtual(name)
-        self._query_to_package = QueryState(
+        self.last_query = QueryState(
             name=name,
             extra_parameters=query_parameters,
             isvirtual=is_virtual
         )
-
-    @property
-    def last_query(self):
-        return self._query_to_package
 
 
 @key_ordering
@@ -2245,7 +2241,7 @@ class Spec(object):
         if not self.virtual and other.virtual:
             try:
                 pkg = spack.repo.get(self.fullname)
-            except spack.repository.PackageLoadError:
+            except spack.repository.UnknownEntityError:
                 # If we can't get package info on this spec, don't treat
                 # it as a provider of this vdep.
                 return False
@@ -2765,7 +2761,7 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture) + ' ', ' arch=')
+                        write(fmt % str(self.architecture), ' arch=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -2781,7 +2777,7 @@ class Spec(object):
                         hashlen = int(hashlen)
                     else:
                         hashlen = None
-                    out.write('/' + fmt % (self.dag_hash(hashlen)))
+                    out.write(fmt % (self.dag_hash(hashlen)))
 
                 named = False
 

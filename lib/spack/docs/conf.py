@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -134,6 +134,7 @@ todo_include_todos = True
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.graphviz',
+              'sphinx.ext.napoleon',
               'sphinx.ext.todo',
               'sphinxcontrib.programoutput']
 
@@ -160,7 +161,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spack'
-copyright = u'2013-2015, Lawrence Livermore National Laboratory.'
+copyright = u'2013-2017, Lawrence Livermore National Laboratory.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

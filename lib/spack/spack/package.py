@@ -46,7 +46,6 @@ from six import StringIO
 from six import string_types
 from six import with_metaclass
 
-import llnl.util.lock
 import llnl.util.tty as tty
 import spack
 import spack.store
@@ -67,7 +66,6 @@ from llnl.util.tty.log import log_output
 from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.version import *
 
@@ -486,7 +484,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     parallel = True
 
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
-    make_jobs = None
+    make_jobs = spack.build_jobs
 
     """By default do not run tests within package's install()"""
     run_tests = False
@@ -514,15 +512,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     """
     sanity_check_is_dir = []
 
-    """Per-process lock objects for each install prefix."""
-    prefix_locks = {}
-
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
-
-        # Lock on the prefix shared resource. Will be set in prefix property
-        self._prefix_lock = None
 
         # Name of package is the name of its module, without the
         # containing module names.
@@ -860,29 +852,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return os.path.isdir(self.prefix)
 
     @property
-    def prefix_lock(self):
-        """Prefix lock is a byte range lock on the nth byte of a file.
-
-        The lock file is ``spack.store.db.prefix_lock`` -- the DB
-        tells us what to call it and it lives alongside the install DB.
-
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
-        likelihood of collision is very low AND it gives us
-        readers-writer lock semantics with just a single lockfile, so no
-        cleanup required.
-        """
-        if self._prefix_lock is None:
-            prefix = self.spec.prefix
-            if prefix not in Package.prefix_locks:
-                Package.prefix_locks[prefix] = llnl.util.lock.Lock(
-                    spack.store.db.prefix_lock_path,
-                    self.spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
-
-            self._prefix_lock = Package.prefix_locks[prefix]
-
-        return self._prefix_lock
-
-    @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
@@ -1117,26 +1086,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return resource_stage_folder
 
     @contextlib.contextmanager
-    def _prefix_read_lock(self):
-        try:
-            self.prefix_lock.acquire_read(60)
-            yield self
-        finally:
-            self.prefix_lock.release_read()
-
-    @contextlib.contextmanager
-    def _prefix_write_lock(self):
-        try:
-            self.prefix_lock.acquire_write(60)
-            yield self
-        finally:
-            self.prefix_lock.release_write()
-
-    @contextlib.contextmanager
     def _stage_and_write_lock(self):
         """Prefix lock nested in a stage."""
         with self.stage:
-            with self._prefix_write_lock():
+            with spack.store.db.prefix_write_lock(self.spec):
                 yield
 
     def do_install(self,
@@ -1156,22 +1109,24 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         Package implementations should override install() to describe
         their build process.
 
-        :param keep_prefix: Keep install prefix on failure. By default, \
+        :param bool keep_prefix: Keep install prefix on failure. By default,
             destroys it.
-        :param keep_stage: By default, stage is destroyed only if there are \
-            no exceptions during build. Set to True to keep the stage
+        :param bool keep_stage: By default, stage is destroyed only if there
+            are no exceptions during build. Set to True to keep the stage
             even with exceptions.
-        :param install_deps: Install dependencies before installing this \
+        :param bool install_deps: Install dependencies before installing this
             package
-        :param fake: Don't really build; install fake stub files instead.
-        :param skip_patch: Skip patch stage of build if True.
-        :param verbose: Display verbose build output (by default, suppresses \
-            it)
-        :param dirty: Don't clean the build environment before installing.
-        :param make_jobs: Number of make jobs to use for install. Default is \
-            ncpus
-        :param force: Install again, even if already installed.
-        :param run_tests: Run tests within the package's install()
+        :param bool skip_patch: Skip patch stage of build if True.
+        :param bool verbose: Display verbose build output (by default,
+            suppresses it)
+        :param int make_jobs: Number of make jobs to use for install. Default
+            is ncpus
+        :param bool run_tests: Run tests within the package's install()
+        :param bool fake: Don't really build; install fake stub files instead.
+        :param bool explicit: True if package was explicitly installed, False
+            if package was implicitly installed (as a dependency).
+        :param bool dirty: Don't clean the build environment before installing.
+        :param bool force: Install again, even if already installed.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -1185,8 +1140,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Ensure package is not already installed
         layout = spack.store.layout
-        with self._prefix_read_lock():
-            if layout.check_installed(self.spec):
+        with spack.store.db.prefix_read_lock(self.spec):
+            if (keep_prefix and os.path.isdir(self.prefix) and
+                    (not self.installed)):
+                tty.msg(
+                    "Continuing from partial install of %s" % self.name)
+            elif layout.check_installed(self.spec):
                 tty.msg(
                     "%s is already installed in %s" % (self.name, self.prefix))
                 rec = spack.store.db.get_record(self.spec)
@@ -1256,7 +1215,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             )
 
             self.stage.keep = keep_stage
-
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
@@ -1512,34 +1470,50 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         pass
 
-    def do_uninstall(self, force=False):
-        if not self.installed:
+    @staticmethod
+    def uninstall_by_spec(spec, force=False):
+        if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
-            specs = spack.store.db.query(self.spec, installed=True)
+            specs = spack.store.db.query(spec, installed=True)
             if specs:
                 spack.store.db.remove(specs[0])
-                tty.msg("Removed stale DB entry for %s" % self.spec.short_spec)
+                tty.msg("Removed stale DB entry for %s" % spec.short_spec)
                 return
             else:
-                raise InstallError(str(self.spec) + " is not installed.")
+                raise InstallError(str(spec) + " is not installed.")
 
         if not force:
-            dependents = spack.store.db.installed_dependents(self.spec)
+            dependents = spack.store.db.installed_dependents(spec)
             if dependents:
-                raise PackageStillNeededError(self.spec, dependents)
+                raise PackageStillNeededError(spec, dependents)
+
+        # Try to get the pcakage for the spec
+        try:
+            pkg = spec.package
+        except spack.repository.UnknownEntityError:
+            pkg = None
 
         # Pre-uninstall hook runs first.
-        with self._prefix_write_lock():
-            spack.hooks.pre_uninstall(self)
-            # Uninstalling in Spack only requires removing the prefix.
-            self.remove_prefix()
-            #
-            spack.store.db.remove(self.spec)
-        tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
+        with spack.store.db.prefix_write_lock(spec):
+            # TODO: hooks should take specs, not packages.
+            if pkg is not None:
+                spack.hooks.pre_uninstall(pkg)
 
-        # Once everything else is done, run post install hooks
-        spack.hooks.post_uninstall(self)
+            # Uninstalling in Spack only requires removing the prefix.
+            spack.store.layout.remove_install_directory(spec)
+            spack.store.db.remove(spec)
+
+            # TODO: refactor hooks to use specs, not packages.
+            if pkg is not None:
+                spack.hooks.post_uninstall(pkg)
+
+        tty.msg("Successfully uninstalled %s" % spec.short_spec)
+
+    def do_uninstall(self, force=False):
+        """Uninstall this package by spec."""
+        # delegate to instance-less method.
+        Package.uninstall_by_spec(self.spec, force)
 
     def _check_extendable(self):
         if not self.extendable:

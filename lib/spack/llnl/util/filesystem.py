@@ -51,6 +51,7 @@ __all__ = [
     'find',
     'find_headers',
     'find_libraries',
+    'find_system_libraries',
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
@@ -74,7 +75,7 @@ __all__ = [
 
 
 def filter_file(regex, repl, *filenames, **kwargs):
-    """Like sed, but uses python regular expressions.
+    r"""Like sed, but uses python regular expressions.
 
        Filters every line of each file through regex and replaces the file
        with a filtered version.  Preserves mode of filtered files.
@@ -399,8 +400,14 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
 
 def set_executable(path):
-    st = os.stat(path)
-    os.chmod(path, st.st_mode | stat.S_IEXEC)
+    mode = os.stat(path).st_mode
+    if mode & stat.S_IRUSR:
+        mode |= stat.S_IXUSR
+    if mode & stat.S_IRGRP:
+        mode |= stat.S_IXGRP
+    if mode & stat.S_IROTH:
+        mode |= stat.S_IXOTH
+    os.chmod(path, mode)
 
 
 def remove_dead_links(root):
@@ -773,6 +780,55 @@ class LibraryList(FileList):
         >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
         """
         return self.search_flags + ' ' + self.link_flags
+
+
+def find_system_libraries(libraries, shared=True):
+    """Searches the usual system library locations for the
+    specified libraries.
+
+    Search order is as follows:
+
+    1. /lib64
+    2. /lib
+    3. /usr/lib64
+    4. /usr/lib
+    5. /usr/local/lib64
+    6. /usr/local/lib
+
+    :param libraries: Library name(s) to search for
+    :type args: str or collections.Sequence
+    :param bool shared: if True searches for shared libraries,
+
+    :returns: The libraries that have been found
+    :rtype: LibraryList
+    """
+    if isinstance(libraries, str):
+        libraries = [libraries]
+    elif not isinstance(libraries, collections.Sequence):
+        message = '{0} expects a string or sequence of strings as the '
+        message += 'first argument [got {1} instead]'
+        message = message.format(find_system_libraries.__name__,
+                                 type(libraries))
+        raise TypeError(message)
+
+    libraries_found = []
+    search_locations = [
+        '/lib64',
+        '/lib',
+        '/usr/lib64',
+        '/usr/lib',
+        '/usr/local/lib64',
+        '/usr/local/lib',
+    ]
+
+    for library in libraries:
+        for root in search_locations:
+            result = find_libraries(library, root, shared, recurse=True)
+            if result:
+                libraries_found += result
+                break
+
+    return libraries_found
 
 
 def find_libraries(libraries, root, shared=True, recurse=False):

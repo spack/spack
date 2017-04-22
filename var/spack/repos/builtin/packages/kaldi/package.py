@@ -38,6 +38,8 @@ class Kaldi(Package):    # Does not use Autotools
     url      = "https://github.com/kaldi-asr/kaldi/archive/master.zip"
 
     version('master', git='https://github.com/kaldi-asr/kaldi.git')
+    version('c024e8', git='https://github.com/kaldi-asr/kaldi.git',
+            commit='c024e8aa0a727bf76c91a318f76a1f8b0b59249e')
 
     variant('shared', default=True,
             description='build shared libraries')
@@ -47,19 +49,22 @@ class Kaldi(Package):    # Does not use Autotools
             description='build with CUDA')
 
     depends_on('blas')
-    depends_on('speex')
-    depends_on('openfst@1.6:')
     depends_on('cuda', when='+cuda')
     depends_on('sph2pipe', type='run')
     depends_on('sctk', type='run')
+    depends_on('speex', type='run')
+    depends_on('openfst@1.4.1-patch', when='@c024e8')
+    depends_on('openfst')
+
+    patch('openfst-1.4.1.patch', when='@c024e8')
 
     def install(self, spec, prefix):
-        configure_args = [
-            '--threaded-math',
-            '--speex-root=' + spec['speex'].prefix,
-            '--fst-root=' + spec['openfst'].prefix,
-            '--fst-version=' + str(spec['openfst'].version)
-        ]
+        configure_args = ['--fst-root=' + spec['openfst'].prefix]
+
+        if spec.satisfies('c024e8'):
+            configure_args.append('--speex-root=' + spec['speex'].prefix)
+            configure_args.append('--fst-version=' +
+                                  str(spec['openfst'].version))
 
         if '~shared' in spec:
             configure_args.append('--static')
@@ -70,7 +75,7 @@ class Kaldi(Package):    # Does not use Autotools
             configure_args.append('--mathlib=OPENBLAS')
             configure_args.append('--openblas-root=' + spec['blas'].prefix)
             if '+openmp' in spec['blas'].variants:
-                configure_args.append('--threaded-math')
+                configure_args.append('--threaded-math=yes')
         elif '^atlas' in spec:
             configure_args.append('--mathlib=ATLAS')
             configure_args.append('--atlas-root=' + spec['blas'].prefix)

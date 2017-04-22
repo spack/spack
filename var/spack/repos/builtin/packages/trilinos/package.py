@@ -86,6 +86,7 @@ class Trilinos(CMakePackage):
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
+    variant('exodus', default=False, description='Compile with Exodus from SEACAS')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -292,14 +293,15 @@ class Trilinos(CMakePackage):
 
         # mumps / scalapack
         if '+mumps' in spec:
+            scalapack = spec['scalapack'].libs
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 # order is important!
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord',
                 '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
-                # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
-                '-DSCALAPACK_LIBRARY_NAMES=scalapack'
+                '-DSCALAPACK_LIBRARY_NAMES=%s' % ';'.join(scalapack.names),
+                '-DSCALAPACK_LIBRARY_DIRS=%s' % ';'.join(scalapack.directories)
             ])
             # see
             # https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS
@@ -370,11 +372,20 @@ class Trilinos(CMakePackage):
 
         # disable due to compiler / config errors:
         options.extend([
-            '-DTrilinos_ENABLE_SEACAS=OFF',
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
 
+        # exodus
+        if '+exodus' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF'
+            ])
+ 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
             options.extend([
