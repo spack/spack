@@ -25,29 +25,17 @@
 from spack import *
 
 
-class GitLfs(Package):
-    """Git LFS is a system for managing and versioning large files in
-       association with a Git repository.  Instead of storing the large files
-       within the Git repository as blobs, Git LFS stores special "pointer
-       files" in the repository, while storing the actual file contents on a
-       Git LFS server."""
+class PyPythonGitlab(PythonPackage):
+    """Python wrapper for the GitLab API"""
 
-    homepage = "https://git-lfs.github.com"
-    git_url  = "https://github.com/github/git-lfs.git"
+    homepage = "https://github.com/gpocentek/python-gitlab"
+    url      = "https://pypi.io/packages/source/p/python-gitlab/python-gitlab-0.19.tar.gz"
 
-    version('2.0.2', git=git_url, tag='v2.0.2')
-    version('1.4.1', git=git_url, tag='v1.4.1')
-    version('1.3.1', git=git_url, tag='v1.3.1')
+    version('0.19', '6564d7204c2b7e65c54b3fa89ec91df6')
+    version('0.18', 'c31dae1d0bab3966cb830f2308a96308')
+    version('0.17', '8a69c602e07dd4731856531d79bb58eb')
+    version('0.16', 'e0421d930718021e7d796d74d2ad7194')
 
-    # TODO: Add tests by following the instructions at this location:
-    # https://github.com/github/git-lfs/blob/master/CONTRIBUTING.md#building
-
-    depends_on('go@1.5:', type='build')
-    depends_on('git@1.8.2:', type='run')
-
-    def install(self, spec, prefix):
-        bootstrap_script = Executable(join_path('script', 'bootstrap'))
-        bootstrap_script()
-
-        mkdirp(prefix.bin)
-        install(join_path('bin', 'git-lfs'), prefix.bin)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-requests@1.0:', type=('build', 'run'))

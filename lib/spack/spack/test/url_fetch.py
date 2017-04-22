@@ -23,41 +23,46 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-
 import pytest
-import spack
+
 from llnl.util.filesystem import *
+
+import spack
 from spack.spec import Spec
 from spack.version import ver
+import spack.util.crypto as crypto
 
 
-@pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
-@pytest.mark.parametrize("secure", [True, False])
+@pytest.fixture(params=list(crypto.hashes.keys()))
+def checksum_type(request):
+    return request.param
+
+
+@pytest.mark.parametrize('secure', [True, False])
 def test_fetch(
-        type_of_test,
+        mock_archive,
         secure,
-        mock_svn_repository,
+        checksum_type,
         config,
         refresh_builtin_mock
 ):
-    """Tries to:
+    """Fetch an archive and make sure we can checksum it."""
+    mock_archive.url
+    mock_archive.path
 
-    1. Fetch the repo using a fetch strategy constructed with
-       supplied args (they depend on type_of_test).
-    2. Check if the test_file is in the checked out repository.
-    3. Assert that the repository is at the revision supplied.
-    4. Add and remove some files, then reset the repo, and
-       ensure it's all there again.
-    """
-    # Retrieve the right test parameters
-    t = mock_svn_repository.checks[type_of_test]
-    h = mock_svn_repository.hash
+    algo = crypto.hashes[checksum_type]()
+    with open(mock_archive.archive_file, 'rb') as f:
+        algo.update(f.read())
+    checksum = algo.hexdigest()
 
-    # Construct the package under test
-    spec = Spec('svn-test')
+    # Get a spec and tweak the test package with new chcecksum params
+    spec = Spec('url-test')
     spec.concretize()
-    pkg = spack.repo.get(spec, new=True)
-    pkg.versions[ver('svn')] = t.args
+
+    pkg = spack.repo.get('url-test', new=True)
+    pkg.url = mock_archive.url
+    pkg.versions[ver('test')] = {checksum_type: checksum, 'url': pkg.url}
+    pkg.spec = spec
 
     # Enter the stage directory and check some properties
     with pkg.stage:
@@ -67,22 +72,22 @@ def test_fetch(
         finally:
             spack.insecure = False
 
-        assert h() == t.revision
+        assert os.path.exists('configure')
+        assert is_exe('configure')
 
-        file_path = join_path(pkg.stage.source_path, t.file)
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+        with open('configure') as f:
+            contents = f.read()
+        assert contents.startswith('#!/bin/sh')
+        assert 'echo Building...' in contents
 
-        os.unlink(file_path)
-        assert not os.path.isfile(file_path)
 
-        untracked_file = 'foobarbaz'
-        touch(untracked_file)
-        assert os.path.isfile(untracked_file)
-        pkg.do_restage()
-        assert not os.path.isfile(untracked_file)
+def test_hash_detection(checksum_type):
+    algo = crypto.hashes[checksum_type]()
+    h = 'f' * (algo.digest_size * 2)  # hex -> bytes
+    checker = crypto.Checker(h)
+    assert checker.hash_name == checksum_type
 
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
 
-        assert h() == t.revision
+def test_unknown_hash(checksum_type):
+    with pytest.raises(ValueError):
+        crypto.Checker('a')

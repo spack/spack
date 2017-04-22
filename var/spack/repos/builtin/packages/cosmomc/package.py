@@ -108,7 +108,7 @@ class Cosmomc(Package):
         else:
             wantmpi = 'BUILD=NOMPI'
             mpif90 = 'MPIF90C='
-        
+
         # Choose BLAS and LAPACK
         lapack = ("LAPACKL=%s" %
                   (spec['lapack'].libs + spec['blas'].libs).ld_flags)
@@ -158,8 +158,8 @@ class Cosmomc(Package):
             for filename in fnmatch.filter(filenames, '*~'):
                 os.remove(os.path.join(dirpath, filename))
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         prefix = self.prefix
         spec = self.spec
