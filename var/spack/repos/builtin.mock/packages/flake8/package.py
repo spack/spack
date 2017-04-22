@@ -30,7 +30,7 @@ class Flake8(Package):
     All of these violations are exceptions that we allow in
     package.py files."""
 
-    # Used to tell whether or not the package has been unmodified
+    # Used to tell whether or not the package has been modified
     state = 'unmodified'
 
     # Make sure pre-existing noqa is not interfered with
