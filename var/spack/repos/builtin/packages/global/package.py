@@ -35,7 +35,7 @@ class Global(Package):
     version('6.5', 'dfec818b4f53d91721e247cf7b218078')
 
     depends_on('exuberant-ctags', type=('build', 'run'))
-    depends_on('ncurses')
+    depends_on('ncurses~wide')
 
     def install(self, spec, prefix):
         config_args = ['--prefix={0}'.format(prefix)]

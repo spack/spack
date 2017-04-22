@@ -41,6 +41,9 @@ class Ncurses(AutotoolsPackage):
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
 
+    variant('wide', default=True,
+            description='Enable to build ncursesw, disable to build ncurses')
+
     depends_on('pkg-config', type='build')
 
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
@@ -52,7 +55,6 @@ class Ncurses(AutotoolsPackage):
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
             '--with-cxx-shared',
-            '--enable-widec',
             '--enable-overwrite',
             '--without-ada',
             '--enable-pc-files',
@@ -61,5 +63,8 @@ class Ncurses(AutotoolsPackage):
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
+
+        if '+wide' in self.spec:
+            opts.append('--enable-widec')
 
         return opts

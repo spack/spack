@@ -42,11 +42,10 @@ class Ncdu(Package):
     version('1.8', '94d7a821f8a0d7ba8ef3dd926226f7d5')
     version('1.7', '172047c29d232724cc62e773e82e592a')
 
-    depends_on("ncurses")
+    depends_on('ncurses')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-ncurses=%s' % spec['ncurses'])
+        configure('--prefix=%s' % prefix)
 
         make()
         make("install")

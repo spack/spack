@@ -41,7 +41,7 @@ class Tmux(Package):
     version('1.9a', 'b07601711f96f1d260b390513b509a2d')
 
     depends_on('libevent')
-    depends_on('ncurses')
+    depends_on('ncurses~wide')
 
     def install(self, spec, prefix):
         pkg_config_path = ':'.join([

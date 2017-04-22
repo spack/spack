@@ -45,8 +45,10 @@ class Readline(AutotoolsPackage):
     patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 
     def build(self, spec, prefix):
-        options = [
-            'SHLIB_LIBS=-L{0} -lncursesw'.format(spec['ncurses'].prefix.lib)
-        ]
+        if '+wide' in spec['ncurses']:
+            shlib = 'SHLIB_LIBS=-L%s -lncursesw' % spec['ncurses'].prefix.lib
+        else:
+            shlib = 'SHLIB_LIBS=-L%s -lncurses' % spec['ncurses'].prefix.lib
 
+        options = [shlib]
         make(*options)
