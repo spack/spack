@@ -59,8 +59,8 @@ class PyFlake8(PythonPackage):
 
     # These dependencies breaks concretization
     # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-configparser', when='^python@:3.3.999', type=('build', 'run'))  # noqa
-    # depends_on('py-enum34', when='^python@:3.1.999', type=('build', 'run'))
+    # depends_on('py-configparser', when='^python@:3.3', type=('build', 'run'))
+    # depends_on('py-enum34', when='^python@:3.1', type=('build', 'run'))
     depends_on('py-configparser', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'))
 
