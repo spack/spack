@@ -109,15 +109,21 @@ def changed_files(args):
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
     changed = set()
-    for git_arg_list in git_args:
-        arg_list = git_arg_list + ['--', '*.py']
 
-        files = [f for f in git(*arg_list, output=str).split('\n') if f]
+    for arg_list in git_args:
+        files = git(*arg_list, output=str).split('\n')
+
         for f in files:
-            # don't look at files that are in the exclude locations
+            # Ignore non-Python files
+            if not f.endswith('.py'):
+                continue
+
+            # Ignore files in the exclude locations
             if any(os.path.realpath(f).startswith(e) for e in excludes):
                 continue
+
             changed.add(f)
+
     return sorted(changed)
 
 
