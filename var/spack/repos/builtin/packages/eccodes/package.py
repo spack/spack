@@ -27,14 +27,8 @@ from spack import *
 
 
 class Eccodes(CMakePackage):
-    """ecCodes is a package developed by ECMWF which provides an application
-    programming interface and a set of tools for decoding and encoding
-    messages in the following formats:
-
-      WMO FM-92 GRIB edition 1 and edition 2
-      WMO FM-94 BUFR edition 3 and edition 4 
-      WMO GTS abbreviated header (only decoding).
-    """
+    """ecCodes is a package developed by ECMWF for processing meteorological
+    data in GRIB (1/2), BUFR (3/4) and GTS header formats."""
 
     homepage = "https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home"
     url      = "https://software.ecmwf.int/wiki/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2"
