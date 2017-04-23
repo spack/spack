@@ -165,7 +165,7 @@ class Python(AutotoolsPackage):
         if spec.satisfies('@3.6:'):
             # Python 3.6.0 renamed the sys config file
             sc = 'import sysconfig; print(sysconfig._get_sysconfigdata_name())'
-            cf = self.python('-c', sc, output=str).strip()
+            cf = self.command('-c', sc, output=str).strip()
             self.sysconfigfilename = '{0}.py'.format(cf)
 
         self._save_distutil_vars(prefix)
