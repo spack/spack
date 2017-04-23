@@ -228,7 +228,7 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
-                      spec['python'].executable))
+                      spec['python'].command.path))
             # install module to standard style site packages dir
             # so we can support spack activate
             cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",

@@ -60,8 +60,8 @@ class Geos(Package):
     def install(self, spec, prefix):
         args = ["--prefix=%s" % prefix]
 #        if '+python' in spec:
-#            os.environ['PYTHON'] = spec['python'].executable
-#            os.environ['SWIG'] = spec['swig'].executable
+#            os.environ['PYTHON'] = spec['python'].command.path
+#            os.environ['SWIG'] = spec['swig'].command.path
 #
 #            args.append("--enable-python")
 

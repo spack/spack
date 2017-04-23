@@ -176,7 +176,7 @@ class Gcc(AutotoolsPackage):
                      self.spec.format('$_$@'))
             return
 
-        gcc = Executable(self.spec['gcc'].executable)
+        gcc = self.spec['gcc'].command
         lines = gcc('-dumpspecs', output=str).strip().split("\n")
         specs_file = join_path(self.spec_dir, 'specs')
         with closing(open(specs_file, 'w')) as out:

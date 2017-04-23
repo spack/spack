@@ -69,7 +69,7 @@ class Hdf5Blosc(Package):
         # if sys.platform == "darwin":
         #     fix_darwin_install_name(prefix.lib)
 
-        libtool = Executable(spec["libtool"].executable)
+        libtool = spec["libtool"].command
 
         # TODO: these vars are not used.
         # if "+mpi" in spec["hdf5"]:

@@ -164,8 +164,8 @@ class Scotch(Package):
 
         # General Features #
 
-        flex_path = self.spec['flex'].executable
-        bison_path = self.spec['bison'].executable
+        flex_path = self.spec['flex'].command.path
+        bison_path = self.spec['bison'].command.path
         makefile_inc.extend([
             'EXE       =',
             'OBJ       = .o',

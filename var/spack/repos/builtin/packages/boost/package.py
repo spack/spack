@@ -167,7 +167,7 @@ class Boost(Package):
     def bjam_python_line(self, spec):
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
-            spec['python'].executable,
+            spec['python'].command.path,
             spec['python'].headers.directories[0],
             spec['python'].libs[0]
         )
@@ -178,7 +178,7 @@ class Boost(Package):
         options.append("--with-libraries=%s" % ','.join(withLibs))
 
         if '+python' in spec:
-            options.append('--with-python=%s' % spec['python'].executable)
+            options.append('--with-python=%s' % spec['python'].command.path)
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in

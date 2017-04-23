@@ -123,6 +123,7 @@ from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
+from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.util.spack_yaml import syaml_dict
 from spack.util.string import *
@@ -759,8 +760,8 @@ class DependencyMap(HashableMap):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
 
 
-def _executable_default_handler(descriptor, spec, cls):
-    """Default handler when looks for 'executable' attribute. The default
+def _command_default_handler(descriptor, spec, cls):
+    """Default handler when looks for 'command' attribute. The default
     tries to search for {spec.name} in the ``spec.prefix.bin`` directory.
 
     :param ForwardQueryToPackage descriptor: descriptor that triggered
@@ -769,12 +770,12 @@ def _executable_default_handler(descriptor, spec, cls):
     :param type(spec) cls: type of spec, to match the signature of the
         descriptor `__get__` method
     """
-    exe = os.path.join(spec.prefix.bin, spec.name)
+    command = os.path.join(spec.prefix.bin, spec.name)
 
-    if os.path.isfile(exe) and os.access(exe, os.X_OK):
-        return exe
+    if os.path.isfile(command) and os.access(command, os.X_OK):
+        return Executable(command)
     else:
-        msg = 'Unable to locate {0} executable in {1}'
+        msg = 'Unable to locate {0} command in {1}'
         raise RuntimeError(msg.format(spec.name, spec.prefix.bin))
 
 
@@ -931,9 +932,9 @@ class ForwardQueryToPackage(object):
 
 
 class SpecBuildInterface(ObjectWrapper):
-    executable = ForwardQueryToPackage(
-        'executable',
-        default_handler=_executable_default_handler
+    command = ForwardQueryToPackage(
+        'command',
+        default_handler=_command_default_handler
     )
 
     headers = ForwardQueryToPackage(

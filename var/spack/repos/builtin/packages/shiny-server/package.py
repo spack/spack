@@ -54,7 +54,7 @@ class ShinyServer(CMakePackage):
         spec = self.spec
         options = []
 
-        options.append("-DPYTHON=%s" % spec['python'].executable)
+        options.append("-DPYTHON=%s" % spec['python'].command.path)
 
         return options
 

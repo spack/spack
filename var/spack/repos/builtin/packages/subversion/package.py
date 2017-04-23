@@ -72,7 +72,7 @@ class Subversion(Package):
         if 'swig' in spec:
             options.append('--with-swig=%s' % spec['swig'].prefix)
         if 'perl' in spec:
-            options.append('PERL=%s' % spec['perl'].executable)
+            options.append('PERL=%s' % spec['perl'].command.path)
 
         configure(*options)
         make()

@@ -32,6 +32,7 @@ import os.path
 import pytest
 import spack
 import spack.store
+from spack.util.executable import Executable
 from llnl.util.tty.colify import colify
 
 
@@ -115,8 +116,10 @@ def test_default_queries(database):
     headers = spec['zmpi'].headers
     assert len(headers) == 1
 
-    executable = spec['zmpi'].executable
-    assert os.path.exists(executable)
+    command = spec['zmpi'].command
+    assert isinstance(command, Executable)
+    assert command.name == 'zmpi'
+    assert os.path.exists(command.path)
 
 
 def test_005_db_exists(database):

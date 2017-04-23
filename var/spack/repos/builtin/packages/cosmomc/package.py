@@ -178,7 +178,7 @@ class Cosmomc(Package):
         os.environ.pop('CLIKPATH', '')
         os.environ.pop('PLANCKLIKE', '')
 
-        exe = spec['cosmomc'].executable
+        exe = spec['cosmomc'].command.path
         args = []
         if '+mpi' in spec:
             # Add mpirun prefix

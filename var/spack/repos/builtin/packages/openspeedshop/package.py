@@ -167,7 +167,7 @@ class Openspeedshop(Package):
         # Appends to cmakeOptions the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
-        python_exe = spec['python'].executable
+        python_exe = spec['python'].command.path
         python_library = spec['python'].libs[0]
         python_include = spec['python'].headers.directories[0]
 

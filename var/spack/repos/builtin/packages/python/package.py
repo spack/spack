@@ -334,45 +334,41 @@ class Python(AutotoolsPackage):
     # ========================================================================
 
     @property
-    def executable(self):
-        """Returns the path to the Python executable, which may vary depending
+    def command(self):
+        """Returns the Python command, which may vary depending
         on the version of Python and how it was installed.
 
-        In general, Python 2 comes with ``python`` and ``python2`` executables,
-        while Python 3 only comes with a ``python3`` executable.
+        In general, Python 2 comes with ``python`` and ``python2`` commands,
+        while Python 3 only comes with a ``python3`` command.
 
-        :returns: The full path to the Python executable
-        :rtype: str
+        :returns: The Python command
+        :rtype: Executable
         """
         # We need to be careful here. If the user is using an externally
-        # installed python, all 3 executables could be in the same directory.
+        # installed python, all 3 commands could be in the same directory.
 
         # Search for `python2` iff using Python 2
         if (self.spec.satisfies('@:2') and
                 os.path.exists(os.path.join(self.prefix.bin, 'python2'))):
-            exe = 'python2'
+            command = 'python2'
         # Search for `python3` iff using Python 3
         elif (self.spec.satisfies('@3:') and
                 os.path.exists(os.path.join(self.prefix.bin, 'python3'))):
-            exe = 'python3'
+            command = 'python3'
         # If neither were found, try `python`
         elif os.path.exists(os.path.join(self.prefix.bin, 'python')):
-            exe = 'python'
+            command = 'python'
         else:
-            msg = 'Unable to locate {0} executable in {1}'
+            msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
 
-        # The python executable may be a symlink if it was installed
+        # The python command may be a symlink if it was installed
         # with Homebrew. Since some packages try to determine the
         # location of libraries and headers based on the path,
         # return the realpath
-        return os.path.realpath(os.path.join(self.prefix.bin, exe))
+        path = os.path.realpath(os.path.join(self.prefix.bin, command))
 
-    @property
-    def python(self):
-        """Returns the Python executable."""
-
-        return Executable(self.executable)
+        return Executable(path)
 
     def print_string(self, string):
         """Returns the appropriate print string depending on the
@@ -402,7 +398,7 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_var; '
         cmd += self.print_string("get_config_var('{0}')".format(key))
 
-        return self.python('-c', cmd, output=str).strip()
+        return self.command('-c', cmd, output=str).strip()
 
     def get_config_h_filename(self):
         """Returns the full path name of the configuration header.
@@ -411,7 +407,7 @@ class Python(AutotoolsPackage):
         cmd = 'from distutils.sysconfig import get_config_h_filename; '
         cmd += self.print_string('get_config_h_filename()')
 
-        return self.python('-c', cmd, output=str).strip()
+        return self.command('-c', cmd, output=str).strip()
 
     @property
     def home(self):
@@ -512,9 +508,9 @@ class Python(AutotoolsPackage):
 
         setup_py('install', '--prefix={0}'.format(prefix))"""
 
-        module.python = self.python
+        module.python = self.command
         module.setup_py = Executable(
-            self.executable + ' setup.py --no-user-cfg')
+            self.command + ' setup.py --no-user-cfg')
 
         distutil_vars = self._load_distutil_vars()
 

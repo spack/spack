@@ -165,7 +165,7 @@ class Opencv(Package):
 
         # Python
         if '+python' in spec:
-            python_exe = spec['python'].executable
+            python_exe = spec['python'].command.path
             python_lib = spec['python'].libs[0]
             python_include_dir = spec['python'].headers.directories[0]
 

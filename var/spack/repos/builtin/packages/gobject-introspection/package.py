@@ -48,7 +48,7 @@ class GobjectIntrospection(Package):
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         # we need to filter this file to avoid an overly long hashbang line
-        filter_file('@PYTHON@', os.basename(spec['python'].executable),
+        filter_file('@PYTHON@', spec['python'].command.name,
                     'tools/g-ir-tool-template.in')
         make()
         make("install")

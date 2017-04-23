@@ -156,7 +156,7 @@ class Git(AutotoolsPackage):
             '--with-iconv={0}'.format(spec['libiconv'].prefix),
             '--with-libpcre={0}'.format(spec['pcre'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
-            '--with-perl={0}'.format(spec['perl'].executable),
+            '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 

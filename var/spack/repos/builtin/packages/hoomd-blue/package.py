@@ -81,7 +81,7 @@ class HoomdBlue(CMakePackage):
         spec = self.spec
 
         cmake_args = [
-            '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].executable),
+            '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
         ]
 
         # MPI support
