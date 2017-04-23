@@ -43,7 +43,11 @@ class Boost(Package):
     list_depth = 1
 
     version('1.64.0', '93eecce2abed9d2442c9676914709349')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
+    #       +python and +mpi, there seem to be errors with out-of-date
+    #       API calls from mpi/python.
+    #       See: https://github.com/LLNL/spack/issues/3963
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847', preferred=True)
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
