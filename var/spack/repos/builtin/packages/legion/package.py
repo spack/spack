@@ -47,7 +47,7 @@ class Legion(CMakePackage):
     version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
 
     variant('debug', default=False, description='Build debug version')
-    variant('mpi', default=False,
+    variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
 
     depends_on("cmake@3.1:", type='build')
