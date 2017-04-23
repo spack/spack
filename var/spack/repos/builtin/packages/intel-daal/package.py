@@ -37,12 +37,14 @@ class IntelDaal(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/daal"
 
+    version('2017.2.174', 'f067d5d7b0f70914fba1f78da0361065',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11308/l_daal_2017.2.174.tgz")
     version('2017.0.098', 'b4eb234de12beff4a5cba4b81ea60673',
-            url="file://%s/l_daal_2017.0.098.tgz" % os.getcwd())
-    version('2016.2.181', 'aad2aa70e5599ebfe6f85b29d8719d46',
-            url="file://%s/l_daal_2016.2.181.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9664/l_daal_2017.0.098.tgz")
     version('2016.3.210', 'ad747c0dd97dace4cad03cf2266cad28',
-            url="file://%s/l_daal_2016.3.210.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9099/l_daal_2016.3.210.tgz")
+    version('2016.2.181', 'aad2aa70e5599ebfe6f85b29d8719d46',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8687/l_daal_2016.2.181.tgz")
 
     provides('daal')
 
