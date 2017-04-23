@@ -83,7 +83,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         config_args = [
             '-des',
-            '-Dprefix={0}'.format(prefix)
+            '-Dprefix={0}'.format(prefix),
+            '-Dlocincpth=' + self.spec['gdbm'].prefix.include,
+            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib
         ]
 
         # Discussion of -fPIC for Intel at:
