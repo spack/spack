@@ -113,7 +113,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         if '+cpanm' in spec:
             with working_dir(join_path('cpanm', 'cpanm')):
-                perl = Executable(join_path(prefix.bin, 'perl'))
+                perl = self.command
                 perl('Makefile.PL')
                 make()
                 make('install')

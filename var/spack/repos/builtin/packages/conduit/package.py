@@ -174,13 +174,13 @@ class Conduit(Package):
         ##############################################
 
         if "+cmake" in spec:
-            cmake_exe = join_path(spec['cmake'].prefix.bin, "cmake")
+            cmake_exe = spec['cmake'].command.path
         else:
             cmake_exe = which("cmake")
             if cmake_exe is None:
                 msg = 'failed to find CMake (and cmake variant is off)'
                 raise RuntimeError(msg)
-            cmake_exe = cmake_exe.command
+            cmake_exe = cmake_exe.path
 
         host_cfg_fname = "%s-%s-%s.cmake" % (socket.gethostname(),
                                              sys_type,
@@ -245,7 +245,7 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
 
             cfg.write("# doxygen from uberenv\n")
-            doxygen_exe = join_path(spec['doxygen'].prefix.bin, "doxygen")
+            doxygen_exe = spec['doxygen'].command.path
             cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
