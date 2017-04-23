@@ -32,6 +32,7 @@ class Eccodes(CMakePackage):
 
     homepage = "https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home"
     url      = "https://software.ecmwf.int/wiki/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2"
+    list_url = "https://software.ecmwf.int/wiki/display/ECC/Releases"
 
     version('2.2.0', 'b27e6f0a3eea5b92dac37372e4c45a62')
 
