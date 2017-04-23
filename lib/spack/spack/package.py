@@ -1228,7 +1228,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # otherwise it should not have passed us the copy of the stream.
             # Thus, we are free to work with the the copy (input_stream)
             # however we want. For example, we might want to call functions
-            # (e.g. raw_input()) that implicitly read from whatever stream is
+            # (e.g. input()) that implicitly read from whatever stream is
             # assigned to sys.stdin. Since we want them to work with the
             # original input stream, we are making the following assignment:
             sys.stdin = input_stream
