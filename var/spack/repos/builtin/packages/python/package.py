@@ -378,13 +378,17 @@ class Python(AutotoolsPackage):
 
         * Python 2
 
-          >>> self.print_string('sys.prefix')
-          'print sys.prefix'
+          .. code-block:: python
+
+             >>> self.print_string('sys.prefix')
+             'print sys.prefix'
 
         * Python 3
 
-          >>> self.print_string('sys.prefix')
-          'print(sys.prefix)'
+          .. code-block:: python
+
+             >>> self.print_string('sys.prefix')
+             'print(sys.prefix)'
         """
         if self.spec.satisfies('@:2'):
             return 'print {0}'.format(string)
@@ -510,7 +514,7 @@ class Python(AutotoolsPackage):
 
         module.python = self.command
         module.setup_py = Executable(
-            self.command + ' setup.py --no-user-cfg')
+            self.command.path + ' setup.py --no-user-cfg')
 
         distutil_vars = self._load_distutil_vars()
 

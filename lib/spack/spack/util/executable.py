@@ -53,21 +53,27 @@ class Executable(object):
 
     @property
     def command(self):
-        """Returns:
-            str: The executable and and default arguments
+        """The command-line string.
+
+        Returns:
+            str: The executable and default arguments
         """
         return ' '.join(self.exe)
 
     @property
     def name(self):
-        """Returns:
+        """The executable name.
+
+        Returns:
             str: The basename of the executable
         """
         return os.path.basename(self.path)
 
     @property
     def path(self):
-        """Returns:
+        """The path to the executable.
+
+        Returns:
             str: The path to the executable
         """
         return self.exe[0]

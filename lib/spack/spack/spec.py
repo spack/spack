@@ -117,7 +117,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 
-from llnl.util.filesystem import find_headers, find_libraries
+from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
@@ -762,18 +762,24 @@ class DependencyMap(HashableMap):
 
 def _command_default_handler(descriptor, spec, cls):
     """Default handler when looks for 'command' attribute. The default
-    tries to search for {spec.name} in the ``spec.prefix.bin`` directory.
+    tries to search for ``spec.name`` in the ``spec.prefix.bin`` directory.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered the call
+        spec (Spec): spec that is being queried
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor ``__get__`` method
+
+    Returns:
+        Executable: An executable of the command
+
+    Raises:
+        RuntimeError: If the command is not found
     """
-    command = os.path.join(spec.prefix.bin, spec.name)
+    path = os.path.join(spec.prefix.bin, spec.name)
 
-    if os.path.isfile(command) and os.access(command, os.X_OK):
-        return Executable(command)
+    if is_exe(path):
+        return Executable(path)
     else:
         msg = 'Unable to locate {0} command in {1}'
         raise RuntimeError(msg.format(spec.name, spec.prefix.bin))
@@ -784,11 +790,17 @@ def _headers_default_handler(descriptor, spec, cls):
     tries to search for ``*.h`` files recursively starting from
     ``spec.prefix.include``.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered the call
+        spec (Spec): spec that is being queried
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor ``__get__`` method
+
+    Returns:
+        HeaderList: The headers in ``prefix.include``
+
+    Raises:
+        RuntimeError: If no headers are found
     """
     headers = find_headers('*', root=spec.prefix.include, recurse=True)
 
@@ -801,14 +813,20 @@ def _headers_default_handler(descriptor, spec, cls):
 
 def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for 'libs' attribute. The default
-    tries to search for 'lib{spec.name}' recursively starting from
+    tries to search for ``lib{spec.name}`` recursively starting from
     ``spec.prefix``.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered the call
+        spec (Spec): spec that is being queried
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor ``__get__`` method
+
+    Returns:
+        LibraryList: The libraries found
+
+    Raises:
+        RuntimeError: If no libraries are found
     """
     name = 'lib' + spec.name
 

@@ -41,8 +41,8 @@ from llnl.util.lang import dedupe
 
 __all__ = [
     'FileFilter',
-    'LibraryList',
     'HeaderList',
+    'LibraryList',
     'ancestor',
     'can_access',
     'change_sed_delimiter',
@@ -521,23 +521,23 @@ def find(root, files, recurse=True):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ==================================
+    =======  ====================================
     Pattern  Meaning
-    =======  ==================================
+    =======  ====================================
     *        matches everything
     ?        matches any single character
-    [seq]    matches any character in `seq`
-    [!seq]   matches any character not in `seq`
-    =======  ==================================
+    [seq]    matches any character in ``seq``
+    [!seq]   matches any character not in ``seq``
+    =======  ====================================
 
-    :param str root: The root directory to start searching from
-    :param files: Library name(s) to search for
-    :type files: str or collections.Sequence
-    :param bool recurse: if False search only root folder,
-        if True descends top-down from the root
+    Args:
+        root (str): The root directory to start searching from
+        files (str or collections.Sequence): Library name(s) to search for
+        recurse (bool, optional): if False search only root folder,
+            if True descends top-down from the root. Defaults to True.
 
-    :returns: The files that have been found
-    :rtype: :func:`list`
+    Returns:
+        :func:`list`: The files that have been found
     """
     if isinstance(files, str):
         files = [files]
@@ -590,10 +590,12 @@ class FileList(collections.Sequence):
     def directories(self):
         """Stable de-duplication of the directories where the files reside.
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
-        >>> assert l.directories == ['/dir1', '/dir2']
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> assert h.directories == ['/dir1', '/dir2']
+        .. code-block:: python
+
+           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])  # noqa
+           >>> assert l.directories == ['/dir1', '/dir2']
+           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+           >>> assert h.directories == ['/dir1', '/dir2']
         """
         return list(dedupe(
             os.path.dirname(x) for x in self.files if os.path.dirname(x)
@@ -603,10 +605,12 @@ class FileList(collections.Sequence):
     def basenames(self):
         """Stable de-duplication of the base-names in the list
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
-        >>> assert l.basenames == ['liba.a', 'libb.a']
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-        >>> assert h.basenames == ['a.h', 'b.h']
+        .. code-block:: python
+
+           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])  # noqa
+           >>> assert l.basenames == ['liba.a', 'libb.a']
+           >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+           >>> assert h.basenames == ['a.h', 'b.h']
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
@@ -614,8 +618,10 @@ class FileList(collections.Sequence):
     def names(self):
         """Stable de-duplication of file names in the list
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-        >>> assert h.names == ['a', 'b']
+        .. code-block:: python
+
+           >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+           >>> assert h.names == ['a', 'b']
         """
         return list(dedupe(x.split('.')[0] for x in self.basenames))
 
@@ -648,10 +654,10 @@ class FileList(collections.Sequence):
 
 
 class HeaderList(FileList):
-    """Sequence of absolute paths to headers
+    """Sequence of absolute paths to headers.
 
     Provides a few convenience methods to manipulate header paths and get
-    commonly used compiler flags or names
+    commonly used compiler flags or names.
     """
 
     def __init__(self, files):
@@ -667,8 +673,10 @@ class HeaderList(FileList):
     def include_flags(self):
         """Include flags
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
+        .. code-block:: python
+
+           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+           >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
         """
         return ' '.join(['-I' + x for x in self.directories])
 
@@ -676,10 +684,12 @@ class HeaderList(FileList):
     def macro_definitions(self):
         """Macro definitions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
-        >>> h.add_macro('-DBOOST_DYN_LINK')
-        >>> assert h.macro_definitions == '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'  # noqa
+        .. code-block:: python
+
+           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+           >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
+           >>> h.add_macro('-DBOOST_DYN_LINK')
+           >>> assert h.macro_definitions == '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'  # noqa
         """
         return ' '.join(self._macro_definitions)
 
@@ -687,9 +697,11 @@ class HeaderList(FileList):
     def cpp_flags(self):
         """Include flags + macro definitions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> h.add_macro('-DBOOST_DYN_LINK')
-        >>> assert h.macro_definitions == '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+        .. code-block:: python
+
+           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+           >>> h.add_macro('-DBOOST_DYN_LINK')
+           >>> assert h.macro_definitions == '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
         """
         return self.include_flags + ' ' + self.macro_definitions
 
@@ -704,23 +716,23 @@ def find_headers(headers, root, recurse=False):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ==================================
+    =======  ====================================
     Pattern  Meaning
-    =======  ==================================
+    =======  ====================================
     *        matches everything
     ?        matches any single character
-    [seq]    matches any character in `seq`
-    [!seq]   matches any character not in `seq`
-    =======  ==================================
+    [seq]    matches any character in ``seq``
+    [!seq]   matches any character not in ``seq``
+    =======  ====================================
 
-    :param headers: Header name(s) to search for
-    :type headers: str or collections.Sequence
-    :param str root: The root directory to start searching from
-    :param bool recurse: if False search only root folder,
-        if True descends top-down from the root
+    Args:
+        headers (str or collections.Sequence): Header name(s) to search for
+        root (str): The root directory to start searching from
+        recurses (bool, optional): if False search only root folder,
+            if True descends top-down from the root. Defaults to False.
 
-    :returns: The headers that have been found
-    :rtype: HeaderList
+    Returns:
+        HeaderList: The headers that have been found
     """
     if isinstance(headers, str):
         headers = [headers]
@@ -749,8 +761,10 @@ class LibraryList(FileList):
     def names(self):
         """Stable de-duplication of library names in the list
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
-        >>> assert l.names == ['a', 'b']
+        .. code-block:: python
+
+           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])  # noqa
+           >>> assert l.names == ['a', 'b']
         """
         return list(dedupe(x.split('.')[0][3:] for x in self.basenames))
 
@@ -758,8 +772,10 @@ class LibraryList(FileList):
     def search_flags(self):
         """Search flags for the libraries
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> assert l.search_flags == '-L/dir1 -L/dir2'
+        .. code-block:: python
+
+           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])  # noqa
+           >>> assert l.search_flags == '-L/dir1 -L/dir2'
         """
         return ' '.join(['-L' + x for x in self.directories])
 
@@ -767,8 +783,10 @@ class LibraryList(FileList):
     def link_flags(self):
         """Link flags for the libraries
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> assert l.search_flags == '-la -lb'
+        .. code-block:: python
+
+           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])  # noqa
+           >>> assert l.search_flags == '-la -lb'
         """
         return ' '.join(['-l' + name for name in self.names])
 
@@ -776,8 +794,10 @@ class LibraryList(FileList):
     def ld_flags(self):
         """Search flags + link flags
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
+        .. code-block:: python
+
+           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])  # noqa
+           >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
         """
         return self.search_flags + ' ' + self.link_flags
 
@@ -795,12 +815,24 @@ def find_system_libraries(libraries, shared=True):
     5. /usr/local/lib64
     6. /usr/local/lib
 
-    :param libraries: Library name(s) to search for
-    :type args: str or collections.Sequence
-    :param bool shared: if True searches for shared libraries,
+    Accepts any glob characters accepted by fnmatch:
 
-    :returns: The libraries that have been found
-    :rtype: LibraryList
+    =======  ====================================
+    Pattern  Meaning
+    =======  ====================================
+    *        matches everything
+    ?        matches any single character
+    [seq]    matches any character in ``seq``
+    [!seq]   matches any character not in ``seq``
+    =======  ====================================
+
+    Args:
+        libraries (str or collections.Sequence): Library name(s) to search for
+        shared (bool, optional): if True searches for shared libraries,
+            otherwise for static. Defaults to True.
+
+    Returns:
+        LibraryList: The libraries that have been found
     """
     if isinstance(libraries, str):
         libraries = [libraries]
@@ -837,25 +869,25 @@ def find_libraries(libraries, root, shared=True, recurse=False):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ==================================
+    =======  ====================================
     Pattern  Meaning
-    =======  ==================================
+    =======  ====================================
     *        matches everything
     ?        matches any single character
-    [seq]    matches any character in `seq`
-    [!seq]   matches any character not in `seq`
-    =======  ==================================
+    [seq]    matches any character in ``seq``
+    [!seq]   matches any character not in ``seq``
+    =======  ====================================
 
-    :param libraries: Library name(s) to search for
-    :type libraries: str or collections.Sequence
-    :param str root: The root directory to start searching from
-    :param bool shared: if True searches for shared libraries,
-        otherwise for static
-    :param bool recurse: if False search only root folder,
-        if True descends top-down from the root
+    Args:
+        libraries (str or collections.Sequence): Library name(s) to search for
+        root (str): The root directory to start searching from
+        shared (bool, optional): if True searches for shared libraries,
+            otherwise for static. Defaults to True.
+        recurse (bool, optional): if False search only root folder,
+            if True descends top-down from the root. Defaults to False.
 
-    :returns: The libraries that have been found
-    :rtype: LibraryList
+    Returns:
+        LibraryList: The libraries that have been found
     """
     if isinstance(libraries, str):
         libraries = [libraries]
