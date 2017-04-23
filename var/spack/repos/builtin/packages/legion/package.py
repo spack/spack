@@ -49,6 +49,7 @@ class Legion(CMakePackage):
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("gasnet", when='~mpi')
@@ -62,7 +63,10 @@ class Legion(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        options = ['-DLegion_USE_GASNet=ON', '-DLegion_BUILD_EXAMPLES=ON']
+        options = [
+            '-DLegion_USE_GASNet=ON',
+            '-DLegion_BUILD_EXAMPLES=ON',
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec)]
 
         if '+mpi' in self.spec:
             options.append('-DGASNet_CONDUIT=mpi')
