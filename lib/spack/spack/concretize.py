@@ -99,7 +99,7 @@ class DefaultConcretizer(object):
 
         # Use a sort key to order the results
         return sorted(usable, key=lambda spec: (
-            not (spec.external or spec.external_module),  # prefer externals
+            not spec.external,                            # prefer externals
             pref_key(spec),                               # respect prefs
             spec.name,                                    # group by name
             reverse_order(spec.versions),                 # latest version
