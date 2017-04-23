@@ -170,4 +170,4 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec('mpi')
         spec.concretize()
-        assert spec['mpich'].external == '/dummy/path'
+        assert spec['mpich'].external_path == '/dummy/path'

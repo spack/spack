@@ -29,6 +29,7 @@ from llnl.util.lang import classproperty
 
 import spack
 import spack.error
+from spack.util.path import canonicalize_path
 from spack.version import *
 
 
@@ -199,7 +200,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.build_environment import get_path_from_module
+    from spack.build_environment import get_path_from_module  # noqa: F401
 
     allpkgs = get_packages_config()
     name = spec.name
@@ -215,7 +216,8 @@ def spec_externals(spec):
             # skip entries without paths (avoid creating extra Specs)
             continue
 
-        external_spec = spack.spec.Spec(external_spec, external=path)
+        external_spec = spack.spec.Spec(external_spec,
+                                        external_path=canonicalize_path(path))
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
 
@@ -223,10 +225,8 @@ def spec_externals(spec):
         if not module:
             continue
 
-        path = get_path_from_module(module)
-
         external_spec = spack.spec.Spec(
-            external_spec, external=path, external_module=module)
+            external_spec, external_module=module)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
 

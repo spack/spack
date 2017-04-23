@@ -67,9 +67,9 @@ from spack.version import Version
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.2')
+_db_version = Version('0.9.3')
 
-# Default timeout for spack database locks is 5 min.
+# Timeout for spack database locks in seconds
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
@@ -409,30 +409,82 @@ class Database(object):
                 self._data = {}
 
         transaction = WriteTransaction(
-            self.lock, _read_suppress_error, self._write, _db_lock_timeout)
+            self.lock, _read_suppress_error, self._write, _db_lock_timeout
+        )
 
         with transaction:
             if self._error:
                 tty.warn(
                     "Spack database was corrupt. Will rebuild. Error was:",
-                    str(self._error))
+                    str(self._error)
+                )
                 self._error = None
+
+            # Read first the `spec.yaml` files in the prefixes. They should be
+            # considered authoritative with respect to DB reindexing, as
+            # entries in the DB may be corrupted in a way that still makes
+            # them readable. If we considered DB entries authoritative
+            # instead, we would perpetuate errors over a reindex.
 
             old_data = self._data
             try:
+                # Initialize data in the reconstructed DB
                 self._data = {}
 
-                # Ask the directory layout to traverse the filesystem.
+                # Start inspecting the installed prefixes
+                processed_specs = set()
+
                 for spec in directory_layout.all_specs():
                     # Try to recover explicit value from old DB, but
-                    # default it to False if DB was corrupt.
-                    explicit = False
+                    # default it to True if DB was corrupt. This is
+                    # just to be conservative in case a command like
+                    # "autoremove" is run by the user after a reindex.
+                    tty.debug(
+                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec)
+                    )
+                    explicit = True
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
                         if old_info is not None:
                             explicit = old_info.explicit
 
                     self._add(spec, directory_layout, explicit=explicit)
+
+                    processed_specs.add(spec)
+
+                for key, entry in old_data.items():
+                    # We already took care of this spec using
+                    # `spec.yaml` from its prefix.
+                    if entry.spec in processed_specs:
+                        msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
+                        msg += ' [already reconstructed from spec.yaml]'
+                        tty.debug(msg.format(entry.spec))
+                        continue
+
+                    # If we arrived here it very likely means that
+                    # we have external specs that are not dependencies
+                    # of other specs. This may be the case for externally
+                    # installed compilers or externally installed
+                    # applications.
+                    tty.debug(
+                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec)
+                    )
+                    try:
+                        layout = spack.store.layout
+                        if entry.spec.external:
+                            layout = None
+                        kwargs = {
+                            'spec': entry.spec,
+                            'directory_layout': layout,
+                            'explicit': entry.explicit
+                        }
+                        self._add(**kwargs)
+                        processed_specs.add(entry.spec)
+                    except Exception as e:
+                        # Something went wrong, so the spec was not restored
+                        # from old data
+                        tty.debug(e.message)
+                        pass
 
                 self._check_ref_counts()
 
@@ -542,7 +594,7 @@ class Database(object):
 
         key = spec.dag_hash()
         if key not in self._data:
-            installed = False
+            installed = bool(spec.external)
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
