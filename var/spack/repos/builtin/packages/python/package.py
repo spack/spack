@@ -439,7 +439,7 @@ class Python(AutotoolsPackage):
         # install libraries into a Frameworks directory
         frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
 
-        if '+shared' in spec:
+        if '+shared' in self.spec:
             ldlibrary = self.get_config_var('LDLIBRARY')
 
             if os.path.exists(os.path.join(libdir, ldlibrary)):

@@ -31,6 +31,7 @@ import numbers
 import os
 import re
 import shutil
+import six
 import stat
 import subprocess
 import sys
@@ -539,7 +540,7 @@ def find(root, files, recurse=True):
     Returns:
         :func:`list`: The files that have been found
     """
-    if isinstance(files, str):
+    if isinstance(files, six.string_types):
         files = [files]
 
     if recurse:
@@ -581,7 +582,7 @@ class FileList(collections.Sequence):
     """
 
     def __init__(self, files):
-        if isinstance(files, str):
+        if isinstance(files, six.string_types):
             files = [files]
 
         self.files = list(dedupe(files))
@@ -734,7 +735,7 @@ def find_headers(headers, root, recurse=False):
     Returns:
         HeaderList: The headers that have been found
     """
-    if isinstance(headers, str):
+    if isinstance(headers, six.string_types):
         headers = [headers]
 
     # Construct the right suffix for the headers
@@ -834,7 +835,7 @@ def find_system_libraries(libraries, shared=True):
     Returns:
         LibraryList: The libraries that have been found
     """
-    if isinstance(libraries, str):
+    if isinstance(libraries, six.string_types):
         libraries = [libraries]
     elif not isinstance(libraries, collections.Sequence):
         message = '{0} expects a string or sequence of strings as the '
@@ -889,7 +890,7 @@ def find_libraries(libraries, root, shared=True, recurse=False):
     Returns:
         LibraryList: The libraries that have been found
     """
-    if isinstance(libraries, str):
+    if isinstance(libraries, six.string_types):
         libraries = [libraries]
 
     # Construct the right suffix for the library
