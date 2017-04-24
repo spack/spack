@@ -19,10 +19,19 @@ coverage:
           - "!lib/spack/llnl"
           - "!lib/spack/spack/cmd"
 
-ignore:
-  - lib/spack/spack/test/.*
-  - lib/spack/env/.*
-  - lib/spack/docs/.*
-  - lib/spack/external/.*
+  status:
+    project:
+      default:
+        target: auto
+
+    patch:
+      default:
+        target: auto
+
+  ignore:
+    - lib/spack/spack/test/.*
+    - lib/spack/env/.*
+    - lib/spack/docs/.*
+    - lib/spack/external/.*
 
 comment: off
