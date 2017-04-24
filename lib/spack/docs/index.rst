@@ -50,7 +50,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
-   tutorial_sc16
+   tutorial
    known_issues
 
 .. toctree::
