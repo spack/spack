@@ -38,11 +38,13 @@ class Scr(CMakePackage):
 
     version('master', git='https://github.com/llnl/scr.git', branch='master')
 
-    depends_on('pdsh')
+    depends_on('pdsh', type=('build', 'run'))
     depends_on('zlib')
     depends_on('mpi')
 
-    variant('dtcmp', default=True, description="DTCMP")
+    variant('dtcmp', default=True,
+            description="Build with DTCMP. "
+            "Necessary to enable user directory naming at runtime")
     depends_on('dtcmp', when="+dtcmp")
 
     ## YOGRT not yet in spack
