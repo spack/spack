@@ -22,21 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install flann
-#
-# You can edit this file again by typing:
-#
-#     spack edit flann
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
+
 from spack import *
 
 
@@ -69,7 +55,10 @@ class Flann(CMakePackage):
     # Options available in the CMakeLists.txt
     # Language bindings
     variant("python",   default=False,
-            description="Build the Python bindings. Module: pyflann.  Python2 only.")
+            description="Build the Python bindings. "
+                        "Module: pyflann. "
+                        "Python2 verified. "
+                        "Python3 claimed, not attainable.")
     variant("matlab",   default=False, description="Build the Matlab bindings.")
     # default to true for C because it's a C++ library, nothing extra needed
     variant("c",        default=True,  description="Build the C bindings.")
@@ -88,8 +77,8 @@ class Flann(CMakePackage):
     variant("hdf5",     default=True,  description="Enable HDF5 support.")
 
     # Dependencies
-    extends("python",      when="+python") # creates a site-packages pyflann folder
-    depends_on("py-numpy", when="+python") # imports ctypes and numpy
+    extends("python",      when="+python")
+    depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("matlab",   when="+matlab")
     depends_on("cuda",     when="+cuda")
     depends_on("mpi",      when="+mpi")
@@ -108,13 +97,18 @@ class Flann(CMakePackage):
 
     def patch(self):
         # TODO: when #3367 is merged:
-        # filter_file("python2", self.spec["python"].command.name, "src/python/setup.py.tpl")
+        # filter_file(
+        #     "python2",
+        #     self.spec["python"].command.name,
+        #     "src/python/setup.py.tpl"
+        # )
         if self.spec.satisfies("^python@3:"):
             filter_file("python2", "python3", "src/python/setup.py.tpl")
 
     def cmake_args(self):
         args = []
-        args.append("-DCMAKE_BUILD_TYPE:STRING=Release") # Default is RelWithDebugInfo
+        # Default is RelWithDebugInfo
+        args.append("-DCMAKE_BUILD_TYPE:STRING=Release")
 
         # Language bindings. Many default to true in CMakeLists, bypass all
         c_bind   = "ON" if self.spec.satisfies("+c")      else "OFF"
