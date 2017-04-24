@@ -25,6 +25,7 @@
 from spack import *
 import sys
 import os
+from os.path import dirname, splitext, realpath
 from glob import glob
 
 
@@ -166,17 +167,23 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
-        from os.path import dirname, splitext
         pydir = 'python%s.%s*' % spec['python'].version.version[:2]
         incs = join_path(spec['python'].prefix.include, pydir, "pyconfig.h")
         incs = glob(incs)
         incs = " ".join([dirname(u) for u in incs])
 
         pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
-        all_libs = join_path(spec['python'].prefix.lib, pylib)
-        libs = [u for u in all_libs if splitext(u)[1] == dso_suffix]
+        all_libs = glob(join_path(spec['python'].prefix.lib, pylib))
+        libs = set([realpath(u) for u in all_libs
+                    if splitext(u)[1] == "." + dso_suffix])
         if len(libs) == 0:
-            libs = [u for u in all_libs if splitext(u)[1] == '.a']
+            libs = set([realpath(u)
+                        for u in all_libs if splitext(u)[1] == '.a'])
+
+        # bjam only accepts one library. So if more than one is found, we leave
+        # it to bjam and cross our fingers
+        if len(libs) > 1:
+            libs = []
 
         libs = " ".join(libs)
         return 'using python : %s : %s : %s : %s ;\n' % (
