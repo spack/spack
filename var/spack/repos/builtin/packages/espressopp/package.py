@@ -48,7 +48,7 @@ class Espressopp(CMakePackage):
     depends_on("mpi")
     depends_on("boost+serialization+filesystem+system+python+mpi", when='@1.9.4:')
     extends("python")
-    depends_on("python@2:2.7.13")
+    depends_on("python@2:2.8")
     depends_on("py-mpi4py@2.0.0:", when='@1.9.4', type=('build', 'run'))
     depends_on("py-mpi4py@1.3.1:", when='@1.9.4.1:', type=('build', 'run'))
     depends_on("fftw")

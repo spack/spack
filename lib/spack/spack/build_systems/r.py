@@ -25,7 +25,7 @@
 
 import inspect
 
-from spack.directives import extends
+from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 
@@ -46,6 +46,8 @@ class RPackage(PackageBase):
     build_system_class = 'RPackage'
 
     extends('r')
+
+    depends_on('r', type=('build', 'run'))
 
     def install(self, spec, prefix):
         """Installs an R package."""
