@@ -39,6 +39,7 @@ class Dia(Package):
     depends_on('libxslt')
     depends_on('python')
     depends_on('swig')
+    depends_on('libxml2')
 
     # TODO: Optional dependencies, not yet supported by Spack
     # depends_on('libart')
