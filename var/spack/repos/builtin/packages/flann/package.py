@@ -107,8 +107,6 @@ class Flann(CMakePackage):
 
     def cmake_args(self):
         args = []
-        # Default is RelWithDebugInfo
-        args.append("-DCMAKE_BUILD_TYPE:STRING=Release")
 
         # Language bindings. Many default to true in CMakeLists, bypass all
         c_bind   = "ON" if self.spec.satisfies("+c")      else "OFF"
