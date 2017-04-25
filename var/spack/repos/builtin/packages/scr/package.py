@@ -27,8 +27,6 @@ from spack import *
 import os
 import shutil
 
-from llnl.util.filesystem import join_path
-
 class Scr(CMakePackage):
     """SCR caches checkpoint data in storage on the compute nodes of a
        Linux cluster to provide a fast, scalable checkpoint/restart
@@ -61,9 +59,26 @@ class Scr(CMakePackage):
     # depends_on('mysql', when="+mysql")
 
     variant('scr_config', default='scr.conf',
-            description='Location for SCR to find its system config file')
+            description='Location for SCR to find its system config file. '
+            'May be either absolute or relative to the install prefix')
     variant('copy_config', default=None,
-            description='Location from which to copy SCR system config file')
+            description='Location from which to copy SCR system config file. '
+            'Must be an absolute path.')
+
+    variant('fortran', default=True,
+            description="Build SCR with fortran bindings")
+
+    variant('resource_manager', default='SLURM',
+            description="Resource manager for which to configure SCR. "
+            "Possible values are SLURM, APRUN, PMIX, LSF, NONE")
+
+    variant('async_api', default='NONE',
+            description="Asynchronous data transfer API to use with SCR. "
+            "Possible values are NONE, Cray_DataWarp, Intel_CPPR.")
+
+    variant('file_lock', default='FLOCK',
+            description='File locking style for SCR. '
+            'Possible values are FLOCK, FNCTL, NONE')
 
     def get_abs_path_rel_prefix(self, path):
         # Return path absolute, otherwise prepend prefix
@@ -73,22 +88,34 @@ class Scr(CMakePackage):
             return join_path(self.spec.prefix, path)
 
     def cmake_args(self):
+        spec = self.spec
         args = []
-
-        args.append('-DWITH_PDSH_PREFX={0}'.format(self.spec['pdsh'].prefix))
 
         conf_path = self.get_abs_path_rel_prefix(
             self.spec.variants['scr_config'].value)
         args.append('-DCMAKE_SCR_CONFIG_FILE={0}'.format(conf_path))
 
-        if "+dtcmp" in self.spec:
-                args.append('-DWITH_DTCMP_PREFIX={0}'.format(self.spec['dtcmp'].prefix))
+        args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
 
-        # if "+yogrt" in self.spec:
-                # args.append('-DWITH_YOGRT_PREFIX={0}'.format(self.spec['yogrt'].prefix))
+        args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
+                spec.variants['resource_manager'].value.upper()))
 
-        # if "+mysql" in self.spec:
-                # args.append('-DWITH_MYSQL_PREFIX={0}'.format(self.spec['mysql'].prefix))
+        args.append('-DSCR_ASYNC_API={0}'.format(
+                spec.variants['async_api'].value))
+
+        args.append('-DSCR_FILE_LOCK={0}'.format(
+                spec.variants['file_lock'].value.upper()))
+
+        args.append('-DWITH_PDSH_PREFX={0}'.format(spec['pdsh'].prefix))
+
+        if "+dtcmp" in spec:
+                args.append('-DWITH_DTCMP_PREFIX={0}'.format(spec['dtcmp'].prefix))
+
+        # if "+yogrt" in spec:
+                # args.append('-DWITH_YOGRT_PREFIX={0}'.format(spec['yogrt'].prefix))
+
+        # if "+mysql" in spec:
+                # args.append('-DWITH_MYSQL_PREFIX={0}'.format(spec['mysql'].prefix))
 
         return args
 
