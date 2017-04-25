@@ -116,12 +116,12 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
-    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')        
+    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+fpic@4.3', when='+superlu')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
-    depends_on('hypre@develop~internal-superlu', when='@develop+hypre')        
+    depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
@@ -395,7 +395,7 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTrilinos_ENABLE_SEACAS:BOOL=OFF'
             ])
- 
+
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
             options.extend([

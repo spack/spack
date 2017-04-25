@@ -126,8 +126,8 @@ class Petsc(Package):
     depends_on('scalapack', when='+mumps+mpi~int64')
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
-    depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')        
-    
+    depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
             compiler_opts = [
@@ -183,7 +183,7 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
-	    
+
         # Help PETSc pick up Scalapack from MKL:
         if 'scalapack' in spec:
             scalapack = spec['scalapack'].libs

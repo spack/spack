@@ -32,7 +32,7 @@ class Alquimia(CMakePackage):
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
 
     version('xsdk-0.2.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.2.0')
-    version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')    
+    version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -42,9 +42,9 @@ class Alquimia(CMakePackage):
     depends_on('mpi')
     depends_on('hdf5')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
-    depends_on('pflotran@develop', when='@develop')    
+    depends_on('pflotran@develop', when='@develop')
     depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
-    depends_on('petsc@develop', when='@develop')    
+    depends_on('petsc@develop', when='@develop')
 
     def cmake_args(self):
         spec = self.spec
@@ -70,5 +70,5 @@ class Alquimia(CMakePackage):
                        spec['pflotran'].prefix.include),
                    '-DTPL_ENABLE_PETSC:BOOL=ON',
                    '-DPETSC_EXECUTABLE_RUNS=ON',
-                   '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix] 
+                   '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix]
         return options
