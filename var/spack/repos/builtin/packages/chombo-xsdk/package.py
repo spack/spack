@@ -27,7 +27,6 @@ from spack import *
 import glob
 import os
 
-
 class ChomboXsdk(Package):
     """Chombo is a ...
     """
@@ -38,60 +37,64 @@ class ChomboXsdk(Package):
     version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='8893c7')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
+    variant('dim'      , default=2    , description = 'Set the physical dimension')
+    variant('debug'    , default=False, description = 'Build with debugging symbols')
+    variant('opt'      , default=True , description = 'Build using compiler optimizations')
+    variant('namespace', default=False, description = 'Put Chombo in a namespace')
+    variant('mpi'      , default=True , description = 'Compile with MPI support')
+    variant('use_eb'   , default=False, description = 'Compile with Embedded Boundary support')
+    variant('use_hdf'  , default=True , description = 'Compile with HDF5 I/O support')
+    variant('use_petsc', default=True , description = 'Compile with PETSc support')
+
     # Chombo dependencies for xSDK build
     depends_on('blas')
     depends_on('lapack')
+
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5+mpi', when='+hdf5+mpi')
-    depends_on('petsc', when='@xsdk-0.2.0')
+
+    depends_on('hdf5~mpi', when='+use_hdf~mpi')
+    depends_on('hdf5+mpi', when='+use_hdf+mpi')
+
+    depends_on('petsc~mpi', when='+use_petsc~mpi')
+    depends_on('petsc+mpi', when='+use_petsc+mpi')
 
     def install(self, spec, prefix):
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        makefile_inc = []
-        makefile_inc.extend([
-            'PLAT         = _mac_x',
-            'DCHOMBOroot = %s' % self.stage.source_path,
-            'DCHOMBOLIB  = $(DCHOMBOroot)/lib/libchombo_xsdk.a',
-            'BLASDEF      = -DUSE_VENDOR_BLAS',
-            'BLASLIB      = %s' % lapack_blas.ld_flags,
-            'FLIBS        =',
-            'LIBS         = $(DCHOMBOLIB) $(BLASLIB)',  # noqa
-            'ARCH         = ar',
-            'ARCHFLAGS    = cr',
-            'RANLIB       = true',
-            'CFLAGS       = -fPIC -std=c99 -O2 %s' % ( 
-              '-D_LONGINT' if '+int64' in spec else ''),
-            'NOOPTS       = -fPIC -std=c99',
-            'LOADOPTS     =',
-            'CDEFS        = -DAdd_'
-        ])
-            # 'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            # 'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
-            # 'F90FLAGS     = -O2',
-            # 'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
 
-        with open('make.inc', 'w') as fh:
-            fh.write('\n'.join(makefile_inc))
+        options = []
 
-        mkdirp(os.path.join(self.stage.source_path, 'lib'))
-        make("lib", parallel=False)
-        # FIXME: hack to create a fake lib file
-        with open('lib/libchombo_xsdk.a', 'w') as fh:
-            fh.write('\n'.join(makefile_inc))
+        if 'dim' in spec:
+          options.append('DIM=%d' % spec['dim'])
+
+        if 'use_hdf' in spec:
+          options.append('USE_HDF=TRUE')
+          options.append('HDFINCFLAGS=-I%s/include' % spec['use_hdf',prefix])
+          options.append('HDFLIBFLAGS=-L%s/lib -lhdf5 -lz' % spec['use_hdf',prefix])
+          options.append('HDFMPIINCFLAGS=-I%s/include' % spec['use_hdf',prefix])
+          options.append('HDFMPILIBFLAGS=-L%s/lib -lhdf5 -lz' % spec['use_hdf',prefix])
+        else:
+          options.append('USE_HDF=FALSE')
+
+        if 'mpi' in spec:
+          options.append('MPI=TRUE')
+        else:
+          options.append('MPI=FALSE')
+
+        make('--directory=lib','lib',*options)
 
         # FIXME:
         # cd "EXAMPLE" do
         # system "make"
 
         # need to install by hand
-        headers_location = self.prefix.include
-        mkdirp(headers_location)
-        mkdirp(prefix.lib)
+        #headers_location = self.prefix.include
+        #mkdirp(headers_location)
+        #mkdirp(prefix.lib)
 
-        headers = glob.glob(join_path(self.stage.source_path, 'SRC', '*.h'))
-        for h in headers:
-            install(h, headers_location)
+        #headers = glob.glob(join_path(self.stage.source_path, 'SRC', '*.h'))
+        #for h in headers:
+            #install(h, headers_location)
 
-        chomboxsdk_lib = join_path(self.stage.source_path,
-                                    'lib/libchombo_xsdk.a')
-        install(chomboxsdk_lib, self.prefix.lib)
+        #chomboxsdk_lib = join_path(self.stage.source_path,
+                                    #'lib/libchombo_xsdk.a')
+        #install(chomboxsdk_lib, self.prefix.lib)
