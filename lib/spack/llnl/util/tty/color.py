@@ -88,6 +88,7 @@ class ColorParseError(Exception):
     def __init__(self, message):
         super(ColorParseError, self).__init__(message)
 
+
 # Text styles for ansi codes
 styles = {'*': '1',       # bold
           '_': '4',       # underline
