@@ -243,7 +243,7 @@ def link_one(spec, path, link=os.symlink, verbose=False):
                 continue
             if os.path.islink(src):
                 linkto = os.readlink(src)
-                os.symlink(linkto, dst)            
+                os.symlink(linkto, dst)
             else:
                 link(src, dst)
 
