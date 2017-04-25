@@ -50,9 +50,9 @@ class Scr(CMakePackage):
             "Necessary to enable user directory naming at runtime")
     depends_on('dtcmp', when="+dtcmp")
 
-    ## YOGRT not yet in spack
-    # variant('yogrt', default=True, description="Lib YOGRT")
-    # depends_on('yogrt', when="+yogrt")
+    variant('libyogrt', default=True,
+            description="Build SCR with libyogrt for get_time_remaining.")
+    depends_on('libyogrt', when="+libyogrt")
 
     ## MySQL not yet in spack
     # variant('mysql', default=True, decription="MySQL database for logging")
@@ -120,10 +120,10 @@ class Scr(CMakePackage):
         args.append('-DWITH_PDSH_PREFX={0}'.format(spec['pdsh'].prefix))
 
         if "+dtcmp" in spec:
-                args.append('-DWITH_DTCMP_PREFIX={0}'.format(spec['dtcmp'].prefix))
+            args.append('-DWITH_DTCMP_PREFIX={0}'.format(spec['dtcmp'].prefix))
 
-        # if "+yogrt" in spec:
-                # args.append('-DWITH_YOGRT_PREFIX={0}'.format(spec['yogrt'].prefix))
+        if "+libyogrt" in spec:
+            args.append('-DWITH_YOGRT_PREFIX={0}'.format(spec['libyogrt'].prefix))
 
         # if "+mysql" in spec:
                 # args.append('-DWITH_MYSQL_PREFIX={0}'.format(spec['mysql'].prefix))
