@@ -1,5 +1,6 @@
 package_list.rst
 command_index.rst
 spack*.rst
+llnl*.rst
 modules.rst
 _build

@@ -73,7 +73,8 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide
    developer_guide
-   API Docs <spack>
+   Spack API Docs <spack>
+   LLNL API Docs <llnl>
 
 ==================
 Indices and tables

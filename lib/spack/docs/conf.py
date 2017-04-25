@@ -98,6 +98,7 @@ with open('command_index.rst', 'a') as index:
 
 # Run sphinx-apidoc
 sphinx_apidoc(['-T', '-o', '.', '../spack'])
+sphinx_apidoc(['-T', '-o', '.', '../llnl'])
 os.remove('modules.rst')
 
 #

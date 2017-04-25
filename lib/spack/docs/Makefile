@@ -9,7 +9,7 @@ PAPER         =
 BUILDDIR      = _build
 
 export PYTHONPATH := ../../spack:$(PYTHONPATH)
-APIDOC_FILES  = spack*.rst
+APIDOC_FILES  = spack*.rst llnl*.rst
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -58,7 +58,8 @@ upload:
 	git push -f github gh-pages
 
 apidoc:
-	sphinx-apidoc -T -o . $(PYTHONPATH)/spack
+	sphinx-apidoc -T -o . ../spack
+	sphinx-apidoc -T -o . ../llnl
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
