@@ -54,28 +54,44 @@ class IntelMkl(IntelInstaller):
 
     @property
     def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        suffix = dso_suffix if '+shared' in self.spec else 'a'
-        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        spec = self.spec
+        prefix = self.prefix
+        shared = '+shared' in spec
+
+        if '+ilp64' in spec:
+            mkl_integer = ['libmkl_intel_ilp64']
+        else:
+            mkl_integer = ['libmkl_intel_lp64']
+
         mkl_threading = ['libmkl_sequential']
-        if '+openmp' in self.spec:
-            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+
+        if '+openmp' in spec:
+            if '%intel' in spec:
+                mkl_threading = ['libmkl_intel_thread', 'libiomp5']
+            else:
+                mkl_threading = ['libmkl_gnu_thread']
+
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+
+        mkl_root = join_path(prefix.lib, 'intel64')
+
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(self.prefix.lib, 'intel64'),
+            root=mkl_root,
             shared=shared
         )
-        system_libs = [
-            'libpthread.{0}'.format(suffix),
-            'libm.{0}'.format(suffix),
-            'libdl.{0}'.format(suffix)
-        ]
+
+        # Intel MKL link line advisor recommends these system libraries
+        system_libs = find_system_libraries(
+            ['libpthread', 'libm', 'libdl'],
+            shared=shared
+        )
+
         return mkl_libs + system_libs
 
     @property
     def lapack_libs(self):
-        return self.libs
+        return self.blas_libs
 
     @property
     def scalapack_libs(self):

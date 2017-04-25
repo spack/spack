@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from os import listdir
-from fnmatch import fnmatch
 
 
 class Cntk1bitsgd(Package):
@@ -34,11 +33,12 @@ class Cntk1bitsgd(Package):
 
     homepage = "https://github.com/CNTK-components/CNTK1bitSGD"
 
-    version('master',
-            git='https://github.com/CNTK-components/CNTK1bitSGD.git')
+    version('master', git='https://github.com/CNTK-components/CNTK1bitSGD.git')
+    version('c8b77d', git='https://github.com/CNTK-components/CNTK1bitSGD.git',
+            commit='c8b77d6e325a4786547b27624890276c1483aed1')
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         for file in listdir('.'):
-            if (fnmatch(file, '*.h')):
+            if file.endswith('.h'):
                 install(file, prefix.include)

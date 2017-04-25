@@ -33,6 +33,8 @@ class Sqlite(Package):
     """
     homepage = "www.sqlite.org"
 
+    version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
+            url='https://www.sqlite.org/2017/sqlite-autoconf-3180000.tar.gz')
     version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
             url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
 

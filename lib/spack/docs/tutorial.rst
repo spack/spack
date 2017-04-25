@@ -43,6 +43,6 @@ correspond to sections in the slides above.
 Full contents:
 
 .. toctree::
-   tutorial_sc16_spack_basics
-   tutorial_sc16_packaging
-   tutorial_sc16_modules
+   tutorial_basics
+   tutorial_packaging
+   tutorial_modules

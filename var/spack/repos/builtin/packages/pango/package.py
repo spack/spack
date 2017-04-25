@@ -46,7 +46,16 @@ class Pango(AutotoolsPackage):
     depends_on("cairo")
     depends_on("cairo~X", when='~X')
     depends_on("cairo+X", when='+X')
+    depends_on("libxft", when='+X')
     depends_on("glib")
+
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies('+X'):
+            args.append('--with-xft')
+        else:
+            args.append('--without-xft')
+        return args
 
     def install(self, spec, prefix):
         make("install", parallel=False)

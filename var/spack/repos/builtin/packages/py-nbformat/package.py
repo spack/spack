@@ -35,7 +35,6 @@ class PyNbformat(PythonPackage):
     version('4.0.1', 'ab7172e517c9d561c0c01eef5631b4c8')
     version('4.0.0', '7cf61359fa4e9cf3ef5e969e2fcb909e')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-jsonschema', type=('build', 'run'))

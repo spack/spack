@@ -26,18 +26,22 @@ from spack import *
 
 
 class Multiverso(CMakePackage):
-    """Multiverso is a parameter server based framework
-    for training machine learning models on big data with numbers of machines."""
+    """Multiverso is a parameter server based framework for
+    training machine learning models on big data with numbers of machines."""
 
     homepage = "https://github.com/Microsoft/Multiverso"
     url      = "https://github.com/Microsoft/Multiverso/archive/v0.2.tar.gz"
 
     version('master', git='https://github.com/Microsoft/Multiverso.git',
             branch='master')
+    version('143187', git='https://github.com/Microsoft/Multiverso.git',
+            commit='143187575d1cfa410100037b8aea2e767e0af637')
     version('0.2', '483ca7524fea14a311389e421f2bc098')
 
     depends_on('mpi')
     depends_on('boost')
+
+    patch('cmake-143187.patch', when='@143187')
 
     def cmake_args(self):
         spec = self.spec

@@ -31,9 +31,13 @@ class Caffe(CMakePackage):
        Center (BVLC) and by community contributors."""
 
     homepage = "http://caffe.berkeleyvision.org"
-    url      = "https://github.com/BVLC/caffe/archive/rc5.tar.gz"
+    url      = "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
 
+    version('1.0', '5fbb0e32e7cd8de3de46e6fe6e4cd2b5')
     version('rc5', '692bd3580b7576485cde6b1e03eb5a6d')
+    version('rc4', 'd86eeb38b1400097d32ffcabdec75b55')
+    version('rc3', '84e39223115753b48312a8bf48c31f59')
+    version('rc2', 'c331932e34b5e2f5022fcc34c419080f')
 
     variant('gpu', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')

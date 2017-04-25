@@ -47,7 +47,7 @@ class Paraview(CMakePackage):
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
 
-    depends_on('python@2:2.7', when='+python')
+    depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('mpi', when='+mpi')
