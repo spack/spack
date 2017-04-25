@@ -1112,7 +1112,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # post-install hooks to generate module files
             message = '{s.name}@{s.version} : generating module file'
             tty.msg(message.format(s=self))
-            spack.hooks.post_install(self)
+            spack.hooks.post_install(self.spec)
             # Add to the DB
             message = '{s.name}@{s.version} : registering into DB'
             tty.msg(message.format(s=self))
@@ -1248,7 +1248,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
-                spack.hooks.pre_install(self)
+                spack.hooks.pre_install(self.spec)
                 if fake:
                     self.do_fake_install()
                 else:
@@ -1288,7 +1288,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                     self.spec, self.prefix)
                     self.log()
                 # Run post install hooks before build stage is removed.
-                spack.hooks.post_install(self)
+                spack.hooks.post_install(self.spec)
 
             # Stop timer.
             self._total_time = time.time() - start_time
@@ -1526,9 +1526,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
-            # TODO: hooks should take specs, not packages.
+
             if pkg is not None:
-                spack.hooks.pre_uninstall(pkg)
+                spack.hooks.pre_uninstall(spec)
 
             # Uninstalling in Spack only requires removing the prefix.
             if not spec.external:
@@ -1541,9 +1541,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.db.remove(spec)
         tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
-        # TODO: refactor hooks to use specs, not packages.
         if pkg is not None:
-            spack.hooks.post_uninstall(pkg)
+            spack.hooks.post_uninstall(spec)
 
         tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
