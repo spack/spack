@@ -29,8 +29,9 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
 
-def pre_install(pkg):
+def pre_install(spec):
     """This hook handles global license setup for licensed software."""
+    pkg = spec.package
     if pkg.license_required and not pkg.spec.external:
         set_up_license(pkg)
 
@@ -142,9 +143,11 @@ def write_license_file(pkg, license_path):
     license.close()
 
 
-def post_install(pkg):
+def post_install(spec):
     """This hook symlinks local licenses to the global license for
-    licensed software."""
+    licensed software.
+    """
+    pkg = spec.package
     if pkg.license_required and not pkg.spec.external:
         symlink_license(pkg)
 
