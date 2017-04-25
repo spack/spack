@@ -24,6 +24,11 @@
 ##############################################################################
 from spack import *
 
+import os
+import shutil
+
+from llnl.util.filesystem import join_path
+
 class Scr(CMakePackage):
     """SCR caches checkpoint data in storage on the compute nodes of a
        Linux cluster to provide a fast, scalable checkpoint/restart
@@ -55,10 +60,26 @@ class Scr(CMakePackage):
     # variant('mysql', default=True, decription="MySQL database for logging")
     # depends_on('mysql', when="+mysql")
 
+    variant('scr_config', default='scr.conf',
+            description='Location for SCR to find its system config file')
+    variant('copy_config', default=None,
+            description='Location from which to copy SCR system config file')
+
+    def get_abs_path_rel_prefix(self, path):
+        # Return path absolute, otherwise prepend prefix
+        if os.path.isabs(path):
+            return path
+        else:
+            return join_path(self.spec.prefix, path)
+
     def cmake_args(self):
         args = []
 
         args.append('-DWITH_PDSH_PREFX={0}'.format(self.spec['pdsh'].prefix))
+
+        conf_path = self.get_abs_path_rel_prefix(
+            self.spec.variants['scr_config'].value)
+        args.append('-DCMAKE_SCR_CONFIG_FILE={0}'.format(conf_path))
 
         if "+dtcmp" in self.spec:
                 args.append('-DWITH_DTCMP_PREFIX={0}'.format(self.spec['dtcmp'].prefix))
@@ -70,3 +91,11 @@ class Scr(CMakePackage):
                 # args.append('-DWITH_MYSQL_PREFIX={0}'.format(self.spec['mysql'].prefix))
 
         return args
+
+    @run_after('install')
+    def copy_config(self):
+        spec = self.spec
+        if spec.variants['copy_config'].value:
+            dest_path = self.get_abs_path_rel_prefix(
+                spec.variants['scr_config'].value)
+            shutil.copyfile(spec.variants['copy_config'].value, dest_path)
