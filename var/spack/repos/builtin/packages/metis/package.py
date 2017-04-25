@@ -84,7 +84,7 @@ class Metis(Package):
             filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24',
                         join_path(source_path, 'GKlib', 'error.c'))
 
-    @when('@:4')  # noqa: F811
+    @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
         if any('+{0}'.format(v) in spec for v in ['gdb', 'int64', 'real64']):
@@ -175,7 +175,7 @@ class Metis(Package):
             Executable(test_bin('mesh2dual'))(test_graph('metis.mesh'))
             """
 
-    @when('@5:')  # noqa: F811
+    @when('@5:')
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
         build_directory = join_path(source_directory, 'build')
