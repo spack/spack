@@ -139,14 +139,6 @@ def filter_file(source, dest, output=False):
                 # We still want to catch trailing whitespace warnings
                 line = line.rstrip('\n')
 
-                if line == '# flake8: noqa':
-                    # Entire file is ignored
-                    break
-
-                if line.endswith('# noqa'):
-                    # Line is already ignored
-                    continue
-
                 for file_pattern, errors in exemptions.items():
                     if not file_pattern.search(source):
                         continue
@@ -154,7 +146,10 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                if '# noqa: ' in line:
+                                if line.endswith('# noqa'):
+                                    # Line is already ignored
+                                    pass
+                                elif '# noqa: ' in line:
                                     line += ',{0}'.format(code)
                                 else:
                                     line += '  # noqa: {0}'.format(code)
