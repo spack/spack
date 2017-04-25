@@ -29,7 +29,7 @@ from spack import *
 
 class Xsdk(Package):
     """Xsdk is a suite of Department of Energy (DOE) packages for numerical
-       simulation. This is a Spack bundle package that installs the xSDK 
+       simulation. This is a Spack bundle package that installs the xSDK
        packages
     """
 
@@ -43,10 +43,10 @@ class Xsdk(Package):
     version('xsdk-0.2.0', '941a541bdf625856be18c9752249146d')
 
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
-    depends_on('hypre@develop~internal-superlu', when='@develop')    
+    depends_on('hypre@develop~internal-superlu', when='@develop')
 
-    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')    
-    depends_on('superlu-dist@develop', when='@develop')    
+    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('superlu-dist@develop', when='@develop')
 
     depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra',
                when='@xsdk-0.2.0')
@@ -58,16 +58,16 @@ class Xsdk(Package):
     depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
                when='@develop')
 
-    depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')    
+    depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
 
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
-    depends_on('alquimia@develop', when='@develop')    
+    depends_on('alquimia@develop', when='@develop')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
-    #depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
-    #depends_on('xsdktrilinos@develop', when='@develop')    
+    # depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
+    # depends_on('xsdktrilinos@develop', when='@develop')
 
     variant('debug', default=False, description='Compile in debug mode')
 
