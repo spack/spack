@@ -58,8 +58,8 @@ upload:
 	git push -f github gh-pages
 
 apidoc:
-	sphinx-apidoc -T -o . ../spack
-	sphinx-apidoc -T -o . ../llnl
+	sphinx-apidoc -f -T -o . ../spack
+	sphinx-apidoc -f -T -o . ../llnl
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -84,7 +84,7 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -f package_list.rst command_index.rst modules.rst
+	-rm -f package_list.rst command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
 html:
