@@ -95,6 +95,14 @@ with open('command_index.rst', 'a') as index:
     for cmd in sorted(command_names):
         index.write('   * :ref:`%s`\n' % cmd)
 
+# Remove any previous API docs
+# Read the Docs doesn't clean up after previous builds
+# Without this, the API Docs will never actually update
+for filename in glob('spack*.rst'):
+    os.remove(filename)
+
+for filename in glob('llnl*.rst'):
+    os.remove(filename)
 
 # Run sphinx-apidoc
 sphinx_apidoc(['-T', '-o', '.', '../spack'])
