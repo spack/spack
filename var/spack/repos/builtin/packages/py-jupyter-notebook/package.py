@@ -44,9 +44,9 @@ class PyJupyterNotebook(PythonPackage):
 
     variant('terminal', default=False, description="Enable terminal functionality")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('python@2.7:2.8,3.3:')
     depends_on('npm', type='build')
+    depends_on('node-js', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-tornado@4:', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))

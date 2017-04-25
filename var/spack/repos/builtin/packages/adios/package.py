@@ -53,6 +53,7 @@ class Adios(AutotoolsPackage):
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
+    variant('bzip2', default=False, description='Enable bzip2 transform support')
     variant('szip', default=False, description='Enable szip transform support')
     variant('zfp', default=False, description='Enable ZFP transform support')
     # transports and serial file converters
@@ -72,6 +73,7 @@ class Adios(AutotoolsPackage):
     depends_on('mxml@2.9:')
     # optional transformations
     depends_on('zlib', when='+zlib')
+    depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
@@ -80,8 +82,8 @@ class Adios(AutotoolsPackage):
     build_directory = 'spack-build'
 
     # ADIOS uses the absolute Python path, which is too long and results in
-    # "bad interpreter" errors
-    patch('python.patch')
+    # "bad interpreter" errors - but not applicable for 1.9.0
+    patch('python.patch', when='@1.10.0:')
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/LLNL/spack/issues/1683
@@ -126,6 +128,8 @@ class Adios(AutotoolsPackage):
 
         if '+zlib' in spec:
             extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+        if '+bzip2' in spec:
+            extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix)
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+zfp' in spec:

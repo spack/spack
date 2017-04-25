@@ -465,7 +465,10 @@ def parent_class_modules(cls):
 
 
 def load_external_modules(pkg):
-    """ traverse the spec list and find any specs that have external modules.
+    """Traverse the spec list associated with a package
+    and find any specs that have external modules.
+
+    :param pkg: package under consideration
     """
     for dep in list(pkg.spec.traverse()):
         if dep.external_module:
