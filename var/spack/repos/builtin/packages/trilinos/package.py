@@ -46,6 +46,8 @@ class Trilinos(CMakePackage):
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
+    version('xsdk-0.2.0',
+            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
     version('develop',
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
@@ -86,6 +88,7 @@ class Trilinos(CMakePackage):
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
+    variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('exodus', default=False, description='Compile with Exodus from SEACAS')
 
     # Everything should be compiled with -fpic
@@ -112,15 +115,19 @@ class Trilinos(CMakePackage):
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
+    depends_on('superlu-dist@develop', when='@develop+superlu-dist')
+    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+fpic@4.3', when='+superlu')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
+    depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
-    patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
+    patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -128,7 +135,8 @@ class Trilinos(CMakePackage):
 
     # check that the combination of variants makes sense
     def variants_check(self):
-        if '+superlu-dist' in self.spec and self.spec.satisfies('@:11.4.3'):
+        if ('+superlu-dist' in self.spec and
+            self.spec.satisfies('@11.14.1:11.14.3')):
             # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
             # deprecated SuperLUDist v3.3 together with an Amesos patch is
             # working.
@@ -174,7 +182,9 @@ class Trilinos(CMakePackage):
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_Netcdf:BOOL=ON'
+            '-DTPL_ENABLE_Netcdf:BOOL=ON',
+            '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
+                'ON' if '+tpetra' in spec else 'OFF')
         ])
 
         if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
@@ -385,7 +395,7 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTrilinos_ENABLE_SEACAS:BOOL=OFF'
             ])
- 
+
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
             options.extend([

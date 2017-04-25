@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
 import sys
+import os
 from spack import *
 
 
@@ -38,8 +38,7 @@ class Petsc(Package):
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
-    version('for-pflotran-0.1.0', git='https://bitbucket.org/petsc/petsc.git',
-            commit='7943f4e1472fff9cf1fc630a1100136616e4970f')
+    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
     version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
@@ -66,11 +65,15 @@ class Petsc(Package):
     variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
-    variant('mumps',   default=True,
+    # Mumps is disabled by default, because it depends on Scalapack
+    # which is not portable to all HPC systems
+    variant('mumps',   default=False,
             description='Activates support for MUMPS (only parallel'
             ' and 32bit indices)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
+    variant('trilinos', default=False,
+            description='Activates support for Trilinos (only parallel)')
     variant('int64', default=False,
             description='Compile with 64bit indices')
 
@@ -106,15 +109,24 @@ class Petsc(Package):
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
     depends_on('hypre~internal-superlu~int64', when='+hypre+mpi~complex~int64')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
+    depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
+    depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
     depends_on('hypre~internal-superlu+int64', when='+hypre+mpi~complex+int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:~int64', when='@3.7:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.0.0:~int64', when='@for-pflotran-0.1.0+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.0.0:+int64', when='@for-pflotran-0.1.0+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
     depends_on('mumps+mpi', when='+mumps+mpi~int64')
     depends_on('scalapack', when='+mumps+mpi~int64')
+    depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
+    depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
+    depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -140,14 +152,10 @@ class Petsc(Package):
                 raise RuntimeError('\n'.join(errors))
         else:
             compiler_opts = [
-                '--with-mpi=1',
-                '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
+                '--with-cc=%s' % self.spec['mpi'].mpicc,
+                '--with-cxx=%s' % self.spec['mpi'].mpicxx,
+                '--with-fc=%s' % self.spec['mpi'].mpifc
             ]
-        if sys.platform != "darwin":
-            compiler_opts.extend([
-                '--with-cpp=cpp',
-                '--with-cxxcpp=cpp',
-            ])
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -173,6 +181,9 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        if 'trilinos' in spec:
+            options.append('--with-cxx-dialect=C++11')
+
         # Help PETSc pick up Scalapack from MKL:
         if 'scalapack' in spec:
             scalapack = spec['scalapack'].libs
@@ -187,7 +198,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps'):
+                        'mumps', 'scalapack', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
