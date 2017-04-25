@@ -80,8 +80,13 @@ class Scr(CMakePackage):
             description='File locking style for SCR. '
             'Possible values are FLOCK, FNCTL, NONE')
 
+    variant('cache_base', default='/tmp',
+            description='Compile time default location for checkpoint cache.')
+    variant('cntl_base', default='/tmp',
+            description='Compile time default location for control directory.')
+
     def get_abs_path_rel_prefix(self, path):
-        # Return path absolute, otherwise prepend prefix
+        # Return path if absolute, otherwise prepend prefix
         if os.path.isabs(path):
             return path
         else:
@@ -91,11 +96,11 @@ class Scr(CMakePackage):
         spec = self.spec
         args = []
 
+        args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
+
         conf_path = self.get_abs_path_rel_prefix(
             self.spec.variants['scr_config'].value)
         args.append('-DCMAKE_SCR_CONFIG_FILE={0}'.format(conf_path))
-
-        args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
 
         args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
                 spec.variants['resource_manager'].value.upper()))
@@ -105,6 +110,12 @@ class Scr(CMakePackage):
 
         args.append('-DSCR_FILE_LOCK={0}'.format(
                 spec.variants['file_lock'].value.upper()))
+
+        args.append('-DSCR_CACHE_BASE={0}'.format(
+                spec.variants['cache_base'].value))
+
+        args.append('-DSCR_CNTL_BASE={0}'.format(
+                spec.variants['cntl_base'].value))
 
         args.append('-DWITH_PDSH_PREFX={0}'.format(spec['pdsh'].prefix))
 
