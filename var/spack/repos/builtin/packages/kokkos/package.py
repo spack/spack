@@ -42,20 +42,20 @@ class Kokkos(Package):
     depends_on('cuda', when='+cuda')
 
     def install(self, spec, prefix):
-        generate = which(join_path(self.stage.source_path, 'generate_makefile.bash'))
+        generate = which(join_path(self.stage.source_path,
+                                   'generate_makefile.bash'))
         with working_dir('build', create=True):
-            generate_args = [
+            g_args = [
                 '--prefix=%s' % prefix,
                 '--with-hwloc=%s' % spec['hwloc'].prefix,
                 '--with-serial',
                 '--with-openmp',
             ]
             if 'qthreads' in spec:
-                generate_args.append('--with-qthreads=%s' % spec ['qthreads'].prefix)
+                g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
             if 'cuda' in spec:
-                generate_args.append('--with-cuda=%s' % spec['cuda'].prefix)
+                g_args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
-            generate(*generate_args)
+            generate(*g_args)
             make()
             make('install')
-
