@@ -34,8 +34,8 @@ class Kokkos(Package):
 
     version('2.03.00', 'f205d659d4304747759fabfba32d43c3')
 
-    variant('qthreads', default=False)
-    variant('cuda', default=False)
+    variant('qthreads', default=False, description="enable Qthreads backend")
+    variant('cuda', default=False, description="enable Cuda backend")
 
     depends_on('hwloc')
     depends_on('qthreads', when='+qthreads')
