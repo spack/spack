@@ -78,7 +78,7 @@ def get_checksums(url_dict, name, **kwargs):
             num_ver, '' if num_ver == 1 else 's', name),
             "",
             *spack.cmd.elide_list(
-                ["{0:{1}}  {2}".format(v, max_len, url_dict[v])
+                ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()
 
