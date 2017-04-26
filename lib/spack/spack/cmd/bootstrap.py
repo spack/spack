@@ -29,6 +29,8 @@ from llnl.util.filesystem import join_path, mkdirp
 
 import spack
 from spack.util.executable import ProcessError, which
+from spack.util.chroot import build_chroot_enviroment
+
 
 _SPACK_UPSTREAM = 'https://github.com/llnl/spack'
 
@@ -42,6 +44,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         'prefix',
         help="names of prefix where we should install spack")
+    subparser.add_argument(
+        '--isolate', action='store_true', dest='isolate',
+        help="isolate the bootsraped enviroment from the system",
+        default='False')
 
 
 def get_origin_info(remote):
@@ -71,6 +77,12 @@ def get_origin_info(remote):
 def bootstrap(parser, args):
     origin_url, branch = get_origin_info(args.remote)
     prefix = args.prefix
+    isolate = True if args.isolate != None else False
+
+
+    build_chroot_enviroment(prefix)
+
+    return
 
     tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
