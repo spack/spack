@@ -26,7 +26,7 @@ from spack import *
 
 
 class Libyogrt(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Your One Get Remaining Time Library."""
 
     homepage = "https://github.com/LLNL/libyogrt"
     url      = "https://github.com/LLNL/libyogrt/archive/1.20-6.tar.gz"
