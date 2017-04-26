@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/bin/bash -e
 #
 # Description:
 #     Runs Spack build smoke tests.  This installs a few packages that
