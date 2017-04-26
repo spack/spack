@@ -29,8 +29,9 @@ class Libx11(AutotoolsPackage):
     """libX11 - Core X11 protocol client library."""
 
     homepage = "https://www.x.org/"
-    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.3.tar.gz"
+    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.5.tar.gz"
 
+    version('1.6.5', '300b5831916ffcc375468431d856917e')
     version('1.6.3', '7d16653fe7c36209799175bb3dc1ae46')
 
     depends_on('libxcb@1.1.92:')
