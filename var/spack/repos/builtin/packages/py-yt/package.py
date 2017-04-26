@@ -66,10 +66,10 @@ class PyYt(PythonPackage):
     depends_on("py-matplotlib", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=('build', 'run'))
     depends_on("py-sympy", type=('build', 'run'))
     depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
-    depends_on("python @2.7:2.999,3.4:")
+    depends_on("python@2.7:2.8,3.4:")
 
     @run_before('install')
     def prep_yt(self):

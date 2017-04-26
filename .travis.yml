@@ -92,7 +92,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 && $TRAVIS_OS_NAME == "linux" ]]; then codecov --env PY_VERSION; fi
+  - codecov --env PY_VERSION
 
 #=============================================================================
 # Notifications

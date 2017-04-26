@@ -26,13 +26,13 @@ import spack.modules
 from six import iteritems
 
 
-def post_install(pkg):
+def post_install(spec):
     for item, cls in iteritems(spack.modules.module_types):
-        generator = cls(pkg.spec)
+        generator = cls(spec)
         generator.write()
 
 
-def post_uninstall(pkg):
+def post_uninstall(spec):
     for item, cls in iteritems(spack.modules.module_types):
-        generator = cls(pkg.spec)
+        generator = cls(spec)
         generator.remove()

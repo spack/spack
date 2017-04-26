@@ -1084,6 +1084,51 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with spack.store.db.prefix_write_lock(self.spec):
                 yield
 
+    def _process_external_package(self, explicit):
+        """Helper function to process external packages. It runs post install
+        hooks and registers the package in the DB.
+
+        :param bool explicit: True if the package was requested explicitly by
+            the user, False if it was pulled in as a dependency of an explicit
+            package.
+        """
+        if self.spec.external_module:
+            message = '{s.name}@{s.version} : has external module in {module}'
+            tty.msg(message.format(s=self, module=self.spec.external_module))
+            message = '{s.name}@{s.version} : is actually installed in {path}'
+            tty.msg(message.format(s=self, path=self.spec.external_path))
+        else:
+            message = '{s.name}@{s.version} : externally installed in {path}'
+            tty.msg(message.format(s=self, path=self.spec.external_path))
+        try:
+            # Check if the package was already registered in the DB
+            # If this is the case, then just exit
+            rec = spack.store.db.get_record(self.spec)
+            message = '{s.name}@{s.version} : already registered in DB'
+            tty.msg(message.format(s=self))
+            # Update the value of rec.explicit if it is necessary
+            self._update_explicit_entry_in_db(rec, explicit)
+
+        except KeyError:
+            # If not register it and generate the module file
+            # For external packages we just need to run
+            # post-install hooks to generate module files
+            message = '{s.name}@{s.version} : generating module file'
+            tty.msg(message.format(s=self))
+            spack.hooks.post_install(self.spec)
+            # Add to the DB
+            message = '{s.name}@{s.version} : registering into DB'
+            tty.msg(message.format(s=self))
+            spack.store.db.add(self.spec, None, explicit=explicit)
+
+    def _update_explicit_entry_in_db(self, rec, explicit):
+        if explicit and not rec.explicit:
+            with spack.store.db.write_transaction():
+                rec = spack.store.db.get_record(self.spec)
+                rec.explicit = True
+                message = '{s.name}@{s.version} : marking the package explicit'
+                tty.msg(message.format(s=self))
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1124,11 +1169,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only install concrete packages: %s."
                              % self.spec.name)
 
-        # No installation needed if package is external
+        # For external packages the workflow is simplified, and basically
+        # consists in module file generation and registration in the DB
         if self.spec.external:
-            tty.msg("%s is externally installed in %s" %
-                    (self.name, self.spec.external))
-            return
+            return self._process_external_package(explicit)
 
         self.repair_partial(keep_prefix)
 
@@ -1140,14 +1184,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.msg(
                     "Continuing from partial install of %s" % self.name)
             elif layout.check_installed(self.spec):
-                tty.msg(
-                    "%s is already installed in %s" % (self.name, self.prefix))
+                msg = '{0.name} is already installed in {0.prefix}'
+                tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
-                if (not rec.explicit) and explicit:
-                    with spack.store.db.write_transaction():
-                        rec = spack.store.db.get_record(self.spec)
-                        rec.explicit = True
-                return
+                return self._update_explicit_entry_in_db(rec, explicit)
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
@@ -1155,10 +1195,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self._do_install_pop_kwargs(kwargs)
 
-        tty.msg("Installing %s" % self.name)
-
         # First, install dependencies recursively.
         if install_deps:
+            tty.debug('Installing {0} dependencies'.format(self.name))
             for dep in self.spec.dependencies():
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
@@ -1172,6 +1211,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     dirty=dirty,
                     **kwargs
                 )
+
+        tty.msg('Installing %s' % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1192,7 +1233,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # otherwise it should not have passed us the copy of the stream.
             # Thus, we are free to work with the the copy (input_stream)
             # however we want. For example, we might want to call functions
-            # (e.g. raw_input()) that implicitly read from whatever stream is
+            # (e.g. input()) that implicitly read from whatever stream is
             # assigned to sys.stdin. Since we want them to work with the
             # original input stream, we are making the following assignment:
             sys.stdin = input_stream
@@ -1212,7 +1253,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
-                spack.hooks.pre_install(self)
+                spack.hooks.pre_install(self.spec)
                 if fake:
                     self.do_fake_install()
                 else:
@@ -1252,7 +1293,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                     self.spec, self.prefix)
                     self.log()
                 # Run post install hooks before build stage is removed.
-                spack.hooks.post_install(self)
+                spack.hooks.post_install(self.spec)
 
             # Stop timer.
             self._total_time = time.time() - start_time
@@ -1272,7 +1313,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.build_environment.fork(self, build_process, dirty=dirty)
             self._mark_installed()
             # If we installed then we should keep the prefix
-            keep_prefix = True if self.last_phase is None else keep_prefix
+            keep_prefix = self.last_phase is None or keep_prefix
             # note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.db.add(
@@ -1547,17 +1588,23 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
-            # TODO: hooks should take specs, not packages.
+
             if pkg is not None:
-                spack.hooks.pre_uninstall(pkg)
+                spack.hooks.pre_uninstall(spec)
 
             # Uninstalling in Spack only requires removing the prefix.
-            spack.store.layout.remove_install_directory(spec)
+            if not spec.external:
+                msg = 'Deleting package prefix [{0}]'
+                tty.debug(msg.format(spec.short_spec))
+                spack.store.layout.remove_install_directory(spec)
+            # Delete DB entry
+            msg = 'Deleting DB entry [{0}]'
+            tty.debug(msg.format(spec.short_spec))
             spack.store.db.remove(spec)
+        tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
-            # TODO: refactor hooks to use specs, not packages.
-            if pkg is not None:
-                spack.hooks.post_uninstall(pkg)
+        if pkg is not None:
+            spack.hooks.post_uninstall(spec)
 
         tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
