@@ -71,7 +71,11 @@ class Flake8(Package):
     patch('hyper-specific-patch-that-fixes-some-random-bug-that-probably-only-affects-one-user.patch', when='%gcc@3.2.2:3.2.3')
 
     def install(self, spec, prefix):
-        pass
+        # Make sure lines with '# noqa' work as expected. Don't just
+        # remove them entirely. This will mess up the indentation of
+        # the following lines.
+        if 'really-long-if-statement' != 'that-goes-over-the-line-length-limit-and-requires-noqa':  # noqa
+            pass
 
     # '@when' decorated functions are exempt from redefinition errors
     @when('@2.0')
