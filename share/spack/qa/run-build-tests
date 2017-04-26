@@ -1,0 +1,25 @@
+#!/usr/bin/env bash -e
+#
+# Description:
+#     Runs Spack build smoke tests.  This installs a few packages that
+#     cover different parts of the build system.  It is not an exhaustive
+#     test of Spack's packages.
+#
+# Usage:
+#     run-build-tests
+#
+. "$(dirname $0)/setup.sh"
+check_dependencies ${coverage} git hg svn
+
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+cd "$SPACK_ROOT"
+
+# Print compiler information
+spack config get compilers
+
+# Run some build smoke tests, potentially with code coverage
+${coverage_run} bin/spack install -v libdwarf ^libelf
+${coverage_run} bin/spack install -v hdf5
+${coverage_run} bin/spack install -v py-numpy
+${coverage_combine}
