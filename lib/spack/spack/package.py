@@ -1344,7 +1344,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            stage directory to start an installation from scratch.
         """
         if self.spec.external:
-            return
+            raise ExternalPackageError("Attempted to repair external spec %s" %
+                                       self.spec.name)
 
         layout = spack.store.layout
         with spack.store.db.prefix_write_lock(self.spec):

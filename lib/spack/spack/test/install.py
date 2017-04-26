@@ -249,6 +249,17 @@ def test_installed_in_db_does_not_trigger_reinstall(mock_archive):
 
 
 @pytest.mark.usefixtures('install_mockery')
+def test_external_repair_triggers_exception():
+    spec = Spec('externaltool')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    pkg.do_install()
+
+    with pytest.raises(spack.package.ExternalPackageError):
+        pkg.repair_partial()
+
+
+@pytest.mark.usefixtures('install_mockery')
 def test_store(mock_archive):
     spec = Spec('cmake-client').concretized()
 
