@@ -36,7 +36,3 @@ class Libyogrt(AutotoolsPackage):
     version('1.20-4', '092bea10de22c505ce92aa07001decbb')
     version('1.20-3', 'd0507717009a5f8e2009e3b63594738f')
     version('1.20-2', '780bda03268324f6b5f72631fff6e6cb')
-
-    def configure_args(self):
-        args = []
-        return args
