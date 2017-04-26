@@ -108,10 +108,6 @@ def query_arguments(args):
         installed = any
     if args.unknown:
         known = False
-<<<<<<< 86d681be6e9506f8b048afc9f0a4087111926539
-=======
-
->>>>>>> fixes #967
     explicit = any
     if args.explicit:
         explicit = True
