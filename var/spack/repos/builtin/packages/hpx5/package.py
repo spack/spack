@@ -47,6 +47,9 @@ class Hpx5(AutotoolsPackage):
     version('1.1.0', '646afb460ecb7e0eea713a634933ce4f')
     version('1.0.0', '8020822adf6090bd59ed7fe465f6c6cb')
 
+    # Don't second-guess what compiler we are using on Cray
+    patch("configure.patch", when='@4.0.0')
+
     variant('cuda', default=False, description='Enable CUDA support')
     variant('cxx11', default=False, description='Enable C++11 hpx++ interface')
     variant('debug', default=False, description='Build debug version of HPX-5')

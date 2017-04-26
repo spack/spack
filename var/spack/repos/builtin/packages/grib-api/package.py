@@ -33,6 +33,7 @@ class GribApi(Package):
     homepage = "https://software.ecmwf.int/wiki/display/GRIB/Home"
     url      = "https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.17.0-Source.tar.gz"
 
+    version('1.21.0', 'eb64c5eb72e6e90841237cba9d644016')
     version('1.17.0', 'bca7114d2c3100501a08190a146818d2')
     version('1.16.0', '8c7fdee03344e4379d400ae20976a460')
 

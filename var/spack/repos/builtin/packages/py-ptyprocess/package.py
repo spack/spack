@@ -32,5 +32,3 @@ class PyPtyprocess(PythonPackage):
     url      = "https://pypi.io/packages/source/p/ptyprocess/ptyprocess-0.5.1.tar.gz"
 
     version('0.5.1', '94e537122914cc9ec9c1eadcd36e73a1')
-
-    depends_on('py-setuptools', type='build')

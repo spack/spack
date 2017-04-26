@@ -57,6 +57,10 @@ class Openblas(MakefilePackage):
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
 
+    # Change file comments to work around clang 3.9 assembler bug
+    # https://github.com/xianyi/OpenBLAS/pull/982
+    patch('openblas0.2.19.diff', when='@0.2.19')
+
     parallel = False
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
@@ -76,12 +80,6 @@ class Openblas(MakefilePackage):
             # be used with any (!) compiler named clang, bummer.
             raise InstallError(
                 'OpenBLAS does not support OpenMP with clang!'
-            )
-
-        spec = self.spec
-        if spec.satisfies('%clang@8.1.0:') and spec.satisfies('@:0.2.19'):
-            raise InstallError(
-                'OpenBLAS @:0.2.19 does not build with Apple clang@8.1.0:'
             )
 
     @property
@@ -125,8 +123,8 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
-    @on_package_attributes(run_tests=True)
     @run_after('build')
+    @on_package_attributes(run_tests=True)
     def check_build(self):
         make('tests', *self.make_defs)
 
@@ -138,8 +136,8 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack

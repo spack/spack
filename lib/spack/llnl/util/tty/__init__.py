@@ -30,6 +30,7 @@ import termios
 import struct
 import traceback
 from six import StringIO
+from six.moves import input
 
 from llnl.util.tty.color import *
 
@@ -164,7 +165,7 @@ def get_number(prompt, **kwargs):
     number = None
     while number is None:
         msg(prompt, newline=False)
-        ans = raw_input()
+        ans = input()
         if ans == str(abort):
             return None
 
@@ -197,7 +198,7 @@ def get_yes_or_no(prompt, **kwargs):
     result = None
     while result is None:
         msg(prompt, newline=False)
-        ans = raw_input().lower()
+        ans = input().lower()
         if not ans:
             result = default_value
             if result is None:
@@ -212,9 +213,10 @@ def get_yes_or_no(prompt, **kwargs):
 
 def hline(label=None, **kwargs):
     """Draw a labeled horizontal line.
-       Options:
-       char       Char to draw the line with.  Default '-'
-       max_width  Maximum width of the line.  Default is 64 chars.
+
+    Keyword Arguments:
+        char (str): Char to draw the line with.  Default '-'
+        max_width (int): Maximum width of the line.  Default is 64 chars.
     """
     char      = kwargs.pop('char', '-')
     max_width = kwargs.pop('max_width', 64)
