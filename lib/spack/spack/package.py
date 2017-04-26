@@ -1343,6 +1343,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            record. If continue_with_partial is not set this also clears the
            stage directory to start an installation from scratch.
         """
+        if self.spec.external:
+            return
+
         layout = spack.store.layout
         with spack.store.db.prefix_write_lock(self.spec):
             try:
@@ -1368,13 +1371,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             elif (os.path.isdir(self.prefix) and
                     not self.installed and
                     not continue_with_partial):
-                spack.hooks.pre_uninstall(self)
+                spack.hooks.pre_uninstall(self.spec)
                 self.remove_prefix()
                 try:
                     spack.store.db.remove(self.spec)
                 except KeyError:
                     pass
-                spack.hooks.post_uninstall(self)
+                spack.hooks.post_uninstall(self.spec)
                 tty.msg("Removed partial install for %s" %
                         self.spec.short_spec)
             elif not self.installed and continue_with_partial:
