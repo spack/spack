@@ -46,4 +46,5 @@ class Atk(AutotoolsPackage):
         return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS", join_path(self.prefix, 'share'))
+        spack_env.prepend_path("XDG_DATA_DIRS",
+                               self.prefix.share)

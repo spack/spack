@@ -47,4 +47,5 @@ class GdkPixbuf(AutotoolsPackage):
     depends_on("gobject-introspection")
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS", join_path(self.prefix, 'share'))
+        spack_env.prepend_path("XDG_DATA_DIRS",
+                               self.prefix.share)
