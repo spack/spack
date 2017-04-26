@@ -60,17 +60,17 @@ class Executable(object):
         """
         self.default_env[key] = value
 
-    def get_shared_librarys(self):
+    def get_shared_libraries(self):
         if not self._ldd:
             self._ldd = which('ldd', required = True)
 
-        librarys = list()
+        libraries = list()
         output = self._ldd(' '.join(self.exe), output=str)
         for line in output.split('\n'):
             found = re.search(r'\s+([^\s]+)(?<!=>)\s+\([^)]+\)', line)
             if found:
-                librarys.append(found.group(1))
-        return librarys
+                libraries.append(found.group(1))
+        return libraries
 
     @property
     def command(self):
