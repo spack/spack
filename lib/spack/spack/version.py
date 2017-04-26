@@ -226,6 +226,9 @@ class Version(object):
     def __str__(self):
         return self.string
 
+    def __format__(self, format_spec):
+        return self.string.format(format_spec)
+
     @property
     def concrete(self):
         return self
