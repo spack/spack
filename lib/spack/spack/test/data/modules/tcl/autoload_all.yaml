@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  verbose: true
+  all:
+    autoload: 'all'

@@ -51,6 +51,10 @@ if sys.version_info[0] < 3:
 
     # Exclude Python 3 versions of dual-source modules when using Python 2
     exclude_paths = [
+        # Jinja 2 has some 'async def' functions that are not treated correctly
+        # by pyqver.py
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncfilters.py'),
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncsupport.py'),
         os.path.join(spack.lib_path, 'external', 'yaml', 'lib3'),
         os.path.join(spack.lib_path, 'external', 'pyqver3.py')]
 
@@ -60,6 +64,10 @@ else:
 
     # Exclude Python 2 versions of dual-source modules when using Python 3
     exclude_paths = [
+        # Jinja 2 has some 'async def' functions that are not treated correctly
+        # by pyqver.py
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncfilters.py'),
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncsupport.py'),
         os.path.join(spack.lib_path, 'external', 'yaml', 'lib'),
         os.path.join(spack.lib_path, 'external', 'pyqver2.py')]
 

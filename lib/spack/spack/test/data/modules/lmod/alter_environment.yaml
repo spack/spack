@@ -1,0 +1,27 @@
+enable:
+  - lmod
+lmod:
+  core_compilers:
+    - 'clang@3.3'
+
+  hierarchy:
+    - mpi
+
+  all:
+    filter:
+      environment_blacklist':
+        - CMAKE_PREFIX_PATH
+    environment:
+      set:
+        '${PACKAGE}_ROOT': '${PREFIX}'
+
+  'platform=test target=x86_64':
+    environment:
+      set:
+        FOO: 'foo'
+      unset:
+        - BAR
+
+  'platform=test target=x86_32':
+    load:
+      - 'foo/bar'
