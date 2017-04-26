@@ -30,6 +30,7 @@ class LibpthreadStubs(AutotoolsPackage):
     functions not provided in libc or otherwise available by default."""
 
     homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/libpthread-stubs-0.3.tar.gz"
+    url      = "https://xcb.freedesktop.org/dist/libpthread-stubs-0.4.tar.gz"
 
+    version('0.4', '7d2734e604a3e2f6f665c420b835ab62')
     version('0.3', 'a09d928c4af54fe5436002345ef71138')
