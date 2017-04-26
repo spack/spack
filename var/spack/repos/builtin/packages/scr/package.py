@@ -74,7 +74,7 @@ class Scr(CMakePackage):
 
     variant('async_api', default='NONE',
             description="Asynchronous data transfer API to use with SCR. "
-            "Possible values are NONE, Cray_DataWarp, Intel_CPPR.")
+            "Possible values are NONE, CRAY_DW, INTEL_CPPR.")
 
     variant('file_lock', default='FLOCK',
             description='File locking style for SCR. '
@@ -106,7 +106,7 @@ class Scr(CMakePackage):
                 spec.variants['resource_manager'].value.upper()))
 
         args.append('-DSCR_ASYNC_API={0}'.format(
-                spec.variants['async_api'].value))
+                spec.variants['async_api'].value.upper()))
 
         args.append('-DSCR_FILE_LOCK={0}'.format(
                 spec.variants['file_lock'].value.upper()))
