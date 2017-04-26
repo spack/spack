@@ -15,11 +15,15 @@ check_dependencies ${coverage} git hg svn
 # Allows script to be run from anywhere
 cd "$SPACK_ROOT"
 
+# Make sure we have a spec to build.
+if [ -z "$SPEC" ]; then
+    echo "Error: run-build-tests requires the $SPEC to build to be set."
+    exit 1
+fi
+
 # Print compiler information
 spack config get compilers
 
 # Run some build smoke tests, potentially with code coverage
-${coverage_run} bin/spack install -v libdwarf ^libelf
-${coverage_run} bin/spack install -v hdf5
-${coverage_run} bin/spack install -v py-numpy
+${coverage_run} bin/spack install -v ${SPEC}
 ${coverage_combine}
