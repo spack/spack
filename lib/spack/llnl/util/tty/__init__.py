@@ -213,9 +213,10 @@ def get_yes_or_no(prompt, **kwargs):
 
 def hline(label=None, **kwargs):
     """Draw a labeled horizontal line.
-       Options:
-       char       Char to draw the line with.  Default '-'
-       max_width  Maximum width of the line.  Default is 64 chars.
+
+    Keyword Arguments:
+        char (str): Char to draw the line with.  Default '-'
+        max_width (int): Maximum width of the line.  Default is 64 chars.
     """
     char      = kwargs.pop('char', '-')
     max_width = kwargs.pop('max_width', 64)
