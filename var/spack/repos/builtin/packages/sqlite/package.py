@@ -49,6 +49,6 @@ class Sqlite(AutotoolsPackage):
         args = []
 
         if self.get_arch() == 'ppc64le':
-            config.append('--build=powerpc64le-redhat-linux-gnu')
+            args.append('--build=powerpc64le-redhat-linux-gnu')
 
         return args
