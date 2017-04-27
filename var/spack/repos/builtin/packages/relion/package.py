@@ -1,5 +1,6 @@
 from spack import *
 
+
 class Relion(CMakePackage):
     """RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on) is a
     stand-alone computer program that employs an empirical Bayesian approach to
@@ -25,14 +26,13 @@ class Relion(CMakePackage):
         args = [
             '-DCMAKE_C_FLAGS=-g',
             '-DCMAKE_CXX_FLAGS=-g',
-            '-DGUI=%s' % ('on' if '+gui' in self.spec else 'off'),
-            '-DDoublePrec_CPU=%s' % ('on' if '+double' in self.spec else 'off'),
-            '-DDoublePrec_GPU=%s' % ('on' if '+double-gpu' in self.spec else 'off'),
-            ]
+            '-DGUI=%s' % ('+gui' in self.spec),
+            '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
+            '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
+        ]
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
                 '-DCUFFT=on',
-                ]
+            ]
         return args
-
