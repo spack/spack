@@ -451,10 +451,12 @@ def get_name(args):
     If a name was provided, always use that. Otherwise, if a URL was
     provided, extract the name from that. Otherwise, use a default.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
+    Args:
+        args (param argparse.Namespace): The arguments given to
+            ``spack create``
 
-    :returns: The name of the package
-    :rtype: str
+    Returns:
+        str: The name of the package
     """
 
     # Default package name
@@ -487,10 +489,11 @@ def get_url(args):
 
     Use a default URL if none is provided.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
 
-    :returns: The URL of the package
-    :rtype: str
+    Returns:
+        str: The URL of the package
     """
 
     # Default URL
@@ -510,11 +513,13 @@ def get_versions(args, name):
 
     Returns default values if no URL is provided.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param str name: The name of the package
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        name (str): The name of the package
 
-    :returns: Versions and hashes, and a BuildSystemGuesser object
-    :rtype: str and BuildSystemGuesser
+    Returns:
+        str and BuildSystemGuesser: Versions and hashes, and a
+            BuildSystemGuesser object
     """
 
     # Default version, hash, and guesser
@@ -552,12 +557,13 @@ def get_build_system(args, guesser):
     is provided, download the tarball and peek inside to guess what
     build system it uses. Otherwise, use a generic template by default.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param BuildSystemGuesser guesser: The first_stage_function given to \
-        ``spack checksum`` which records the build system it detects
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        guesser (BuildSystemGuesser): The first_stage_function given to
+            ``spack checksum`` which records the build system it detects
 
-    :returns: The name of the build system template to use
-    :rtype: str
+    Returns:
+        str: The name of the build system template to use
     """
 
     # Default template
@@ -584,11 +590,12 @@ def get_repository(args, name):
     """Returns a Repo object that will allow us to determine the path where
     the new package file should be created.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param str name: The name of the package to create
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        name (str): The name of the package to create
 
-    :returns: A Repo object capable of determining the path to the package file
-    :rtype: Repo
+    Returns:
+        Repo: A Repo object capable of determining the path to the package file
     """
     spec = Spec(name)
     # Figure out namespace for spec
