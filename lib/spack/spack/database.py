@@ -473,13 +473,18 @@ class Database(object):
                         layout = spack.store.layout
                         if entry.spec.external:
                             layout = None
-                        kwargs = {
-                            'spec': entry.spec,
-                            'directory_layout': layout,
-                            'explicit': entry.explicit
-                        }
-                        self._add(**kwargs)
-                        processed_specs.add(entry.spec)
+                            install_check = True
+                        else:
+                            install_check = layout.check_installed(entry.spec)
+
+                        if install_check:
+                            kwargs = {
+                                'spec': entry.spec,
+                                'directory_layout': layout,
+                                'explicit': entry.explicit
+                            }
+                            self._add(**kwargs)
+                            processed_specs.add(entry.spec)
                     except Exception as e:
                         # Something went wrong, so the spec was not restored
                         # from old data
