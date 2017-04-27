@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 #
 # Description:
 #     Builds Spack documentation and checks for
@@ -8,33 +8,12 @@
 # Usage:
 #     run-doc-tests
 #
-# Notes:
-#     Requires sphinx, graphviz, git, mercurial, and subversion.
-#
-
-QA_DIR="$(dirname "$0")"
-SPACK_ROOT="$QA_DIR/../../.."
-DOC_DIR="$SPACK_ROOT/lib/spack/docs"
-
-# Array of dependencies
-deps=(
-    sphinx-apidoc
-    sphinx-build
-    dot
-    git
-    hg
-    svn
-)
-
-# Check for dependencies
-"$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
-
-# Add Spack to the PATH.
-export PATH="$SPACK_ROOT/bin:$PATH"
+. "$(dirname $0)/setup.sh"
+check_dependencies sphinx-apidoc sphinx-build dot git hg svn
 
 # Move to documentation directory
 # Allows script to be run from anywhere
-cd "$DOC_DIR"
+cd "$SPACK_ROOT/lib/spack/docs"
 
 # Treat warnings as fatal errors
 make clean --silent
