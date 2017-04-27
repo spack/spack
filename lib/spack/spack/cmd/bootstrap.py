@@ -46,7 +46,7 @@ def setup_parser(subparser):
         help="names of prefix where we should install spack")
     subparser.add_argument(
         '--isolate', action='store_true', dest='isolate',
-        help="isolate the bootsraped enviroment from the system")
+        help="isolate the bootstraped enviroment from the system")
 
 
 def get_origin_info(remote):
