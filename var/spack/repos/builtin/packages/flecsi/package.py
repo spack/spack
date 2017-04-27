@@ -39,19 +39,21 @@ class Flecsi(CMakePackage):
     homepage = "http://flecsi.lanl.gov/"
     url      = "https://github.com/laristra/flecsi/tarball/v1.0"
 
-    version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=True)
+    version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=False)
 
     variant('debug', default=False, description='Build debug version')
+    variant('mpi', default=True,
+            description='Build on top of mpi conduit for mpi inoperability')
 
     depends_on("cmake@3.1:", type='build')
-    depends_on("legion")
+    depends_on("legion+shared", when='~mpi')
+    depends_on("legion+shared+mpi", when='+mpi')
 
-    # drop when #3779 has been fixed
+    # drop when #3958 has been merged
     def do_fetch(self, mirror_only=True):
         super(Flecsi, self).do_fetch(mirror_only)
         git = which("git")
-        git('-C', 'flecsi', 'submodule', 'update', '--init', '--recursive',
-            '--depth=1')
+        git('-C', 'flecsi', 'submodule', 'update', '--init', '--recursive')
 
     def build_type(self):
         spec = self.spec
@@ -61,4 +63,12 @@ class Flecsi(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        return ['-DENABLE_UNIT_TESTS=ON']
+        options = ['-DENABLE_UNIT_TESTS=ON']
+
+        if '+mpi' in self.spec:
+            options.extend([
+                '-DENABLE_MPI=ON',
+                '-DFLECSI_RUNTIME_MODEL=mpilegion'
+            ])
+
+        return options
