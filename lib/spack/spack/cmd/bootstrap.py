@@ -102,11 +102,11 @@ def bootstrap(parser, args):
 
         mkdirp(home)
         mkdirp(install_dir)
-        #build_chroot_enviroment(prefix)
+        build_chroot_enviroment(prefix)
+        #raw_input("Wait Key: ")
+        #remove_chroot_enviroment(prefix)
     else:
         install_dir = prefix
-
-    #remove_chroot_enviroment(prefix)
 
     if os.path.exists(join_path(install_dir, '.git')):
         tty.die("There already seems to be a git repository in %s" % prefix)
