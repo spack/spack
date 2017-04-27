@@ -224,6 +224,10 @@ class UrlStripNameSuffixesTest(unittest.TestCase):
 
     # Download version
 
+    def test_release(self):
+        self.check('cbench_release_1.3.0.tar.gz', '1.3.0',
+                   'cbench')
+
     def test_snapshot(self):
         self.check('gts-snapshot-121130', '121130',
                    'gts')
