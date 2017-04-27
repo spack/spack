@@ -46,6 +46,8 @@ class Gtkplus(AutotoolsPackage):
     depends_on("pango+X", when='+X')
     depends_on('gobject-introspection', when='+X')
 
+    patch('no-demos.patch')
+
     def patch(self):
         # remove disable deprecated flag.
         filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
