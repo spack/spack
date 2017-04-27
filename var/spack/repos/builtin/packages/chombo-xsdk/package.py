@@ -35,7 +35,7 @@ class ChomboXsdk(Package):
     url = "http://bitbucket.org/drhansj/chombo-xsdk/get/xsdk-0.2.0a.tar.bz2"
 
     # version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='8893c7')
-    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='0979d85')
+    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
     variant('dim'      , default=2    , description = 'Set the physical dimension')
