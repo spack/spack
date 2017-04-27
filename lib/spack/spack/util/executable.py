@@ -65,7 +65,7 @@ class Executable(object):
             self._ldd = which('ldd', required = True)
 
         libraries = list()
-        output = self._ldd(' '.join(self.exe), output=str)
+        output = self._ldd(' '.join(self.exe), output=str, fail_on_error=False)
         for line in output.split('\n'):
             found = re.search(r'\s+([^\s]+)(?<!=>)\s+\([^)]+\)', line)
             if found:
