@@ -1588,17 +1588,11 @@ class Spec(object):
             if 'dependencies' not in node[name]:
                 continue
 
-<<<<<<< 2704ab71bffabac7b5622f6a12e670ad5aaff8bc
             yaml_deps = node[name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
                 # Fill in dependencies by looking them up by name in deps dict
                 deps[name]._dependencies[dname] = DependencySpec(
                     deps[name], deps[dname], dtypes)
-=======
-        if 'variants' in node:
-            for name, enabled in node['variants'].items():
-                spec.variants[name] = VariantSpec(name, enabled)
->>>>>>> Version bump to 0.9.1
 
         return spec
 
