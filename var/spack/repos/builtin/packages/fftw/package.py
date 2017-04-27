@@ -35,6 +35,7 @@ class Fftw(AutotoolsPackage):
 
     homepage = "http://www.fftw.org"
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
+    list_url = "http://www.fftw.org/download.html"
 
     version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
@@ -138,7 +139,8 @@ class Fftw(AutotoolsPackage):
             with working_dir('quad'):
                 make()
 
-    def check(self, spec, prefix):
+    def check(self):
+        spec = self.spec
         if '+double' in spec:
             with working_dir('double'):
                 make("check")

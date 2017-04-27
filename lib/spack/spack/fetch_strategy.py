@@ -103,27 +103,42 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
 
     # Subclasses need to implement these methods
     def fetch(self):
-        pass  # Return True on success, False on fail.
+        """Fetch source code archive or repo.
+
+        Returns:
+            bool: True on success, False on failure.
+        """
 
     def check(self):
-        pass  # Do checksum.
+        """Checksum the archive fetched by this FetchStrategy."""
 
     def expand(self):
-        pass  # Expand archive.
+        """Expand the downloaded archive."""
 
     def reset(self):
-        pass  # Revert to freshly downloaded state.
+        """Revert to freshly downloaded state.
+
+        For archive files, this may just re-expand the archive.
+        """
 
     def archive(self, destination):
-        pass  # Used to create tarball for mirror.
+        """Create an archive of the downloaded data for a mirror.
+
+        For downloaded files, this should preserve the checksum of the
+        original file. For repositories, it should just create an
+        expandable tarball out of the downloaded repository.
+        """
 
     @property
     def cachable(self):
-        """Return whether the fetcher is capable of caching the
-           resource it retrieves. This generally is determined by
-           whether the resource is identifiably associated with a
-           specific package version."""
-        pass
+        """Whether fetcher is capable of caching the resource it retrieves.
+
+        This generally is determined by whether the resource is
+        identifiably associated with a specific package version.
+
+        Returns:
+            bool: True if can cache, False otherwise.
+        """
 
     def __str__(self):  # Should be human readable URL.
         return "FetchStrategy.__str___"
@@ -162,7 +177,8 @@ class URLFetchStrategy(FetchStrategy):
         if not self.url:
             self.url = url
 
-        self.digest = kwargs.get('md5', None)
+        self.digest = next((kwargs[h] for h in crypto.hashes if h in kwargs),
+                           None)
         if not self.digest:
             self.digest = digest
 
@@ -670,10 +686,20 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         # Init submodules if the user asked for them.
         if self.submodules:
-            if spack.debug:
-                self.git('submodule', 'update', '--init')
+            # only git 1.8.4 and later have --depth option
+            if self.git_version < ver('1.8.4'):
+                if spack.debug:
+                    self.git('submodule', 'update', '--init', '--recursive')
+                else:
+                    self.git('submodule', '--quiet', 'update', '--init',
+                             '--recursive')
             else:
-                self.git('submodule', '--quiet', 'update', '--init')
+                if spack.debug:
+                    self.git('submodule', 'update', '--init', '--recursive',
+                             '--depth=1')
+                else:
+                    self.git('submodule', '--quiet', 'update', '--init',
+                             '--recursive', '--depth=1')
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
@@ -885,11 +911,18 @@ def from_url(url):
 
 
 def from_kwargs(**kwargs):
-    """
-    Construct the appropriate FetchStrategy from the given keyword arguments.
+    """Construct an appropriate FetchStrategy from the given keyword arguments.
 
-    :param kwargs: dictionary of keyword arguments
-    :return: fetcher or raise a FetchError exception
+    Args:
+        **kwargs: dictionary of keyword arguments, e.g. from a
+            ``version()`` directive in a package.
+
+    Returns:
+        fetch_strategy: The fetch strategy that matches the args, based
+            on attribute names (e.g., ``git``, ``hg``, etc.)
+
+    Raises:
+        FetchError: If no ``fetch_strategy`` matches the args.
     """
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):

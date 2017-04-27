@@ -61,6 +61,7 @@ class Ipopt(Package):
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
             "--enable-shared",
+            "coin_skip_warn_cxxflags=yes",
             "--with-blas-incdir=%s" % blas_dir.include,
             "--with-blas-lib=%s" % blas_lib,
             "--with-lapack-incdir=%s" % lapack_dir.include,

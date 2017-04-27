@@ -758,32 +758,35 @@ class DependencyMap(HashableMap):
 
 
 def _libs_default_handler(descriptor, spec, cls):
-    """Default handler when looking for 'libs' attribute. The default
-    tries to search for 'lib{spec.name}' recursively starting from
+    """Default handler when for ``libs`` attribute in Spec interface.
+
+    Tries to search for ``lib{spec.name}`` recursively starting from
     `spec.prefix`.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered
+            the call
+        spec (Spec): spec that is being queried
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor `__get__` method
     """
     name = 'lib' + spec.name
     shared = '+shared' in spec
-    return find_libraries(
-        name, root=spec.prefix, shared=shared, recurse=True
-    )
+    return find_libraries(name, root=spec.prefix, shared=shared, recurse=True)
 
 
 def _cppflags_default_handler(descriptor, spec, cls):
-    """Default handler when looking for cppflags attribute. The default
-    just returns '-I{spec.prefix.include}'.
+    """Default handler for the ``cppflags`` attribute in the Spec interface.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    The default just returns ``-I{spec.prefix.include}``.
+
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered
+            the call
+        spec (Spec): spec that is being queried
+
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor ``__get__`` method
     """
     return '-I' + spec.prefix.include
 
@@ -792,13 +795,14 @@ class ForwardQueryToPackage(object):
     """Descriptor used to forward queries from Spec to Package"""
 
     def __init__(self, attribute_name, default_handler=None):
-        """Initializes the instance of the descriptor
+        """Create a new descriptor.
 
-        :param str attribute_name: name of the attribute to be
-            searched for in the Package instance
-        :param callable default_handler: [optional] default function
-            to be called if the attribute was not found in the Package
-            instance
+        Args:
+            attribute_name (str): name of the attribute to be
+                searched for in the Package instance
+            default_handler (callable, optional): default function to be
+                called if the attribute was not found in the Package
+                instance
         """
         self.attribute_name = attribute_name
         # Turn the default handler into a function with the right
@@ -954,7 +958,7 @@ class Spec(object):
         self._concrete = kwargs.get('concrete', False)
 
         # Allow a spec to be constructed with an external path.
-        self.external  = kwargs.get('external', None)
+        self.external_path = kwargs.get('external_path', None)
         self.external_module = kwargs.get('external_module', None)
 
         # This allows users to construct a spec DAG with literals.
@@ -975,6 +979,10 @@ class Spec(object):
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec, deptypes)
             deptypes = ()
+
+    @property
+    def external(self):
+        return bool(self.external_path) or bool(self.external_module)
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -1349,6 +1357,12 @@ class Spec(object):
         if params:
             d['parameters'] = params
 
+        if self.external:
+            d['external'] = {
+                'path': self.external_path,
+                'module': bool(self.external_module)
+            }
+
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
@@ -1411,6 +1425,22 @@ class Spec(object):
                 spec.variants[name] = VariantSpec(name, value)
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
+
+        if 'external' in node:
+            spec.external_path = None
+            spec.external_module = None
+            # This conditional is needed because sometimes this function is
+            # called with a node already constructed that contains a 'versions'
+            # and 'external' field. Related to virtual packages provider
+            # indexes.
+            if node['external']:
+                spec.external_path = node['external']['path']
+                spec.external_module = node['external']['module']
+                if spec.external_module is False:
+                    spec.external_module = None
+        else:
+            spec.external_path = None
+            spec.external_module = None
 
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.
@@ -1578,6 +1608,8 @@ class Spec(object):
             done = True
             for spec in list(self.traverse()):
                 replacement = None
+                if spec.external:
+                    continue
                 if spec.virtual:
                     replacement = self._find_provider(spec, self_index)
                     if replacement:
@@ -1614,7 +1646,7 @@ class Spec(object):
                             continue
 
                 # If replacement is external then trim the dependencies
-                if replacement.external or replacement.external_module:
+                if replacement.external:
                     if (spec._dependencies):
                         changed = True
                         spec._dependencies = DependencyMap()
@@ -1632,7 +1664,8 @@ class Spec(object):
                         feq(replacement.architecture, spec.architecture) and
                         feq(replacement._dependencies, spec._dependencies) and
                         feq(replacement.variants, spec.variants) and
-                        feq(replacement.external, spec.external) and
+                        feq(replacement.external_path,
+                            spec.external_path) and
                         feq(replacement.external_module,
                             spec.external_module)):
                     continue
@@ -1691,14 +1724,14 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
-        for s in self.traverse(root=False):
+        for s in self.traverse():
             if s.external_module:
                 compiler = spack.compilers.compiler_for_spec(
                     s.compiler, s.architecture)
                 for mod in compiler.modules:
                     load_module(mod)
 
-                s.external = get_path_from_module(s.external_module)
+                s.external_path = get_path_from_module(s.external_module)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -1919,7 +1952,7 @@ class Spec(object):
 
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
-        if self.virtual or self.external or self.external_module:
+        if self.virtual or self.external:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -2187,7 +2220,7 @@ class Spec(object):
         if not self.virtual and other.virtual:
             try:
                 pkg = spack.repo.get(self.fullname)
-            except spack.repository.PackageLoadError:
+            except spack.repository.UnknownEntityError:
                 # If we can't get package info on this spec, don't treat
                 # it as a provider of this vdep.
                 return False
@@ -2325,7 +2358,7 @@ class Spec(object):
                        self.variants != other.variants and
                        self._normal != other._normal and
                        self.concrete != other.concrete and
-                       self.external != other.external and
+                       self.external_path != other.external_path and
                        self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
 
@@ -2341,7 +2374,7 @@ class Spec(object):
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
         self.variants.spec = self
-        self.external = other.external
+        self.external_path = other.external_path
         self.external_module = other.external_module
         self.namespace = other.namespace
 
@@ -2988,7 +3021,7 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
-        spec.external = None
+        spec.external_path = None
         spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
         spec._dependents = DependencyMap()

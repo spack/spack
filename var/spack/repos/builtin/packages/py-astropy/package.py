@@ -37,6 +37,7 @@ class PyAstropy(PythonPackage):
     version('1.1.post1', 'b52919f657a37d45cc45f5cb0f58c44d')
 
     # Required dependencies
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
 
     # Optional dependencies

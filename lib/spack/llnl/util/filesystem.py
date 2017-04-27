@@ -47,6 +47,7 @@ __all__ = [
     'copy_mode',
     'filter_file',
     'find_libraries',
+    'find_system_libraries',
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
@@ -583,27 +584,74 @@ class LibraryList(collections.Sequence):
         return self.joined()
 
 
-def find_libraries(args, root, shared=True, recurse=False):
-    """Returns an iterable object containing a list of full paths to
-    libraries if found.
+def find_system_libraries(library_names, shared=True):
+    """Searches the usual system library locations for ``library_names``.
 
-    :param args: Library name(s) to search for
-    :type args: str or collections.Sequence
-    :param str root: The root directory to start searching from
-    :param bool shared: if True searches for shared libraries,
-        otherwise for static
-    :param bool recurse: if False search only root folder,
-        if True descends top-down from the root
+    Search order is as follows:
 
-    :returns: The libraries that have been found
-    :rtype: LibraryList
+    1. ``/lib64``
+    2. ``/lib``
+    3. ``/usr/lib64``
+    4. ``/usr/lib``
+    5. ``/usr/local/lib64``
+    6. ``/usr/local/lib``
+
+    Args:
+        library_names (str or list of str): Library name(s) to search for
+        shared (bool): searches for shared libraries if True
+
+    Returns:
+        LibraryList: The libraries that have been found
     """
-    if isinstance(args, str):
-        args = [args]
-    elif not isinstance(args, collections.Sequence):
+    if isinstance(library_names, str):
+        library_names = [library_names]
+    elif not isinstance(library_names, collections.Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
-        raise TypeError(message.format(find_libraries.__name__, type(args)))
+        message = message.format(
+            find_system_libraries.__name__, type(library_names))
+        raise TypeError(message)
+
+    libraries_found = []
+    search_locations = [
+        '/lib64',
+        '/lib',
+        '/usr/lib64',
+        '/usr/lib',
+        '/usr/local/lib64',
+        '/usr/local/lib',
+    ]
+
+    for library in library_names:
+        for root in search_locations:
+            result = find_libraries(library, root, shared, recurse=True)
+            if result:
+                libraries_found += result
+                break
+
+    return libraries_found
+
+
+def find_libraries(library_names, root, shared=True, recurse=False):
+    """Returns an iterable of full paths to libraries found in a root dir.
+
+    Args:
+        library_names (str or list of str): Library names to search for
+        root (str): The root directory to start searching from
+        shared (bool): if True searches for shared libraries, otherwise static.
+        recurse (bool): if False search only root folder,
+            if True descends top-down from the root
+
+    Returns:
+        LibraryList: The libraries that have been found
+    """
+    if isinstance(library_names, str):
+        library_names = [library_names]
+    elif not isinstance(library_names, collections.Sequence):
+        message = '{0} expects a string or sequence of strings as the '
+        message += 'first argument [got {1} instead]'
+        raise TypeError(message.format(
+            find_libraries.__name__, type(library_names)))
 
     # Construct the right suffix for the library
     if shared is True:
@@ -611,7 +659,7 @@ def find_libraries(args, root, shared=True, recurse=False):
     else:
         suffix = 'a'
     # List of libraries we are searching with suffixes
-    libraries = ['{0}.{1}'.format(lib, suffix) for lib in args]
+    libraries = ['{0}.{1}'.format(lib, suffix) for lib in library_names]
     # Search method
     if recurse is False:
         search_method = _find_libraries_non_recursive
