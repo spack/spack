@@ -258,6 +258,7 @@ def strip_name_suffixes(path, version):
         '[._-]std',
 
         # Download version
+        'release',
         'snapshot',
         'distrib',
 
