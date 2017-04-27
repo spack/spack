@@ -34,15 +34,18 @@ class Dia(Package):
 
     depends_on('intltool', type='build')
     depends_on('gtkplus@2.6.0:')
-    depends_on('cairo')
-    depends_on('libpng')
     depends_on('libxslt')
     depends_on('python')
     depends_on('swig')
+    depends_on('libsm')
+    depends_on('libuuid')
+    depends_on('libxinerama')
+    depends_on('libxrender')
+    depends_on('libxml2')
 
     # TODO: Optional dependencies, not yet supported by Spack
     # depends_on('libart')
-    # depends_on('py-gtk', type=('build', 'run'))
+    # depends_on('py-pygtk', type=('build', 'run'))
 
     def url_for_version(self, version):
         """Handle Dia's version-based custom URLs."""
