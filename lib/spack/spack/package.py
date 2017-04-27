@@ -1548,7 +1548,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             msg = 'Deleting DB entry [{0}]'
             tty.debug(msg.format(spec.short_spec))
             spack.store.db.remove(spec)
-        tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
         if pkg is not None:
             spack.hooks.post_uninstall(spec)
