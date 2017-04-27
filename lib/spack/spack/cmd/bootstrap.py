@@ -24,14 +24,8 @@
 ##############################################################################
 import llnl.util.tty as tty
 import spack
-<<<<<<< c06a379621af6be10f7fff8864911a724221a736
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-=======
-from spack.util.executable import ProcessError, which
-from spack.util.chroot import build_chroot_enviroment, remove_chroot_enviroment
-
->>>>>>> Created chroot enviroment for bootstrap if isolation mode is enabled
 
 description = "Bootstrap packages needed for spack to run smoothly"
 section = "admin"
