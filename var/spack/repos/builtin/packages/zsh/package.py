@@ -37,3 +37,4 @@ class Zsh(AutotoolsPackage):
     version('5.1.1', checksum='8ba28a9ef82e40c3a271602f18343b2f')
 
     depends_on("pcre")
+    depends_on("ncurses")

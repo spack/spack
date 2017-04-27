@@ -75,7 +75,7 @@ class Julia(Package):
     depends_on("git", when='@:0.4')
     depends_on("git", when='@release-0.4')
     depends_on("openssl")
-    depends_on("python @2.7:2.999")
+    depends_on("python@2.7:2.8")
 
     # Run-time dependencies:
     # depends_on("arpack")

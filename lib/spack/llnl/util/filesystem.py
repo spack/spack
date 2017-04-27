@@ -78,19 +78,25 @@ __all__ = [
 def filter_file(regex, repl, *filenames, **kwargs):
     r"""Like sed, but uses python regular expressions.
 
-       Filters every line of each file through regex and replaces the file
-       with a filtered version.  Preserves mode of filtered files.
+    Filters every line of each file through regex and replaces the file
+    with a filtered version.  Preserves mode of filtered files.
 
-       As with re.sub, ``repl`` can be either a string or a callable.
-       If it is a callable, it is passed the match object and should
-       return a suitable replacement string.  If it is a string, it
-       can contain ``\1``, ``\2``, etc. to represent back-substitution
-       as sed would allow.
+    As with re.sub, ``repl`` can be either a string or a callable.
+    If it is a callable, it is passed the match object and should
+    return a suitable replacement string.  If it is a string, it
+    can contain ``\1``, ``\2``, etc. to represent back-substitution
+    as sed would allow.
 
-       Keyword Options:
-         string[=False]         If True, treat regex as a plain string.
-         backup[=True]          Make backup file(s) suffixed with ~
-         ignore_absent[=False]  Ignore any files that don't exist.
+    Parameters:
+        regex (str): The regular expression to search for
+        repl (str): The string to replace matches with
+        *filenames: One or more files to search and replace
+
+    Keyword Arguments:
+        string (bool): Treat regex as a plain string. Default it False
+        backup (bool): Make backup file(s) suffixed with ``~``. Default is True
+        ignore_absent (bool): Ignore any files that don't exist.
+            Default is False
     """
     string = kwargs.get('string', False)
     backup = kwargs.get('backup', True)
@@ -134,7 +140,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
 
 class FileFilter(object):
-    """Convenience class for calling filter_file a lot."""
+    """Convenience class for calling ``filter_file`` a lot."""
 
     def __init__(self, *filenames):
         self.filenames = filenames
@@ -145,12 +151,18 @@ class FileFilter(object):
 
 def change_sed_delimiter(old_delim, new_delim, *filenames):
     """Find all sed search/replace commands and change the delimiter.
-       e.g., if the file contains seds that look like 's///', you can
-       call change_sed_delimiter('/', '@', file) to change the
-       delimiter to '@'.
 
-       NOTE that this routine will fail if the delimiter is ' or ".
-       Handling those is left for future work.
+    e.g., if the file contains seds that look like ``'s///'``, you can
+    call ``change_sed_delimiter('/', '@', file)`` to change the
+    delimiter to ``'@'``.
+
+    Note that this routine will fail if the delimiter is ``'`` or ``"``.
+    Handling those is left for future work.
+
+    Parameters:
+        old_delim (str): The delimiter to search for
+        new_delim (str): The delimiter to replace with
+        *filenames: One or more files to search and replace
     """
     assert(len(old_delim) == 1)
     assert(len(new_delim) == 1)
@@ -245,7 +257,7 @@ def mkdirp(*paths):
 
 
 def force_remove(*paths):
-    """Remove files without printing errors.  Like rm -f, does NOT
+    """Remove files without printing errors.  Like ``rm -f``, does NOT
        remove directories."""
     for path in paths:
         try:
@@ -284,7 +296,8 @@ def touch(path):
 
 
 def touchp(path):
-    """Like touch, but creates any parent directories needed for the file."""
+    """Like ``touch``, but creates any parent directories needed for the file.
+    """
     mkdirp(os.path.dirname(path))
     touch(path)
 
@@ -341,17 +354,13 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         ('root/b',       'dest/b')
         ('root/b/file3', 'dest/b/file3')
 
-    Optional args:
-
-    order=[pre|post] -- Whether to do pre- or post-order traversal.
-
-    ignore=<predicate> -- Predicate indicating which files to ignore.
-
-    follow_nonexisting -- Whether to descend into directories in
-                          src that do not exit in dest. Default True.
-
-    follow_links -- Whether to descend into symlinks in src.
-
+    Keyword Arguments:
+        order (str): Whether to do pre- or post-order traversal. Accepted
+            values are 'pre' and 'post'
+        ignore (str): Predicate indicating which files to ignore
+        follow_nonexisting (bool): Whether to descend into directories in
+            ``src`` that do not exit in ``dest``. Default is True
+        follow_links (bool): Whether to descend into symlinks in ``src``
     """
     follow_nonexisting = kwargs.get('follow_nonexisting', True)
     follow_links = kwargs.get('follow_link', False)
@@ -412,12 +421,10 @@ def set_executable(path):
 
 
 def remove_dead_links(root):
-    """
-    Removes any dead link that is present in root
+    """Removes any dead link that is present in root.
 
-    Args:
-        root: path where to search for dead links
-
+    Parameters:
+        root (str): path where to search for dead links
     """
     for file in os.listdir(root):
         path = join_path(root, file)
@@ -425,11 +432,10 @@ def remove_dead_links(root):
 
 
 def remove_if_dead_link(path):
-    """
-    Removes the argument if it is a dead link, does nothing otherwise
+    """Removes the argument if it is a dead link.
 
-    Args:
-        path: the potential dead link
+    Parameters:
+        path (str): The potential dead link
     """
     if os.path.islink(path):
         real_path = os.path.realpath(path)
@@ -438,14 +444,13 @@ def remove_if_dead_link(path):
 
 
 def remove_linked_tree(path):
-    """
-    Removes a directory and its contents.  If the directory is a
-    symlink, follows the link and removes the real directory before
-    removing the link.
+    """Removes a directory and its contents.
 
-    Args:
-        path: directory to be removed
+    If the directory is a symlink, follows the link and removes the real
+    directory before removing the link.
 
+    Parameters:
+        path (str): Directory to be removed
     """
     if os.path.exists(path):
         if os.path.islink(path):
@@ -456,17 +461,17 @@ def remove_linked_tree(path):
 
 
 def fix_darwin_install_name(path):
-    """
-    Fix install name of dynamic libraries on Darwin to have full path.
+    """Fix install name of dynamic libraries on Darwin to have full path.
+
     There are two parts of this task:
-    (i) use install_name('-id',...) to change install name of a single lib;
-    (ii) use install_name('-change',...) to change the cross linking between
-    libs. The function assumes that all libraries are in one folder and
-    currently won't follow subfolders.
 
-    Args:
-        path: directory in which .dylib files are located
+    1. Use ``install_name('-id', ...)`` to change install name of a single lib
+    2. Use ``install_name('-change', ...)`` to change the cross linking between
+       libs. The function assumes that all libraries are in one folder and
+       currently won't follow subfolders.
 
+    Parameters:
+        path (str): directory in which .dylib files are located
     """
     libs = glob.glob(join_path(path, "*.dylib"))
     for lib in libs:
@@ -506,9 +511,7 @@ def find(root, files, recurse=True):
 
     is equivalent to:
 
-    .. code-block:: python
-
-       >>> find('/usr', 'python')
+    >>> find('/usr', 'python')
 
     .. code-block:: console
 
@@ -516,9 +519,7 @@ def find(root, files, recurse=True):
 
     is equivalent to:
 
-    .. code-block:: python
-
-       >>> find('/usr/local/bin', 'python', recurse=False)
+    >>> find('/usr/local/bin', 'python', recurse=False)
 
     Accepts any glob characters accepted by fnmatch:
 
@@ -531,7 +532,7 @@ def find(root, files, recurse=True):
     [!seq]   matches any character not in ``seq``
     =======  ====================================
 
-    Args:
+    Parameters:
         root (str): The root directory to start searching from
         files (str or collections.Sequence): Library name(s) to search for
         recurse (bool, optional): if False search only root folder,
@@ -591,12 +592,10 @@ class FileList(collections.Sequence):
     def directories(self):
         """Stable de-duplication of the directories where the files reside.
 
-        .. code-block:: python
-
-           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])  # noqa
-           >>> assert l.directories == ['/dir1', '/dir2']
-           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-           >>> assert h.directories == ['/dir1', '/dir2']
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
+        >>> assert l.directories == ['/dir1', '/dir2']
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> assert h.directories == ['/dir1', '/dir2']
         """
         return list(dedupe(
             os.path.dirname(x) for x in self.files if os.path.dirname(x)
@@ -606,12 +605,10 @@ class FileList(collections.Sequence):
     def basenames(self):
         """Stable de-duplication of the base-names in the list
 
-        .. code-block:: python
-
-           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])  # noqa
-           >>> assert l.basenames == ['liba.a', 'libb.a']
-           >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-           >>> assert h.basenames == ['a.h', 'b.h']
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
+        >>> assert l.basenames == ['liba.a', 'libb.a']
+        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> assert h.basenames == ['a.h', 'b.h']
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
@@ -619,10 +616,8 @@ class FileList(collections.Sequence):
     def names(self):
         """Stable de-duplication of file names in the list
 
-        .. code-block:: python
-
-           >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-           >>> assert h.names == ['a', 'b']
+        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> assert h.names == ['a', 'b']
         """
         return list(dedupe(x.split('.')[0] for x in self.basenames))
 
@@ -674,10 +669,8 @@ class HeaderList(FileList):
     def include_flags(self):
         """Include flags
 
-        .. code-block:: python
-
-           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-           >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
         """
         return ' '.join(['-I' + x for x in self.directories])
 
@@ -685,12 +678,10 @@ class HeaderList(FileList):
     def macro_definitions(self):
         """Macro definitions
 
-        .. code-block:: python
-
-           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-           >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
-           >>> h.add_macro('-DBOOST_DYN_LINK')
-           >>> assert h.macro_definitions == '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'  # noqa
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
+        >>> h.add_macro('-DBOOST_DYN_LINK')
+        >>> assert h.macro_definitions == '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'  # noqa
         """
         return ' '.join(self._macro_definitions)
 
@@ -698,11 +689,9 @@ class HeaderList(FileList):
     def cpp_flags(self):
         """Include flags + macro definitions
 
-        .. code-block:: python
-
-           >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-           >>> h.add_macro('-DBOOST_DYN_LINK')
-           >>> assert h.macro_definitions == '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h.add_macro('-DBOOST_DYN_LINK')
+        >>> assert h.macro_definitions == '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
         """
         return self.include_flags + ' ' + self.macro_definitions
 
@@ -726,8 +715,8 @@ def find_headers(headers, root, recurse=False):
     [!seq]   matches any character not in ``seq``
     =======  ====================================
 
-    Args:
-        headers (str or collections.Sequence): Header name(s) to search for
+    Parameters:
+        headers (str or list of str): Header name(s) to search for
         root (str): The root directory to start searching from
         recurses (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
@@ -737,6 +726,11 @@ def find_headers(headers, root, recurse=False):
     """
     if isinstance(headers, six.string_types):
         headers = [headers]
+    elif not isinstance(headers, collections.Sequence):
+        message = '{0} expects a string or sequence of strings as the '
+        message += 'first argument [got {1} instead]'
+        message = message.format(find_headers.__name__, type(headers))
+        raise TypeError(message)
 
     # Construct the right suffix for the headers
     suffix = 'h'
@@ -762,10 +756,8 @@ class LibraryList(FileList):
     def names(self):
         """Stable de-duplication of library names in the list
 
-        .. code-block:: python
-
-           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])  # noqa
-           >>> assert l.names == ['a', 'b']
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
+        >>> assert l.names == ['a', 'b']
         """
         return list(dedupe(x.split('.')[0][3:] for x in self.basenames))
 
@@ -773,10 +765,8 @@ class LibraryList(FileList):
     def search_flags(self):
         """Search flags for the libraries
 
-        .. code-block:: python
-
-           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])  # noqa
-           >>> assert l.search_flags == '-L/dir1 -L/dir2'
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-L/dir1 -L/dir2'
         """
         return ' '.join(['-L' + x for x in self.directories])
 
@@ -784,10 +774,8 @@ class LibraryList(FileList):
     def link_flags(self):
         """Link flags for the libraries
 
-        .. code-block:: python
-
-           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])  # noqa
-           >>> assert l.search_flags == '-la -lb'
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-la -lb'
         """
         return ' '.join(['-l' + name for name in self.names])
 
@@ -795,26 +783,23 @@ class LibraryList(FileList):
     def ld_flags(self):
         """Search flags + link flags
 
-        .. code-block:: python
-
-           >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])  # noqa
-           >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
+        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
         """
         return self.search_flags + ' ' + self.link_flags
 
 
 def find_system_libraries(libraries, shared=True):
-    """Searches the usual system library locations for the
-    specified libraries.
+    """Searches the usual system library locations for ``libraries``.
 
     Search order is as follows:
 
-    1. /lib64
-    2. /lib
-    3. /usr/lib64
-    4. /usr/lib
-    5. /usr/local/lib64
-    6. /usr/local/lib
+    1. ``/lib64``
+    2. ``/lib``
+    3. ``/usr/lib64``
+    4. ``/usr/lib``
+    5. ``/usr/local/lib64``
+    6. ``/usr/local/lib``
 
     Accepts any glob characters accepted by fnmatch:
 
@@ -827,8 +812,8 @@ def find_system_libraries(libraries, shared=True):
     [!seq]   matches any character not in ``seq``
     =======  ====================================
 
-    Args:
-        libraries (str or collections.Sequence): Library name(s) to search for
+    Parameters:
+        libraries (str or list of str): Library name(s) to search for
         shared (bool, optional): if True searches for shared libraries,
             otherwise for static. Defaults to True.
 
@@ -865,8 +850,7 @@ def find_system_libraries(libraries, shared=True):
 
 
 def find_libraries(libraries, root, shared=True, recurse=False):
-    """Returns an iterable object containing a list of full paths to
-    libraries if found.
+    """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
 
@@ -879,8 +863,8 @@ def find_libraries(libraries, root, shared=True, recurse=False):
     [!seq]   matches any character not in ``seq``
     =======  ====================================
 
-    Args:
-        libraries (str or collections.Sequence): Library name(s) to search for
+    Parameters:
+        libraries (str or list of str): Library name(s) to search for
         root (str): The root directory to start searching from
         shared (bool, optional): if True searches for shared libraries,
             otherwise for static. Defaults to True.
@@ -892,6 +876,11 @@ def find_libraries(libraries, root, shared=True, recurse=False):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
+    elif not isinstance(libraries, collections.Sequence):
+        message = '{0} expects a string or sequence of strings as the '
+        message += 'first argument [got {1} instead]'
+        message = message.format(find_libraries.__name__, type(libraries))
+        raise TypeError(message)
 
     # Construct the right suffix for the library
     if shared is True:
