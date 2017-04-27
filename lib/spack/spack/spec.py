@@ -758,32 +758,35 @@ class DependencyMap(HashableMap):
 
 
 def _libs_default_handler(descriptor, spec, cls):
-    """Default handler when looking for 'libs' attribute. The default
-    tries to search for 'lib{spec.name}' recursively starting from
+    """Default handler when for ``libs`` attribute in Spec interface.
+
+    Tries to search for ``lib{spec.name}`` recursively starting from
     `spec.prefix`.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered
+            the call
+        spec (Spec): spec that is being queried
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor `__get__` method
     """
     name = 'lib' + spec.name
     shared = '+shared' in spec
-    return find_libraries(
-        name, root=spec.prefix, shared=shared, recurse=True
-    )
+    return find_libraries(name, root=spec.prefix, shared=shared, recurse=True)
 
 
 def _cppflags_default_handler(descriptor, spec, cls):
-    """Default handler when looking for cppflags attribute. The default
-    just returns '-I{spec.prefix.include}'.
+    """Default handler for the ``cppflags`` attribute in the Spec interface.
 
-    :param ForwardQueryToPackage descriptor: descriptor that triggered
-        the call
-    :param Spec spec: spec that is being queried
-    :param type(spec) cls: type of spec, to match the signature of the
-        descriptor `__get__` method
+    The default just returns ``-I{spec.prefix.include}``.
+
+    Args:
+        descriptor (ForwardQueryToPackage): descriptor that triggered
+            the call
+        spec (Spec): spec that is being queried
+
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor ``__get__`` method
     """
     return '-I' + spec.prefix.include
 
@@ -792,13 +795,14 @@ class ForwardQueryToPackage(object):
     """Descriptor used to forward queries from Spec to Package"""
 
     def __init__(self, attribute_name, default_handler=None):
-        """Initializes the instance of the descriptor
+        """Create a new descriptor.
 
-        :param str attribute_name: name of the attribute to be
-            searched for in the Package instance
-        :param callable default_handler: [optional] default function
-            to be called if the attribute was not found in the Package
-            instance
+        Args:
+            attribute_name (str): name of the attribute to be
+                searched for in the Package instance
+            default_handler (callable, optional): default function to be
+                called if the attribute was not found in the Package
+                instance
         """
         self.attribute_name = attribute_name
         # Turn the default handler into a function with the right

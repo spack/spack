@@ -137,9 +137,11 @@ class PythonPackage(PackageBase):
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
 
-        :param str command: The command to look for
-        :return: True if the command is found, else False
-        :rtype: bool
+        Args:
+            command (str): The command to look for
+
+        Returns:
+            bool: True if the command is found, else False
         """
         kwargs = {
             'output': os.devnull,

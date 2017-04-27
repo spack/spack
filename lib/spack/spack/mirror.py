@@ -117,13 +117,10 @@ def get_matching_versions(specs, **kwargs):
 
 
 def suggest_archive_basename(resource):
-    """
-    Return a tentative basename for an archive.
+    """Return a tentative basename for an archive.
 
-    Raises an exception if the name is not an allowed archive type.
-
-    :param fetcher:
-    :return:
+    Raises:
+        RuntimeError: if the name is not an allowed archive type.
     """
     basename = os.path.basename(resource.fetcher.url)
     if not allowed_archive(basename):

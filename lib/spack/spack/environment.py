@@ -262,12 +262,15 @@ class EnvironmentModifications(object):
 
     @staticmethod
     def from_sourcing_files(*args, **kwargs):
-        """Creates an instance of EnvironmentModifications that, if executed,
-        has the same effect on the environment as sourcing the files passed as
-        parameters
+        """Returns modifications that would be made by sourcing files.
 
-        :param \*args: list of files to be sourced
-        :rtype: instance of EnvironmentModifications
+        Args:
+            *args (list of str): list of files to be sourced
+
+        Returns:
+            EnvironmentModifications: an object that, if executed, has
+                the same effect on the environment as sourcing the files
+                passed as parameters
         """
         env = EnvironmentModifications()
 

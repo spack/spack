@@ -57,13 +57,14 @@ def get_checksums(url_dict, name, **kwargs):
     The ``first_stage_function`` kwarg allows ``spack create`` to determine
     things like the build system of the archive.
 
-    :param dict url_dict: A dictionary of the form: version -> URL
-    :param str name: The name of the package
-    :param callable first_stage_function: Function to run on first staging area
-    :param bool keep_stage: Don't clean up staging area when command completes
+    Args:
+        url_dict (dict): A dictionary of the form: version -> URL
+        name (str): The name of the package
+        first_stage_function (callable): Function to run on first staging area
+        keep_stage (bool): Don't clean up staging area when command completes
 
-    :returns: A multi-line string containing versions and corresponding hashes
-    :rtype: str
+    Returns:
+        str: A multi-line string containing versions and corresponding hashes
     """
     first_stage_function = kwargs.get('first_stage_function', None)
     keep_stage = kwargs.get('keep_stage', False)
