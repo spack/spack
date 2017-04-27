@@ -34,7 +34,8 @@ class ChomboXsdk(Package):
     homepage = "http://chombo.lbl.gov/"
     url = "http://bitbucket.org/drhansj/chombo-xsdk/get/xsdk-0.2.0a.tar.bz2"
 
-    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='8893c7')
+    # version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='8893c7')
+    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='0979d85')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
     variant('dim'      , default=2    , description = 'Set the physical dimension')
@@ -59,12 +60,44 @@ class ChomboXsdk(Package):
     depends_on('petsc+mpi', when='+use_petsc+mpi')
 
     def install(self, spec, prefix):
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
-
         options = []
+
+        # Set up all the options for the Chombo build
 
         if 'dim' in spec:
           options.append('DIM=%d' % spec['dim'])
+
+        if 'debug' in spec:
+          options.append('DEBUG=TRUE')
+        else:
+          options.append('DEBUG=FALSE')
+
+        if 'opt' in spec:
+          options.append('OPT=TRUE')
+        else:
+          options.append('OPT=FALSE')
+
+        if 'namespace' in spec:
+          options.append('NAMESPACE=TRUE')
+        else:
+          options.append('NAMESPACE=FALSE')
+
+        if 'opt' in spec:
+          options.append('OPT=TRUE')
+        else:
+          options.append('OPT=FALSE')
+
+        if 'mpi' in spec:
+          options.append('MPI=TRUE')
+          options.append('RUN=%s -np 2 ./' % join_path(spec['mpi'].prefix.bin,'mpirun'))
+        else:
+          options.append('MPI=FALSE')
+          options.append('RUN=./')
+
+        if 'use_eb' in spec:
+          options.append('USE_EB=TRUE')
+        else:
+          options.append('USE_EB=FALSE')
 
         if 'use_hdf' in spec:
           options.append('USE_HDF=TRUE')
@@ -75,26 +108,39 @@ class ChomboXsdk(Package):
         else:
           options.append('USE_HDF=FALSE')
 
-        if 'mpi' in spec:
-          options.append('MPI=TRUE')
+        if 'use_petsc' in spec:
+          options.append('USE_PETSC=TRUE')
         else:
-          options.append('MPI=FALSE')
+          options.append('USE_PETSC=FALSE')
 
+        options.append('syslibflags=%s %s' % (spec['lapack'].libs,spec['blas'].libs))
+
+        # Build library
         make('--directory=lib','lib',*options)
 
-        # FIXME:
-        # cd "EXAMPLE" do
-        # system "make"
+        # Build unit tests
+        make('--directory=lib','all',*options)
 
-        # need to install by hand
-        #headers_location = self.prefix.include
-        #mkdirp(headers_location)
-        #mkdirp(prefix.lib)
+        # Run unit tests
+        make('--directory=lib','run',*options)
 
-        #headers = glob.glob(join_path(self.stage.source_path, 'SRC', '*.h'))
-        #for h in headers:
-            #install(h, headers_location)
+        # TODO - Build and run example
 
-        #chomboxsdk_lib = join_path(self.stage.source_path,
-                                    #'lib/libchombo_xsdk.a')
-        #install(chomboxsdk_lib, self.prefix.lib)
+        # Need to install by hand
+
+        # Get and create the target 'include' and 'lib'
+        headers_location = self.prefix.include
+        mkdirp(headers_location)
+
+        libs_location = self.prefix.lib
+        mkdirp(libs_location)
+
+        # Install the include files
+        headers = glob.glob(join_path(self.stage.source_path, 'lib', 'include', '*.H'))
+        for h in headers:
+          install(h, headers_location)
+
+        # Install the library
+        libs = glob.glob(join_path(self.stage.source_path, 'lib', '*.a'))
+        for l in libs:
+          install(l, libs_location)
