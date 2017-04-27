@@ -66,7 +66,7 @@ class Legion(CMakePackage):
         options = [
             '-DLegion_USE_GASNet=ON',
             '-DLegion_BUILD_EXAMPLES=ON',
-            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec)]
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
 
         if '+mpi' in self.spec:
             options.append('-DGASNet_CONDUIT=mpi')
