@@ -56,6 +56,7 @@ class Openblas(MakefilePackage):
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
+    patch('openblas_icc_openmp.patch', when='%intel@18.0:')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982

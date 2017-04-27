@@ -1,0 +1,20 @@
+diff -Naur a/Makefile.system b/Makefile.system
+--- a/Makefile.system   2017-04-27 16:31:34.609465937 -0700
++++ b/Makefile.system   2017-04-27 16:32:24.692184811 -0700
+@@ -415,7 +415,7 @@
+ endif
+ 
+ ifeq ($(C_COMPILER), INTEL)
+-CCOMMON_OPT    += -openmp
++CCOMMON_OPT    += -qopenmp
+ endif
+ 
+ ifeq ($(C_COMPILER), PGI)
+@@ -645,7 +645,7 @@
+ endif
+ endif
+ ifeq ($(USE_OPENMP), 1)
+-FCOMMON_OPT += -openmp
++FCOMMON_OPT += -qopenmp
+ endif
+ endif
