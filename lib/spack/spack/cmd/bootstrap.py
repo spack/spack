@@ -40,6 +40,7 @@ def setup_parser(subparser):
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
+<<<<<<< d602cff7dd0c667ea5d3ee86a002c2e764329500
         '--keep-stage', action='store_true', dest='keep_stage',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
@@ -48,6 +49,92 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
+=======
+        '--isolate', action='store_true', dest='isolate',
+        help="isolate the bootstraped enviroment from the system")
+
+
+def get_origin_info(remote):
+    git_dir = join_path(spack.prefix, '.git')
+    git = which('git', required=True)
+    try:
+        branch = git('symbolic-ref', '--short', 'HEAD', output=str)
+    except ProcessError:
+        branch = 'develop'
+        tty.warn('No branch found; using default branch: %s' % branch)
+    if remote == 'origin' and \
+       branch not in ('master', 'develop'):
+        branch = 'develop'
+        tty.warn('Unknown branch found; using default branch: %s' % branch)
+    try:
+        origin_url = git(
+            '--git-dir=%s' % git_dir,
+            'config', '--get', 'remote.%s.url' % remote,
+            output=str)
+    except ProcessError:
+        origin_url = _SPACK_UPSTREAM
+        tty.warn('No git repository found; '
+                 'using default upstream URL: %s' % origin_url)
+    return (origin_url.strip(), branch.strip())
+
+def adapt_config(install_dir):
+    etc_path = join_path(install_dir, "etc")
+    config_path = join_path(etc_path, "spack")
+
+    # Add the boostrap file to the config list
+    spack.config.ConfigScope('bootstrap', config_path)
+    config = spack.config.get_config("config", "bootstrap")
+
+    #write to the config
+    config['isolate'] = True
+    spack.config.update_config("config", config, "bootstrap")
+
+def bootstrap(parser, args):
+    origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap" #get_origin_info(args.remote)
+    prefix = args.prefix
+    isolate = args.isolate
+
+    tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
+
+    if os.path.isfile(prefix):
+        tty.die("There is already a file at %s" % prefix)
+
+    mkdirp(prefix)
+
+    if isolate:
+        home = os.path.join(prefix, 'home')
+        install_dir = os.path.join(home, 'spack')
+
+        mkdirp(home)
+        mkdirp(install_dir)
+        build_chroot_enviroment(prefix)
+        #raw_input("Wait Key: ")
+        #remove_chroot_enviroment(prefix)
+    else:
+        install_dir = prefix
+
+    if os.path.exists(join_path(install_dir, '.git')):
+        tty.die("There already seems to be a git repository in %s" % prefix)
+
+    files_in_the_way = os.listdir(install_dir)
+    if files_in_the_way:
+        tty.die("There are already files there! "
+                "Delete these files before boostrapping spack.",
+                *files_in_the_way)
+
+    tty.msg("Installing:",
+            "%s/bin/spack" % install_dir,
+            "%s/lib/spack/..." % install_dir)
+
+    os.chdir(install_dir)
+    git = which('git', required=True)
+    git('init', '--shared', '-q')
+    git('remote', 'add', 'origin', origin_url)
+    git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
+                           '-n', '-q')
+    git('reset', '--hard', 'origin/%s' % branch, '-q')
+    git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
+>>>>>>> Fixed typo
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
