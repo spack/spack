@@ -102,6 +102,7 @@ class Scr(CMakePackage):
             self.spec.variants['scr_config'].value)
         args.append('-DCMAKE_SCR_CONFIG_FILE={0}'.format(conf_path))
 
+        # We uppercase the values for these to avoid unnecessary user error.
         args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
                 spec.variants['resource_manager'].value.upper()))
 
