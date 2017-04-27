@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import os
+import sys
 import spack
 from itertools import product
 from spack.util.executable import which
@@ -32,32 +33,65 @@ EXECUTABLES = [
     'bash',
     'git',
     'tar',
-    'curl'
+    'curl',
+    'python',
+
+    #debug
+    'ls',
+    'mkdir',
 ]
 
 DEFAULT_PATHS = [
-    u'dev',
-    u'sys',
-    u'bin',
-    u'run',
-    u'etc',
-    u'lib',
-    u'lib32',
-    u'lib64'
+    '/dev',
+    '/sys',
+    '/run',
+
+    #networking
+    '/etc/resolv.conf',
+    '/lib/x86_64-linux-gnu/libnss_files.so.2',
+    '/lib/x86_64-linux-gnu/libnss_dns.so.2',
+
+    #git
+    '/usr/share/git-core',
+
+    #python
+    '/usr/lib/python2.7',
 ]
 
 def get_all_library_directories():
     libraries = set(DEFAULT_PATHS)
     for exe in EXECUTABLES:
         executable = spack.util.executable.which(exe, required=True)
-        for lib in executable.get_shared_libraries():
-            libraries.add(os.path.dirname(lib[1:]))
+        files = executable.get_shared_libraries()
+        files.extend(executable.exe)
+        for lib in files:
+            libraries.add(lib)
     return list(libraries)
 
 def mount_bind_path(realpath, chrootpath):
+    if os.path.isfile(realpath):
+        if not os.path.exists(os.path.dirname(chrootpath)):
+            os.makedirs(os.path.dirname(chrootpath))
+
+        if not os.path.exists(chrootpath):
+            with open(chrootpath, "w") as out:
+                pass
+    else:
+        if not os.path.exists(chrootpath):
+            os.makedirs(chrootpath)
+
+    #print "mount --bind %s %s" % (realpath, chrootpath)
     os.system("mount --bind %s %s" % (realpath, chrootpath))
+
+def umount_bind_path(chrootpath):
+    os.system("umount -l %s" % (chrootpath))
 
 def build_chroot_enviroment(dir):
     libraries = get_all_library_directories()
     for lib in libraries:
-        mount_bind_path(lib, os.path.join(dir, lib))
+        mount_bind_path(lib, os.path.join(dir, lib[1:]))
+
+def remove_chroot_enviroment(dir):
+    libraries = get_all_library_directories()
+    for lib in libraries:
+        umount_bind_path(os.path.join(dir, lib[1:]))

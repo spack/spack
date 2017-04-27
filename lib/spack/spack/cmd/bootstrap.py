@@ -29,7 +29,7 @@ from llnl.util.filesystem import join_path, mkdirp
 
 import spack
 from spack.util.executable import ProcessError, which
-from spack.util.chroot import build_chroot_enviroment
+from spack.util.chroot import build_chroot_enviroment, remove_chroot_enviroment
 
 
 _SPACK_UPSTREAM = 'https://github.com/llnl/spack'
@@ -46,8 +46,7 @@ def setup_parser(subparser):
         help="names of prefix where we should install spack")
     subparser.add_argument(
         '--isolate', action='store_true', dest='isolate',
-        help="isolate the bootsraped enviroment from the system",
-        default='False')
+        help="isolate the bootsraped enviroment from the system")
 
 
 def get_origin_info(remote):
@@ -75,14 +74,9 @@ def get_origin_info(remote):
 
 
 def bootstrap(parser, args):
-    origin_url, branch = get_origin_info(args.remote)
+    origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap" #get_origin_info(args.remote)
     prefix = args.prefix
-    isolate = True if args.isolate != None else False
-
-
-    build_chroot_enviroment(prefix)
-
-    return
+    isolate = args.isolate
 
     tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
@@ -91,20 +85,33 @@ def bootstrap(parser, args):
 
     mkdirp(prefix)
 
-    if os.path.exists(join_path(prefix, '.git')):
+    if isolate:
+        home = os.path.join(prefix, 'home')
+        install_dir = os.path.join(home, 'spack')
+
+        mkdirp(home)
+        mkdirp(install_dir)
+
+        build_chroot_enviroment(prefix)
+    else:
+        install_dir = prefix
+
+    #remove_chroot_enviroment(prefix)
+
+    if os.path.exists(join_path(install_dir, '.git')):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
-    files_in_the_way = os.listdir(prefix)
+    files_in_the_way = os.listdir(install_dir)
     if files_in_the_way:
         tty.die("There are already files there! "
                 "Delete these files before boostrapping spack.",
                 *files_in_the_way)
 
     tty.msg("Installing:",
-            "%s/bin/spack" % prefix,
-            "%s/lib/spack/..." % prefix)
+            "%s/bin/spack" % install_dir,
+            "%s/lib/spack/..." % install_dir)
 
-    os.chdir(prefix)
+    os.chdir(install_dir)
     git = which('git', required=True)
     git('init', '--shared', '-q')
     git('remote', 'add', 'origin', origin_url)
