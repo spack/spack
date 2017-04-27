@@ -72,6 +72,17 @@ def get_origin_info(remote):
                  'using default upstream URL: %s' % origin_url)
     return (origin_url.strip(), branch.strip())
 
+def adapt_config(install_dir):
+    etc_path = join_path(install_dir, "etc")
+    config_path = join_path(etc_path, "spack")
+
+    # Add the boostrap file to the config list
+    spack.config.ConfigScope('bootstrap', config_path)
+    config = spack.config.get_config("config", "bootstrap")
+
+    #write to the config
+    config['isolate'] = True
+    spack.config.update_config("config", config, "bootstrap")
 
 def bootstrap(parser, args):
     origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap" #get_origin_info(args.remote)
@@ -91,8 +102,7 @@ def bootstrap(parser, args):
 
         mkdirp(home)
         mkdirp(install_dir)
-
-        build_chroot_enviroment(prefix)
+        #build_chroot_enviroment(prefix)
     else:
         install_dir = prefix
 
@@ -122,3 +132,7 @@ def bootstrap(parser, args):
 
     tty.msg("Successfully created a new spack in %s" % prefix,
             "Run %s/bin/spack to use this installation." % prefix)
+
+    # at last change the config
+    if isolate:
+        adapt_config(install_dir)
