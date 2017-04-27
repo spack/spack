@@ -28,7 +28,7 @@ from spack import *
 class Atop(Package):
     """Atop is an ASCII full-screen performance monitor for Linux"""
     homepage = "http://www.atoptool.nl/index.php"
-    url = "http://www.atoptool.nl/download/atop-2.2-3.tar.gz"
+    url      = "http://www.atoptool.nl/download/atop-2.2-3.tar.gz"
 
     version('2.2-3', '034dc1544f2ec4e4d2c739d320dc326d')
 

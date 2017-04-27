@@ -31,7 +31,7 @@ class Hstr(AutotoolsPackage):
     your command history."""
 
     homepage = "https://github.com/dvorka/hstr"
-    url = "https://github.com/dvorka/hstr/archive/1.22.tar.gz"
+    url      = "https://github.com/dvorka/hstr/archive/1.22.tar.gz"
 
     version('1.22', '620dab922fadf2858938fbe36d9f99fd')
 

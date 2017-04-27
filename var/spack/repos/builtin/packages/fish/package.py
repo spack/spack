@@ -26,12 +26,12 @@ from spack import *
 
 
 class Fish(AutotoolsPackage):
-    """fish is a smart and user-friendly command line shell for OS X, Linux,
-    and the rest of the family.
+    """fish is a smart and user-friendly command line shell for OS X, Linux, and
+    the rest of the family.
     """
 
     homepage = "http://fishshell.com/"
-    url = "http://fishshell.com/files/2.2.0/fish-2.2.0.tar.gz"
+    url      = "http://fishshell.com/files/2.2.0/fish-2.2.0.tar.gz"
     list_url = "http://fishshell.com/"
 
     depends_on('ncurses')

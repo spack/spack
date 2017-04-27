@@ -28,7 +28,7 @@ from spack import *
 class Libtermkey(Package):
     """Easy keyboard entry processing for terminal programs"""
     homepage = "http://www.leonerd.org.uk/code/libtermkey/"
-    url = "http://www.leonerd.org.uk/code/libtermkey/libtermkey-0.18.tar.gz"
+    url      = "http://www.leonerd.org.uk/code/libtermkey/libtermkey-0.18.tar.gz"
 
     version('0.18', '3be2e3e5a851a49cc5e8567ac108b520')
     version('0.17', '20edb99e0d95ec1690fe90e6a555ae6d')
