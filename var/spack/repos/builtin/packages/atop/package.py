@@ -32,6 +32,9 @@ class Atop(Package):
 
     version('2.2-3', '034dc1544f2ec4e4d2c739d320dc326d')
 
+    depends_on('zlib')
+    depends_on('ncurses')
+
     def install(self, spec, prefix):
         make()
         mkdirp(prefix.bin)

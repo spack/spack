@@ -36,6 +36,9 @@ class Libtermkey(Package):
     version('0.15b', '27689756e6c86c56ae454f2ac259bc3d')
     version('0.14', 'e08ce30f440f9715c459060e0e048978')
 
+    depends_on('libtool', type='build')
+    depends_on('ncurses')
+
     def install(self, spec, prefix):
         make()
         make("install", "PREFIX=" + prefix)
