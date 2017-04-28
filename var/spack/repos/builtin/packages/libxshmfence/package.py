@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxshmfence(Package):
+class Libxshmfence(AutotoolsPackage):
     """libxshmfence - Shared memory 'SyncFence' synchronization primitive.
 
     This library offers a CPU-based synchronization primitive compatible
@@ -40,10 +40,3 @@ class Libxshmfence(Package):
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

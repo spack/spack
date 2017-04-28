@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Resourceproto(Package):
+class Resourceproto(AutotoolsPackage):
     """X Resource Extension.
 
     This extension defines a protocol that allows a client to query the
@@ -38,8 +38,3 @@ class Resourceproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

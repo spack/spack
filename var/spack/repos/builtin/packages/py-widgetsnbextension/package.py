@@ -34,5 +34,5 @@ class PyWidgetsnbextension(PythonPackage):
     version('1.2.6', '0aa4e152c9ba2d704389dc2453f448c7')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('python@2.7:2.8,3.3:')
     depends_on('py-jupyter-notebook@4.2.0:', type=('build', 'run'))

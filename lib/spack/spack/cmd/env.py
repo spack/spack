@@ -22,19 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 import argparse
+
 import llnl.util.tty as tty
 import spack.cmd
 import spack.build_environment as build_env
 
-description = "Run a command with the install environment for a spec."
+description = "run a command with the install environment for a spec"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="specs of package environment to emulate.")
+        help="specs of package environment to emulate")
 
 
 def env(parser, args):
@@ -64,7 +67,7 @@ def env(parser, args):
     if not cmd:
         # If no command act like the "env" command and print out env vars.
         for key, val in os.environ.items():
-            print "%s=%s" % (key, val)
+            print("%s=%s" % (key, val))
 
     else:
         # Otherwise execute the command with the new environment

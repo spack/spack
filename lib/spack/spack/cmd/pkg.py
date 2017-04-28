@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 
 import argparse
@@ -31,7 +33,7 @@ from llnl.util.tty.colify import colify
 import spack
 from spack.util.executable import *
 
-description = "Query packages associated with particular git revisions."
+description = "query packages associated with particular git revisions"
 
 
 def setup_parser(subparser):
@@ -40,44 +42,47 @@ def setup_parser(subparser):
 
     add_parser = sp.add_parser('add', help=pkg_add.__doc__)
     add_parser.add_argument('packages', nargs=argparse.REMAINDER,
-                            help="Names of packages to add to git repo.")
+                            help="names of packages to add to git repo")
 
     list_parser = sp.add_parser('list', help=pkg_list.__doc__)
     list_parser.add_argument('rev', default='HEAD', nargs='?',
-                             help="Revision to list packages for.")
+                             help="revision to list packages for")
 
     diff_parser = sp.add_parser('diff', help=pkg_diff.__doc__)
     diff_parser.add_argument(
         'rev1', nargs='?', default='HEAD^',
-        help="Revision to compare against.")
+        help="revision to compare against")
     diff_parser.add_argument(
         'rev2', nargs='?', default='HEAD',
-        help="Revision to compare to rev1 (default is HEAD).")
+        help="revision to compare to rev1 (default is HEAD)")
 
     add_parser = sp.add_parser('added', help=pkg_added.__doc__)
     add_parser.add_argument(
         'rev1', nargs='?', default='HEAD^',
-        help="Revision to compare against.")
+        help="revision to compare against")
     add_parser.add_argument(
         'rev2', nargs='?', default='HEAD',
-        help="Revision to compare to rev1 (default is HEAD).")
+        help="revision to compare to rev1 (default is HEAD)")
 
     rm_parser = sp.add_parser('removed', help=pkg_removed.__doc__)
     rm_parser.add_argument(
         'rev1', nargs='?', default='HEAD^',
-        help="Revision to compare against.")
+        help="revision to compare against")
     rm_parser.add_argument(
         'rev2', nargs='?', default='HEAD',
-        help="Revision to compare to rev1 (default is HEAD).")
+        help="revision to compare to rev1 (default is HEAD)")
 
 
-def get_git():
+def get_git(fatal=True):
     # cd to spack prefix to do git operations
     os.chdir(spack.prefix)
 
     # If this is a non-git version of spack, give up.
     if not os.path.isdir('.git'):
-        tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
+        if fatal:
+            tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
+        else:
+            return None
 
     return which("git", required=True)
 
@@ -118,13 +123,13 @@ def pkg_diff(args):
     u1, u2 = diff_packages(args.rev1, args.rev2)
 
     if u1:
-        print "%s:" % args.rev1
+        print("%s:" % args.rev1)
         colify(sorted(u1), indent=4)
         if u1:
-            print
+            print()
 
     if u2:
-        print "%s:" % args.rev2
+        print("%s:" % args.rev2)
         colify(sorted(u2), indent=4)
 
 

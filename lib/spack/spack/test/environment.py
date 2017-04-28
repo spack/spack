@@ -22,182 +22,246 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import unittest
 import os
 
+import pytest
 from spack import spack_root
-from llnl.util.filesystem import join_path
 from spack.environment import EnvironmentModifications
-from spack.environment import SetEnv, UnsetEnv
 from spack.environment import RemovePath, PrependPath, AppendPath
+from spack.environment import SetEnv, UnsetEnv
 from spack.util.environment import filter_system_paths, filter_system_bin_paths
 
 
-class EnvironmentTest(unittest.TestCase):
+@pytest.fixture()
+def prepare_environment_for_tests():
+    """Sets a few dummy variables in the current environment, that will be
+    useful for the tests below.
+    """
+    os.environ['UNSET_ME'] = 'foo'
+    os.environ['EMPTY_PATH_LIST'] = ''
+    os.environ['PATH_LIST'] = '/path/second:/path/third'
+    os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
+    yield
+    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST'):
+        if x in os.environ:
+            del os.environ[x]
 
-    def setUp(self):
-        os.environ['UNSET_ME'] = 'foo'
-        os.environ['EMPTY_PATH_LIST'] = ''
-        os.environ['PATH_LIST'] = '/path/second:/path/third'
-        os.environ['REMOVE_PATH_LIST'] = \
-            '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
 
-    def tearDown(self):
-        pass
+@pytest.fixture
+def env(prepare_environment_for_tests):
+    """Returns an empty EnvironmentModifications object."""
+    return EnvironmentModifications()
 
-    def test_set(self):
-        env = EnvironmentModifications()
-        env.set('A', 'dummy value')
-        env.set('B', 3)
-        env.apply_modifications()
-        self.assertEqual('dummy value', os.environ['A'])
-        self.assertEqual(str(3), os.environ['B'])
 
-    def test_unset(self):
-        env = EnvironmentModifications()
-        self.assertEqual('foo', os.environ['UNSET_ME'])
-        env.unset('UNSET_ME')
-        env.apply_modifications()
-        self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
+@pytest.fixture
+def miscellaneous_paths():
+    """Returns a list of paths, including system ones."""
+    return [
+        '/usr/local/Cellar/gcc/5.3.0/lib',
+        '/usr/local/lib',
+        '/usr/local',
+        '/usr/local/include',
+        '/usr/local/lib64',
+        '/usr/local/opt/some-package/lib',
+        '/usr/opt/lib',
+        '/lib',
+        '/',
+        '/usr',
+        '/lib64',
+        '/include',
+        '/opt/some-package/include',
+    ]
 
-    def test_filter_system_paths(self):
-        filtered = filter_system_paths([
-            '/usr/local/Cellar/gcc/5.3.0/lib',
-            '/usr/local/lib',
-            '/usr/local',
-            '/usr/local/include',
-            '/usr/local/lib64',
-            '/usr/local/opt/some-package/lib',
-            '/usr/opt/lib',
-            '/lib',
-            '/',
-            '/usr',
-            '/lib64',
-            '/include',
-            '/opt/some-package/include',
-        ])
-        self.assertEqual(filtered,
-                         ['/usr/local/Cellar/gcc/5.3.0/lib',
-                          '/usr/local/opt/some-package/lib',
-                          '/usr/opt/lib',
-                          '/opt/some-package/include'])
 
-        filtered = filter_system_bin_paths([
-            '/usr/local/Cellar/gcc/5.3.0/bin',
-            '/usr/local/bin',
-            '/usr/local/opt/some-package/bin',
-            '/usr/opt/bin',
-            '/bin',
-            '/opt/some-package/bin',
-        ])
-        self.assertEqual(filtered,
-                         ['/usr/local/bin',
-                          '/bin',
-                          '/usr/local/Cellar/gcc/5.3.0/bin',
-                          '/usr/local/opt/some-package/bin',
-                          '/usr/opt/bin',
-                          '/opt/some-package/bin'])
+@pytest.fixture
+def bin_paths():
+    """Returns a list of bin paths, including system ones."""
+    return [
+        '/usr/local/Cellar/gcc/5.3.0/bin',
+        '/usr/local/bin',
+        '/usr/local/opt/some-package/bin',
+        '/usr/opt/bin',
+        '/bin',
+        '/opt/some-package/bin',
+    ]
 
-    def test_set_path(self):
-        env = EnvironmentModifications()
-        env.set_path('A', ['foo', 'bar', 'baz'])
-        env.apply_modifications()
-        self.assertEqual('foo:bar:baz', os.environ['A'])
 
-    def test_path_manipulation(self):
-        env = EnvironmentModifications()
+@pytest.fixture
+def files_to_be_sourced():
+    """Returns a list of files to be sourced"""
+    datadir = os.path.join(
+        spack_root, 'lib', 'spack', 'spack', 'test', 'data'
+    )
 
-        env.append_path('PATH_LIST', '/path/last')
-        env.prepend_path('PATH_LIST', '/path/first')
+    files = [
+        os.path.join(datadir, 'sourceme_first.sh'),
+        os.path.join(datadir, 'sourceme_second.sh'),
+        os.path.join(datadir, 'sourceme_parameters.sh intel64'),
+        os.path.join(datadir, 'sourceme_unicode.sh')
+    ]
 
-        env.append_path('EMPTY_PATH_LIST', '/path/middle')
-        env.append_path('EMPTY_PATH_LIST', '/path/last')
-        env.prepend_path('EMPTY_PATH_LIST', '/path/first')
+    return files
 
-        env.append_path('NEWLY_CREATED_PATH_LIST', '/path/middle')
-        env.append_path('NEWLY_CREATED_PATH_LIST', '/path/last')
-        env.prepend_path('NEWLY_CREATED_PATH_LIST', '/path/first')
 
-        env.remove_path('REMOVE_PATH_LIST', '/remove/this')
-        env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
+def test_set(env):
+    """Tests setting values in the environment."""
 
-        env.apply_modifications()
-        self.assertEqual(
-            '/path/first:/path/second:/path/third:/path/last',
-            os.environ['PATH_LIST']
-        )
-        self.assertEqual(
-            '/path/first:/path/middle:/path/last',
-            os.environ['EMPTY_PATH_LIST']
-        )
-        self.assertEqual(
-            '/path/first:/path/middle:/path/last',
-            os.environ['NEWLY_CREATED_PATH_LIST']
-        )
-        self.assertEqual('/a/b:/a/c:/a/d:/f/g', os.environ['REMOVE_PATH_LIST'])
+    # Here we are storing the commands to set a couple of variables
+    env.set('A', 'dummy value')
+    env.set('B', 3)
 
-    def test_extra_arguments(self):
-        env = EnvironmentModifications()
-        env.set('A', 'dummy value', who='Pkg1')
-        for x in env:
-            assert 'who' in x.args
-        env.apply_modifications()
-        self.assertEqual('dummy value', os.environ['A'])
+    # ...and then we are executing them
+    env.apply_modifications()
 
-    def test_extend(self):
-        env = EnvironmentModifications()
-        env.set('A', 'dummy value')
-        env.set('B', 3)
-        copy_construct = EnvironmentModifications(env)
-        self.assertEqual(len(copy_construct), 2)
-        for x, y in zip(env, copy_construct):
-            assert x is y
+    assert 'dummy value' == os.environ['A']
+    assert str(3) == os.environ['B']
 
-    def test_source_files(self):
-        datadir = join_path(spack_root, 'lib', 'spack',
-                            'spack', 'test', 'data')
-        files = [
-            join_path(datadir, 'sourceme_first.sh'),
-            join_path(datadir, 'sourceme_second.sh'),
-            join_path(datadir, 'sourceme_parameters.sh intel64')
-        ]
-        env = EnvironmentModifications.from_sourcing_files(*files)
-        modifications = env.group_by_name()
 
-        # This is sensitive to the user's environment; can include
-        # spurious entries for things like PS1
-        #
-        # TODO: figure out how to make a bit more robust.
-        self.assertTrue(len(modifications) >= 4)
+def test_unset(env):
+    """Tests unsetting values in the environment."""
 
-        # Set new variables
-        self.assertEqual(len(modifications['NEW_VAR']), 1)
-        self.assertTrue(isinstance(modifications['NEW_VAR'][0], SetEnv))
-        self.assertEqual(modifications['NEW_VAR'][0].value, 'new')
+    # Assert that the target variable is there and unset it
+    assert 'foo' == os.environ['UNSET_ME']
+    env.unset('UNSET_ME')
+    env.apply_modifications()
 
-        self.assertEqual(len(modifications['FOO']), 1)
-        self.assertTrue(isinstance(modifications['FOO'][0], SetEnv))
-        self.assertEqual(modifications['FOO'][0].value, 'intel64')
+    # Trying to retrieve is after deletion should cause a KeyError
+    with pytest.raises(KeyError):
+        os.environ['UNSET_ME']
 
-        # Unset variables
-        self.assertEqual(len(modifications['EMPTY_PATH_LIST']), 1)
-        self.assertTrue(isinstance(
-            modifications['EMPTY_PATH_LIST'][0], UnsetEnv))
-        # Modified variables
-        self.assertEqual(len(modifications['UNSET_ME']), 1)
-        self.assertTrue(isinstance(modifications['UNSET_ME'][0], SetEnv))
-        self.assertEqual(modifications['UNSET_ME'][0].value, 'overridden')
 
-        self.assertEqual(len(modifications['PATH_LIST']), 3)
-        self.assertTrue(
-            isinstance(modifications['PATH_LIST'][0], RemovePath)
-        )
-        self.assertEqual(modifications['PATH_LIST'][0].value, '/path/third')
-        self.assertTrue(
-            isinstance(modifications['PATH_LIST'][1], AppendPath)
-        )
-        self.assertEqual(modifications['PATH_LIST'][1].value, '/path/fourth')
-        self.assertTrue(
-            isinstance(modifications['PATH_LIST'][2], PrependPath)
-        )
-        self.assertEqual(modifications['PATH_LIST'][2].value, '/path/first')
+def test_filter_system_paths(miscellaneous_paths):
+    """Tests that the filtering of system paths works as expected."""
+    filtered = filter_system_paths(miscellaneous_paths)
+    expected = [
+        '/usr/local/Cellar/gcc/5.3.0/lib',
+        '/usr/local/opt/some-package/lib',
+        '/usr/opt/lib',
+        '/opt/some-package/include'
+    ]
+    assert filtered == expected
+
+
+def test_filter_system_bin_paths(bin_paths):
+    """Tests that the filtering of system bin paths works as expected."""
+    filtered = filter_system_bin_paths(bin_paths)
+    expected = [
+        '/usr/local/bin',
+        '/bin',
+        '/usr/local/Cellar/gcc/5.3.0/bin',
+        '/usr/local/opt/some-package/bin',
+        '/usr/opt/bin',
+        '/opt/some-package/bin'
+    ]
+    assert filtered == expected
+
+
+def test_set_path(env):
+    """Tests setting paths in an environment variable."""
+
+    # Check setting paths with the default separator
+    env.set_path('A', ['foo', 'bar', 'baz'])
+    env.apply_modifications()
+
+    assert 'foo:bar:baz' == os.environ['A']
+
+    env.set_path('B', ['foo', 'bar', 'baz'], separator=';')
+    env.apply_modifications()
+
+    assert 'foo;bar;baz' == os.environ['B']
+
+
+def test_path_manipulation(env):
+    """Tests manipulating list of paths in the environment."""
+
+    env.append_path('PATH_LIST', '/path/last')
+    env.prepend_path('PATH_LIST', '/path/first')
+
+    env.append_path('EMPTY_PATH_LIST', '/path/middle')
+    env.append_path('EMPTY_PATH_LIST', '/path/last')
+    env.prepend_path('EMPTY_PATH_LIST', '/path/first')
+
+    env.append_path('NEWLY_CREATED_PATH_LIST', '/path/middle')
+    env.append_path('NEWLY_CREATED_PATH_LIST', '/path/last')
+    env.prepend_path('NEWLY_CREATED_PATH_LIST', '/path/first')
+
+    env.remove_path('REMOVE_PATH_LIST', '/remove/this')
+    env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
+
+    env.apply_modifications()
+
+    expected = '/path/first:/path/second:/path/third:/path/last'
+    assert os.environ['PATH_LIST'] == expected
+
+    expected = '/path/first:/path/middle:/path/last'
+    assert os.environ['EMPTY_PATH_LIST'] == expected
+
+    expected = '/path/first:/path/middle:/path/last'
+    assert os.environ['NEWLY_CREATED_PATH_LIST'] == expected
+
+    assert os.environ['REMOVE_PATH_LIST'] == '/a/b:/a/c:/a/d:/f/g'
+
+
+def test_extra_arguments(env):
+    """Tests that we can attach extra arguments to any command."""
+    env.set('A', 'dummy value', who='Pkg1')
+    for x in env:
+        assert 'who' in x.args
+
+    env.apply_modifications()
+    assert 'dummy value' == os.environ['A']
+
+
+def test_extend(env):
+    """Tests that we can construct a list of environment modifications
+    starting from another list.
+    """
+    env.set('A', 'dummy value')
+    env.set('B', 3)
+    copy_construct = EnvironmentModifications(env)
+
+    assert len(copy_construct) == 2
+
+    for x, y in zip(env, copy_construct):
+        assert x is y
+
+
+@pytest.mark.usefixtures('prepare_environment_for_tests')
+def test_source_files(files_to_be_sourced):
+    """Tests the construction of a list of environment modifications that are
+    the result of sourcing a file.
+    """
+    env = EnvironmentModifications.from_sourcing_files(*files_to_be_sourced)
+    modifications = env.group_by_name()
+
+    # This is sensitive to the user's environment; can include
+    # spurious entries for things like PS1
+    #
+    # TODO: figure out how to make a bit more robust.
+    assert len(modifications) >= 5
+
+    # Set new variables
+    assert len(modifications['NEW_VAR']) == 1
+    assert isinstance(modifications['NEW_VAR'][0], SetEnv)
+    assert modifications['NEW_VAR'][0].value == 'new'
+
+    assert len(modifications['FOO']) == 1
+    assert isinstance(modifications['FOO'][0], SetEnv)
+    assert modifications['FOO'][0].value == 'intel64'
+
+    # Unset variables
+    assert len(modifications['EMPTY_PATH_LIST']) == 1
+    assert isinstance(modifications['EMPTY_PATH_LIST'][0], UnsetEnv)
+
+    # Modified variables
+    assert len(modifications['UNSET_ME']) == 1
+    assert isinstance(modifications['UNSET_ME'][0], SetEnv)
+    assert modifications['UNSET_ME'][0].value == 'overridden'
+
+    assert len(modifications['PATH_LIST']) == 3
+    assert isinstance(modifications['PATH_LIST'][0], RemovePath)
+    assert modifications['PATH_LIST'][0].value == '/path/third'
+    assert isinstance(modifications['PATH_LIST'][1], AppendPath)
+    assert modifications['PATH_LIST'][1].value == '/path/fourth'
+    assert isinstance(modifications['PATH_LIST'][2], PrependPath)
+    assert modifications['PATH_LIST'][2].value == '/path/first'

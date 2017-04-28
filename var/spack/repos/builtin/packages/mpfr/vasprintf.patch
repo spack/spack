@@ -1,0 +1,82 @@
+diff -Naurd mpfr-3.1.5-a/PATCHES mpfr-3.1.5-b/PATCHES
+--- mpfr-3.1.5-a/PATCHES	2016-12-15 08:35:46.476430238 +0000
++++ mpfr-3.1.5-b/PATCHES	2016-12-15 08:35:46.544430346 +0000
+@@ -0,0 +1 @@
++vasprintf
+diff -Naurd mpfr-3.1.5-a/VERSION mpfr-3.1.5-b/VERSION
+--- mpfr-3.1.5-a/VERSION	2016-09-27 07:58:14.000000000 +0000
++++ mpfr-3.1.5-b/VERSION	2016-12-15 08:35:46.544430346 +0000
+@@ -1 +1 @@
+-3.1.5
++3.1.5-p1
+diff -Naurd mpfr-3.1.5-a/src/mpfr.h mpfr-3.1.5-b/src/mpfr.h
+--- mpfr-3.1.5-a/src/mpfr.h	2016-09-27 07:58:15.000000000 +0000
++++ mpfr-3.1.5-b/src/mpfr.h	2016-12-15 08:35:46.540430340 +0000
+@@ -27,7 +27,7 @@
+ #define MPFR_VERSION_MAJOR 3
+ #define MPFR_VERSION_MINOR 1
+ #define MPFR_VERSION_PATCHLEVEL 5
+-#define MPFR_VERSION_STRING "3.1.5"
++#define MPFR_VERSION_STRING "3.1.5-p1"
+ 
+ /* Macros dealing with MPFR VERSION */
+ #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
+diff -Naurd mpfr-3.1.5-a/src/vasprintf.c mpfr-3.1.5-b/src/vasprintf.c
+--- mpfr-3.1.5-a/src/vasprintf.c	2016-09-27 07:58:15.000000000 +0000
++++ mpfr-3.1.5-b/src/vasprintf.c	2016-12-15 08:35:46.520430308 +0000
+@@ -1593,7 +1593,7 @@
+         }
+       else if (spec.spec == 'f' || spec.spec == 'F')
+         {
+-          if (spec.prec == -1)
++          if (spec.prec < 0)
+             spec.prec = 6;
+           if (regular_fg (np, p, spec, NULL) == -1)
+             goto error;
+diff -Naurd mpfr-3.1.5-a/src/version.c mpfr-3.1.5-b/src/version.c
+--- mpfr-3.1.5-a/src/version.c	2016-09-27 07:58:15.000000000 +0000
++++ mpfr-3.1.5-b/src/version.c	2016-12-15 08:35:46.544430346 +0000
+@@ -25,5 +25,5 @@
+ const char *
+ mpfr_get_version (void)
+ {
+-  return "3.1.5";
++  return "3.1.5-p1";
+ }
+diff -Naurd mpfr-3.1.5-a/tests/tsprintf.c mpfr-3.1.5-b/tests/tsprintf.c
+--- mpfr-3.1.5-a/tests/tsprintf.c	2016-09-27 07:58:14.000000000 +0000
++++ mpfr-3.1.5-b/tests/tsprintf.c	2016-12-15 08:35:46.520430308 +0000
+@@ -1251,6 +1251,25 @@
+   check_emin_aux (MPFR_EMIN_MIN);
+ }
+ 
++static void
++test20161214 (void)
++{
++  mpfr_t x;
++  char buf[32];
++  const char s[] = "0x0.fffffffffffff8p+1024";
++  int r;
++
++  mpfr_init2 (x, 64);
++  mpfr_set_str (x, s, 16, MPFR_RNDN);
++  r = mpfr_snprintf (buf, 32, "%.*RDf", -2, x);
++  MPFR_ASSERTN(r == 316);
++  r = mpfr_snprintf (buf, 32, "%.*RDf", INT_MIN + 1, x);
++  MPFR_ASSERTN(r == 316);
++  r = mpfr_snprintf (buf, 32, "%.*RDf", INT_MIN, x);
++  MPFR_ASSERTN(r == 316);
++  mpfr_clear (x);
++}
++
+ int
+ main (int argc, char **argv)
+ {
+@@ -1271,6 +1290,7 @@
+   mixed ();
+   check_emax ();
+   check_emin ();
++  test20161214 ();
+ 
+ #if defined(HAVE_LOCALE_H) && defined(HAVE_SETLOCALE)
+ #if MPFR_LCONV_DPTS

@@ -31,15 +31,15 @@ import platform
 import spack
 
 
+description = "launch an interpreter as spack would launch a command"
+
+
 def setup_parser(subparser):
     subparser.add_argument(
-        '-c', dest='python_command', help='Command to execute.')
+        '-c', dest='python_command', help='command to execute')
     subparser.add_argument(
         'python_args', nargs=argparse.REMAINDER,
-        help="File to run plus arguments.")
-
-
-description = "Launch an interpreter as spack would launch a command"
+        help="file to run plus arguments")
 
 
 def python(parser, args):
@@ -62,6 +62,9 @@ def python(parser, args):
         with open(python_args[0]) as file:
             console.runsource(file.read(), python_args[0], 'exec')
     else:
+        # Provides readline support, allowing user to use arrow keys
+        console.push('import readline')
+
         console.interact("Spack version %s\nPython %s, %s %s"""
                          % (spack.spack_version, platform.python_version(),
                             platform.system(), platform.machine()))

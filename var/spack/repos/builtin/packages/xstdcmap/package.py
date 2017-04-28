@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xstdcmap(Package):
+class Xstdcmap(AutotoolsPackage):
     """The xstdcmap utility can be used to selectively define standard colormap
     properties.  It is intended to be run from a user's X startup script to
     create standard colormap definitions in order to facilitate sharing of
@@ -42,9 +42,3 @@ class Xstdcmap(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

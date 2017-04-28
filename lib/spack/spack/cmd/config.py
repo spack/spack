@@ -24,27 +24,27 @@
 ##############################################################################
 import spack.config
 
-description = "Get and set configuration options."
+description = "get and set configuration options"
 
 
 def setup_parser(subparser):
     # User can only choose one
     subparser.add_argument('--scope', choices=spack.config.config_scopes,
-                           help="Configuration scope to read/modify.")
+                           help="configuration scope to read/modify")
 
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 
-    get_parser = sp.add_parser('get', help='Print configuration values.')
+    get_parser = sp.add_parser('get', help='print configuration values')
     get_parser.add_argument('section',
-                            help="Configuration section to print. "
-                                 "Options: %(choices)s.",
+                            help="configuration section to print. "
+                                 "options: %(choices)s",
                             metavar='SECTION',
                             choices=spack.config.section_schemas)
 
-    edit_parser = sp.add_parser('edit', help='Edit configuration file.')
+    edit_parser = sp.add_parser('edit', help='edit configuration file')
     edit_parser.add_argument('section',
-                             help="Configuration section to edit. "
-                                  "Options: %(choices)s.",
+                             help="configuration section to edit. "
+                                  "options: %(choices)s",
                              metavar='SECTION',
                              choices=spack.config.section_schemas)
 
@@ -55,7 +55,10 @@ def config_get(args):
 
 def config_edit(args):
     if not args.scope:
-        args.scope = 'user'
+        if args.section == 'compilers':
+            args.scope = spack.cmd.default_modify_scope
+        else:
+            args.scope = 'user'
     if not args.section:
         args.section = None
     config_file = spack.config.get_config_filename(args.scope, args.section)

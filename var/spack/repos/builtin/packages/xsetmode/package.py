@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xsetmode(Package):
+class Xsetmode(AutotoolsPackage):
     """Set the mode for an X Input device."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xsetmode"
@@ -38,9 +38,3 @@ class Xsetmode(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

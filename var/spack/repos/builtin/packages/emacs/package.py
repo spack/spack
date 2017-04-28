@@ -25,12 +25,13 @@
 from spack import *
 
 
-class Emacs(Package):
+class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
     version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
@@ -47,7 +48,8 @@ class Emacs(Package):
     depends_on('libxaw', when='+X toolkit=athena')
     depends_on('gtkplus+X', when='+X toolkit=gtk')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         args = []
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
@@ -61,7 +63,4 @@ class Emacs(Package):
         else:
             args = ['--without-x']
 
-        configure('--prefix={0}'.format(prefix), *args)
-
-        make()
-        make("install")
+        return args

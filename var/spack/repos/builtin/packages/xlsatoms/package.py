@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xlsatoms(Package):
+class Xlsatoms(AutotoolsPackage):
     """xlsatoms lists the interned atoms defined on an X11 server."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xlsatoms"
@@ -38,9 +38,3 @@ class Xlsatoms(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

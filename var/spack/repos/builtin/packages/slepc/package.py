@@ -42,15 +42,18 @@ class Slepc(Package):
     variant('arpack', default=True, description='Enables Arpack wrappers')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
-    depends_on('python@2.6:2.7', type='build')
+    depends_on('python@2.6:2.8', type='build')
     depends_on('petsc@3.7:', when='@3.7.1:')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
-    depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi')
-    depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi')
+    depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
+    depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
 
     patch('install_name_371.patch', when='@3.7.1')
 
     def install(self, spec, prefix):
+        if spec.satisfies('+arpack^petsc+int64'):
+            raise RuntimeError('Arpack can not be used with 64bit integers.')
+
         # set SLEPC_DIR for installation
         # Note that one should set the current (temporary) directory instead
         # its symlink in spack/stage/ !

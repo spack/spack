@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xclipboard(Package):
+class Xclipboard(AutotoolsPackage):
     """xclipboard is used to collect and display text selections that are
     sent to the CLIPBOARD by other clients.  It is typically used to save
     CLIPBOARD selections for later use.  It stores each CLIPBOARD
@@ -45,9 +45,3 @@ class Xclipboard(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

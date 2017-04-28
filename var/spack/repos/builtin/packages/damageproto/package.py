@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Damageproto(Package):
+class Damageproto(AutotoolsPackage):
     """X Damage Extension.
 
     This package contains header files and documentation for the X Damage
@@ -38,8 +38,3 @@ class Damageproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

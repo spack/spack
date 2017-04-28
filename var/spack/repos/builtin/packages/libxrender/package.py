@@ -25,22 +25,17 @@
 from spack import *
 
 
-class Libxrender(Package):
+class Libxrender(AutotoolsPackage):
     """libXrender - library for the Render Extension to the X11 protocol."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXrender"
-    url      = "https://www.x.org/archive/individual/lib/libXrender-0.9.9.tar.gz"
+    url      = "https://www.x.org/archive/individual/lib/libXrender-0.9.10.tar.gz"
 
-    version('0.9.9', '0c797c4f2a7b782896bc223e6dac4333')
+    version('0.9.10', '98a14fc11aee08b4a1769426ab4b23a3')
+    version('0.9.9',  '0c797c4f2a7b782896bc223e6dac4333')
 
     depends_on('libx11@1.6:')
 
     depends_on('renderproto@0.9:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -38,6 +38,11 @@ import spack.stage
         ('setup.py',       'python'),
         ('NAMESPACE',      'r'),
         ('WORKSPACE',      'bazel'),
+        ('Makefile.PL',    'perlmake'),
+        ('Build.PL',       'perlbuild'),
+        ('GNUmakefile',    'makefile'),
+        ('makefile',       'makefile'),
+        ('Makefile',       'makefile'),
         ('foobar',         'generic')
     ]
 )

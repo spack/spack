@@ -30,14 +30,14 @@ import sys
 from os.path import isfile
 
 
-class Gcc(Package):
+class Gcc(AutotoolsPackage):
     """The GNU Compiler Collection includes front ends for C, C++,
        Objective-C, Fortran, and Java."""
     homepage = "https://gcc.gnu.org"
 
     url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
-    list_depth = 2
+    list_depth = 1
 
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
@@ -59,9 +59,6 @@ class Gcc(Package):
     variant('binutils',
             default=sys.platform != 'darwin',
             description="Build via binutils")
-    variant('gold',
-            default=sys.platform != 'darwin',
-            description="Build the gold linker plugin for ld-based LTO")
     variant('piclibs',
             default=False,
             description="Build PIC versions of libgfortran.a and libstdc++.a")
@@ -70,25 +67,33 @@ class Gcc(Package):
     depends_on("gmp")
     depends_on("mpc", when='@4.5:')
     depends_on("isl", when='@5.0:')
-    depends_on("binutils~libiberty", when='+binutils ~gold')
-    depends_on("binutils~libiberty+gold", when='+binutils +gold')
+    depends_on("binutils~libiberty", when='+binutils')
+    depends_on("zip", type='build')
 
     # TODO: integrate these libraries.
     # depends_on("ppl")
     # depends_on("cloog")
+
+    # TODO: Add a 'test' deptype
+    # https://github.com/LLNL/spack/issues/1279
+    # depends_on('dejagnu@1.4.4', type='test')
+    # depends_on('expect', type='test')
+    # depends_on('tcl', type='test')
+    # depends_on('autogen@5.5.4:', type='test')
+    # depends_on('guile@1.4.1:', type='test')
+
     if sys.platform == 'darwin':
-        patch('darwin/gcc-4.9.patch1', when='@4.9.3')
-        patch('darwin/gcc-4.9.patch2', when='@4.9.3')
+        patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
+        patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
     else:
         provides('golang', when='@4.7.1:')
 
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
-    def install(self, spec, prefix):
-        # libjava/configure needs a minor fix to install into spack paths.
-        filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
-                    string=True)
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.spec.prefix
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
@@ -110,12 +115,16 @@ class Gcc(Package):
                             new_header)
 
         # Generic options to compile GCC
-        options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,
-                   "--disable-multilib",
-                   "--enable-languages=" + ','.join(enabled_languages),
-                   "--with-mpc=%s" % spec['mpc'].prefix, "--with-mpfr=%s" %
-                   spec['mpfr'].prefix, "--with-gmp=%s" % spec['gmp'].prefix,
-                   "--enable-lto", "--with-quad"]
+        options = [
+            '--libdir={0}'.format(prefix.lib64),
+            '--disable-multilib',
+            '--enable-languages={0}'.format(','.join(enabled_languages)),
+            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+            '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--enable-lto',
+            '--with-quad'
+        ]
+
         # Binutils
         if spec.satisfies('+binutils'):
             static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
@@ -129,27 +138,28 @@ class Gcc(Package):
                 "--with-as=%s/bin/as" % spec['binutils'].prefix
             ]
             options.extend(binutils_options)
-        # Isl
+
+        # MPC
+        if 'mpc' in spec:
+            options.append('--with-mpc={0}'.format(spec['mpc'].prefix))
+
+        # ISL
         if 'isl' in spec:
-            isl_options = ["--with-isl=%s" % spec['isl'].prefix]
-            options.extend(isl_options)
+            options.append('--with-isl={0}'.format(spec['isl'].prefix))
 
+        # macOS
         if sys.platform == 'darwin':
-            darwin_options = ["--with-build-config=bootstrap-debug"]
-            options.extend(darwin_options)
+            options.append('--with-build-config=bootstrap-debug')
 
-        build_dir = join_path(self.stage.path, 'spack-build')
-        configure = Executable(join_path(self.stage.source_path, 'configure'))
-        with working_dir(build_dir, create=True):
-            # Rest of install is straightforward.
-            configure(*options)
-            if sys.platform == 'darwin':
-                make("bootstrap")
-            else:
-                make()
-            make("install")
+        return options
 
-        self.write_rpath_specs()
+    build_directory = 'spack-build'
+
+    @property
+    def build_targets(self):
+        if sys.platform == 'darwin':
+            return ['bootstrap']
+        return []
 
     @property
     def spec_dir(self):
@@ -157,6 +167,7 @@ class Gcc(Package):
         spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
         return spec_dir[0] if spec_dir else None
 
+    @run_after('install')
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""

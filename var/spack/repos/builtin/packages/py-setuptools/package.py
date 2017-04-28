@@ -30,14 +30,36 @@ class PySetuptools(PythonPackage):
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://pypi.python.org/pypi/setuptools"
-    url      = "https://pypi.python.org/packages/source/s/setuptools/setuptools-11.3.tar.gz"
+    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-25.2.0.tar.gz"
 
-    version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c',
-            url="https://pypi.python.org/packages/9f/32/81c324675725d78e7f6da777483a3453611a427db0145dfb878940469692/setuptools-25.2.0.tar.gz")
+    import_modules = ['pkg_resources', 'setuptools', 'setuptools.command']
+
+    version('34.4.1', '5f9b07aeaafd29eac2548fc0b89a4934',
+            url="https://pypi.io/packages/source/s/setuptools/setuptools-34.4.1.zip")
+    version('34.2.0', '41b630da4ea6cfa5894d9eb3142922be',
+            url="https://pypi.io/packages/source/s/setuptools/setuptools-34.2.0.zip")
+    version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c')
     version('20.7.0', '5d12b39bf3e75e80fdce54e44b255615')
     version('20.6.7', '45d6110f3ec14924e44c33411db64fe6')
-    version('20.5', 'fadc1e1123ddbe31006e5e43e927362b')
-    version('19.2', '78353b1f80375ca5e088f4b4627ffe03')
-    version('18.1', 'f72e87f34fbf07f299f6cb46256a0b06')
-    version('16.0', '0ace0b96233516fc5f7c857d086aa3ad')
+    version('20.5',   'fadc1e1123ddbe31006e5e43e927362b')
+    version('19.2',   '78353b1f80375ca5e088f4b4627ffe03')
+    version('18.1',   'f72e87f34fbf07f299f6cb46256a0b06')
+    version('16.0',   '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
+
+    depends_on('python@2.6:2.8,3.3:')
+
+    # Previously, setuptools vendored all of its dependencies to allow
+    # easy bootstrapping. As of version 34.0.0, this is no longer done
+    # and the dependencies need to be installed externally.
+    depends_on('py-packaging@16.8:', when='@34.0.0:', type=('build', 'run'))
+    depends_on('py-six@1.6.0:',      when='@34.0.0:', type=('build', 'run'))
+    depends_on('py-appdirs@1.4.0:',  when='@34.0.0:', type=('build', 'run'))
+
+    # Tests require:
+    # TODO: Add a 'test' deptype
+    # FIXME: All of these depend on setuptools, creating a dependency loop
+    # FIXME: Is there any way around this problem?
+    # depends_on('py-pytest-flake8', type='test')
+    # depends_on('pytest@2.8:', type='test')
+    # depends_on('py-mock', when='^python@:3.2', type='test')

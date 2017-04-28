@@ -23,6 +23,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import multiprocessing
 import os
 import sys
 import tempfile
@@ -46,6 +47,7 @@ build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 platform_path  = join_path(module_path, 'platforms')
 compilers_path = join_path(module_path, "compilers")
+build_systems_path = join_path(module_path, 'build_systems')
 operating_system_path = join_path(module_path, 'operating_systems')
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
@@ -77,7 +79,6 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
@@ -95,7 +96,7 @@ spack_version = Version("0.10.0")
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.error.SpackError, e:
+except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
@@ -141,6 +142,11 @@ do_checksum = _config.get('checksum', True)
 dirty = _config.get('dirty', False)
 
 
+# The number of jobs to use when building in parallel.
+# By default, use all cores on the machine.
+build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
@@ -155,14 +161,26 @@ dirty = _config.get('dirty', False)
 #-----------------------------------------------------------------------------
 __all__ = []
 
-from spack.package import Package
+from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
-__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
-            'PythonPackage', 'RPackage']
+from spack.build_systems.perl import PerlPackage
+
+__all__ += [
+    'run_before',
+    'run_after',
+    'on_package_attributes',
+    'Package',
+    'CMakePackage',
+    'AutotoolsPackage',
+    'MakefilePackage',
+    'PythonPackage',
+    'RPackage',
+    'PerlPackage'
+]
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']

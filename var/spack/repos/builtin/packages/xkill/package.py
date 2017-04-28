@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xkill(Package):
+class Xkill(AutotoolsPackage):
     """xkill is a utility for forcing the X server to close connections to
     clients.  This program is very dangerous, but is useful for aborting
     programs that have displayed undesired windows on a user's screen."""
@@ -41,9 +41,3 @@ class Xkill(Package):
     depends_on('xproto@7.0.22:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

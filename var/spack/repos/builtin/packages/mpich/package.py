@@ -32,7 +32,7 @@ class Mpich(AutotoolsPackage):
     homepage = "http://www.mpich.org"
     url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     list_url = "http://www.mpich.org/static/downloads/"
-    list_depth = 2
+    list_depth = 1
 
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
@@ -69,7 +69,7 @@ class Mpich(AutotoolsPackage):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
@@ -86,7 +86,7 @@ class Mpich(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-    @AutotoolsPackage.precondition('autoreconf')
+    @run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
@@ -106,7 +106,7 @@ class Mpich(AutotoolsPackage):
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
 
-    @AutotoolsPackage.sanity_check('install')
+    @run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
         compilers that Spack built the package with.

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XorgCfFiles(Package):
+class XorgCfFiles(AutotoolsPackage):
     """The xorg-cf-files package contains the data files for the imake utility,
     defining the known settings for a wide variety of platforms (many of which
     have not been verified or tested in over a decade), and for many of the
@@ -37,8 +37,3 @@ class XorgCfFiles(Package):
     version('1.0.6', 'c0ce98377c70d95fb48e1bd856109bf8')
 
     depends_on('pkg-config@0.9.0:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

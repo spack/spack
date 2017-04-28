@@ -26,7 +26,7 @@ from spack import *
 from glob import glob
 
 
-class Lmod(Package):
+class Lmod(AutotoolsPackage):
     """Lmod is a Lua based module system that easily handles the MODULEPATH
     Hierarchical problem. Environment Modules provide a convenient way to
     dynamically change the users' environment through modulefiles. This
@@ -36,8 +36,11 @@ class Lmod(Package):
     """
 
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
-    url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
+    url = 'https://github.com/TACC/Lmod/archive/7.3.tar.gz'
 
+    version('7.4.5', 'fc34029c60dd9782c3d011c2b93fd266')
+    version('7.4.1', '59b2558ee50877f2cf49ed37d7b09fea')
+    version('7.3',   '70180ec2ea1fae53aa83350523f6b2b3')
     version('6.4.5', '14f6c58dbc0a5a75574d795eac2c1e3c')
     version('6.4.1', '7978ba777c8aa41a4d8c05fec5f780f4')
     version('6.3.7', '0fa4d5a24c41cae03776f781aa2dedc1')
@@ -66,7 +69,3 @@ class Lmod(Package):
         if self.spec.version <= Version('6.4.3'):
             for tclscript in glob('src/*.tcl'):
                 filter_file(r'^#!.*tclsh', '#!@path_to_tclsh@', tclscript)
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make('install')

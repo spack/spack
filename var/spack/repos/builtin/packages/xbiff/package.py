@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xbiff(Package):
+class Xbiff(AutotoolsPackage):
     """xbiff provides graphical notification of new e-mail.
     It only handles mail stored in a filesystem accessible file,
     not via IMAP, POP or other remote access protocols."""
@@ -43,9 +43,3 @@ class Xbiff(Package):
     depends_on('xbitmaps', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

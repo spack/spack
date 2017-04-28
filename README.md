@@ -2,7 +2,7 @@
 ============
 
 [![Build Status](https://travis-ci.org/LLNL/spack.svg?branch=develop)](https://travis-ci.org/LLNL/spack)
-[![Coverage Status](https://coveralls.io/repos/github/LLNL/spack/badge.svg?branch=develop)](https://coveralls.io/github/LLNL/spack?branch=develop)
+[![codecov](https://codecov.io/gh/LLNL/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/spack)
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -23,7 +23,8 @@ See the
 [Feature Overview](http://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
-To install spack and install your first package:
+To install spack and install your first package, make sure you have
+Python (2 or 3).  Then:
 
     $ git clone https://github.com/llnl/spack.git
     $ cd spack/bin

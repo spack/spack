@@ -35,3 +35,4 @@ class PyUnittest2(PythonPackage):
     version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))

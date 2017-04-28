@@ -52,20 +52,20 @@ class Ruby(Package):
         make()
         make("install")
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         ruby_paths = []
-        for d in extension_spec.traverse():
+        for d in dependent_spec.traverse():
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
 
         spack_env.set_path('GEM_PATH', ruby_paths)
 
         # The actual installation path for this gem
-        spack_env.set('GEM_HOME', extension_spec.prefix)
+        spack_env.set('GEM_HOME', dependent_spec.prefix)
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
         and GEM_PATH to values appropriate for the package being built.
 

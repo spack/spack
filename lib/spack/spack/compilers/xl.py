@@ -29,17 +29,16 @@ from spack.version import ver
 
 class Xl(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['xlc', 'xlc_r']
+    cc_names = ['xlc']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['xlC', 'xlC_r', 'xlc++', 'xlc++_r']
+    cxx_names = ['xlC', 'xlc++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['xlf', 'xlf_r']
+    f77_names = ['xlf']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['xlf90', 'xlf90_r', 'xlf95', 'xlf95_r',
-                'xlf2003', 'xlf2003_r', 'xlf2008', 'xlf2008_r']
+    fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'xl/xlc',
@@ -61,6 +60,14 @@ class Xl(Compiler):
     @property
     def pic_flag(self):
         return "-qpic"
+
+    @property
+    def fflags(self):
+        # The -qzerosize flag is effective only for the Fortran 77
+        # compilers and allows the use of zero size objects.
+        # For Fortran 90 and beyond, it is set by default and has not impact.
+        # Its use has no negative side effects.
+        return "-qzerosize"
 
     @classmethod
     def default_version(cls, comp):

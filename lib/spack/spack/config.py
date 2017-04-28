@@ -52,6 +52,8 @@ import copy
 import os
 import re
 import sys
+from six import string_types
+from six import iteritems
 
 import yaml
 import jsonschema
@@ -108,7 +110,7 @@ def extend_with_default(validator_class):
         "patternProperties"]
 
     def set_defaults(validator, properties, instance, schema):
-        for property, subschema in properties.iteritems():
+        for property, subschema in iteritems(properties):
             if "default" in subschema:
                 instance.setdefault(property, subschema["default"])
         for err in validate_properties(
@@ -116,10 +118,10 @@ def extend_with_default(validator_class):
             yield err
 
     def set_pp_defaults(validator, properties, instance, schema):
-        for property, subschema in properties.iteritems():
+        for property, subschema in iteritems(properties):
             if "default" in subschema:
                 if isinstance(instance, dict):
-                    for key, val in instance.iteritems():
+                    for key, val in iteritems(instance):
                         if re.match(property, key) and val is None:
                             instance[key] = subschema["default"]
 
@@ -306,8 +308,8 @@ def _mark_overrides(data):
 
     elif isinstance(data, dict):
         marked = {}
-        for key, val in data.iteritems():
-            if isinstance(key, basestring) and key.endswith(':'):
+        for key, val in iteritems(data):
+            if isinstance(key, string_types) and key.endswith(':'):
                 key = syaml.syaml_str(key[:-1])
                 key.override = True
             marked[key] = _mark_overrides(val)
@@ -348,7 +350,7 @@ def _merge_yaml(dest, source):
 
     # Source dict is merged into dest.
     elif they_are(dict):
-        for sk, sv in source.iteritems():
+        for sk, sv in iteritems(source):
             if override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.copy(sv)

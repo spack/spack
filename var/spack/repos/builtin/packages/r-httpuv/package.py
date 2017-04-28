@@ -40,4 +40,6 @@ class RHttpuv(RPackage):
 
     version('1.3.3', 'c78ae068cf59e949b9791be987bb4489')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@2.15.1:')
+
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

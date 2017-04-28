@@ -52,9 +52,9 @@ class Extrae(Package):
        instrument the MPI programin model, and the following parallel
        programming models either alone or in conjunction with MPI :
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
-    homepage = "http://www.bsc.es/computer-sciences/extrae"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-3.3.0.tar.bz2"
-    version('3.3.0', 'f46e3f1a6086b5b3ac41c9585b42952d')
+    homepage = "https://tools.bsc.es/extrae"
+    url      = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
+    version('3.4.1', '69001f5cfac46e445d61eeb567bc8844')
 
     depends_on("mpi")
     depends_on("dyninst")
@@ -62,8 +62,12 @@ class Extrae(Package):
     depends_on("boost")
     depends_on("libdwarf")
     depends_on("papi")
-    depends_on("libelf")
+    depends_on("elf", type="link")
     depends_on("libxml2")
+
+    # gettext dependency added to find -lintl
+    # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
+    depends_on("gettext")
     depends_on("binutils+libiberty")
 
     def install(self, spec, prefix):
@@ -74,6 +78,16 @@ class Extrae(Package):
         elif 'mvapich2' in spec:
             mpi = spec['mvapich2']
 
+        extra_config_args = []
+
+        # This was added due to configure failure
+        # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
+        extra_config_args.append('LDFLAGS=-lintl')
+
+        if spec.satisfies("^dyninst@9.3.0:"):
+            make.add_default_arg('CXXFLAGS=-std=c++11')
+            extra_config_args.append('CXXFLAGS=-std=c++11')
+
         configure("--prefix=%s" % prefix,
                   "--with-mpi=%s" % mpi.prefix,
                   "--with-unwind=%s" % spec['libunwind'].prefix,
@@ -83,10 +97,11 @@ class Extrae(Package):
                   "--with-papi=%s" % spec['papi'].prefix,
                   "--with-dyninst-headers=%s" % spec[
                       'dyninst'].prefix.include,
-                  "--with-elf=%s" % spec['libelf'].prefix,
+                  "--with-elf=%s" % spec['elf'].prefix,
                   "--with-xml-prefix=%s" % spec['libxml2'].prefix,
                   "--with-binutils=%s" % spec['binutils'].prefix,
-                  "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib)
+                  "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib,
+                  *extra_config_args)
 
         make()
         make("install", parallel=False)

@@ -29,7 +29,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description = "Revert checked out package source code."
+description = "revert checked out package source code"
 
 
 def setup_parser(subparser):

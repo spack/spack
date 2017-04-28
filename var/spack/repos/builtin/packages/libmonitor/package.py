@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libmonitor(Package):
+class Libmonitor(AutotoolsPackage):
     """Libmonitor is a library for process and thread control."""
     homepage = "https://github.com/HPCToolkit/libmonitor"
     version('20130218', git='https://github.com/HPCToolkit/libmonitor.git',
@@ -36,8 +36,3 @@ class Libmonitor(Package):
     patch('libmonitorkrell-0000.patch', when='@20130218+krellpatch')
     patch('libmonitorkrell-0001.patch', when='@20130218+krellpatch')
     patch('libmonitorkrell-0002.patch', when='@20130218+krellpatch')
-
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")

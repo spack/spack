@@ -32,9 +32,10 @@ class RMgcv(RPackage):
     beyond the exponential family."""
 
     homepage = "https://cran.r-project.org/package=mgcv"
-    url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-13.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-16.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/mgcv"
 
+    version('1.8-16', '4c1d85e0f80b017bccb4b63395842911')
     version('1.8-13', '30607be3aaf44b13bd8c81fc32e8c984')
 
     depends_on('r-nlme', type=('build', 'run'))

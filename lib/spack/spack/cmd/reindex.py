@@ -24,7 +24,7 @@
 ##############################################################################
 import spack
 import spack.store
-description = "Rebuild Spack's package database."
+description = "rebuild Spack's package database"
 
 
 def reindex(parser, args):

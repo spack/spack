@@ -40,7 +40,7 @@ for the results of these tests after submitting a PR, we recommend that you run 
 locally to speed up the review process.
 
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6 and 2.7. We currently perform 3 types of tests:
+against Python 2.6, 2.7, and 3.3-3.6. We currently perform 3 types of tests:
 
 ^^^^^^^^^^
 Unit Tests
@@ -75,7 +75,10 @@ This allows you to develop iteratively: make a change, test that change, make
 another change, test that change, etc. To get a list of all available unit
 tests, run:
 
-.. command-output:: spack test --collect-only
+.. command-output:: spack test --list
+
+A more detailed list of available unit tests can be found by running
+``spack test --long-list``.
 
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider

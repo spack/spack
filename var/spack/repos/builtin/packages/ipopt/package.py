@@ -53,14 +53,15 @@ class Ipopt(Package):
         mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
         mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
 
-        blas_lib = spec['blas'].blas_libs.ld_flags
-        lapack_lib = spec['lapack'].lapack_libs.ld_flags
+        blas_lib = spec['blas'].libs.ld_flags
+        lapack_lib = spec['lapack'].libs.ld_flags
 
         configure_args = [
             "--prefix=%s" % prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
             "--enable-shared",
+            "coin_skip_warn_cxxflags=yes",
             "--with-blas-incdir=%s" % blas_dir.include,
             "--with-blas-lib=%s" % blas_lib,
             "--with-lapack-incdir=%s" % lapack_dir.include,

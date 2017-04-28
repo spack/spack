@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Mpip(Package):
+class Mpip(AutotoolsPackage):
     """mpiP: Lightweight, Scalable MPI Profiling"""
     homepage = "http://mpip.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/mpip/mpiP/mpiP-3.4.1/mpiP-3.4.1.tar.gz"
@@ -38,7 +38,5 @@ class Mpip(Package):
     depends_on('libunwind', when=os.uname()[4] == "x86_64", type="build")
     depends_on("mpi", type="build")
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix, "--without-f77")
-        make()
-        make("install")
+    def configure_args(self):
+        return ['--without-f77']

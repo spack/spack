@@ -51,8 +51,8 @@ class PyMeep(PythonPackage):
 
     phases = ['clean', 'build_ext', 'install', 'bdist']
 
-    def setup_file(self, spec, prefix):
-        return 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
+    def setup_file(self):
+        return 'setup-mpi.py' if '+mpi' in self.spec else 'setup.py'
 
     def common_args(self, spec, prefix):
         include_dirs = [

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Liboldx(Package):
+class Liboldx(AutotoolsPackage):
     """X version 10 backwards compatibility."""
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/liboldX/"
@@ -37,9 +37,3 @@ class Liboldx(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
