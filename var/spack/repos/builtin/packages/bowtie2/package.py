@@ -37,6 +37,7 @@ class Bowtie2(Package):
     version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
 
     depends_on('tbb', when='@2.3.1')
+    depends_on('readline')
 
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
