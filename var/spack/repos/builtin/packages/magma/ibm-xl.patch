@@ -1,0 +1,248 @@
+diff -Naur magma-2.2.0/src/dlaex3_m.cpp magma-2.2.0-patched/src/dlaex3_m.cpp
+--- magma-2.2.0/src/dlaex3_m.cpp	2016-11-20 20:20:06.000000000 -0500
++++ magma-2.2.0/src/dlaex3_m.cpp	2017-01-06 15:54:29.423668874 -0500
+@@ -197,7 +197,7 @@
+     magmaDouble_ptr dwork[],
+     magma_queue_t queues[MagmaMaxGPUs][2],
+     magma_range_t range, double vl, double vu, magma_int_t il, magma_int_t iu,
+-    magma_int_t *info )
++    magma_int_t *infom )
+ {
+ #define Q(i_,j_) (Q + (i_) + (j_)*ldq)
+ 
+@@ -209,8 +209,8 @@
+         magma_setdevice(0);
+         magma_dlaex3( k, n, n1, d, Q, ldq, rho,
+                       dlamda, Q2, indx, ctot, w, s, indxq,
+-                      *dwork, range, vl, vu, il, iu, info );
+-        return *info;
++                      *dwork, range, vl, vu, il, iu, infom );
++        return *infom;
+     }
+     double d_one  = 1.;
+     double d_zero = 0.;
+@@ -229,37 +229,37 @@
+     valeig = (range == MagmaRangeV);
+     indeig = (range == MagmaRangeI);
+ 
+-    *info = 0;
++    *infom = 0;
+ 
+     if (k < 0)
+-        *info=-1;
++        *infom=-1;
+     else if (n < k)
+-        *info=-2;
++        *infom=-2;
+     else if (ldq < max(1,n))
+-        *info=-6;
++        *infom=-6;
+     else if (! (alleig || valeig || indeig))
+-        *info = -15;
++        *infom = -15;
+     else {
+         if (valeig) {
+             if (n > 0 && vu <= vl)
+-                *info = -17;
++                *infom = -17;
+         }
+         else if (indeig) {
+             if (il < 1 || il > max(1,n))
+-                *info = -18;
++                *infom = -18;
+             else if (iu < min(n,il) || iu > n)
+-                *info = -19;
++                *infom = -19;
+         }
+     }
+ 
+-    if (*info != 0) {
+-        magma_xerbla( __func__, -(*info) );
+-        return *info;
++    if (*infom != 0) {
++        magma_xerbla( __func__, -(*infom) );
++        return *infom;
+     }
+ 
+     // Quick return if possible
+     if (k == 0)
+-        return *info;
++        return *infom;
+ 
+     magma_device_t orig_dev;
+     magma_getdevice( &orig_dev );
+@@ -360,15 +360,15 @@
+             lapackf77_dlaed4( &k, &tmpp, dlamda, w, Q(0,j), &rho, &d[j], &iinfo );
+             // If the zero finder fails, the computation is terminated.
+             if (iinfo != 0) {
+-                #pragma omp critical (info)
+-                *info = iinfo;
++                #pragma omp critical (infom)
++                *infom = iinfo;
+                 break;
+             }
+         }
+ 
+         #pragma omp barrier
+ 
+-        if (*info == 0) {
++        if (*infom == 0) {
+             #pragma omp single
+             {
+                 // Prepare the INDXQ sorting permutation.
+@@ -452,8 +452,8 @@
+             }
+         }
+     }  // end omp parallel
+-    if (*info != 0)
+-        return *info;
++    if (*infom != 0)
++        return *infom;
+ 
+     timer_stop( time );
+     timer_printf( "eigenvalues/vector D+zzT = %6.2f\n", time );
+@@ -474,10 +474,10 @@
+         lapackf77_dlaed4( &k, &tmpp, dlamda, w, Q(0,j), &rho, &d[j], &iinfo );
+         // If the zero finder fails, the computation is terminated.
+         if (iinfo != 0)
+-            *info=iinfo;
++            *infom=iinfo;
+     }
+-    if (*info != 0)
+-        return *info;
++    if (*infom != 0)
++        return *infom;
+ 
+     // Prepare the INDXQ sorting permutation.
+     magma_int_t nk = n - k;
+@@ -688,5 +688,5 @@
+ 
+     magma_setdevice( orig_dev );
+     
+-    return *info;
++    return *infom;
+ } /* magma_dlaed3_m */
+diff -Naur magma-2.2.0/src/slaex3_m.cpp magma-2.2.0-patched/src/slaex3_m.cpp
+--- magma-2.2.0/src/slaex3_m.cpp	2016-11-20 20:20:24.000000000 -0500
++++ magma-2.2.0/src/slaex3_m.cpp	2017-01-06 10:20:13.200783151 -0500
+@@ -197,7 +197,7 @@
+     magmaFloat_ptr dwork[],
+     magma_queue_t queues[MagmaMaxGPUs][2],
+     magma_range_t range, float vl, float vu, magma_int_t il, magma_int_t iu,
+-    magma_int_t *info )
++    magma_int_t *infom )
+ {
+ #define Q(i_,j_) (Q + (i_) + (j_)*ldq)
+ 
+@@ -209,8 +209,8 @@
+         magma_setdevice(0);
+         magma_slaex3( k, n, n1, d, Q, ldq, rho,
+                       dlamda, Q2, indx, ctot, w, s, indxq,
+-                      *dwork, range, vl, vu, il, iu, info );
+-        return *info;
++                      *dwork, range, vl, vu, il, iu, infom );
++        return *infom;
+     }
+     float d_one  = 1.;
+     float d_zero = 0.;
+@@ -229,37 +229,37 @@
+     valeig = (range == MagmaRangeV);
+     indeig = (range == MagmaRangeI);
+ 
+-    *info = 0;
++    *infom = 0;
+ 
+     if (k < 0)
+-        *info=-1;
++        *infom=-1;
+     else if (n < k)
+-        *info=-2;
++        *infom=-2;
+     else if (ldq < max(1,n))
+-        *info=-6;
++        *infom=-6;
+     else if (! (alleig || valeig || indeig))
+-        *info = -15;
++        *infom = -15;
+     else {
+         if (valeig) {
+             if (n > 0 && vu <= vl)
+-                *info = -17;
++                *infom = -17;
+         }
+         else if (indeig) {
+             if (il < 1 || il > max(1,n))
+-                *info = -18;
++                *infom = -18;
+             else if (iu < min(n,il) || iu > n)
+-                *info = -19;
++                *infom = -19;
+         }
+     }
+ 
+-    if (*info != 0) {
+-        magma_xerbla( __func__, -(*info) );
+-        return *info;
++    if (*infom != 0) {
++        magma_xerbla( __func__, -(*infom) );
++        return *infom;
+     }
+ 
+     // Quick return if possible
+     if (k == 0)
+-        return *info;
++        return *infom;
+ 
+     magma_device_t orig_dev;
+     magma_getdevice( &orig_dev );
+@@ -360,15 +360,15 @@
+             lapackf77_slaed4( &k, &tmpp, dlamda, w, Q(0,j), &rho, &d[j], &iinfo );
+             // If the zero finder fails, the computation is terminated.
+             if (iinfo != 0) {
+-                #pragma omp critical (info)
+-                *info = iinfo;
++                #pragma omp critical (infom)
++                *infom = iinfo;
+                 break;
+             }
+         }
+ 
+         #pragma omp barrier
+ 
+-        if (*info == 0) {
++        if (*infom == 0) {
+             #pragma omp single
+             {
+                 // Prepare the INDXQ sorting permutation.
+@@ -452,8 +452,8 @@
+             }
+         }
+     }  // end omp parallel
+-    if (*info != 0)
+-        return *info;
++    if (*infom != 0)
++        return *infom;
+ 
+     timer_stop( time );
+     timer_printf( "eigenvalues/vector D+zzT = %6.2f\n", time );
+@@ -474,10 +474,10 @@
+         lapackf77_slaed4( &k, &tmpp, dlamda, w, Q(0,j), &rho, &d[j], &iinfo );
+         // If the zero finder fails, the computation is terminated.
+         if (iinfo != 0)
+-            *info=iinfo;
++            *infom=iinfo;
+     }
+-    if (*info != 0)
+-        return *info;
++    if (*infom != 0)
++        return *infom;
+ 
+     // Prepare the INDXQ sorting permutation.
+     magma_int_t nk = n - k;
+@@ -688,5 +688,5 @@
+ 
+     magma_setdevice( orig_dev );
+     
+-    return *info;
++    return *infom;
+ } /* magma_slaed3_m */

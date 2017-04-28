@@ -35,11 +35,18 @@ class Mpc(AutotoolsPackage):
     version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
     version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
 
-    depends_on('gmp')   # mpir is a drop-in replacement for this
-    depends_on('mpfr')  # Could also be built against mpir
+    depends_on('gmp@4.3.2:')   # mpir is a drop-in replacement for this
+    depends_on('mpfr@2.4.2:')  # Could also be built against mpir
 
     def url_for_version(self, version):
         if version < Version("1.0.1"):
             return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version
         else:
             return "https://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
+
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+            '--with-gmp={0}'.format(spec['gmp'].prefix)
+        ]

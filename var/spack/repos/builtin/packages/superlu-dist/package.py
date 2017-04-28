@@ -34,6 +34,8 @@ class SuperluDist(Package):
     url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
     version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
+    version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')    
+    version('5.1.3', 'fec21a9207ef94f57501c9406da78285')
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')
     version('5.1.0', '6bb86e630bd4bd8650243aed8fd92eb9')
     version('5.0.0', '2b53baf1b0ddbd9fcf724992577f0670')
@@ -53,7 +55,7 @@ class SuperluDist(Package):
     depends_on('metis@5:')
 
     def install(self, spec, prefix):
-        lapack_blas = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         makefile_inc = []
         makefile_inc.extend([
             'PLAT         = _mac_x',
@@ -61,17 +63,17 @@ class SuperluDist(Package):
             'DSUPERLULIB  = $(DSuperLUroot)/lib/libsuperlu_dist.a',
             'BLASDEF      = -DUSE_VENDOR_BLAS',
             'BLASLIB      = %s' % lapack_blas.ld_flags,
-            'METISLIB     = -L%s -lmetis' % spec['metis'].prefix.lib,
-            'PARMETISLIB  = -L%s -lparmetis' % spec['parmetis'].prefix.lib,
+            'METISLIB     = %s' % spec['metis'].libs.ld_flags,
+            'PARMETISLIB  = %s' % spec['parmetis'].libs.ld_flags,
             'FLIBS        =',
             'LIBS         = $(DSUPERLULIB) $(BLASLIB) $(PARMETISLIB) $(METISLIB)',  # noqa
             'ARCH         = ar',
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = -fPIC -std=c99 -O2 -I%s -I%s %s' % (
-                spec['parmetis'].prefix.include,
-                spec['metis'].prefix.include,
+            'CFLAGS       = -fPIC -std=c99 -O2 %s %s %s' % (
+                spec['parmetis'].cppflags,
+                spec['metis'].cppflags,
                 '-D_LONGINT' if '+int64' in spec else ''),
             'NOOPTS       = -fPIC -std=c99',
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),

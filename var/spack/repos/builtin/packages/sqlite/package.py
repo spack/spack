@@ -26,25 +26,29 @@ from spack import *
 from spack import architecture
 
 
-class Sqlite(Package):
+class Sqlite(AutotoolsPackage):
     """SQLite3 is an SQL database engine in a C library. Programs that
        link the SQLite3 library can have SQL database access without
        running a separate RDBMS process.
     """
     homepage = "www.sqlite.org"
 
+    version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
+            url='https://www.sqlite.org/2017/sqlite-autoconf-3180000.tar.gz')
     version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
             url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
+
+    depends_on('readline')
 
     def get_arch(self):
         arch = architecture.Arch()
         arch.platform = architecture.platform()
         return str(arch.platform.target('default_target'))
 
-    def install(self, spec, prefix):
-        config = ["--prefix=" + prefix]
+    def configure_args(self):
+        args = []
+
         if self.get_arch() == 'ppc64le':
-            config.append("--build=powerpc64le-redhat-linux-gnu")
-        configure(*config)
-        make()
-        make("install")
+            args.append('--build=powerpc64le-redhat-linux-gnu')
+
+        return args

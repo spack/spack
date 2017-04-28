@@ -57,6 +57,7 @@ import os
 import shutil
 import sys
 import traceback
+from six import iteritems
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -224,6 +225,9 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
     for mod in compiler.modules:
+        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
         load_module(mod)
 
     compiler.setup_custom_environment(pkg, env)
@@ -310,7 +314,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     environment = compiler.environment
     if 'set' in environment:
         env_to_set = environment['set']
-        for key, value in env_to_set.iteritems():
+        for key, value in iteritems(env_to_set):
             env.set('SPACK_ENV_SET_%s' % key, value)
             env.set('%s' % key, value)
         # Let shell know which variables to set
@@ -322,8 +326,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(filter(os.path.isdir, [
-        '%s/bin' % d.prefix for d in pkg.spec.dependencies(deptype='build')]))
+    bin_dirs = reversed(
+        [d.prefix.bin for d in pkg.spec.dependencies(deptype='build')
+         if os.path.isdir(d.prefix.bin)])
     bin_dirs = filter_system_bin_paths(bin_dirs)
     for item in bin_dirs:
         env.prepend_path('PATH', item)
@@ -352,7 +357,7 @@ def set_module_variables_for_package(pkg, module):
        This makes things easier for package writers.
     """
     # number of jobs spack will build with.
-    jobs = multiprocessing.cpu_count()
+    jobs = spack.build_jobs
     if not pkg.parallel:
         jobs = 1
     elif pkg.make_jobs:
@@ -433,12 +438,17 @@ def get_rpaths(pkg):
 
 
 def get_std_cmake_args(pkg):
-    """Returns the list of standard arguments that would be used if this
-    package was a CMakePackage instance.
+    """List of standard arguments used if a package is a CMakePackage.
 
-    :param pkg: pkg under consideration
+    Returns:
+        list of str: standard arguments that would be used if this
+        package were a CMakePackage instance.
 
-    :return: list of arguments for cmake
+    Args:
+        pkg (PackageBase): package under consideration
+
+    Returns:
+        list of str: arguments for cmake
     """
     return spack.CMakePackage._std_args(pkg)
 
@@ -460,7 +470,13 @@ def parent_class_modules(cls):
 
 
 def load_external_modules(pkg):
-    """ traverse the spec list and find any specs that have external modules.
+    """Traverse a package's spec DAG and load any external modules.
+
+    Traverse a package's dependencies and load any external modules
+    associated with them.
+
+    Args:
+        pkg (PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
         if dep.external_module:
@@ -523,25 +539,29 @@ def setup_package(pkg, dirty=False):
 def fork(pkg, function, dirty=False):
     """Fork a child process to do part of a spack build.
 
-    :param pkg: pkg whose environemnt we should set up the forked process for.
-    :param function: arg-less function to run in the child process.
-    :param dirty: If True, do NOT clean the environment before building.
+    Args:
+
+        pkg (PackageBase): package whose environemnt we should set up the
+            forked process for.
+        function (callable): argless function to run in the child
+            process.
+        dirty (bool): If True, do NOT clean the environment before
+            building.
 
     Usage::
 
-       def child_fun():
-           # do stuff
-       build_env.fork(pkg, child_fun)
+        def child_fun():
+            # do stuff
+        build_env.fork(pkg, child_fun)
 
     Forked processes are run with the build environment set up by
-    spack.build_environment.  This allows package authors to have
-    full control over the environment, etc. without affecting
-    other builds that might be executed in the same spack call.
+    spack.build_environment.  This allows package authors to have full
+    control over the environment, etc. without affecting other builds
+    that might be executed in the same spack call.
 
-    If something goes wrong, the child process is expected to print
-    the error and the parent process will exit with error as
-    well. If things go well, the child exits and the parent
-    carries on.
+    If something goes wrong, the child process is expected to print the
+    error and the parent process will exit with error as well. If things
+    go well, the child exits and the parent carries on.
     """
 
     def child_execution(child_connection, input_stream):

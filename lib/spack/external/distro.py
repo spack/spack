@@ -993,13 +993,18 @@ class LinuxDistribution(object):
                     continue
                 match = _DISTRO_RELEASE_BASENAME_PATTERN.match(basename)
                 if match:
-                    filepath = os.path.join(_UNIXCONFDIR, basename)
-                    distro_info = self._parse_distro_release_file(filepath)
-                    if 'name' in distro_info:
-                        # The name is always present if the pattern matches
-                        self.distro_release_file = filepath
-                        distro_info['id'] = match.group(1)
-                        return distro_info
+                    try:
+                        filepath = os.path.join(_UNIXCONFDIR, basename)
+                        distro_info = self._parse_distro_release_file(filepath)
+                        if 'name' in distro_info:
+                            # The name is always present if the pattern matches
+                            self.distro_release_file = filepath
+                            distro_info['id'] = match.group(1)
+                            return distro_info
+                    except IOError:
+                        # We found a file we do not have permission to read
+                        # Continue checking candidate files for distro file.
+                        continue
             return {}
 
     def _parse_distro_release_file(self, filepath):

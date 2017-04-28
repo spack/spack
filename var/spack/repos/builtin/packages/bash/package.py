@@ -25,21 +25,27 @@
 from spack import *
 
 
-class Bash(Package):
+class Bash(AutotoolsPackage):
     """The GNU Project's Bourne Again SHell."""
 
     homepage = "https://www.gnu.org/software/bash/"
-    url      = "https://ftp.gnu.org/gnu/bash/bash-4.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/bash/bash-4.4.tar.gz"
 
+    version('4.4', '148888a7c95ac23705559b6f477dfe25')
     version('4.3', '81348932d5da294953e15d4814c74dd1')
 
-    depends_on('readline')
+    depends_on('ncurses')
+    depends_on('readline@5.0:')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-curses',
-                  '--with-installed-readline=%s' % spec['readline'].prefix)
+    def configure_args(self):
+        spec = self.spec
 
-        make()
-        make("tests")
-        make("install")
+        return [
+            'LIBS=-lncursesw',
+            '--with-curses',
+            '--enable-readline',
+            '--with-installed-readline={0}'.format(spec['readline'].prefix),
+        ]
+
+    def check(self):
+        make('tests')

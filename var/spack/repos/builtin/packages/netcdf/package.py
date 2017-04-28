@@ -33,7 +33,11 @@ class Netcdf(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
 
+    # Version 4.4.1.1 is having problems in tests
+    #    https://github.com/Unidata/netcdf-c/issues/343
     version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
+    # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
+    #    https://github.com/Unidata/netcdf-c/issues/282
     version('4.4.1',   '7843e35b661c99e1d49e60791d5072d8')
     version('4.4.0',   'cffda0cbd97fdb3a06e9274f7aef438e')
     version('4.3.3.1', '5c9dad3705a3408d27f696e5b31fb88c')
@@ -133,6 +137,7 @@ class Netcdf(AutotoolsPackage):
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
+            config_args.append('CC=%s' % spec['mpi'].mpicc)
 
         CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
         LDFLAGS.append("-L%s/lib"     % spec['hdf5'].prefix)

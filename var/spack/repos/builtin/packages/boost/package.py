@@ -40,9 +40,17 @@ class Boost(Package):
     homepage = "http://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
-    list_depth = 2
+    list_depth = 1
 
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
+    #       +python and +mpi, there seem to be errors with out-of-date
+    #       API calls from mpi/python.
+    #       See: https://github.com/LLNL/spack/issues/3963
+    version('1.64.0', '93eecce2abed9d2442c9676914709349')
+
+    # Set previous release to preferred for now, can be removed
+    # once boost+python+mpi is fixed.
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847', preferred=True)
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
@@ -130,18 +138,20 @@ class Boost(Package):
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/11120
+    patch('python_jam.patch', when='@1.56.0: ^python@3:')
+    patch('python_jam_pre156.patch', when='@:1.55.0 ^python@3:')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
     patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
 
+    # Patch fix for IBM XL compiler
+    patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
+    patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
+
     def url_for_version(self, version):
-        """
-        Handle Boost's weird URLs,
-        which write the version two different ways.
-        """
-        parts = [str(p) for p in Version(version)]
-        dots = ".".join(parts)
-        underscores = "_".join(parts)
-        return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (dots, underscores)
+        url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+        return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):
@@ -149,7 +159,9 @@ class Boost(Package):
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
-                    'clang++': 'clang'}
+                    'clang++': 'clang',
+                    'xlc++': 'xlcpp',
+                    'xlc++_r': 'xlcpp'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
@@ -186,8 +198,7 @@ class Boost(Package):
         options.append("--with-libraries=%s" % ','.join(withLibs))
 
         if '+python' in spec:
-            options.append('--with-python=%s' %
-                           join_path(spec['python'].prefix.bin, 'python'))
+            options.append('--with-python=%s' % python_exe)
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in

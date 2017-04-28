@@ -27,6 +27,8 @@
 YAML format preserves DAG informatoin in the spec.
 
 """
+from collections import Iterable, Mapping
+
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec
@@ -47,6 +49,16 @@ def test_simple_spec():
 def test_normal_spec(builtin_mock):
     spec = Spec('mpileaks+debug~opt')
     spec.normalize()
+    check_yaml_round_trip(spec)
+
+
+def test_external_spec(config, builtin_mock):
+    spec = Spec('externaltool')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+    spec = Spec('externaltest')
+    spec.concretize()
     check_yaml_round_trip(spec)
 
 
@@ -78,8 +90,6 @@ def test_using_ordered_dict(builtin_mock):
     versions and processes.
     """
     def descend_and_check(iterable, level=0):
-        from spack.util.spack_yaml import syaml_dict
-        from collections import Iterable, Mapping
         if isinstance(iterable, Mapping):
             assert isinstance(iterable, syaml_dict)
             return descend_and_check(iterable.values(), level=level + 1)
@@ -95,7 +105,12 @@ def test_using_ordered_dict(builtin_mock):
     for spec in specs:
         dag = Spec(spec)
         dag.normalize()
+        from pprint import pprint
+        pprint(dag.to_node_dict())
+        break
+
         level = descend_and_check(dag.to_node_dict())
+
         # level just makes sure we are doing something here
         assert level >= 5
 

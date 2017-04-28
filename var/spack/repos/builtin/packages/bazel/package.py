@@ -34,6 +34,8 @@ class Bazel(Package):
     homepage = "https://www.bazel.io"
     url = "https://github.com/bazelbuild/bazel/archive/0.3.1.tar.gz"
 
+    version('0.4.4', '5e7c52b89071efc41277e2f0057d258f',
+            url="https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel-0.4.4-dist.zip")
     version('0.3.1', '5c959467484a7fc7dd2e5e4a1e8e866b')
     version('0.3.0', '33a2cb457d28e1bee9282134769b9283')
     version('0.2.3', '393a491d690e43caaba88005efe6da91')
@@ -51,7 +53,7 @@ class Bazel(Package):
         mkdir(prefix.bin)
         install('output/bazel', prefix.bin)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         class BazelExecutable(Executable):
             """Special callable executable object for bazel so the user can
                specify parallel or not on a per-invocation basis.  Using
@@ -82,8 +84,8 @@ class Bazel(Package):
                 return super(BazelExecutable, self).__call__(*args, **kwargs)
 
         jobs = cpu_count()
-        if not dep_spec.package.parallel:
+        if not dependent_spec.package.parallel:
             jobs = 1
-        elif dep_spec.package.make_jobs:
-            jobs = dep_spec.package.make_jobs
+        elif dependent_spec.package.make_jobs:
+            jobs = dependent_spec.package.make_jobs
         module.bazel = BazelExecutable('bazel', 'build', jobs)

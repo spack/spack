@@ -44,8 +44,10 @@ class Trilinos(CMakePackage):
     A unique design feature of Trilinos is its focus on packages.
     """
     homepage = "https://trilinos.org/"
-    base_url = "https://github.com/trilinos/Trilinos/archive"
+    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
+    version('xsdk-0.2.0',
+            git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
     version('develop',
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
@@ -62,10 +64,6 @@ class Trilinos(CMakePackage):
     version('11.14.3', 'dea62e57ebe51a886bee0b10a2176969')
     version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
     version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
-
-    def url_for_version(self, version):
-        return '%s/trilinos-release-%s.tar.gz' % \
-            (Trilinos.base_url, version.dashed)
 
     variant('xsdkflags',        default=False,
             description='Compile using the default xSDK configuration')
@@ -90,6 +88,8 @@ class Trilinos(CMakePackage):
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
+    variant('tpetra',       default=True, description='Compile with Tpetra')
+    variant('exodus', default=False, description='Compile with Exodus from SEACAS')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -115,18 +115,28 @@ class Trilinos(CMakePackage):
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
+    depends_on('superlu-dist@develop', when='@develop+superlu-dist')
+    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+fpic@4.3', when='+superlu')
-    depends_on('hypre~internal-superlu', when='+hypre')
+    # Trilinos can not be built against 64bit int hypre
+    depends_on('hypre~internal-superlu~int64', when='+hypre')
+    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
+    depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
-    patch('umfpack_from_suitesparse.patch', when='@:12.8.1')
+    patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
+
+    def url_for_version(self, version):
+        url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
+        return url.format(version.dashed)
 
     # check that the combination of variants makes sense
     def variants_check(self):
-        if '+superlu-dist' in self.spec and self.spec.satisfies('@:11.4.3'):
+        if ('+superlu-dist' in self.spec and
+            self.spec.satisfies('@11.14.1:11.14.3')):
             # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
             # deprecated SuperLUDist v3.3 together with an Amesos patch is
             # working.
@@ -146,8 +156,8 @@ class Trilinos(CMakePackage):
 
         mpi_bin = spec['mpi'].prefix.bin
         # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
             '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
@@ -172,7 +182,9 @@ class Trilinos(CMakePackage):
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_Netcdf:BOOL=ON'
+            '-DTPL_ENABLE_Netcdf:BOOL=ON',
+            '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
+                'ON' if '+tpetra' in spec else 'OFF')
         ])
 
         if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
@@ -291,14 +303,15 @@ class Trilinos(CMakePackage):
 
         # mumps / scalapack
         if '+mumps' in spec:
+            scalapack = spec['scalapack'].libs
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 # order is important!
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord',
                 '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
-                # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
-                '-DSCALAPACK_LIBRARY_NAMES=scalapack'
+                '-DSCALAPACK_LIBRARY_NAMES=%s' % ';'.join(scalapack.names),
+                '-DSCALAPACK_LIBRARY_DIRS=%s' % ';'.join(scalapack.directories)
             ])
             # see
             # https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS
@@ -369,10 +382,27 @@ class Trilinos(CMakePackage):
 
         # disable due to compiler / config errors:
         options.extend([
-            '-DTrilinos_ENABLE_SEACAS=OFF',
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
+
+        # exodus
+        if '+exodus' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF'
+            ])
+
+        # disable due to compiler / config errors:
+        if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            options.extend([
+                '-DTrilinos_ENABLE_Pamgen:BOOL=OFF',
+                '-DTrilinos_ENABLE_Stokhos:BOOL=OFF'
+            ])
+
         if sys.platform == 'darwin':
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'

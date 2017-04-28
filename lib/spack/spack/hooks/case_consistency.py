@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from __future__ import absolute_import
+
 import os
 import re
 import platform
@@ -30,6 +31,7 @@ import platform
 from llnl.util.filesystem import *
 
 import spack
+from spack.cmd.pkg import get_git
 from spack.util.executable import *
 
 
@@ -60,8 +62,8 @@ def git_case_consistency_check(path):
     """
     with working_dir(path):
         # Don't bother fixing case if Spack isn't in a git repository
-        git = which('git')
-        if not git:
+        git = get_git(fatal=False)
+        if git is None:
             return
 
         try:
