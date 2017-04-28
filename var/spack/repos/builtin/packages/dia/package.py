@@ -42,7 +42,7 @@ class Dia(Package):
     depends_on('libxinerama')
     depends_on('libxrender')
     depends_on('libxml2')
-    depends_on('freetype', type='build')
+    depends_on('freetype')
 
     # TODO: Optional dependencies, not yet supported by Spack
     # depends_on('libart')
