@@ -253,10 +253,26 @@ def test_external_repair_triggers_exception():
     spec = Spec('externaltool')
     spec.concretize()
     pkg = spack.repo.get(spec)
+    with pytest.raises(spack.package.ExternalPackageError):
+        pkg.repair_partial()
+
     pkg.do_install()
 
     with pytest.raises(spack.package.ExternalPackageError):
         pkg.repair_partial()
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_reindex_without_completion_file_is_repaired(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+
+    os.remove(spack.store.layout._completion_marker_file(spec))
+    spack.store.db.reindex(spack.store.layout)
+    assert pkg.installed
 
 
 @pytest.mark.usefixtures('install_mockery')

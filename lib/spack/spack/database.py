@@ -392,7 +392,7 @@ class Database(object):
 
         self._data = data
 
-    def reindex(self, directory_layout, repair_partial=False):
+    def reindex(self, directory_layout):
         """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
@@ -413,17 +413,16 @@ class Database(object):
         )
 
         with transaction:
-            all_specs = directory_layout.all_specs()
-
             if self._error:
                 tty.warn(
                     "Spack database was corrupt. Will rebuild. Error was:",
                     str(self._error)
                 )
                 self._error = None
-            elif repair_partial:
-                for spec in all_specs:
-                    spec.package.repair_partial()
+            else:
+                for key, entry in self._data.items():
+                    if entry.installed and not entry.spec.external:
+                        entry.spec.package._mark_installed()
 
             # Read first the `spec.yaml` files in the prefixes. They should be
             # considered authoritative with respect to DB reindexing, as
@@ -439,7 +438,7 @@ class Database(object):
                 # Start inspecting the installed prefixes
                 processed_specs = set()
 
-                for spec in all_specs:
+                for spec in directory_layout.all_specs():
                     # Try to recover explicit value from old DB, but
                     # default it to True if DB was corrupt. This is
                     # just to be conservative in case a command like
