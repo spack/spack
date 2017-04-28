@@ -30,16 +30,15 @@ class Pgi(Package):
     """PGI optimizing multi-core x64 compilers for Linux, MacOS & Windows
     with support for debugging and profiling of local MPI processes.
 
-    Note: The PGI compilers are licensed software. You will need to create
-    an account on the PGI homepage and download PGI yourself. Once the download
-    finishes, rename the file (which may contain information such as the
-    architecture) to the format: pgi-<version>.tar.gz. Spack will search your
-    current directory for a file of this format. Alternatively, add this
+    Note: The PGI compilers are licensed software. You will need to create an
+    account on the PGI homepage and download PGI yourself. Spack will search
+    your current directory for the download tarball. Alternatively, add this
     file to a mirror so that Spack can find it. For instructions on how to
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.pgroup.com/"
 
+    version('17.3',  '6eefc42f85e756cbaba76467ed640902')
     version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')
     version('16.5',  'a40e8852071b5d600cb42f31631b3de1')
     version('16.3',  '618cb7ddbc57d4e4ed1f21a0ab25f427')
