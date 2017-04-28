@@ -37,6 +37,7 @@ class Bamtools(Package):
     version('2.2.3', '6eccd3e45e4ba12a68daa3298998e76d')
 
     depends_on('cmake', type='build')
+    depends_on('zlib', type='link')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
