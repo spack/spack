@@ -451,10 +451,11 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
        compiler spec."""
 
     def __init__(self, compiler_spec, arch=None):
-        err_msg = "No compilers with spec %s found" % compiler_spec
+        err_msg = "No compilers with spec {0} found".format(compiler_spec)
         if arch:
-            err_msg += (" for operating system %s and target %s." %
-                        (compiler_spec, arch.platform_os, arch.target))
+            err_msg += " for operating system {0} and target {1}.".format(
+                arch.platform_os, arch.target
+            )
 
         super(UnavailableCompilerVersionError, self).__init__(
             err_msg, "Run 'spack compiler find' to add compilers.")
