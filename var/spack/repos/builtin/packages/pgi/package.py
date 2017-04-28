@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.util.prefix import Prefix
 import os
 
 
@@ -99,3 +100,17 @@ class Pgi(Package):
 
         # Run install script
         os.system("./install")
+
+    def setup_environment(self, spack_env, run_env):
+        prefix = Prefix(join_path(self.prefix, 'linux86-64', self.version))
+
+        run_env.set('CC',  join_path(prefix.bin, 'pgcc'))
+        run_env.set('CXX', join_path(prefix.bin, 'pgc++'))
+        run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
+        run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
+
+        run_env.set('PATH',            prefix.bin)
+        run_env.set('CPATH',           prefix.include)
+        run_env.set('LIBRARY_PATH',    prefix.lib)
+        run_env.set('LD_LIBRARY_PATH', prefix.lib)
+        run_env.set('MANPATH',         prefix.man)
