@@ -62,4 +62,9 @@ class Ncurses(AutotoolsPackage):
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
 
+        # The CPPFLAGS setting works around this bug:
+        # <http://stackoverflow.com/questions/37475222/ncurses-6-0-compilation-error-error-expected-before-int>
+        if self.spec.satisfies('%gcc'):
+            opts.append('CPPFLAGS=-P')
+
         return opts
