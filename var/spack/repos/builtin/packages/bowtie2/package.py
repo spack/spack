@@ -43,6 +43,9 @@ class Bowtie2(Package):
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
 
+    # seems to have trouble with 6's -std=gnu++14
+    conflicts('%gcc@6:')
+
     def install(self, spec, prefix):
         make()
         mkdirp(prefix.bin)
