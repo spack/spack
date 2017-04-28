@@ -39,9 +39,11 @@ if ($?SPACK_ROOT) then
     alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
 
+    # Shamelessly stolen from setup-env.sh
+    set _sp_sys_type = `$SPACK_ROOT/bin/spack python -c 'print(spack.architecture.sys_type())'`
+
     # Set up modules and dotkit search paths in the user environment
-    # TODO: fix SYS_TYPE to something non-LLNL-specific
-    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
-    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
+    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$_sp_sys_type"
+    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$_sp_sys_type"
     _spack_pathadd PATH       "$SPACK_ROOT/bin"
 endif
