@@ -144,6 +144,9 @@ class Dealii(CMakePackage):
         self.variants_check()
         spec = self.spec
         options = []
+        # release flags
+        cxx_flags_release = []
+        # debug and release flags
         cxx_flags = []
 
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -168,11 +171,14 @@ class Dealii(CMakePackage):
         # Set recommended flags for maximum (matrix-free) performance, see
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
-            cxx_flags.extend(['-O3', '-march=native'])
+            cxx_flags_release.extend(['-O3'])
+            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%intel'):
-            cxx_flags.extend(['-O3', '-march=native'])
+            cxx_flags_release.extend(['-O3'])
+            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%clang'):
-            cxx_flags.extend(['-O3', '-march=native', '-ffp-contract=fast'])
+            cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
+            cxx_flags.extend(['-march=native'])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
@@ -281,9 +287,12 @@ class Dealii(CMakePackage):
         ])
 
         # collect CXX flags:
-        if len(cxx_flags) > 0 and '+optflags' in spec:
+        if len(cxx_flags_release) > 0 and '+optflags' in spec:
             options.extend([
-                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (' '.join(cxx_flags))
+                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (
+                    ' '.join(cxx_flags_release)),
+                '-DCMAKE_CXX_FLAGS:STRING=%s' % (
+                    ' '.join(cxx_flags))
             ])
 
         return options
