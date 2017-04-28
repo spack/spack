@@ -38,9 +38,12 @@ shebang_limit = 127
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
-    with open(path, 'r') as script:
+    if not os.path.isfile(path):
+        return False
+
+    with open(path, 'rb') as script:
         bytes = script.read(2)
-        if bytes != '#!':
+        if bytes != b'#!':
             return False
 
         line = bytes + script.readline()

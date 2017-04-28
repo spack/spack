@@ -39,8 +39,8 @@ class Xsdk(Package):
     # removed when metapackage is available
     url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
 
-    version('develop', '941a541bdf625856be18c9752249146d')
-    version('xsdk-0.2.0', '941a541bdf625856be18c9752249146d')
+    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
+    version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
 
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
     depends_on('hypre@develop~internal-superlu', when='@develop')

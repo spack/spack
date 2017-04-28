@@ -26,34 +26,26 @@
 from spack import *
 
 
-class Legion(CMakePackage):
-    """Legion is a data-centric parallel programming system for writing
-       portable high performance programs targeted at distributed heterogeneous
-       architectures. Legion presents abstractions which allow programmers to
-       describe properties of program data (e.g. independence, locality). By
-       making the Legion programming system aware of the structure of program
-       data, it can automate many of the tedious tasks programmers currently
-       face, including correctly extracting task- and data-level parallelism
-       and moving data around complex memory hierarchies. A novel mapping
-       interface provides explicit programmer controlled placement of data in
-       the memory hierarchy and assignment of tasks to processors in a way
-       that is orthogonal to correctness, thereby enabling easy porting and
-       tuning of Legion applications to new architectures.
-    """
-    homepage = "http://legion.stanford.edu/"
-    url      = "https://github.com/StanfordLegion/legion/tarball/legion-17.02.0"
+class Flecsale(CMakePackage):
+    """Flecsale is an ALE code based on FleCSI"""
+    homepage = "https://github.com/laristra/flecsale"
+    url      = "https://github.com/laristra/flecsale/tarball/v1.0"
 
-    version('develop', git='https://github.com/StanfordLegion/legion', branch='master')
-    version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
+    version('develop', git='https://github.com/laristra/flecsale', branch='master', submodules=False)
 
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
-    variant('shared', default=True, description='Build shared libraries')
 
     depends_on("cmake@3.1:", type='build')
-    depends_on("gasnet", when='~mpi')
-    depends_on("gasnet+mpi", when='+mpi')
+    depends_on("flecsi~mpi", when='~mpi')
+    depends_on("flecsi+mpi", when='+mpi')
+
+    # drop when #3958 has been merged
+    def do_fetch(self, mirror_only=True):
+        super(Flecsale, self).do_fetch(mirror_only)
+        git = which("git")
+        git('submodule', 'update', '--init', '--recursive')
 
     def build_type(self):
         spec = self.spec
@@ -63,12 +55,12 @@ class Legion(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        options = [
-            '-DLegion_USE_GASNet=ON',
-            '-DLegion_BUILD_EXAMPLES=ON',
-            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
+        options = ['-DENABLE_UNIT_TESTS=ON']
 
         if '+mpi' in self.spec:
-            options.append('-DGASNet_CONDUIT=mpi')
+            options.extend([
+                '-DENABLE_MPI=ON',
+                '-DFLECSI_RUNTIME_MODEL=mpilegion'
+            ])
 
         return options

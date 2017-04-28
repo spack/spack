@@ -36,8 +36,9 @@ class Xproto(AutotoolsPackage):
     common definitions and porting layer."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/x11proto"
-    url      = "https://www.x.org/archive/individual/proto/xproto-7.0.29.tar.gz"
+    url      = "https://www.x.org/archive/individual/proto/xproto-7.0.31.tar.gz"
 
+    version('7.0.31', '04b925bf9e472c80f9212615cd684f1e')
     version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
 
     depends_on('pkg-config@0.9.0:', type='build')
