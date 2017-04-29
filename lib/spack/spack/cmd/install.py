@@ -41,6 +41,7 @@ import spack.cmd.common.arguments as arguments
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
+from spack.util.chroot import build_chroot_enviroment, remove_chroot_enviroment
 
 description = "build and install packages"
 section = "build"
@@ -398,3 +399,6 @@ def install(parser, args, **kwargs):
         # Dump test output if asked to
         if args.log_format is not None:
             test_suite.dump(log_filename)
+
+    #if spack.isolate:
+    #    remove_chroot_enviroment(spack.spack_bootstrap_root)
