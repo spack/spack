@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Bamtools(Package):
@@ -41,7 +42,14 @@ class Bamtools(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
+            rpath = self.rpath
+            rpath.append(os.path.join(self.prefix.lib, 'bamtools')
+            
+            cmake_args = []
+            cmake_args.extend(std_cmake_args)
+            cmake_args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
+
+            cmake('..', *cmake_args)
 
             make()
             make('install')
