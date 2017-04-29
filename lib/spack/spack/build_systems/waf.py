@@ -51,7 +51,7 @@ class WafPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python -j<jobs> waf <phase>
+       $ python waf -j<jobs> <phase>
 
     where <jobs> is the number of parallel jobs to build with. Each phase
     also has a <phase_args> function that can pass arguments to this call.
