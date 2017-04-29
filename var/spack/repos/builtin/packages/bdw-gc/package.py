@@ -38,6 +38,7 @@ class BdwGc(AutotoolsPackage):
     variant('libatomic-ops', default=True,
             description='Use external libatomic-ops')
 
+    depends_on('pkg-config')
     depends_on('libatomic-ops', when='+libatomic-ops')
 
     def configure_args(self):
