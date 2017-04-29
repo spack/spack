@@ -87,12 +87,6 @@ class Ncurses(AutotoolsPackage):
         with working_dir('build_ncursesw'):
             make()
 
-    def check(self):
-        with working_dir('build_ncurses'):
-            make('check')
-        with working_dir('build_ncursesw'):
-            make('check')
-
     def install(self, spec, prefix):
         with working_dir('build_ncurses'):
             make('install')

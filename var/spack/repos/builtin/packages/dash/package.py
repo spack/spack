@@ -25,17 +25,24 @@
 from spack import *
 
 
-class Libedit(AutotoolsPackage):
-    """An autotools compatible port of the NetBSD editline library"""
-    homepage = "http://thrysoee.dk/editline/"
-    url      = "http://thrysoee.dk/editline/libedit-20170329-3.1.tar.gz"
+class Dash(AutotoolsPackage):
+    """The Debian Almquist Shell."""
 
-    version('3.1-20170329', 'c57a0690e62ef523c083598730272cfd')
-    version('3.1-20160903', '0467d27684c453a351fbcefebbcb16a3')
-    version('3.1-20150325', '43cdb5df3061d78b5e9d59109871b4f6')
+    homepage = "https://git.kernel.org/pub/scm/utils/dash/dash.git"
+    url      = "https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-0.5.9.1.tar.gz"
+    list_url = homepage
 
-    depends_on('ncurses')
+    version('0.5.9.1', '0d800da0b8ddbefa1468978d314b7d09')
 
-    def url_for_version(self, version):
-        url = "http://thrysoee.dk/editline/libedit-{0}-{1}.tar.gz"
-        return url.format(version[-1], version.up_to(-1))
+    depends_on('libedit', type='link')
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    def configure_args(self):
+        # Compile with libedit support
+        # This allows the use of arrow keys at the command line
+        # See https://askubuntu.com/questions/704688
+        return ['--with-libedit']
