@@ -67,6 +67,7 @@ from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.version import *
+from spack.util.path_variables import PathVariables
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -919,7 +920,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.fetch(mirror_only)
 
         self._fetch_time = time.time() - start_time
-
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
@@ -1220,6 +1220,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
 
+            #enter isolation mode if needed
+            # real_root = os.open("/", os.O_RDONLY)
+            # old_path_variables = copy.copy(spack.path_variables)
+            # if spack.isolate:
+            #     tty.msg("Isolate enviroment to root {0}"
+            #                 .format(spack.spack_bootstrap_root))
+            #     os.chroot(spack.spack_bootstrap_root)
+            #     spack.path_variables = PathVariables("/home/spack/")
+
+
             # We are in the child process. This means that our sys.stdin is
             # equal to open(os.devnull). Python did this to prevent our process
             # and the parent process from possible simultaneous reading from
@@ -1299,6 +1309,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     (_hms(self._fetch_time), _hms(build_time),
                      _hms(self._total_time)))
             print_pkg(self.prefix)
+
+            #leave the isolation mode
+            # if spack.isolate:
+            #     os.fchdir(real_root)
+            #     os.chroot(".")
+            # os.close(real_root)
+            # spack.path_variables = old_path_variables
 
         try:
             # Create the install prefix and fork the build process.

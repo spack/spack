@@ -39,6 +39,7 @@ import spack.cmd.common.arguments as arguments
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
+from spack.util.chroot import build_chroot_enviroment, remove_chroot_enviroment
 
 description = "build and install packages"
 
@@ -72,6 +73,11 @@ the dependencies"""
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="fake install. just remove prefix and create a fake file")
+    subparser.add_argument(
+        '--no-isolation', action='store_true', dest='no_isolation',
+        help="""don't isolate this installation.
+This only have affact in an isolated boostraped enviroment"""
+    )
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -300,6 +306,13 @@ def install(parser, args, **kwargs):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
+    if args.no_isolation:
+        spack.isolate = False            # TODO: remove this global.
+
+    #if spack.isolate:
+    #    remove_chroot_enviroment(spack.spack_bootstrap_root)
+    #    build_chroot_enviroment(spack.spack_bootstrap_root)
+
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
     kwargs.update({
@@ -348,3 +361,6 @@ def install(parser, args, **kwargs):
         # Dump log file if asked to
         if args.log_format is not None:
             test_suite.dump(log_filename)
+
+    #if spack.isolate:
+    #    remove_chroot_enviroment(spack.spack_bootstrap_root)

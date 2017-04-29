@@ -98,13 +98,15 @@ def bootstrap(parser, args):
 
     if isolate:
         home = os.path.join(prefix, 'home')
+        tmp = os.path.join(prefix, 'tmp')
         install_dir = os.path.join(home, 'spack')
 
         mkdirp(home)
+        mkdirp(tmp)
         mkdirp(install_dir)
+        #generate and remove enviroment
         build_chroot_enviroment(prefix)
-        #raw_input("Wait Key: ")
-        #remove_chroot_enviroment(prefix)
+        remove_chroot_enviroment(prefix)
     else:
         install_dir = prefix
 
