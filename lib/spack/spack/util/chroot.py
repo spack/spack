@@ -26,17 +26,17 @@ import re
 import os
 import sys
 import spack
+import llnl.util.tty as tty
 from itertools import product
 from spack.util.executable import which
 
 EXECUTABLES = [
+    # unix tools
     'env',
     'git',
     'tar',
     'bash',
     'curl',
-    'python',
-    'python3',
     'make',
     'uniq',
     'tr',
@@ -55,6 +55,7 @@ EXECUTABLES = [
     'unzip',
     'zip',
     'id',
+    'xz',
     'file',
     'patch',
     'dirname',
@@ -68,11 +69,11 @@ EXECUTABLES = [
     'man',
     'md5sum',
     'basename',
-    'perl',
     'test',
+    'install',
     'grep',
-    'ranlib',
-    ('gfortran', False),
+
+    # lsb_release (for os detection)
     'lsb_release',
     'apt-cache', #for lsb_release
     'dpkg-query', #for lsb_release
@@ -80,6 +81,16 @@ EXECUTABLES = [
     #gcc
     'gcc',
     'g++',
+
+    #fortran
+    ('gfortran', False), #not required
+
+    #python
+    'python',
+    'python3',
+
+    #perl
+    'perl',
 
     #binutils
     'addr2line',
@@ -131,6 +142,9 @@ DEFAULT_PATHS = [
     '/usr/lib/x86_64-linux-gnu/crt1.o',
     '/usr/lib/x86_64-linux-gnu/crti.o',
     '/usr/lib/x86_64-linux-gnu/crtn.o',
+    '/usr/lib/x86_64-linux-gnu/libquadmath.so.0',
+    '/usr/lib/x86_64-linux-gnu/libgfortran.so.3',
+    '/usr/lib/x86_64-linux-gnu/libgfortran.so.3.0.0',
 
     # lib c libraries
     '/usr/lib/x86_64-linux-gnu/libc.a',
@@ -237,7 +251,7 @@ DEFAULT_PATHS = [
     '/usr/include/langinfo.h',
     '/usr/include/lastlog.h',
     '/usr/include/libgen.h',
-    '/usr/include/libintl.h',
+    #'/usr/include/libintl.h',
     '/usr/include/libio.h',
     '/usr/include/limits.h',
     '/usr/include/link.h',
@@ -319,6 +333,7 @@ DEFAULT_PATHS = [
     '/etc/perl',
     '/usr/lib/perl5',
     '/usr/lib/x86_64-linux-gnu/perl5',
+    '/usr/lib/x86_64-linux-gnu/perl',
     '/usr/lib/x86_64-linux-gnu/perl-base',
     '/usr/share/perl5',
     '/usr/share/perl',
@@ -387,3 +402,26 @@ def remove_chroot_enviroment(dir):
     libraries = get_all_library_directories()
     for lib in libraries:
         umount_bind_path(os.path.join(dir, lib[1:]))
+
+def isolate_enviroment():
+    tty.msg("Isolate spack")
+
+    lockFile = os.path.join(spack.spack_root, '.env')
+    existed = True
+    # check if the enviroment has to be generated
+    if not os.path.exists(lockFile):
+        build_chroot_enviroment(spack.spack_bootstrap_root)
+        existed = False
+
+    whoami = which("whoami", required=True)
+    username = whoami(output=str).replace('\n', '')
+    groups = which("groups", required=True)
+    # just use the first group
+    group = groups(username, output=str).split(':')[1].strip().split(' ')[0]
+
+    #restart the command in the chroot jail
+    os.system("sudo chroot --userspec=%s:%s %s /home/spack/bin/spack %s"
+        % (username, group, spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
+
+    if not existed:
+        remove_chroot_enviroment(spack.spack_bootstrap_root)
