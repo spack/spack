@@ -390,7 +390,7 @@ class Python(Package):
         distutil_vars = self._load_distutil_vars()
 
         if distutil_vars:
-            for key, value in distutil_vars.iteritems():
+            for key, value in distutil_vars.items():
                 module.setup_py.add_default_env(key, value)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
