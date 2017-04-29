@@ -31,7 +31,9 @@ import getpass
 from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
-from spack.util.chroot import build_chroot_enviroment, remove_chroot_enviroment
+from spack.util.chroot import build_chroot_enviroment,  \
+                              remove_chroot_enviroment, \
+                              isolate_enviroment
 from spack.util.path_variables import PathVariables
 
 #-----------------------------------------------------------------------------
@@ -96,6 +98,7 @@ from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
+from spack.util.executable import which
 
 
 #-----------------------------------------------------------------------------
@@ -168,17 +171,12 @@ build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 # ./spack bootstrap --isolate path
 isolate = _config.get('isolate', False)
 
-
-if isolate:
+# check sys.argv[1] agaist isolate allow the call to
+# isolate --remove-enviroment without being trapped inside a chroot jail
+if isolate and sys.argv[1] != 'isolate':
     if spack_root != "/home/spack":
-        remove_chroot_enviroment(spack.spack_bootstrap_root)
-        build_chroot_enviroment(spack.spack_bootstrap_root)
-
-        os.system("sudo chroot %s /home/spack/bin/spack %s"
-            % (spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
-
-        #remove_chroot_enviroment(spack.spack_bootstrap_root)
-        sys.exit(0)
+        isolate_enviroment()
+        sys.exit(0) #exit main process because it wasn't called in a chroot jail
 
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
