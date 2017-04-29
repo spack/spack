@@ -74,7 +74,7 @@ class WafPackage(PackageBase):
     # Much like AutotoolsPackage does not require automake and autoconf
     # to build, WafPackage does not require waf to build. It only requires
     # python to run the waf build script.
-    depends_on('python', type='build')
+    depends_on('python@2.5:', type='build')
 
     @property
     def build_directory(self):
