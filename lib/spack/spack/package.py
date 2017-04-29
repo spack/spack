@@ -69,6 +69,7 @@ from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.version import *
+from spack.util.path_variables import PathVariables
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -965,7 +966,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.fetch(mirror_only)
 
         self._fetch_time = time.time() - start_time
-
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 

@@ -31,16 +31,22 @@ import getpass
 from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
+from spack.util.chroot import build_chroot_enviroment, remove_chroot_enviroment
+from spack.util.path_variables import PathVariables
+
 #-----------------------------------------------------------------------------
 # Variables describing how Spack is laid out in its prefix.
 #-----------------------------------------------------------------------------
 # This file lives in $prefix/lib/spack/spack/__file__
 spack_root = ancestor(__file__, 4)
 
-# The spack script itself
+# #the bootstrap enviroment is in $prefix/home/spack_root
+spack_bootstrap_root = ancestor(spack_root, 2)
+#
+# # The spack script itself
 spack_file = join_path(spack_root, "bin", "spack")
-
-# spack directory hierarchy
+#
+# # spack directory hierarchy
 lib_path       = join_path(spack_root, "lib", "spack")
 external_path  = join_path(lib_path, "external")
 build_env_path = join_path(lib_path, "env")
@@ -55,14 +61,14 @@ var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
-
-# Paths to built-in Spack repositories.
+#
+# # Paths to built-in Spack repositories.
 packages_path      = join_path(repos_path, "builtin")
 mock_packages_path = join_path(repos_path, "builtin.mock")
-
-# User configuration location
+#
+# # User configuration location
 user_config_path = os.path.expanduser('~/.spack')
-
+#
 prefix = spack_root
 opt_path        = join_path(prefix, "opt")
 etc_path        = join_path(prefix, "etc")
@@ -157,6 +163,22 @@ dirty = _config.get('dirty', False)
 # By default, use all cores on the machine.
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
+# If set to true, Spack will isolate itself in an chroot enviroment.
+# This option only work in an enviroment created with
+# ./spack bootstrap --isolate path
+isolate = _config.get('isolate', False)
+
+
+if isolate:
+    if spack_root != "/home/spack":
+        remove_chroot_enviroment(spack.spack_bootstrap_root)
+        build_chroot_enviroment(spack.spack_bootstrap_root)
+
+        os.system("sudo chroot %s /home/spack/bin/spack %s"
+            % (spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
+
+        #remove_chroot_enviroment(spack.spack_bootstrap_root)
+        sys.exit(0)
 
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
