@@ -43,7 +43,7 @@ class Bamtools(Package):
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             rpath = self.rpath
-            rpath.append(os.path.join(self.prefix.lib, 'bamtools')
+            rpath.append(os.path.join(self.prefix.lib, 'bamtools'))
             
             cmake_args = []
             cmake_args.extend(std_cmake_args)
