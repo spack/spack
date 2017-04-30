@@ -71,6 +71,7 @@ class Qt(Package):
     # see https://github.com/Homebrew/homebrew-core/pull/5951
     patch('restore-pc-files.patch', when='@5.9: platform=darwin')
 
+    patch('qt3accept.patch', when='@3.3.8b')
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
