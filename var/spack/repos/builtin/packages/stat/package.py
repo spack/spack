@@ -69,7 +69,7 @@ class Stat(AutotoolsPackage):
             "--with-graphlib=%s"    % spec['graphlib'].prefix,
             "--with-stackwalker=%s" % spec['dyninst'].prefix,
             "--with-libdwarf=%s"    % spec['libdwarf'].prefix,
-            "--with-python=%s/bin/python" % spec['python'].prefix
+            "--with-python=%s"      % spec['python'].command.path,
         ]
         if '+dysect' in spec:
             args.append('--enable-dysectapi')
