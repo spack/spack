@@ -72,7 +72,7 @@ class Gdal(Package):
         args.append("--prefix=%s" % prefix)
         args.append("--with-liblzma=yes")
         args.append("--with-zlib=%s" % spec['zlib'].prefix)
-        args.append("--with-python=%s" % spec['python'].prefix.bin + "/python")
+        args.append("--with-python=%s" % spec['python'].command.path)
         args.append("--without-libtool")
 
         if '+geos' in spec:
