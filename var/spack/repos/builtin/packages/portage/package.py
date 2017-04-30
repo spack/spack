@@ -34,19 +34,13 @@ class Portage(CMakePackage):
     homepage = "http://portage.lanl.gov/"
     url      = "https://github.com/laristra/portage/tarball/v1.0"
 
-    version('develop', git='https://github.com/laristra/portage', branch='master', submodules=False)
+    version('develop', git='https://github.com/laristra/portage', branch='master', submodules=True)
 
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Support MPI')
 
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi', when='+mpi')
-
-    # drop when #3958 has been merged
-    def do_fetch(self, mirror_only=True):
-        super(Portage, self).do_fetch(mirror_only)
-        git = which("git")
-        git('submodule', 'update', '--init', '--recursive')
 
     def build_type(self):
         spec = self.spec

@@ -39,7 +39,7 @@ class Flecsi(CMakePackage):
     homepage = "http://flecsi.lanl.gov/"
     url      = "https://github.com/laristra/flecsi/tarball/v1.0"
 
-    version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=False)
+    version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=True)
 
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
@@ -48,12 +48,6 @@ class Flecsi(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("legion+shared", when='~mpi')
     depends_on("legion+shared+mpi", when='+mpi')
-
-    # drop when #3958 has been merged
-    def do_fetch(self, mirror_only=True):
-        super(Flecsi, self).do_fetch(mirror_only)
-        git = which("git")
-        git('-C', 'flecsi', 'submodule', 'update', '--init', '--recursive')
 
     def build_type(self):
         spec = self.spec
