@@ -69,8 +69,7 @@ class Spark(Package):
         env['JAVA_HOME'] = self.spec['jdk'].prefix
         # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
-        hadoop_bin_path = join_path(self.spec['hadoop'].prefix.bin, 'hadoop')
-        hadoop_bin = Executable(hadoop_bin_path)
-        hadoop_classpath = hadoop_bin('classpath', return_output=True)
+        hadoop = self.spec['hadoop'].command
+        hadoop_classpath = hadoop('classpath', return_output=True)
 
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

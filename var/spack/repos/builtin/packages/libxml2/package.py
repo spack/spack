@@ -49,7 +49,7 @@ class Libxml2(AutotoolsPackage):
         spec = self.spec
         if '+python' in spec:
             python_args = [
-                '--with-python={0}'.format(spec['python'].prefix),
+                '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
             ]
         else:

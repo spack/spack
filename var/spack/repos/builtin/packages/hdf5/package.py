@@ -257,7 +257,7 @@ HDF5 version {version} {version}
                 cc = Executable(spec['mpi'].mpicc)
             else:
                 cc = Executable(self.compiler.cc)
-            cc(*(['-c', "check.c"] + spec['hdf5'].cppflags.split()))
+            cc(*(['-c', "check.c"] + spec['hdf5'].headers.cpp_flags.split()))
             cc(*(['-o', "check", "check.o"] +
                  spec['hdf5'].libs.ld_flags.split()))
             try:

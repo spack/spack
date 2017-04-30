@@ -206,7 +206,7 @@ class BlastPlus(AutotoolsPackage):
 
         if '+python' in spec:
             config_args.append(
-                '--with-python={0}'.format(self.spec['python'].prefix)
+                '--with-python={0}'.format(self.spec['python'].home)
             )
         else:
             config_args.append('--without-python')

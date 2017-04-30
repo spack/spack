@@ -45,7 +45,7 @@ class Ack(Package):
         ack = 'ack-{0}-single-file'.format(self.version)
 
         # rewrite the script's #! line to call the perl dependency
-        shbang = '#!' + join_path(spec['perl'].prefix.bin, 'perl')
+        shbang = '#!' + spec['perl'].command.path
         filter_file(r'^#!/usr/bin/env perl', shbang, ack)
 
         install(ack, join_path(prefix.bin, "ack"))

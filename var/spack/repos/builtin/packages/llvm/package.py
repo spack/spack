@@ -339,7 +339,7 @@ class Llvm(CMakePackage):
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix
+            '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
 
         if '+gold' in spec:

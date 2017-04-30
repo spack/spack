@@ -115,8 +115,7 @@ class Psi4(Package):
             ' -I'.join([
                 os.path.join(spec['psi4'].prefix.include, 'psi4'),
                 os.path.join(spec['boost'].prefix.include, 'boost'),
-                os.path.join(spec['python'].prefix.include, 'python{0}'.format(
-                    spec['python'].version.up_to(2))),
+                os.path.join(spec['python'].headers.directories[0]),
                 spec['lapack'].prefix.include,
                 spec['blas'].prefix.include,
                 '/usr/include'

@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
@@ -165,8 +164,8 @@ class Scotch(Package):
 
         # General Features #
 
-        flex_path = os.path.join(self.spec['flex'].prefix.bin, 'flex')
-        bison_path = os.path.join(self.spec['bison'].prefix.bin, 'bison')
+        flex_path = self.spec['flex'].command.path
+        bison_path = self.spec['bison'].command.path
         makefile_inc.extend([
             'EXE       =',
             'OBJ       = .o',
