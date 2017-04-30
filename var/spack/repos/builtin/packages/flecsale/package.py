@@ -40,6 +40,8 @@ class Flecsale(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("flecsi~mpi", when='~mpi')
     depends_on("flecsi+mpi", when='+mpi')
+    depends_on("python@2:2.8")
+    depends_on("openssl")
 
     # drop when #3958 has been merged
     def do_fetch(self, mirror_only=True):
@@ -55,7 +57,11 @@ class Flecsale(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        options = ['-DENABLE_UNIT_TESTS=ON']
+        options = [
+            '-DENABLE_UNIT_TESTS=ON'
+            '-DENABLE_OPENSSL=ON'
+            '-DENABLE_PYTHON=ON'
+        ]
 
         if '+mpi' in self.spec:
             options.extend([
