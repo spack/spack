@@ -246,8 +246,13 @@ class TestSpecSematics(object):
         check_satisfies('mpich foo=False', 'mpich~foo')
 
     def test_satisfies_multi_value_variant(self):
+        # Check quoting
         check_satisfies('multivalue_variant foo="bar,baz"',
                         'multivalue_variant foo="bar,baz"')
+        check_satisfies('multivalue_variant foo=bar,baz',
+                        'multivalue_variant foo=bar,baz')
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo=bar,baz')
 
         # A more constrained spec satisfies a less constrained one
         check_satisfies('multivalue_variant foo="bar,baz"',

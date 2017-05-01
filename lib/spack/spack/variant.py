@@ -26,11 +26,12 @@
 variants both in packages and in specs.
 """
 
-from six import StringIO
-import csv
 import inspect
+import re
+
 import llnl.util.lang as lang
 import spack.error as error
+from six import StringIO
 
 
 class Variant(object):
@@ -64,7 +65,7 @@ class Variant(object):
         self.default = default
         self.description = str(description)
 
-        if inspect.isroutine(values):
+        if callable(values):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
@@ -194,11 +195,7 @@ class MultiValuedVariant(object):
         # Store a tuple of CSV string representations
         # Tuple is necessary here instead of list because the
         # values need to be hashed
-        f = StringIO(str(value))
-        try:
-            t = next(csv.reader(f, skipinitialspace=True))
-        except StopIteration:
-            t = []
+        t = re.split(r'\s*,\s*', str(value))
 
         # With multi-value variants it is necessary
         # to remove duplicates and give an order
@@ -256,10 +253,7 @@ class MultiValuedVariant(object):
             return False
 
         # If names are different then they are not compatible
-        if other.name != self.name:
-            return False
-
-        return True
+        return other.name == self.name
 
     def constrain(self, other):
         """Modify self to match all the constraints for other if both
