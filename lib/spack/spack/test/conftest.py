@@ -55,7 +55,7 @@ import spack.util.pattern
 @pytest.fixture(autouse=True)
 def no_stdin_duplication(monkeypatch):
     """Duplicating stdin (or any other stream) returns an empty
-    cStringIO object.
+    StringIO object.
     """
     monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
                         lambda x: StringIO())
