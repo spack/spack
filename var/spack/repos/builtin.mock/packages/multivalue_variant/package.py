@@ -25,43 +25,33 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
-    """Simple package with no dependencies"""
+class MultivalueVariant(Package):
+    homepage = "http://www.llnl.gov"
+    url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    version(1.0, 'foobarbaz')
+    version(2.1, 'foobarbaz')
+    version(2.2, 'foobarbaz')
+    version(2.3, 'foobarbaz')
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-
+    variant('debug', default=False, description='Debug variant')
     variant(
         'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
+        description='Multi-valued variant',
+        values=('bar', 'baz', 'barbaz'),
         multi=True
     )
 
     variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
+        'fee',
+        description='Single-valued variant',
         default='bar',
-        description='',
+        values=('bar', 'baz', 'barbaz'),
         multi=False
     )
 
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
+    depends_on('mpi')
+    depends_on('callpath')
 
     def install(self, spec, prefix):
         pass
