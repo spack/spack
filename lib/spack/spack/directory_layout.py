@@ -265,13 +265,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         mkdirp(self.metadata_path(spec))
         self.write_spec(spec, self.spec_file_path(spec))
 
-    def check_installed(self, spec):
+    def check_installed(self, spec, legacy=False):
         _check_concrete(spec)
         path = self.path_for_spec(spec)
 
         if not os.path.isdir(path):
             return None
-        elif not self.completed_install(spec):
+        elif (not legacy) and (not self.completed_install(spec)):
             raise InconsistentInstallDirectoryError(
                 'The prefix %s contains a partial install' % path)
 
