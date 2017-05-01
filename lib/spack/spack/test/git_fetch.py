@@ -29,6 +29,11 @@ import spack
 from llnl.util.filesystem import *
 from spack.spec import Spec
 from spack.version import ver
+from spack.util.executable import which
+
+
+pytestmark = pytest.mark.skipif(
+    not which('git'), reason='requires git to be installed')
 
 
 @pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
