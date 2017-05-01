@@ -33,3 +33,5 @@ class Nano(AutotoolsPackage):
 
     version('2.6.3', '1213c7f17916e65afefc95054c1f90f9')
     version('2.6.2', '58568a4b8a33841d774c25f285fc11c1')
+
+    depends_on('ncurses')
