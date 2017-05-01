@@ -204,6 +204,16 @@ class SconsPackageTemplate(PackageTemplate):
         scons('install')"""
 
 
+class WafPackageTemplate(PackageTemplate):
+    """Provides appropriate override for Waf-based packages"""
+
+    base_class_name = 'WafPackage'
+
+    body = """\
+    # FIXME: Override configure_args(), build_args(),
+    # or install_args() if necessary."""
+
+
 class BazelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Bazel-based packages"""
 
@@ -347,6 +357,7 @@ templates = {
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
     'scons':      SconsPackageTemplate,
+    'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
@@ -354,7 +365,7 @@ templates = {
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
-    'generic':    PackageTemplate
+    'generic':    PackageTemplate,
 }
 
 
@@ -413,6 +424,7 @@ class BuildSystemGuesser:
             ('/Makefile.am$',       'autoreconf'),
             ('/CMakeLists.txt$',    'cmake'),
             ('/SConstruct$',        'scons'),
+            ('/waf$',               'waf'),
             ('/setup.py$',          'python'),
             ('/NAMESPACE$',         'r'),
             ('/WORKSPACE$',         'bazel'),

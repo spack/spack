@@ -2085,33 +2085,34 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-    +------------------------------------+----------------------------------+
-    |                                    |   **Base class purpose**         |
-    +====================================+==================================+
-    |          :py:class:`.Package`      | General base class not           |
-    |                                    | specialized for any build system |
-    +------------------------------------+----------------------------------+
-    |   :py:class:`.MakefilePackage`     | Specialized class for packages   |
-    |                                    | built invoking                   |
-    |                                    | hand-written Makefiles           |
-    +------------------------------------+----------------------------------+
-    |   :py:class:`.AutotoolsPackage`    | Specialized class for packages   |
-    |                                    | built using GNU Autotools        |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.CMakePackage`         | Specialized class for packages   |
-    |                                    | built using CMake                |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.RPackage`             | Specialized class for            |
-    |                                    | :py:class:`.R` extensions        |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.PythonPackage`        | Specialized class for            |
-    |                                    | :py:class:`.Python` extensions   |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.PerlPackage`          | Specialized class for            |
-    |                                    | :py:class:`.Perl` extensions     |
-    +------------------------------------+----------------------------------+
-
-
+    +-------------------------------+----------------------------------+
+    |        **Base Class**         |           **Purpose**            |
+    +===============================+==================================+
+    | :py:class:`.Package`          | General base class not           |
+    |                               | specialized for any build system |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.MakefilePackage`  | Specialized class for packages   |
+    |                               | built invoking                   |
+    |                               | hand-written Makefiles           |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.AutotoolsPackage` | Specialized class for packages   |
+    |                               | built using GNU Autotools        |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.CMakePackage`     | Specialized class for packages   |
+    |                               | built using CMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.WafPackage`       | Specialize class for packages    |
+    |                               | built using Waf                  |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.RPackage`         | Specialized class for            |
+    |                               | :py:class:`.R` extensions        |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.PythonPackage`    | Specialized class for            |
+    |                               | :py:class:`.Python` extensions   |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.PerlPackage`      | Specialized class for            |
+    |                               | :py:class:`.Perl` extensions     |
+    +-------------------------------+----------------------------------+
 
 
 .. note::

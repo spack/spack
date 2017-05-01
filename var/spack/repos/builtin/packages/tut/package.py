@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Tut(Package):
+class Tut(WafPackage):
     """TUT is a small and portable unit test framework for C++."""
 
     homepage = "http://mrzechonek.github.io/tut-framework/"
@@ -33,9 +33,11 @@ class Tut(Package):
 
     version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
 
-    extends('python')
+    def build_args(self, spec, prefix):
+        args = []
 
-    def install(self, spec, prefix):
-        python('waf', 'configure', '--prefix={0}'.format(prefix))
-        python('waf', 'build')
-        python('waf', 'install')
+        if self.run_tests:
+            # Run unit tests
+            args.append('--test')
+
+        return args
