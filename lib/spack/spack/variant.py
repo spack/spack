@@ -50,16 +50,17 @@ class Variant(object):
     ):
         """Initialize a package variant.
 
-        :param str name: name of the variant
-        :param str default: default value for the variant in case
-            nothing has been specified
-        :param str description: purpose of the variant
-        :param sequence values: sequence of allowed values or a callable
-            accepting a single value as argument and returning True if the
-            value is good, False otherwise
-        :param bool multi: whether multiple CSV are allowed
-        :param callable validator: optional callable used to enforce
-            additional logic on the set of values being validated
+        Args:
+            name (str): name of the variant
+            default (str): default value for the variant in case
+                nothing has been specified
+            description (str): purpose of the variant
+            values (sequence): sequence of allowed values or a callable
+                accepting a single value as argument and returning True if the
+                value is good, False otherwise
+            multi (bool): whether multiple CSV are allowed
+            validator (callable): optional callable used to enforce
+                additional logic on the set of values being validated
         """
         self.name = name
         self.default = default
@@ -83,16 +84,19 @@ class Variant(object):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
 
-        :param VariantSpec vspec: instance to be validated
-        :param Package pkg: the package that required the validation,
-            if available
+        Args:
+            vspec (VariantSpec): instance to be validated
+            pkg (Package): the package that required the validation,
+                if available
 
-        :raises InconsistentValidationError: if vspec.name doesn't
-            match self.name
-        :raises MultipleValuesInExclusiveVariantError: if vspec has
-            multiple values but self.exclusive ==True
-        :raises InvalidVariantValueError: if vspec.value contains
-            invalid values
+        Raises:
+            InconsistentValidationError: if ``vspec.name != self.name``
+
+            MultipleValuesInExclusiveVariantError: if ``vspec`` has
+                multiple values but ``self.multi == False``
+
+            InvalidVariantValueError: if ``vspec.value`` contains
+                invalid values
         """
         # Check the name of the variant
         if self.name != vspec.name:
@@ -123,8 +127,8 @@ class Variant(object):
         """Returns a string representation of the allowed values for
         printing purposes
 
-        :return: representation of the allowed values
-        :rtype: str
+        Returns:
+            str: representation of the allowed values
         """
         # Join an explicit set of allowed values
         if self.values is not None:
@@ -137,13 +141,30 @@ class Variant(object):
         return v
 
     def make_default(self):
+        """Factory that creates a variant holding the default value.
+
+        Returns:
+            MultiValuedVariant or SingleValuedVariant or BoolValuedVariant:
+                instance of the proper variant
+        """
         return self.make_variant(self.default)
 
     def make_variant(self, value):
+        """Factory that creates a variant holding the value passed as
+        a parameter.
+
+        Args:
+            value: value that will be hold by the variant
+
+        Returns:
+            MultiValuedVariant or SingleValuedVariant or BoolValuedVariant:
+                instance of the proper variant
+        """
         return self.variant_cls(self.name, value)
 
     @property
     def variant_cls(self):
+        """Proper variant class to be used for this configuration."""
         if self.multi:
             return MultiValuedVariant
         elif self.values == (True, False):
@@ -153,9 +174,11 @@ class Variant(object):
 
 @lang.key_ordering
 class MultiValuedVariant(object):
+    """A variant that can hold multiple values at once."""
 
     @staticmethod
     def from_node_dict(name, value):
+        """Reconstruct a variant from a node dict."""
         if isinstance(value, list):
             value = ','.join(value)
             return MultiValuedVariant(name, value)
@@ -179,8 +202,8 @@ class MultiValuedVariant(object):
         """Returns a tuple of strings containing the values stored in
         the variant.
 
-        :return: a tuple of strings
-        :rtype: tuple
+        Returns:
+            tuple of str: values stored in the variant
         """
         return self._value
 
@@ -208,8 +231,8 @@ class MultiValuedVariant(object):
     def copy(self):
         """Returns an instance of a variant equivalent to self
 
-        :return: a copy of self
-        :rtype: any variant
+        Returns:
+            any variant type: a copy of self
 
         >>> a = MultiValuedVariant('foo', True)
         >>> b = a.copy()
@@ -219,13 +242,14 @@ class MultiValuedVariant(object):
         return type(self)(self.name, self._original_value)
 
     def satisfies(self, other):
-        """Returns true if other.name == self.name and other.value is
+        """Returns true if ``other.name == self.name`` and ``other.value`` is
         a strict subset of self. Does not try to validate.
 
-        :param other: constraint to be met for the method to
-            return True
-        :return: True or False
-        :rtype: bool
+        Args:
+            other: constraint to be met for the method to return True
+
+        Returns:
+            bool: True or False
         """
         # If types are different the constraint is not satisfied
         if type(other) != type(self):
@@ -241,12 +265,15 @@ class MultiValuedVariant(object):
 
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
+
         As there is no semantic check, two VariantSpec are compatible if
         either they contain the same value or they are both multi-valued.
 
-        :param other: instance against which we test compatibility
-        :return: True or False
-        :rtype: bool
+        Args:
+            other: instance against which we test compatibility
+
+        Returns:
+            bool: True or False
         """
         # If types are different they are not compatible
         if type(other) != type(self):
@@ -260,9 +287,11 @@ class MultiValuedVariant(object):
         instances are multi-valued. Returns True if self changed,
         False otherwise.
 
-        :param other: instance against which we constrain self
-        :return: True or False
-        :rtype: bool
+        Args:
+            other: instance against which we constrain self
+
+        Returns:
+            bool: True or False
         """
         # If types are different they are not compatible
         if type(other) != type(self):
@@ -276,10 +305,10 @@ class MultiValuedVariant(object):
         return old_value != self.value
 
     def yaml_entry(self):
-        """Returns a key, value tuple suitable to be an entry in a yaml dict
+        """Returns a key, value tuple suitable to be an entry in a yaml dict.
 
-        :return: (name, value_representation)
-        :rtype: tuple
+        Returns:
+            tuple: (name, value_representation)
         """
         return self.name, list(self.value)
 
@@ -299,6 +328,7 @@ class MultiValuedVariant(object):
 
 
 class SingleValuedVariant(MultiValuedVariant):
+    """A variant that can hold multiple values, but one at a time."""
 
     def _value_setter(self, value):
         # Treat the value as a multi-valued variant
@@ -343,15 +373,12 @@ class SingleValuedVariant(MultiValuedVariant):
         return item == self.value
 
     def yaml_entry(self):
-        """Returns a key, value tuple suitable to be an entry in a yaml dict
-
-        :return: (name, value_representation)
-        :rtype: tuple
-        """
         return self.name, self.value
 
 
 class BoolValuedVariant(SingleValuedVariant):
+    """A variant that can hold either True or False."""
+
     def _value_setter(self, value):
         # Check the string representation of the value and turn
         # it to a boolean
@@ -374,7 +401,7 @@ class BoolValuedVariant(SingleValuedVariant):
 
 
 class VariantMap(lang.HashableMap):
-    """Map containing VariantSpec instances. New values can be added only
+    """Map containing variant instances. New values can be added only
     if the key is not already present.
     """
 
@@ -402,6 +429,11 @@ class VariantMap(lang.HashableMap):
         super(VariantMap, self).__setitem__(name, vspec)
 
     def substitute(self, vspec):
+        """Substitutes the entry under ``vspec.name`` with ``vspec``.
+
+        Args:
+            vspec: variant spec to be substituted
+        """
         if vspec.name not in self:
             msg = 'cannot substitute a key that does not exist [{0}]'
             raise KeyError(msg.format(vspec.name))
@@ -413,13 +445,14 @@ class VariantMap(lang.HashableMap):
         """Returns True if this VariantMap is more constrained than other,
         False otherwise.
 
-        :param VariantMap other: VariantMap to satisfy
-        :param bool strict: if True return False if a key is in other and
-            not in self, otherwise discard that key and proceed with evaluation
+        Args:
+            other (VariantMap): VariantMap instance to satisfy
+            strict (bool): if True return False if a key is in other and
+                not in self, otherwise discard that key and proceed with
+                evaluation
 
-        :return: True or False
-        :rtype: bool
-
+        Returns:
+            bool: True or False
         """
         to_be_checked = [k for k in other]
 
@@ -438,9 +471,11 @@ class VariantMap(lang.HashableMap):
         constrain all multi-valued variants that are already present.
         Return True if self changed, False otherwise
 
-        :param VariantMap other: instance against which we constrain self
-        :return: True or False
-        :rtype: bool
+        Args:
+            other (VariantMap): instance against which we constrain self
+
+        Returns:
+            bool: True or False
         """
         if other.spec is not None and other.spec._concrete:
             for k in self:
@@ -464,20 +499,20 @@ class VariantMap(lang.HashableMap):
 
     @property
     def concrete(self):
-        """Returns True if the spec is concrete in terms of variants
+        """Returns True if the spec is concrete in terms of variants.
 
-        :return: True or False
-        :rtype: bool
+        Returns:
+            bool: True or False
         """
         return self.spec._concrete or all(
             v in self for v in self.spec.package_class.variants
         )
 
     def copy(self):
-        """Return an instance of VariantMap equivalent to self
+        """Return an instance of VariantMap equivalent to self.
 
-        :return: a copy of self
-        :rtype: VariantMap
+        Returns:
+            VariantMap: a copy of self
         """
         clone = VariantMap(self.spec)
         for name, variant in self.items():
@@ -525,7 +560,7 @@ class UnknownVariantError(error.SpecError):
 
 
 class InconsistentValidationError(error.SpecError):
-
+    """Raised if the wrong validator is used to validate a variant."""
     def __init__(self, vspec, variant):
         msg = ('trying to validate variant "{0.name}" '
                'with the validator of "{1.name}"')
@@ -535,7 +570,9 @@ class InconsistentValidationError(error.SpecError):
 
 
 class MultipleValuesInExclusiveVariantError(error.SpecError, ValueError):
-
+    """Raised when multiple values are present in a variant that wants
+    only one.
+    """
     def __init__(self, variant, pkg):
         msg = 'multiple values are not allowed for variant "{0.name}"{1}'
         pkg_info = ''
