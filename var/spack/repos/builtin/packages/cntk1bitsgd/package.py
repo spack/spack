@@ -23,33 +23,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from os import listdir
 
 
-class Protobuf(AutotoolsPackage):
-    """Google's data interchange format."""
+class Cntk1bitsgd(Package):
+    """CNTK1bitSGD is the header-only
+    1-bit stochastic gradient descent (1bit-SGD) library for
+    the Computational Network Toolkit (CNTK)."""
 
-    homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
+    homepage = "https://github.com/CNTK-components/CNTK1bitSGD"
 
-    version('3.2.0', '61d899b8369781f6dd1e62370813392d')
-    version('3.1.0', '14a532a7538551d5def317bfca41dace')
-    version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')
-    version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
+    version('master', git='https://github.com/CNTK-components/CNTK1bitSGD.git')
+    version('c8b77d', git='https://github.com/CNTK-components/CNTK1bitSGD.git',
+            commit='c8b77d6e325a4786547b27624890276c1483aed1')
 
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-
-    conflicts('%gcc@:4.6')  # Requires c++11
-
-    variant('shared', default=True, description='Build shared libraries.')
-
-    def configure_args(self):
-        if '+shared' in self.spec:
-            return ['--enable-shared=yes',
-                    '--enable-static=no']
-        else:
-            return ['--enable-shared=no',
-                    '--enable-static=yes',
-                    '--with-pic=yes']
+    def install(self, spec, prefix):
+        mkdirp(prefix.include)
+        for file in listdir('.'):
+            if file.endswith('.h'):
+                install(file, prefix.include)

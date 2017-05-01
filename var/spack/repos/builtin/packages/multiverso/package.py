@@ -25,31 +25,24 @@
 from spack import *
 
 
-class Protobuf(AutotoolsPackage):
-    """Google's data interchange format."""
+class Multiverso(CMakePackage):
+    """Multiverso is a parameter server based framework for
+    training machine learning models on big data with numbers of machines."""
 
-    homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
+    homepage = "https://github.com/Microsoft/Multiverso"
+    url      = "https://github.com/Microsoft/Multiverso/archive/v0.2.tar.gz"
 
-    version('3.2.0', '61d899b8369781f6dd1e62370813392d')
-    version('3.1.0', '14a532a7538551d5def317bfca41dace')
-    version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')
-    version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
+    version('master', git='https://github.com/Microsoft/Multiverso.git',
+            branch='master')
+    version('143187', git='https://github.com/Microsoft/Multiverso.git',
+            commit='143187575d1cfa410100037b8aea2e767e0af637')
+    version('0.2', '483ca7524fea14a311389e421f2bc098')
 
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on('mpi')
+    depends_on('boost')
 
-    conflicts('%gcc@:4.6')  # Requires c++11
+    patch('cmake-143187.patch', when='@143187')
 
-    variant('shared', default=True, description='Build shared libraries.')
-
-    def configure_args(self):
-        if '+shared' in self.spec:
-            return ['--enable-shared=yes',
-                    '--enable-static=no']
-        else:
-            return ['--enable-shared=no',
-                    '--enable-static=yes',
-                    '--with-pic=yes']
+    def cmake_args(self):
+        spec = self.spec
+        return ['-DBOOST_ROOT:PATH=%s' % spec['boost'].prefix]
