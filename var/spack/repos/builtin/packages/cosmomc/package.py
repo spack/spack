@@ -56,7 +56,7 @@ class Cosmomc(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('planck-likelihood', when='+planck')
-    depends_on('python @2.7:2.999,3.4:')
+    depends_on('python@2.7:2.8,3.4:')
 
     parallel = False
 
@@ -108,7 +108,7 @@ class Cosmomc(Package):
         else:
             wantmpi = 'BUILD=NOMPI'
             mpif90 = 'MPIF90C='
-        
+
         # Choose BLAS and LAPACK
         lapack = ("LAPACKL=%s" %
                   (spec['lapack'].libs + spec['blas'].libs).ld_flags)
@@ -158,8 +158,8 @@ class Cosmomc(Package):
             for filename in fnmatch.filter(filenames, '*~'):
                 os.remove(os.path.join(dirpath, filename))
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         prefix = self.prefix
         spec = self.spec
@@ -178,7 +178,7 @@ class Cosmomc(Package):
         os.environ.pop('CLIKPATH', '')
         os.environ.pop('PLANCKLIKE', '')
 
-        exe = join_path(prefix.bin, 'cosmomc')
+        exe = spec['cosmomc'].command.path
         args = []
         if '+mpi' in spec:
             # Add mpirun prefix

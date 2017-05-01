@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class HoomdBlue(Package):
+class HoomdBlue(CMakePackage):
     """HOOMD-blue is a general-purpose particle simulation toolkit. It scales
     from a single CPU core to thousands of GPUs.
 
@@ -36,28 +36,52 @@ class HoomdBlue(Package):
     to create custom initialization routines, control simulation parameters,
     and perform in situ analysis."""
 
-    homepage = "https://codeblue.umich.edu/hoomd-blue/index.html"
-    url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2"
+    homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
+    git      = "https://bitbucket.org/glotzer/hoomd-blue"
 
-    version('1.3.3', '1469ef4531dc14b579c0acddbfe6a273')
+    # TODO: There is a bug in Spack that requires a url to be defined
+    # even if it isn't used. These URLs can hopefully be removed someday.
+    url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v2.1.6.tar.bz2"
+    list_url = "https://bitbucket.org/glotzer/hoomd-blue/downloads/?tab=tags"
 
-    variant('mpi',  default=True, description='Compile with MPI enabled')
-    variant('cuda', default=True, description='Compile with CUDA Toolkit')
-    variant('doc',  default=True, description='Generate documentation')
+    version('develop', git=git, submodules=True)
+
+    # Bitbucket has tarballs for each release, but they cannot be built.
+    # The tarball doesn't come with the git submodules, nor does it come
+    # with a .git directory, causing the build to fail. As a workaround,
+    # clone a specific tag from Bitbucket instead of using the tarballs.
+    # https://bitbucket.org/glotzer/hoomd-blue/issues/238
+    version('2.1.6', git=git, tag='v2.1.6', submodules=True)
+
+    variant('mpi',  default=True,  description='Compile with MPI enabled')
+    variant('cuda', default=True,  description='Compile with CUDA Toolkit')
+    variant('doc',  default=False, description='Generate documentation')
+
+    # HOOMD-blue requires C++11 support, which is only available in GCC 4.7+
+    # https://bitbucket.org/glotzer/hoomd-blue/issues/238
+    # https://gcc.gnu.org/projects/cxx-status.html
+    conflicts('%gcc@:4.6')
+
+    # HOOMD-blue uses hexadecimal floats, which are not technically part of
+    # the C++11 standard. GCC 6.0+ produces an error when this happens.
+    # https://bitbucket.org/glotzer/hoomd-blue/issues/239
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1321986
+    conflicts('%gcc@6.0:')
 
     extends('python')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('boost+python')
-    depends_on('cmake', type='build')
+    depends_on('python@2.7:')
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('cmake@2.8.0:', type='build')
+    depends_on('pkg-config', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
-    depends_on('doxygen', when='+doc', type='build')
+    depends_on('cuda@7.0:', when='+cuda')
+    depends_on('doxygen@1.8.5:', when='+doc', type='build')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
 
         cmake_args = [
-            '-DPYTHON_EXECUTABLE=%s/python' % spec['python'].prefix.bin,
-            '-DBOOST_ROOT=%s'               % spec['boost'].prefix
+            '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
         ]
 
         # MPI support
@@ -90,9 +114,4 @@ class HoomdBlue(Package):
         else:
             cmake_args.append('-DENABLE_DOXYGEN=OFF')
 
-        cmake_args.extend(std_cmake_args)
-        cmake('.', *cmake_args)
-
-        make()
-        make("test")
-        make("install")
+        return cmake_args

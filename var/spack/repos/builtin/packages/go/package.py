@@ -56,12 +56,11 @@ class Go(Package):
 
     extendable = True
 
+    version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')
     version('1.8',   '7743960c968760437b6e39093cfe6f67')
     version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
     version('1.7.4', '49c1076428a5d3b5ad7ac65233fcca2f')
     version('1.6.4', 'b023240be707b34059d2c114d3465c92')
-
-    variant('test', default=True, description='Build and run tests as part of the build.')
 
     provides('golang')
 
@@ -92,7 +91,7 @@ class Go(Package):
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('src'):
-            bash('{0}.bash'.format('all' if '+test' in spec else 'make'))
+            bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
         try:
             os.makedirs(prefix)
@@ -118,7 +117,7 @@ class Go(Package):
         shutil.copytree('bin', os.path.join(prefix, '/bin'))
         """
         #  Add a go command/compiler for extensions
-        module.go = Executable(join_path(self.spec.prefix.bin, 'go'))
+        module.go = self.spec['go'].command
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.environ.get('GOROOT', False):

@@ -37,10 +37,12 @@ class IntelIpp(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2017.2.174', '8ad7753ee30c5176c4931070334144bc',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11307/l_ipp_2017.2.174.tgz")
     version('2017.0.098', 'e7be757ebe351d9f9beed7efdc7b7118',
-            url="file://%s/l_ipp_2017.0.098.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9663/l_ipp_2017.0.098.tgz")
     version('9.0.3.210', '0e1520dd3de7f811a6ef6ebc7aa429a3',
-            url="file://%s/l_ipp_9.0.3.210.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9067/l_ipp_9.0.3.210.tgz")
 
     provides('ipp')
 

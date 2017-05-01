@@ -49,6 +49,20 @@ class Mvapich2(Package):
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
 
+    # Accepted values are:
+    #   single      - No threads (MPI_THREAD_SINGLE)
+    #   funneled    - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
+    #   serialized  - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
+    #   multiple    - Fully multi-threaded (MPI_THREAD_MULTIPLE)
+    #   runtime     - Alias to "multiple"
+    variant('threads', default='multiple',
+            description='Control the level of thread support')
+
+    # 32 is needed when job size exceeds 32768 cores
+    variant('ch3_rank_bits', default=32,
+            description='Number of bits allocated to the rank field (16 or 32)'
+            )
+
     ##########
     # TODO : Process managers should be grouped into the same variant,
     # as soon as variant capabilities will be extended See
@@ -252,6 +266,9 @@ class Mvapich2(Package):
             "--enable-shared",
             "--enable-romio",
             "--disable-silent-rules",
+            "--enable-threads={0}".format(spec.variants['threads'].value),
+            "--with-ch3-rank-bits={0}".format(
+                spec.variants['ch3_rank_bits'].value),
         ]
 
         if self.compiler.f77 and self.compiler.fc:

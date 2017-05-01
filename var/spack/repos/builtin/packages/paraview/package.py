@@ -47,7 +47,7 @@ class Paraview(CMakePackage):
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
 
-    depends_on('python@2:2.7', when='+python')
+    depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('mpi', when='+mpi')
@@ -120,8 +120,7 @@ class Paraview(CMakePackage):
         if '+python' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s/bin/python'
-                % spec['python'].prefix
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path
             ])
 
         if '+mpi' in spec:

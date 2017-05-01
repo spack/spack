@@ -95,10 +95,21 @@ with open('command_index.rst', 'a') as index:
     for cmd in sorted(command_names):
         index.write('   * :ref:`%s`\n' % cmd)
 
-
+#
 # Run sphinx-apidoc
-sphinx_apidoc(['-T', '-o', '.', '../spack'])
-os.remove('modules.rst')
+#
+# Remove any previous API docs
+# Read the Docs doesn't clean up after previous builds
+# Without this, the API Docs will never actually update
+#
+apidoc_args = [
+    'sphinx_apidoc',   # The first arugment is ignored
+    '--force',         # Overwrite existing files
+    '--no-toc',        # Don't create a table of contents file
+    '--output-dir=.',  # Directory to place all output
+]
+sphinx_apidoc(apidoc_args + ['../spack'])
+sphinx_apidoc(apidoc_args + ['../llnl'])
 
 #
 # Exclude everything in spack.__all__ from indexing.  All of these
@@ -134,6 +145,7 @@ todo_include_todos = True
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.graphviz',
+              'sphinx.ext.napoleon',
               'sphinx.ext.todo',
               'sphinxcontrib.programoutput']
 

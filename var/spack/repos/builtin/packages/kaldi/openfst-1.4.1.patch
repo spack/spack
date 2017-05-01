@@ -1,0 +1,45 @@
+From ef1c38844fd4c40304176f4e672189010805a3d9 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Thu, 13 Apr 2017 15:17:12 +0800
+Subject: [PATCH 1/1] Add a patched openfst@1.4.1-patch for Kaldi.
+
+---
+ src/configure  | 4 ++--
+ tools/Makefile | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/configure b/src/configure
+index c90e9ba4e..ff328772c 100755
+--- a/src/configure
++++ b/src/configure
+@@ -793,9 +793,9 @@ echo "CONFIGURE_VERSION := $CONFIGURE_VERSION" >> kaldi.mk
+ echo "FSTROOT = $FSTROOT" >> kaldi.mk
+ 
+ # Check installed OpenFst version and add C++11 flags if OpenFst >= 1.4
+-OPENFST_VER=`grep 'PACKAGE_VERSION' $FSTROOT/Makefile | sed -e 's:.*= ::'`
++OPENFST_VER=1.4.1
+ echo "OPENFST_VER = $OPENFST_VER" >> kaldi.mk
+-OPENFST_VER_NUM=`echo $OPENFST_VER | sed 's/\./ /g' | xargs printf "%d%02d%02d"`
++OPENFST_VER_NUM=104001
+ if [ $OPENFST_VER_NUM -ge 10400 ]; then
+   echo "OPENFST_GE_10400 = 1" >> kaldi.mk
+   echo "EXTRA_CXXFLAGS += -DHAVE_OPENFST_GE_10400 -std=c++0x" >> kaldi.mk
+diff --git a/tools/Makefile b/tools/Makefile
+index cb3a35b2a..b868e600a 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -3,9 +3,9 @@
+ CXX = g++
+ # CXX = clang++  # Uncomment this line to build with Clang.
+ 
+-OPENFST_VERSION = 1.3.4
++# OPENFST_VERSION = 1.3.4
+ # Uncomment the next line to build with OpenFst-1.4.1.
+-# OPENFST_VERSION = 1.4.1
++OPENFST_VERSION = 1.4.1
+ # Note: OpenFst >= 1.4 requires C++11 support, hence you will need to use a
+ # relatively recent C++ compiler, e.g. gcc >= 4.6, clang >= 3.0.
+ 
+-- 
+2.11.1
+
