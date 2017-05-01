@@ -22,22 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-import os
-import textwrap
 import fcntl
-import termios
+import os
 import struct
+import sys
+import termios
+import textwrap
 import traceback
 from six import StringIO
 from six.moves import input
 
 from llnl.util.tty.color import *
 
-_debug   = False
+_debug = False
 _verbose = False
 _stacktrace = False
-indent  = "  "
+indent = "  "
 
 
 def is_verbose():
@@ -100,7 +100,7 @@ def msg(message, *args, **kwargs):
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
-    wrap   = kwargs.get('wrap', False)
+    wrap = kwargs.get('wrap', False)
     break_long_words = kwargs.get('break_long_words', False)
     st_countback = kwargs.get('countback', 3)
 
@@ -218,7 +218,7 @@ def hline(label=None, **kwargs):
         char (str): Char to draw the line with.  Default '-'
         max_width (int): Maximum width of the line.  Default is 64 chars.
     """
-    char      = kwargs.pop('char', '-')
+    char = kwargs.pop('char', '-')
     max_width = kwargs.pop('max_width', 64)
     if kwargs:
         raise TypeError(

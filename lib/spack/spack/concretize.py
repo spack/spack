@@ -245,14 +245,15 @@ class DefaultConcretizer(object):
         """
         changed = False
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
-        for name, variant in spec.package_class.variants.items():
+        pkg_cls = spec.package_class
+        for name, variant in pkg_cls.variants.items():
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
-                    spec.variants[name] = spack.spec.VariantSpec(
-                        name, variant.default)
+                    spec.variants[name] = variant.make_default()
+
         return changed
 
     def concretize_compiler(self, spec):

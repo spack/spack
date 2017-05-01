@@ -27,7 +27,8 @@ from spack import *
 
 class Cdo(Package):
     """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+    Climate and NWP model Data.
+    """
 
     homepage = "https://code.zmaw.de/projects/cdo"
     url      = "https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz"

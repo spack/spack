@@ -74,6 +74,12 @@ def test_concrete_spec(config, builtin_mock):
     check_yaml_round_trip(spec)
 
 
+def test_yaml_multivalue():
+    spec = Spec('multivalue_variant foo="bar,baz"')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+
 def test_yaml_subdag(config, builtin_mock):
     spec = Spec('mpileaks^mpich+debug')
     spec.concretize()

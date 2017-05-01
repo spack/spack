@@ -289,6 +289,51 @@ class AutotoolsPackage(PackageBase):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 
+    def _activate_or_not(self, active, inactive, name, active_parameters=None):
+        spec = self.spec
+        args = []
+        # For each allowed value in the list of values
+        for value in self.variants[name].values:
+            # Check if the value is active in the current spec
+            condition = '{name}={value}'.format(name=name, value=value)
+            activated = condition in spec
+            # Search for an override in the package for this value
+            override_name = '{0}_or_{1}_{2}'.format(active, inactive, value)
+            line_generator = getattr(self, override_name, None)
+            # If not available use a sensible default
+            if line_generator is None:
+                def _default_generator(is_activated):
+                    if is_activated:
+                        line = '--{0}-{1}'.format(active, value)
+                        if active_parameters is not None and active_parameters(value):  # NOQA=ignore=E501
+                            line += '={0}'.format(active_parameters(value))
+                        return line
+                    return '--{0}-{1}'.format(inactive, value)
+                line_generator = _default_generator
+            args.append(line_generator(activated))
+        return args
+
+    def with_or_without(self, name, active_parameters=None):
+        """Inspects the multi-valued variant 'name' and returns the configure
+        arguments that activate / deactivate the selected feature.
+
+        :param str name: name of a valid multi-valued variant
+        :param callable active_parameters: if present accepts a single value
+            and returns the parameter to be used leading to an entry of the
+            type '--with-{name}={parameter}
+        """
+        return self._activate_or_not(
+            'with', 'without', name, active_parameters
+        )
+
+    def enable_or_disable(self, name, active_parameters=None):
+        """Inspects the multi-valued variant 'name' and returns the configure
+        arguments that activate / deactivate the selected feature.
+        """
+        return self._activate_or_not(
+            'enable', 'disable', name, active_parameters
+        )
+
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 
     def installcheck(self):

@@ -24,6 +24,8 @@
 ##############################################################################
 
 import spack
+import pytest
+
 from spack.build_environment import get_std_cmake_args
 from spack.spec import Spec
 
@@ -40,3 +42,31 @@ def test_cmake_std_args(config, builtin_mock):
     s.concretize()
     pkg = spack.repo.get(s)
     assert get_std_cmake_args(pkg)
+
+
+@pytest.mark.usefixtures('config', 'builtin_mock')
+class TestAutotoolsPackage(object):
+
+    def test_with_or_without(self):
+        s = Spec('a')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        # Called without parameters
+        l = pkg.with_or_without('foo')
+        assert '--with-bar' in l
+        assert '--without-baz' in l
+        assert '--no-fee' in l
+
+        def activate(value):
+            return 'something'
+
+        l = pkg.with_or_without('foo', active_parameters=activate)
+        assert '--with-bar=something' in l
+        assert '--without-baz' in l
+        assert '--no-fee' in l
+
+        l = pkg.enable_or_disable('foo')
+        assert '--enable-bar' in l
+        assert '--disable-baz' in l
+        assert '--disable-fee' in l

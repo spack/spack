@@ -121,12 +121,14 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
+from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.util.spack_yaml import syaml_dict
 from spack.util.string import *
+from spack.variant import *
 from spack.version import *
 from yaml.error import MarkedYAMLError
 
@@ -606,81 +608,6 @@ class DependencySpec(object):
                                 self.spec.name if self.spec else None)
 
 
-@key_ordering
-class VariantSpec(object):
-    """Variants are named, build-time options for a package.  Names depend
-       on the particular package being built, and each named variant can
-       be enabled or disabled.
-    """
-
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
-
-    def _cmp_key(self):
-        return (self.name, self.value)
-
-    def copy(self):
-        return VariantSpec(self.name, self.value)
-
-    def __str__(self):
-        if type(self.value) == bool:
-            return '{0}{1}'.format('+' if self.value else '~', self.name)
-        else:
-            return ' {0}={1} '.format(self.name, self.value)
-
-
-class VariantMap(HashableMap):
-
-    def __init__(self, spec):
-        super(VariantMap, self).__init__()
-        self.spec = spec
-
-    def satisfies(self, other, strict=False):
-        if strict or self.spec._concrete:
-            return all(k in self and self[k].value == other[k].value
-                       for k in other)
-        else:
-            return all(self[k].value == other[k].value
-                       for k in other if k in self)
-
-    def constrain(self, other):
-        """Add all variants in other that aren't in self to self.
-
-        Raises an error if any common variants don't match.
-        Return whether the spec changed.
-        """
-        if other.spec._concrete:
-            for k in self:
-                if k not in other:
-                    raise UnsatisfiableVariantSpecError(self[k], '<absent>')
-
-        changed = False
-        for k in other:
-            if k in self:
-                if self[k].value != other[k].value:
-                    raise UnsatisfiableVariantSpecError(self[k], other[k])
-            else:
-                self[k] = other[k].copy()
-                changed = True
-        return changed
-
-    @property
-    def concrete(self):
-        return self.spec._concrete or all(
-            v in self for v in self.spec.package_class.variants)
-
-    def copy(self):
-        clone = VariantMap(None)
-        for name, variant in self.items():
-            clone[name] = variant.copy()
-        return clone
-
-    def __str__(self):
-        sorted_keys = sorted(self.keys())
-        return ''.join(str(self[key]) for key in sorted_keys)
-
-
 _valid_compiler_flags = [
     'cflags', 'cxxflags', 'fflags', 'ldflags', 'ldlibs', 'cppflags']
 
@@ -1094,17 +1021,6 @@ class Spec(object):
         """Called by the parser to add an allowable version."""
         self.versions.add(version)
 
-    def _add_variant(self, name, value):
-        """Called by the parser to add a variant."""
-        if name in self.variants:
-            raise DuplicateVariantError(
-                "Cannot specify variant '%s' twice" % name)
-        if isinstance(value, string_types) and value.upper() == 'TRUE':
-            value = True
-        elif isinstance(value, string_types) and value.upper() == 'FALSE':
-            value = False
-        self.variants[name] = VariantSpec(name, value)
-
     def _add_flag(self, name, value):
         """Called by the parser to add a known flag.
         Known flags currently include "arch"
@@ -1124,7 +1040,13 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
-            self._add_variant(name, value)
+            # All other flags represent variants. 'foo=true' and 'foo=false'
+            # map to '+foo' and '~foo' respectively. As such they need a
+            # BoolValuedVariant instance.
+            if str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
+                self.variants[name] = BoolValuedVariant(name, value)
+            else:
+                self.variants[name] = MultiValuedVariant(name, value)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -1424,8 +1346,11 @@ class Spec(object):
         if self.namespace:
             d['namespace'] = self.namespace
 
-        params = syaml_dict(sorted(
-            (name, v.value) for name, v in self.variants.items()))
+        params = syaml_dict(
+            sorted(
+                v.yaml_entry() for _, v in self.variants.items()
+            )
+        )
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d['parameters'] = params
@@ -1491,11 +1416,14 @@ class Spec(object):
                 if name in _valid_compiler_flags:
                     spec.compiler_flags[name] = value
                 else:
-                    spec.variants[name] = VariantSpec(name, value)
-
+                    spec.variants[name] = MultiValuedVariant.from_node_dict(
+                        name, value
+                    )
         elif 'variants' in node:
             for name, value in node['variants'].items():
-                spec.variants[name] = VariantSpec(name, value)
+                spec.variants[name] = MultiValuedVariant.from_node_dict(
+                    name, value
+                )
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
 
@@ -2076,7 +2004,7 @@ class Spec(object):
             self._mark_concrete(False)
 
         # Ensure first that all packages & compilers in the DAG exist.
-        self.validate_names()
+        self.validate_or_raise()
         # Get all the dependencies into one DependencyMap
         spec_deps = self.flat_dependencies(copy=False, deptype_query=alldeps)
 
@@ -2110,11 +2038,13 @@ class Spec(object):
         clone.normalize()
         return clone
 
-    def validate_names(self):
-        """This checks that names of packages and compilers in this spec are real.
-           If they're not, it will raise either UnknownPackageError or
-           UnsupportedCompilerError.
+    def validate_or_raise(self):
+        """Checks that names and values in this spec are real. If they're not,
+        it will raise an appropriate exception.
         """
+        # FIXME: this function should be lazy, and collect all the errors
+        # FIXME: before raising the exceptions, instead of being greedy and
+        # FIXME: raise just the first one encountered
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
@@ -2125,16 +2055,44 @@ class Spec(object):
                 if not compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
-            # Ensure that variants all exist.
-            for vname, variant in spec.variants.items():
-                if vname not in spec.package_class.variants:
-                    raise UnknownVariantError(spec.name, vname)
+            # FIXME: Move the logic below into the variant.py module
+            # Ensure correctness of variants (if the spec is not virtual)
+            if not spec.virtual:
+                pkg_cls = spec.package_class
+                pkg_variants = pkg_cls.variants
+                not_existing = set(spec.variants) - set(pkg_variants)
+                if not_existing:
+                    raise UnknownVariantError(spec.name, not_existing)
+
+                for name, v in [(x, y) for (x, y) in spec.variants.items()]:
+                    # When parsing a spec every variant of the form
+                    # 'foo=value' will be interpreted by default as a
+                    # multi-valued variant. During validation of the
+                    # variants we use the information in the package
+                    # to turn any variant that needs it to a single-valued
+                    # variant.
+                    pkg_variant = pkg_variants[name]
+                    pkg_variant.validate_or_raise(v, pkg_cls)
+                    spec.variants.substitute(
+                        pkg_variant.make_variant(v._original_value)
+                    )
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
 
         Returns True if the spec changed as a result, False if not.
         """
+        # If we are trying to constrain a concrete spec, either the spec
+        # already satisfies the constraint (and the method returns False)
+        # or it raises an exception
+        if self.concrete:
+            if self.satisfies(other):
+                return False
+            else:
+                raise UnsatisfiableSpecError(
+                    self, other, 'constrain a concrete spec'
+                )
+
         other = self._autospec(other)
 
         if not (self.name == other.name or
@@ -2150,11 +2108,11 @@ class Spec(object):
         if not self.versions.overlaps(other.versions):
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
-        for v in other.variants:
-            if (v in self.variants and
-                    self.variants[v].value != other.variants[v].value):
-                raise UnsatisfiableVariantSpecError(self.variants[v],
-                                                    other.variants[v])
+        for v in [x for x in other.variants if x in self.variants]:
+            if not self.variants[v].compatible(other.variants[v]):
+                raise UnsatisfiableVariantSpecError(
+                    self.variants[v], other.variants[v]
+                )
 
         # TODO: Check out the logic here
         sarch, oarch = self.architecture, other.architecture
@@ -2327,6 +2285,30 @@ class Spec(object):
                 return False
         elif strict and (other.compiler and not self.compiler):
             return False
+
+        # If self is a concrete spec, and other is not virtual, then we need
+        # to substitute every multi-valued variant that needs it with a
+        # single-valued variant.
+        if self.concrete:
+            for name, v in [(x, y) for (x, y) in other.variants.items()]:
+                # When parsing a spec every variant of the form
+                # 'foo=value' will be interpreted by default as a
+                # multi-valued variant. During validation of the
+                # variants we use the information in the package
+                # to turn any variant that needs it to a single-valued
+                # variant.
+                pkg_cls = type(other.package)
+                try:
+                    pkg_variant = other.package.variants[name]
+                    pkg_variant.validate_or_raise(v, pkg_cls)
+                except (SpecError, KeyError):
+                    # Catch the two things that could go wrong above:
+                    # 1. name is not a valid variant (KeyError)
+                    # 2. the variant is not validated (SpecError)
+                    return False
+                other.variants.substitute(
+                    pkg_variant.make_variant(v._original_value)
+                )
 
         var_strict = strict
         if (not self.name) or (not other.name):
@@ -3118,10 +3100,12 @@ class SpecParser(spack.parse.Parser):
                 added_version = True
 
             elif self.accept(ON):
-                spec._add_variant(self.variant(), True)
+                name = self.variant()
+                spec.variants[name] = BoolValuedVariant(name, True)
 
             elif self.accept(OFF):
-                spec._add_variant(self.variant(), False)
+                name = self.variant()
+                spec.variants[name] = BoolValuedVariant(name, False)
 
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
@@ -3275,10 +3259,6 @@ def base32_prefix_bits(hash_string, bits):
     return prefix_bits(hash_bytes, bits)
 
 
-class SpecError(spack.error.SpackError):
-    """Superclass for all errors that occur while constructing specs."""
-
-
 class SpecParseError(SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
     def __init__(self, parse_error):
@@ -3291,10 +3271,6 @@ class DuplicateDependencyError(SpecError):
     """Raised when the same dependency occurs in a spec twice."""
 
 
-class DuplicateVariantError(SpecError):
-    """Raised when the same variant occurs in a spec twice."""
-
-
 class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
 
@@ -3304,13 +3280,6 @@ class UnsupportedCompilerError(SpecError):
     def __init__(self, compiler_name):
         super(UnsupportedCompilerError, self).__init__(
             "The '%s' compiler is not yet supported." % compiler_name)
-
-
-class UnknownVariantError(SpecError):
-    """Raised when the same variant occurs in a spec twice."""
-    def __init__(self, pkg, variant):
-        super(UnknownVariantError, self).__init__(
-            "Package %s has no variant %s!" % (pkg, variant))
 
 
 class DuplicateArchitectureError(SpecError):
@@ -3354,17 +3323,6 @@ class MultipleProviderError(SpecError):
         self.providers = providers
 
 
-class UnsatisfiableSpecError(SpecError):
-    """Raised when a spec conflicts with package constraints.
-       Provide the requirement that was violated when raising."""
-    def __init__(self, provided, required, constraint_type):
-        super(UnsatisfiableSpecError, self).__init__(
-            "%s does not satisfy %s" % (provided, required))
-        self.provided = provided
-        self.required = required
-        self.constraint_type = constraint_type
-
-
 class UnsatisfiableSpecNameError(UnsatisfiableSpecError):
     """Raised when two specs aren't even for the same package."""
     def __init__(self, provided, required):
@@ -3384,13 +3342,6 @@ class UnsatisfiableCompilerSpecError(UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerSpecError, self).__init__(
             provided, required, "compiler")
-
-
-class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
-    """Raised when a spec variant conflicts with package constraints."""
-    def __init__(self, provided, required):
-        super(UnsatisfiableVariantSpecError, self).__init__(
-            provided, required, "variant")
 
 
 class UnsatisfiableCompilerFlagSpecError(UnsatisfiableSpecError):

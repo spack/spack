@@ -75,7 +75,7 @@ def check_concretize(abstract_spec):
         # dag
         'callpath', 'mpileaks', 'libelf',
         # variant
-        'mpich+debug', 'mpich~debug', 'mpich debug=2', 'mpich',
+        'mpich+debug', 'mpich~debug', 'mpich debug=True', 'mpich',
         # compiler flags
         'mpich cppflags="-O3"',
         # with virtual
