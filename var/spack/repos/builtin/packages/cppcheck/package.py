@@ -36,6 +36,8 @@ class Cppcheck(Package):
     version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
     version('1.68', 'c015195f5d61a542f350269030150708')
 
+    depends_on('gettext')
+
     def install(self, spec, prefix):
         # cppcheck does not have a configure script
         make("CFGDIR=%s" % os.path.join(prefix, 'cfg'))
