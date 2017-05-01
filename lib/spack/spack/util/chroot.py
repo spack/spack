@@ -183,6 +183,10 @@ DEFAULT_PATHS = [
     #lib rpc libraries
     '/usr/lib/x86_64-linux-gnu/librpcsvc.a',
 
+    #lib crypt libraries
+    '/usr/lib/x86_64-linux-gnu/libcrypt.a',
+    '/usr/lib/x86_64-linux-gnu/libcrypt.so',
+
     # linux headers
     '/usr/include/linux',
     '/usr/include/net',

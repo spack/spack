@@ -57,7 +57,7 @@ def isolate(parser, args):
     build_enviroment = args.build_enviroment
     if build_enviroment:
         if not os.path.exists(lockFile) or force:
-            tty.msg("startup bootstraped enviroment")
+            tty.msg("Startup bootstraped enviroment")
 
             home = os.path.join(spack.spack_bootstrap_root, 'home')
             tmp = os.path.join(spack.spack_bootstrap_root, 'tmp')
@@ -77,7 +77,7 @@ def isolate(parser, args):
                 pass
     else:
         if os.path.exists(lockFile) or force:
-            tty.msg("shutdown bootstraped enviroment")
+            tty.msg("Shutdown bootstraped enviroment")
 
             config = spack.config.get_config("config", "site")
             config['isolate'] = False
