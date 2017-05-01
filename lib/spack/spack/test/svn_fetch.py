@@ -29,6 +29,11 @@ import spack
 from llnl.util.filesystem import *
 from spack.spec import Spec
 from spack.version import ver
+from spack.util.executable import which
+
+
+pytestmark = pytest.mark.skipif(
+    not which('svn'), reason='requires subversion to be installed')
 
 
 @pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
