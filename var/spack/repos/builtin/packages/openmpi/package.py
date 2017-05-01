@@ -90,14 +90,14 @@ class Openmpi(AutotoolsPackage):
         default=None if _verbs_dir() is None else 'verbs',
         description='List of fabrics that are enabled',
         values=('psm', 'psm2', 'pmi', 'verbs', 'mxm'),
-        exclusive=False
+        multi=True
     )
 
     variant(
         'schedulers',
         description='List of schedulers for which support is enabled',
         values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
-        exclusive=False
+        multi=True
     )
 
     # Additional support options

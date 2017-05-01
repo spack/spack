@@ -373,7 +373,7 @@ def variant(
         default=None,
         description='',
         values=(True, False),
-        exclusive=True,
+        multi=False,
         validator=None
 ):
     """Define a variant for the package. Packager can specify a default
@@ -388,7 +388,7 @@ def variant(
         values (tuple or callable): either a tuple of strings containing the
             allowed values, or a callable accepting one value and returning
             True if it is valid
-        exclusive (bool): if True only one value per spec is allowed for
+        multi (bool): if False only one value per spec is allowed for
             this variant
         validator (callable): optional group validator to enforce additional
             logic. It receives a tuple of values and should raise an instance
@@ -408,7 +408,7 @@ def variant(
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
         pkg.variants[name] = Variant(
-            name, default, description, values, exclusive, validator
+            name, default, description, values, multi, validator
         )
     return _execute
 

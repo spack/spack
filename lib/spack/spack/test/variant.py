@@ -509,7 +509,7 @@ class TestVariant(object):
             default='',
             description='',
             values=('bar', 'baz', 'foobar'),
-            exclusive=True
+            multi=False
         )
         # Valid vspec, shouldn't raise
         vspec = a.make_variant('bar')
@@ -525,7 +525,7 @@ class TestVariant(object):
             a.validate_or_raise(vspec)
 
         # Valid multi-value vspec
-        a.exclusive = False
+        a.multi = True
         vspec = a.make_variant('bar,baz')
         a.validate_or_raise(vspec)
         # Add an invalid value
@@ -546,7 +546,7 @@ class TestVariant(object):
             default=1024,
             description='',
             values=validator,
-            exclusive=True
+            multi=False
         )
         vspec = a.make_default()
         a.validate_or_raise(vspec)
@@ -562,7 +562,7 @@ class TestVariant(object):
             default='',
             description='',
             values=('bar', 'baz', 'foobar'),
-            exclusive=True
+            multi=False
         )
         assert a.allowed_values == 'bar, baz, foobar'
 

@@ -45,7 +45,7 @@ class Variant(object):
             default,
             description,
             values=(True, False),
-            exclusive=True,
+            multi=False,
             validator=None
     ):
         """Initialize a package variant.
@@ -57,7 +57,7 @@ class Variant(object):
         :param sequence values: sequence of allowed values or a callable
             accepting a single value as argument and returning True if the
             value is good, False otherwise
-        :param bool exclusive: whether multiple CSV are allowed
+        :param bool multi: whether multiple CSV are allowed
         :param callable validator: optional callable used to enforce
             additional logic on the set of values being validated
         """
@@ -76,7 +76,7 @@ class Variant(object):
             allowed = self.values + (self.default,)
             self.single_value_validator = lambda x: x in allowed
 
-        self.exclusive = exclusive
+        self.multi = multi
         self.group_validator = validator
 
     def validate_or_raise(self, vspec, pkg=None):
@@ -104,7 +104,7 @@ class Variant(object):
             value = (vspec.value,)
 
         # If the value is exclusive there must be at most one
-        if self.exclusive and len(value) != 1:
+        if not self.multi and len(value) != 1:
             raise MultipleValuesInExclusiveVariantError(vspec, pkg)
 
         # Check and record the values that are not allowed
@@ -144,7 +144,7 @@ class Variant(object):
 
     @property
     def variant_cls(self):
-        if self.exclusive is False:
+        if self.multi:
             return MultiValuedVariant
         elif self.values == (True, False):
             return BoolValuedVariant

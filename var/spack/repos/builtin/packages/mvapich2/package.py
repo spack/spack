@@ -68,7 +68,7 @@ class Mvapich2(AutotoolsPackage):
         'threads',
         default='multiple',
         values=('single', 'funneled', 'serialized', 'multiple'),
-        exclusive=True,
+        multi=False,
         description='Control the level of thread support'
     )
 
@@ -77,7 +77,7 @@ class Mvapich2(AutotoolsPackage):
         'ch3_rank_bits',
         default='32',
         values=('16', '32'),
-        exclusive=True,
+        multi=False,
         description='Number of bits allocated to the rank field (16 or 32)'
     )
 
@@ -85,7 +85,7 @@ class Mvapich2(AutotoolsPackage):
         'process_managers',
         description='List of the process managers to activate',
         values=('slurm', 'hydra', 'gforker', 'remshell'),
-        exclusive=False,
+        multi=True,
         validator=_process_manager_validator
     )
 

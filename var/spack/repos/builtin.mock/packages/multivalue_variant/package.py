@@ -39,7 +39,7 @@ class MultivalueVariant(Package):
         'foo',
         description='Multi-valued variant',
         values=('bar', 'baz', 'barbaz'),
-        exclusive=False
+        multi=True
     )
 
     variant(
@@ -47,7 +47,7 @@ class MultivalueVariant(Package):
         description='Single-valued variant',
         default='bar',
         values=('bar', 'baz', 'barbaz'),
-        exclusive=True
+        multi=False
     )
 
     depends_on('mpi')

@@ -38,7 +38,7 @@ class A(AutotoolsPackage):
         values=('bar', 'baz', 'fee'),
         default='bar',
         description='',
-        exclusive=False
+        multi=True
     )
 
     variant(
@@ -46,7 +46,7 @@ class A(AutotoolsPackage):
         values=('bar', 'baz', 'fee'),
         default='bar',
         description='',
-        exclusive=True
+        multi=False
     )
 
     def with_or_without_fee(self, activated):
