@@ -22,88 +22,92 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import unittest
+import pytest
 
-from spack.util.naming import NamespaceTrie
+import spack.util.naming
 
 
-class NamespaceTrieTest(unittest.TestCase):
+@pytest.fixture()
+def trie():
+    return spack.util.naming.NamespaceTrie()
 
-    def setUp(self):
-        self.trie = NamespaceTrie()
 
-    def test_add_single(self):
-        self.trie['foo'] = 'bar'
+def test_add_single(trie):
+    trie['foo'] = 'bar'
 
-        self.assertTrue(self.trie.is_prefix('foo'))
-        self.assertTrue(self.trie.has_value('foo'))
-        self.assertEqual(self.trie['foo'], 'bar')
+    assert trie.is_prefix('foo')
+    assert trie.has_value('foo')
+    assert trie['foo'] == 'bar'
 
-    def test_add_multiple(self):
-        self.trie['foo.bar'] = 'baz'
 
-        self.assertFalse(self.trie.has_value('foo'))
-        self.assertTrue(self.trie.is_prefix('foo'))
+def test_add_multiple(trie):
+    trie['foo.bar'] = 'baz'
 
-        self.assertTrue(self.trie.is_prefix('foo.bar'))
-        self.assertTrue(self.trie.has_value('foo.bar'))
-        self.assertEqual(self.trie['foo.bar'], 'baz')
+    assert not trie.has_value('foo')
+    assert trie.is_prefix('foo')
 
-        self.assertFalse(self.trie.is_prefix('foo.bar.baz'))
-        self.assertFalse(self.trie.has_value('foo.bar.baz'))
+    assert trie.is_prefix('foo.bar')
+    assert trie.has_value('foo.bar')
+    assert trie['foo.bar'] == 'baz'
 
-    def test_add_three(self):
-        # add a three-level namespace
-        self.trie['foo.bar.baz'] = 'quux'
+    assert not trie.is_prefix('foo.bar.baz')
+    assert not trie.has_value('foo.bar.baz')
 
-        self.assertTrue(self.trie.is_prefix('foo'))
-        self.assertFalse(self.trie.has_value('foo'))
 
-        self.assertTrue(self.trie.is_prefix('foo.bar'))
-        self.assertFalse(self.trie.has_value('foo.bar'))
+def test_add_three(trie):
+    # add a three-level namespace
+    trie['foo.bar.baz'] = 'quux'
 
-        self.assertTrue(self.trie.is_prefix('foo.bar.baz'))
-        self.assertTrue(self.trie.has_value('foo.bar.baz'))
-        self.assertEqual(self.trie['foo.bar.baz'], 'quux')
+    assert trie.is_prefix('foo')
+    assert not trie.has_value('foo')
 
-        self.assertFalse(self.trie.is_prefix('foo.bar.baz.quux'))
-        self.assertFalse(self.trie.has_value('foo.bar.baz.quux'))
+    assert trie.is_prefix('foo.bar')
+    assert not trie.has_value('foo.bar')
 
-        # Try to add a second element in a prefix namespace
-        self.trie['foo.bar'] = 'blah'
+    assert trie.is_prefix('foo.bar.baz')
+    assert trie.has_value('foo.bar.baz')
+    assert trie['foo.bar.baz'] == 'quux'
 
-        self.assertTrue(self.trie.is_prefix('foo'))
-        self.assertFalse(self.trie.has_value('foo'))
+    assert not trie.is_prefix('foo.bar.baz.quux')
+    assert not trie.has_value('foo.bar.baz.quux')
 
-        self.assertTrue(self.trie.is_prefix('foo.bar'))
-        self.assertTrue(self.trie.has_value('foo.bar'))
-        self.assertEqual(self.trie['foo.bar'], 'blah')
+    # Try to add a second element in a prefix namespace
+    trie['foo.bar'] = 'blah'
 
-        self.assertTrue(self.trie.is_prefix('foo.bar.baz'))
-        self.assertTrue(self.trie.has_value('foo.bar.baz'))
-        self.assertEqual(self.trie['foo.bar.baz'], 'quux')
+    assert trie.is_prefix('foo')
+    assert not trie.has_value('foo')
 
-        self.assertFalse(self.trie.is_prefix('foo.bar.baz.quux'))
-        self.assertFalse(self.trie.has_value('foo.bar.baz.quux'))
+    assert trie.is_prefix('foo.bar')
+    assert trie.has_value('foo.bar')
+    assert trie['foo.bar'] == 'blah'
 
-    def test_add_none_single(self):
-        self.trie['foo'] = None
-        self.assertTrue(self.trie.is_prefix('foo'))
-        self.assertTrue(self.trie.has_value('foo'))
-        self.assertEqual(self.trie['foo'], None)
+    assert trie.is_prefix('foo.bar.baz')
+    assert trie.has_value('foo.bar.baz')
+    assert trie['foo.bar.baz'] == 'quux'
 
-        self.assertFalse(self.trie.is_prefix('foo.bar'))
-        self.assertFalse(self.trie.has_value('foo.bar'))
+    assert not trie.is_prefix('foo.bar.baz.quux')
+    assert not trie.has_value('foo.bar.baz.quux')
 
-    def test_add_none_multiple(self):
-        self.trie['foo.bar'] = None
 
-        self.assertTrue(self.trie.is_prefix('foo'))
-        self.assertFalse(self.trie.has_value('foo'))
+def test_add_none_single(trie):
+    trie['foo'] = None
+    assert trie.is_prefix('foo')
+    assert trie.has_value('foo')
+    assert trie['foo'] is None
 
-        self.assertTrue(self.trie.is_prefix('foo.bar'))
-        self.assertTrue(self.trie.has_value('foo.bar'))
-        self.assertEqual(self.trie['foo.bar'], None)
+    assert not trie.is_prefix('foo.bar')
+    assert not trie.has_value('foo.bar')
 
-        self.assertFalse(self.trie.is_prefix('foo.bar.baz'))
-        self.assertFalse(self.trie.has_value('foo.bar.baz'))
+
+def test_add_none_multiple(trie):
+    trie['foo.bar'] = None
+
+    assert trie.is_prefix('foo')
+    assert not trie.has_value('foo')
+
+    assert trie.is_prefix('foo.bar')
+    assert trie.has_value('foo.bar')
+    assert trie['foo.bar'] is None
+
+    assert not trie.is_prefix('foo.bar.baz')
+    assert not trie.has_value('foo.bar.baz')
