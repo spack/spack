@@ -40,7 +40,7 @@ class Flecsale(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("flecsi~mpi", when='~mpi')
     depends_on("flecsi+mpi", when='+mpi')
-    depends_on("python@2:2.8")
+    depends_on("python")
     depends_on("openssl")
 
     def build_type(self):
