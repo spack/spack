@@ -81,6 +81,7 @@ EXECUTABLES = [
     #gcc
     'gcc',
     'g++',
+    'cpp',
 
     #fortran
     ('gfortran', False), #not required
@@ -225,6 +226,7 @@ DEFAULT_PATHS = [
     '/usr/include/byteswap.h',
     '/usr/include/complex.h',
     '/usr/include/cpio.h',
+    '/usr/include/crypt.h', # for crypt
     '/usr/include/ctype.h',
     '/usr/include/dirent.h',
     '/usr/include/dlfcn.h',
@@ -255,7 +257,7 @@ DEFAULT_PATHS = [
     '/usr/include/langinfo.h',
     '/usr/include/lastlog.h',
     '/usr/include/libgen.h',
-    #'/usr/include/libintl.h',
+    #'/usr/include/libintl.h', # part of gettext but many packages crashes without
     '/usr/include/libio.h',
     '/usr/include/limits.h',
     '/usr/include/link.h',
