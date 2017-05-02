@@ -29,15 +29,16 @@ class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
+    url      = "http://ftp.gnu.org/gnu/emacs/emacs-25.1.tar.gz"
 
     version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
     version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=False, description="Enable an X toolkit")
-    variant('toolkit', default='gtk',
-            description="Select an X toolkit (gtk, athena)")
+    variant('gui', default=None,
+                description='GUI toolkit to use (requires X11)',
+                values=('gtk', 'athena'))
 
     depends_on('pkg-config@0.9.0:', type='build')
 
@@ -48,22 +49,24 @@ class Emacs(AutotoolsPackage):
     depends_on('libxpm', when='+X')
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
-    depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('gtkplus+X', when='+X toolkit=gtk')
+    depends_on('libxaw', when='gui=athena')
+    depends_on('gtkplus+X', when='gui=gtk')
 
     def configure_args(self):
         spec = self.spec
         args = []
-        toolkit = spec.variants['toolkit'].value
-        if '+X' in spec:
-            if toolkit not in ('gtk', 'athena'):
-                raise InstallError("toolkit must be in (gtk, athena), not %s" %
-                                   toolkit)
+        if self.variants['gui'].value is None:
+            args = ['--without-x',
+                    '--with-jpeg=no',
+                    '--with-gif=no',
+                    '--with-tiff=no',
+                    '--with-xpm=no',
+                    '--with-x-toolkit=no',
+                    ]
+        else:
             args = [
                 '--with-x',
-                '--with-x-toolkit={0}'.format(toolkit)
+                '--with-x-toolkit={0}'.format(spec.variants['gui'].value)
             ]
-        else:
-            args = ['--without-x']
 
         return args
