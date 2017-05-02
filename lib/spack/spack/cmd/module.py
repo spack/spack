@@ -254,12 +254,17 @@ def module(parser, args):
             'installed': True,
             'known': True
         },
-        'loads': {
-            'unique': True
-        }
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
     specs = args.specs(**query_args)
+    if len(specs) > 1:
+        message = ("Trying to load multiple modules, please be more specific."
+                   "Currently we would load: " + str(specs))
+        tty.error(message)
+    elif len(specs) == 0:
+        message = ("Did not find a module statisfying '" +
+                   " ".join(args.constraint) + "'.")
+        tty.error(message)
     module_type = args.module_type
     constraint = args.constraint
     try:
