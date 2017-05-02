@@ -288,7 +288,7 @@ function _spack_debug {
     fi
 }
 
-function _spack_create-db-tarball {
+function _spack_create_db_tarball {
     compgen -W "-h --help" -- "$cur"
 }
 
