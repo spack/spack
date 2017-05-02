@@ -26,9 +26,9 @@ from spack import *
 
 
 class Openfst(AutotoolsPackage):
-    """OpenFst is a library for constructing, combining, optimizing, 
-        and searching weighted finite-state transducers (FSTs). Weighted 
-        finite-state transducers are automata where each transition has 
+    """OpenFst is a library for constructing, combining, optimizing,
+        and searching weighted finite-state transducers (FSTs). Weighted
+        finite-state transducers are automata where each transition has
         an input label, an output label, and a weight."""
 
     homepage = "http://www.openfst.org"
@@ -42,13 +42,15 @@ class Openfst(AutotoolsPackage):
     version('1.5.2',  'e9d43874f7cadf791394caab3925eee4')
     version('1.5.1',  '8869e44c5a4af65409ae78b9f482b40e')
     version('1.5.0',  'a24fee5ffe28744c6fb7b1a49e0006c4')
+    version('1.4.1-patch',  'ca8f1730b9b9b281e515611fa9ae23c0',
+            url='http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.4.1.tar.gz')
     version('1.4.1',  'ca8f1730b9b9b281e515611fa9ae23c0')
     version('1.4.0',  '662367ec91084ffab48ee9b5716de39c')
 
-    @run_before('autoreconf')
-    def check_compilers(self):
-        # Fails to built openfst with %gcc@6: or %intel@16
-        if self.spec.satisfies('%intel@16:') or self.spec.satisfies('gcc@6:'):
-            raise InstallError(
-                'openfst does not support Intel compiler >= 16 and gcc >= 6 '
-            )
+    conflicts('%intel@16:')
+    conflicts('%gcc@6:')
+
+    # Patch openfst-1.4.1 for kaldi@c024e8
+    # See https://github.com/kaldi-asr/kaldi/blob/c024e8aa0a727bf76c91a318f76a1f8b0b59249e/tools/Makefile#L82-L88
+    patch('openfst-1.4.1.patch', when='@1.4.1-patch')
+    patch('openfst_gcc41up.patch', when='@1.4.1-patch')

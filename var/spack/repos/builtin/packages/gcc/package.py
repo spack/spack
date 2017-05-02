@@ -68,6 +68,7 @@ class Gcc(AutotoolsPackage):
     depends_on("mpc", when='@4.5:')
     depends_on("isl", when='@5.0:')
     depends_on("binutils~libiberty", when='+binutils')
+    depends_on("zip", type='build')
 
     # TODO: integrate these libraries.
     # depends_on("ppl")
@@ -82,8 +83,8 @@ class Gcc(AutotoolsPackage):
     # depends_on('guile@1.4.1:', type='test')
 
     if sys.platform == 'darwin':
-        patch('darwin/gcc-4.9.patch1', when='@4.9.3')
-        patch('darwin/gcc-4.9.patch2', when='@4.9.3')
+        patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
+        patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
     else:
         provides('golang', when='@4.7.1:')
 
@@ -175,7 +176,7 @@ class Gcc(AutotoolsPackage):
                      self.spec.format('$_$@'))
             return
 
-        gcc = Executable(join_path(self.prefix.bin, 'gcc'))
+        gcc = self.spec['gcc'].command
         lines = gcc('-dumpspecs', output=str).strip().split("\n")
         specs_file = join_path(self.spec_dir, 'specs')
         with closing(open(specs_file, 'w')) as out:

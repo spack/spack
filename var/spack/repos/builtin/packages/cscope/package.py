@@ -33,12 +33,10 @@ class Cscope(AutotoolsPackage):
 
     version('15.8b', '8f9409a238ee313a96f9f87fe0f3b176')
 
-    variant('flex', default=False, description="Builds with flex")
+    depends_on('ncurses')
 
-    depends_on('flex', when='+flex')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('pkg-config', type='build')
 
-    def configure_args(self):
-        args = []
-        if '+flex' in self.spec:
-            args.append('--with-flex')
-        return args
+    build_targets = ['CURSES_LIBS=-lncursesw']

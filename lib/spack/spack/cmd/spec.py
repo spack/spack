@@ -74,7 +74,8 @@ def spec(parser, args):
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
         if args.yaml:
-            spec.concretize()
+            if spec.name in spack.repo:
+                spec.concretize()
             print(spec.to_yaml())
             continue
 

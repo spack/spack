@@ -35,7 +35,7 @@ class Ape(Package):
     version('2.2.1', 'ab81da85bd749c0c136af088c7f9ad58')
 
     depends_on('gsl')
-    depends_on('libxc')
+    depends_on('libxc@:2.2.2')
 
     def install(self, spec, prefix):
         args = []

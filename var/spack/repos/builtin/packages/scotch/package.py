@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
@@ -31,8 +30,7 @@ class Scotch(Package):
        partitioning, graph clustering, and sparse matrix ordering."""
 
     homepage = "http://www.labri.fr/perso/pelegrin/scotch/"
-    url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.3.tar.gz"  # noqa: E501
-    base_url = "http://gforge.inria.fr/frs/download.php/latestfile/298"
+    url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
     version('6.0.4', 'd58b825eb95e1db77efe8c6ff42d329f')
@@ -71,12 +69,10 @@ class Scotch(Package):
     # from the Scotch hosting site.  These alternative archives include a
     # superset of the behavior in their default counterparts, so we choose to
     # always grab these versions for older Scotch versions for simplicity.
-    def url_for_version(self, version):
-        return super(Scotch, self).url_for_version(version)
-
     @when('@:6.0.0')
     def url_for_version(self, version):
-        return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
+        url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
+        return url.format(version)
 
     def patch(self):
         self.configure()
@@ -168,8 +164,8 @@ class Scotch(Package):
 
         # General Features #
 
-        flex_path = os.path.join(self.spec['flex'].prefix.bin, 'flex')
-        bison_path = os.path.join(self.spec['bison'].prefix.bin, 'bison')
+        flex_path = self.spec['flex'].command.path
+        bison_path = self.spec['bison'].command.path
         makefile_inc.extend([
             'EXE       =',
             'OBJ       = .o',

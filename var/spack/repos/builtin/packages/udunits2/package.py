@@ -31,7 +31,9 @@ class Udunits2(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/udunits"
     url      = "https://github.com/Unidata/UDUNITS-2/archive/v2.2.23.tar.gz"
 
-    version('2.2.25', '373106a0fcd20c40fc53a975c9fa4fca')
+    # When adding new versions, check whether they are listed at
+    # ftp://ftp.unidata.ucar.edu/pub/udunits first. Git tags may change
+    # for unreleased versions.
     version('2.2.24', '316911493e3b5c28ff7019223b4e27ea')
     version('2.2.23', '0c0d9b1ebd7ad066233bedf40e66f1ba')
     version('2.2.21', '167738b3ec886da1b92239de9cbbbc39')

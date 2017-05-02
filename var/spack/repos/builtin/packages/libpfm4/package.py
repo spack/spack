@@ -36,7 +36,7 @@ class Libpfm4(MakefilePackage):
     version('4.8.0', '730383896db92e12fb2cc10f2d41dd43')
 
     # Fails to build libpfm4 with intel compiler version 16 and 17
-    conflicts('intel@16:17')
+    conflicts('%intel@16:17')
 
     @property
     def install_targets(self):

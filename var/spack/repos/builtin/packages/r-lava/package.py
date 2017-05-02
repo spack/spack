@@ -29,7 +29,7 @@ class RLava(RPackage):
     """Estimation and simulation of latent variable models."""
 
     homepage = "https://cran.r-project.org/package=lava"
-    url      = "https://cran.r-project.org/src/contrib/lava_1.4.6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/lava_1.4.7.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/lava"
 
     version('1.4.7', '28039248a7039ba9281d172e4dbf9543')

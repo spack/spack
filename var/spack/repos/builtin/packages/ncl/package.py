@@ -39,7 +39,10 @@ class Ncl(Package):
     version('6.4.0', 'a981848ddcaf1c263279648265f24766',
             url='https://www.earthsystemgrid.org/download/fileDownload.html?logicalFileId=86b9bec2-fa01-11e6-a976-00c0f03d5b7c',
             extension='tar.gz')
+
     patch('spack_ncl.patch')
+    # Make ncl compile with hdf5 1.10
+    patch('hdf5.patch')
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -55,15 +58,29 @@ class Ncl(Package):
     depends_on('netcdf')
     depends_on('cairo')
 
+    # Extra dependencies that may be missing from build system:
+    depends_on('bison', type='build')
+    depends_on('flex+lex')
+    depends_on('libiconv')
+
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
+
+    # The following dependencies are required, otherwise several components
+    # fail to compile:
+    depends_on('curl')
+    depends_on('libiconv')
+    depends_on('libx11')
+    depends_on('libxaw')
+    depends_on('libxmu')
 
     # In Spack, we do not have an option to compile netcdf without netcdf-4
     # support, so we will tell the ncl configuration script that we want
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
     # statement.
-    depends_on('hdf5@:1.8+szip')
+    depends_on('hdf5+szip')
+    depends_on('szip')
 
     # In Spack, we also do not have an option to compile netcdf without DAP
     # support, so we will tell the ncl configuration script that we have it.

@@ -29,26 +29,18 @@ from spack.pkg.builtin.intel import IntelInstaller
 
 
 class IntelMkl(IntelInstaller):
-    """Intel Math Kernel Library.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
-
-    To set the threading layer at run time set MKL_THREADING_LAYER
-    variable to one of the following values: INTEL (default), SEQUENTIAL, PGI.
-    To set interface layer at run time, use set the MKL_INTERFACE_LAYER
-    variable to LP64 (default) or ILP64.
-    """
+    """Intel Math Kernel Library."""
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2017.2.174', 'ef39a12dcbffe5f4a0ef141b8759208c',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11306/l_mkl_2017.2.174.tgz")
     version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
-            url="file://%s/l_mkl_2017.0.098.tgz" % os.getcwd())
-    version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
-            url="file://%s/l_mkl_11.3.2.181.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9662/l_mkl_2017.0.098.tgz")
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
-            url="file://%s/l_mkl_11.3.3.210.tgz" % os.getcwd())
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9068/l_mkl_11.3.3.210.tgz")
+    version('11.3.2.181', '536dbd82896d6facc16de8f961d17d65',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8711/l_mkl_11.3.2.181.tgz")
 
     variant('shared', default=True, description='Builds shared library')
     variant('ilp64', default=False, description='64 bit integers')
@@ -62,28 +54,44 @@ class IntelMkl(IntelInstaller):
 
     @property
     def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        suffix = dso_suffix if '+shared' in self.spec else 'a'
-        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        spec = self.spec
+        prefix = self.prefix
+        shared = '+shared' in spec
+
+        if '+ilp64' in spec:
+            mkl_integer = ['libmkl_intel_ilp64']
+        else:
+            mkl_integer = ['libmkl_intel_lp64']
+
         mkl_threading = ['libmkl_sequential']
-        if '+openmp' in self.spec:
-            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+
+        if '+openmp' in spec:
+            if '%intel' in spec:
+                mkl_threading = ['libmkl_intel_thread', 'libiomp5']
+            else:
+                mkl_threading = ['libmkl_gnu_thread']
+
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+
+        mkl_root = join_path(prefix.lib, 'intel64')
+
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(self.prefix.lib, 'intel64'),
+            root=mkl_root,
             shared=shared
         )
-        system_libs = [
-            'libpthread.{0}'.format(suffix),
-            'libm.{0}'.format(suffix),
-            'libdl.{0}'.format(suffix)
-        ]
+
+        # Intel MKL link line advisor recommends these system libraries
+        system_libs = find_system_libraries(
+            ['libpthread', 'libm', 'libdl'],
+            shared=shared
+        )
+
         return mkl_libs + system_libs
 
     @property
     def lapack_libs(self):
-        return self.libs
+        return self.blas_libs
 
     @property
     def scalapack_libs(self):

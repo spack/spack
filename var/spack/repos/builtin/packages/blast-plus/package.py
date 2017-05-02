@@ -39,13 +39,8 @@ from spack import *
 class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
-
     homepage = "http://blast.ncbi.nlm.nih.gov/"
     url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.6.0/ncbi-blast-2.6.0+-src.tar.gz"
-
-    def url_for_version(self, version):
-        url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/{0}/ncbi-blast-{0}+-src.tar.gz"
-        return url.format(version)
 
     version('2.6.0',  'c8ce8055b10c4d774d995f88c7cc6225')
     version('2.2.30', 'f8e9a5eb368173142fe6867208b73715')
@@ -93,6 +88,10 @@ class BlastPlus(AutotoolsPackage):
             description='Build with lzo support')
     variant('pcre', default=True,
             description='Build with pcre support')
+    variant('perl', default=True,
+            description='Build with perl support')
+    variant('python', default=True,
+            description='Build with python support')
 
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
@@ -105,7 +104,8 @@ class BlastPlus(AutotoolsPackage):
     depends_on('lzo', when='+lzo')
     depends_on('pcre', when='+pcre')
 
-    depends_on('python')
+    depends_on('python', when='+python')
+    depends_on('perl', when='+perl')
 
     configure_directory = 'c++'
 
@@ -203,5 +203,19 @@ class BlastPlus(AutotoolsPackage):
             )
         else:
             config_args.append('--without-pcre')
+
+        if '+python' in spec:
+            config_args.append(
+                '--with-python={0}'.format(self.spec['python'].home)
+            )
+        else:
+            config_args.append('--without-python')
+
+        if '+perl' in spec:
+            config_args.append(
+                '--with-perl={0}'.format(self.spec['perl'].prefix)
+            )
+        else:
+            config_args.append('--without-python')
 
         return config_args

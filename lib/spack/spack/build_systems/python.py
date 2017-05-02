@@ -26,7 +26,7 @@
 import inspect
 import os
 
-from spack.directives import extends
+from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
@@ -114,6 +114,8 @@ class PythonPackage(PackageBase):
 
     extends('python')
 
+    depends_on('python', type=('build', 'run'))
+
     def setup_file(self):
         """Returns the name of the setup file to use."""
         return 'setup.py'
@@ -135,9 +137,11 @@ class PythonPackage(PackageBase):
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
 
-        :param str command: The command to look for
-        :return: True if the command is found, else False
-        :rtype: bool
+        Args:
+            command (str): The command to look for
+
+        Returns:
+            bool: True if the command is found, else False
         """
         kwargs = {
             'output': os.devnull,
@@ -220,7 +224,24 @@ class PythonPackage(PackageBase):
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
-        return ['--prefix={0}'.format(prefix)]
+        args = ['--prefix={0}'.format(prefix)]
+
+        # This option causes python packages (including setuptools) NOT
+        # to create eggs or easy-install.pth files.  Instead, they
+        # install naturally into $prefix/pythonX.Y/site-packages.
+        #
+        # Eggs add an extra level of indirection to sys.path, slowing
+        # down large HPC runs.  They are also deprecated in favor of
+        # wheels, which use a normal layout when installed.
+        #
+        # Spack manages the package directory on its own by symlinking
+        # extensions into the site-packages directory, so we don't really
+        # need the .pth files or egg directories, anyway.
+        if ('py-setuptools' == spec.name or          # this is setuptools, or
+            'py-setuptools' in spec._dependencies):  # it's an immediate dep
+            args += ['--single-version-externally-managed', '--root=/']
+
+        return args
 
     def install_lib(self, spec, prefix):
         """Install all Python modules (extensions and pure Python)."""

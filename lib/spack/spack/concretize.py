@@ -99,7 +99,7 @@ class DefaultConcretizer(object):
 
         # Use a sort key to order the results
         return sorted(usable, key=lambda spec: (
-            not (spec.external or spec.external_module),  # prefer externals
+            not spec.external,                            # prefer externals
             pref_key(spec),                               # respect prefs
             spec.name,                                    # group by name
             reverse_order(spec.versions),                 # latest version
@@ -222,15 +222,19 @@ class DefaultConcretizer(object):
             spec.architecture = root_arch.copy() if root_arch else sys_arch
             spec_changed = True
 
-        default_archs = [root_arch, sys_arch]
-        while not spec.architecture.concrete and default_archs:
-            arch = default_archs.pop(0)
+        default_archs = list(x for x in [root_arch, sys_arch] if x)
+        for arch in default_archs:
+            if spec.architecture.concrete:
+                break
 
             replacement_fields = [k for k, v in iteritems(arch.to_cmp_dict())
                                   if v and not getattr(spec.architecture, k)]
             for field in replacement_fields:
                 setattr(spec.architecture, field, getattr(arch, field))
                 spec_changed = True
+
+        if not spec.architecture.concrete:
+            raise InsufficientArchitectureInfoError(spec, default_archs)
 
         return spec_changed
 
@@ -241,14 +245,15 @@ class DefaultConcretizer(object):
         """
         changed = False
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
-        for name, variant in spec.package_class.variants.items():
+        pkg_cls = spec.package_class
+        for name, variant in pkg_cls.variants.items():
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
-                    spec.variants[name] = spack.spec.VariantSpec(
-                        name, variant.default)
+                    spec.variants[name] = variant.make_default()
+
         return changed
 
     def concretize_compiler(self, spec):
@@ -447,10 +452,11 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
        compiler spec."""
 
     def __init__(self, compiler_spec, arch=None):
-        err_msg = "No compilers with spec %s found" % compiler_spec
+        err_msg = "No compilers with spec {0} found".format(compiler_spec)
         if arch:
-            err_msg += (" for operating system %s and target %s." %
-                        (compiler_spec, arch.platform_os, arch.target))
+            err_msg += " for operating system {0} and target {1}.".format(
+                arch.platform_os, arch.target
+            )
 
         super(UnavailableCompilerVersionError, self).__init__(
             err_msg, "Run 'spack compiler find' to add compilers.")
@@ -464,6 +470,17 @@ class NoValidVersionError(spack.error.SpackError):
         super(NoValidVersionError, self).__init__(
             "There are no valid versions for %s that match '%s'"
             % (spec.name, spec.versions))
+
+
+class InsufficientArchitectureInfoError(spack.error.SpackError):
+
+    """Raised when details on architecture cannot be collected from the
+       system"""
+
+    def __init__(self, spec, archs):
+        super(InsufficientArchitectureInfoError, self).__init__(
+            "Cannot determine necessary architecture information for '%s': %s"
+            % (spec.name, str(archs)))
 
 
 class NoBuildError(spack.error.SpackError):

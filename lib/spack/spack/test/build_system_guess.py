@@ -35,11 +35,15 @@ import spack.stage
         ('configure',      'autotools'),
         ('CMakeLists.txt', 'cmake'),
         ('SConstruct',     'scons'),
+        ('waf',            'waf'),
         ('setup.py',       'python'),
         ('NAMESPACE',      'r'),
         ('WORKSPACE',      'bazel'),
         ('Makefile.PL',    'perlmake'),
         ('Build.PL',       'perlbuild'),
+        ('GNUmakefile',    'makefile'),
+        ('makefile',       'makefile'),
+        ('Makefile',       'makefile'),
         ('foobar',         'generic')
     ]
 )
