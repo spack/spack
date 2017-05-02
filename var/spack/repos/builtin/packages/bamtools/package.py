@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Bamtools(Package):
+class Bamtools(CMakePackage):
     """C++ API & command-line toolkit for working with BAM data."""
 
     homepage = "https://github.com/pezmaster31/bamtools"
@@ -40,16 +40,13 @@ class Bamtools(Package):
     depends_on('cmake', type='build')
     depends_on('zlib', type='link')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            rpath = self.rpath
-            rpath.append(os.path.join(self.prefix.lib, 'bamtools'))
-            
-            cmake_args = []
-            cmake_args.extend(std_cmake_args)
-            cmake_args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
+    def cmake_args(self):
+        args = []
 
-            cmake('..', *cmake_args)
+        rpath = self.rpath
+        rpath.append(os.path.join(self.prefix.lib, "bamtools"))
+        args.extend(std_cmake_args)
+        args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
 
-            make()
-            make('install')
+        return args
+
