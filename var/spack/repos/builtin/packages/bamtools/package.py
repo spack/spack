@@ -37,7 +37,6 @@ class Bamtools(CMakePackage):
     version('2.3.0', 'd327df4ba037d6eb8beef65d7da75ebc')
     version('2.2.3', '6eccd3e45e4ba12a68daa3298998e76d')
 
-    depends_on('cmake', type='build')
     depends_on('zlib', type='link')
 
     def cmake_args(self):
@@ -49,4 +48,3 @@ class Bamtools(CMakePackage):
         args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
 
         return args
-
