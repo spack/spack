@@ -41,3 +41,5 @@ class Random123(Package):
         # We have to do our own install here.
         install_tree('include', prefix.include)
         install('./LICENSE', "%s" % prefix)
+        # used by some packages, e.g. quinoa
+        install('examples/uniform.hpp', join_path(prefix.include, 'Random123'))

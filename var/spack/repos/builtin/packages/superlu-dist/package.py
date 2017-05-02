@@ -34,6 +34,7 @@ class SuperluDist(Package):
     url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
     version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
+    version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')    
     version('5.1.3', 'fec21a9207ef94f57501c9406da78285')
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')
     version('5.1.0', '6bb86e630bd4bd8650243aed8fd92eb9')
@@ -71,8 +72,8 @@ class SuperluDist(Package):
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
             'CFLAGS       = -fPIC -std=c99 -O2 %s %s %s' % (
-                spec['parmetis'].cppflags,
-                spec['metis'].cppflags,
+                spec['parmetis'].headers.cpp_flags,
+                spec['metis'].headers.cpp_flags,
                 '-D_LONGINT' if '+int64' in spec else ''),
             'NOOPTS       = -fPIC -std=c99',
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),

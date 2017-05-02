@@ -29,9 +29,12 @@ class PyCertifi(PythonPackage):
     """Certifi: A carefully curated collection of Root Certificates for validating
     the trustworthiness of SSL certificates while verifying the identity of TLS
     hosts."""
-    homepage = "https://github.com/certifi/python-certifi"
-    url      = "https://github.com/certifi/python-certifi/archive/2016.02.28.tar.gz"
+    homepage = "http://certifi.io/"
+    url      = "https://pypi.io/packages/source/c/certifi/certifi-2017.1.23.tar.gz"
 
+    import_modules = ['certifi']
+
+    version('2017.1.23',  'b72521a8badff5e89a8eabea586d79ab')
     version('2016.02.28', '5ccfc23bd5e931863f0b01ef3e9d2dbd3bef0e1b')
 
     depends_on('py-setuptools', type='build')

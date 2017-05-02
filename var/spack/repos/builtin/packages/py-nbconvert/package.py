@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
 
 
@@ -35,9 +36,8 @@ class PyNbconvert(PythonPackage):
     version('4.1.0', '06655576713ba1ff7cece2b92760c187')
     version('4.0.0', '9661620b1e10a7b46f314588d2d0932f')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-pycurl', type='build')
-    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('python@2.7:2.8,3.3:')
     depends_on('py-mistune', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
@@ -48,8 +48,8 @@ class PyNbconvert(PythonPackage):
     depends_on('py-tornado', type=('build', 'run'))
     depends_on('py-jupyter-client', type=('build', 'run'))
 
-    # FIXME:
-    # Failed, try again after installing PycURL with `pip install pycurl` to avoid outdated SSL.  # noqa
-    # Failed to download css from https://cdn.jupyter.org/notebook/4.1.0/style/style.min.css: [Errno socket error] [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:661)  # noqa
-    # Downloading CSS: https://cdn.jupyter.org/notebook/4.1.0/style/style.min.css  # noqa
-    # error: Need Notebook CSS to proceed: nbconvert/resources/style.min.css
+    def patch(self):
+        # We bundle this with the spack package so that the installer
+        # doesn't try to download it.
+        install(os.path.join(self.package_dir, 'style.min.css'),
+                os.path.join('nbconvert', 'resources', 'style.min.css'))

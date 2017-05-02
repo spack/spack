@@ -45,7 +45,7 @@ _sleep_time = 1e-5
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
 
-    In Python, `lockf` actually calls `fcntl`, so this should work with
+    In Python, ``lockf`` actually calls ``fcntl``, so this should work with
     any filesystem implementation that supports locking through the fcntl
     calls.  This includes distributed filesystems like Lustre (when flock
     is enabled) and recent NFS versions.
@@ -60,7 +60,7 @@ class Lock(object):
 
         This exposes a subset of fcntl locking functionality.  It does
         not currently expose the ``whence`` parameter -- ``whence`` is
-        always os.SEEK_SET and ``start`` is always evaluated from the
+        always ``os.SEEK_SET`` and ``start`` is always evaluated from the
         beginning of the file.
         """
         self.path = path
@@ -80,7 +80,7 @@ class Lock(object):
         """This takes a lock using POSIX locks (``fnctl.lockf``).
 
         The lock is implemented as a spin lock using a nonblocking call
-        to lockf().
+        to ``lockf()``.
 
         On acquiring an exclusive lock, the lock writes this process's
         pid and host to the lock file, in case the holding process needs
@@ -276,14 +276,14 @@ class LockTransaction(object):
     This class can trigger actions when the lock is acquired for the
     first time and released for the last.
 
-    If the acquire_fn returns a value, it is used as the return value for
-    __enter__, allowing it to be passed as the `as` argument of a `with`
-    statement.
+    If the ``acquire_fn`` returns a value, it is used as the return value for
+    ``__enter__``, allowing it to be passed as the ``as`` argument of a
+    ``with`` statement.
 
-    If acquire_fn returns a context manager, *its* `__enter__` function will be
-    called in `__enter__` after acquire_fn, and its `__exit__` funciton will be
-    called before `release_fn` in `__exit__`, allowing you to nest a context
-    manager to be used along with the lock.
+    If ``acquire_fn`` returns a context manager, *its* ``__enter__`` function
+    will be called in ``__enter__`` after ``acquire_fn``, and its ``__exit__``
+    funciton will be called before ``release_fn`` in ``__exit__``, allowing you
+    to nest a context manager to be used along with the lock.
 
     Timeout for lock is customizable.
 

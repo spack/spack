@@ -100,3 +100,18 @@ class NoNetworkConnectionError(SpackError):
             "No network connection: " + str(message),
             "URL was: " + str(url))
         self.url = url
+
+
+class SpecError(SpackError):
+    """Superclass for all errors that occur while constructing specs."""
+
+
+class UnsatisfiableSpecError(SpecError):
+    """Raised when a spec conflicts with package constraints.
+       Provide the requirement that was violated when raising."""
+    def __init__(self, provided, required, constraint_type):
+        super(UnsatisfiableSpecError, self).__init__(
+            "%s does not satisfy %s" % (provided, required))
+        self.provided = provided
+        self.required = required
+        self.constraint_type = constraint_type
