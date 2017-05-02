@@ -35,6 +35,7 @@ class Cgal(Package):
     homepage = 'http://www.cgal.org/'
     url = 'https://github.com/CGAL/cgal/archive/releases/CGAL-4.7.tar.gz'
 
+    version('4.9.1', 'df6517df3320bf6c9de2e1b0361738b9')
     version('4.9', '7b628db3e5614347f776c046b7666089')
     version('4.7', '4826714810f3b4c65cac96b90fb03b67')
     version('4.6.3', 'e8ee2ecc8d2b09b94a121c09257b576d')
