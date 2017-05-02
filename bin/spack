@@ -194,6 +194,8 @@ def _main(args, unknown_args):
             return_val = command(parser, args)
     except SpackError as e:
         e.die()
+    except Exception as e:
+        tty.die(str(e))
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")

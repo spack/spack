@@ -36,8 +36,12 @@ class Emacs(AutotoolsPackage):
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=False, description="Enable an X toolkit")
-    variant('toolkit', default='gtk',
-            description="Select an X toolkit (gtk, athena)")
+    variant(
+        'toolkit',
+        default='gtk',
+        values=('gtk', 'athena'),
+        description="Select an X toolkit (gtk, athena)"
+    )
 
     depends_on('ncurses')
     depends_on('libtiff', when='+X')

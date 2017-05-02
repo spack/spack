@@ -389,9 +389,9 @@ class BoolValuedVariant(SingleValuedVariant):
             self._original_value = value
             self._value = False
         else:
-            msg = 'cannot construct a BoolValuedVariant from '
+            msg = 'cannot construct a BoolValuedVariant for "{0}" from '
             msg += 'a value that does not represent a bool'
-            raise ValueError(msg)
+            raise ValueError(msg.format(self.name))
 
     def __contains__(self, item):
         return item is self.value
