@@ -25,25 +25,33 @@
 from spack import *
 
 
-class PyPy2cairo(WafPackage):
-    """Pycairo is a set of Python bindings for the cairo graphics library."""
+class MultivalueVariant(Package):
+    homepage = "http://www.llnl.gov"
+    url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
 
-    homepage = "https://www.cairographics.org/pycairo/"
-    url      = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
+    version(1.0, 'foobarbaz')
+    version(2.1, 'foobarbaz')
+    version(2.2, 'foobarbaz')
+    version(2.3, 'foobarbaz')
 
-    version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
+    variant('debug', default=False, description='Debug variant')
+    variant(
+        'foo',
+        description='Multi-valued variant',
+        values=('bar', 'baz', 'barbaz'),
+        multi=True
+    )
 
-    extends('python')
+    variant(
+        'fee',
+        description='Single-valued variant',
+        default='bar',
+        values=('bar', 'baz', 'barbaz'),
+        multi=False
+    )
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('cairo@1.10.0:')
-    depends_on('pixman')
-    depends_on('pkg-config', type='build')
+    depends_on('mpi')
+    depends_on('callpath')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest', type='test')
-
-    def installtest(self):
-        with working_dir('test'):
-            pytest = which('py.test')
-            pytest()
+    def install(self, spec, prefix):
+        pass

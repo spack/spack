@@ -39,7 +39,10 @@ class Emacs(AutotoolsPackage):
     variant('toolkit', default='gtk',
             description="Select an X toolkit (gtk, athena)")
 
+    depends_on('pkg-config@0.9.0:', type='build')
+
     depends_on('ncurses')
+    depends_on('zlib')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')

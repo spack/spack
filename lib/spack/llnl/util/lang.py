@@ -266,9 +266,27 @@ def key_ordering(cls):
 
 
 @key_ordering
-class HashableMap(dict):
+class HashableMap(collections.MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
        a tuple of the values in the dictionary."""
+
+    def __init__(self):
+        self.dict = {}
+
+    def __getitem__(self, key):
+        return self.dict[key]
+
+    def __setitem__(self, key, value):
+        self.dict[key] = value
+
+    def __iter__(self):
+        return iter(self.dict)
+
+    def __len__(self):
+        return len(self.dict)
+
+    def __delitem__(self, key):
+        del self.dict[key]
 
     def _cmp_key(self):
         return tuple(sorted(self.values()))

@@ -25,25 +25,24 @@
 from spack import *
 
 
-class PyPy2cairo(WafPackage):
-    """Pycairo is a set of Python bindings for the cairo graphics library."""
+class Dash(AutotoolsPackage):
+    """The Debian Almquist Shell."""
 
-    homepage = "https://www.cairographics.org/pycairo/"
-    url      = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
+    homepage = "https://git.kernel.org/pub/scm/utils/dash/dash.git"
+    url      = "https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-0.5.9.1.tar.gz"
+    list_url = homepage
 
-    version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
+    version('0.5.9.1', '0d800da0b8ddbefa1468978d314b7d09')
 
-    extends('python')
+    depends_on('libedit', type='link')
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('cairo@1.10.0:')
-    depends_on('pixman')
-    depends_on('pkg-config', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-pytest', type='test')
-
-    def installtest(self):
-        with working_dir('test'):
-            pytest = which('py.test')
-            pytest()
+    def configure_args(self):
+        # Compile with libedit support
+        # This allows the use of arrow keys at the command line
+        # See https://askubuntu.com/questions/704688
+        return ['--with-libedit']
