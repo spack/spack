@@ -939,10 +939,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
-    def patch(self):
-        """Default patch implementation is a no-op."""
-        pass
-
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
            haven't been applied already."""
