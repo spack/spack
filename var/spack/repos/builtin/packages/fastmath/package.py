@@ -56,7 +56,7 @@ class Fastmath(Package):
 #    depends_on('boxlib+dims=3') # how do we say 3D boxlib?
 #    depends_on('chombo')
     depends_on('hypre~internal-superlu')
-#    depends_on('mesquite')
+    depends_on('mesquite')
 #    depends_on('ml-from-trilinos')
 #    depends_on('nox-from-trilinos')
     depends_on('moab')
