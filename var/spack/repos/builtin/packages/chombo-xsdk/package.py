@@ -27,22 +27,25 @@ from spack import *
 import glob,os,numbers
 
 def isIntegral(x):
-    """Any integer value"""
+    """True for any integer value"""
     try:
         return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
     except ValueError:
         return False
 
 class ChomboXsdk(Package):
-    """Chombo is a ...
+    """Chombo is a Adaptive Mesh Refinement (AMR) C++ framework/library...
     """
 
+    # Find out more about Chombo
     homepage = "http://chombo.lbl.gov/"
     url = "http://bitbucket.org/drhansj/chombo-xsdk/get/xsdk-0.2.0a.tar.bz2"
 
+    # Versions available
     version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
+    # Build options/variants
     variant('dim'      , default=2    , description = 'Set the physical dimension',values=isIntegral)
     variant('debug'    , default=False, description = 'Build with debugging symbols')
     variant('opt'      , default=True , description = 'Build using compiler optimizations')
@@ -64,6 +67,7 @@ class ChomboXsdk(Package):
     depends_on('petsc~mpi~hypre~superlu-dist~hdf5', when='+use_petsc~mpi')
     depends_on('petsc+mpi'                        , when='+use_petsc+mpi')
 
+    # Convert Python boolean False/True to strings "FALSE"/"TRUE"
     def boolToChombo(self, value):
         return str(value).upper()
 
@@ -71,7 +75,6 @@ class ChomboXsdk(Package):
         options = []
 
         # Set up all the options for the Chombo build
-
         options.append('DIM=%s'       %                   spec.variants['dim'].value)
         options.append('DEBUG=%s'     % self.boolToChombo(spec.variants['debug'].value))
         options.append('OPT=%s'       % self.boolToChombo(spec.variants['opt'].value))
