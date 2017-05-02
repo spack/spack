@@ -190,6 +190,7 @@ class Mvapich2(AutotoolsPackage):
             )
 
     def configure_args(self):
+        spec = self.spec
         args = [
             '--enable-shared',
             '--enable-romio',
