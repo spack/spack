@@ -53,7 +53,7 @@ def test_uninstall(database):
     uninstall(parser, args)
 
     all_specs = spack.store.layout.all_specs()
-    assert len(all_specs) == 7
+    assert len(all_specs) == 8
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
     callpath_specs = [s for s in all_specs if s.satisfies('callpath')]

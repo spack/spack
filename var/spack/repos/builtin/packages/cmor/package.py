@@ -46,7 +46,7 @@ class Cmor(AutotoolsPackage):
     depends_on('hdf5@:1.8')
 
     extends('python', when='+python')
-    depends_on('python@:2.7', when='+python')
+    depends_on('python@:2.8', when='+python')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
 
     @run_before('configure')

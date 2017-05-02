@@ -61,6 +61,8 @@ class Gettext(AutotoolsPackage):
     depends_on('libunistring', when='+libunistring')
     # depends_on('cvs')
 
+    patch('test-verify-parallel-make-check.patch', when='@:0.19.8.1')
+
     def configure_args(self):
         spec = self.spec
 

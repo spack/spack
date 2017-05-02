@@ -99,7 +99,7 @@ class DefaultConcretizer(object):
 
         # Use a sort key to order the results
         return sorted(usable, key=lambda spec: (
-            not (spec.external or spec.external_module),  # prefer externals
+            not spec.external,                            # prefer externals
             pref_key(spec),                               # respect prefs
             spec.name,                                    # group by name
             reverse_order(spec.versions),                 # latest version
@@ -245,14 +245,15 @@ class DefaultConcretizer(object):
         """
         changed = False
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
-        for name, variant in spec.package_class.variants.items():
+        pkg_cls = spec.package_class
+        for name, variant in pkg_cls.variants.items():
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
-                    spec.variants[name] = spack.spec.VariantSpec(
-                        name, variant.default)
+                    spec.variants[name] = variant.make_default()
+
         return changed
 
     def concretize_compiler(self, spec):
@@ -451,10 +452,11 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
        compiler spec."""
 
     def __init__(self, compiler_spec, arch=None):
-        err_msg = "No compilers with spec %s found" % compiler_spec
+        err_msg = "No compilers with spec {0} found".format(compiler_spec)
         if arch:
-            err_msg += (" for operating system %s and target %s." %
-                        (compiler_spec, arch.platform_os, arch.target))
+            err_msg += " for operating system {0} and target {1}.".format(
+                arch.platform_os, arch.target
+            )
 
         super(UnavailableCompilerVersionError, self).__init__(
             err_msg, "Run 'spack compiler find' to add compilers.")

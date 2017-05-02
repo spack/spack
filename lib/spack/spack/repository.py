@@ -924,11 +924,11 @@ class DuplicateRepoError(RepoError):
     """Raised when duplicate repos are added to a RepoPath."""
 
 
-class PackageLoadError(spack.error.SpackError):
-    """Superclass for errors related to loading packages."""
+class UnknownEntityError(RepoError):
+    """Raised when we encounter a package spack doesn't have."""
 
 
-class UnknownPackageError(PackageLoadError):
+class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
     def __init__(self, name, repo=None):
@@ -941,7 +941,7 @@ class UnknownPackageError(PackageLoadError):
         self.name = name
 
 
-class UnknownNamespaceError(PackageLoadError):
+class UnknownNamespaceError(UnknownEntityError):
     """Raised when we encounter an unknown namespace"""
 
     def __init__(self, namespace):
@@ -949,7 +949,7 @@ class UnknownNamespaceError(PackageLoadError):
             "Unknown namespace: %s" % namespace)
 
 
-class FailedConstructorError(PackageLoadError):
+class FailedConstructorError(RepoError):
     """Raised when a package's class constructor fails."""
 
     def __init__(self, name, exc_type, exc_obj, exc_tb):

@@ -33,6 +33,5 @@ class PyTerminado(PythonPackage):
 
     version('0.6', '5b6c65da27fe1ed07a9f80f0588cdaba')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-tornado@4:', type=('build', 'run'))
     depends_on('py-ptyprocess', type=('build', 'run'))

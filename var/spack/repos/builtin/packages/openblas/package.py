@@ -56,6 +56,12 @@ class Openblas(MakefilePackage):
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
+    patch('openblas_icc_openmp.patch', when='%intel@16.0:')
+    patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+
+    # Change file comments to work around clang 3.9 assembler bug
+    # https://github.com/xianyi/OpenBLAS/pull/982
+    patch('openblas0.2.19.diff', when='@0.2.19')
 
     parallel = False
 
@@ -76,12 +82,6 @@ class Openblas(MakefilePackage):
             # be used with any (!) compiler named clang, bummer.
             raise InstallError(
                 'OpenBLAS does not support OpenMP with clang!'
-            )
-
-        spec = self.spec
-        if spec.satisfies('%clang@8.1.0:') and spec.satisfies('@:0.2.19'):
-            raise InstallError(
-                'OpenBLAS @:0.2.19 does not build with Apple clang@8.1.0:'
             )
 
     @property
@@ -125,8 +125,8 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
-    @on_package_attributes(run_tests=True)
     @run_after('build')
+    @on_package_attributes(run_tests=True)
     def check_build(self):
         make('tests', *self.make_defs)
 
@@ -138,8 +138,8 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack
@@ -150,7 +150,7 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = spec['openblas'].cppflags
+        include_flags = spec['openblas'].headers.cpp_flags
         link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
             link_flags += ' -lifcore'

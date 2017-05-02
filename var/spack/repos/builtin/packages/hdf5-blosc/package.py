@@ -69,7 +69,7 @@ class Hdf5Blosc(Package):
         # if sys.platform == "darwin":
         #     fix_darwin_install_name(prefix.lib)
 
-        libtool = Executable(join_path(spec["libtool"].prefix.bin, "libtool"))
+        libtool = spec["libtool"].command
 
         # TODO: these vars are not used.
         # if "+mpi" in spec["hdf5"]:
@@ -111,7 +111,8 @@ class Hdf5Blosc(Package):
                         "-L%s" % spec["hdf5"].prefix.lib, "-lhdf5")
                 _install_shlib("libblosc_plugin", ".libs", prefix.lib)
 
-        self.check_install(spec)
+        if self.run_tests:
+            self.check_install(spec)
 
     def check_install(self, spec):
         "Build and run a small program to test the installed HDF5 Blosc plugin"

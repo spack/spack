@@ -63,10 +63,12 @@ def stringio_open(monkeypatch):
 def get_modulefile_content(factory, spec):
     """Writes the module file and returns the content as a string.
 
-    :param factory: module file factory
-    :param spec: spec of the module file to be written
-    :return: content of the module file
-    :rtype: str
+    Args:
+        factory: module file factory
+        spec: spec of the module file to be written
+
+    Returns:
+        str: content of the module file
     """
     spec.concretize()
     generator = factory(spec)

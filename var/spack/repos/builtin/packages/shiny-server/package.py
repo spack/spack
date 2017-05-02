@@ -44,7 +44,7 @@ class ShinyServer(CMakePackage):
 
     version('1.5.3.838', '96f20fdcdd94c9e9bb851baccb82b97f')
 
-    depends_on('python@:2.9.99')  # docs say: "Really.  3.x will not work"
+    depends_on('python@:2.8')  # docs say: "Really.  3.x will not work"
     depends_on('cmake@2.8.10:')
     depends_on('git')
     depends_on('r+X')
@@ -54,9 +54,7 @@ class ShinyServer(CMakePackage):
         spec = self.spec
         options = []
 
-        options.extend([
-            "-DPYTHON=%s" % join_path(spec['python'].prefix.bin, 'python'),
-        ])
+        options.append("-DPYTHON=%s" % spec['python'].command.path)
 
         return options
 

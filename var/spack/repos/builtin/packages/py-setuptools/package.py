@@ -32,12 +32,10 @@ class PySetuptools(PythonPackage):
     homepage = "https://pypi.python.org/pypi/setuptools"
     url      = "https://pypi.io/packages/source/s/setuptools/setuptools-25.2.0.tar.gz"
 
-    import_modules = [
-        'pkg_resources', 'setuptools', 'pkg_resources.extern',
-        'pkg_resources._vendor', 'pkg_resources._vendor.packaging',
-        'setuptools.extern', 'setuptools.command'
-    ]
+    import_modules = ['pkg_resources', 'setuptools', 'setuptools.command']
 
+    version('34.4.1', '5f9b07aeaafd29eac2548fc0b89a4934',
+            url="https://pypi.io/packages/source/s/setuptools/setuptools-34.4.1.zip")
     version('34.2.0', '41b630da4ea6cfa5894d9eb3142922be',
             url="https://pypi.io/packages/source/s/setuptools/setuptools-34.2.0.zip")
     version('25.2.0', 'a0dbb65889c46214c691f6c516cf959c')
@@ -49,9 +47,7 @@ class PySetuptools(PythonPackage):
     version('16.0',   '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
 
-    # FIXME: when we use 2.6:2.7, spack spec llvm tries to install non-existing
-    # python@2.7 instead of python@2.7.13
-    depends_on('python@2.6:2.7.99,3.3:')
+    depends_on('python@2.6:2.8,3.3:')
 
     # Previously, setuptools vendored all of its dependencies to allow
     # easy bootstrapping. As of version 34.0.0, this is no longer done

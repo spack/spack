@@ -88,6 +88,10 @@ class BlastPlus(AutotoolsPackage):
             description='Build with lzo support')
     variant('pcre', default=True,
             description='Build with pcre support')
+    variant('perl', default=True,
+            description='Build with perl support')
+    variant('python', default=True,
+            description='Build with python support')
 
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
@@ -100,7 +104,8 @@ class BlastPlus(AutotoolsPackage):
     depends_on('lzo', when='+lzo')
     depends_on('pcre', when='+pcre')
 
-    depends_on('python')
+    depends_on('python', when='+python')
+    depends_on('perl', when='+perl')
 
     configure_directory = 'c++'
 
@@ -198,5 +203,19 @@ class BlastPlus(AutotoolsPackage):
             )
         else:
             config_args.append('--without-pcre')
+
+        if '+python' in spec:
+            config_args.append(
+                '--with-python={0}'.format(self.spec['python'].home)
+            )
+        else:
+            config_args.append('--without-python')
+
+        if '+perl' in spec:
+            config_args.append(
+                '--with-perl={0}'.format(self.spec['perl'].prefix)
+            )
+        else:
+            config_args.append('--without-python')
 
         return config_args

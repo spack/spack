@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.util.prefix import Prefix
 import os
 
 
@@ -30,16 +31,15 @@ class Pgi(Package):
     """PGI optimizing multi-core x64 compilers for Linux, MacOS & Windows
     with support for debugging and profiling of local MPI processes.
 
-    Note: The PGI compilers are licensed software. You will need to create
-    an account on the PGI homepage and download PGI yourself. Once the download
-    finishes, rename the file (which may contain information such as the
-    architecture) to the format: pgi-<version>.tar.gz. Spack will search your
-    current directory for a file of this format. Alternatively, add this
+    Note: The PGI compilers are licensed software. You will need to create an
+    account on the PGI homepage and download PGI yourself. Spack will search
+    your current directory for the download tarball. Alternatively, add this
     file to a mirror so that Spack can find it. For instructions on how to
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.pgroup.com/"
 
+    version('17.3',  '6eefc42f85e756cbaba76467ed640902')
     version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')
     version('16.5',  'a40e8852071b5d600cb42f31631b3de1')
     version('16.3',  '618cb7ddbc57d4e4ed1f21a0ab25f427')
@@ -100,3 +100,17 @@ class Pgi(Package):
 
         # Run install script
         os.system("./install")
+
+    def setup_environment(self, spack_env, run_env):
+        prefix = Prefix(join_path(self.prefix, 'linux86-64', self.version))
+
+        run_env.set('CC',  join_path(prefix.bin, 'pgcc'))
+        run_env.set('CXX', join_path(prefix.bin, 'pgc++'))
+        run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
+        run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
+
+        run_env.set('PATH',            prefix.bin)
+        run_env.set('CPATH',           prefix.include)
+        run_env.set('LIBRARY_PATH',    prefix.lib)
+        run_env.set('LD_LIBRARY_PATH', prefix.lib)
+        run_env.set('MANPATH',         prefix.man)
