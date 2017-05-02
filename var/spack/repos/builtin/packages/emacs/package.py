@@ -37,6 +37,7 @@ class Emacs(AutotoolsPackage):
 
     variant('X', default=False, description="Enable an X toolkit")
     variant('toolkit', default='gtk',
+            values=('gtk', 'athena'),
             description="Select an X toolkit (gtk, athena)")
 
     depends_on('pkg-config@0.9.0:', type='build')
