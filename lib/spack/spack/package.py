@@ -64,6 +64,7 @@ from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
+from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.version import *
@@ -1025,17 +1026,27 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return namespace
 
     def do_fake_install(self):
-        """Make a fake install directory containing a 'fake' file in bin."""
-        # FIXME : Make this part of the 'install' behavior ?
-        mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, 'fake'))
-        mkdirp(self.prefix.include)
-        mkdirp(self.prefix.lib)
+        """Make a fake install directory containing fake executables,
+        headers, and libraries."""
+
+        name = self.name
         library_name = 'lib' + self.name
-        dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
+        chmod = which('chmod')
+
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, name))
+        chmod('+x', join_path(self.prefix.bin, name))
+
+        mkdirp(self.prefix.include)
+        touch(join_path(self.prefix.include, name + '.h'))
+
+        mkdirp(self.prefix.lib)
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
+
         mkdirp(self.prefix.man1)
+
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
@@ -1548,7 +1559,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             msg = 'Deleting DB entry [{0}]'
             tty.debug(msg.format(spec.short_spec))
             spack.store.db.remove(spec)
-        tty.msg("Successfully uninstalled %s" % spec.short_spec)
 
         if pkg is not None:
             spack.hooks.post_uninstall(spec)

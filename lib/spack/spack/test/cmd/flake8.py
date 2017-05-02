@@ -54,12 +54,12 @@ def flake8_package():
     package = FileFilter(filename)
 
     # Make the change
-    package.filter('unmodified', 'modified')
+    package.filter("state = 'unmodified'", "state = 'modified'", string=True)
 
     yield filename
 
     # Undo the change
-    package.filter('modified', 'unmodified')
+    package.filter("state = 'modified'", "state = 'unmodified'", string=True)
 
 
 def test_changed_files(parser, flake8_package):

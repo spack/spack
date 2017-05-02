@@ -56,6 +56,8 @@ class Openblas(MakefilePackage):
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
     patch('openblas_icc.patch', when='%intel')
+    patch('openblas_icc_openmp.patch', when='%intel@16.0:')
+    patch('openblas_icc_fortran.patch', when='%intel@16.0:')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
@@ -148,7 +150,7 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = spec['openblas'].cppflags
+        include_flags = spec['openblas'].headers.cpp_flags
         link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
             link_flags += ' -lifcore'

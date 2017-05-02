@@ -122,7 +122,7 @@ class Plumed(AutotoolsPackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
-        module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
+        module.plumed = self.spec['plumed'].command
 
     @run_before('autoreconf')
     def filter_gslcblas(self):

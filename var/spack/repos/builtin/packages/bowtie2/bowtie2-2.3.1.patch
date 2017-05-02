@@ -3,7 +3,8 @@
 @@ -26,10 +26,10 @@
 
  INC =
- LIBS = -lreadline -ltermcap -lz
+-LIBS = -lreadline -ltermcap -lz
++LIBS = -lreadline -lz
 -GCC_PREFIX = $(shell dirname `which gcc`)
 +GCC_PREFIX =
  GCC_SUFFIX =
