@@ -350,10 +350,10 @@ class Llvm(CMakePackage):
 
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
-            '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp'])
+            '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp']
 
         PackageReference(
-            '-DPYTHON_EXECUTABLE:PATH={0}, 
+            '-DPYTHON_EXECUTABLE:PATH={0}', 
             spec['python'].command.path).appendIfExists(cmake_args)
 
         if '+gold' in spec:
