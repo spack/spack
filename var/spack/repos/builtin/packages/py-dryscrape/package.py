@@ -32,11 +32,10 @@ class PyDryscrape(PythonPackage):
     homepage = "https://github.com/niklasb/dryscrape"
     url      = "https://pypi.io/packages/source/d/dryscrape/dryscrape-1.0.tar.gz"
 
-    version('development', git="https://github.com/niklasb/dryscrape",
+    version('develop', git="https://github.com/niklasb/dryscrape",
             branch="master")
     version('1.0', '267e380a8efaf9cd8fd94de1639d3198')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-lxml', type=('build', 'run'))
-    depends_on('py-webkit-server', type=('build', 'run'))
+    depends_on('py-webkit-server@1.0:', type=('build', 'run'))
     depends_on('py-xvfbwrapper', type=('build', 'run'))
