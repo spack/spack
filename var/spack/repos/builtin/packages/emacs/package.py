@@ -54,12 +54,9 @@ class Emacs(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            if toolkit not in ('gtk', 'athena'):
-                raise InstallError("toolkit must be in (gtk, athena), not %s" %
-                                   toolkit)
             args = [
                 '--with-x',
                 '--with-x-toolkit={0}'.format(toolkit)
