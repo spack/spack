@@ -41,7 +41,9 @@ if ($?SPACK_ROOT) then
 
     # Set up modules and dotkit search paths in the user environment
     # TODO: fix SYS_TYPE to something non-LLNL-specific
-    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
-    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
+    if ($?SYS_TYPE) then
+        _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
+        _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
+    endif
     _spack_pathadd PATH       "$SPACK_ROOT/bin"
 endif
