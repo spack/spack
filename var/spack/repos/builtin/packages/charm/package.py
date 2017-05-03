@@ -53,8 +53,12 @@ class Charm(Package):
 
     # Communication mechanisms (choose exactly one)
     # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
-    variant('backend', default='mpi', description=(
-        'Set the backend to use (mpi, multicore, net, netlrts, verbs)'))
+    variant(
+        'backend',
+        default='mpi',
+        values=('mpi', 'multicore', 'net', 'netlrts', 'verbs'),
+        description='Set the backend to use'
+    )
 
     # Other options
     # Something is off with PAPI -- there are build errors. Maybe
