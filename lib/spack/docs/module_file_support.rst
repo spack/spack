@@ -210,7 +210,7 @@ Scripts to load modules recursively may be made with the command:
 
     $ spack module loads --dependencies <spec>
 
-An equivalent alternative is:
+An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
 
 .. code-block :: console
 

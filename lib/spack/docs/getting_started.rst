@@ -60,9 +60,14 @@ For a richer experience, use Spack's shell support:
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to :ref:`load environment modules <shell-support>` and execute
+command to used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
+
+If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
+installed and available, the ``spack`` command can also load and unload
+:ref:`modules <modules>`.
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -94,12 +99,12 @@ Optional: Alternate Prefix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may want to run Spack out of a prefix other than the git repository
-you cloned.  The ``spack bootstrap`` command provides this
+you cloned.  The ``spack clone`` command provides this
 functionality.  To install spack in a new directory, simply type:
 
 .. code-block:: console
 
-   $ spack bootstrap /my/favorite/prefix
+   $ spack clone /my/favorite/prefix
 
 This will install a new spack script in ``/my/favorite/prefix/bin``,
 which you can use just like you would the regular spack script.  Each
