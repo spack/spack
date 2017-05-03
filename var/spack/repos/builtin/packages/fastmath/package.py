@@ -42,20 +42,20 @@ class Fastmath(Package):
     depends_on('chombo')
     depends_on('hypre~internal-superlu')
     depends_on('mesquite')
-#    depends_on('ml-trilinos')
-#    depends_on('nox-trilinos')
+#    depends_on('ml-trilinos') # hoping for stripped down install of just ml
+#    depends_on('nox-trilinos') # hoping for stripped down install of just nox 
+#    depends_on('trilinos')
     depends_on('moab')
     depends_on('mpi')
     depends_on('parpack') # we need parpack ng
     depends_on('petsc')
 #    depends_on('phasta')
-#    depends_on('pumi')
+    depends_on('pumi')
     depends_on('sundials')
     depends_on('superlu-dist')
     depends_on('zoltan')
 
     def url_for_version(self, version):
-        print __file__
         dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
         dummy_tar_path = pjoin(dummy_tar_path,"fastmath.tar.gz")
         url      = "file://" + dummy_tar_path

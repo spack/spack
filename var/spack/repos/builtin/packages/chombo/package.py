@@ -30,7 +30,8 @@ class Chombo(MakefilePackage):
     """The Chombo package provides a set of tools for implementing finite
        difference and finite-volume methods for the solution of partial
        differential equations on block-structured adaptively refined
-       logically rectangular (i.e. Cartesian) grids."""
+       logically rectangular (i.e. Cartesian) grids. Note: Chombo download
+       requires human registration process."""
 
     homepage = "https://anag-repo.lbl.gov/svn/Chombo/release"
     url      = "https://anag-repo.lbl.gov/svn/Chombo/release/3.2"

@@ -1,0 +1,33 @@
+*** ./cmake/bob.cmake	2017-05-03 12:23:53.000000000 -0700
+--- ./cmake/bob.cmake.patched	2017-05-03 12:20:31.000000000 -0700
+***************
+*** 55,68 ****
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      if (${PROJECT_NAME}_CXX_WARNINGS)
+!       set(FLAGS "${FLAGS} -Werror -Weverything")
+        set(FLAGS "${FLAGS} -Wno-padded")
+        set(FLAGS "${FLAGS} -Wno-float-equal")
+        set(FLAGS "${FLAGS} -Wno-weak-template-vtables")
+      endif()
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+      if (${PROJECT_NAME}_CXX_WARNINGS)
+!       set(FLAGS "${FLAGS} -Werror -Wall -Wextra")
+      endif()
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+    else()
+--- 55,68 ----
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      if (${PROJECT_NAME}_CXX_WARNINGS)
+!       set(FLAGS "${FLAGS} -Weverything")
+        set(FLAGS "${FLAGS} -Wno-padded")
+        set(FLAGS "${FLAGS} -Wno-float-equal")
+        set(FLAGS "${FLAGS} -Wno-weak-template-vtables")
+      endif()
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+      if (${PROJECT_NAME}_CXX_WARNINGS)
+!       set(FLAGS "${FLAGS} -Wall -Wextra")
+      endif()
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+    else()
