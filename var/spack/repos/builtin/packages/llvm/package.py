@@ -67,8 +67,6 @@ class Llvm(CMakePackage):
     variant('link_dylib', default=False,
             description="Build and link the libLLVM shared library rather "
             "than static")
-    variant('utils', default=False,
-            description="LLVM_INSTALL_UTILS  ")
     variant('all_targets', default=True,
             description="Build all supported targets, default targets "
             "<current arch>,NVPTX,AMDGPU,CppBackend")
@@ -328,9 +326,6 @@ class Llvm(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('CXXFLAGS', self.compiler.cxx11_flag)
-        cmake_build_lib = join_path(
-            self.stage.source_path,'spack-build','lib')
-        spack_env.prepend_path('LD_LIBRARY_PATH',cmake_build_lib) 
 
     def build_type(self):
         if '+debug' in self.spec:
@@ -377,9 +372,6 @@ class Llvm(CMakePackage):
         if '+link_dylib' in spec:
             cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
 
-        if '+utils' in spec:
-            cmake_args.append('-DLLVM_INSTALL_UTILS:Bool=ON')
-
         if '+all_targets' not in spec:  # all is default on cmake
             targets = ['CppBackend', 'NVPTX', 'AMDGPU']
             if 'x86' in spec.architecture.target.lower():
@@ -402,16 +394,7 @@ class Llvm(CMakePackage):
 
         return cmake_args
 
-<<<<<<< 5d055301c35add4aa3cb39cc736297c48f440b92
     @run_after('install')
     def post_install(self):
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
-=======
-        with working_dir('spack-build', create=True):
-            # NOT NEEDED os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
-            cmake(*cmake_args)
-            make()
-            make("install")
-            install_tree("bin", join_path(prefix, "libexec", "llvm"))
->>>>>>> fix flake8 errors
