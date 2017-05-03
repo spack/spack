@@ -40,11 +40,9 @@ class Mesquite(AutotoolsPackage):
     version('2.3.0', 'f64948b5210d5ccffaa9a2482447b322')
     version('2.2.0', '41360c363e541aff7dc10024c90072d3')
 
-    depends_on('mpi')
+    variant('mpi', default=True, description='Enable MPI parallel support')
 
-#  --enable-32bit          Force 32bit object code
-#  --enable-64bit          Force 64bit object code
-
+    depends_on('mpi', when='+mpi')
 
     def configure_args(self):
         args = []

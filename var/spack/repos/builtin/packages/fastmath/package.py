@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install fastmath
-#
-# You can edit this file again by typing:
-#
-#     spack edit fastmath
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 import os
 from os.path import join as pjoin
@@ -52,13 +37,13 @@ class Fastmath(Package):
 
     version('1.0', 'bf5b7a996baebe97d6bf1801604a7e7b')
 
-    depends_on('boxlib') # how do we say 3D boxlib?
-#    depends_on('boxlib+dims=3') # how do we say 3D boxlib?
-#    depends_on('chombo')
+#    depends_on('boxlib') # how do we say 3D boxlib?
+    depends_on('boxlib dims=3') # how do we say 3D boxlib?
+    depends_on('chombo')
     depends_on('hypre~internal-superlu')
     depends_on('mesquite')
-#    depends_on('ml-from-trilinos')
-#    depends_on('nox-from-trilinos')
+#    depends_on('ml-trilinos')
+#    depends_on('nox-trilinos')
     depends_on('moab')
     depends_on('mpi')
     depends_on('parpack') # we need parpack ng
