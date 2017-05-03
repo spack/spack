@@ -58,6 +58,7 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+import spack.multimethod
 
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -999,6 +1000,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 self.patch()
                 tty.msg("Ran patch() for %s" % self.name)
                 patched = True
+            except spack.multimethod.NoSuchMethodError:
+                # We are running a multimethod without a default case.
+                # If there's no default it means we don't need to patch.
+                tty.msg("No patches needed for %s" % self.name)
             except:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
