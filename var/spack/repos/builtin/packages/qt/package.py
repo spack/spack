@@ -201,7 +201,7 @@ class Qt(Package):
         if '@:5.7.1' in self.spec:
             config_args.append('-no-openvg')
         else:
-            # FIXME: those could work for over versions
+            # FIXME: those could work for other versions
             config_args.extend([
                 '-system-libpng',
                 '-system-libjpeg',
