@@ -849,6 +849,10 @@ well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
 
+If you find that you are missing some of these programs, ``spack`` can
+build some of them for you with ``spack bootstrap``. Currently supported
+programs are ``environment-modules``.
+
 A few notes on specific programs in this list:
 
 """"""""""""""""""""""""""
