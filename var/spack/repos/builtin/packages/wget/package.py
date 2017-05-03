@@ -39,6 +39,7 @@ class Wget(Package):
     version('1.16', '293a37977c41b5522f781d3a3a078426')
 
     depends_on("openssl")
+    depends_on("perl@5.12.0:", type='build')
 
     def install(self, spec, prefix):
         configure(
