@@ -67,6 +67,8 @@ class Qt(Package):
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
     patch('QTBUG-57656.patch', when='@5.8.0')
+    # see https://bugreports.qt.io/browse/QTBUG-58038
+    patch('QTBUG-58038.patch', when='@5.8.0')
 
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
@@ -88,6 +90,10 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
+    depends_on("freetype", when='@5.8:')
+    # FIXME:
+    # -system-harfbuzz
+    # -system-pcre
 
     # QtQml
     depends_on("python", when='@5.7.0:', type='build')
@@ -109,8 +115,6 @@ class Qt(Package):
     # depends_on("ogg", when='+multimedia')
 
     use_xcode = True
-    # parallel build fails on Sierra
-    parallel = False
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -196,6 +200,14 @@ class Qt(Package):
 
         if '@:5.7.1' in self.spec:
             config_args.append('-no-openvg')
+        else:
+            # FIXME: those could work for over versions
+            config_args.extend([
+                '-system-libpng',
+                '-system-libjpeg',
+                '-system-zlib',
+                '-system-freetype'
+            ])
 
         if '@:5.7.0' in self.spec:
             config_args.extend([
