@@ -26,6 +26,7 @@ from spack import *
 from shutil import copyfile
 import glob
 
+
 class Chombo(MakefilePackage):
     """The Chombo package provides a set of tools for implementing finite
        difference and finite-volume methods for the solution of partial
@@ -37,7 +38,7 @@ class Chombo(MakefilePackage):
     url      = "https://anag-repo.lbl.gov/svn/Chombo/release/3.2"
 
     version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
-  
+
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('dims', default=3, description='Number of PDE dimensions [1-6]')
     variant('hdf5', default=True, description='Enable HDF5 support')
@@ -56,7 +57,7 @@ class Chombo(MakefilePackage):
         # Set fortran name mangling in Make.defs
         defs_file = FileFilter('./lib/mk/Make.defs')
         defs_file.filter('^\s*#\s*cppcallsfort\s*=\s*',
-            'cppcallsfort = -DCH_FORT_UNDERSCORE')
+                         'cppcallsfort = -DCH_FORT_UNDERSCORE')
 
         # Set remaining variables in Make.defs.local
         # Make.defs.local.template.patch ensures lines for USE_TIMER,
@@ -75,35 +76,44 @@ class Chombo(MakefilePackage):
 
         # LAPACK setup
         defs_file.filter('^\s*#\s*USE_LAPACK\s*=\s*', 'USE_LAPACK = TRUE')
-        defs_file.filter('^\s*#\s*lapackincflags\s*=\s*',
+        defs_file.filter(
+            '^\s*#\s*lapackincflags\s*=\s*',
             'lapackincflags = -I%s' % spec['lapack'].prefix.include)
-        defs_file.filter('^\s*#\s*syslibflags\s*=\s*',
+        defs_file.filter(
+            '^\s*#\s*syslibflags\s*=\s*',
             'syslibflags= -L%s -llapack -lblas' % spec['lapack'].prefix.lib)
 
         # Compilers and Compiler flags
         defs_file.filter('^\s*#\s*CXX\s*=\s*', 'CXX = c++')
         defs_file.filter('^\s*#\s*FC\s*=\s*', 'FC = f90')
         if '+mpi' in spec:
-            defs_file.filter('^\s*#\s*MPICXX\s*=\s*',
+            defs_file.filter(
+                '^\s*#\s*MPICXX\s*=\s*',
                 'MPICXX = %s' % self.spec['mpi'].mpicxx)
 
         # Conditionally determined settings
-        defs_file.filter('^\s*#\s*MPI\s*=\s*',
+        defs_file.filter(
+            '^\s*#\s*MPI\s*=\s*',
             'MPI = %s' % ('TRUE' if '+mpi' in spec else 'FALSE'))
-        defs_file.filter('^\s*#\s*DIM\s*=\s*',
+        defs_file.filter(
+            '^\s*#\s*DIM\s*=\s*',
             'DIM = %d' % int(spec.variants['dims'].value))
 
         # HDF5 settings
         if '+hdf5' in spec:
             defs_file.filter('^\s*#\s*USE_HDF5\s*=\s*', 'USE_HDF5 = TRUE')
-            defs_file.filter('^\s*#\s*HDFINCFLAGS\s*=.*',
+            defs_file.filter(
+                '^\s*#\s*HDFINCFLAGS\s*=.*',
                 'HDFINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
-            defs_file.filter('^\s*#\s*HDFLIBFLAGS\s*=.*',
+            defs_file.filter(
+                '^\s*#\s*HDFLIBFLAGS\s*=.*',
                 'HDFLIBFLAGS = -L%s -lhdf5' % spec['hdf5'].prefix.lib)
             if '+mpi' in spec:
-                defs_file.filter('^\s*#\s*HDFMPIINCFLAGS\s*=.*',
+                defs_file.filter(
+                    '^\s*#\s*HDFMPIINCFLAGS\s*=.*',
                     'HDFMPIINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
-                defs_file.filter('^\s*#\s*HDFMPILIBFLAGS\s*=.*',
+                defs_file.filter(
+                    '^\s*#\s*HDFMPILIBFLAGS\s*=.*',
                     'HDFMPILIBFLAGS = -L%s -lhdf5' % spec['hdf5'].prefix.lib)
 
         return
