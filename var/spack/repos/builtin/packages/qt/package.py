@@ -35,6 +35,7 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
     version('5.7.1',  '031fb3fd0c3cc0f1082644492683f18d')
     version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
@@ -63,6 +64,9 @@ class Qt(Package):
             description="Build with phonon support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
+
+    # see https://bugreports.qt.io/browse/QTBUG-57656
+    patch('QTBUG-57656.patch', when='@5.8.0')
 
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
@@ -105,6 +109,8 @@ class Qt(Package):
     # depends_on("ogg", when='+multimedia')
 
     use_xcode = True
+    # parallel build fails on Sierra
+    parallel = False
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -185,9 +191,11 @@ class Qt(Package):
             '-confirm-license',
             '-openssl-linked',
             '-optimized-qmake',
-            '-no-openvg',
-            '-no-pch',
+            '-no-pch'
         ]
+
+        if '@:5.7.1' in self.spec:
+            config_args.append('-no-openvg')
 
         if '@:5.7.0' in self.spec:
             config_args.extend([
