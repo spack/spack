@@ -26,6 +26,7 @@ from spack import *
 import os
 from os.path import join as pjoin
 
+
 class Fastmath(Package):
     """FASTMath is a suite of ~15 numerical libraries frequently used together
     in various SciDAC and CSE applications. The suite includes discretization
@@ -37,17 +38,17 @@ class Fastmath(Package):
 
     version('1.0', 'bf5b7a996baebe97d6bf1801604a7e7b')
 
-#    depends_on('boxlib') # how do we say 3D boxlib?
-    depends_on('boxlib dims=3') # how do we say 3D boxlib?
+#    depends_on('boxlib')  # how do we say 3D boxlib?
+    depends_on('boxlib dims=3')  # how do we say 3D boxlib?
     depends_on('chombo')
     depends_on('hypre~internal-superlu')
     depends_on('mesquite')
-#    depends_on('ml-trilinos') # hoping for stripped down install of just ml
-#    depends_on('nox-trilinos') # hoping for stripped down install of just nox 
+#    depends_on('ml-trilinos')  # hoping for stripped down install of just ml
+#    depends_on('nox-trilinos')  # hoping for stripped down install of just nox
 #    depends_on('trilinos')
     depends_on('moab')
     depends_on('mpi')
-    depends_on('parpack') # we need parpack ng
+    depends_on('parpack')  # we need parpack ng
     depends_on('petsc')
 #    depends_on('phasta')
     depends_on('pumi')
@@ -56,12 +57,11 @@ class Fastmath(Package):
     depends_on('zoltan')
 
     def url_for_version(self, version):
-        dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
-        dummy_tar_path = pjoin(dummy_tar_path,"fastmath.tar.gz")
+        dummy_tar_path = os.path.abspath(pjoin(os.path.split(__file__)[0]))
+        dummy_tar_path = pjoin(dummy_tar_path, "fastmath.tar.gz")
         url      = "file://" + dummy_tar_path
         return url
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
         make()
         make('install')

@@ -25,6 +25,7 @@
 from spack import *
 import sys
 
+
 class Pumi(CMakePackage):
     """SCOREC RPI's Parallel Unstructured Mesh Infrastructure (PUMI).
        An efficient distributed mesh data structure and methods to support
@@ -41,9 +42,9 @@ class Pumi(CMakePackage):
     version('master', git='https://github.com/SCOREC/core.git',
         branch='master')
 
-    patch('bob.cmake.patch', level=0) # !-Werror
+    patch('bob.cmake.patch', level=0)  # !-Werror
     if sys.platform == 'darwin':
-        patch('phiotimer.cc.darwin.patch', level=0) # !clock_gettime
+        patch('phiotimer.cc.darwin.patch', level=0)  # !clock_gettime
 
     variant('zoltan', default=False, description='Enable Zoltan Features')
 

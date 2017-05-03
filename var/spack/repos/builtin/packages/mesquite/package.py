@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Mesquite(AutotoolsPackage):
     """Mesquite (Mesh Quality Improvement Toolkit) is designed to provide a
        stand-alone, portable, comprehensive suite of mesh quality improvement
