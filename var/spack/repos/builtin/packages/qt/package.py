@@ -90,8 +90,8 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
-    depends_on("freetype", when='@5.8:')
     # FIXME:
+    # depends_on("freetype", when='@5.8:') and '-system-freetype'
     # -system-harfbuzz
     # -system-pcre
 
@@ -205,8 +205,7 @@ class Qt(Package):
             config_args.extend([
                 '-system-libpng',
                 '-system-libjpeg',
-                '-system-zlib',
-                '-system-freetype'
+                '-system-zlib'
             ])
 
         if '@:5.7.0' in self.spec:
