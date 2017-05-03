@@ -56,14 +56,18 @@ class ChomboXsdk(Package):
     variant('use_petsc', default=True , description = 'Compile with PETSc support')
 
     # Chombo dependencies for xSDK build
-    depends_on('blas')
-    depends_on('lapack')
-
+    # depends_on('blas')
+    # depends_on('lapack')
+    depends_on('openblas@0.2.19', when='@xsdk-0.2.0');
     depends_on('mpi', when='+mpi')
 
     depends_on('hdf5~mpi', when='+use_hdf~mpi')
     depends_on('hdf5+mpi', when='+use_hdf+mpi')
 
+    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0');
+    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0');
+
+    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost', when='@xsdk-0.2.0')
     depends_on('petsc~mpi~hypre~superlu-dist~hdf5', when='+use_petsc~mpi')
     depends_on('petsc+mpi'                        , when='+use_petsc+mpi')
 
@@ -95,7 +99,7 @@ class ChomboXsdk(Package):
           options.append('HDFMPIINCFLAGS=-I%s/include' % spec['hdf5'].prefix)
           options.append('HDFMPILIBFLAGS=-L%s/lib -lhdf5 -lz' % spec['hdf5'].prefix)
 
-        options.append('syslibflags=%s %s' % (spec['lapack'].libs,spec['blas'].libs))
+        # options.append('syslibflags=%s %s' % (spec['lapack'].libs,spec['blas'].libs))
 
         # Build library
         make('--directory=lib','lib',*options)
