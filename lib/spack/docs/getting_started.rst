@@ -52,7 +52,7 @@ For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
-   # For bash users
+   # For bash/zsh users
    $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
@@ -886,50 +886,73 @@ In order to use Spack's generated environment modules, you must have
 installed one of *Environment Modules* or *Lmod*.  On many Linux
 distributions, this can be installed from the vendor's repository.  For
 example: ``yum install environment-modules`` (Fedora/RHEL/CentOS).  If
-your Linux distribution does not have Environment Modules, you can get it
-with Spack:
+your Linux distribution does not have Environment Modules, Spack can build it for you!
 
-#. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
+#. Install ``environment-modules``.
 
-   #) Identify its location using ``which tclsh``
-   #) Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
-   #) Add to ``~/.spack/packages.yaml`` and modify as appropriate:
+   * Spack can build and install ``environment-modules`` for you.
+     Call ``spack bootstrap`` which will install ``environment-modules`` and it's 
+     dependencies.
 
-      .. code-block:: yaml
+   * If you wish to install ``environment-modules`` in a more manual way,
+     try the following procedure:
 
-         packages:
-             tcl:
-                 paths:
-                     tcl@8.5: /usr
-                 buildable: False
+      * Consider using system tcl (as long as your system has Tcl version 8.0 or later):
 
-#. Install with:
+         #) Identify its location using ``which tclsh``
+         #) Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
+         #) Add to ``~/.spack/packages.yaml`` and modify as appropriate:
+
+            .. code-block:: yaml
+
+               packages:
+                   tcl:
+                       paths:
+                           tcl@8.5: /usr
+                       buildable: False
+
+      #. Install with:
+
+         .. code-block:: console
+
+            $ spack install environment-modules
+
+#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. 
+
+   * If you are using bash/zsh, Spack can currently do this for you as well.
+     Simply source Spack's shell integration script again. This will automatically
+     detect the lack of ``modulecmd`` and ``module``, and use the installed
+     ``environment-modules`` from ``spack bootstrap``.
+     
+     .. code-block:: console
+
+        # For bash/zsh users
+        $ export SPACK_ROOT=/path/to/spack
+        $ . $SPACK_ROOT/share/spack/setup-env.sh
+
+
+   * If you prefer to do it manually,  you can activate with the following 
+     script (or apply the updates to your ``.bashrc`` file manually):
+
+         .. code-block:: sh
+
+            TMP=`tempfile`
+            echo >$TMP
+            MODULE_HOME=`spack location --install-dir environment-modules`
+            MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
+            ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
+            cp .bashrc $TMP
+            echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
+            cat $TMP >>.bashrc
+
+      This adds to your ``.bashrc`` (or similar) files, enabling Environment
+      Modules when you log in.
+        
+#. Test that the ``module`` command is found with:
 
    .. code-block:: console
 
-      $ spack install environment-modules
-
-#. Activate with the following script (or apply the updates to your
-   ``.bashrc`` file manually):
-
-   .. code-block:: sh
-
-      TMP=`tempfile`
-      echo >$TMP
-      MODULE_HOME=`spack location --install-dir environment-modules`
-      MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-      ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-      cp .bashrc $TMP
-      echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-      cat $TMP >>.bashrc
-
-This adds to your ``.bashrc`` (or similar) files, enabling Environment
-Modules when you log in.  Re-load your .bashrc (or log out and in
-again), and then test that the ``module`` command is found with:
-
-.. code-block:: console
-
-   $ module avail
+      $ module avail
 
 
 ^^^^^^^^^^^^^^^^^
