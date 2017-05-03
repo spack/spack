@@ -50,7 +50,7 @@ class Fastmath(Package):
     depends_on('mpi')
     depends_on('parpack')  # we need parpack ng
     depends_on('petsc')
-#    depends_on('phasta')
+    depends_on('phasta')
     depends_on('pumi')
     depends_on('sundials')
     depends_on('superlu-dist')
