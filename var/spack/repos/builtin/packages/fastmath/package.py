@@ -24,10 +24,9 @@
 ##############################################################################
 from spack import *
 import os
-from os.path import join as pjoin
 
 
-class Fastmath(Package):
+class Fastmath(MakefilePackage):
     """FASTMath is a suite of ~15 numerical libraries frequently used together
     in various SciDAC and CSE applications. The suite includes discretization
     libraries for structured, AMR and unstructured settings as well as solver
@@ -36,9 +35,8 @@ class Fastmath(Package):
 
     homepage = "www.fastmath-scidac.org/"
 
-    version('1.0', 'bf5b7a996baebe97d6bf1801604a7e7b')
+    version('1.0', 'cd5006bbe9a39c1bf252b9b8b5e5bdcd')
 
-#    depends_on('boxlib')  # how do we say 3D boxlib?
     depends_on('boxlib dims=3')  # how do we say 3D boxlib?
     depends_on('chombo')
     depends_on('hypre~internal-superlu')
@@ -50,18 +48,11 @@ class Fastmath(Package):
     depends_on('mpi')
     depends_on('parpack')  # we need parpack ng
     depends_on('petsc')
-    depends_on('phasta')
+#    depends_on('phasta')
     depends_on('pumi')
     depends_on('sundials')
     depends_on('superlu-dist')
     depends_on('zoltan')
 
     def url_for_version(self, version):
-        dummy_tar_path = os.path.abspath(pjoin(os.path.split(__file__)[0]))
-        dummy_tar_path = pjoin(dummy_tar_path, "fastmath.tar.gz")
-        url      = "file://" + dummy_tar_path
-        return url
-
-    def install(self, spec, prefix):
-        make()
-        make('install')
+        return "file://%s/fastmath.tar.gz" % os.getcwd()
