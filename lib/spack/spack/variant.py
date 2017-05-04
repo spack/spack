@@ -26,6 +26,7 @@
 variants both in packages and in specs.
 """
 
+import functools
 import inspect
 import re
 
@@ -172,6 +173,26 @@ class Variant(object):
         return SingleValuedVariant
 
 
+def implicit_variant_conversion(method):
+    """Converts other to type(self) and calls method(self, other)
+
+    Args:
+        method: any predicate method that takes another variant as an argument
+
+    Returns: decorated method
+    """
+    @functools.wraps(method)
+    def convert(self, other):
+        # We don't care if types are different as long as I can convert
+        # other to type(self)
+        try:
+            other = type(self)(other.name, other._original_value)
+        except (error.SpecError, ValueError):
+            return False
+        return method(self, other)
+    return convert
+
+
 @lang.key_ordering
 class MultiValuedVariant(object):
     """A variant that can hold multiple values at once."""
@@ -241,6 +262,7 @@ class MultiValuedVariant(object):
         """
         return type(self)(self.name, self._original_value)
 
+    @implicit_variant_conversion
     def satisfies(self, other):
         """Returns true if ``other.name == self.name`` and ``other.value`` is
         a strict subset of self. Does not try to validate.
@@ -251,10 +273,6 @@ class MultiValuedVariant(object):
         Returns:
             bool: True or False
         """
-        # If types are different the constraint is not satisfied
-        if type(other) != type(self):
-            return False
-
         # If names are different then `self` does not satisfy `other`
         # (`foo=bar` does not satisfy `baz=bar`)
         if other.name != self.name:
@@ -263,6 +281,7 @@ class MultiValuedVariant(object):
         # Otherwise we want all the values in `other` to be also in `self`
         return all(v in self.value for v in other.value)
 
+    @implicit_variant_conversion
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
 
@@ -275,13 +294,10 @@ class MultiValuedVariant(object):
         Returns:
             bool: True or False
         """
-        # If types are different they are not compatible
-        if type(other) != type(self):
-            return False
-
         # If names are different then they are not compatible
         return other.name == self.name
 
+    @implicit_variant_conversion
     def constrain(self, other):
         """Modify self to match all the constraints for other if both
         instances are multi-valued. Returns True if self changed,
@@ -293,13 +309,9 @@ class MultiValuedVariant(object):
         Returns:
             bool: True or False
         """
-        # If types are different they are not compatible
-        if type(other) != type(self):
-            msg = 'other must be of type \'{0.__name__}\''
-            raise TypeError(msg.format(type(self)))
-
         if self.name != other.name:
             raise ValueError('variants must have the same name')
+
         old_value = self.value
         self.value = ','.join(sorted(set(self.value + other.value)))
         return old_value != self.value
@@ -342,11 +354,8 @@ class SingleValuedVariant(MultiValuedVariant):
     def __str__(self):
         return '{0}={1}'.format(self.name, self.value)
 
+    @implicit_variant_conversion
     def satisfies(self, other):
-        # If types are different the constraint is not satisfied
-        if type(other) != type(self):
-            return False
-
         # If names are different then `self` does not satisfy `other`
         # (`foo=bar` does not satisfy `baz=bar`)
         if other.name != self.name:
@@ -357,11 +366,8 @@ class SingleValuedVariant(MultiValuedVariant):
     def compatible(self, other):
         return self.satisfies(other)
 
+    @implicit_variant_conversion
     def constrain(self, other):
-        if type(other) != type(self):
-            msg = 'other must be of type \'{0.__name__}\''
-            raise TypeError(msg.format(type(self)))
-
         if self.name != other.name:
             raise ValueError('variants must have the same name')
 
