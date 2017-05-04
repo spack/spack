@@ -42,8 +42,9 @@ class Chombo(MakefilePackage):
 #    version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
-    variant('dims', default=3, description='Number of PDE dimensions [1-6]')
     variant('hdf5', default=True, description='Enable HDF5 support')
+    variant('dims', default=3, values=(1, 2, 3, 4, 5, 6), multi=False,
+        description='Number of PDE dimensions [1-6]')
 
     patch('hdf5-16api.patch', when='@3.2', level=0)
     patch('Make.defs.local.template.patch', when='@3.2', level=0)
@@ -99,6 +100,7 @@ class Chombo(MakefilePackage):
         defs_file.filter(
             '^\s*#\s*MPI\s*=\s*',
             'MPI = %s' % ('TRUE' if '+mpi' in spec else 'FALSE'))
+        assert(int(spec.variants['dims'].value) in range(1, 7))
         defs_file.filter(
             '^\s*#\s*DIM\s*=\s*',
             'DIM = %d' % int(spec.variants['dims'].value))
