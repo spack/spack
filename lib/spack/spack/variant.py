@@ -546,6 +546,22 @@ class VariantMap(lang.HashableMap):
         return string.getvalue()
 
 
+def substitute_single_valued_variants(spec):
+    """Uses the information in `spec.package` to turn any variant that needs
+    it into a SingleValuedVariant.
+
+    Args:
+        spec: spec on which to operate the substitution
+    """
+    for name, v in spec.variants.items():
+        pkg_cls = type(spec.package)
+        pkg_variant = spec.package.variants[name]
+        pkg_variant.validate_or_raise(v, pkg_cls)
+        spec.variants.substitute(
+            pkg_variant.make_variant(v._original_value)
+        )
+
+
 class DuplicateVariantError(error.SpecError):
     """Raised when the same variant occurs in a spec twice."""
 
