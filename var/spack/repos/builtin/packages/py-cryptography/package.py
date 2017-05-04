@@ -36,6 +36,7 @@ class PyCryptography(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'link'))
     depends_on('py-cffi', type=('build', 'link','run'))
+    depends_on('py-asn1crypto', type=('build', 'link','run'))
     depends_on('openssl')
 
 

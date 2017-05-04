@@ -26,11 +26,15 @@
 from spack import *
 
 
-class PyPyasn1(PythonPackage):
-    """ Generic ASN.1 library for Python http://pyasn1.sf.net"""
+class PyIpaddress(PythonPackage):
+    """Python 3.3's ipaddress for older Python versions"""
 
-    homepage = "https://github.com/etingof/pyasn1"
-    url      = "https://pypi.io/packages/source/p/pyasn1/pyasn1-0.2.3.tar.gz"
+    homepage = "https://github.com/phihag/ipaddress"
+    url      = "https://pypi.io/packages/source/i/ipaddress/ipaddress-1.0.18.tar.gz"
 
-    version('0.2.3', '79f98135071c8dd5c37b6c923c51be45')
+    version('1.0.18', '310c2dfd64eb6f0df44aa8c59f2334a7')
+
+    # FIXME: Add dependencies if required.
+    # depends_on('py-setuptools', type='build')
+    # depends_on('py-foo',        type=('build', 'run'))
 

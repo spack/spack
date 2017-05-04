@@ -26,11 +26,15 @@
 from spack import *
 
 
-class PyPyasn1(PythonPackage):
-    """ Generic ASN.1 library for Python http://pyasn1.sf.net"""
+class PyIdna(PythonPackage):
+    """Internationalized Domain Names for Python (IDNA 2008 and UTS #46) """
 
-    homepage = "https://github.com/etingof/pyasn1"
-    url      = "https://pypi.io/packages/source/p/pyasn1/pyasn1-0.2.3.tar.gz"
+    homepage = "https://github.com/kjd/idna"
+    url      = "https://pypi.io/packages/source/i/idna/idna-2.5.tar.gz"
 
-    version('0.2.3', '79f98135071c8dd5c37b6c923c51be45')
+    version('2.5', 'fc1d992bef73e8824db411bb5d21f012')
+
+    # FIXME: Add dependencies if required.
+    depends_on('py-setuptools', type=('build', 'link'))
+    # depends_on('py-foo',        type=('build', 'run'))
 

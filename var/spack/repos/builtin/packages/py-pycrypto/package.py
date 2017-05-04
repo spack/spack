@@ -23,14 +23,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 #
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install py-pycrypto
+#
+# You can edit this file again by typing:
+#
+#     spack edit py-pycrypto
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class PyPyasn1(PythonPackage):
-    """ Generic ASN.1 library for Python http://pyasn1.sf.net"""
+class PyPycrypto(PythonPackage):
+    """The Python Cryptography Toolkit"""
 
-    homepage = "https://github.com/etingof/pyasn1"
-    url      = "https://pypi.io/packages/source/p/pyasn1/pyasn1-0.2.3.tar.gz"
+    homepage = "https://www.dlitz.net/software/pycrypto/"
+    url      = "https://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.6.1.tar.gz"
 
-    version('0.2.3', '79f98135071c8dd5c37b6c923c51be45')
+    version('2.6.1', '55a61a054aa66812daf5161a0d5d7eda')
+
+    #depends_on('py-setuptools', type=('build', 'link')) 
+    #depends_on('py-setuptools', type='include')
+    #depends_on('gmp')
+    # not just build-time, requires pkg_resources
 

@@ -23,14 +23,30 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 #
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install py-asn1crypto
+#
+# You can edit this file again by typing:
+#
+#     spack edit py-asn1crypto
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class PyPyasn1(PythonPackage):
-    """ Generic ASN.1 library for Python http://pyasn1.sf.net"""
+class PyAsn1crypto(PythonPackage):
+    """Python ASN.1 library with a focus on performance and a pythonic API """
 
-    homepage = "https://github.com/etingof/pyasn1"
-    url      = "https://pypi.io/packages/source/p/pyasn1/pyasn1-0.2.3.tar.gz"
+    homepage = "https://github.com/wbond/asn1crypto"
+    url      = "https://pypi.io/packages/source/a/asn1crypto/asn1crypto-0.22.0.tar.gz"
 
-    version('0.2.3', '79f98135071c8dd5c37b6c923c51be45')
+    version('0.22.0', '74a8b9402625b38ef19cf3fa69ef8470')
+
+    depends_on('py-setuptools', type=('build', 'link'))
 

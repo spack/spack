@@ -30,12 +30,16 @@ class PyParamiko(PythonPackage):
     """SSH2 protocol library"""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://pypi.python.org/pypi/paramiko/2.1.2"
-    url      = "https://pypi.python.org/packages/64/79/5e8baeedb6baf1d5879efa8cd012f801efc232e56a068550ba00d7e82625/paramiko-2.1.2.tar.gz#md5=41a8ea0e8abb03a6bf59870670d4f46c"
+    homepage = "http://www.paramiko.org/"
+    url      = "https://pypi.io/packages/source/p/paramiko/paramiko-2.1.2.tar.gz"
 
     version('2.1.2', '41a8ea0e8abb03a6bf59870670d4f46c')
 
-    depends_on('py-setuptools', type=('build', 'link'))
-    depends_on('py-pyasn1',        type=('build', 'run'))
+    depends_on('py-setuptools',    type=('build', 'link'))
+    depends_on('py-pyasn1',        type=('build', 'link', 'run'))
     depends_on('py-cryptography',  type=('build', 'link', 'run'))
+    depends_on('py-enum34',        type=('build', 'link', 'run'))
+    depends_on('py-ipaddress',     type=('build', 'link', 'run'))
+    depends_on('py-idna',          type=('build', 'link', 'run'))
+    
 
