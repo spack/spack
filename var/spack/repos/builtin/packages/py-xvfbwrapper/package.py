@@ -25,16 +25,13 @@
 from spack import *
 
 
-class Lcms(AutotoolsPackage):
-    """Little cms is a color management library. Implements fast
-       transforms between ICC profiles. It is focused on speed, and is
-       portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
+class PyXvfbwrapper(PythonPackage):
+    """run headless display inside X virtual framebuffer (Xvfb)"""
 
-    version('2.8', '87a5913f1a52464190bb655ad230539c')
-    version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
+    homepage = "https://pypi.python.org/pypi/xvfbwrapper/0.2.9"
+    url      = "https://pypi.io/packages/source/x/xvfbwrapper/xvfbwrapper-0.2.9.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('libtiff')
-    depends_on('zlib')
+    version('0.2.9', '3f3cbed698606f4b14e76ccc7b5dd366')
+
+    depends_on('py-setuptools', type='build')
+    # Eventually add xvfb!

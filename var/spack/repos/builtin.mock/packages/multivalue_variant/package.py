@@ -25,46 +25,33 @@
 from spack import *
 
 
-class Emacs(AutotoolsPackage):
-    """The Emacs programmable text editor."""
+class MultivalueVariant(Package):
+    homepage = "http://www.llnl.gov"
+    url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
 
-    homepage = "https://www.gnu.org/software/emacs"
-    url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
+    version(1.0, 'foobarbaz')
+    version(2.1, 'foobarbaz')
+    version(2.2, 'foobarbaz')
+    version(2.3, 'foobarbaz')
 
-    version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
-    version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
-    version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
-
-    variant('X', default=False, description="Enable an X toolkit")
+    variant('debug', default=False, description='Debug variant')
     variant(
-        'toolkit',
-        default='gtk',
-        values=('gtk', 'athena'),
-        description="Select an X toolkit (gtk, athena)"
+        'foo',
+        description='Multi-valued variant',
+        values=('bar', 'baz', 'barbaz'),
+        multi=True
     )
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    variant(
+        'fee',
+        description='Single-valued variant',
+        default='bar',
+        values=('bar', 'baz', 'barbaz'),
+        multi=False
+    )
 
-    depends_on('ncurses')
-    depends_on('zlib')
-    depends_on('libtiff', when='+X')
-    depends_on('libpng', when='+X')
-    depends_on('libxpm', when='+X')
-    depends_on('giflib', when='+X')
-    depends_on('libx11', when='+X')
-    depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('gtkplus+X', when='+X toolkit=gtk')
+    depends_on('mpi')
+    depends_on('callpath')
 
-    def configure_args(self):
-        spec = self.spec
-
-        toolkit = spec.variants['toolkit'].value
-        if '+X' in spec:
-            args = [
-                '--with-x',
-                '--with-x-toolkit={0}'.format(toolkit)
-            ]
-        else:
-            args = ['--without-x']
-
-        return args
+    def install(self, spec, prefix):
+        pass

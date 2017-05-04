@@ -25,16 +25,12 @@
 from spack import *
 
 
-class Lcms(AutotoolsPackage):
-    """Little cms is a color management library. Implements fast
-       transforms between ICC profiles. It is focused on speed, and is
-       portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
+class PyLibconf(PythonPackage):
+    """A pure-Python libconfig reader/writer with permissive license"""
 
-    version('2.8', '87a5913f1a52464190bb655ad230539c')
-    version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
+    homepage = "https://pypi.python.org/pypi/libconf"
+    url      = "https://pypi.io/packages/source/l/libconf/libconf-1.0.1.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('libtiff')
-    depends_on('zlib')
+    version('1.0.1', 'd37d355b3248f99802c46669ba38e406')
+
+    depends_on('py-setuptools', type='build')

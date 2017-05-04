@@ -93,6 +93,12 @@ from llnl.util.tty.color import *
 import spack
 from spack.error import SpackError
 import argparse
+import pstats
+
+# Get the allowed names of statistics for cProfile, and make a list of
+# groups of 7 names to wrap them nicely.
+stat_names = pstats.Stats.sort_arg_dict_default
+stat_lines = list(zip(*(iter(stat_names),)*7))
 
 # Command parsing
 parser = argparse.ArgumentParser(
@@ -120,10 +126,15 @@ parser.add_argument('-m', '--mock', action='store_true',
                     help="use mock packages instead of real ones")
 parser.add_argument('-p', '--profile', action='store_true',
                     help="profile execution using cProfile")
+parser.add_argument('-P', '--sorted-profile', default=None, metavar="STAT",
+                    help="profile and sort by one or more of:\n[%s]" %
+                    ',\n '.join([', '.join(line) for line in stat_lines]))
+parser.add_argument('--lines', default=20, action='store',
+                    help="lines of profile output: default 20; 'all' for all")
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="print additional output during builds")
 parser.add_argument('-s', '--stacktrace', action='store_true',
-                    help="add stacktrace information to all printed statements")
+                    help="add stacktrace info to all printed statements")
 parser.add_argument('-V', '--version', action='version',
                     version="%s" % spack.spack_version)
 
@@ -183,6 +194,8 @@ def _main(args, unknown_args):
             return_val = command(parser, args)
     except SpackError as e:
         e.die()
+    except Exception as e:
+        tty.die(str(e))
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
@@ -206,9 +219,37 @@ def main(args):
     # actually parse the args.
     args, unknown = parser.parse_known_args()
 
-    if args.profile:
+    if args.profile or args.sorted_profile:
         import cProfile
-        cProfile.runctx('_main(args, unknown)', globals(), locals())
+
+        try:
+            nlines = int(args.lines)
+        except ValueError:
+            if args.lines != 'all':
+                tty.die('Invalid number for --lines: %s' % args.lines)
+            nlines = -1
+
+        # allow comma-separated list of fields
+        sortby = ['time']
+        if args.sorted_profile:
+            sortby = args.sorted_profile.split(',')
+            for stat in sortby:
+                if stat not in stat_names:
+                    tty.die("Invalid sort field: %s" % stat)
+
+        try:
+            # make a profiler and run the code.
+            pr = cProfile.Profile()
+            pr.enable()
+            _main(args, unknown)
+        finally:
+            pr.disable()
+
+            # print out  profile stats.
+            stats = pstats.Stats(pr)
+            stats.sort_stats(*sortby)
+            stats.print_stats(nlines)
+
     elif args.pdb:
         import pdb
         pdb.runctx('_main(args, unknown)', globals(), locals())

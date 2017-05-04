@@ -25,16 +25,11 @@
 from spack import *
 
 
-class Lcms(AutotoolsPackage):
-    """Little cms is a color management library. Implements fast
-       transforms between ICC profiles. It is focused on speed, and is
-       portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
+class PyWebkitServer(PythonPackage):
+    """a Webkit-based, headless web client"""
 
-    version('2.8', '87a5913f1a52464190bb655ad230539c')
-    version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
+    homepage = "https://github.com/niklasb/webkit-server"
+    url      = "https://pypi.io/packages/source/w/webkit-server/webkit-server-1.0.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('libtiff')
-    depends_on('zlib')
+    version('develop', git="https://github.com/niklasb/webkit-server", branch="master")
+    version('1.0', '8463245c2b4f0264d934c0ae20bd4654')

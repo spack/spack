@@ -25,16 +25,17 @@
 from spack import *
 
 
-class Lcms(AutotoolsPackage):
-    """Little cms is a color management library. Implements fast
-       transforms between ICC profiles. It is focused on speed, and is
-       portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
+class PyDryscrape(PythonPackage):
+    """a lightweight Javascript-aware, headless web scraping library
+       for Python"""
 
-    version('2.8', '87a5913f1a52464190bb655ad230539c')
-    version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
+    homepage = "https://github.com/niklasb/dryscrape"
+    url      = "https://pypi.io/packages/source/d/dryscrape/dryscrape-1.0.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('libtiff')
-    depends_on('zlib')
+    version('develop', git="https://github.com/niklasb/dryscrape",
+            branch="master")
+    version('1.0', '267e380a8efaf9cd8fd94de1639d3198')
+
+    depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-webkit-server@1.0:', type=('build', 'run'))
+    depends_on('py-xvfbwrapper', type=('build', 'run'))

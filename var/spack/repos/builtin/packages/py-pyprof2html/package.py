@@ -25,16 +25,15 @@
 from spack import *
 
 
-class Lcms(AutotoolsPackage):
-    """Little cms is a color management library. Implements fast
-       transforms between ICC profiles. It is focused on speed, and is
-       portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
+class PyPyprof2html(PythonPackage):
+    """Python cProfile and hotshot profile's data to HTML Converter"""
 
-    version('2.8', '87a5913f1a52464190bb655ad230539c')
-    version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
+    homepage = "https://pypi.python.org/pypi/pyprof2html/"
+    url      = "https://pypi.io/packages/source/p/pyprof2html/pyprof2html-0.3.1.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('libtiff')
-    depends_on('zlib')
+    version('0.3.1', 'aa65a1635aac95e0487d7749a6351c43')
+
+    patch('version_0.3.1.patch', when="@0.3.1")
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-jinja2', type=('build', 'run'))

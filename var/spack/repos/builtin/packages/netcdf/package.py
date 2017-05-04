@@ -24,6 +24,16 @@
 ##############################################################################
 from spack import *
 
+import numbers
+
+
+def is_integral(x):
+    """Any integer value"""
+    try:
+        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
+    except ValueError:
+        return False
+
 
 class Netcdf(AutotoolsPackage):
     """NetCDF is a set of software libraries and self-describing,
@@ -52,10 +62,18 @@ class Netcdf(AutotoolsPackage):
     # These variants control the number of dimensions (i.e. coordinates and
     # attributes) and variables (e.g. time, entity ID, number of coordinates)
     # that can be used in any particular NetCDF file.
-    variant('maxdims', default=1024,
-            description='Defines the maximum dimensions of NetCDF files.')
-    variant('maxvars', default=8192,
-            description='Defines the maximum variables of NetCDF files.')
+    variant(
+        'maxdims',
+        default=1024,
+        description='Defines the maximum dimensions of NetCDF files.',
+        values=is_integral
+    )
+    variant(
+        'maxvars',
+        default=8192,
+        description='Defines the maximum variables of NetCDF files.',
+        values=is_integral
+    )
 
     depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')

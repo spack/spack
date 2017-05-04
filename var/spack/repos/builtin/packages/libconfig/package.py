@@ -25,16 +25,19 @@
 from spack import *
 
 
-class Lcms(AutotoolsPackage):
-    """Little cms is a color management library. Implements fast
-       transforms between ICC profiles. It is focused on speed, and is
-       portable across several platforms (MIT license)."""
-    homepage = "http://www.littlecms.com"
-    url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.8/lcms2-2.8.tar.gz"
+class Libconfig(AutotoolsPackage):
+    """C/C++ Configuration File Library"""
 
-    version('2.8', '87a5913f1a52464190bb655ad230539c')
-    version('2.6', 'f4c08d38ceade4a664ebff7228910a33')
+    homepage = "http://www.hyperrealm.com/libconfig/"
+    url      = "https://github.com/hyperrealm/libconfig/archive/v1.6.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('libtiff')
-    depends_on('zlib')
+    force_autoreconf = True
+    # there is currently a build error with version 1.6, see:
+    # https://github.com/hyperrealm/libconfig/issues/47
+    # version('1.6', '2ccd24b6a2ee39f7ff8a3badfafb6539')
+    version('1.5', 'e92a91c2ddf3bf77bea0f5ed7f09e492', preferred=True)
+
+    depends_on('m4', type=('build'))
+    depends_on('autoconf', type=('build'))
+    depends_on('automake', type=('build'))
+    depends_on('libtool', type=('build'))
