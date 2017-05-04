@@ -90,7 +90,7 @@ def test_load_multi_install_package(database, parser, capfd):
         module.module(parser, args)
     except SystemExit:
         out, err = capfd.readouterr()
-        assert 'Found more than one spec for mpileaks' in err
+        assert 'Trying to load multiple modules' in err
 
 
 def test_load_non_existing_package(database, parser, capfd):
@@ -99,7 +99,7 @@ def test_load_non_existing_package(database, parser, capfd):
         module.module(parser, args)
     except SystemExit:
         out, err = capfd.readouterr()
-        assert 'Found no spec for py-pudb' in err
+        assert "Did not find a module statisfying 'py-pudb'" in err
 
 
 def test_find(database, parser):
