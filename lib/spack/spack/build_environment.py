@@ -259,9 +259,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
     rpath_prefixes      = [dep.prefix for dep in rpath_deps]
 
     # add run-time dependencies of direct build-time dependencies:
-    for bd in build_deps:
-        for rd in bd.dependencies(deptype='run'):
-            build_prefixes.append(rd.prefix)
+    for build_dep in build_deps:
+        for run_dep in build_dep.traverse(deptype='run'):
+            build_prefixes.append(run_dep.prefix)
 
     # Filter out system paths: ['/', '/usr', '/usr/local']
     # These paths can be introduced into the build when an external package
