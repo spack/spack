@@ -32,7 +32,9 @@ class Phasta(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/software.php"
     url      = "https://github.com/PHASTA/phasta.git"
 
-    version('master', git='https://github.com/PHASTA/phasta.git',
+    version('0.0.1', git='https://github.com/PHASTA/phasta.git',
+        commit='11f431f2d1a53a529dab4b0f079ab8aab7ca1109')
+    version('develop', git='https://github.com/PHASTA/phasta.git',
         branch='master')
 
     depends_on('mpi')
@@ -40,7 +42,7 @@ class Phasta(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cmake_args.extend([
+        cmake_args = [
             '-DPHASTA_USE_MPI=ON',
             '-DPHASTA_BUILD_CONVERTERIO=OFF',
             '-DPHASTA_BUILD_ACUSTAT=OFF',
@@ -54,6 +56,6 @@ class Phasta(CMakePackage):
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-        ])
+        ]
 
         return cmake_args

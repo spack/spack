@@ -57,6 +57,7 @@ class Moab(Package):
 
     depends_on('mpi')
     depends_on('hdf5+mpi')
+    depends_on('netcdf', when='+netcdf')
     depends_on('netcdf+mpi', when='+netcdf')
     depends_on('metis')
     depends_on('parmetis')

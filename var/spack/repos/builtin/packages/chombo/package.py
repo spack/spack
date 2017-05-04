@@ -37,7 +37,9 @@ class Chombo(MakefilePackage):
     homepage = "https://anag-repo.lbl.gov/svn/Chombo/release"
     url      = "https://anag-repo.lbl.gov/svn/Chombo/release/3.2"
 
-    version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
+    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
+    version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
+#    version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('dims', default=3, description='Number of PDE dimensions [1-6]')
@@ -46,6 +48,7 @@ class Chombo(MakefilePackage):
     patch('hdf5-16api.patch', when='@3.2', level=0)
     patch('Make.defs.local.template.patch', when='@3.2', level=0)
 
+    depends_on('blas')  # if req'd whenever lapack is, y !Spack enforce it
     depends_on('lapack')
     depends_on('gmake', type='build')
     depends_on('mpi', when='+mpi')
@@ -75,17 +78,18 @@ class Chombo(MakefilePackage):
         defs_file.filter('^\s*#\s*USE_TIMER\s*=\s*', 'USE_TIMER = FALSE')
 
         # LAPACK setup
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         defs_file.filter('^\s*#\s*USE_LAPACK\s*=\s*', 'USE_LAPACK = TRUE')
         defs_file.filter(
             '^\s*#\s*lapackincflags\s*=\s*',
             'lapackincflags = -I%s' % spec['lapack'].prefix.include)
         defs_file.filter(
             '^\s*#\s*syslibflags\s*=\s*',
-            'syslibflags= -L%s -llapack -lblas' % spec['lapack'].prefix.lib)
+            'syslibflags = %s' % lapack_blas.ld_flags)
 
         # Compilers and Compiler flags
-        defs_file.filter('^\s*#\s*CXX\s*=\s*', 'CXX = c++')
-        defs_file.filter('^\s*#\s*FC\s*=\s*', 'FC = f90')
+        defs_file.filter('^\s*#\s*CXX\s*=\s*', 'CXX = %s' % spack_cxx)
+        defs_file.filter('^\s*#\s*FC\s*=\s*', 'FC = %s' % spack_fc)
         if '+mpi' in spec:
             defs_file.filter(
                 '^\s*#\s*MPICXX\s*=\s*',
@@ -107,14 +111,14 @@ class Chombo(MakefilePackage):
                 'HDFINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
             defs_file.filter(
                 '^\s*#\s*HDFLIBFLAGS\s*=.*',
-                'HDFLIBFLAGS = -L%s -lhdf5' % spec['hdf5'].prefix.lib)
+                'HDFLIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
             if '+mpi' in spec:
                 defs_file.filter(
                     '^\s*#\s*HDFMPIINCFLAGS\s*=.*',
                     'HDFMPIINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
                 defs_file.filter(
                     '^\s*#\s*HDFMPILIBFLAGS\s*=.*',
-                    'HDFMPILIBFLAGS = -L%s -lhdf5' % spec['hdf5'].prefix.lib)
+                    'HDFMPILIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
 
         return
 

@@ -39,7 +39,9 @@ class Pumi(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/pumi"
     url      = "https://github.com/SCOREC/core.git"
 
-    version('master', git='https://github.com/SCOREC/core.git',
+    version('0.0.1', git='https://github.com/SCOREC/core.git',
+        commit='0c315e82b3f2478dc18bdd6cfa89f1cddb85cd6a')
+    version('develop', git='https://github.com/SCOREC/core.git',
         branch='master')
 
     patch('bob.cmake.patch', level=0)  # !-Werror
