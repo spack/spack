@@ -257,14 +257,19 @@ def module(parser, args):
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
     specs = args.specs(**query_args)
-    if len(specs) > 1:
-        message = ("Trying to load multiple modules, please be more specific."
-                   "Currently we would load: " + str(specs))
-        tty.error(message)
-    elif len(specs) == 0:
-        message = ("Did not find a module statisfying '" +
-                   " ".join(args.constraint) + "'.")
-        tty.error(message)
+    if args.subparser_name == 'loads':
+        if len(specs) > 1:
+            message = ("Trying to load multiple modules, please be more "
+                        "specific. Currently we would load: \n\t" +
+                        "\n\t".join(str(s) for s in specs) +
+                        "\n")
+            tty.error(message)
+            tty.die("Aborting.")
+        elif len(specs) == 0:
+            message = ("Did not find a module statisfying '" +
+                       " ".join(args.constraint) + "'.")
+            tty.error(message)
+            tty.die("Aborting.")
     module_type = args.module_type
     constraint = args.constraint
     try:
