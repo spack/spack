@@ -1397,7 +1397,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.msg("Repairing db for %s" % self.name)
                 spack.store.db.add(self.spec)
 
-        if not continue_with_partial:
+        stage_is_managed_in_spack = self.stage.path.startswith(
+            spack.stage_path)
+        if (not continue_with_partial) and stage_is_managed_in_spack:
             self.stage.destroy()
             self.stage.create()
 
