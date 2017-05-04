@@ -40,7 +40,6 @@ class Phasta(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cmake_args = std_cmake_args[:]
         cmake_args.extend([
             '-DPHASTA_USE_MPI=ON',
             '-DPHASTA_BUILD_CONVERTERIO=OFF',

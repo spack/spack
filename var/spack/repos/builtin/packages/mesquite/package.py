@@ -46,10 +46,11 @@ class Mesquite(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
 
     def configure_args(self):
-        args = []
-        args += ['CC=%s' % self.spec['mpi'].mpicc]
-        args += ['CXX=%s' % self.spec['mpi'].mpicxx]
-        args += ['--with-mpi=%s' % self.spec['mpi'].prefix]
-        args += ['--enable-release']
-        args += ['--enable-shared']
+        args = [
+            'CC=%s' % self.spec['mpi'].mpicc,
+            'CXX=%s' % self.spec['mpi'].mpicxx,
+            '--with-mpi=%s' % self.spec['mpi'].prefix,
+            '--enable-release',
+            '--enable-shared',
+        ]
         return args
