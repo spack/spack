@@ -29,7 +29,7 @@ import os
 class Fastmath(MakefilePackage):
     """FASTMath is a suite of ~15 numerical libraries frequently used together
     in various SciDAC and CSE applications. The suite includes discretization
-    libraries for structured, AMR and unstructured settings as well as solver
+    libraries for structured, AMR and unstructured grids as well as solver
     libraries for ODE's, Time Integrators, Iterative, Non-Linear, and Direct
     Solvers."""
 
@@ -43,15 +43,15 @@ class Fastmath(MakefilePackage):
     depends_on('mesquite')
 #    depends_on('ml-trilinos')  # hoping for stripped down install of just ml
 #    depends_on('nox-trilinos')  # hoping for stripped down install of just nox
-#    depends_on('trilinos')
     depends_on('moab')
     depends_on('mpi')
     depends_on('parpack')  # we need parpack ng
     depends_on('petsc')
-#    depends_on('phasta')
+    depends_on('phasta')
     depends_on('pumi')
     depends_on('sundials')
     depends_on('superlu-dist')
+    depends_on('trilinos')
     depends_on('zoltan')
 
     def url_for_version(self, version):
