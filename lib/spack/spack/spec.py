@@ -1828,6 +1828,18 @@ class Spec(object):
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dep_spec in conditions.items():
+            # If self was concrete it would have changed the variants in
+            # when_spec automatically. As here we are for sure during the
+            # concretization process, self is not concrete and we must change
+            # the variants in when_spec on our own to avoid using a
+            # MultiValuedVariant whe it is instead a SingleValuedVariant
+            try:
+                substitute_single_valued_variants(when_spec)
+            except SpecError as e:
+                msg = 'evaluating a `when=` statement gives ' + e.message
+                e.message = msg
+                raise
+
             sat = self.satisfies(when_spec, strict=True)
             if sat:
                 if dep is None:
@@ -2064,18 +2076,7 @@ class Spec(object):
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 
-                for name, v in [(x, y) for (x, y) in spec.variants.items()]:
-                    # When parsing a spec every variant of the form
-                    # 'foo=value' will be interpreted by default as a
-                    # multi-valued variant. During validation of the
-                    # variants we use the information in the package
-                    # to turn any variant that needs it to a single-valued
-                    # variant.
-                    pkg_variant = pkg_variants[name]
-                    pkg_variant.validate_or_raise(v, pkg_cls)
-                    spec.variants.substitute(
-                        pkg_variant.make_variant(v._original_value)
-                    )
+                substitute_single_valued_variants(spec)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -2290,25 +2291,19 @@ class Spec(object):
         # to substitute every multi-valued variant that needs it with a
         # single-valued variant.
         if self.concrete:
-            for name, v in [(x, y) for (x, y) in other.variants.items()]:
+            try:
                 # When parsing a spec every variant of the form
                 # 'foo=value' will be interpreted by default as a
                 # multi-valued variant. During validation of the
                 # variants we use the information in the package
                 # to turn any variant that needs it to a single-valued
                 # variant.
-                pkg_cls = type(other.package)
-                try:
-                    pkg_variant = other.package.variants[name]
-                    pkg_variant.validate_or_raise(v, pkg_cls)
-                except (SpecError, KeyError):
-                    # Catch the two things that could go wrong above:
-                    # 1. name is not a valid variant (KeyError)
-                    # 2. the variant is not validated (SpecError)
-                    return False
-                other.variants.substitute(
-                    pkg_variant.make_variant(v._original_value)
-                )
+                substitute_single_valued_variants(other)
+            except (SpecError, KeyError):
+                # Catch the two things that could go wrong above:
+                # 1. name is not a valid variant (KeyError)
+                # 2. the variant is not validated (SpecError)
+                return False
 
         var_strict = strict
         if (not self.name) or (not other.name):
