@@ -260,9 +260,8 @@ def module(parser, args):
     if args.subparser_name == 'loads':
         if len(specs) > 1:
             message = ("Trying to load multiple modules, please be more "
-                        "specific. Currently we would load: \n\t" +
-                        "\n\t".join(str(s) for s in specs) +
-                        "\n")
+                       "specific. Currently we would load: \n\t" +
+                       "\n\t".join(str(s) for s in specs) + "\n")
             tty.error(message)
             tty.die("Aborting.")
         elif len(specs) == 0:
