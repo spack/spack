@@ -1833,7 +1833,12 @@ class Spec(object):
             # concretization process, self is not concrete and we must change
             # the variants in when_spec on our own to avoid using a
             # MultiValuedVariant whe it is instead a SingleValuedVariant
-            substitute_single_valued_variants(when_spec)
+            try:
+                substitute_single_valued_variants(when_spec)
+            except SpecError as e:
+                msg = 'evaluating a `when=` statement gives ' + e.message
+                e.message = msg
+                raise
 
             sat = self.satisfies(when_spec, strict=True)
             if sat:
