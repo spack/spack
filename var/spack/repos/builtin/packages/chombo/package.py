@@ -31,13 +31,13 @@ class Chombo(MakefilePackage):
     """The Chombo package provides a set of tools for implementing finite
        difference and finite-volume methods for the solution of partial
        differential equations on block-structured adaptively refined
-       logically rectangular (i.e. Cartesian) grids. Note: Chombo download
-       requires human registration process."""
+       logically rectangular (i.e. Cartesian) grids."""
 
     homepage = "https://anag-repo.lbl.gov/svn/Chombo/release"
     url      = "https://anag-repo.lbl.gov/svn/Chombo/release/3.2"
 
-    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
+    # Use whatever path Brian V. and Terry agreed upon, but preserve version #
+    version('3.2', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 #    version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
 
@@ -129,6 +129,9 @@ class Chombo(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir('lib'):
             install_tree('include', prefix.include)
+            libfiles = glob.glob('lib*.a')
+            libfiles += glob.glob('lib*.so')
+            libfiles += glob.glob('lib*.dylib')
             mkdirp(prefix.lib)
-            for lib in glob.glob('lib*.{a,so,dylib}'):
+            for lib in libfiles:
                 install(lib, prefix.lib)

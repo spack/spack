@@ -56,11 +56,10 @@ class Pumi(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cmake_args = std_cmake_args[:]
-        cmake_args.extend([
+        cmake_args = [
             '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-        ])
+        ]
 
         return cmake_args
