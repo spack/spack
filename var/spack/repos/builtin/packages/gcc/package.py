@@ -94,10 +94,6 @@ class Gcc(AutotoolsPackage):
     # depends_on('autogen@5.5.4:', type='test')
     # depends_on('guile@1.4.1:', type='test')
 
-    if sys.platform == 'darwin':
-        patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
-        patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
-
     # See https://golang.org/doc/install/gccgo#Releases
     provides('golang',        when='languages=go @4.6:')
     provides('golang@:1',     when='languages=go @4.7.1:')
@@ -108,6 +104,10 @@ class Gcc(AutotoolsPackage):
     provides('golang@:1.6.1', when='languages=go @6:')
     provides('golang@:1.8',   when='languages=go @7:')
 
+    patch('darwin/gcc-7.1.0-headerpad.patch', when='@7.1.0 platform=darwin')
+    patch('darwin/gcc-6.1.0-jit.patch', when='@6.1.0 platform=darwin')
+    patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3 platform=darwin')
+    patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3 platform=darwin')
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
