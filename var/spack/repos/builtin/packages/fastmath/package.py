@@ -33,6 +33,7 @@ class Fastmath(Package):
     Solvers."""
 
     homepage = "www.fastmath-scidac.org/"
+    url = "https://fastmath-scidac.llnl.gov"
 
     version('1.0', 'cd5006bbe9a39c1bf252b9b8b5e5bdcd')
 
