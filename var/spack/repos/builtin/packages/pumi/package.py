@@ -44,7 +44,6 @@ class Pumi(CMakePackage):
     version('develop', git='https://github.com/SCOREC/core.git',
         branch='master')
 
-    patch('bob.cmake.patch', level=0)  # !-Werror
     if sys.platform == 'darwin':
         patch('phiotimer.cc.darwin.patch', level=0)  # !clock_gettime
 
@@ -57,6 +56,7 @@ class Pumi(CMakePackage):
         spec = self.spec
 
         cmake_args = [
+            '-DSCOREC_CXX_WARNINGS=OFF',
             '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
