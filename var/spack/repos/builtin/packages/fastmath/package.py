@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Fastmath(MakefilePackage):
+class Fastmath(Package):
     """FASTMath is a suite of ~15 numerical libraries frequently used together
     in various SciDAC and CSE applications. The suite includes discretization
     libraries for structured, AMR and unstructured grids as well as solver
@@ -55,5 +55,11 @@ class Fastmath(MakefilePackage):
     depends_on('trilinos')
     depends_on('zoltan')
 
-    def url_for_version(self, version):
-        return "file://%s/fastmath.tar.gz" % os.getcwd()
+    # Dummy install for now,  will be removed when metapackage is available
+    def install(self, spec, prefix):
+        # Prevent the error message
+        #      ==> Error: Install failed for xsdk.  Nothing was installed!
+        #      ==> Error: Installation process had nonzero exit code : 256
+        with open(join_path(spec.prefix, 'bundle-package.txt'), 'w') as out:
+            out.write('This is a bundle\n')
+            out.close()
