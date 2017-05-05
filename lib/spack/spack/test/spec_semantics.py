@@ -45,15 +45,15 @@ def check_satisfies(spec, anon_spec, concrete=False):
     right.copy().constrain(left)
 
 
-def check_unsatisfiable(spec, anon_spec, concrete=False):
-    left = Spec(spec, concrete=concrete)
+def check_unsatisfiable(target_spec, argument_spec, target_concrete=False):
+    left = Spec(target_spec, concrete=target_concrete)
     try:
-        right = Spec(anon_spec)  # if it's not anonymous, allow it.
+        right = Spec(argument_spec)  # if it's not anonymous, allow it.
     except Exception:
-        right = parse_anonymous_spec(anon_spec, left.name)
+        right = parse_anonymous_spec(argument_spec, left.name)
 
     assert not left.satisfies(right)
-    assert not left.satisfies(anon_spec)
+    assert not left.satisfies(argument_spec)
 
     with pytest.raises(UnsatisfiableSpecError):
         right.copy().constrain(left)
@@ -309,8 +309,9 @@ class TestSpecSematics(object):
         a = Spec('multivalue_variant foo="bar"')
         spec_str = 'multivalue_variant foo="bar,baz"'
         b = Spec(spec_str)
-        assert not a.satisfies(b)
-        assert not a.satisfies(spec_str)
+        # The specs are abstract and they **could** be constrained
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
@@ -326,8 +327,9 @@ class TestSpecSematics(object):
         a = Spec('multivalue_variant foo="bar,baz"')
         spec_str = 'multivalue_variant foo="bar,baz,quux"'
         b = Spec(spec_str)
-        assert not a.satisfies(b)
-        assert not a.satisfies(spec_str)
+        # The specs are abstract and they **could** be constrained
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
         # ...but will fail during concretization if there are
@@ -339,8 +341,11 @@ class TestSpecSematics(object):
         a = Spec('multivalue_variant fee="bar"')
         spec_str = 'multivalue_variant fee="baz"'
         b = Spec(spec_str)
-        assert not a.satisfies(b)
-        assert not a.satisfies(spec_str)
+        # The specs are abstract and they **could** be constrained,
+        # as before concretization I don't know which type of variant
+        # I have (if it is not a BV)
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
         # A variant cannot be parsed as single-valued until we try to
         # concretize. This means that we can constrain the variant above
         assert a.constrain(b)
@@ -359,11 +364,17 @@ class TestSpecSematics(object):
         # check_unsatisfiable('multivalue_variant ~foo',
         #                     'multivalue_variant foo="bar"')
 
-        check_unsatisfiable('multivalue_variant foo="bar"',
-                            'multivalue_variant +foo')
+        check_unsatisfiable(
+            target_spec='multivalue_variant foo="bar"',
+            argument_spec='multivalue_variant +foo',
+            target_concrete=True
+        )
 
-        check_unsatisfiable('multivalue_variant foo="bar"',
-                            'multivalue_variant ~foo')
+        check_unsatisfiable(
+            target_spec='multivalue_variant foo="bar"',
+            argument_spec='multivalue_variant ~foo',
+            target_concrete=True
+        )
 
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.

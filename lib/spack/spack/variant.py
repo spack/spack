@@ -194,18 +194,16 @@ def implicit_variant_conversion(method):
 
 
 @lang.key_ordering
-class MultiValuedVariant(object):
-    """A variant that can hold multiple values at once."""
+class AbstractVariant(object):
+    """A variant that has not yet decided who it wants to be. It behaves like
+    a multi valued variant which **could** do things.
 
-    @staticmethod
-    def from_node_dict(name, value):
-        """Reconstruct a variant from a node dict."""
-        if isinstance(value, list):
-            value = ','.join(value)
-            return MultiValuedVariant(name, value)
-        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
-            return BoolValuedVariant(name, value)
-        return SingleValuedVariant(name, value)
+    This kind of variant is generated during parsing of expressions like
+    ``foo=bar`` and differs from multi valued variants because it will
+    satisfy any other variant with the same name. This is because it **could**
+    do it if it grows up to be a multi valued variant with the right set of
+    values.
+    """
 
     def __init__(self, name, value):
         self.name = name
@@ -264,8 +262,8 @@ class MultiValuedVariant(object):
 
     @implicit_variant_conversion
     def satisfies(self, other):
-        """Returns true if ``other.name == self.name`` and ``other.value`` is
-        a strict subset of self. Does not try to validate.
+        """Returns true if ``other.name == self.name``, because any value that
+        other holds and is not in self yet **could** be added.
 
         Args:
             other: constraint to be met for the method to return True
@@ -274,12 +272,8 @@ class MultiValuedVariant(object):
             bool: True or False
         """
         # If names are different then `self` does not satisfy `other`
-        # (`foo=bar` does not satisfy `baz=bar`)
-        if other.name != self.name:
-            return False
-
-        # Otherwise we want all the values in `other` to be also in `self`
-        return all(v in self.value for v in other.value)
+        # (`foo=bar` will never satisfy `baz=bar`)
+        return other.name == self.name
 
     @implicit_variant_conversion
     def compatible(self, other):
@@ -316,14 +310,6 @@ class MultiValuedVariant(object):
         self.value = ','.join(sorted(set(self.value + other.value)))
         return old_value != self.value
 
-    def yaml_entry(self):
-        """Returns a key, value tuple suitable to be an entry in a yaml dict.
-
-        Returns:
-            tuple: (name, value_representation)
-        """
-        return self.name, list(self.value)
-
     def __contains__(self, item):
         return item in self._value
 
@@ -337,6 +323,46 @@ class MultiValuedVariant(object):
         return '{0}={1}'.format(
             self.name, ','.join(str(x) for x in self.value)
         )
+
+
+class MultiValuedVariant(AbstractVariant):
+    """A variant that can hold multiple values at once."""
+    @staticmethod
+    def from_node_dict(name, value):
+        """Reconstruct a variant from a node dict."""
+        if isinstance(value, list):
+            value = ','.join(value)
+            return MultiValuedVariant(name, value)
+        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
+            return BoolValuedVariant(name, value)
+        return SingleValuedVariant(name, value)
+
+    def yaml_entry(self):
+        """Returns a key, value tuple suitable to be an entry in a yaml dict.
+
+        Returns:
+            tuple: (name, value_representation)
+        """
+        return self.name, list(self.value)
+
+    @implicit_variant_conversion
+    def satisfies(self, other):
+        """Returns true if ``other.name == self.name`` and ``other.value`` is
+        a strict subset of self. Does not try to validate.
+
+        Args:
+            other: constraint to be met for the method to return True
+
+        Returns:
+            bool: True or False
+        """
+        # If names are different then `self` does not satisfy `other`
+        # (`foo=bar` does not satisfy `baz=bar`)
+        if other.name != self.name:
+            return False
+
+        # Otherwise we want all the values in `other` to be also in `self`
+        return all(v in self.value for v in other.value)
 
 
 class SingleValuedVariant(MultiValuedVariant):
@@ -417,8 +443,9 @@ class VariantMap(lang.HashableMap):
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, MultiValuedVariant):
-            msg = 'VariantMap accepts only values of type VariantSpec'
+        if not isinstance(vspec, AbstractVariant):
+            msg = 'VariantMap accepts only values of variant types'
+            msg += ' [got {0} instead]'.format(type(vspec).__name__)
             raise TypeError(msg)
 
         # Raise an error if the variant was already in this map
@@ -552,7 +579,7 @@ class VariantMap(lang.HashableMap):
         return string.getvalue()
 
 
-def substitute_single_valued_variants(spec):
+def substitute_abstract_variants(spec):
     """Uses the information in `spec.package` to turn any variant that needs
     it into a SingleValuedVariant.
 
@@ -562,10 +589,9 @@ def substitute_single_valued_variants(spec):
     for name, v in spec.variants.items():
         pkg_cls = type(spec.package)
         pkg_variant = spec.package.variants[name]
-        pkg_variant.validate_or_raise(v, pkg_cls)
-        spec.variants.substitute(
-            pkg_variant.make_variant(v._original_value)
-        )
+        new_variant = pkg_variant.make_variant(v._original_value)
+        pkg_variant.validate_or_raise(new_variant, pkg_cls)
+        spec.variants.substitute(new_variant)
 
 
 class DuplicateVariantError(error.SpecError):

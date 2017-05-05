@@ -1039,6 +1039,9 @@ class Spec(object):
             self._add_dependency(spec, deptypes)
             deptypes = ()
 
+        if self._normal or self._concrete:
+            substitute_abstract_variants(self)
+
     @property
     def external(self):
         return bool(self.external_path) or bool(self.external_module)
@@ -1099,13 +1102,14 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
+            # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
             # map to '+foo' and '~foo' respectively. As such they need a
             # BoolValuedVariant instance.
             if str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
                 self.variants[name] = BoolValuedVariant(name, value)
             else:
-                self.variants[name] = MultiValuedVariant(name, value)
+                self.variants[name] = AbstractVariant(name, value)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -2119,7 +2123,6 @@ class Spec(object):
                 if not compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
-            # FIXME: Move the logic below into the variant.py module
             # Ensure correctness of variants (if the spec is not virtual)
             if not spec.virtual:
                 pkg_cls = spec.package_class
@@ -2128,7 +2131,7 @@ class Spec(object):
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 
-                substitute_single_valued_variants(spec)
+                substitute_abstract_variants(spec)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -3179,7 +3182,6 @@ class SpecParser(spack.parse.Parser):
         return spec
 
     def variant(self, name=None):
-        # TODO: Make generalized variants possible
         if name:
             return name
         else:
