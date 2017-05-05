@@ -53,7 +53,7 @@ class Chombo(MakefilePackage):
     patch('hdf5-16api.patch', when='@3.2', level=0)
     patch('Make.defs.local.template.patch', when='@3.2', level=0)
 
-    depends_on('blas')  # if req'd whenever lapack is, y !Spack enforce it
+    depends_on('blas')
     depends_on('lapack')
     depends_on('gmake', type='build')
     depends_on('mpi', when='+mpi')
