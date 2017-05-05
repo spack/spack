@@ -100,6 +100,36 @@ class ChomboXsdk(Package):
 
         options.append('syslibflags=%s %s' % (spec['lapack'].libs,spec['blas'].libs))
 
+        # Where all the include files will go
+        headers_dest = self.prefix.include
+        mkdirp(headers_dest)
+
+        # Install the library source directory
+        lib_src  = join_path(self.stage.source_path, 'lib')
+        lib_dest = self.prefix.lib
+        shutil.copytree(lib_src, lib_dest)
+
+        # Modify the "Make.defs.local" file in installation under "lib/mk"
+        make_defs_local_filename = join_path(self.prefix.lib, 'mk', 'Make.defs.local')
+        make_defs_local = open(make_defs_local_filename,'w')
+
+        make_defs_local.write('makefiles+=Make.defs.local\n\n')
+
+        make_defs_local.write('#begin  -- dont change this line\n\n')
+
+        for option in options:
+          make_defs_local.write('%s\n' % option)
+        make_defs_local.write('\n')
+
+        make_defs_local.write('#end  -- dont change this line\n\n')
+
+        make_defs_local.close()
+
+        # Install the examples source directory
+        example_src = join_path(self.stage.source_path, 'releasedExamples')
+        example_dest = join_path(self.prefix,"examples")
+        shutil.copytree(example_src, example_dest)
+
         # Build library
         make('--directory=lib','lib',*options)
 
@@ -107,55 +137,22 @@ class ChomboXsdk(Package):
         make('--directory=lib','all',*options)
 
         # Run unit tests
-        # make('--directory=lib','run',*options)
-
-        # Need to install by hand
-
-        # Get and create the target directories for 'include', 'lib',
-        # 'lib/mk', 'lib/util', and 'examples'
-        headers_location = self.prefix.include
-        mkdirp(headers_location)
-
-        libs_location = self.prefix.lib
-        mkdirp(libs_location)
-
-        make_dest = join_path(libs_location,"mk")
-
-        util_chfpp_dest   = join_path(libs_location,"util","chfpp")
-        util_cxxtest_dest = join_path(libs_location,"util","cxxtest")
-        util_mkdep_dest   = join_path(libs_location,"util","mkdep")
-
-        example_dest = join_path(self.prefix,"examples")
+        make('--directory=lib','run',*options)
 
         # Install the include files
         header_files = glob.glob(join_path(self.stage.source_path, 'lib', 'include', '*.H'))
         for h in header_files:
-          install(h, headers_location)
+          install(h, headers_dest)
 
-        # Install the library
+        # Install the built libraries
         lib_files = glob.glob(join_path(self.stage.source_path, 'lib', '*.a'))
         for l in lib_files:
-          install(l, libs_location)
+          install(l, lib_dest)
 
-        # Install the make system
-        make_src = join_path(self.stage.source_path, 'lib', 'mk')
-        shutil.copytree(make_src, make_dest)
-
-        util_chfpp_src = join_path(self.stage.source_path, 'lib', 'util','chfpp')
-        shutil.copytree(util_chfpp_src, util_chfpp_dest)
-
-        util_cxxtest_src = join_path(self.stage.source_path, 'lib', 'util','cxxtest')
-        shutil.copytree(util_cxxtest_src, util_cxxtest_dest)
-
-        util_mkdep_src = join_path(self.stage.source_path, 'lib', 'util','mkdep')
-        shutil.copytree(util_mkdep_src, util_mkdep_dest)
-
-        # TODO - Install, build, and run examples
-
-        # Install the examples
-        example_src = join_path(self.stage.source_path, 'releasedExamples')
-        shutil.copytree(example_src, example_dest)
+        # TODO - Build and run examples
 
         # Build the examples
         make('--directory=%s' % example_dest,'example-only',*options)
 
+        # Run the examples
+        make('--directory=%s' % example_dest,'run',*options)
