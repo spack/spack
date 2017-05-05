@@ -1,0 +1,49 @@
+--- a/opt.cpp
++++ b/opt.cpp
+@@ -805,8 +805,13 @@ Optimize(llvm::Module *module, int optLevel) {
+           optPM.add(CreatePromoteLocalToPrivatePass());
+           optPM.add(llvm::createGlobalDCEPass());
+ 
++#if ISPC_LLVM_VERSION <= ISPC_LLVM_3_7
+           optPM.add(llvm::createTypeBasedAliasAnalysisPass());
+           optPM.add(llvm::createBasicAliasAnalysisPass());
++#else
++          optPM.add(llvm::createTypeBasedAAWrapperPass());
++          optPM.add(llvm::createBasicAAWrapperPass());
++#endif
+           optPM.add(llvm::createCFGSimplificationPass());
+           // Here clang has an experimental pass SROAPass instead of
+           // ScalarReplAggregatesPass. We should add it in the future.
+@@ -817,8 +822,14 @@ Optimize(llvm::Module *module, int optLevel) {
+ #endif
+           optPM.add(llvm::createEarlyCSEPass());
+           optPM.add(llvm::createLowerExpectIntrinsicPass());
++
++#if ISPC_LLVM_VERSION <= ISPC_LLVM_3_7
+           optPM.add(llvm::createTypeBasedAliasAnalysisPass());
+           optPM.add(llvm::createBasicAliasAnalysisPass());
++#else
++          optPM.add(llvm::createTypeBasedAAWrapperPass());
++          optPM.add(llvm::createBasicAAWrapperPass());
++#endif
+ 
+           // Early optimizations to try to reduce the total amount of code to
+           // work with if we can
+@@ -846,7 +857,17 @@ Optimize(llvm::Module *module, int optLevel) {
+           optPM.add(llvm::createInstructionCombiningPass());
+           optPM.add(llvm::createCFGSimplificationPass());
+           optPM.add(llvm::createPruneEHPass());
++
++#if ISPC_LLVM_VERSION >= ISPC_LLVM_3_9 // 3.9+
++          optPM.add(llvm::createPostOrderFunctionAttrsLegacyPass());
++          optPM.add(llvm::createReversePostOrderFunctionAttrsPass());
++#elif ISPC_LLVM_VERSION == ISPC_LLVM_3_8 // 3.8
++          optPM.add(llvm::createPostOrderFunctionAttrsPass());
++          optPM.add(llvm::createReversePostOrderFunctionAttrsPass());
++#else // 3.7 and earlier
+           optPM.add(llvm::createFunctionAttrsPass());
++#endif
++
+           optPM.add(llvm::createFunctionInliningPass());
+           optPM.add(llvm::createConstantPropagationPass());
+           optPM.add(llvm::createDeadInstEliminationPass());
