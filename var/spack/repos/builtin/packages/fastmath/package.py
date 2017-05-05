@@ -38,8 +38,8 @@ class Fastmath(MakefilePackage):
     version('1.0', 'cd5006bbe9a39c1bf252b9b8b5e5bdcd')
 
     # BundlePackage
-    depends_on('boxlib dims=3')  # how do we say 3D boxlib?
-    depends_on('chombo')
+    depends_on('boxlib dims=3')
+    depends_on('chombo@3.2')
     depends_on('hypre~internal-superlu')
     depends_on('mesquite')
 #    depends_on('ml-trilinos')  # hoping for stripped down install of just ml
@@ -48,11 +48,11 @@ class Fastmath(MakefilePackage):
     depends_on('mpi')
     depends_on('parpack')  # we need parpack ng
     depends_on('petsc')
-#    depends_on('phasta')
+    depends_on('phasta')
     depends_on('pumi')
     depends_on('sundials')
     depends_on('superlu-dist')
-#    depends_on('trilinos')
+    depends_on('trilinos')
     depends_on('zoltan')
 
     def url_for_version(self, version):

@@ -33,10 +33,10 @@ class Chombo(MakefilePackage):
        differential equations on block-structured adaptively refined
        logically rectangular (i.e. Cartesian) grids."""
 
-    homepage = "https://anag-repo.lbl.gov/svn/Chombo/release"
-    url      = "https://anag-repo.lbl.gov/svn/Chombo/release/3.2"
+    homepage = "https://commons.lbl.gov/display/chombo"
+    url      = "http://bitbucket.org/drhansj/chombo-xsdk.git"
 
-    # Use whatever path Brian V. and Terry agreed upon, but preserve version #
+    # Use whatever path Brian V. and Terry L. agreed upon, but preserve version
     version('3.2', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
     version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 #    version('3.2', svn='https://anag-repo.lbl.gov/svn/Chombo/release/3.2')
