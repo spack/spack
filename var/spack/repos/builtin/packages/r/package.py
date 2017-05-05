@@ -40,6 +40,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.3.3', '0ac211ec15e813a24f8f4a5a634029a4')
     version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
     version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
     version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
