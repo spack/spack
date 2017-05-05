@@ -57,6 +57,9 @@ class Gcc(AutotoolsPackage):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
+    # Builds all default languages by default.
+    # Ada, Go, Jit, and Objective-C++ are not default languages.
+    # In that respect, the name 'all' is rather misleading.
     variant('languages',
             default='all',
             values=('all', 'ada', 'brig', 'c', 'c++', 'fortran',
