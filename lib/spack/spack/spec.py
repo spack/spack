@@ -1012,12 +1012,9 @@ class Spec(object):
         self._hash = other._hash
         self._cmp_key_cache = other._cmp_key_cache
 
-        # Specs are by default not assumed to be normal, but in some
-        # cases we've read them from a file want to assume normal.
-        # This allows us to manipulate specs that Spack doesn't have
-        # package.py files for.
-        self._normal = kwargs.get('normal', False)
-        self._concrete = kwargs.get('concrete', False)
+        # Specs are by default not assumed to be normal or concrete.
+        self._normal = False
+        self._concrete = False
 
         # Allow a spec to be constructed with an external path.
         self.external_path = kwargs.get('external_path', None)
@@ -1038,9 +1035,6 @@ class Spec(object):
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec, deptypes)
             deptypes = ()
-
-        if self._normal or self._concrete:
-            substitute_abstract_variants(self)
 
     @property
     def external(self):

@@ -29,28 +29,43 @@ from spack.spec import *
 from spack.variant import *
 
 
-def check_satisfies(spec, anon_spec, concrete=False):
-    left = Spec(spec, concrete=concrete)
+def target_factory(spec_string, target_concrete):
+    spec = Spec(spec_string)
+
+    if target_concrete:
+        spec._mark_concrete()
+        substitute_abstract_variants(spec)
+
+    return spec
+
+
+def argument_factory(argument_spec, left):
     try:
-        right = Spec(anon_spec)  # if it's not anonymous, allow it.
+        # If it's not anonymous, allow it
+        right = target_factory(argument_spec, False)
     except Exception:
-        right = parse_anonymous_spec(anon_spec, left.name)
+        right = parse_anonymous_spec(argument_spec, left.name)
+    return right
+
+
+def check_satisfies(target_spec, argument_spec, target_concrete=False):
+
+    left = target_factory(target_spec, target_concrete)
+    right = argument_factory(argument_spec, left)
 
     # Satisfies is one-directional.
     assert left.satisfies(right)
-    assert left.satisfies(anon_spec)
+    assert left.satisfies(argument_spec)
 
-    # if left satisfies right, then we should be able to consrain
+    # If left satisfies right, then we should be able to constrain
     # right by left.  Reverse is not always true.
     right.copy().constrain(left)
 
 
 def check_unsatisfiable(target_spec, argument_spec, target_concrete=False):
-    left = Spec(target_spec, concrete=target_concrete)
-    try:
-        right = Spec(argument_spec)  # if it's not anonymous, allow it.
-    except Exception:
-        right = parse_anonymous_spec(argument_spec, left.name)
+
+    left = target_factory(target_spec, target_concrete)
+    right = argument_factory(argument_spec, left)
 
     assert not left.satisfies(right)
     assert not left.satisfies(argument_spec)
@@ -297,7 +312,9 @@ class TestSpecSematics(object):
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
-        a = Spec('multivalue_variant foo="bar"', concrete=True)
+        a = target_factory(
+            'multivalue_variant foo="bar"', target_concrete=True
+        )
         spec_str = 'multivalue_variant foo="bar,baz"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
@@ -315,7 +332,9 @@ class TestSpecSematics(object):
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
-        a = Spec('multivalue_variant foo="bar,baz"', concrete=True)
+        a = target_factory(
+            'multivalue_variant foo="bar,baz"', target_concrete=True
+        )
         spec_str = 'multivalue_variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
