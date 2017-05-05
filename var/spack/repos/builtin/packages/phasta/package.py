@@ -42,7 +42,7 @@ class Phasta(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        cmake_args = [
+        args = [
             '-DPHASTA_USE_MPI=ON',
             '-DPHASTA_BUILD_CONVERTERIO=OFF',
             '-DPHASTA_BUILD_ACUSTAT=OFF',
@@ -58,4 +58,4 @@ class Phasta(CMakePackage):
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
         ]
 
-        return cmake_args
+        return args
