@@ -51,8 +51,12 @@ class Plumed(AutotoolsPackage):
     # The ones listed here are not built by default for various reasons,
     # such as stability, lack of testing, or lack of demand.
     # FIXME: This needs to be an optional
-    variant('optional_modules', default='all',
-            description='String that is used to build optional modules')
+    variant(
+        'optional_modules',
+        default='all',
+        values=lambda x: True,
+        description='String that is used to build optional modules'
+    )
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')

@@ -389,9 +389,9 @@ class BoolValuedVariant(SingleValuedVariant):
             self._original_value = value
             self._value = False
         else:
-            msg = 'cannot construct a BoolValuedVariant from '
+            msg = 'cannot construct a BoolValuedVariant for "{0}" from '
             msg += 'a value that does not represent a bool'
-            raise ValueError(msg)
+            raise ValueError(msg.format(self.name))
 
     def __contains__(self, item):
         return item is self.value
@@ -544,6 +544,22 @@ class VariantMap(lang.HashableMap):
             string.write(str(vspec))
 
         return string.getvalue()
+
+
+def substitute_single_valued_variants(spec):
+    """Uses the information in `spec.package` to turn any variant that needs
+    it into a SingleValuedVariant.
+
+    Args:
+        spec: spec on which to operate the substitution
+    """
+    for name, v in spec.variants.items():
+        pkg_cls = type(spec.package)
+        pkg_variant = spec.package.variants[name]
+        pkg_variant.validate_or_raise(v, pkg_cls)
+        spec.variants.substitute(
+            pkg_variant.make_variant(v._original_value)
+        )
 
 
 class DuplicateVariantError(error.SpecError):

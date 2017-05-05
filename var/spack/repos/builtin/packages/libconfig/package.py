@@ -22,46 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Libconfig(AutotoolsPackage):
+    """C/C++ Configuration File Library"""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://www.hyperrealm.com/libconfig/"
+    url      = "https://github.com/hyperrealm/libconfig/archive/v1.6.tar.gz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    force_autoreconf = True
+    # there is currently a build error with version 1.6, see:
+    # https://github.com/hyperrealm/libconfig/issues/47
+    # version('1.6', '2ccd24b6a2ee39f7ff8a3badfafb6539')
+    version('1.5', 'e92a91c2ddf3bf77bea0f5ed7f09e492', preferred=True)
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
-
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    depends_on('m4', type=('build'))
+    depends_on('autoconf', type=('build'))
+    depends_on('automake', type=('build'))
+    depends_on('libtool', type=('build'))

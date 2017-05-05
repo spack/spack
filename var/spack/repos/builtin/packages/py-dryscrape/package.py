@@ -22,46 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class PyDryscrape(PythonPackage):
+    """a lightweight Javascript-aware, headless web scraping library
+       for Python"""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "https://github.com/niklasb/dryscrape"
+    url      = "https://pypi.io/packages/source/d/dryscrape/dryscrape-1.0.tar.gz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('develop', git="https://github.com/niklasb/dryscrape",
+            branch="master")
+    version('1.0', '267e380a8efaf9cd8fd94de1639d3198')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
-
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-webkit-server@1.0:', type=('build', 'run'))
+    depends_on('py-xvfbwrapper', type=('build', 'run'))
