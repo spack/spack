@@ -31,14 +31,15 @@ from os.path import isfile
 
 
 class Gcc(AutotoolsPackage):
-    """The GNU Compiler Collection includes front ends for C, C++,
-       Objective-C, Fortran, and Java."""
-    homepage = "https://gcc.gnu.org"
+    """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
+    Fortran, Ada, and Go, as well as libraries for these languages."""
 
-    url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
+    homepage = 'https://gcc.gnu.org'
+    url      = 'http://ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
@@ -63,16 +64,17 @@ class Gcc(AutotoolsPackage):
             default=False,
             description="Build PIC versions of libgfortran.a and libstdc++.a")
 
-    depends_on("mpfr")
-    depends_on("gmp")
-    depends_on("mpc", when='@4.5:')
-    depends_on("isl", when='@5.0:')
-    depends_on("binutils~libiberty", when='+binutils')
-    depends_on("zip", type='build')
+    # https://gcc.gnu.org/install/prerequisites.html
+    depends_on('gmp@4.3.2:')
+    depends_on('mpfr@2.4.2:')
+    depends_on('mpc@0.8.1:', when='@4.5:')
+    depends_on('isl@0.15:', when='@5.0:')
+    depends_on('binutils~libiberty', when='+binutils')
+    depends_on('zip', type='build')
 
     # TODO: integrate these libraries.
-    # depends_on("ppl")
-    # depends_on("cloog")
+    # depends_on('ppl')
+    # depends_on('cloog')
 
     # TODO: Add a 'test' deptype
     # https://github.com/LLNL/spack/issues/1279
@@ -95,7 +97,14 @@ class Gcc(AutotoolsPackage):
         spec = self.spec
         prefix = self.spec.prefix
 
-        enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
+        # TODO: Add support for ada, brig, jit, lto, obj-c++
+        enabled_languages = set(('c', 'c++', 'fortran', 'objc'))
+
+        # The GCC Java frontend and associated libjava runtime library
+        # have been removed from GCC as of GCC 7.
+        # See https://gcc.gnu.org/gcc-7/changes.html
+        if self.version < Version('7'):
+            enabled_languages.add('java')
 
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin' and \
            not (spec.satisfies('@:4.9.3') and 'ppc64le' in spec.architecture):
