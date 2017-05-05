@@ -42,6 +42,7 @@ class Opencv(Package):
     homepage = 'http://opencv.org/'
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
+    version('3.2.0', 'a43b65488124ba33dde195fea9041b70')
     version('3.1.0', '70e1dd07f0aa06606f1bc0e3fa15abd3')
 
     variant('shared', default=True,
