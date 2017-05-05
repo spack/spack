@@ -43,7 +43,7 @@ class ChomboXsdk(Package):
 
     # Versions available
     version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
-    version('develop', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
+    version('develop'   , git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
     # Build options/variants
     variant('dim'      , default=2    , description = 'Set the physical dimension',values=isIntegral)
@@ -56,20 +56,19 @@ class ChomboXsdk(Package):
     variant('use_petsc', default=True , description = 'Compile with PETSc support')
 
     # Chombo dependencies for xSDK build
-    # depends_on('blas')
-    # depends_on('lapack')
-    depends_on('openblas@0.2.19', when='@xsdk-0.2.0');
+    depends_on('blas')
+    depends_on('lapack')
+
     depends_on('mpi', when='+mpi')
 
-    depends_on('hdf5~mpi', when='+use_hdf~mpi')
-    depends_on('hdf5+mpi', when='+use_hdf+mpi')
+    depends_on('hdf5~mpi~fortran', when='+use_hdf~mpi')
+    depends_on('hdf5+mpi~fortran', when='+use_hdf+mpi')
 
-    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0');
-    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0');
+    depends_on('petsc@xsdk-0.2.0~mpi~hypre~superlu-dist~hdf5+int64', when='@xsdk-0.2.0+use_petsc~mpi')
+    depends_on('petsc@xsdk-0.2.0+mpi+int64'                        , when='@xsdk-0.2.0+use_petsc+mpi')
 
-    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost', when='@xsdk-0.2.0')
-    depends_on('petsc~mpi~hypre~superlu-dist~hdf5', when='+use_petsc~mpi')
-    depends_on('petsc+mpi'                        , when='+use_petsc+mpi')
+    depends_on('petsc@develop~mpi~hypre~superlu-dist~hdf5+int64', when='@develop+use_petsc~mpi')
+    depends_on('petsc@develop+mpi+int64'                        , when='@develop+use_petsc+mpi')
 
     # Convert Python boolean False/True to strings "FALSE"/"TRUE"
     def boolToChombo(self, value):
@@ -99,7 +98,7 @@ class ChomboXsdk(Package):
           options.append('HDFMPIINCFLAGS=-I%s/include' % spec['hdf5'].prefix)
           options.append('HDFMPILIBFLAGS=-L%s/lib -lhdf5 -lz' % spec['hdf5'].prefix)
 
-        # options.append('syslibflags=%s %s' % (spec['lapack'].libs,spec['blas'].libs))
+        options.append('syslibflags=%s %s' % (spec['lapack'].libs,spec['blas'].libs))
 
         # Build library
         make('--directory=lib','lib',*options)
