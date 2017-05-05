@@ -140,7 +140,7 @@ def rewrite_environ_files(environ, **kwargs):
     """
     posix = kwargs.get('posix', None)
     if posix and isfile(posix):
-        for k, v in environ.iteritems():
+        for k, v in environ.items():
             filter_file(
                 r'^(\s*export\s+%s)=.*$' % k,
                 r'\1=%s' % v,
@@ -148,7 +148,7 @@ def rewrite_environ_files(environ, **kwargs):
                 backup=False)
     cshell = kwargs.get('cshell', None)
     if cshell and isfile(cshell):
-        for k, v in environ.iteritems():
+        for k, v in environ.items():
             filter_file(
                 r'^(\s*setenv\s+%s)\s+.*$' % k,
                 r'\1 %s' % v,
@@ -616,7 +616,7 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
                 cshell=join_path('etc', 'prefs.csh'))
 
         # Adjust components to use SPACK variants
-        for component, subdict in self.etc_config.iteritems():
+        for component, subdict in self.etc_config.items():
             write_environ(
                 subdict,
                 posix=join_path('etc', 'config.sh',  component),

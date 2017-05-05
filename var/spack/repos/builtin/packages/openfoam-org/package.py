@@ -386,7 +386,7 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
                 cshell=join_path('etc', 'prefs.csh'))
 
         # Adjust components to use SPACK variants
-        for component, subdict in self.etc_config.iteritems():
+        for component, subdict in self.etc_config.items():
             write_environ(
                 subdict,
                 posix=join_path('etc', 'config.sh',  component),

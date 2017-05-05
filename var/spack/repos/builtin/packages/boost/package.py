@@ -164,7 +164,7 @@ class Boost(Package):
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
-        for cc, toolset in toolsets.iteritems():
+        for cc, toolset in toolsets.items():
             if cc in self.compiler.cxx_names:
                 return toolset
 
