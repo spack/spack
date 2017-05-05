@@ -97,8 +97,16 @@ class Gcc(AutotoolsPackage):
     if sys.platform == 'darwin':
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
-    else:
-        provides('golang', when='@4.7.1:')
+
+    # See https://golang.org/doc/install/gccgo#Releases
+    provides('golang',        when='languages=go @4.6:')
+    provides('golang@:1',     when='languages=go @4.7.1:')
+    provides('golang@:1.1',   when='languages=go @4.8:')
+    provides('golang@:1.1.2', when='languages=go @4.8.2:')
+    provides('golang@:1.2',   when='languages=go @4.9:')
+    provides('golang@:1.4',   when='languages=go @5:')
+    provides('golang@:1.6.1', when='languages=go @6:')
+    provides('golang@:1.8',   when='languages=go @7:')
 
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
@@ -139,7 +147,6 @@ class Gcc(AutotoolsPackage):
 
         # GCC 4.6 added support for the Go programming language.
         # See https://gcc.gnu.org/gcc-4.6/changes.html
-        # See https://golang.org/doc/install/gccgo#Releases
         if version < Version('4.6') and 'languages=go' in spec:
             raise InstallError('Go is not available before GCC 4.6')
 
