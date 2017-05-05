@@ -58,6 +58,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
+    depends_on('gdbm')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing
@@ -81,7 +83,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         config_args = [
             '-des',
-            '-Dprefix={0}'.format(prefix)
+            '-Dprefix={0}'.format(prefix),
+            '-Dlocincpth=' + self.spec['gdbm'].prefix.include,
+            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib
         ]
 
         # Discussion of -fPIC for Intel at:
@@ -109,11 +113,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     @run_after('install')
     def install_cpanm(self):
         spec = self.spec
-        prefix = self.prefix
 
         if '+cpanm' in spec:
             with working_dir(join_path('cpanm', 'cpanm')):
-                perl = Executable(join_path(prefix.bin, 'perl'))
+                perl = spec['perl'].command
                 perl('Makefile.PL')
                 make()
                 make('install')

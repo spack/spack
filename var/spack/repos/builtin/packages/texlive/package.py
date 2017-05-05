@@ -36,8 +36,8 @@ class Texlive(Package):
     # update in synchrony.
     #
     # BEWARE: TexLive updates their installs frequently (probably why
-    # they call it *Live*...).  There is no good way to provide a 
-    # repeatable install of the package.  We try to keep up with the 
+    # they call it *Live*...).  There is no good way to provide a
+    # repeatable install of the package.  We try to keep up with the
     # digest values, but don't be surprised if this package is
     # briefly unbuildable.
     #
@@ -53,8 +53,12 @@ class Texlive(Package):
     #   minimal scheme (plain only)
     # See:
     # https://www.tug.org/texlive/doc/texlive-en/texlive-en.html#x1-25025r6
-    variant('scheme',  default="small",
-            description='Package subset to install (e.g. full, small, basic)')
+    variant(
+        'scheme',
+        default='small',
+        values=('minimal', 'basic', 'small', 'medium', 'full'),
+        description='Package subset to install'
+    )
 
     depends_on('perl', type='build')
 
@@ -62,7 +66,7 @@ class Texlive(Package):
         # Using texlive's mirror system leads to mysterious problems,
         # in lieu of being able to specify a repository as a variant, hardwire
         # a particular (slow, but central) one for now.
-        _repository='http://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
+        _repository = 'http://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
         env = os.environ
         env['TEXLIVE_INSTALL_PREFIX'] = prefix
         perl = which('perl')

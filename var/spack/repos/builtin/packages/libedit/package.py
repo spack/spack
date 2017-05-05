@@ -39,6 +39,3 @@ class Libedit(AutotoolsPackage):
     def url_for_version(self, version):
         url = "http://thrysoee.dk/editline/libedit-{0}-{1}.tar.gz"
         return url.format(version[-1], version.up_to(-1))
-
-    def configure_args(self):
-        return ['LIBS=-lncursesw']

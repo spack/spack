@@ -686,20 +686,11 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         # Init submodules if the user asked for them.
         if self.submodules:
-            # only git 1.8.4 and later have --depth option
-            if self.git_version < ver('1.8.4'):
-                if spack.debug:
-                    self.git('submodule', 'update', '--init', '--recursive')
-                else:
-                    self.git('submodule', '--quiet', 'update', '--init',
-                             '--recursive')
+            if spack.debug:
+                self.git('submodule', 'update', '--init', '--recursive')
             else:
-                if spack.debug:
-                    self.git('submodule', 'update', '--init', '--recursive',
-                             '--depth=1')
-                else:
-                    self.git('submodule', '--quiet', 'update', '--init',
-                             '--recursive', '--depth=1')
+                self.git('submodule', '--quiet', 'update', '--init',
+                         '--recursive')
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
@@ -911,11 +902,18 @@ def from_url(url):
 
 
 def from_kwargs(**kwargs):
-    """
-    Construct the appropriate FetchStrategy from the given keyword arguments.
+    """Construct an appropriate FetchStrategy from the given keyword arguments.
 
-    :param kwargs: dictionary of keyword arguments
-    :return: fetcher or raise a FetchError exception
+    Args:
+        **kwargs: dictionary of keyword arguments, e.g. from a
+            ``version()`` directive in a package.
+
+    Returns:
+        fetch_strategy: The fetch strategy that matches the args, based
+            on attribute names (e.g., ``git``, ``hg``, etc.)
+
+    Raises:
+        FetchError: If no ``fetch_strategy`` matches the args.
     """
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):

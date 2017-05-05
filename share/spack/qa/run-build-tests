@@ -1,0 +1,29 @@
+#!/bin/bash -e
+#
+# Description:
+#     Runs Spack build smoke tests.  This installs a few packages that
+#     cover different parts of the build system.  It is not an exhaustive
+#     test of Spack's packages.
+#
+# Usage:
+#     run-build-tests
+#
+. "$(dirname $0)/setup.sh"
+check_dependencies ${coverage} git hg svn
+
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+cd "$SPACK_ROOT"
+
+# Make sure we have a spec to build.
+if [ -z "$SPEC" ]; then
+    echo "Error: run-build-tests requires the $SPEC to build to be set."
+    exit 1
+fi
+
+# Print compiler information
+spack config get compilers
+
+# Run some build smoke tests, potentially with code coverage
+${coverage_run} bin/spack install -v ${SPEC}
+${coverage_combine}

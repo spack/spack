@@ -116,9 +116,11 @@ def strip_version_suffixes(path):
     * ``libevent-2.0.21``
     * ``cuda_8.0.44``
 
-    :param str path: The filename or URL for the package
-    :return: The ``path`` with any extraneous suffixes removed
-    :rtype: str
+    Args:
+        path (str): The filename or URL for the package
+
+    Returns:
+        str: The ``path`` with any extraneous suffixes removed
     """
     # NOTE: This could be done with complicated regexes in parse_version_offset
     # NOTE: The problem is that we would have to add these regexes to the end
@@ -227,10 +229,12 @@ def strip_name_suffixes(path, version):
     * ``converge``
     * ``jpeg``
 
-    :param str path: The filename or URL for the package
-    :param str version: The version detected for this URL
-    :return: The ``path`` with any extraneous suffixes removed
-    :rtype: str
+    Args:
+        path (str): The filename or URL for the package
+        version (str): The version detected for this URL
+
+    Returns:
+        str: The ``path`` with any extraneous suffixes removed
     """
     # NOTE: This could be done with complicated regexes in parse_name_offset
     # NOTE: The problem is that we would have to add these regexes to every
@@ -254,6 +258,7 @@ def strip_name_suffixes(path, version):
         '[._-]std',
 
         # Download version
+        'release',
         'snapshot',
         'distrib',
 
@@ -339,18 +344,19 @@ def determine_url_file_extension(path):
 def parse_version_offset(path):
     """Try to extract a version string from a filename or URL.
 
-    :param str path: The filename or URL for the package
+    Args:
+        path (str): The filename or URL for the package
 
-    :return: A tuple containing:
-        version of the package,
-        first index of version,
-        length of version string,
-        the index of the matching regex
-        the matching regex
+    Returns:
+        tuple of (Version, int, int, int, str): A tuple containing:
+            version of the package,
+            first index of version,
+            length of version string,
+            the index of the matching regex
+            the matching regex
 
-    :rtype: tuple
-
-    :raises UndetectableVersionError: If the URL does not match any regexes
+    Raises:
+        UndetectableVersionError: If the URL does not match any regexes
     """
     original_path = path
 
@@ -524,12 +530,14 @@ def parse_version_offset(path):
 def parse_version(path):
     """Try to extract a version string from a filename or URL.
 
-    :param str path: The filename or URL for the package
+    Args:
+        path (str): The filename or URL for the package
 
-    :return: The version of the package
-    :rtype: spack.version.Version
+    Returns:
+        spack.version.Version: The version of the package
 
-    :raises UndetectableVersionError: If the URL does not match any regexes
+    Raises:
+        UndetectableVersionError: If the URL does not match any regexes
     """
     version, start, length, i, regex = parse_version_offset(path)
     return Version(version)
@@ -538,19 +546,20 @@ def parse_version(path):
 def parse_name_offset(path, v=None):
     """Try to determine the name of a package from its filename or URL.
 
-    :param str path: The filename or URL for the package
-    :param str v: The version of the package
+    Args:
+        path (str): The filename or URL for the package
+        v (str): The version of the package
 
-    :return: A tuple containing:
-        name of the package,
-        first index of name,
-        length of name,
-        the index of the matching regex
-        the matching regex
+    Returns:
+        tuple of (str, int, int, int, str): A tuple containing:
+            name of the package,
+            first index of name,
+            length of name,
+            the index of the matching regex
+            the matching regex
 
-    :rtype: tuple
-
-    :raises UndetectableNameError: If the URL does not match any regexes
+    Raises:
+        UndetectableNameError: If the URL does not match any regexes
     """
     original_path = path
 
@@ -651,13 +660,15 @@ def parse_name_offset(path, v=None):
 def parse_name(path, ver=None):
     """Try to determine the name of a package from its filename or URL.
 
-    :param str path: The filename or URL for the package
-    :param str ver: The version of the package
+    Args:
+        path (str): The filename or URL for the package
+        ver (str): The version of the package
 
-    :return: The name of the package
-    :rtype: str
+    Returns:
+        str: The name of the package
 
-    :raises UndetectableNameError: If the URL does not match any regexes
+    Raises:
+        UndetectableNameError: If the URL does not match any regexes
     """
     name, start, length, i, regex = parse_name_offset(path, ver)
     return name
@@ -667,16 +678,17 @@ def parse_name_and_version(path):
     """Try to determine the name of a package and extract its version
     from its filename or URL.
 
-    :param str path: The filename or URL for the package
+    Args:
+        path (str): The filename or URL for the package
 
-    :return: A tuple containing:
-        The name of the package
-        The version of the package
+    Returns:
+        tuple of (str, Version)A tuple containing:
+            The name of the package
+            The version of the package
 
-    :rtype: tuple
-
-    :raises UndetectableVersionError: If the URL does not match any regexes
-    :raises UndetectableNameError: If the URL does not match any regexes
+    Raises:
+        UndetectableVersionError: If the URL does not match any regexes
+        UndetectableNameError: If the URL does not match any regexes
     """
     ver = parse_version(path)
     name = parse_name(path, ver)
@@ -804,9 +816,10 @@ def color_url(path, **kwargs):
        | Green:   Instances of version string from :func:`substitute_version`.
        | Magenta: Instances of the name (protected from substitution).
 
-    :param str path: The filename or URL for the package
-    :keyword bool errors: Append parse errors at end of string.
-    :keyword bool subs: Color substitutions as well as parsed name/version.
+    Args:
+        path (str): The filename or URL for the package
+        errors (bool): Append parse errors at end of string.
+        subs (bool): Color substitutions as well as parsed name/version.
     """
     errors = kwargs.get('errors', False)
     subs   = kwargs.get('subs', False)
