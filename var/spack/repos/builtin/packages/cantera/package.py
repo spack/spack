@@ -117,15 +117,13 @@ class Cantera(Package):
         if '+python' in spec:
             options.extend([
                 'python_package=full',
-                'python_cmd={0}'.format(
-                    join_path(spec['python'].prefix.bin, 'python')),
+                'python_cmd={0}'.format(spec['python'].command.path),
                 'python_array_home={0}'.format(spec['py-numpy'].prefix)
             ])
             if spec['python'].satisfies('@3'):
                 options.extend([
                     'python3_package=y',
-                    'python3_cmd={0}'.format(
-                        join_path(spec['python'].prefix.bin, 'python')),
+                    'python3_cmd={0}'.format(spec['python'].command.path),
                     'python3_array_home={0}'.format(spec['py-numpy'].prefix)
                 ])
             else:

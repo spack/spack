@@ -50,7 +50,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
-   tutorial_sc16
+   tutorial
    known_issues
 
 .. toctree::
@@ -73,7 +73,8 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide
    developer_guide
-   API Docs <spack>
+   Spack API Docs <spack>
+   LLNL API Docs <llnl>
 
 ==================
 Indices and tables

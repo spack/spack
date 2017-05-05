@@ -29,16 +29,18 @@ import spack
 from llnl.util.filesystem import *
 from spack.spec import Spec
 from spack.version import ver
+from spack.util.executable import which
 
 
-@pytest.fixture(params=['master', 'branch', 'tag', 'commit'])
-def type_of_test(request):
-    """Returns one of the test type available for the mock_git_repository"""
-    return request.param
+pytestmark = pytest.mark.skipif(
+    not which('git'), reason='requires git to be installed')
 
 
+@pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
+@pytest.mark.parametrize("secure", [True, False])
 def test_fetch(
         type_of_test,
+        secure,
         mock_git_repository,
         config,
         refresh_builtin_mock
@@ -55,14 +57,21 @@ def test_fetch(
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
+
     # Construct the package under test
     spec = Spec('git-test')
     spec.concretize()
     pkg = spack.repo.get(spec, new=True)
     pkg.versions[ver('git')] = t.args
+
     # Enter the stage directory and check some properties
     with pkg.stage:
-        pkg.do_stage()
+        try:
+            spack.insecure = secure
+            pkg.do_stage()
+        finally:
+            spack.insecure = False
+
         assert h('HEAD') == h(t.revision)
 
         file_path = join_path(pkg.stage.source_path, t.file)

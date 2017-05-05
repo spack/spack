@@ -22,12 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
 
 
-class Llvm(Package):
+class Llvm(CMakePackage):
     """The LLVM Project is a collection of modular and reusable compiler and
        toolchain technologies. Despite its name, LLVM has little to do
        with traditional virtual machines, though it does provide helpful
@@ -37,6 +35,7 @@ class Llvm(Package):
 
     homepage = 'http://llvm.org/'
     url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
+    list_url = 'http://releases.llvm.org/download.html'
 
     family = 'compiler'  # Used by lmod
 
@@ -73,7 +72,7 @@ class Llvm(Package):
             "<current arch>,NVPTX,AMDGPU,CppBackend")
 
     # Build dependency
-    depends_on('cmake@2.8.12.2:', type='build')
+    depends_on('cmake@3.4.3:', type='build')
 
     # Universal dependency
     depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
@@ -322,21 +321,30 @@ class Llvm(Package):
                              resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
-    def install(self, spec, prefix):
-        env['CXXFLAGS'] = self.compiler.cxx11_flag
-        cmake_args = [arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg]
+    conflicts('+clang_extra', when='~clang')
+    conflicts('+lldb',        when='~clang')
 
-        build_type = 'RelWithDebInfo' if '+debug' in spec else 'Release'
-        cmake_args.extend([
-            '..',
-            '-DCMAKE_BUILD_TYPE=' + build_type,
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CXXFLAGS', self.compiler.cxx11_flag)
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'RelWithDebInfo'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        spec = self.spec
+
+        cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix])
+            '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
+        ]
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
-                              os.path.join(spec['binutils'].prefix, 'include'))
+                              spec['binutils'].prefix.include)
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
@@ -381,16 +389,12 @@ class Llvm(Package):
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
 
-        if '+clang' not in spec:
-            if '+clang_extra' in spec:
-                raise SpackException(
-                    'The clang_extra variant requires the `+clang` variant.')
-            if '+lldb' in spec:
-                raise SpackException(
-                    'The lldb variant requires the `+clang` variant')
+        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
+            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
-        with working_dir('spack-build', create=True):
-            cmake(*cmake_args)
-            make()
-            make("install")
-            install_tree("bin", join_path(prefix, "libexec", "llvm"))
+        return cmake_args
+
+    @run_after('install')
+    def post_install(self):
+        with working_dir(self.build_directory):
+            install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))

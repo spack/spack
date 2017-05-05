@@ -75,7 +75,7 @@ class Julia(Package):
     depends_on("git", when='@:0.4')
     depends_on("git", when='@release-0.4')
     depends_on("openssl")
-    depends_on("python @2.7:2.999")
+    depends_on("python@2.7:2.8")
 
     # Run-time dependencies:
     # depends_on("arpack")
@@ -185,7 +185,7 @@ class Julia(Package):
             juliarc.write('\n')
 
         # Install some commonly used packages
-        julia = Executable(join_path(prefix.bin, "julia"))
+        julia = spec['julia'].command
         julia("-e", 'Pkg.init(); Pkg.update()')
 
         # Install HDF5
@@ -216,7 +216,7 @@ class Julia(Package):
             with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
                       "a") as juliarc:
                 juliarc.write('# Python\n')
-                juliarc.write('ENV["PYTHON"] = "%s"\n' % spec["python"].prefix)
+                juliarc.write('ENV["PYTHON"] = "%s"\n' % spec["python"].home)
                 juliarc.write('\n')
             # Python's OpenSSL package installer complains:
             # Error: PREFIX too long: 166 characters, but only 128 allowed

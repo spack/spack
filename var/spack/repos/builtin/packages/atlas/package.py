@@ -110,7 +110,8 @@ class Atlas(Package):
                     make('shared_all')
 
             make("install")
-            self.install_test()
+            if self.run_tests:
+                self.install_test()
 
     @property
     def libs(self):

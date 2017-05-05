@@ -52,6 +52,16 @@ def test_normal_spec(builtin_mock):
     check_yaml_round_trip(spec)
 
 
+def test_external_spec(config, builtin_mock):
+    spec = Spec('externaltool')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+    spec = Spec('externaltest')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+
 def test_ambiguous_version_spec(builtin_mock):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
     spec.normalize()
@@ -60,6 +70,12 @@ def test_ambiguous_version_spec(builtin_mock):
 
 def test_concrete_spec(config, builtin_mock):
     spec = Spec('mpileaks+debug~opt')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+
+def test_yaml_multivalue():
+    spec = Spec('multivalue_variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)
 

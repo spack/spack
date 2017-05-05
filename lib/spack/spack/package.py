@@ -46,7 +46,6 @@ from six import StringIO
 from six import string_types
 from six import with_metaclass
 
-import llnl.util.lock
 import llnl.util.tty as tty
 import spack
 import spack.store
@@ -65,8 +64,8 @@ from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
+from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.version import *
 
@@ -75,7 +74,7 @@ _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
 class InstallPhase(object):
-    """Manages a single phase of the installation
+    """Manages a single phase of the installation.
 
     This descriptor stores at creation time the name of the method it should
     search for execution. The method is retrieved at __get__ time, so that
@@ -216,11 +215,14 @@ def run_after(*phases):
 
 
 def on_package_attributes(**attr_dict):
-    """Executes the decorated method only if at the moment of calling
-    the instance has attributes that are equal to certain values.
+    """Decorator: executes instance function only if object has attr valuses.
 
-    :param dict attr_dict: dictionary mapping attribute names to their
-        required values
+    Executes the decorated method only if at the moment of calling the
+    instance has attributes that are equal to certain values.
+
+    Args:
+        attr_dict (dict): dictionary mapping attribute names to their
+            required values
     """
     def _execute_under_condition(func):
 
@@ -513,15 +515,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     """
     sanity_check_is_dir = []
 
-    """Per-process lock objects for each install prefix."""
-    prefix_locks = {}
-
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
-
-        # Lock on the prefix shared resource. Will be set in prefix property
-        self._prefix_lock = None
 
         # Name of package is the name of its module, without the
         # containing module names.
@@ -859,29 +855,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return os.path.isdir(self.prefix)
 
     @property
-    def prefix_lock(self):
-        """Prefix lock is a byte range lock on the nth byte of a file.
-
-        The lock file is ``spack.store.db.prefix_lock`` -- the DB
-        tells us what to call it and it lives alongside the install DB.
-
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
-        likelihood of collision is very low AND it gives us
-        readers-writer lock semantics with just a single lockfile, so no
-        cleanup required.
-        """
-        if self._prefix_lock is None:
-            prefix = self.spec.prefix
-            if prefix not in Package.prefix_locks:
-                Package.prefix_locks[prefix] = llnl.util.lock.Lock(
-                    spack.store.db.prefix_lock_path,
-                    self.spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
-
-            self._prefix_lock = Package.prefix_locks[prefix]
-
-        return self._prefix_lock
-
-    @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
@@ -1053,17 +1026,27 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return namespace
 
     def do_fake_install(self):
-        """Make a fake install directory containing a 'fake' file in bin."""
-        # FIXME : Make this part of the 'install' behavior ?
-        mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, 'fake'))
-        mkdirp(self.prefix.include)
-        mkdirp(self.prefix.lib)
+        """Make a fake install directory containing fake executables,
+        headers, and libraries."""
+
+        name = self.name
         library_name = 'lib' + self.name
-        dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
+        chmod = which('chmod')
+
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, name))
+        chmod('+x', join_path(self.prefix.bin, name))
+
+        mkdirp(self.prefix.include)
+        touch(join_path(self.prefix.include, name + '.h'))
+
+        mkdirp(self.prefix.lib)
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
+
         mkdirp(self.prefix.man1)
+
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
@@ -1106,27 +1089,58 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return resource_stage_folder
 
     @contextlib.contextmanager
-    def _prefix_read_lock(self):
-        try:
-            self.prefix_lock.acquire_read(60)
-            yield self
-        finally:
-            self.prefix_lock.release_read()
-
-    @contextlib.contextmanager
-    def _prefix_write_lock(self):
-        try:
-            self.prefix_lock.acquire_write(60)
-            yield self
-        finally:
-            self.prefix_lock.release_write()
-
-    @contextlib.contextmanager
     def _stage_and_write_lock(self):
         """Prefix lock nested in a stage."""
         with self.stage:
-            with self._prefix_write_lock():
+            with spack.store.db.prefix_write_lock(self.spec):
                 yield
+
+    def _process_external_package(self, explicit):
+        """Helper function to process external packages.
+
+        Runs post install hooks and registers the package in the DB.
+
+        Args:
+            explicit (bool): if the package was requested explicitly by
+                the user, False if it was pulled in as a dependency of an
+                explicit package.
+        """
+        if self.spec.external_module:
+            message = '{s.name}@{s.version} : has external module in {module}'
+            tty.msg(message.format(s=self, module=self.spec.external_module))
+            message = '{s.name}@{s.version} : is actually installed in {path}'
+            tty.msg(message.format(s=self, path=self.spec.external_path))
+        else:
+            message = '{s.name}@{s.version} : externally installed in {path}'
+            tty.msg(message.format(s=self, path=self.spec.external_path))
+        try:
+            # Check if the package was already registered in the DB
+            # If this is the case, then just exit
+            rec = spack.store.db.get_record(self.spec)
+            message = '{s.name}@{s.version} : already registered in DB'
+            tty.msg(message.format(s=self))
+            # Update the value of rec.explicit if it is necessary
+            self._update_explicit_entry_in_db(rec, explicit)
+
+        except KeyError:
+            # If not register it and generate the module file
+            # For external packages we just need to run
+            # post-install hooks to generate module files
+            message = '{s.name}@{s.version} : generating module file'
+            tty.msg(message.format(s=self))
+            spack.hooks.post_install(self.spec)
+            # Add to the DB
+            message = '{s.name}@{s.version} : registering into DB'
+            tty.msg(message.format(s=self))
+            spack.store.db.add(self.spec, None, explicit=explicit)
+
+    def _update_explicit_entry_in_db(self, rec, explicit):
+        if explicit and not rec.explicit:
+            with spack.store.db.write_transaction():
+                rec = spack.store.db.get_record(self.spec)
+                rec.explicit = True
+                message = '{s.name}@{s.version} : marking the package explicit'
+                tty.msg(message.format(s=self))
 
     def do_install(self,
                    keep_prefix=False,
@@ -1145,47 +1159,47 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         Package implementations should override install() to describe
         their build process.
 
-        :param bool keep_prefix: Keep install prefix on failure. By default,
-            destroys it.
-        :param bool keep_stage: By default, stage is destroyed only if there
-            are no exceptions during build. Set to True to keep the stage
-            even with exceptions.
-        :param bool install_deps: Install dependencies before installing this
-            package
-        :param bool skip_patch: Skip patch stage of build if True.
-        :param bool verbose: Display verbose build output (by default,
-            suppresses it)
-        :param int make_jobs: Number of make jobs to use for install. Default
-            is ncpus
-        :param bool run_tests: Run tests within the package's install()
-        :param bool fake: Don't really build; install fake stub files instead.
-        :param bool explicit: True if package was explicitly installed, False
-            if package was implicitly installed (as a dependency).
-        :param bool dirty: Don't clean the build environment before installing.
-        :param bool force: Install again, even if already installed.
+        Args:
+            keep_prefix (bool): Keep install prefix on failure. By default,
+                destroys it.
+            keep_stage (bool): By default, stage is destroyed only if there
+                are no exceptions during build. Set to True to keep the stage
+                even with exceptions.
+            install_deps (bool): Install dependencies before installing this
+                package
+            skip_patch (bool): Skip patch stage of build if True.
+            verbose (bool): Display verbose build output (by default,
+                suppresses it)
+            make_jobs (int): Number of make jobs to use for install. Default
+                is ncpus
+            run_tests (bool): Run tests within the package's install()
+            fake (bool): Don't really build; install fake stub files instead.
+            explicit (bool): True if package was explicitly installed, False
+                if package was implicitly installed (as a dependency).
+            dirty (bool): Don't clean the build environment before installing.
+            force (bool): Install again, even if already installed.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
                              % self.spec.name)
 
-        # No installation needed if package is external
+        # For external packages the workflow is simplified, and basically
+        # consists in module file generation and registration in the DB
         if self.spec.external:
-            tty.msg("%s is externally installed in %s" %
-                    (self.name, self.spec.external))
-            return
+            return self._process_external_package(explicit)
 
         # Ensure package is not already installed
         layout = spack.store.layout
-        with self._prefix_read_lock():
-            if layout.check_installed(self.spec):
+        with spack.store.db.prefix_read_lock(self.spec):
+            if (keep_prefix and os.path.isdir(self.prefix) and
+                    (not self.installed)):
                 tty.msg(
-                    "%s is already installed in %s" % (self.name, self.prefix))
+                    "Continuing from partial install of %s" % self.name)
+            elif layout.check_installed(self.spec):
+                msg = '{0.name} is already installed in {0.prefix}'
+                tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
-                if (not rec.explicit) and explicit:
-                    with spack.store.db.write_transaction():
-                        rec = spack.store.db.get_record(self.spec)
-                        rec.explicit = True
-                return
+                return self._update_explicit_entry_in_db(rec, explicit)
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
@@ -1193,10 +1207,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self._do_install_pop_kwargs(kwargs)
 
-        tty.msg("Installing %s" % self.name)
-
         # First, install dependencies recursively.
         if install_deps:
+            tty.debug('Installing {0} dependencies'.format(self.name))
             for dep in self.spec.dependencies():
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
@@ -1210,6 +1223,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     dirty=dirty,
                     **kwargs
                 )
+
+        tty.msg('Installing %s' % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -1230,7 +1245,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # otherwise it should not have passed us the copy of the stream.
             # Thus, we are free to work with the the copy (input_stream)
             # however we want. For example, we might want to call functions
-            # (e.g. raw_input()) that implicitly read from whatever stream is
+            # (e.g. input()) that implicitly read from whatever stream is
             # assigned to sys.stdin. Since we want them to work with the
             # original input stream, we are making the following assignment:
             sys.stdin = input_stream
@@ -1247,11 +1262,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             )
 
             self.stage.keep = keep_stage
-
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
                 # the directory is created.
-                spack.hooks.pre_install(self)
+                spack.hooks.pre_install(self.spec)
                 if fake:
                     self.do_fake_install()
                 else:
@@ -1291,7 +1305,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                     self.spec, self.prefix)
                     self.log()
                 # Run post install hooks before build stage is removed.
-                spack.hooks.post_install(self)
+                spack.hooks.post_install(self.spec)
 
             # Stop timer.
             self._total_time = time.time() - start_time
@@ -1309,7 +1323,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
             # If we installed then we should keep the prefix
-            keep_prefix = True if self.last_phase is None else keep_prefix
+            keep_prefix = self.last_phase is None or keep_prefix
             # note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.db.add(
@@ -1426,12 +1440,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         1. Qt extensions need ``QTDIR`` set.
 
-        :param EnvironmentModifications spack_env: List of environment
-            modifications to be applied when this package is built
-            within Spack.
-        :param EnvironmentModifications run_env: List of environment
-            modifications to be applied when this package is run outside
-            of Spack. These are added to the resulting module file.
+        Args:
+            spack_env (EnvironmentModifications): List of environment
+                modifications to be applied when this package is built
+                within Spack.
+            run_env (EnvironmentModifications): List of environment
+                modifications to be applied when this package is run outside
+                of Spack. These are added to the resulting module file.
         """
         pass
 
@@ -1453,17 +1468,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            to the ``lib/pythonX.Y/site-packages`` directory in the module's
            install prefix. This method could be used to set that variable.
 
-        :param EnvironmentModifications spack_env: List of environment
-            modifications to be applied when the dependent package is
-            built within Spack.
-        :param EnvironmentModifications run_env: List of environment
-            modifications to be applied when the dependent package is
-            run outside of Spack. These are added to the resulting
-            module file.
-        :param Spec dependent_spec: The spec of the dependent package
-            about to be built. This allows the extendee (self) to query
-            the dependent's state. Note that *this* package's spec is
-            available as ``self.spec``.
+        Args:
+            spack_env (EnvironmentModifications): List of environment
+                modifications to be applied when the dependent package is
+                built within Spack.
+            run_env (EnvironmentModifications): List of environment
+                modifications to be applied when the dependent package is
+                run outside of Spack. These are added to the resulting
+                module file.
+            dependent_spec (Spec): The spec of the dependent package
+                about to be built. This allows the extendee (self) to query
+                the dependent's state. Note that *this* package's spec is
+                available as ``self.spec``.
         """
         pass
 
@@ -1492,45 +1508,67 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            indicating the path to their libraries, since these
            paths differ by BLAS/LAPACK implementation.
 
-        :param spack.package.PackageBase.module module: The Python ``module``
-            object of the dependent package. Packages can use this to set
-            module-scope variables for the dependent to use.
+        Args:
+            module (spack.package.PackageBase.module): The Python ``module``
+                object of the dependent package. Packages can use this to set
+                module-scope variables for the dependent to use.
 
-        :param Spec dependent_spec: The spec of the dependent package
-            about to be built. This allows the extendee (self) to
-            query the dependent's state.  Note that *this*
-            package's spec is available as ``self.spec``.
+            dependent_spec (Spec): The spec of the dependent package
+                about to be built. This allows the extendee (self) to
+                query the dependent's state.  Note that *this*
+                package's spec is available as ``self.spec``.
         """
         pass
 
-    def do_uninstall(self, force=False):
-        if not self.installed:
+    @staticmethod
+    def uninstall_by_spec(spec, force=False):
+        if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
-            specs = spack.store.db.query(self.spec, installed=True)
+            specs = spack.store.db.query(spec, installed=True)
             if specs:
                 spack.store.db.remove(specs[0])
-                tty.msg("Removed stale DB entry for %s" % self.spec.short_spec)
+                tty.msg("Removed stale DB entry for %s" % spec.short_spec)
                 return
             else:
-                raise InstallError(str(self.spec) + " is not installed.")
+                raise InstallError(str(spec) + " is not installed.")
 
         if not force:
-            dependents = spack.store.db.installed_dependents(self.spec)
+            dependents = spack.store.db.installed_dependents(spec)
             if dependents:
-                raise PackageStillNeededError(self.spec, dependents)
+                raise PackageStillNeededError(spec, dependents)
+
+        # Try to get the pcakage for the spec
+        try:
+            pkg = spec.package
+        except spack.repository.UnknownEntityError:
+            pkg = None
 
         # Pre-uninstall hook runs first.
-        with self._prefix_write_lock():
-            spack.hooks.pre_uninstall(self)
-            # Uninstalling in Spack only requires removing the prefix.
-            self.remove_prefix()
-            #
-            spack.store.db.remove(self.spec)
-        tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
+        with spack.store.db.prefix_write_lock(spec):
 
-        # Once everything else is done, run post install hooks
-        spack.hooks.post_uninstall(self)
+            if pkg is not None:
+                spack.hooks.pre_uninstall(spec)
+
+            # Uninstalling in Spack only requires removing the prefix.
+            if not spec.external:
+                msg = 'Deleting package prefix [{0}]'
+                tty.debug(msg.format(spec.short_spec))
+                spack.store.layout.remove_install_directory(spec)
+            # Delete DB entry
+            msg = 'Deleting DB entry [{0}]'
+            tty.debug(msg.format(spec.short_spec))
+            spack.store.db.remove(spec)
+
+        if pkg is not None:
+            spack.hooks.post_uninstall(spec)
+
+        tty.msg("Successfully uninstalled %s" % spec.short_spec)
+
+    def do_uninstall(self, force=False):
+        """Uninstall this package by spec."""
+        # delegate to instance-less method.
+        Package.uninstall_by_spec(self.spec, force)
 
     def _check_extendable(self):
         if not self.extendable:
