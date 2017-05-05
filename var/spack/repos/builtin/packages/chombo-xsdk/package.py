@@ -42,7 +42,7 @@ class ChomboXsdk(Package):
     url = "http://bitbucket.org/drhansj/chombo-xsdk/get/xsdk-0.2.0a.tar.bz2"
 
     # Versions available
-    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
+    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='xsdk-0.2.0')
     version('develop'   , git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
     # Build options/variants
