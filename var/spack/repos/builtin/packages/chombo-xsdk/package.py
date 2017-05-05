@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-import glob,os,numbers
+import glob,os,numbers,shutil
 
 def isIntegral(x):
     """True for any integer value"""
@@ -42,7 +42,7 @@ class ChomboXsdk(Package):
     url = "http://bitbucket.org/drhansj/chombo-xsdk/get/xsdk-0.2.0a.tar.bz2"
 
     # Versions available
-    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', commit='71d856c')
+    version('xsdk-0.2.0', git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
     version('develop'   , git='http://bitbucket.org/drhansj/chombo-xsdk.git', tag='master')
 
     # Build options/variants
@@ -61,8 +61,8 @@ class ChomboXsdk(Package):
 
     depends_on('mpi', when='+mpi')
 
-    depends_on('hdf5~mpi~fortran', when='+use_hdf~mpi')
-    depends_on('hdf5+mpi~fortran', when='+use_hdf+mpi')
+    depends_on('hdf5~mpi', when='+use_hdf~mpi')
+    depends_on('hdf5+mpi', when='+use_hdf+mpi')
 
     depends_on('petsc@xsdk-0.2.0~mpi~hypre~superlu-dist~hdf5+int64', when='@xsdk-0.2.0+use_petsc~mpi')
     depends_on('petsc@xsdk-0.2.0+mpi+int64'                        , when='@xsdk-0.2.0+use_petsc+mpi')
@@ -107,25 +107,55 @@ class ChomboXsdk(Package):
         make('--directory=lib','all',*options)
 
         # Run unit tests
-        make('--directory=lib','run',*options)
-
-        # TODO - Build and run example
+        # make('--directory=lib','run',*options)
 
         # Need to install by hand
 
-        # Get and create the target 'include' and 'lib'
+        # Get and create the target directories for 'include', 'lib',
+        # 'lib/mk', 'lib/util', and 'examples'
         headers_location = self.prefix.include
         mkdirp(headers_location)
 
         libs_location = self.prefix.lib
         mkdirp(libs_location)
 
+        make_dest = join_path(libs_location,"mk")
+
+        util_chfpp_dest   = join_path(libs_location,"util","chfpp")
+        util_cxxtest_dest = join_path(libs_location,"util","cxxtest")
+        util_mkdep_dest   = join_path(libs_location,"util","mkdep")
+
+        example_dest = join_path(self.prefix,"examples")
+
         # Install the include files
-        headers = glob.glob(join_path(self.stage.source_path, 'lib', 'include', '*.H'))
-        for h in headers:
+        header_files = glob.glob(join_path(self.stage.source_path, 'lib', 'include', '*.H'))
+        for h in header_files:
           install(h, headers_location)
 
         # Install the library
-        libs = glob.glob(join_path(self.stage.source_path, 'lib', '*.a'))
-        for l in libs:
+        lib_files = glob.glob(join_path(self.stage.source_path, 'lib', '*.a'))
+        for l in lib_files:
           install(l, libs_location)
+
+        # Install the make system
+        make_src = join_path(self.stage.source_path, 'lib', 'mk')
+        shutil.copytree(make_src, make_dest)
+
+        util_chfpp_src = join_path(self.stage.source_path, 'lib', 'util','chfpp')
+        shutil.copytree(util_chfpp_src, util_chfpp_dest)
+
+        util_cxxtest_src = join_path(self.stage.source_path, 'lib', 'util','cxxtest')
+        shutil.copytree(util_cxxtest_src, util_cxxtest_dest)
+
+        util_mkdep_src = join_path(self.stage.source_path, 'lib', 'util','mkdep')
+        shutil.copytree(util_mkdep_src, util_mkdep_dest)
+
+        # TODO - Install, build, and run examples
+
+        # Install the examples
+        example_src = join_path(self.stage.source_path, 'releasedExamples')
+        shutil.copytree(example_src, example_dest)
+
+        # Build the examples
+        make('--directory=%s' % example_dest,'example-only',*options)
+
