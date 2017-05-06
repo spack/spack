@@ -95,14 +95,17 @@ class Gcc(AutotoolsPackage):
     # depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    provides('golang',        when='languages=go @4.6:')
-    provides('golang@:1',     when='languages=go @4.7.1:')
-    provides('golang@:1.1',   when='languages=go @4.8:')
-    provides('golang@:1.1.2', when='languages=go @4.8.2:')
-    provides('golang@:1.2',   when='languages=go @4.9:')
-    provides('golang@:1.4',   when='languages=go @5:')
-    provides('golang@:1.6.1', when='languages=go @6:')
-    provides('golang@:1.8',   when='languages=go @7:')
+    provides('golang', when='languages=go')
+    # 'when' does not currently support multiple parts of a spec.
+    # See https://github.com/LLNL/spack/pull/4151
+    # provides('golang',        when='languages=go @4.6:')
+    # provides('golang@:1',     when='languages=go @4.7.1:')
+    # provides('golang@:1.1',   when='languages=go @4.8:')
+    # provides('golang@:1.1.2', when='languages=go @4.8.2:')
+    # provides('golang@:1.2',   when='languages=go @4.9:')
+    # provides('golang@:1.4',   when='languages=go @5:')
+    # provides('golang@:1.6.1', when='languages=go @6:')
+    # provides('golang@:1.8',   when='languages=go @7:')
 
     patch('darwin/gcc-7.1.0-headerpad.patch', when='@7.1.0 platform=darwin')
     patch('darwin/gcc-6.1.0-jit.patch', when='@6.1.0 platform=darwin')
