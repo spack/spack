@@ -78,11 +78,11 @@ class Gcc(AutotoolsPackage):
     depends_on('mpfr@2.4.2:')
     depends_on('mpc@0.8.1:', when='@4.5:')
     depends_on('isl@0.15:', when='@5.0:')
+    depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
 
     # TODO: integrate these libraries.
-    # depends_on('gnat', when='languages=ada')
     # depends_on('ppl')
     # depends_on('cloog')
 
@@ -130,11 +130,6 @@ class Gcc(AutotoolsPackage):
         """
         spec = self.spec
         version = self.version
-
-        # Ada is not currently supported as it requires
-        # an existing Ada compiler to build.
-        if 'languages=ada' in spec:
-            raise InstallError('Ada requires GNAT to install')
 
         # Support for processing BRIG 1.0 files was added in GCC 7
         # BRIG is a binary format for HSAIL:
