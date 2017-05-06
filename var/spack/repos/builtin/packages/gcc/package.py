@@ -107,57 +107,40 @@ class Gcc(AutotoolsPackage):
     # provides('golang@:1.6.1', when='languages=go @6:')
     # provides('golang@:1.8',   when='languages=go @7:')
 
+    # For a list of valid languages for a specific release,
+    # run the following command in the GCC source directory:
+    #    $ grep ^language= gcc/*/config-lang.in
+    # See https://gcc.gnu.org/install/configure.html
+
+    # Support for processing BRIG 1.0 files was added in GCC 7
+    # BRIG is a binary format for HSAIL:
+    # (Heterogeneous System Architecture Intermediate Language).
+    # See https://gcc.gnu.org/gcc-7/changes.html
+    conflicts('languages=brig', when='@:6')
+
+    # GCC 4.8 added a 'c' language. I'm sure C was always built,
+    # but this is the first version that accepts 'c' as a valid language.
+    conflicts('languages=c', when='@:4.7')
+
+    # GCC 4.6 added support for the Go programming language.
+    # See https://gcc.gnu.org/gcc-4.6/changes.html
+    conflicts('languages=go', when='@:4.5')
+
+    # The GCC Java frontend and associated libjava runtime library
+    # have been removed from GCC as of GCC 7.
+    # See https://gcc.gnu.org/gcc-7/changes.html
+    conflicts('languages=java', when='@7:')
+
+    # GCC 5 added the ability to build GCC as a Just-In-Time compiler.
+    # See https://gcc.gnu.org/gcc-5/changes.html
+    conflicts('languages=jit', when='@:4')
+
     patch('darwin/gcc-7.1.0-headerpad.patch', when='@7.1.0 platform=darwin')
     patch('darwin/gcc-6.1.0-jit.patch', when='@6.1.0 platform=darwin')
     patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3 platform=darwin')
     patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3 platform=darwin')
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
-
-    @run_before('autoreconf')
-    def check_languages(self):
-        """Makes sure all requested languages are valid for a
-        specific version of GCC.
-
-        For a list of valid languages for a specific release,
-        run the following command in the GCC source directory:
-
-        .. code-block:: console
-
-           $ grep ^language= gcc/*/config-lang.in
-
-        See https://gcc.gnu.org/install/configure.html
-        """
-        spec = self.spec
-        version = self.version
-
-        # Support for processing BRIG 1.0 files was added in GCC 7
-        # BRIG is a binary format for HSAIL:
-        # (Heterogeneous System Architecture Intermediate Language).
-        # See https://gcc.gnu.org/gcc-7/changes.html
-        if version < Version('7') and 'languages=brig' in spec:
-            raise InstallError('BRIG is not available before GCC 7')
-
-        # GCC 4.8 added a 'c' language. I'm sure C was always built,
-        # but this is the first version that accepts 'c' as a valid language.
-        if version < Version('4.8') and 'languages=c' in spec:
-            raise InstallError('C is not a valid language before GCC 4.8')
-
-        # GCC 4.6 added support for the Go programming language.
-        # See https://gcc.gnu.org/gcc-4.6/changes.html
-        if version < Version('4.6') and 'languages=go' in spec:
-            raise InstallError('Go is not available before GCC 4.6')
-
-        # The GCC Java frontend and associated libjava runtime library
-        # have been removed from GCC as of GCC 7.
-        # See https://gcc.gnu.org/gcc-7/changes.html
-        if version >= Version('7') and 'languages=java' in spec:
-            raise InstallError('Java is no longer available as of GCC 7')
-
-        # GCC 5 added the ability to build GCC as a Just-In-Time compiler.
-        # See https://gcc.gnu.org/gcc-5/changes.html
-        if version < Version('5') and 'languages=jit' in spec:
-            raise InstallError('JIT is not available before GCC 5')
 
     def configure_args(self):
         spec = self.spec
