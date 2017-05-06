@@ -142,26 +142,28 @@ class Gcc(AutotoolsPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
-    def configure_args(self):
+    def patch(self):
         spec = self.spec
         prefix = self.spec.prefix
 
         # Fix a standard header file for OS X Yosemite that
         # is GCC incompatible by replacing non-GCC compliant macros
         if 'yosemite' in spec.architecture:
-            if isfile(r'/usr/include/dispatch/object.h'):
+            if isfile('/usr/include/dispatch/object.h'):
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 cp = which('cp')
                 new_header = join_path(new_dispatch_dir, 'object.h')
-                cp(r'/usr/include/dispatch/object.h', new_header)
+                cp('/usr/include/dispatch/object.h', new_header)
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t',
                             new_header)
 
+    def configure_args(self):
+        spec = self.spec
+
         # Generic options to compile GCC
         options = [
-            '--libdir={0}'.format(prefix.lib64),
             '--disable-multilib',
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
@@ -170,6 +172,10 @@ class Gcc(AutotoolsPackage):
             '--enable-lto',
             '--with-quad'
         ]
+
+        # Enabling language "jit" requires --enable-host-shared.
+        if 'languages=jit' in spec:
+            options.append('--enable-host-shared')
 
         # Binutils
         if spec.satisfies('+binutils'):
