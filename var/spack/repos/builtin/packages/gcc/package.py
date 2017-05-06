@@ -163,7 +163,8 @@ class Gcc(AutotoolsPackage):
         options = [
             '--libdir={0}'.format(prefix.lib64),
             '--disable-multilib',
-            '--enable-languages={0}'.format(spec.variants['languages'].value),
+            '--enable-languages={0}'.format(
+                ','.join(spec.variants['languages'].value)),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
             '--enable-lto',
