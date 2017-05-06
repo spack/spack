@@ -30,8 +30,7 @@ class Mpfr(AutotoolsPackage):
        floating-point computations with correct rounding."""
 
     homepage = "http://www.mpfr.org"
-    url      = "https://gforge.inria.fr/frs/download.php/latestfile/159/mpfr-3.1.2.tar.bz2"
-    list_url = "http://www.mpfr.org/mpfr-current/"
+    url      = "http://ftp.gnu.org/gnu/mpfr/mpfr-3.1.5.tar.bz2"
 
     version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
     version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
