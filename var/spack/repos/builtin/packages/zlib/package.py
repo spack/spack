@@ -46,6 +46,8 @@ class Zlib(Package):
     variant('shared', default=True,
             description='Enables the build of shared libraries.')
 
+    patch('w_patch.patch', when="@1.2.11%cce")
+
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:
             spack_env.set('CFLAGS', self.compiler.pic_flag)
