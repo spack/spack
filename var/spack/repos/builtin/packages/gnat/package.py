@@ -42,7 +42,7 @@ class Gnat(MakefilePackage):
     # dependencies are already in Spack.
 
     # This is the GPL release for Linux x86-64
-    version('2016', '9741107cca1a6a4ddb0d5e8de824a90c',
+    version('2016', '9741107cca1a6a4ddb0d5e8de824a90c', extension='tar.gz',
             url="http://mirrors.cdn.adacore.com/art/5739cefdc7a447658e0b016b")
 
     phases = ['install']
