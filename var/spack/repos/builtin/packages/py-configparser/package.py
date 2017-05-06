@@ -17,3 +17,5 @@ class PyConfigparser(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
+
+    patch('backports.patch')

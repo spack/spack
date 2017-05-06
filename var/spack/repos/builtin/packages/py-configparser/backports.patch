@@ -1,0 +1,11 @@
+--- a/setup.py	2017-05-06 19:51:03.799210224 +0200
++++ b/setup.py	2017-05-06 17:31:41.076833957 +0200
+@@ -42,7 +42,7 @@
+     py_modules=modules,
+     package_dir={'': 'src'},
+     packages=find_packages('src'),
+-    namespace_packages=['backports'],
++#    namespace_packages=['backports'],
+     include_package_data=True,
+     zip_safe=False,
+     install_requires=requirements,
