@@ -35,9 +35,12 @@ class PyCryptography(PythonPackage):
 
     version('1.8.1', '9f28a9c141995cd2300d0976b4fac3fb')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cffi',       type=('build', 'run'))
-    depends_on('py-asn1crypto', type=('build', 'run'))
-    depends_on('py-six',        type=('build', 'run'))
-    depends_on('py-idna',       type=('build', 'run'))
+    # dependencies taken from https://github.com/pyca/cryptography/blob/master/setup.py
+    depends_on('py-setuptools@20.5:',   type='build')
+    depends_on('py-cffi@1.4.1:',        type=('build', 'run'))
+    depends_on('py-asn1crypto@0.21.0:', type=('build', 'run'))
+    depends_on('py-six@1.4.1:',         type=('build', 'run'))
+    depends_on('py-idna@2.1:',          type=('build', 'run'))
+    depends_on('py-enum34',             type=('build', 'run'), when='^python@:3.4')
+    depends_on('py-ipaddress',          type=('build', 'run'), when='^python@:3.3')
     depends_on('openssl')
