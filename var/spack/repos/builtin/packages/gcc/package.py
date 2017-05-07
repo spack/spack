@@ -25,10 +25,10 @@
 from spack import *
 from llnl.util import tty
 
-from contextlib import closing
-from glob import glob
+import glob
+import os
+import shutil
 import sys
-from os.path import isfile
 
 
 class Gcc(AutotoolsPackage):
@@ -149,6 +149,8 @@ class Gcc(AutotoolsPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
+    build_directory = 'spack-build'
+
     def patch(self):
         spec = self.spec
         prefix = self.spec.prefix
@@ -156,12 +158,11 @@ class Gcc(AutotoolsPackage):
         # Fix a standard header file for OS X Yosemite that
         # is GCC incompatible by replacing non-GCC compliant macros
         if 'yosemite' in spec.architecture:
-            if isfile('/usr/include/dispatch/object.h'):
+            if os.path.isfile('/usr/include/dispatch/object.h'):
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
-                cp = which('cp')
                 new_header = join_path(new_dispatch_dir, 'object.h')
-                cp('/usr/include/dispatch/object.h', new_header)
+                shutil.copyfile('/usr/include/dispatch/object.h', new_header)
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t',
                             new_header)
@@ -186,15 +187,17 @@ class Gcc(AutotoolsPackage):
 
         # Binutils
         if spec.satisfies('+binutils'):
-            static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
+            static_bootstrap_flags = '-static-libstdc++ -static-libgcc'
             binutils_options = [
-                "--with-sysroot=/", "--with-stage1-ldflags=%s %s" %
-                (self.rpath_args, static_bootstrap_flags),
-                "--with-boot-ldflags=%s %s" %
-                (self.rpath_args, static_bootstrap_flags), "--with-gnu-ld",
-                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                "--with-gnu-as",
-                "--with-as=%s/bin/as" % spec['binutils'].prefix
+                '--with-sysroot=/',
+                '--with-stage1-ldflags={0} {1}'.format(
+                    self.rpath_args, static_bootstrap_flags),
+                '--with-boot-ldflags={0} {1}'.format(
+                    self.rpath_args, static_bootstrap_flags),
+                '--with-gnu-ld',
+                '--with-ld={0}/ld'.format(spec['binutils'].prefix.bin),
+                '--with-gnu-as',
+                '--with-as={0}/as'.format(spec['binutils'].prefix.bin),
             ]
             options.extend(binutils_options)
 
@@ -212,8 +215,6 @@ class Gcc(AutotoolsPackage):
 
         return options
 
-    build_directory = 'spack-build'
-
     @property
     def build_targets(self):
         if sys.platform == 'darwin':
@@ -223,7 +224,7 @@ class Gcc(AutotoolsPackage):
     @property
     def spec_dir(self):
         # e.g. lib/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob('{0}/gcc/*/*'.format(self.prefix.lib))
+        spec_dir = glob.glob('{0}/gcc/*/*'.format(self.prefix.lib))
         return spec_dir[0] if spec_dir else None
 
     @run_after('install')
@@ -231,17 +232,17 @@ class Gcc(AutotoolsPackage):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""
         if not self.spec_dir:
-            tty.warn("Could not install specs for %s." %
-                     self.spec.format('$_$@'))
+            tty.warn('Could not install specs for {0}.'.format(
+                     self.spec.format('$_$@')))
             return
 
         gcc = self.spec['gcc'].command
-        lines = gcc('-dumpspecs', output=str).strip().split("\n")
+        lines = gcc('-dumpspecs', output=str).strip().split('\n')
         specs_file = join_path(self.spec_dir, 'specs')
-        with closing(open(specs_file, 'w')) as out:
+        with open(specs_file, 'w') as out:
             for line in lines:
-                out.write(line + "\n")
-                if line.startswith("*link:"):
-                    out.write("-rpath %s/lib:%s/lib64 \\\n" %
-                              (self.prefix, self.prefix))
+                out.write(line + '\n')
+                if line.startswith('*link:'):
+                    out.write(r'-rpath {0}:{1} \n'.format(
+                              self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
