@@ -119,6 +119,9 @@ class Gcc(AutotoolsPackage):
     # See https://gcc.gnu.org/gcc-7/changes.html
     conflicts('languages=brig', when='@:6')
 
+    # BRIG does not seem to be supported on macOS
+    conflicts('languages=brig', when='platform=darwin')
+
     # GCC 4.8 added a 'c' language. I'm sure C was always built,
     # but this is the first version that accepts 'c' as a valid language.
     conflicts('languages=c', when='@:4.7')
@@ -126,6 +129,9 @@ class Gcc(AutotoolsPackage):
     # GCC 4.6 added support for the Go programming language.
     # See https://gcc.gnu.org/gcc-4.6/changes.html
     conflicts('languages=go', when='@:4.5')
+
+    # Go is not supported on macOS
+    conflicts('languages=go', when='platform=darwin')
 
     # The GCC Java frontend and associated libjava runtime library
     # have been removed from GCC as of GCC 7.
