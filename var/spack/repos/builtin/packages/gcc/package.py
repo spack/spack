@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from llnl.util import tty
 
 from contextlib import closing
 from glob import glob
@@ -215,8 +216,8 @@ class Gcc(AutotoolsPackage):
 
     @property
     def spec_dir(self):
-        # e.g. lib64/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
+        # e.g. lib/gcc/x86_64-unknown-linux-gnu/4.9.2
+        spec_dir = glob('{0}/gcc/*/*'.format(self.prefix.lib))
         return spec_dir[0] if spec_dir else None
 
     @run_after('install')
