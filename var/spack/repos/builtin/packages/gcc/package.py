@@ -142,10 +142,12 @@ class Gcc(AutotoolsPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
-    patch('darwin/gcc-7.1.0-headerpad.patch', when='@7.1.0 platform=darwin')
-    patch('darwin/gcc-6.1.0-jit.patch', when='@6.1.0 platform=darwin')
-    patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3 platform=darwin')
-    patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3 platform=darwin')
+    if sys.platform == 'darwin':
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
+        patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
+        patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
+        patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
+
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
