@@ -29,7 +29,6 @@ from spack import *
 class PyParamiko(PythonPackage):
     """SSH2 protocol library"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.paramiko.org/"
     url      = "https://pypi.io/packages/source/p/paramiko/paramiko-2.1.2.tar.gz"
 
@@ -38,5 +37,3 @@ class PyParamiko(PythonPackage):
     depends_on('py-setuptools',    type='build')
     depends_on('py-pyasn1@0.1.7:',        type=('build', 'run'))
     depends_on('py-cryptography@1.1:',    type=('build', 'run'))
-    # depends_on('py-enum34',        type=('build', 'link', 'run'))
-    # depends_on('py-ipaddress',     type=('build', 'link', 'run'))
