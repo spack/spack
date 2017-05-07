@@ -34,7 +34,4 @@ class PyIdna(PythonPackage):
 
     version('2.5', 'fc1d992bef73e8824db411bb5d21f012')
 
-    # FIXME: Add dependencies if required.
     depends_on('py-setuptools', type=('build', 'link'))
-    # depends_on('py-foo',        type=('build', 'run'))
-

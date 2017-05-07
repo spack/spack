@@ -27,7 +27,8 @@ from spack import *
 
 
 class PyCryptography(PythonPackage):
-    """cryptography is a package which provides cryptographic recipes and primitives to Python developers"""
+    """cryptography is a package which provides cryptographic recipes
+       and primitives to Python developers"""
 
     homepage = "https://pypi.python.org/pypi/cryptography"
     url      = "https://pypi.python.org/packages/ec/5f/d5bc241d06665eed93cd8d3aa7198024ce7833af7a67f6dc92df94e00588/cryptography-1.8.1.tar.gz#md5=9f28a9c141995cd2300d0976b4fac3fb"
@@ -35,8 +36,6 @@ class PyCryptography(PythonPackage):
     version('1.8.1', '9f28a9c141995cd2300d0976b4fac3fb')
 
     depends_on('py-setuptools', type=('build', 'link'))
-    depends_on('py-cffi', type=('build', 'link','run'))
-    depends_on('py-asn1crypto', type=('build', 'link','run'))
+    depends_on('py-cffi',       type=('build', 'link', 'run'))
+    depends_on('py-asn1crypto', type=('build', 'link', 'run'))
     depends_on('openssl')
-
-

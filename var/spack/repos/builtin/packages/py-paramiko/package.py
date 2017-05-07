@@ -41,5 +41,3 @@ class PyParamiko(PythonPackage):
     depends_on('py-enum34',        type=('build', 'link', 'run'))
     depends_on('py-ipaddress',     type=('build', 'link', 'run'))
     depends_on('py-idna',          type=('build', 'link', 'run'))
-    
-
