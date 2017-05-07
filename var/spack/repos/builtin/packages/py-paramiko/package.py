@@ -35,9 +35,8 @@ class PyParamiko(PythonPackage):
 
     version('2.1.2', '41a8ea0e8abb03a6bf59870670d4f46c')
 
-    depends_on('py-setuptools',    type=('build', 'link'))
-    depends_on('py-pyasn1',        type=('build', 'link', 'run'))
-    depends_on('py-cryptography',  type=('build', 'link', 'run'))
-    depends_on('py-enum34',        type=('build', 'link', 'run'))
-    depends_on('py-ipaddress',     type=('build', 'link', 'run'))
-    depends_on('py-idna',          type=('build', 'link', 'run'))
+    depends_on('py-setuptools',    type='build')
+    depends_on('py-pyasn1@0.1.7:',        type=('build', 'run'))
+    depends_on('py-cryptography@1.1:',    type=('build', 'run'))
+    # depends_on('py-enum34',        type=('build', 'link', 'run'))
+    # depends_on('py-ipaddress',     type=('build', 'link', 'run'))

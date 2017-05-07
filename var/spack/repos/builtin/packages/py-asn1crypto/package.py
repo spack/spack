@@ -34,4 +34,4 @@ class PyAsn1crypto(PythonPackage):
 
     version('0.22.0', '74a8b9402625b38ef19cf3fa69ef8470')
 
-    depends_on('py-setuptools', type=('build', 'link'))
+    depends_on('py-setuptools', type='build')

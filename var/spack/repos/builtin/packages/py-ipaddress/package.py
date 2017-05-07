@@ -34,4 +34,4 @@ class PyIpaddress(PythonPackage):
 
     version('1.0.18', '310c2dfd64eb6f0df44aa8c59f2334a7')
 
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')

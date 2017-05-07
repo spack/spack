@@ -34,7 +34,5 @@ class PyPycrypto(PythonPackage):
 
     version('2.6.1', '55a61a054aa66812daf5161a0d5d7eda')
 
-    # depends_on('py-setuptools', type=('build', 'link'))
-    # depends_on('py-setuptools', type='include')
-    # depends_on('gmp')
-    # not just build-time, requires pkg_resources
+    # depends_on('py-setuptools', type='build')
+    depends_on('gmp')

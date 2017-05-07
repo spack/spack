@@ -35,3 +35,4 @@ class PyIdna(PythonPackage):
     version('2.5', 'fc1d992bef73e8824db411bb5d21f012')
 
     depends_on('py-setuptools', type=('build', 'link'))
+    depends_on('python@2.6:',   type=('build', 'run'))
