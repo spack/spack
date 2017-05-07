@@ -79,6 +79,7 @@ class Gcc(AutotoolsPackage):
     depends_on('mpfr@2.4.2:')
     depends_on('mpc@0.8.1:', when='@4.5:')
     depends_on('isl@0.15:', when='@5.0:')
+    depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
@@ -182,6 +183,10 @@ class Gcc(AutotoolsPackage):
             '--enable-lto',
             '--with-quad'
         ]
+
+        # Use installed libz
+        if self.version >= Version('6'):
+            options.append('--with-system-zlib')
 
         # Enabling language "jit" requires --enable-host-shared.
         if 'languages=jit' in spec:
