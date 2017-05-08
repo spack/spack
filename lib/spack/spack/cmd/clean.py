@@ -30,6 +30,8 @@ import spack
 import spack.cmd
 
 description = "remove build stage and source tarball for packages"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):

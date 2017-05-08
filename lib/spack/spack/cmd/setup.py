@@ -39,6 +39,8 @@ from spack import which
 from spack.stage import DIYStage
 
 description = "create a configuration script and module, but don't build"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

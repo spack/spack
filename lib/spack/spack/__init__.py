@@ -217,5 +217,5 @@ __all__ += [
 
 # Add default values for attributes that would otherwise be modified from
 # Spack main script
-debug = True
+debug = False
 spack_working_dir = None

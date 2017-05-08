@@ -25,7 +25,9 @@
 import argparse
 import spack.modules
 
-description = "remove package from environment using module"
+description = "remove package from environment using `module unload`"
+section = "environment"
+level = "short"
 
 
 def setup_parser(subparser):

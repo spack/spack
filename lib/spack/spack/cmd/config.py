@@ -25,6 +25,8 @@
 import spack.config
 
 description = "get and set configuration options"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):

@@ -33,6 +33,8 @@ import spack.cmd.find
 import spack.store
 
 description = "list extensions for package"
+section = "extensions"
+level = "long"
 
 
 def setup_parser(subparser):

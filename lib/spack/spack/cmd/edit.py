@@ -33,6 +33,8 @@ from spack.spec import Spec
 from spack.repository import Repo
 
 description = "open package files in $EDITOR"
+section = "packaging"
+level = "short"
 
 
 def edit_package(name, repo_path, namespace):

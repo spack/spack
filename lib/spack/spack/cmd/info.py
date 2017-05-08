@@ -31,6 +31,8 @@ import spack
 import spack.fetch_strategy as fs
 
 description = "get detailed information on a particular package"
+section = "basic"
+level = "short"
 
 
 def padder(str_list, extra=0):

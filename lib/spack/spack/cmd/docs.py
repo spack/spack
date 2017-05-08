@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,22 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-import spack.modules
+import webbrowser
 
-description = "add package to environment using `module load`"
-section = "environment"
-level = "short"
-
-
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package to load with modules "
-             "(if -, read specs from STDIN)")
+description = 'open spack documentation in a web browser'
+section = 'help'
+level = 'short'
 
 
-def load(parser, args):
-    spack.modules.print_help()
+def docs(parser, args):
+    webbrowser.open('https://spack.readthedocs.io')

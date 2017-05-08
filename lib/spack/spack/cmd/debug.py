@@ -34,6 +34,8 @@ import spack
 from spack.util.executable import which
 
 description = "debugging commands for troubleshooting Spack"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

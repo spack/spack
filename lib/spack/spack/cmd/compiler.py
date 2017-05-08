@@ -39,6 +39,8 @@ from spack.spec import CompilerSpec, ArchSpec
 from spack.util.environment import get_path
 
 description = "manage compilers"
+section = "system"
+level = "long"
 
 
 def setup_parser(subparser):

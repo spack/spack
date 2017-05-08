@@ -34,6 +34,8 @@ import spack
 from spack.util.executable import *
 
 description = "query packages associated with particular git revisions"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

@@ -34,6 +34,8 @@ import spack.cmd.common.arguments as arguments
 from spack.stage import DIYStage
 
 description = "do-it-yourself: build from an existing source directory"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

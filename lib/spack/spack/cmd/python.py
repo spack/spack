@@ -32,6 +32,8 @@ import spack
 
 
 description = "launch an interpreter as spack would launch a command"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

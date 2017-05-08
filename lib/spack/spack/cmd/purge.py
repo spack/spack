@@ -26,6 +26,8 @@ import spack
 import spack.stage as stage
 
 description = "remove temporary build files and/or downloaded archives"
+section = "admin"
+level = "long"
 
 
 def setup_parser(subparser):

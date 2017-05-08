@@ -36,7 +36,9 @@ from llnl.util.tty.colify import colify
 
 import spack
 
-description = "a thin wrapper around the pytest command"
+description = "run spack's unit tests"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):

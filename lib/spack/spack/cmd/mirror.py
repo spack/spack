@@ -38,6 +38,8 @@ from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):

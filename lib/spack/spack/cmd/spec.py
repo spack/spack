@@ -29,7 +29,9 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
-description = "print out abstract and concrete versions of a spec"
+description = "show what would be installed, given a spec"
+section = "build"
+level = "short"
 
 
 def setup_parser(subparser):

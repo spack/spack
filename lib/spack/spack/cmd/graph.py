@@ -34,6 +34,8 @@ from spack.spec import *
 from spack.graph import *
 
 description = "generate graphs of package dependency relationships"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):

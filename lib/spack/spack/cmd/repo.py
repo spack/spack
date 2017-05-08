@@ -33,6 +33,8 @@ import spack.config
 from spack.repository import *
 
 description = "manage package source repositories"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):

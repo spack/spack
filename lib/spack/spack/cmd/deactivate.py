@@ -31,6 +31,8 @@ import spack.store
 from spack.graph import topological_sort
 
 description = "deactivate a package extension"
+section = "extensions"
+level = "long"
 
 
 def setup_parser(subparser):
