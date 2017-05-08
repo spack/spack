@@ -125,8 +125,6 @@ class Chombo(MakefilePackage):
                     '^\s*#\s*HDFMPILIBFLAGS\s*=.*',
                     'HDFMPILIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
 
-        return
-
     def build(self, spec, prefix):
         with working_dir('lib'):
             make('all')

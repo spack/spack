@@ -33,9 +33,9 @@ class Fastmath(Package):
     Solvers."""
 
     homepage = "www.fastmath-scidac.org/"
-    url = "https://fastmath-scidac.llnl.gov"
+    url = "https://github.com/citibeth/dummy/tarball/v1.0"
 
-    version('1.0', 'cd5006bbe9a39c1bf252b9b8b5e5bdcd')
+    version('1.0', 'e2b724dfcc31d735897971db91be89ff')
 
     # BundlePackage
     depends_on('boxlib dims=3')
@@ -58,7 +58,7 @@ class Fastmath(Package):
     # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):
         # Prevent the error message
-        #      ==> Error: Install failed for xsdk.  Nothing was installed!
+        #      ==> Error: Install failed for fastmath.  Nothing was installed!
         #      ==> Error: Installation process had nonzero exit code : 256
         with open(join_path(spec.prefix, 'bundle-package.txt'), 'w') as out:
             out.write('This is a bundle\n')
