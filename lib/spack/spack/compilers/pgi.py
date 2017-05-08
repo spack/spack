@@ -61,12 +61,20 @@ class Pgi(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        """The '-V' option works for all the PGI compilers.
+        """The ``-V`` option works for all the PGI compilers.
         Output looks like this::
 
             pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
             The Portland Group - PGI Compilers and Tools
             Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
+
+        on x86-64, and::
+
+            pgcc 17.4-0 linuxpower target on Linuxpower
+            PGI Compilers and Tools
+            Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.
+
+        on PowerPC.
         """
         return get_compiler_version(
-            comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')
+            comp, '-V', r'pg[^ ]* ([0-9.-]+) [^ ]+ target on ')
