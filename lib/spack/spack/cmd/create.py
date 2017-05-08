@@ -40,6 +40,9 @@ from spack.util.naming import *
 from spack.url import *
 
 description = "create a new package file"
+section = "packaging"
+level = "short"
+
 
 package_template = '''\
 ##############################################################################

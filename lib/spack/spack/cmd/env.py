@@ -31,7 +31,9 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.build_environment as build_env
 
-description = "run a command with the install environment for a spec"
+description = "show install environment for a spec, and run commands"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):

@@ -32,6 +32,8 @@ import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
 
 description = "calculate md5 checksums for files/urls"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):
