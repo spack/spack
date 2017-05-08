@@ -92,5 +92,5 @@ class Barrier:
         self.turnstile2.release()
 
 
-class BarrierTimeoutError:
+class BarrierTimeoutError(Exception):
     pass
