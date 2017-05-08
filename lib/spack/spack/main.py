@@ -71,7 +71,7 @@ section_descriptions = {
     'environment': 'environment',
     'extensions':  'extensions',
     'help':        'more help',
-    'packaging':   'packaging',
+    'packaging':   'create packages',
     'system':      'system',
 }
 
