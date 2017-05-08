@@ -41,7 +41,7 @@ from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
 
 description = "build and install packages"
-section = "basic"
+section = "build"
 level = "short"
 
 

@@ -29,7 +29,7 @@ import spack.cmd.common.arguments as arguments
 
 from spack.cmd import display_specs
 
-description = "query and show installed packages"
+description = "list and search installed packages"
 section = "basic"
 level = "short"
 

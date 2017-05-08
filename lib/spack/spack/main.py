@@ -64,8 +64,8 @@ options_by_level = {
 # Longer text for each section, to show in help
 section_descriptions = {
     'admin':       'administration',
-    'basic':       'basic usage',
-    'build':       'build pipeline (in order of execution)',
+    'basic':       'query packages',
+    'build':       'build packages',
     'config':      'configuration',
     'developer':   'developer',
     'environment': 'environment',
@@ -78,9 +78,9 @@ section_descriptions = {
 # preferential command order for some sections (e.g., build pipeline is
 # in execution order, not alphabetical)
 section_order = {
-    'basic': ['list', 'info', 'install', 'uninstall', 'find'],
-    'build': ['fetch', 'stage', 'patch', 'configure', 'build', 'clean',
-              'restage']
+    'basic': ['list', 'info', 'find'],
+    'build': ['fetch', 'stage', 'patch', 'configure', 'build', 'restage',
+              'install', 'uninstall', 'clean']
 }
 
 # Properties that commands are required to set.

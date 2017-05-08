@@ -33,8 +33,8 @@ import spack.repository
 
 from llnl.util import tty
 
-description = "remove an installed package"
-section = "basic"
+description = "remove installed packages"
+section = "build"
 level = "short"
 
 error_message = """You can either:

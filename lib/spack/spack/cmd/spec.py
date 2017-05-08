@@ -29,8 +29,8 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
-description = "show what will be installed, given a spec"
-section = "basic"
+description = "show what would be installed, given a spec"
+section = "build"
 level = "short"
 
 
