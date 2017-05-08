@@ -35,6 +35,7 @@ class XcbProto(AutotoolsPackage):
     version('1.12', '5ee1ec124ea8d56bd9e83b8e9e0b84c4')
     version('1.11', 'c8c6cb72c84f58270f4db1f39607f66a')
 
-    extends('python')
+    # TODO: uncomment once build deps can be resolved separately
+    # extends('python')
 
     patch('xcb-proto-1.12-schema-1.patch', when='@1.12')
