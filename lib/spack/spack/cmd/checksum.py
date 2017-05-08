@@ -36,6 +36,8 @@ from spack.util.naming import *
 from spack.version import *
 
 description = "checksum available versions of a package"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):

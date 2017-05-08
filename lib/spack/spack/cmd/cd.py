@@ -26,6 +26,8 @@ import spack.cmd.location
 import spack.modules
 
 description = "cd to spack directories in the shell"
+section = "environment"
+level = "long"
 
 
 def setup_parser(subparser):

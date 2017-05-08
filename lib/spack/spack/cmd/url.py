@@ -34,6 +34,8 @@ from spack.util.web import find_versions_of_archive
 from spack.util.naming import simplify_name
 
 description = "debugging tool for url parsing"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
