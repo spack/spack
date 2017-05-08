@@ -22,23 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class Mpfr(AutotoolsPackage):
-    """The MPFR library is a C library for multiple-precision
-       floating-point computations with correct rounding."""
+class PyCryptography(PythonPackage):
+    """cryptography is a package which provides cryptographic recipes
+       and primitives to Python developers"""
 
-    homepage = "http://www.mpfr.org"
-    url      = "https://ftp.gnu.org/gnu/mpfr/mpfr-3.1.5.tar.bz2"
+    homepage = "https://pypi.python.org/pypi/cryptography"
+    url      = "https://pypi.io/packages/source/c/cryptography/cryptography-1.8.1.tar.gz"
 
-    version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
-    version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
-    version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    version('1.8.1', '9f28a9c141995cd2300d0976b4fac3fb')
 
-    # mpir is a drop-in replacement for gmp
-    depends_on('gmp@4.1.0:')  # 4.2.3 or higher is recommended
-
-    patch('vasprintf.patch', when='@3.1.5')
-    patch('strtofr.patch',   when='@3.1.5')
+    # dependencies taken from https://github.com/pyca/cryptography/blob/master/setup.py
+    depends_on('py-setuptools@20.5:',   type='build')
+    depends_on('py-cffi@1.4.1:',        type=('build', 'run'))
+    depends_on('py-asn1crypto@0.21.0:', type=('build', 'run'))
+    depends_on('py-six@1.4.1:',         type=('build', 'run'))
+    depends_on('py-idna@2.1:',          type=('build', 'run'))
+    depends_on('py-enum34',             type=('build', 'run'), when='^python@:3.4')
+    depends_on('py-ipaddress',          type=('build', 'run'), when='^python@:3.3')
+    depends_on('openssl')

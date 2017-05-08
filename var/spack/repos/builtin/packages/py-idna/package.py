@@ -22,23 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class Mpfr(AutotoolsPackage):
-    """The MPFR library is a C library for multiple-precision
-       floating-point computations with correct rounding."""
+class PyIdna(PythonPackage):
+    """Internationalized Domain Names for Python (IDNA 2008 and UTS #46) """
 
-    homepage = "http://www.mpfr.org"
-    url      = "https://ftp.gnu.org/gnu/mpfr/mpfr-3.1.5.tar.bz2"
+    homepage = "https://github.com/kjd/idna"
+    url      = "https://pypi.io/packages/source/i/idna/idna-2.5.tar.gz"
 
-    version('3.1.5', 'b1d23a55588e3b2a13e3be66bc69fd8d')
-    version('3.1.4', 'b8a2f6b0e68bef46e53da2ac439e1cf4')
-    version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    version('2.5', 'fc1d992bef73e8824db411bb5d21f012')
 
-    # mpir is a drop-in replacement for gmp
-    depends_on('gmp@4.1.0:')  # 4.2.3 or higher is recommended
-
-    patch('vasprintf.patch', when='@3.1.5')
-    patch('strtofr.patch',   when='@3.1.5')
+    depends_on('py-setuptools', type=('build', 'link'))
+    depends_on('python@2.6:',   type=('build', 'run'))
