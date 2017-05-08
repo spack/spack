@@ -350,6 +350,10 @@ def _main(command, parser, args, unknown_args):
             return_val = command(parser, args)
     except SpackError as e:
         e.die()  # gracefully die on any SpackErrors
+    except Exception as e:
+        if spack.debug:
+            raise
+        tty.die(str(e))
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
