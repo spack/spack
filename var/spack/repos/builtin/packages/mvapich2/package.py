@@ -110,6 +110,21 @@ class Mvapich2(AutotoolsPackage):
             return "%s/mvapich/mv2/mvapich2-%s.tar.gz"  % (base_url, version)
 
     @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        if 'fortran' in query_parameters:
+            libraries = ['libmpifort'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recurse=True
+        )
+
+    @property
     def process_manager_options(self):
         spec = self.spec
 
