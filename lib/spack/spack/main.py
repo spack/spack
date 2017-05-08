@@ -52,7 +52,7 @@ levels = ['short', 'long']
 # intro text for help at different levels
 intro_by_level = {
     'short': 'These are common spack commands:',
-    'long':  'Complete list of commands:',
+    'long':  'Complete list of spack commands:',
 }
 
 # control top-level spack options shown in basic vs. advanced help
@@ -70,9 +70,9 @@ section_descriptions = {
     'developer':   'developer',
     'environment': 'environment',
     'extensions':  'extensions',
-    'help':        'further help',
+    'help':        'more help',
     'packaging':   'packaging',
-    'system':      'System',
+    'system':      'system',
 }
 
 # preferential command order for some sections (e.g., build pipeline is
@@ -224,9 +224,12 @@ class SpackArgumentParser(ArgumentParser):
 
         # epilog
         formatter.add_text("""\
-'spack help -a' lists all available commands. For help on a specific
-command, use 'spack help <command>'. To open the documentation in a
-web browser, use 'spack docs', or visit http://spack.rtfd.io/.""")
+{help}:
+  spack help -a          list all available commands
+  spack help <command>   help on a specific command
+  spack help --spec      help on the spec syntax
+  spack docs             open http://spack.rtfd.io/ in a browser"""
+.format(help=section_descriptions['help']))
 
         # determine help from format above
         return formatter.format_help()

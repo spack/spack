@@ -84,7 +84,7 @@ spec expression syntax:
       libdwarf @g{%intel} ^libelf@g{%gcc}
           libdwarf, built with intel compiler, linked to libelf built with gcc
       mvapich2 @g{%pgi} @B{fabrics=psm,mrail,sock}
-          mvapich2, built with xl compiler, with support for multiple fabrics
+          mvapich2, built with pgi compiler, with support for multiple fabrics
 """
 
 
