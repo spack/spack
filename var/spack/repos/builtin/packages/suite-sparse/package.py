@@ -99,6 +99,7 @@ class SuiteSparse(Package):
             make_args.extend([
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
+                'CFLAGS+=-I%s' % spec['tbb'].prefix.include
             ])
 
         # Make sure Spack's Blas/Lapack is used. Otherwise System's
