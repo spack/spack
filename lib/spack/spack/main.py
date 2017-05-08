@@ -72,7 +72,7 @@ section_descriptions = {
     'extensions':  'extensions',
     'help':        'further help',
     'packaging':   'packaging',
-    'system':      'system',
+    'system':      'System',
 }
 
 # preferential command order for some sections (e.g., build pipeline is
@@ -384,7 +384,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
         # make a profiler and run the code.
         pr = cProfile.Profile()
         pr.enable()
-        _main(command, parser, args, unknown_args)
+        return _main(command, parser, args, unknown_args)
 
     finally:
         pr.disable()
@@ -457,8 +457,9 @@ def main(argv=None):
             import pdb
             pdb.runctx('_main(command, parser, args, unknown)',
                        globals(), locals())
+            return 0
         else:
-            _main(command, parser, args, unknown)
+            return _main(command, parser, args, unknown)
 
     except SystemExit as e:
         return e.code
