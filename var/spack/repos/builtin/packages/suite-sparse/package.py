@@ -96,6 +96,8 @@ class SuiteSparse(Package):
 
         # Intel TBB in SuiteSparseQR
         if 'tbb' in spec:
+            # NOTE: if the tbb_453 patch *stops* being applicable
+            # then the ld flags for tbb should be updated correspondingly
             make_args.extend([
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
