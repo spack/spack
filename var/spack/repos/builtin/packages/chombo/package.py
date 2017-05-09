@@ -127,7 +127,7 @@ class Chombo(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir('lib'):
-            make('all')
+            gmake('all')
 
     def install(self, spec, prefix):
         with working_dir('lib'):
