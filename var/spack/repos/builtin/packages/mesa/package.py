@@ -99,13 +99,6 @@ class Mesa(AutotoolsPackage):
                 raise RuntimeError(
                     error.format(variant=var, version=ver, reference=ref))
 
-#    def install(self, spec, prefix):
-#        configure('--prefix={0}'.format(prefix))
-#        self.check_variants(
-#            var='+gallium',
-#            ver='@:9.2.2',
-#            ref='http://www.paraview.org/Wiki/ParaView/ParaView_And_Mesa_3D')
-
     def configure_args(self):
         self.check_variants(
             var='+gallium',
