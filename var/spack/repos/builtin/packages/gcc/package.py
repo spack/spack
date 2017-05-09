@@ -250,6 +250,6 @@ class Gcc(AutotoolsPackage):
             for line in lines:
                 out.write(line + '\n')
                 if line.startswith('*link:'):
-                    out.write('-rpath {0}:{1} \\\n'.format(
+                    out.write('-rpath {0}:{1} '.format(
                               self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
