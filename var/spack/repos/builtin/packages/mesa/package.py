@@ -31,13 +31,13 @@ class Mesa(AutotoolsPackage):
 
     homepage = "http://www.mesa3d.org"
     base_url = "ftp://ftp.freedesktop.org/pub/mesa/"
-    url      = base_url+"12.0.3/mesa-12.0.3.tar.gz"
+    url      = base_url + "12.0.3/mesa-12.0.3.tar.gz"
 
-    version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
     version('13.0.2', 'cb828f9f68e0cd6c7ef30b9c67aa7cf2')
     version('13.0.1', '8415d4bb7837e6cfb0c819fdd19a643b')
     version('13.0.0', '7205edb90d0396dc26d049fa495f6fd1')
-   
+    version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
+
     # General dependencies
     depends_on('python@2.6.4:')
     depends_on('py-mako@0.3.4:', type=('build', 'run'))
@@ -47,9 +47,9 @@ class Mesa(AutotoolsPackage):
     variant('gallium', default=False, description="compile with gallium llvm sw rendering")
     variant('drm', default=True, description="compile with drm")
 
-    #depends_on("llvm@3.0", when='@8.0.5~gallium')
-    depends_on("libxml2+python", when='@8.0.5~gallium') #
-    #depends_on("llvm+link_dylib+utils", when='@9:+gallium')
+    # depends_on("llvm@3.0", when='@8.0.5~gallium')
+    depends_on("libxml2+python", when='@8.0.5~gallium') 
+    # depends_on("llvm+link_dylib+utils", when='@9:+gallium')
     # depends_on("llvm+shared_libs", when='@9:+gallium')
     depends_on('llvm', when='+gallium')
 
@@ -82,7 +82,7 @@ class Mesa(AutotoolsPackage):
         if version < Version(latest_mver):
             base = Mesa.base_url + "/older-versions/%s.x" % (version.up_to(1))
         else:
-            base = Mesa.base_url 
+            base = Mesa.base_url
         if version > Version('10.4'):
             name = 'mesa'
         else:
@@ -112,7 +112,7 @@ class Mesa(AutotoolsPackage):
         args = []
         if '+gallium' in self.spec:
             args = ['--enable-opengl', '--disable-gles1', '--disable-gles2',
-                    '--disable-va', '--disable-xvmc', '--disable-vdpa', 
+                    '--disable-va', '--disable-xvmc', '--disable-vdpa',
                     '--enable-gallium-llvm',
                     '--with-gallium-drivers=swrast,swr',
                     '--disable-dri', '--with-dri-drivers=',
@@ -135,9 +135,3 @@ class Mesa(AutotoolsPackage):
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'lib'))
             run_env.set('GALLIUM_DRIVER', 'swr')
-
-      
-#        options = ['-prefix=%s' % prefix]
-#        configure(*options)
-#        make()
-#        make('install')
