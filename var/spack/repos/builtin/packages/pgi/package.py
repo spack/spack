@@ -110,8 +110,8 @@ class Pgi(Package):
         run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
         run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
 
-        run_env.set('PATH',            prefix.bin)
-        run_env.set('CPATH',           prefix.include)
-        run_env.set('LIBRARY_PATH',    prefix.lib)
-        run_env.set('LD_LIBRARY_PATH', prefix.lib)
-        run_env.set('MANPATH',         prefix.man)
+        run_env.prepend_path('PATH',            prefix.bin)
+        run_env.prepend_path('CPATH',           prefix.include)
+        run_env.prepend_path('LIBRARY_PATH',    prefix.lib)
+        run_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        run_env.prepend_path('MANPATH',         prefix.man)
