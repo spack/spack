@@ -95,40 +95,39 @@ class Flann(CMakePackage):
 
     # Tests: require hdf5 and gtest, don't know what to do so ignore...
 
-    def patch(self):
-        # TODO: when #3367 is merged:
-        # filter_file(
-        #     "python2",
-        #     self.spec["python"].command.name,
-        #     "src/python/setup.py.tpl"
-        # )
-        if self.spec.satisfies("^python@3:"):
-            filter_file("python2", "python3", "src/python/setup.py.tpl")
-
     def cmake_args(self):
+        spec = self.spec
         args = []
+        # Default is RelWithDebugInfo
+        args.append("-DCMAKE_BUILD_TYPE:STRING=Release")
 
         # Language bindings. Many default to true in CMakeLists, bypass all
-        c_bind   = "ON" if self.spec.satisfies("+c")      else "OFF"
+        c_bind = "ON" if "+c" in spec else "OFF"
         args.append("-DBUILD_C_BINDINGS:BOOL={}".format(c_bind))
 
-        py_bind  = "ON" if self.spec.satisfies("+python") else "OFF"
+        py_bind = "ON" if "+python" in spec else "OFF"
         args.append("-DBUILD_PYTHON_BINDINGS:BOOL={}".format(py_bind))
 
-        mat_bind = "ON" if self.spec.satisfies("+matlab") else "OFF"
+        mat_bind = "ON" if "+matlab" in spec else "OFF"
         args.append("-DBUILD_MATLAB_BINDINGS:BOOL={}".format(mat_bind))
 
         # Extra options
-        cuda_lib   = "ON" if self.spec.satisfies("+cuda")     else "OFF"
+        cuda_lib = "ON" if "+cuda" in spec else "OFF"
         args.append("-DBUILD_CUDA_LIB:BOOL={}".format(cuda_lib))
 
-        examples   = "ON" if self.spec.satisfies("+examples") else "OFF"
+        examples = "ON" if "+examples" in spec else "OFF"
         args.append("-DBUILD_EXAMPLES:BOOL={}".format(examples))
 
-        use_openmp = "ON" if self.spec.satisfies("+openmp")   else "OFF"
+        use_openmp = "ON" if "+openmp" in spec else "OFF"
         args.append("-DUSE_OPENMP:BOOL={}".format(use_openmp))
 
-        use_mpi    = "ON" if self.spec.satisfies("+mpi")      else "OFF"
+        use_mpi = "ON" if "+mpi" in spec else "OFF"
         args.append("-DUSE_MPI:BOOL={}".format(use_mpi))
+
+        # Configure the proper python executable
+        if "+python" in spec:
+            args.append(
+                "-DPYTHON_EXECUTABLE={}".format(spec["python"].command.path)
+            )
 
         return args
