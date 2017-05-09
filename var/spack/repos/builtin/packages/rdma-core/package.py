@@ -38,8 +38,6 @@ class RdmaCore(CMakePackage):
     depends_on('libnl')
 
     def cmake_args(self):
-        spec = self.spec
-
         if not sys.platform.startswith('linux'):
             raise InstallError("rdma-core requires Linux")
 
