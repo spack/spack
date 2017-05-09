@@ -38,14 +38,17 @@ class Mesa(AutotoolsPackage):
     version('13.0.0', '7205edb90d0396dc26d049fa495f6fd1')
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
 
+    variant('gallium', default=False, description="compile with gallium llvm sw rendering")
+    variant('drm', default=True, description="compile with drm")
+
+    # see http://www.paraview.org/Wiki/ParaView/ParaView_And_Mesa_3D
+    conflicts('+gallium', when='@:9.2.2')
+
     # General dependencies
     depends_on('python@2.6.4:')
     depends_on('py-mako@0.3.4:', type=('build', 'run'))
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
-
-    variant('gallium', default=False, description="compile with gallium llvm sw rendering")
-    variant('drm', default=True, description="compile with drm")
 
     # depends_on("llvm@3.0", when='@8.0.5~gallium')
     depends_on("libxml2+python", when='@8.0.5~gallium') 
@@ -87,8 +90,7 @@ class Mesa(AutotoolsPackage):
             name = 'mesa'
         else:
             name = 'MesaLib'
-        ret = base + "/%s/%s-%s.tar.gz" % (version, name, version)
-        return ret
+        return base + "/%s/%s-%s.tar.gz" % (version, name, version)
 
     def check_variants(self, var='', ver='', ref=''):
         if var and ver:
