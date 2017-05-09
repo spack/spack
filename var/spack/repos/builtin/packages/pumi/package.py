@@ -23,37 +23,43 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
-class Boxlib(CMakePackage):
-    """BoxLib, a software framework for massively parallel
-       block-structured adaptive mesh refinement (AMR) codes."""
+class Pumi(CMakePackage):
+    """SCOREC RPI's Parallel Unstructured Mesh Infrastructure (PUMI).
+       An efficient distributed mesh data structure and methods to support
+       parallel adaptive analysis including general mesh-based operations,
+       such as mesh entity creation/deletion, adjacency and geometric
+       classification, iterators, arbitrary (field) data attachable to mesh
+       entities, efficient communication involving entities duplicated
+       across multiple tasks, migration of mesh entities between tasks,
+       and dynamic load balancing."""
 
-    homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
+    homepage = "https://www.scorec.rpi.edu/pumi"
+    url      = "https://github.com/SCOREC/core.git"
 
-    version('16.12.2', 'a28d92a5ff3fbbdbbd0a776a59f18526')
+    version('0.0.1', git='https://github.com/SCOREC/core.git',
+        commit='0c315e82b3f2478dc18bdd6cfa89f1cddb85cd6a')
+    version('develop', git='https://github.com/SCOREC/core.git',
+        branch='master')
+
+    if sys.platform == 'darwin':
+        patch('phiotimer.cc.darwin.patch', level=0)  # !clock_gettime
+
+    variant('zoltan', default=False, description='Enable Zoltan Features')
 
     depends_on('mpi')
-
-    variant('dims',
-        default='3',
-        values=('1', '2', '3'),
-        multi=False,
-        description='Number of spatial dimensions'
-    )
+    depends_on('zoltan', when='+zoltan')
 
     def cmake_args(self):
         spec = self.spec
-        options = []
 
-        options.extend([
-            '-DBL_SPACEDIM=%d' % int(spec.variants['dims'].value),
-            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
-            '-DENABLE_FBASELIB=ON',
+        args = [
+            '-DSCOREC_CXX_WARNINGS=OFF',
+            '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
-        ])
+        ]
 
-        return options
+        return args

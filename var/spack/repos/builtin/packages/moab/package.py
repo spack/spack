@@ -57,7 +57,9 @@ class Moab(Package):
 
     depends_on('mpi')
     depends_on('hdf5+mpi')
+    depends_on('netcdf', when='+netcdf')
     depends_on('netcdf+mpi', when='+netcdf')
+    depends_on('metis')
     depends_on('parmetis')
     depends_on('zoltan')
     depends_on('zoltan~fortran', when='~fortran')
@@ -67,13 +69,35 @@ class Moab(Package):
         options = [
             '--prefix=%s' % prefix,
             '--enable-optimize',
-            '--enable-tools',
+            '--disable-tools',
+            '--disable-mbconvert',
+            '--disable-hexmodops',
+            '--disable-vtkMOABReader',
+            '--disable-mbsize',
+            '--disable-mbskin',
+            '--disable-mbtagprop',
+            '--disable-mbmem',
+            '--disable-spheredecomp',
+            '--disable-mbsurfplot',
+            '--disable-mbpart',
+            '--disable-dagmc',
+            '--disable-gsets',
+            '--disable-mbmerge',
+            '--disable-mbdepth',
+            '--disable-mbcoupler',
+            '--disable-mcnpmit',
+            '--disable-refiner',
+            '--disable-h5mtools',
+            '--disable-mbcslam',
+            '--disable-mbquality',
+            '--disable-ahf',
+            '--disable-mbumr',
+            '--disable-imesh',
             '--with-pic',
             '--with-mpi=%s' % spec['mpi'].prefix,
             '--with-hdf5=%s' % spec['hdf5'].prefix,
             '--with-parmetis=%s' % spec['parmetis'].prefix,
             '--with-zoltan=%s' % spec['zoltan'].prefix,
-            '--disable-vtkMOABReader',
             '--without-vtk',
             'CXX=%s' % spec['mpi'].mpicxx,
             'CC=%s' % spec['mpi'].mpicc,

@@ -25,35 +25,37 @@
 from spack import *
 
 
-class Boxlib(CMakePackage):
-    """BoxLib, a software framework for massively parallel
-       block-structured adaptive mesh refinement (AMR) codes."""
+class Phasta(CMakePackage):
+    """SCOREC RPI's Parallel Hierarchic Adaptive Stabilized Transient Analysis
+       (PHASTA) of compressible and incompressible Navier Stokes equations."""
 
-    homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
+    homepage = "https://www.scorec.rpi.edu/software.php"
+    url      = "https://github.com/PHASTA/phasta.git"
 
-    version('16.12.2', 'a28d92a5ff3fbbdbbd0a776a59f18526')
+    version('0.0.1', git='https://github.com/PHASTA/phasta.git',
+        commit='11f431f2d1a53a529dab4b0f079ab8aab7ca1109')
+    version('develop', git='https://github.com/PHASTA/phasta.git',
+        branch='master')
 
     depends_on('mpi')
 
-    variant('dims',
-        default='3',
-        values=('1', '2', '3'),
-        multi=False,
-        description='Number of spatial dimensions'
-    )
-
     def cmake_args(self):
         spec = self.spec
-        options = []
 
-        options.extend([
-            '-DBL_SPACEDIM=%d' % int(spec.variants['dims'].value),
-            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
-            '-DENABLE_FBASELIB=ON',
+        args = [
+            '-DPHASTA_USE_MPI=ON',
+            '-DPHASTA_BUILD_CONVERTERIO=OFF',
+            '-DPHASTA_BUILD_ACUSTAT=OFF',
+            '-DPHASTA_BUILD_M2N=OFF',
+            '-DPHASTA_BUILD_M2NFixBnd=OFF',
+            '-DPHASTA_USE_LESLIB=OFF',
+            '-DPHASTA_USE_PETSC=OFF',
+            '-DPHASTA_USE_SVLS=ON',
+            '-DPHASTA_INCOMPRESSIBLE=ON',
+            '-DPHASTA_COMPRESSIBLE=ON',
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
-        ])
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+        ]
 
-        return options
+        return args

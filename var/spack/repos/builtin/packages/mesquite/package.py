@@ -25,35 +25,32 @@
 from spack import *
 
 
-class Boxlib(CMakePackage):
-    """BoxLib, a software framework for massively parallel
-       block-structured adaptive mesh refinement (AMR) codes."""
+class Mesquite(AutotoolsPackage):
+    """Mesquite (Mesh Quality Improvement Toolkit) is designed to provide a
+       stand-alone, portable, comprehensive suite of mesh quality improvement
+       algorithms and components that can be used to construct custom quality
+       improvement algorithms. Mesquite provides a robust and effective mesh
+       improvement toolkit that allows both meshing researchers application
+       scientists to benefit from the latest developments in mesh quality
+       control and improvement."""
 
-    homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
+    homepage = "https://software.sandia.gov/mesquite"
+    url      = "https://software.sandia.gov/mesquite/mesquite-2.3.0.tar.gz"
 
-    version('16.12.2', 'a28d92a5ff3fbbdbbd0a776a59f18526')
+    version('2.99',  '92b94167981bb8fcd59b0f0f18fbab64')
+    version('2.3.0', 'f64948b5210d5ccffaa9a2482447b322')
+    version('2.2.0', '41360c363e541aff7dc10024c90072d3')
 
-    depends_on('mpi')
+    variant('mpi', default=True, description='Enable MPI parallel support')
 
-    variant('dims',
-        default='3',
-        values=('1', '2', '3'),
-        multi=False,
-        description='Number of spatial dimensions'
-    )
+    depends_on('mpi', when='+mpi')
 
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-
-        options.extend([
-            '-DBL_SPACEDIM=%d' % int(spec.variants['dims'].value),
-            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
-            '-DENABLE_FBASELIB=ON',
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
-        ])
-
-        return options
+    def configure_args(self):
+        args = [
+            'CC=%s' % self.spec['mpi'].mpicc,
+            'CXX=%s' % self.spec['mpi'].mpicxx,
+            '--with-mpi=%s' % self.spec['mpi'].prefix,
+            '--enable-release',
+            '--enable-shared',
+        ]
+        return args
