@@ -51,12 +51,19 @@ class Cosmomc(Package):
     variant('planck', default=False,
             description='Enable Planck Likelihood code and baseline data')
 
-    patch('Makefile.patch')
-    patch('errorstop.patch')
+    extends('python')
 
     depends_on('mpi', when='+mpi')
     depends_on('planck-likelihood', when='+planck')
-    depends_on('python@2.7:2.8,3.4:')
+    depends_on('py-matplotlib')
+    depends_on('py-numpy')
+    depends_on('py-pandas')
+    depends_on('py-scipy')
+    depends_on('py-six')
+    depends_on('python @2.7:2.999,3.4:')
+
+    patch('Makefile.patch')
+    patch('errorstop.patch')
 
     parallel = False
 
