@@ -26,46 +26,46 @@ from spack import *
 
 
 class Turbovnc(CMakePackage):
-    """TurboVNC is a derivative of VNC (Virtual Network Computing) 
- that is tuned to provide peak performance for 3D and video workloads.
- TurboVNC was originally a fork of TightVNC 1.3.x, on the surface, 
- the X server and Windows viewer still behave similarly to their parents."""
-    # FIXME: add a proper url for your package's homepage here.
+    """TurboVNC is a derivative of VNC (Virtual Network Computing)
+    that is tuned to provide peak performance for 3D and video workloads.
+    TurboVNC was originally a fork of TightVNC 1.3.x, on the surface,
+    the X server and Windows viewer still behave similarly to their parents."""
+
     homepage = "http://www.turbovnc.org/"
     url      = "http://downloads.sourceforge.net/project/turbovnc/2.0.1/turbovnc-2.0.1.tar.gz"
 
-
+    version('2.1.1', 'b1b1537eb5f8e6bd90acfd853277a9cf')
     version('2.1', '6748bb13647d318f0c932394f8298d10')
     version('2.0.1', 'a279fdb9ac86a1ebe82f85ab68353dcc')
+    version('1.2.2', '556d97741199cf4e2f2d2b2fbee0069c')
 
+    variant('java',    default=False, description='Enable Java build')
+    variant('server',  default=True,  description='Enable server build')
+    variant('x11deps', default=True,  description='Depends x11 depends')
 
-    # FIXME: Add dependencies if this package requires them.
-    variant('java', default=False, description='Enable Java build')
+    patch('x11deps.patch', when='@2.1:')
 
-   
-    depends_on('cmake', type='build')
-    depends_on("libjpeg-turbo")
-    depends_on("libjpeg-turbo+java", when='+java')
+    depends_on("libx11", when='+x11deps')
+    depends_on("libjpeg-turbo@1.3.1", when='@1.2.2')
+    depends_on("libjpeg-turbo@1.5.1", when='@2.1:')
+    depends_on("libjpeg-turbo@1.5.1+java", when='@2.1:+java',)
     depends_on('jdk', when='+java')
-    depends_on("openssl")
+    depends_on('openssl', when='@2.2:')
+    depends_on('openssl@:1.0.999', when='@:2.1')
     depends_on("pam")
-    depends_on("libx11")
-    depends_on("libxext")
-    depends_on("libxdmcp")
-    depends_on("libxau")
-    depends_on("libxdamage")
-    depends_on("libxcursor")
-    depends_on('libxkbfile')
-    depends_on('xkeyboard-config')
-    depends_on('xkbcomp', type="run")
-    depends_on('xkbdata', type='build')
-
-    #def url_for_version(self, version):
-        #"""Handle TurboVNC's version-based custom URLs."""
-        #return 'http://downloads.sourceforge.net/project/turbovnc/%s/turbovnc-%s.tar.gz' % (
-            #version, version)
-
-
+    depends_on("libxext", when='+x11deps')
+    depends_on("libxdmcp", when='+x11deps')
+    depends_on("libxau", when='+x11deps')
+    depends_on("libxdamage", when='+x11deps')
+    depends_on("libxcursor", when='+x11deps')
+    depends_on("libxi", when='+java')
+    depends_on("libxxf86vm", when='+x11deps')
+    depends_on("libxxf86misc", when='+x11deps')
+    depends_on("xf86vidmodeproto", when='+x11deps')
+    # depends_on('libxkbfile')
+    depends_on('xkeyboard-config', when='+x11deps', type=('build', 'run'))
+    depends_on('xkbcomp', when='+x11deps', type=('build', 'run'))
+    # depends_on('xkbdata', when='+x11deps', type='build')
 
     def validate(self):
         """
@@ -74,48 +74,40 @@ class Turbovnc(CMakePackage):
         :param spec: spec of the package
         :raises RuntimeError: in case of inconsistencies
         """
-        spec=self.spec
+        spec = self.spec
         if spec.satisfies('@:2.1') and spec.satisfies('^openssl@1.1:'):
             msg = 'turbovnc does not compile with openssl 1.1 '
             raise RuntimeError(msg)
 
     def cmake_args(self):
 
-        #self.validate()
+        self.validate()
         options = []
-        if '+java' in self.spec:            
+        if '+java' in self.spec:
             options.append('-DTVNC_BUILDJAVA:BOOL=ON')
+            options.append(
+                '-DTJPEG_JAR:PATH=' + self.spec['libjpeg-turbo'].prefix +
+                '/share/classes/turbojpeg.jar')
+            options.append(
+                '-DTJPEG_JNILIBRARY:PATH=' +
+                self.spec['libjpeg-turbo'].prefix +
+                '/lib/libturbojpeg.so')
         else:
             options.append('-DTVNC_BUILDJAVA:BOOL=OFF')
             options.append('-DTVNC_BUILDNATIVE:BOOL=ON')
-            options.append('-DXKB_BASE_DIRECTORY:PATH='+self.spec['xkbdata'].prefix+'/share/X11/xkb')
+        if '+server' in self.spec:
+            options.append('-DTVNC_BUILDSERVER:BOOL=ON')
+            if '~x11deps' in self.spec:
+                options.append('-DTVNC_NVCONTROL:BOOL=ON')
+        if '+x11deps' in self.spec:
+            options.append('-DXKB_BASE_DIRECTORY:PATH=' +
+                           self.spec['xkeyboard-config'].prefix +
+                           '/share/X11/xkb')
+            options.append('-DXKB_BIN_DIRECTORY:PATH=' +
+                           self.spec['xkbcomp'].prefix + '/bin')
         if '+debug' in self.spec:
             options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
         else:
             options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
 
         return options
-    #def install(self, spec, prefix):
-        
-        #self.validate(spec)
-
-        #def feature_to_bool(feature, on='ON', off='OFF'):
-            #if feature in spec:
-                #return on
-            #return off
-##        layout = YamlDirectoryLayout(self.tmpdir)
-##        rel_path=layout.relative_path_for_spec(spec)
-        #feature_args = []
-        ## FIXME: Modify the configure line to suit your build system here.
-        #if '+java' not in spec:
-            #feature_args.append(
-                #'-DTVNC_BUILDJAVA=%s' % feature_to_bool('+java'))
-            #feature_args.append(
-                #' %s' % feature_to_bool('+java'))
-        #feature_args.append('-DCMAKE_VERBOSE_MAKEFILE=ON')
-        #feature_args.extend(std_cmake_args)
-        #cmake('.', *feature_args)
-
-        ## FIXME: Add logic to build and install here
-        #make()
-        #make("install")

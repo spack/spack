@@ -1,0 +1,15 @@
+--- a/unix/CMakeLists.txt.orig	2017-05-09 00:24:00.611880406 +0200
++++ b/unix/CMakeLists.txt	2017-05-09 00:25:29.872515034 +0200
+@@ -30,9 +30,9 @@
+ 	endforeach()
+ endif()
+ 
+-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+-	set(CMAKE_LIBRARY_PATH /usr/lib/${CPU_TYPE}-linux-gnu;/usr/lib${BITS};/usr/lib)
+-endif()
++#not nedded#if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
++#not nedded#	set(CMAKE_LIBRARY_PATH /usr/lib/${CPU_TYPE}-linux-gnu;/usr/lib${BITS};/usr/lib)
++#not nedded#endif()
+ 
+ find_package(X11 REQUIRED)
+ 

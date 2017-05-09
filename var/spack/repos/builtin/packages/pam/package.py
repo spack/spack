@@ -22,20 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install pam
-#
-# You can edit this file again by typing:
-#
-#     spack edit pam
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
+
 #
 from spack import *
 
@@ -50,10 +37,7 @@ class Pam(AutotoolsPackage):
     version('1.2.1', '9dc53067556d2dd567808fd509519dd6')
     version('1.2.0', 'ee4a480d77b341c99e8b1375f8f180c0')
 
-
     def configure_args(self):
         prefix = self.spec.prefix
         return [
-            '--prefix={0}'.format(prefix),
             '--includedir={0}/include/security'.format(prefix)]
-
