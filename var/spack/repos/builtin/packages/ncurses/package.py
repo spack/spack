@@ -63,7 +63,6 @@ class Ncurses(AutotoolsPackage):
         ]
 
         nwide_opts = ['--without-manpages',
-                      '--without-progs',
                       '--without-tests']
 
         wide_opts = ['--enable-widec']
