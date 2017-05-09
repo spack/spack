@@ -85,8 +85,10 @@ class LibjpegTurbo(Package):
         return args
 
     def setup_environment(self, spack_env, run_env):
-        spack_env.set(
-            'JNI_CFLAGS',
-            '-I' + os.path.join(self.spec['jdk'].prefix, 'include') + ' ' +
-            '-I' + os.path.join(self.spec['jdk'].prefix, 'include', 'linux'),
-            separator=' ')
+        if '+java' in self.spec:
+            spack_env.set(
+                'JNI_CFLAGS',
+                '-I' + os.path.join(self.spec['jdk'].prefix, 'include') +
+                ' ' + '-I' +
+                os.path.join(self.spec['jdk'].prefix, 'include', 'linux'),
+                separator=' ')
