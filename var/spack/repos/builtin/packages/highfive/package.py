@@ -37,7 +37,7 @@ class Highfive(CMakePackage):
     version('1.0', 'e44e548560ea92afdb244c223b7655b6')
 
     variant('boost', default=False, description='Support Boost')
-    variant('mpi', default=False, description='Support MPI')
+    variant('mpi', default=True, description='Support MPI')
 
     depends_on('boost @1.41:', when='+boost')
     depends_on('hdf5')
@@ -45,11 +45,8 @@ class Highfive(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.boolopt("USE_BOOST", '+boost' in self.spec),
-            self.boolopt("HIGHFIVE_PARALLEL_HDF5", '+mpi' in self.spec),
-            self.boolopt("UNIT_TESTS", False),
-            self.boolopt("HIGHFIVE_EXAMPLES", False)]
+            '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
+            '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
+            '-DUNIT_TESTS:Bool=false',
+            '-DHIGHFIVE_EXAMPLES:Bool=false']
         return args
-
-    def boolopt(self, option, cond):
-        return "-D%s:Bool=%s" % (option, "true" if cond else "false")
