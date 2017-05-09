@@ -77,7 +77,7 @@ class SuiteSparse(Package):
             'CUDA=no'
         ])
 
-        if spec.satisfies('+cuda'):
+        if '+cuda' in spec:
             make_args.extend([
                 'CUDA_PATH=%s' % spec['cuda'].prefix
             ])
