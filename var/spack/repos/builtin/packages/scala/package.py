@@ -23,12 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-description = "run pydoc from within spack"
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument('entity', help="run pydoc help on entity")
+class Scala(Package):
+    """Scala is a general-purpose programming language providing support for
+    functional programming and a strong static type system. Designed to be
+    concise, many of Scala's design decisions were designed to build from
+    criticisms of Java.
+    """
 
+    homepage = "https://www.scala-lang.org/"
+    url      = "https://downloads.lightbend.com/scala/2.12.1/scala-2.12.1.tgz"
 
-def doc(parser, args):
-    help(args.entity)
+    depends_on('jdk')
+    version('2.12.1', '3eaecbce019b0fa3067503846e292b32')
+
+    def install(self, spec, prefix):
+
+        def install_dir(dirname):
+            install_tree(dirname, join_path(prefix, dirname))
+
+        install_dir('bin')
+        install_dir('lib')
+        install_dir('doc')
+        install_dir('man')
