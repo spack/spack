@@ -84,7 +84,7 @@ class Hdf5(AutotoolsPackage):
         - "hl": high-level interface
         - "cxx": C++ APIs
         - "fortran": Fortran APIs
-        
+
         :return: list of matching libraries
         """
         query_parameters = self.spec.last_query.extra_parameters
