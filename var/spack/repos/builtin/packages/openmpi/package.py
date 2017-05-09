@@ -88,6 +88,8 @@ class Openmpi(AutotoolsPackage):
     patch('configure.patch', when="@1.10.0:1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
+    variant('rdma', default=False, description='Build with rdma-core; also need to manually set "fabrics" to include "verbs"')
+
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
@@ -118,6 +120,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc')
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('jdk', when='+java')
+    depends_on('rdma-core', when='+rdma')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
     def url_for_version(self, version):
@@ -169,7 +172,10 @@ class Openmpi(AutotoolsPackage):
         if not activated:
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
-        path = _verbs_dir()
+        if "+rdma" in self.spec:
+            path = self.spec['rdma-core'].prefix
+        else:
+            path = _verbs_dir()
         if (path is not None) and (path not in ('/usr', '/usr/local')):
             line += '={0}'.format(path)
         return line
@@ -190,9 +196,12 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
             '--enable-static'
         ]
-        if self.spec.satisfies('@2.0:'):
+        if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
+
+        if '+rdma' in spec and not 'fabrics=verbs' in spec:
+            raise InstallError("variant '+rdma' requires variant 'fabrics=verbs'")
 
         # Fabrics and schedulers
         config_args.extend(self.with_or_without('fabrics'))
