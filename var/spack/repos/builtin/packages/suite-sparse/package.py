@@ -39,6 +39,7 @@ class SuiteSparse(Package):
 
     variant('tbb', default=False, description='Build with Intel TBB')
     variant('pic', default=True, description='Build position independent code (required to link with shared libraries)')
+    variant('cuda', default=False, description='Build with CUDA')
 
     depends_on('blas')
     depends_on('lapack')
@@ -47,6 +48,8 @@ class SuiteSparse(Package):
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
     # flags does not seem to be used, which leads to linking errors on Linux.
     depends_on('tbb', when='@4.5.3:+tbb')
+
+    depends_on('cuda', when='+cuda')
 
     patch('tbb_453.patch', when='@4.5.3:+tbb')
 
@@ -65,19 +68,20 @@ class SuiteSparse(Package):
             'CC=%s' % self.compiler.cc,
             'CXX=%s' % self.compiler.cxx,
             'F77=%s' % self.compiler.f77,
-            'CUDA_ROOT     =',
-            'GPU_BLAS_PATH =',
-            'GPU_CONFIG    =',
-            'CUDA_PATH     =',
-            'CUDART_LIB    =',
-            'CUBLAS_LIB    =',
-            'CUDA_INC_PATH =',
-            'NV20          =',
-            'NV30          =',
-            'NV35          =',
-            'NVCC          = echo',
-            'NVCCFLAGS     =',
+            # They "autodetect" CUDA before CUDA_PATH is checked
+            # setting CUDA=no disables them using `which nvcc`,
+            # so that we can use our spack managed cuda path.  If
+            # +cuda we set CUDA_PATH, and the other CUDA specific
+            # libraries are setup by suite-sparse.  See the file
+            # SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk
+            'CUDA=no'
         ])
+
+        if spec.satisfies('+cuda'):
+            make_args.extend([
+                'CUDA_PATH=%s' % spec['cuda'].prefix
+            ])
+
         if '+pic' in spec:
             make_args.extend([
                 'CFLAGS={0}'.format(self.compiler.pic_flag),
