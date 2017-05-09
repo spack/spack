@@ -48,6 +48,8 @@ def _verbs_dir():
         return path
     except TypeError:
         return None
+    except ProcessError:
+        return None
 
 
 class Openmpi(AutotoolsPackage):
