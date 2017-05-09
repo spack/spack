@@ -68,19 +68,12 @@ class SuiteSparse(Package):
             'CC=%s' % self.compiler.cc,
             'CXX=%s' % self.compiler.cxx,
             'F77=%s' % self.compiler.f77,
-            # They "autodetect" CUDA before CUDA_PATH is checked
-            # setting CUDA=no disables them using `which nvcc`,
-            # so that we can use our spack managed cuda path.  If
-            # +cuda we set CUDA_PATH, and the other CUDA specific
-            # libraries are setup by suite-sparse.  See the file
-            # SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk
-            'CUDA=no'
+            # CUDA=no does NOT disable cuda, it only disables internal search for CUDA_PATH.
+            # If in addition the latter is empty, then CUDA is completely disabled.
+            # See [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
+            'CUDA=no',
+            'CUDA_PATH={}'.format(spec['cuda'].prefix if '+cuda' in spec else '')
         ])
-
-        if '+cuda' in spec:
-            make_args.extend([
-                'CUDA_PATH=%s' % spec['cuda'].prefix
-            ])
 
         if '+pic' in spec:
             make_args.extend([
