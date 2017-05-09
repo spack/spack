@@ -35,6 +35,10 @@ class Darwin(Platform):
 
     def __init__(self):
         super(Darwin, self).__init__('darwin')
+
+        if self.default is None:
+            self.default = platform.machine()
+
         self.add_target(self.default, Target(self.default))
         mac_os = MacOs()
 
