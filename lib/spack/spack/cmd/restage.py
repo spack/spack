@@ -30,6 +30,8 @@ import spack
 import spack.cmd
 
 description = "revert checked out package source code"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):
