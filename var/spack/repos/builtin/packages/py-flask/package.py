@@ -29,8 +29,9 @@ class PyFlask(PythonPackage):
     """A microframework based on Werkzeug, Jinja2 and good intentions"""
 
     homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/f/flask/flask-0.11.1.tar.gz"
+    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
 
+    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
     version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
 
     depends_on('py-setuptools',         type='build')
