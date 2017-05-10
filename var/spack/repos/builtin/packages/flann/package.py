@@ -27,8 +27,7 @@ from spack import *
 
 
 class Flann(CMakePackage):
-    """
-    FLANN is a library for performing fast approximate nearest neighbor
+    """FLANN is a library for performing fast approximate nearest neighbor
     searches in high dimensional spaces. It contains a collection of
     algorithms we found to work best for nearest neighbor search and a system
     for automatically choosing the best algorithm and optimum parameters
