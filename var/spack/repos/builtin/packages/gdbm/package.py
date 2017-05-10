@@ -42,5 +42,7 @@ class Gdbm(AutotoolsPackage):
     version('1.9.1', '59f6e4c4193cb875964ffbe8aa384b58')
     version('1.9',   '1f0e8e6691edd61bdd6b697b8c02528d')
 
+    depends_on("readline")
+
     def configure_args(self):
         return ['--enable-libgdbm-compat']

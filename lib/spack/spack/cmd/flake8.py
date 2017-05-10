@@ -36,7 +36,11 @@ from llnl.util.filesystem import *
 import spack
 from spack.util.executable import *
 
+
 description = "runs source code style checks on Spack. requires flake8"
+section = "developer"
+level = "long"
+
 
 """List of directories to exclude from checks."""
 exclude_directories = [spack.external_path]

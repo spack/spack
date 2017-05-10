@@ -26,6 +26,8 @@ import argparse
 import spack.modules
 
 description = "remove package from environment using dotkit"
+section = "environment"
+level = "long"
 
 
 def setup_parser(subparser):

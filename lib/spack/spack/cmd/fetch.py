@@ -28,6 +28,8 @@ import spack
 import spack.cmd
 
 description = "fetch archives for packages"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):
