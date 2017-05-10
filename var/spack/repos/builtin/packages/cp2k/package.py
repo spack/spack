@@ -85,7 +85,8 @@ class Cp2k(Package):
                         '-mtune=native'],
                 'intel': ['-O2',
                           '-pc64',
-                          '-unroll']
+                          '-unroll',
+                          '-xHost']
             }
 
             dflags = ['-DNDEBUG']
