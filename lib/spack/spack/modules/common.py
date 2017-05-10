@@ -475,6 +475,12 @@ class BaseContext(tengine.Context):
         # before asking for package-specific modifications
         for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
+
+            # Forces consistency among spec and spec.package.spec
+            # but does not admit change in recipes that involve new
+            # dependencies or variants
+            package.spec = self.spec[item.name]
+
             modules = build_environment.parent_class_modules(package.__class__)
             for mod in modules:
                 build_environment.set_module_variables_for_package(
