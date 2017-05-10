@@ -37,6 +37,8 @@ class Libnl(AutotoolsPackage):
     version('3.2.25', '03f74d0cd5037cadc8cdfa313bbd195c')
 
     depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('m4', type='build')
 
     def configure_args(self):
         if not sys.platform.startswith('linux'):
