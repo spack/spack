@@ -93,6 +93,13 @@ class Flann(CMakePackage):
     # Example uses hdf5.
     depends_on("hdf5", when="+examples")
 
+    def patch(self):
+        filter_file("setup.py install",
+                    'setup.py install --no-user-cfg --prefix=\\"{0}\\"'.format(
+                        self.prefix
+                     ),
+                     "src/python/CMakeLists.txt")
+
     # Tests: require hdf5 and gtest, don't know what to do so ignore...
 
     def cmake_args(self):
