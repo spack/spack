@@ -26,9 +26,8 @@ from spack import *
 
 
 class Libusb(AutotoolsPackage):
-    """
-    libusb is a C library that provides generic access to USB devices. It is
-    intended to be used by developers to facilitate the production of
+    """libusb is a C library that provides generic access to USB devices. It
+    is intended to be used by developers to facilitate the production of
     applications that communicate with USB hardware.
 
     It is portable: Using a single cross-platform API, it provides access to

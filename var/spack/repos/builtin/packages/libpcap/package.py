@@ -26,8 +26,7 @@ from spack import *
 
 
 class Libpcap(AutotoolsPackage):
-    """
-    The Packet Capture library provides a high level interface to packet
+    """The Packet Capture library provides a high level interface to packet
     capture systems. All packets on the network, even those destined for
     other hosts, are accessible through this mechanism. It also supports
     saving captured packets to a ``savefile'', and reading packets from

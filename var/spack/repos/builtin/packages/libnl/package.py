@@ -26,8 +26,7 @@ from spack import *
 
 
 class Libnl(AutotoolsPackage):
-    """
-    The libnl suite is a collection of libraries providing APIs to netlink
+    """The libnl suite is a collection of libraries providing APIs to netlink
     protocol based Linux kernel interfaces.
 
     Netlink is a IPC mechanism primarly between the kernel and user space
