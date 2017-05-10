@@ -40,7 +40,7 @@ class Flex(AutotoolsPackage):
     version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
     version('2.5.39', '5865e76ac69c05699f476515592750d7')
 
-    variant('lex', default=False,
+    variant('lex', default=True,
             description="Provide symlinks for lex, libl.a and libl.so")
 
     depends_on('bison',         type='build')
