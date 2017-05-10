@@ -72,7 +72,7 @@ class SuiteSparse(Package):
             # If in addition the latter is empty, then CUDA is completely disabled.
             # See [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
             'CUDA=no',
-            'CUDA_PATH={}'.format(spec['cuda'].prefix if '+cuda' in spec else '')
+            'CUDA_PATH={0}'.format(spec['cuda'].prefix if '+cuda' in spec else '')
         ])
 
         if '+pic' in spec:
