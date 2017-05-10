@@ -3010,7 +3010,6 @@ class SpecParser(spack.parse.Parser):
                             raise RedundantSpecError(specs[-1],
                                                      'compiler, version, '
                                                      'or variant')
-                        print "HERE IS THE PROBLEM", specs
                         specs.append(self.spec(None))
                     else:
                         self.unexpected_token()
@@ -3085,7 +3084,6 @@ class SpecParser(spack.parse.Parser):
         added_version = False
 
         while self.next:
-            print self.next.type, self.next
             if self.accept(AT):
                 vlist = self.version_list()
                 for version in vlist:
@@ -3113,7 +3111,6 @@ class SpecParser(spack.parse.Parser):
                 else:
                     # We've found the start of a new spec. Go back to do_parse
                     # and read this token again.
-                    print "HOW DID I GET HERE", self.token
                     self.push_tokens([self.token])
                     self.previous = None
                     break
@@ -3128,7 +3125,6 @@ class SpecParser(spack.parse.Parser):
                     raise InvalidHashError(spec, hash_spec.dag_hash())
 
             else:
-                print "I got here???"
                 break
 
         # If there was no version in the spec, consier it an open range
