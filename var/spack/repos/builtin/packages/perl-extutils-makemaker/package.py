@@ -25,17 +25,14 @@
 from spack import *
 
 
-class PyFlask(PythonPackage):
-    """A microframework based on Werkzeug, Jinja2 and good intentions"""
+class PerlExtutilsMakemaker(PerlPackage):
+    """ExtUtils::MakeMaker - Create a module Makefile. This utility is designed
+    to write a Makefile for an extension module from a Makefile.PL. It is based
+    on the Makefile.SH model provided by Andy Dougherty and the perl5-porters.
+    """
+    homepage = "https://github.com/Perl-Toolchain-Gang/ExtUtils-MakeMaker"
+    url      = "http://search.cpan.org/CPAN/authors/id/B/BI/BINGOS/ExtUtils-MakeMaker-7.24.tar.gz"
 
-    homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
+    version('7.24', '15c67ba2ea2c9e20a3d976b738adb113')
 
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
-
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
-    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
-    depends_on('py-click@2.0:',         type=('build', 'run'))
+    depends_on('perl@5.6.0:', type=('build', 'run'))

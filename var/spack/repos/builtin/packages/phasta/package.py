@@ -25,33 +25,37 @@
 from spack import *
 
 
-class Qthreads(AutotoolsPackage):
-    """The qthreads API is designed to make using large numbers of
-       threads convenient and easy, and to allow portable access to
-       threading constructs used in massively parallel shared memory
-       environments. The API maps well to both MTA-style threading and
-       PIM-style threading, and we provide an implementation of this
-       interface in both a standard SMP context as well as the SST
-       context. The qthreads API provides access to full/empty-bit
-       (FEB) semantics, where every word of memory can be marked
-       either full or empty, and a thread can wait for any word to
-       attain either state."""
-    homepage = "http://www.cs.sandia.gov/qthreads/"
+class Phasta(CMakePackage):
+    """SCOREC RPI's Parallel Hierarchic Adaptive Stabilized Transient Analysis
+       (PHASTA) of compressible and incompressible Navier Stokes equations."""
 
-    url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
-    version("1.12", "c857d175f8135eaa669f3f8fa0fb0c09")
-    version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
-    version("1.10", "d1cf3cf3f30586921359f7840171e551")
+    homepage = "https://www.scorec.rpi.edu/software.php"
+    url      = "https://github.com/PHASTA/phasta.git"
 
-    patch("restrict.patch", when="@:1.10")
-    patch("trap.patch", when="@:1.10")
+    version('0.0.1', git='https://github.com/PHASTA/phasta.git',
+        commit='11f431f2d1a53a529dab4b0f079ab8aab7ca1109')
+    version('develop', git='https://github.com/PHASTA/phasta.git',
+        branch='master')
 
-    depends_on("hwloc")
+    depends_on('mpi')
 
-    def configure_args(self):
+    def cmake_args(self):
         spec = self.spec
+
         args = [
-            "--enable-guard-pages",
-            "--with-topology=hwloc",
-            "--with-hwloc=%s" % spec["hwloc"].prefix]
+            '-DPHASTA_USE_MPI=ON',
+            '-DPHASTA_BUILD_CONVERTERIO=OFF',
+            '-DPHASTA_BUILD_ACUSTAT=OFF',
+            '-DPHASTA_BUILD_M2N=OFF',
+            '-DPHASTA_BUILD_M2NFixBnd=OFF',
+            '-DPHASTA_USE_LESLIB=OFF',
+            '-DPHASTA_USE_PETSC=OFF',
+            '-DPHASTA_USE_SVLS=ON',
+            '-DPHASTA_INCOMPRESSIBLE=ON',
+            '-DPHASTA_COMPRESSIBLE=ON',
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+        ]
+
         return args

@@ -25,33 +25,32 @@
 from spack import *
 
 
-class Qthreads(AutotoolsPackage):
-    """The qthreads API is designed to make using large numbers of
-       threads convenient and easy, and to allow portable access to
-       threading constructs used in massively parallel shared memory
-       environments. The API maps well to both MTA-style threading and
-       PIM-style threading, and we provide an implementation of this
-       interface in both a standard SMP context as well as the SST
-       context. The qthreads API provides access to full/empty-bit
-       (FEB) semantics, where every word of memory can be marked
-       either full or empty, and a thread can wait for any word to
-       attain either state."""
-    homepage = "http://www.cs.sandia.gov/qthreads/"
+class Mesquite(AutotoolsPackage):
+    """Mesquite (Mesh Quality Improvement Toolkit) is designed to provide a
+       stand-alone, portable, comprehensive suite of mesh quality improvement
+       algorithms and components that can be used to construct custom quality
+       improvement algorithms. Mesquite provides a robust and effective mesh
+       improvement toolkit that allows both meshing researchers application
+       scientists to benefit from the latest developments in mesh quality
+       control and improvement."""
 
-    url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
-    version("1.12", "c857d175f8135eaa669f3f8fa0fb0c09")
-    version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
-    version("1.10", "d1cf3cf3f30586921359f7840171e551")
+    homepage = "https://software.sandia.gov/mesquite"
+    url      = "https://software.sandia.gov/mesquite/mesquite-2.3.0.tar.gz"
 
-    patch("restrict.patch", when="@:1.10")
-    patch("trap.patch", when="@:1.10")
+    version('2.99',  '92b94167981bb8fcd59b0f0f18fbab64')
+    version('2.3.0', 'f64948b5210d5ccffaa9a2482447b322')
+    version('2.2.0', '41360c363e541aff7dc10024c90072d3')
 
-    depends_on("hwloc")
+    variant('mpi', default=True, description='Enable MPI parallel support')
+
+    depends_on('mpi', when='+mpi')
 
     def configure_args(self):
-        spec = self.spec
         args = [
-            "--enable-guard-pages",
-            "--with-topology=hwloc",
-            "--with-hwloc=%s" % spec["hwloc"].prefix]
+            'CC=%s' % self.spec['mpi'].mpicc,
+            'CXX=%s' % self.spec['mpi'].mpicxx,
+            '--with-mpi=%s' % self.spec['mpi'].prefix,
+            '--enable-release',
+            '--enable-shared',
+        ]
         return args
