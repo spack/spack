@@ -23,6 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
+from os.path import exists, join
+from os import makedirs
+from shutil import copy
 
 
 class Ncurses(AutotoolsPackage):
@@ -46,20 +50,58 @@ class Ncurses(AutotoolsPackage):
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
-    def configure_args(self):
+    def configure(self, spec, prefix):
         opts = [
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
             '--with-cxx-shared',
-            '--enable-widec',
             '--enable-overwrite',
             '--without-ada',
             '--enable-pc-files',
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
 
+        nwide_opts = ['--without-manpages',
+                      '--without-tests']
+
+        wide_opts = ['--enable-widec']
+
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
 
-        return opts
+        prefix = '--prefix={0}'.format(prefix)
+
+        configure = Executable('../configure')
+
+        with working_dir('build_ncurses', create=True):
+            configure(prefix, *(opts + nwide_opts))
+
+        with working_dir('build_ncursesw', create=True):
+            configure(prefix, *(opts + wide_opts))
+
+    def build(self, spec, prefix):
+        with working_dir('build_ncurses'):
+            make()
+        with working_dir('build_ncursesw'):
+            make()
+
+    def install(self, spec, prefix):
+        with working_dir('build_ncurses'):
+            make('install')
+        with working_dir('build_ncursesw'):
+            make('install')
+
+        # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
+        headers = glob(join(prefix.include, '*'))
+        for p_dir in ['ncurses', 'ncursesw']:
+            path = join(prefix.include, p_dir)
+            if not exists(path):
+                makedirs(path)
+            for header in headers:
+                copy(header, path)
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libncurses', 'libncursesw'], root=self.prefix, recurse=True)

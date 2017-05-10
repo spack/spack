@@ -72,6 +72,9 @@ class MakefilePackage(PackageBase):
     #: phase
     install_targets = ['install']
 
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['check']
+
     @property
     def build_directory(self):
         """Returns the directory containing the main Makefile
@@ -99,6 +102,16 @@ class MakefilePackage(PackageBase):
         """
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
+
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+
+    def check(self):
+        """Searches the Makefile for targets ``test`` and ``check``
+        and runs them if found.
+        """
+        with working_dir(self.build_directory):
+            self._if_make_target_execute('test')
+            self._if_make_target_execute('check')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

@@ -22,7 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import numbers
+
 from spack import *
+
+
+def is_integral(x):
+    """Any integer value"""
+    try:
+        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
+    except ValueError:
+        return False
 
 
 class Npb(MakefilePackage):
@@ -66,20 +76,39 @@ class Npb(MakefilePackage):
     )
 
     # TODO: Combine these into a single mutually exclusive variant
-    variant('mpi',    default=True,  description='Build the MPI implementation')
-    variant('openmp', default=False, description='Build the OpenMP implementation')
-    variant('serial', default=False, description='Build the serial version')
+    variant(
+        'implementation',
+        default='mpi',
+        values=('serial', 'mpi', 'openmp'),
+        description='Selects one among the available implementations'
+    )
 
-    # TODO: Convert these to non-exclusive multi-valued variants
-    variant('names', default=','.join(valid_names),
-            description='Benchmark names (comma separated list)')
-    variant('classes', default=','.join(valid_classes),
-            description='Benchmark classes (comma separated list)')
+    variant(
+        'names',
+        default=','.join(valid_names),
+        values=valid_names,
+        multi=True,
+        description='Benchmark names (comma separated list)'
+    )
+
+    variant(
+        'classes',
+        default=','.join(valid_classes),
+        values=valid_classes,
+        multi=True,
+        description='Benchmark classes (comma separated list)'
+    )
+
     # This variant only applies to the MPI implementation
-    variant('nprocs', default='1,2,4,8,16,32,64,128',
-            description='Number of processes (comma separated list)')
+    variant(
+        'nprocs',
+        default='1,2,4,8,16,32,64,128',
+        values=is_integral,
+        multi=True,
+        description='Number of processes (comma separated list)'
+    )
 
-    depends_on('mpi@2:', when='+mpi')
+    depends_on('mpi@2:', when='implementation=mpi')
 
     phases = ['edit', 'install']
 
@@ -88,11 +117,11 @@ class Npb(MakefilePackage):
 
     @property
     def build_directory(self):
-        if '+mpi' in self.spec:
+        if 'implementation=mpi' in self.spec:
             implementation = 'MPI'
-        elif '+openmp' in self.spec:
+        elif 'implementation=openmp' in self.spec:
             implementation = 'OMP'
-        elif '+serial' in self.spec:
+        elif 'implementation=serial' in self.spec:
             implementation = 'SER'
         else:
             raise RuntimeError('You must choose an implementation to build')
@@ -100,11 +129,11 @@ class Npb(MakefilePackage):
         return 'NPB{0}-{1}'.format(self.version.up_to(2), implementation)
 
     def edit(self, spec, prefix):
-        names   = spec.variants['names'].value.split(',')
-        classes = spec.variants['classes'].value.split(',')
-        nprocs  = spec.variants['nprocs'].value.split(',')
+        names   = spec.variants['names'].value
+        classes = spec.variants['classes'].value
+        nprocs  = spec.variants['nprocs'].value
 
-        if '+mpi' in spec:
+        if 'implementation=mpi' in spec:
             definitions = {
                 # Parallel Fortran
                 'MPIF77':     spec['mpi'].mpif77,
@@ -125,7 +154,7 @@ class Npb(MakefilePackage):
                 'BINDIR':     prefix.bin,
                 'RAND':       'randi8',
             }
-        elif '+openmp' in spec:
+        elif 'implementation=openmp' in spec:
             definitions = {
                 # Parallel Fortran
                 'F77':        spack_f77,
@@ -147,7 +176,7 @@ class Npb(MakefilePackage):
                 'RAND':       'randi8',
                 'WTIME':      'wtime.c',
             }
-        elif '+serial' in spec:
+        elif 'implementation=serial' in spec:
             definitions = {
                 # Parallel Fortran
                 'F77':        spack_f77,
@@ -187,7 +216,7 @@ class Npb(MakefilePackage):
                         if name == 'is' and classname == 'E':
                             continue
 
-                        if '+mpi' in spec:
+                        if 'implementation=mpi' in spec:
                             for nproc in nprocs:
                                 suite_def.write('{0}\t{1}\t{2}\n'.format(
                                     name, classname, nproc))

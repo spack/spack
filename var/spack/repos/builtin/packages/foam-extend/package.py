@@ -356,8 +356,8 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
                 'CMAKE_BIN_DIR': spec['cmake'].prefix.bin,
             },
             'python': {
-                'PYTHON_DIR':     spec['python'].prefix,
-                'PYTHON_BIN_DIR': spec['python'].prefix.bin,
+                'PYTHON_DIR':     spec['python'].home,
+                'PYTHON_BIN_DIR': spec['python'].home.bin,
             },
             'flex': {
                 'FLEX_SYSTEM': 1,

@@ -27,6 +27,8 @@ from __future__ import print_function
 import spack.architecture as architecture
 
 description = "print architecture information about this machine"
+section = "system"
+level = "short"
 
 
 def setup_parser(subparser):

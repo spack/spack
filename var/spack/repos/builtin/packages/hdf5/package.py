@@ -37,6 +37,7 @@ class Hdf5(AutotoolsPackage):
     list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
+    version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
     version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c',
@@ -257,7 +258,7 @@ HDF5 version {version} {version}
                 cc = Executable(spec['mpi'].mpicc)
             else:
                 cc = Executable(self.compiler.cc)
-            cc(*(['-c', "check.c"] + spec['hdf5'].cppflags.split()))
+            cc(*(['-c', "check.c"] + spec['hdf5'].headers.cpp_flags.split()))
             cc(*(['-o', "check", "check.o"] +
                  spec['hdf5'].libs.ld_flags.split()))
             try:

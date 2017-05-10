@@ -22,13 +22,36 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-description = "run pydoc from within spack"
-
-
-def setup_parser(subparser):
-    subparser.add_argument('entity', help="run pydoc help on entity")
+from spack import *
 
 
-def doc(parser, args):
-    help(args.entity)
+class MultivalueVariant(Package):
+    homepage = "http://www.llnl.gov"
+    url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
+
+    version(1.0, 'foobarbaz')
+    version(2.1, 'foobarbaz')
+    version(2.2, 'foobarbaz')
+    version(2.3, 'foobarbaz')
+
+    variant('debug', default=False, description='Debug variant')
+    variant(
+        'foo',
+        description='Multi-valued variant',
+        values=('bar', 'baz', 'barbaz'),
+        multi=True
+    )
+
+    variant(
+        'fee',
+        description='Single-valued variant',
+        default='bar',
+        values=('bar', 'baz', 'barbaz'),
+        multi=False
+    )
+
+    depends_on('mpi')
+    depends_on('callpath')
+
+    def install(self, spec, prefix):
+        pass
