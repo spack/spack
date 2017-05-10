@@ -94,11 +94,20 @@ class Flann(CMakePackage):
     depends_on("hdf5", when="+examples")
 
     def patch(self):
+        # Fix up the python setup.py call inside the install(CODE
         filter_file("setup.py install",
                     'setup.py install --no-user-cfg --prefix=\\"{0}\\"'.format(
                         self.prefix
-                     ),
-                     "src/python/CMakeLists.txt")
+                    ),
+                    "src/python/CMakeLists.txt")
+        # Fix the install location so that spack activate works
+        filter_file("share/flann/python",
+                    "{}".format(site_packages_dir),
+                    "src/python/CMakeLists.txt")
+        # Hack. Don't install setup.py
+        filter_file("install( FILES",
+                    "# install( FILES",
+                    "src/python/CMakeLists.txt", string=True)
 
     # Tests: require hdf5 and gtest, don't know what to do so ignore...
 
