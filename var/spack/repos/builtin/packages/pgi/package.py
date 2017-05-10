@@ -39,6 +39,7 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
+    version('17.4',  'a311d2756ddda657860bad8e5725597b')
     version('17.3',  '6eefc42f85e756cbaba76467ed640902')
     version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')
     version('16.5',  'a40e8852071b5d600cb42f31631b3de1')
@@ -109,8 +110,8 @@ class Pgi(Package):
         run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
         run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
 
-        run_env.set('PATH',            prefix.bin)
-        run_env.set('CPATH',           prefix.include)
-        run_env.set('LIBRARY_PATH',    prefix.lib)
-        run_env.set('LD_LIBRARY_PATH', prefix.lib)
-        run_env.set('MANPATH',         prefix.man)
+        run_env.prepend_path('PATH',            prefix.bin)
+        run_env.prepend_path('CPATH',           prefix.include)
+        run_env.prepend_path('LIBRARY_PATH',    prefix.lib)
+        run_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        run_env.prepend_path('MANPATH',         prefix.man)
