@@ -36,11 +36,6 @@ class Flann(CMakePackage):
 
     FLANN is written in C++ and contains bindings for the following languages:
     C, MATLAB and Python.
-
-    NOTE: The author of the package was careful to support HDF5 without
-    parallel support, so the dependencies do not require this, but you will
-    likely want to make sure that you are giving hdf5+mpi as the dependency,
-    this is the spack default so it should be fine.
     """
 
     homepage = "http://www.cs.ubc.ca/research/flann/"
@@ -102,7 +97,7 @@ class Flann(CMakePackage):
                     "src/python/CMakeLists.txt")
         # Fix the install location so that spack activate works
         filter_file("share/flann/python",
-                    "{}".format(site_packages_dir),
+                    "{0}".format(site_packages_dir),
                     "src/python/CMakeLists.txt")
         # Hack. Don't install setup.py
         filter_file("install( FILES",
@@ -119,31 +114,31 @@ class Flann(CMakePackage):
 
         # Language bindings. Many default to true in CMakeLists, bypass all
         c_bind = "ON" if "+c" in spec else "OFF"
-        args.append("-DBUILD_C_BINDINGS:BOOL={}".format(c_bind))
+        args.append("-DBUILD_C_BINDINGS:BOOL={0}".format(c_bind))
 
         py_bind = "ON" if "+python" in spec else "OFF"
-        args.append("-DBUILD_PYTHON_BINDINGS:BOOL={}".format(py_bind))
+        args.append("-DBUILD_PYTHON_BINDINGS:BOOL={0}".format(py_bind))
 
         mat_bind = "ON" if "+matlab" in spec else "OFF"
-        args.append("-DBUILD_MATLAB_BINDINGS:BOOL={}".format(mat_bind))
+        args.append("-DBUILD_MATLAB_BINDINGS:BOOL={0}".format(mat_bind))
 
         # Extra options
         cuda_lib = "ON" if "+cuda" in spec else "OFF"
-        args.append("-DBUILD_CUDA_LIB:BOOL={}".format(cuda_lib))
+        args.append("-DBUILD_CUDA_LIB:BOOL={0}".format(cuda_lib))
 
         examples = "ON" if "+examples" in spec else "OFF"
-        args.append("-DBUILD_EXAMPLES:BOOL={}".format(examples))
+        args.append("-DBUILD_EXAMPLES:BOOL={0}".format(examples))
 
         use_openmp = "ON" if "+openmp" in spec else "OFF"
-        args.append("-DUSE_OPENMP:BOOL={}".format(use_openmp))
+        args.append("-DUSE_OPENMP:BOOL={0}".format(use_openmp))
 
         use_mpi = "ON" if "+mpi" in spec else "OFF"
-        args.append("-DUSE_MPI:BOOL={}".format(use_mpi))
+        args.append("-DUSE_MPI:BOOL={0}".format(use_mpi))
 
         # Configure the proper python executable
         if "+python" in spec:
             args.append(
-                "-DPYTHON_EXECUTABLE={}".format(spec["python"].command.path)
+                "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path)
             )
 
         return args
