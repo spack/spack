@@ -54,7 +54,7 @@ class Mesa(AutotoolsPackage):
     depends_on("libxml2+python", when='@8.0.5~gallium') 
     # depends_on("llvm+link_dylib+utils", when='@9:+gallium')
     # depends_on("llvm+shared_libs", when='@9:+gallium')
-    depends_on('llvm', when='+gallium')
+    depends_on('llvm@3.9.1', when='@13.0.2+gallium')
 
     # For DRI and hardware acceleration
     depends_on('libpthread-stubs')
