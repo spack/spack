@@ -249,6 +249,27 @@ def test_installed_in_db_does_not_trigger_reinstall(mock_archive):
 
 
 @pytest.mark.usefixtures('install_mockery')
+def test_reindex_no_completion_file_new_db_version_is_repaired(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+
+    os.remove(spack.store.layout._completion_marker_file(spec))
+    old_version = spack.database._db_version
+    try:
+        new_version = '.'.join(
+            str(x) for x in (list(old_version[:-1]) + [old_version[-1] + 1]))
+        spack.database._db_version = spack.Version(new_version)
+        new_db = spack.database.Database(spack.store.db.root)
+        new_db._read_from_file(open(spack.store.db._index_path))
+        assert pkg.installed
+    finally:
+        spack.database._db_version = old_version
+
+
+@pytest.mark.usefixtures('install_mockery')
 def test_external_repair_triggers_exception():
     spec = Spec('externaltool')
     spec.concretize()
