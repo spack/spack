@@ -94,7 +94,8 @@ class Mvapich2(AutotoolsPackage):
         description='The fabric enabled for this build',
         default='psm',
         values=(
-            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp'
+            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
+            'nemesistcpib'
         )
     )
 
@@ -142,6 +143,8 @@ class Mvapich2(AutotoolsPackage):
             opts = ["--with-device=ch3:psm"]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
+        elif 'fabrics=nemesistcpib' in self.spec:
+            opts = ["--with-device=ch3:nemesis:tcp,ib"]
         elif 'fabrics=nemesisibtcp' in self.spec:
             opts = ["--with-device=ch3:nemesis:ib,tcp"]
         elif 'fabrics=nemesisib' in self.spec:
