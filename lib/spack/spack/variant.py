@@ -216,6 +216,24 @@ class AbstractVariant(object):
         # Invokes property setter
         self.value = value
 
+    @staticmethod
+    def from_node_dict(name, value):
+        """Reconstruct a variant from a node dict."""
+        if isinstance(value, list):
+            value = ','.join(value)
+            return MultiValuedVariant(name, value)
+        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
+            return BoolValuedVariant(name, value)
+        return SingleValuedVariant(name, value)
+
+    def yaml_entry(self):
+        """Returns a key, value tuple suitable to be an entry in a yaml dict.
+
+        Returns:
+            tuple: (name, value_representation)
+        """
+        return self.name, list(self.value)
+
     @property
     def value(self):
         """Returns a tuple of strings containing the values stored in
@@ -327,24 +345,6 @@ class AbstractVariant(object):
 
 class MultiValuedVariant(AbstractVariant):
     """A variant that can hold multiple values at once."""
-    @staticmethod
-    def from_node_dict(name, value):
-        """Reconstruct a variant from a node dict."""
-        if isinstance(value, list):
-            value = ','.join(value)
-            return MultiValuedVariant(name, value)
-        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
-            return BoolValuedVariant(name, value)
-        return SingleValuedVariant(name, value)
-
-    def yaml_entry(self):
-        """Returns a key, value tuple suitable to be an entry in a yaml dict.
-
-        Returns:
-            tuple: (name, value_representation)
-        """
-        return self.name, list(self.value)
-
     @implicit_variant_conversion
     def satisfies(self, other):
         """Returns true if ``other.name == self.name`` and ``other.value`` is
