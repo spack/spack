@@ -50,16 +50,9 @@ class Libpcap(AutotoolsPackage):
     """
 
     homepage = "http://www.tcpdump.org/"
-    url      = "https://github.com/the-tcpdump-group/libpcap/archive/libpcap-1.8.1.tar.gz"
+    url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
 
-    version('1.8.1',    '4a70f59c943b21340deca4affe63ea4c')
-    version('1.8.0',    '443376a3b78dfa32dc16264010d8a3c6')
-    version('1.7.4',    '323e59a1a4921a77b7418ced385e59f5')
-    version('1.7.3',    '21627825ae185c3ab374cf71b54462a0')
-    version('1.7.2',    '19e0f562a7bd9b6f9283d323c49b5b75')
-    version('1.7.0',    '7aec0ed3fb273d7634b23668c343291a')
-    version('1.6.2',    '259a4b4ead24d03c3c2a22240460e240')
-    version('1.6.1',    '8e3691f5a58c6255e0414192c05b89f2')
+    version('1.8.1',    '3d48f9cd171ff12b0efd9134b52f1447')
 
     variant("libnl", default=True,
             description="libpcap states a strong preference to using libnl.")
