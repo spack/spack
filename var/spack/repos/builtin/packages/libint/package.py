@@ -67,7 +67,8 @@ class Libint(AutotoolsPackage):
 
         # Optimizations for the Intel compiler, suggested by CP2K
         if '%intel' in self.spec:
-            flags += ' -xAVX -axCORE-AVX2 -ipo'
+            # -xSSE2 will make it usable on old architecture
+            flags += ' -xSSE2 -xAVX -axCORE-AVX2 -ipo'
 
         return flags
 
