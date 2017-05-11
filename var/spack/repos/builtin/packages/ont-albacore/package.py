@@ -36,7 +36,7 @@ class OntAlbacore(Package):
 
     extends('python')
 
-    depends_on('python@3.5.2',        type=('build', 'run'))
+    depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
     depends_on('py-setuptools',        type=('build'))
     depends_on('py-six',        type=('run'))
     depends_on('py-numpy',        type=('build', 'run'))
