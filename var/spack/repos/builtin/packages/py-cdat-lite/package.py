@@ -41,4 +41,3 @@ class PyCdatLite(PythonPackage):
     depends_on("python@2:2.8")
     depends_on("py-numpy")
     depends_on('py-setuptools', type='build')
-
