@@ -36,22 +36,27 @@ class Lmod(AutotoolsPackage):
     """
 
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
-    url = 'https://github.com/TACC/Lmod/archive/7.4.9.tar.gz'
+    url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
-    version('7.4.9', 'd8ffab81ddca2491fe13e2ac0a4fd320')
-    version('7.4.8', '3b22932437cc29ce546ec887885355e7')
-    version('7.4.5', 'fc34029c60dd9782c3d011c2b93fd266')
-    version('7.4.1', '59b2558ee50877f2cf49ed37d7b09fea')
-    version('7.3',   '70180ec2ea1fae53aa83350523f6b2b3')
-    version('6.4.5', '14f6c58dbc0a5a75574d795eac2c1e3c')
-    version('6.4.1', '7978ba777c8aa41a4d8c05fec5f780f4')
-    version('6.3.7', '0fa4d5a24c41cae03776f781aa2dedc1')
-    version('6.0.1', '91abf52fe5033bd419ffe2842ebe7af9')
+    version('7.4.11', '70c55ba0ba3877b6d8df536ee7ea6d49')
+    version('7.4.10', 'a13e36d6196747fded7987ef3dcfb605')
+    version('7.4.9',  'd8ffab81ddca2491fe13e2ac0a4fd320')
+    version('7.4.8',  '3b22932437cc29ce546ec887885355e7')
+    version('7.4.5',  'fc34029c60dd9782c3d011c2b93fd266')
+    version('7.4.1',  '59b2558ee50877f2cf49ed37d7b09fea')
+    version('7.3',    '70180ec2ea1fae53aa83350523f6b2b3')
+    version('6.4.5',  '14f6c58dbc0a5a75574d795eac2c1e3c')
+    version('6.4.1',  '7978ba777c8aa41a4d8c05fec5f780f4')
+    version('6.3.7',  '0fa4d5a24c41cae03776f781aa2dedc1')
+    version('6.0.1',  '91abf52fe5033bd419ffe2842ebe7af9')
 
     depends_on('lua@5.2:')
     depends_on('lua-luaposix', type=('build', 'run'))
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'run'))
+
+    patch('fix_tclsh_paths.patch', when='@:6.4.3')
+    patch('0001-fix-problem-with-MODULESHOME-and-issue-271.patch', when='@7.3.28:7.4.10')
 
     parallel = False
 
@@ -60,8 +65,6 @@ class Lmod(AutotoolsPackage):
             self.stage.path, 'Lmod-{version}', 'src', '?.lua')
         spack_env.append_path('LUA_PATH', stage_lua_path.format(
             version=self.version), separator=';')
-
-    patch('fix_tclsh_paths.patch', when='@:6.4.3')
 
     def patch(self):
         """The tcl scripts should use the tclsh that was discovered
