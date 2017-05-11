@@ -33,7 +33,8 @@ class LanlBml(CMakePackage):
     homepage = "https://github.com/qmmd/bml"
     url      = "https://github.com/qmmd/bml"
 
-    version('master', git='https://github.com/qmmd/bml', branch='master')
+    version('develop', git='https://github.com/qmmd/bml', branch='master')
+    version('1.1.0', git='https://github.com/qmmd/bml', tag='v1.1.0')
 
     variant('debug', default=False, description='Build debug version')
 
