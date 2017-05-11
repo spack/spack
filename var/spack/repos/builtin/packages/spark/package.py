@@ -72,4 +72,8 @@ class Spark(Package):
         hadoop = self.spec['hadoop'].command
         hadoop_classpath = hadoop('classpath', return_output=True)
 
+        # Remove whitespaces, as they can compromise syntax in
+        # module files
+        hadoop_classpath.strip()
+
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
