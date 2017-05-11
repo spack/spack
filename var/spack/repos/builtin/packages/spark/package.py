@@ -22,9 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
-
+import re
 import shutil
+
+from spack import *
 
 
 class Spark(Package):
@@ -74,6 +75,6 @@ class Spark(Package):
 
         # Remove whitespaces, as they can compromise syntax in
         # module files
-        hadoop_classpath.strip()
+        hadoop_classpath = re.sub('[\s+]', '', hadoop_classpath)
 
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
