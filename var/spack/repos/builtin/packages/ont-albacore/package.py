@@ -22,29 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install ont-albacore
-#
-# You can edit this file again by typing:
-#
-#     spack edit ont-albacore
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 import glob
 from spack import *
 
 
 class OntAlbacore(Package):
-    """FIXME: The Albacore Basecaller."""
+    """Albacore is a software project that provides an entry point to the Oxford Nanopore basecalling algorithms. It can be run from the command line on Windows and multiple Linux platforms. A selection of configuration files allow basecalling DNA libraries made with our current range of sequencing kits and Flow Cells."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://nanoporetech.com"
     url      = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.1.0-cp35-cp35m-manylinux1_x86_64.whl"
 
@@ -53,16 +37,16 @@ class OntAlbacore(Package):
     extends('python')
 
     depends_on('python@3.5.2',        type=('build', 'run'))
-    depends_on('py-setuptools',        type=('build', 'run'))
-    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-setuptools',        type=('build'))
+    depends_on('py-six',        type=('run'))
     depends_on('py-numpy',        type=('build', 'run'))
     depends_on('py-dateutil',        type=('build', 'run'))
     depends_on('py-h5py',        type=('build', 'run'))
     depends_on('py-ont-fast5-api',        type=('build', 'run'))
     depends_on('py-pip',        type=('build', 'run'))
-    depends_on('py-packaging',        type=('build', 'run'))
-    depends_on('py-pyparsing',        type=('build', 'run'))
-    depends_on('py-appdirs',        type=('build', 'run'))
+    depends_on('py-packaging',        type=('run'))
+    depends_on('py-pyparsing',        type=('run'))
+    depends_on('py-appdirs',        type=('run'))
 
     def install(self, spec, prefix):
         wheel = glob.glob('*.whl')[0]

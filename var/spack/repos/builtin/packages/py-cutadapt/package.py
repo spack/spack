@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-cutadapt
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-cutadapt
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -49,12 +34,9 @@ class PyCutadapt(PythonPackage):
 
     version('1.13', '2d2d14e0c20ad53d7d84b57bc3e63b4c')
 
-    extends('python')
-
-    depends_on('py-setuptools',        type=('build', 'run'))
-    depends_on('py-xopen',        type=('build', 'run'))
-    depends_on('py-six',        type=('build', 'run'))
-    depends_on('py-packaging',        type=('build', 'run'))
-    depends_on('py-pyparsing',        type=('build', 'run'))
-    depends_on('py-appdirs',        type=('build', 'run'))
-    depends_on('py-pip',        type=('build', 'run'))
+    depends_on('py-setuptools',        type=('build'))
+    depends_on('py-xopen',        type=('run'))
+    depends_on('py-six',        type=('run'))
+    depends_on('py-packaging',        type=('run'))
+    depends_on('py-pyparsing',        type=('run'))
+    depends_on('py-appdirs',        type=('run'))
