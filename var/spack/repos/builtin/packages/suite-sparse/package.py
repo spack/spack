@@ -62,12 +62,11 @@ class SuiteSparse(Package):
 
         make_args = ['INSTALL=%s' % prefix]
 
-        # inject Spack compiler wrappers
         make_args.extend([
+            # By default, the Makefile uses the Intel compilers if
+            # they are found. This flag disables this behavior,
+            # forcing it to use Spack's compiler wrappers.
             'AUTOCC=no',
-            'CC=%s' % self.compiler.cc,
-            'CXX=%s' % self.compiler.cxx,
-            'F77=%s' % self.compiler.f77,
             # CUDA=no does NOT disable cuda, it only disables internal search
             # for CUDA_PATH. If in addition the latter is empty, then CUDA is
             # completely disabled. See
