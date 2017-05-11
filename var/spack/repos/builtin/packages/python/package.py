@@ -92,6 +92,10 @@ class Python(AutotoolsPackage):
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
 
+    # Ensure that distutils chooses correct compiler option for RPATH on cray:
+    patch('is_gcc.patch', when="%gcc platform=cray")
+    patch('is_gcc.patch', when="%intel platform=cray")
+
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
