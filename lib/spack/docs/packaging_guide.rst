@@ -1763,6 +1763,62 @@ The only keyword argument supported by default is the ``ignore``
 argument, which can take a regex, list of regexes, or a predicate to
 determine which files *not* to symlink during activation.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How to Enable Activation for Packages with Language Bindings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you refer to the ``opencv`` package, you will notice that something
+interesting happens: this is a C++ library that can optionally
+produce Python bindings.  Since this package uses the idiom
+mentioned in :ref:`packaging_extensions`:
+
+.. code-block:: py
+
+   extends('python', when='+python')
+
+it now has the ability to enable ``spack activate opencv``.
+When you perform ``extends('python')``, you have given
+yourself access to some important variables worth detailing
+explicitly:
+
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_environment
+   :linenos:
+
+The code is tricky, but here is the bottom line: when you need
+do create Python bindings for a project, you will need to make
+sure that they are installed in the correct location.  The
+code above makes available *in your module* the following names:
+
+``site_packages_dir`` (str)
+    The location where you should direct ``setup.py`` to install.
+
+``PYTHONHOME`` (str)
+    If you need it, the home directory of Python.
+
+``PYTHONPATH`` (str)
+    If you need it, the Python path.
+
+.. tip::
+
+   Generally speaking, you will *never* need to use these variables
+   directly.  A use-case this came up in was the ``flann`` package,
+   where the developers had a hard-coded installation to
+   ``share/flann/python``.  If you encounter a similar scenario,
+   in order for ``spack activate X`` for package ``X`` you are
+   creating, the Python bindings **must** be installed to the
+   ``site_packages_dir``.
+
+   In the ``flann`` scenario, we define a patch:
+
+   .. code-block:: py
+
+      def patch():
+          filter_file("share/flann/python",
+                      site_packages_dir,
+                      "src/python/CMakeLists.txt")
+
+
 .. _virtual-dependencies:
 
 --------------------
