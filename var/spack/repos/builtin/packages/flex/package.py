@@ -41,7 +41,7 @@ class Flex(AutotoolsPackage):
     version('2.5.39', '5865e76ac69c05699f476515592750d7')
 
     variant('lex', default=True,
-            description="Provide symlinks for lex, libl.a and libl.so")
+            description="Provide symlinks for lex and libl")
 
     depends_on('bison',         type='build')
     depends_on('gettext@0.19:', type='build')
@@ -69,14 +69,12 @@ class Flex(AutotoolsPackage):
     @run_after('install')
     def symlink_lex(self):
         if self.spec.satisfies('+lex'):
-            with working_dir(self.prefix.bin):
-                if (os.path.isfile('flex') and not
-                   os.path.lexists('lex')):
-                    symlink('flex', 'lex')
-            with working_dir(self.prefix.lib):
-                if (os.path.isfile('libfl.a') and not
-                   os.path.lexists('libl.a')):
-                    symlink('libfl.a', 'libl.a')
-                if (os.path.isfile('libfl.so') and not
-                   os.path.lexists('libl.so')):
-                    symlink('libfl.so', 'libl.so')
+            dso = dso_suffix
+            for dir, flex, lex in \
+                    ((self.prefix.bin, 'flex', 'lex'),
+                     (self.prefix.lib, 'libfl.a', 'libl.a'),
+                     (self.prefix.lib, 'libfl.' + dso, 'libl.' + dso)):
+                with working_dir(dir):
+                    if (os.path.isfile(flex) and not
+                            os.path.lexists(lex)):
+                        symlink(flex, lex)
