@@ -50,9 +50,7 @@ class Flann(CMakePackage):
     # Language bindings
     variant("python",   default=False,
             description="Build the Python bindings. "
-                        "Module: pyflann. "
-                        "Python2 verified. "
-                        "Python3 claimed, not attainable.")
+                        "Module: pyflann.")
     variant("matlab",   default=False, description="Build the Matlab bindings.")
     # default to true for C because it's a C++ library, nothing extra needed
     variant("c",        default=True,  description="Build the C bindings.")
@@ -90,7 +88,7 @@ class Flann(CMakePackage):
     def patch(self):
         # Fix up the python setup.py call inside the install(CODE
         filter_file("setup.py install",
-                    '--no-user-cfg setup.py install --prefix=\\"{0}\\"'.format(
+                    'setup.py --no-user-cfg install --prefix=\\"{0}\\"'.format(
                         self.prefix
                     ),
                     "src/python/CMakeLists.txt")
@@ -103,13 +101,13 @@ class Flann(CMakePackage):
                     "# install( FILES",
                     "src/python/CMakeLists.txt", string=True)
 
-    # Tests: require hdf5 and gtest, don't know what to do so ignore...
+    # TODO: revisit after https://github.com/LLNL/spack/issues/1279
+    # depends_on('hdf5', type='test')
+    # depends_on('gtest', type='test')
 
     def cmake_args(self):
         spec = self.spec
         args = []
-        # Default is RelWithDebugInfo
-        args.append("-DCMAKE_BUILD_TYPE:STRING=Release")
 
         # Language bindings. Many default to true in CMakeLists, bypass all
         c_bind = "ON" if "+c" in spec else "OFF"
