@@ -236,50 +236,52 @@ def set_compiler_environment_variables(pkg, env):
 
 
 def set_build_environment_variables(pkg, env, dirty=False):
+    """Ensure a clean install environment when we build packages.
+
+    This involves unsetting pesky environment variables that may
+    affect the build. It also involves setting environment variables
+    used by Spack's compiler wrappers.
+
+    Args:
+        pkg: The package we are building
+        env: The build environment
+        dirty (bool): Skip unsetting the user's environment settings
     """
-    This ensures a clean install environment when we build packages.
+    # Gather information about various types of dependencies
+    build_deps      = pkg.spec.dependencies(deptype='build')
+    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
+    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    rpath_deps      = get_rpath_deps(pkg)
 
-    Arguments:
-    dirty -- skip unsetting the user's environment settings.
-    """
-    # Add spack build environment path with compiler wrappers first in
-    # the path. We add both spack.env_path, which includes default
-    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
-    # compiler-specific symlinks.  The latter ensures that builds that
-    # are sensitive to the *name* of the compiler see the right name
-    # when we're building with the wrappers.
-    #
-    # Conflicts on case-insensitive systems (like "CC" and "cc") are
-    # handled by putting one in the <build_env_path>/case-insensitive
-    # directory.  Add that to the path too.
-    env_paths = []
-    compiler_specific = join_path(spack.build_env_path, pkg.compiler.name)
-    for item in [spack.build_env_path, compiler_specific]:
-        env_paths.append(item)
-        ci = join_path(item, 'case-insensitive')
-        if os.path.isdir(ci):
-            env_paths.append(ci)
+    build_prefixes      = [dep.prefix for dep in build_deps]
+    link_prefixes       = [dep.prefix for dep in link_deps]
+    build_link_prefixes = [dep.prefix for dep in build_link_deps]
+    rpath_prefixes      = [dep.prefix for dep in rpath_deps]
 
-    env_paths = filter_system_paths(env_paths)
+    # add run-time dependencies of direct build-time dependencies:
+    for build_dep in build_deps:
+        for run_dep in build_dep.traverse(deptype='run'):
+            build_prefixes.append(run_dep.prefix)
 
-    for item in reversed(env_paths):
-        env.prepend_path('PATH', item)
-    env.set_path(SPACK_ENV_PATH, env_paths)
+    # Filter out system paths: ['/', '/usr', '/usr/local']
+    # These paths can be introduced into the build when an external package
+    # is added as a dependency. The problem with these paths is that they often
+    # contain hundreds of other packages installed in the same directory.
+    # If these paths come first, they can overshadow Spack installations.
+    build_prefixes      = filter_system_paths(build_prefixes)
+    link_prefixes       = filter_system_paths(link_prefixes)
+    build_link_prefixes = filter_system_paths(build_link_prefixes)
+    rpath_prefixes      = filter_system_paths(rpath_prefixes)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix for d in
-                    pkg.spec.traverse(root=False, deptype=('build', 'link'))]
-    dep_prefixes = filter_system_paths(dep_prefixes)
-    env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
+    env.set_path(SPACK_DEPENDENCIES, build_link_prefixes)
 
     # These variables control compiler wrapper behavior
-    env.set_path(SPACK_RPATH_DEPS, filter_system_paths([
-        d.prefix for d in get_rpath_deps(pkg)]))
-    env.set_path(SPACK_LINK_DEPS, filter_system_paths([
-        d.prefix for d in pkg.spec.traverse(root=False, deptype=('link'))]))
+    env.set_path(SPACK_RPATH_DEPS, rpath_prefixes)
+    env.set_path(SPACK_LINK_DEPS, link_prefixes)
 
     # Add dependencies to CMAKE_PREFIX_PATH
-    env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
+    env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
 
     # Install prefix
     env.set(SPACK_PREFIX, pkg.prefix)
@@ -326,12 +328,33 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(
-        [d.prefix.bin for d in pkg.spec.dependencies(deptype='build')
-         if os.path.isdir(d.prefix.bin)])
-    bin_dirs = filter_system_bin_paths(bin_dirs)
-    for item in bin_dirs:
+    for prefix in build_prefixes:
+        for dirname in ['bin', 'bin64']:
+            bin_dir = os.path.join(prefix, dirname)
+            if os.path.isdir(bin_dir):
+                env.prepend_path('PATH', bin_dir)
+
+    # Add spack build environment path with compiler wrappers first in
+    # the path. We add both spack.env_path, which includes default
+    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
+    # compiler-specific symlinks.  The latter ensures that builds that
+    # are sensitive to the *name* of the compiler see the right name
+    # when we're building with the wrappers.
+    #
+    # Conflicts on case-insensitive systems (like "CC" and "cc") are
+    # handled by putting one in the <build_env_path>/case-insensitive
+    # directory.  Add that to the path too.
+    env_paths = []
+    compiler_specific = join_path(spack.build_env_path, pkg.compiler.name)
+    for item in [spack.build_env_path, compiler_specific]:
+        env_paths.append(item)
+        ci = join_path(item, 'case-insensitive')
+        if os.path.isdir(ci):
+            env_paths.append(ci)
+
+    for item in reversed(env_paths):
         env.prepend_path('PATH', item)
+    env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
@@ -340,9 +363,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for pre in dep_prefixes:
+    for prefix in build_link_prefixes:
         for directory in ('lib', 'lib64', 'share'):
-            pcdir = join_path(pre, directory, 'pkgconfig')
+            pcdir = join_path(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
 

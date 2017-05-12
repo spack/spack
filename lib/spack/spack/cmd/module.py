@@ -36,6 +36,9 @@ from spack.cmd.common import arguments
 from spack.modules import module_types
 
 description = "manipulate module files"
+section = "environment"
+level = "short"
+
 
 # Dictionary that will be populated with the list of sub-commands
 # Each sub-command must be callable and accept 3 arguments :

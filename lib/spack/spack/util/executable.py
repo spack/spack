@@ -53,7 +53,30 @@ class Executable(object):
 
     @property
     def command(self):
+        """The command-line string.
+
+        Returns:
+            str: The executable and default arguments
+        """
         return ' '.join(self.exe)
+
+    @property
+    def name(self):
+        """The executable name.
+
+        Returns:
+            str: The basename of the executable
+        """
+        return os.path.basename(self.path)
+
+    @property
+    def path(self):
+        """The path to the executable.
+
+        Returns:
+            str: The path to the executable
+        """
+        return self.exe[0]
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.

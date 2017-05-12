@@ -31,7 +31,7 @@ class Flecsale(CMakePackage):
     homepage = "https://github.com/laristra/flecsale"
     url      = "https://github.com/laristra/flecsale/tarball/v1.0"
 
-    version('develop', git='https://github.com/laristra/flecsale', branch='master', submodules=False)
+    version('develop', git='https://github.com/laristra/flecsale', branch='master', submodules=True)
 
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
@@ -40,12 +40,8 @@ class Flecsale(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("flecsi~mpi", when='~mpi')
     depends_on("flecsi+mpi", when='+mpi')
-
-    # drop when #3958 has been merged
-    def do_fetch(self, mirror_only=True):
-        super(Flecsale, self).do_fetch(mirror_only)
-        git = which("git")
-        git('submodule', 'update', '--init', '--recursive')
+    depends_on("python")
+    depends_on("openssl")
 
     def build_type(self):
         spec = self.spec
@@ -55,7 +51,11 @@ class Flecsale(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        options = ['-DENABLE_UNIT_TESTS=ON']
+        options = [
+            '-DENABLE_UNIT_TESTS=ON'
+            '-DENABLE_OPENSSL=ON'
+            '-DENABLE_PYTHON=ON'
+        ]
 
         if '+mpi' in self.spec:
             options.extend([

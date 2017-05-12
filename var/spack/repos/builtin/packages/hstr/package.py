@@ -40,3 +40,4 @@ class Hstr(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('ncurses@5.9')
+    depends_on('readline')

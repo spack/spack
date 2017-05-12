@@ -22,13 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-description = "run pydoc from within spack"
-
-
-def setup_parser(subparser):
-    subparser.add_argument('entity', help="run pydoc help on entity")
+from spack import *
 
 
-def doc(parser, args):
-    help(args.entity)
+class PyXopen(PythonPackage):
+    """This small Python module provides a xopen function that works like the
+    built-in open function, but can also deal with compressed files. Supported
+    compression formats are gzip, bzip2 and xz. They are automatically
+    recognized by their file extensions .gz, .bz2 or .xz."""
+
+    homepage = "https://github.com/marcelm/xopen"
+    url      = "https://pypi.io/packages/source/x/xopen/xopen-0.1.1.tar.gz"
+
+    version('0.1.1', '4e0e955546ee6bee4ea736b54623a671')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:', type=('build', 'run'))

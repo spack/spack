@@ -30,13 +30,16 @@ import spack.cmd.install as inst
 
 from spack import *
 
-description = 'stops at configuration stage when installing a package, if possible'  # NOQA: ignore=E501
+description = 'stage and configure a package but do not install'
+section = "build"
+level = "long"
 
 
 build_system_to_phase = {
-    CMakePackage: 'cmake',
     AutotoolsPackage: 'configure',
-    PerlPackage: 'configure'
+    CMakePackage: 'cmake',
+    WafPackage: 'configure',
+    PerlPackage: 'configure',
 }
 
 
