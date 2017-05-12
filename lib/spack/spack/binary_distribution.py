@@ -14,6 +14,7 @@ from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
 
+
 def get_full_system_from_platform():
     import platform
     import re
@@ -73,7 +74,7 @@ def write_buildinfo_file(spec):
     Create a cache file containing information
     required for the relocation
     """
-    text_to_relocate   = []
+    text_to_relocate = []
     binary_to_relocate = []
     blacklist = (".spack", "man")
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
@@ -92,7 +93,7 @@ def write_buildinfo_file(spec):
     buildinfo = {}
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['relocate_textfiles'] = text_to_relocate
-    buildinfo['relocate_binaries']  = binary_to_relocate
+    buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(spec)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
@@ -172,14 +173,14 @@ def download_tarball(package):
     tarball = tarball_path_name(package.spec)
     for key in mirrors:
         url = mirrors[key] + "/" + tarball
-        print url
+        # print url
         # stage the tarball into standard place
         stage = Stage(url, name=package.stage.path)
         try:
             stage.fetch()
             return True
         except fs.FetchError:
-            next    
+            next
     return False
 
 

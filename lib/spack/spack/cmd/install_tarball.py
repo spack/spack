@@ -33,7 +33,9 @@ import spack.binary_distribution
 import spack.relocate
 
 
-description = "Create tarballs for given packages"
+description = "Download and extract tarballs for given packages"
+section = "build"
+level = "short"
 
 
 def setup_parser(subparser):
@@ -58,12 +60,14 @@ def install_tarball(parser, args):
                 for d, node in spec.traverse(order='pre', depth=True):
                     tty.msg('adding dependency %s' % node)
                     specs.add(node)
+
     for spec in specs:
-        package=spack.repo.get(spec)
+        package = spack.repo.get(spec)
         if package.installed:
-            tty.warn("Package for spec %s already installed." %spec)
-        else : 
-            tarball_available = spack.binary_distribution.download_tarball(self)
+            tty.warn("Package for spec %s already installed." % spec)
+        else:
+            tarball_available = spack.binary_distribution.download_tarball(
+                self)
             if tarball_available:
                 spack.binary_distribution.prepare()
                 spack.binary_distribution.extract_tarball(spec)
@@ -71,4 +75,3 @@ def install_tarball(parser, args):
                 spack.store.db.reindex(spack.store.layout)
             else:
                 tty.die("Download of binary package for spec %s failed." % spec)
-

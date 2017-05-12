@@ -54,7 +54,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
     install_name_tool  -rpath old new binary
     """
     command = which('otool')
-    output  = command("-l", path_name, output=str, err=str)
+    output = command("-l", path_name, output=str, err=str)
     if command.returncode != 0:
         tty.warn('failed reading rpath for %s.' % path_name)
         return False
@@ -101,7 +101,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
             tty.warn(output)
 
     for orig, new in zip(deps, ndeps):
-        command = ("install_name_tool -change  %s %s %s" % 
+        command = ("install_name_tool -change  %s %s %s" %
                    (orig, new, path_name))
         status, output = getstatusoutput(command)
         if status != 0:
@@ -109,7 +109,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
             tty.warn(output)
 
     for orig, new in zip(rpaths, nrpaths):
-        command = ("install_name_tool -rpath %s %s %s" % 
+        command = ("install_name_tool -rpath %s %s %s" %
                    (orig, new, path_name))
         status, output = getstatusoutput(command)
         if status != 0:
@@ -180,11 +180,11 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
     Change RPATHs in given elf or mach-o file
     """
     if platform.system() == 'Darwin':
-                            modify_macho_object(path_name, old_dir, new_dir)
+        modify_macho_object(path_name, old_dir, new_dir)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
-        new_rpaths  = substitute_rpath(orig_rpaths, old_dir, new_dir)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths, 
+        new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
+        modify_elf_object(path_name, orig_rpaths, new_rpaths,
                           patchelf_executable)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())

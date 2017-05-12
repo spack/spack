@@ -32,6 +32,8 @@ from spack.binary_distribution import build_tarball
 
 
 description = "Create tarballs for given packages"
+section = "build"
+level = "short"
 
 
 def setup_parser(subparser):
