@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-from spack.util.executable import which
 import shutil
 import llnl.util.tty as tty
 
@@ -82,13 +81,13 @@ class Bcl2fastq2(Package):
                 tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
                 shutil.move(join_path('spack-expanded-archive', tarball), '.')
                 os.rmdir('spack-expanded-archive')
-                tar=which('tar')
+                tar = which('tar')
                 tar('-xf', tarball)
                 tty.msg("Finished unpacking bcl2fastq2 tarball.")
         return wrap
 
     def install(self, spec, prefix):
-        bash=which('bash')
+        bash = which('bash')
         bash("src/configure", "--prefix={0}".format(prefix),
              "--with-cmake={0}".format(join_path(spec['cmake'].prefix.bin,
                                                  "cmake")))
