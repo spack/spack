@@ -131,12 +131,13 @@ class Executable(object):
         ignore_errors = kwargs.pop("ignore_errors", ())
 
         # environment
-        env = kwargs.get('env', None)
-        if env is None:
+        env_arg = kwargs.get('env', None)
+        if env_arg is None:
             env = os.environ.copy()
             env.update(self.default_env)
         else:
-            env = self.default_env.copy().update(env)
+            env = self.default_env.copy()
+            env.update(env_arg)
 
         # TODO: This is deprecated.  Remove in a future version.
         return_output = kwargs.pop("return_output", False)
