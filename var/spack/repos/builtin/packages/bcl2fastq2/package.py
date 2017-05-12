@@ -29,7 +29,9 @@ import shutil
 import llnl.util.tty as tty
 
 
-#class Bcl2fastq2(CMakePackage):
+# This application uses cmake to build, but they wrap it with a
+# configure script that performs dark magic.  This package does it
+# their way.
 class Bcl2fastq2(Package):
     """The bcl2fastq2 Conversion Software converts base
        call (BCL) files from a sequencing run into FASTQ
@@ -47,11 +49,11 @@ class Bcl2fastq2(Package):
     depends_on('libgcrypt')
     depends_on('zlib')
 
-    # They forgot to set the flag when they find a library that makes
-    # them happy.
+    # Their cmake macros don't set the flag when they find a library
+    # that makes them happy.
     patch('cmake-macros.patch')
-    # After finding the libxslt bits, still need to wire in the libexslt
-    # bits.
+    # After finding the libxslt bits, cmake still needs to wire in the
+    # libexslt bits.
     patch('cxxConfigure-cmake.patch')
 
     root_cmakelists_dir = '../src'
@@ -60,27 +62,30 @@ class Bcl2fastq2(Package):
         url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
         return url.format(version.dashed)
 
-    # Illumina tucks the source inside a gzipped tarball inside a zip file.
-    # The normal Spack expansion bits unzip's the zip file.
-    # This function untars the tarball after Spack's done it's bit.
-    def de_SNAFU(self, f):
+    # Illumina tucks the source inside a gzipped tarball inside a zip
+    # file.  We let the normal Spack expansion bit unzip the zip file,
+    # then follow it with a function untars the tarball after Spack's
+    # done it's bit.
+    def do_stage(self, mirror_only=False):
+        # wrap (decorate) the standard expand_archive step with a
+        # helper, then call the real do_stage().
+        self.stage.expand_archive = self.unpack_it(self.stage.expand_archive)
+        super(Bcl2fastq2, self).do_stage(mirror_only)
+
+    def unpack_it(self, f):
         def wrap():
-            tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
-            tty.msg("Bcl2fastq2 expand_archive hack in progress")
-            f()
+            f()                 # call the original expand_archive()
             if os.path.isdir('bcl2fastq'):
-                tty.msg("Already hacked up the bcl2fastq directory")
+                tty.msg("The tarball has already been unpacked.")
             else:
+                tty.msg("Unpacking bcl2fastq2 tarball.")
+                tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
                 shutil.move(join_path('spack-expanded-archive', tarball), '.')
                 os.rmdir('spack-expanded-archive')
                 tar=which('tar')
                 tar('-xf', tarball)
-            tty.msg("Bcl2fastq2 expand_archive hack finished")
+                tty.msg("Finished unpacking bcl2fastq2 tarball.")
         return wrap
-
-    def do_stage(self, mirror_only=False):
-        self.stage.expand_archive = self.de_SNAFU(self.stage.expand_archive)
-        super(Bcl2fastq2, self).do_stage(mirror_only)
 
     def install(self, spec, prefix):
         bash=which('bash')
