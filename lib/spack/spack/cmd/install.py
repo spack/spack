@@ -41,6 +41,8 @@ from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
 
 description = "build and install packages"
+section = "build"
+level = "short"
 
 
 def setup_parser(subparser):
@@ -96,11 +98,6 @@ the dependencies"""
         default=None,
         help="filename for the log file. if not passed a default will be used"
     )
-    subparser.add_argument(
-        '-fb', '--fetch-binary', action='store', dest="fetch_binary",
-        default="never", choices=["never", "always", "lazy"],
-        help="Build from source, download binaries, " +
-             "or build if binary not available.")
 
 
 # Needed for test cases
@@ -315,7 +312,6 @@ def install(parser, args, **kwargs):
         'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
-        'fetch_binary': args.fetch_binary,
         'dirty': args.dirty
     })
 

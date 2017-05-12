@@ -51,8 +51,6 @@ import spack
 import spack.store
 import spack.compilers
 import spack.directives
-import spack.binary_distribution
-import spack.relocate
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -66,6 +64,7 @@ from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
+from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.version import *
@@ -1027,17 +1026,27 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return namespace
 
     def do_fake_install(self):
-        """Make a fake install directory containing a 'fake' file in bin."""
-        # FIXME : Make this part of the 'install' behavior ?
-        mkdirp(self.prefix.bin)
-        touch(join_path(self.prefix.bin, 'fake'))
-        mkdirp(self.prefix.include)
-        mkdirp(self.prefix.lib)
+        """Make a fake install directory containing fake executables,
+        headers, and libraries."""
+
+        name = self.name
         library_name = 'lib' + self.name
-        dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
+        chmod = which('chmod')
+
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, name))
+        chmod('+x', join_path(self.prefix.bin, name))
+
+        mkdirp(self.prefix.include)
+        touch(join_path(self.prefix.include, name + '.h'))
+
+        mkdirp(self.prefix.lib)
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
+
         mkdirp(self.prefix.man1)
+
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
@@ -1169,9 +1178,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 if package was implicitly installed (as a dependency).
             dirty (bool): Don't clean the build environment before installing.
             force (bool): Install again, even if already installed.
-            fetch_binary (bool) : Whether to download a pre-compiled package
-                or build from scratch
-
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -1201,9 +1207,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self._do_install_pop_kwargs(kwargs)
 
-        tty.msg("Installing %s" % self.name)
-
-        fetch_binary = kwargs.pop('fetch_binary', 'never')
         # First, install dependencies recursively.
         if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
@@ -1215,7 +1218,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
-                    fetch_binary=fetch_binary,
                     make_jobs=make_jobs,
                     run_tests=run_tests,
                     dirty=dirty,
@@ -1227,20 +1229,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
 
-        # check and prepare binary install option
-        install_binary = False
-        binary_distribution = spack.binary_distribution
-        if fetch_binary in ("always", "lazy"):
-            tarball_available = binary_distribution.download_tarball(self)
-            if tarball_available:
-                install_binary = True
-                binary_distribution.prepare()
-            elif fetch_binary == "always":
-                tty.die("Download of binary package for %s failed."
-                        % self.name)
-            else:
-                tty.warn("No binary package for %s found."
-                         % self.name)
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
@@ -1263,7 +1251,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             sys.stdin = input_stream
 
             start_time = time.time()
-            if not fake and not install_binary:
+            if not fake:
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -1278,11 +1266,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self.spec)
-                if fake or install_binary:
+                if fake:
                     self.do_fake_install()
-                    if install_binary:
-                        spack.binary_distribution.extract_tarball(self)
-                        spack.binary_distribution.relocate_package(self)
                 else:
                     # Do the real install in the source directory.
                     self.stage.chdir_to_source()
