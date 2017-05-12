@@ -38,5 +38,5 @@ class PyCdatLite(PythonPackage):
 
     depends_on("netcdf")
     depends_on("python@2.5:2.8", type=('build', 'run'))
-    depends_on("py-numpy")
+    depends_on("py-numpy", type=('build', 'run'))
     depends_on('py-setuptools', type='build')
