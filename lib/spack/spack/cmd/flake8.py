@@ -184,8 +184,6 @@ def setup_parser(subparser):
 
 
 def flake8(parser, args):
-    flake8 = which('flake8', required=True)
-
     temp = tempfile.mkdtemp()
     try:
         file_list = args.files
@@ -217,9 +215,12 @@ def flake8(parser, args):
 
         # run flake8 on the temporary tree.
         with working_dir(temp):
-            output = flake8('--format', 'pylint', *file_list,
-                            fail_on_error=False, output=str)
-
+            flake8 = Executable(sys.executable, '-m', 'flake8')
+            output = flake8('--format', 'pylint',
+                            *file_list,
+                            fail_on_error=False,
+                            output=str,
+                            env={'PYTHONPATH': spack.external_path})
         if args.root_relative:
             # print results relative to repo root.
             print(output)
