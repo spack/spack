@@ -69,7 +69,9 @@ import spack
 import spack.cmd
 import llnl.util.tty as tty
 
-description = "produce a single-rooted directory view of a spec"
+description = "produce a single-rooted directory view of packages"
+section = "environment"
+level = "short"
 
 
 def setup_parser(sp):
