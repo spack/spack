@@ -26,13 +26,17 @@ from spack import *
 
 
 class PyXopen(PythonPackage):
-    """This small Python module provides a xopen function that works like the built-in open function, but can also deal with compressed files. Supported compression formats are gzip, bzip2 and xz. They are automatically recognized by their file extensions .gz, .bz2 or .xz."""
+    """This small Python module provides a xopen function that works like the
+    built-in open function, but can also deal with compressed files. Supported
+    compression formats are gzip, bzip2 and xz. They are automatically recognized by
+    their file extensions .gz, .bz2 or .xz."""
 
     homepage = "https://github.com/marcelm/xopen"
-    url      = "https://pypi.python.org/packages/9a/b7/8906d6b2c4f874c0aacc676709a3d533362ac93bebc4a656c9df19421c9b/xopen-0.1.1.tar.gz"
+    url      = "https://pypi.io/packages/source/x/xopen/xopen-0.1.1.tar.gz"
 
     extends('python')
 
     version('0.1.1', '4e0e955546ee6bee4ea736b54623a671')
 
     depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:', type=('build', 'run'))

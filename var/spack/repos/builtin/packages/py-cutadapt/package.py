@@ -26,17 +26,14 @@ from spack import *
 
 
 class PyCutadapt(PythonPackage):
-    """Cutadapt finds and removes adapter sequences, primers, poly-A tails and other types of unwanted sequence from your high-throughput sequencing reads."""
+    """Cutadapt finds and removes adapter sequences, primers, poly-A tails and
+    other types of unwanted sequence from your high-throughput sequencing reads."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://cutadapt.readthedocs.io"
-    url      = "https://pypi.python.org/packages/4b/a0/caf0a418d64a69da12c0f5ede20830f0b7dba2d29efa3f667f1ce69e78da/cutadapt-1.13.tar.gz#md5=2d2d14e0c20ad53d7d84b57bc3e63b4c"
+    url      = "https://pypi.io/packages/source/c/cutadapt/cutadapt-1.13.tar.gz"
 
     version('1.13', '2d2d14e0c20ad53d7d84b57bc3e63b4c')
 
+    depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools',        type=('build'))
-    depends_on('py-xopen',        type=('run'))
-    depends_on('py-six',        type=('run'))
-    depends_on('py-packaging',        type=('run'))
-    depends_on('py-pyparsing',        type=('run'))
-    depends_on('py-appdirs',        type=('run'))
+    depends_on('py-xopen@0.1.1:', type=('build', 'run'))
