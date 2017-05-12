@@ -62,6 +62,7 @@ class Scorep(AutotoolsPackage):
 
     depends_on("mpi")
     depends_on("papi")
+    depends_on('pdt')
 
     variant('shmem', default=False, description='Enable shmem tracing')
 
@@ -79,6 +80,7 @@ class Scorep(AutotoolsPackage):
             "--with-cube=%s" % spec['cube'].prefix.bin,
             "--with-papi-header=%s" % spec['papi'].prefix.include,
             "--with-papi-lib=%s" % spec['papi'].prefix.lib,
+            "--with-pdt=%s" % spec['pdt'].prefix.bin,
             "--enable-shared",
         ]
 
