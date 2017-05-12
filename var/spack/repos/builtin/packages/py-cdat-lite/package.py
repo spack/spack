@@ -32,7 +32,7 @@ class PyCdatLite(PythonPackage):
     developed by PCMDI at Lawrence Livermore National Laboratory."""
 
     homepage = "http://proj.badc.rl.ac.uk/cedaservices/wiki/CdatLite"
-    url      = "https://pypi.python.org/simple/cdat-lite/cdat-lite-6.0.1.tar.gz"
+    url      = "https://pypi.io/packages/source/c/cdat-lite/cdat-lite-6.0.1.tar.gz"
 
     version('6.0.1', '6d5a6e86f15ce15291d25feab8793248')
 
