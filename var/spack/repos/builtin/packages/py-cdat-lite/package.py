@@ -22,31 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class PyCdatLite(PythonPackage):
+    """Cdat-lite is a Python package for managing and analysing climate
+    science data. It is a subset of the Climate Data Analysis Tools (CDAT)
+    developed by PCMDI at Lawrence Livermore National Laboratory."""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "http://proj.badc.rl.ac.uk/cedaservices/wiki/CdatLite"
+    url      = "https://pypi.io/packages/source/c/cdat-lite/cdat-lite-6.0.1.tar.gz"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    version('6.0.1', '6d5a6e86f15ce15291d25feab8793248')
 
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('libpng')
-
-    def configure_args(self):
-        args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
-
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
-
-        return args
+    depends_on("netcdf")
+    depends_on("python@2.5:2.8", type=('build', 'run'))
+    depends_on("py-numpy", type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

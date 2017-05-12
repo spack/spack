@@ -22,31 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
-import sys
 
 
-class Pixman(AutotoolsPackage):
-    """The Pixman package contains a library that provides low-level
-    pixel manipulation features such as image compositing and
-    trapezoid rasterization."""
+class Highfive(CMakePackage):
+    """HighFive - Header only C++ HDF5 interface"""
 
-    homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    homepage = "https://github.com/BlueBrain/HighFive"
+    url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    version('1.2', '030728d53519c7e13b5a522d34240301')
+    version('1.1', '986f0bd18c5264709688a536c02d2b2a')
+    version('1.0', 'e44e548560ea92afdb244c223b7655b6')
 
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('libpng')
+    variant('boost', default=False, description='Support Boost')
+    variant('mpi', default=True, description='Support MPI')
 
-    def configure_args(self):
+    depends_on('boost @1.41:', when='+boost')
+    depends_on('hdf5')
+    depends_on('hdf5 +mpi', when='+mpi')
+
+    def cmake_args(self):
         args = [
-            '--enable-libpng',
-            '--disable-gtk',
-        ]
-
-        if sys.platform == 'darwin':
-            args.append('--disable-mmx')
-
+            '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
+            '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
+            '-DUNIT_TESTS:Bool=false',
+            '-DHIGHFIVE_EXAMPLES:Bool=false']
         return args
