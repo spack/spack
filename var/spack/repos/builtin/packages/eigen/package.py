@@ -25,14 +25,16 @@
 from spack import *
 
 
-class Eigen(Package):
+class Eigen(CMakePackage):
     """Eigen is a C++ template library for linear algebra matrices,
     vectors, numerical solvers, and related algorithms.
     """
 
     homepage = 'http://eigen.tuxfamily.org/'
-    url = 'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2'
+    url      = 'https://bitbucket.org/eigen/eigen/get/3.3.3.tar.bz2'
+    list_url = 'https://bitbucket.org/eigen/eigen/downloads/?tab=tags'
 
+    version('3.3.3', 'b2ddade41040d9cf73b39b4b51e8775b')
     version('3.3.1', 'edb6799ef413b0868aace20d2403864c')
     version('3.2.10', 'a85bb68c82988648c3d53ba9768d7dcbcfe105f8')
     version('3.2.9', '59ab81212f8eb2534b1545a9b42c38bf618a0d71')
@@ -51,26 +53,15 @@ class Eigen(Package):
             description='Enables support for multi-precisions FP via mpfr')
 
     # TODO : dependency on googlehash, superlu, adolc missing
-    depends_on('cmake', type='build')
     depends_on('metis@5:', when='+metis')
     depends_on('scotch', when='+scotch')
     depends_on('fftw', when='+fftw')
     depends_on('suite-sparse', when='+suitesparse')
-    depends_on('mpfr@2.3.0:', when="+mpfr")
-    depends_on('gmp', when="+mpfr")
+    depends_on('mpfr@2.3.0:', when='+mpfr')
+    depends_on('gmp', when='+mpfr')
 
-    def install(self, spec, prefix):
-
-        options = []
-        options.extend(std_cmake_args)
-
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
-            make()
-            make("install")
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
