@@ -27,7 +27,8 @@ from spack import *
 
 class PyCutadapt(PythonPackage):
     """Cutadapt finds and removes adapter sequences, primers, poly-A tails and
-    other types of unwanted sequence from your high-throughput sequencing reads."""
+    other types of unwanted sequence from your high-throughput sequencing
+    reads."""
 
     homepage = "https://cutadapt.readthedocs.io"
     url      = "https://pypi.io/packages/source/c/cutadapt/cutadapt-1.13.tar.gz"

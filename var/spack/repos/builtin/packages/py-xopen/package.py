@@ -28,8 +28,8 @@ from spack import *
 class PyXopen(PythonPackage):
     """This small Python module provides a xopen function that works like the
     built-in open function, but can also deal with compressed files. Supported
-    compression formats are gzip, bzip2 and xz. They are automatically recognized by
-    their file extensions .gz, .bz2 or .xz."""
+    compression formats are gzip, bzip2 and xz. They are automatically
+    recognized by their file extensions .gz, .bz2 or .xz."""
 
     homepage = "https://github.com/marcelm/xopen"
     url      = "https://pypi.io/packages/source/x/xopen/xopen-0.1.1.tar.gz"
