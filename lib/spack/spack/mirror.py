@@ -53,13 +53,33 @@ def mirror_archive_filename(spec, fetcher, resourceId=None):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
             ext = url.determine_url_file_extension(fetcher.url)
-            ext = ext or spec.package.versions[spec.package.version].get(
-                'extension', None)
-            ext = ext.lstrip('.')
+
+            # If the filename does not end with a normal suffix,
+            # see if the package explicitly declares the extension
             if not ext:
-                raise MirrorError(
-                    "%s version does not specify an extension" % spec.name +
-                    " and could not parse extension from %s" % fetcher.url)
+                ext = spec.package.versions[spec.package.version].get(
+                    'extension', None)
+
+            if ext:
+                # Remove any leading dots
+                ext = ext.lstrip('.')
+
+            if not ext:
+                msg = """\
+Unable to parse extension from {0}.
+
+If this URL is for a tarball but does not include the file extension
+in the name, you can explicitly declare it with the following syntax:
+
+    version('1.2.3', 'hash', extension='tar.gz')
+
+If this URL is for a download like a .jar or .whl that does not need
+to be expanded, or an uncompressed installation script, you can tell
+Spack not to expand it with the following syntax:
+
+    version('1.2.3', 'hash', expand=False)
+"""
+                raise MirrorError(msg.format(fetcher.url))
         else:
             # If the archive shouldn't be expanded, don't check extension.
             ext = None

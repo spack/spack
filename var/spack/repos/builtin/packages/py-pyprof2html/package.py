@@ -22,13 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-description = "run pydoc from within spack"
-
-
-def setup_parser(subparser):
-    subparser.add_argument('entity', help="run pydoc help on entity")
+from spack import *
 
 
-def doc(parser, args):
-    help(args.entity)
+class PyPyprof2html(PythonPackage):
+    """Python cProfile and hotshot profile's data to HTML Converter"""
+
+    homepage = "https://pypi.python.org/pypi/pyprof2html/"
+    url      = "https://pypi.io/packages/source/p/pyprof2html/pyprof2html-0.3.1.tar.gz"
+
+    version('0.3.1', 'aa65a1635aac95e0487d7749a6351c43')
+
+    patch('version_0.3.1.patch', when="@0.3.1")
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-jinja2', type=('build', 'run'))

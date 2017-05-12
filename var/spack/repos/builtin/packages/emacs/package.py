@@ -36,10 +36,17 @@ class Emacs(AutotoolsPackage):
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=False, description="Enable an X toolkit")
-    variant('toolkit', default='gtk',
-            description="Select an X toolkit (gtk, athena)")
+    variant(
+        'toolkit',
+        default='gtk',
+        values=('gtk', 'athena'),
+        description="Select an X toolkit (gtk, athena)"
+    )
+
+    depends_on('pkg-config@0.9.0:', type='build')
 
     depends_on('ncurses')
+    depends_on('zlib')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')
@@ -50,12 +57,9 @@ class Emacs(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            if toolkit not in ('gtk', 'athena'):
-                raise InstallError("toolkit must be in (gtk, athena), not %s" %
-                                   toolkit)
             args = [
                 '--with-x',
                 '--with-x-toolkit={0}'.format(toolkit)

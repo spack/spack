@@ -40,6 +40,12 @@ class Sqlite(AutotoolsPackage):
 
     depends_on('readline')
 
+    # On some platforms (e.g., PPC) the include chain includes termios.h which
+    # defines a macro B0. Sqlite has a shell.c source file that declares a
+    # variable named B0 and will fail to compile when the macro is found. The
+    # following patch undefines the macro in shell.c
+    patch('sqlite_b0.patch', when='@3.18.0')
+
     def get_arch(self):
         arch = architecture.Arch()
         arch.platform = architecture.platform()

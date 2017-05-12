@@ -280,6 +280,18 @@ class TestSpecSematics(object):
 
         assert a.satisfies('foobar=bar')
 
+        # Assert that an autospec generated from a literal
+        # gives the right result for a single valued variant
+        assert 'foobar=bar' in a
+        assert 'foobar=baz' not in a
+        assert 'foobar=fee' not in a
+
+        # ... and for a multi valued variant
+        assert 'foo=bar' in a
+
+        # Check that conditional dependencies are treated correctly
+        assert '^b' in a
+
     def test_unsatisfiable_multi_value_variant(self):
 
         # Semantics for a multi-valued variant is different
@@ -336,22 +348,6 @@ class TestSpecSematics(object):
         # multiple values set
         with pytest.raises(MultipleValuesInExclusiveVariantError):
             a.concretize()
-
-        # FIXME: remove after having checked the correctness of the semantics
-        # check_unsatisfiable('multivalue_variant foo="bar,baz"',
-        #                     'multivalue_variant foo="bar,baz,quux"',
-        #                     concrete=True)
-        # check_unsatisfiable('multivalue_variant foo="bar,baz"',
-        #                     'multivalue_variant foo="bar,baz,quux"',
-        #                     concrete=True)
-
-        # but succeed for abstract ones (b/c they COULD satisfy the
-        # constraint if constrained)
-        # check_satisfies('multivalue_variant foo="bar"',
-        #                 'multivalue_variant foo="bar,baz"')
-
-        # check_satisfies('multivalue_variant foo="bar,baz"',
-        #                 'multivalue_variant foo="bar,baz,quux"')
 
     def test_unsatisfiable_variant_types(self):
         # These should fail due to incompatible types

@@ -30,6 +30,8 @@ import spack
 
 
 description = "patch expanded archive sources in preparation for install"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):

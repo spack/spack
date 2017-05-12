@@ -30,6 +30,8 @@ import spack
 import spack.cmd
 
 description = "list packages that provide a particular virtual package"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):

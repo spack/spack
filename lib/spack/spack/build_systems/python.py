@@ -75,7 +75,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python --no-user-cfg setup.py <phase>
+       $ python setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``

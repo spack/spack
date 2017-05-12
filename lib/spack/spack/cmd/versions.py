@@ -29,6 +29,8 @@ import llnl.util.tty as tty
 import spack
 
 description = "list available versions of a package"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):
