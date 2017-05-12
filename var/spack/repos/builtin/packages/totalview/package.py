@@ -1,6 +1,5 @@
 from spack import *
 
-import spack.environment
 
 class Totalview(Package):
     """
