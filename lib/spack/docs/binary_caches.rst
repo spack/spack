@@ -50,20 +50,10 @@ via:
 
 .. code-block:: sh
 
-   $ spack install --fetch-binary always bison
+   $ spack install-tarball bison
    
-With the fetch-binary keyword ``always`` the package bison and all its dependencies
-will be downloaded from the specified mirror(s). It fails if a package cannot be
-downloaded.
-
-Chosing the fetch-binary keyword ``lazy``
-
-.. code-block:: sh
-
-   $ spack install --fetch-binary lazy bison
-   
-spack will first attempt to download a pre-built package. If it does not exist,
-it will continue with building locally.
+The package bison and all its dependencies will be downloaded from the 
+specified mirror(s). It fails if a package cannot be downloaded.
 
 
 Relocation
