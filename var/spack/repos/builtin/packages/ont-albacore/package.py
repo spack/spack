@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import glob
-
 from spack import *
 
 
@@ -35,7 +33,7 @@ class OntAlbacore(Package):
     kits and Flow Cells."""
 
     homepage = "https://nanoporetech.com"
-    url      = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.1.0-cp35-cp35m-manylinux1_x86_64.whl"
+    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.1.0-cp35-cp35m-manylinux1_x86_64.whl"
 
     version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
     extends('python')
@@ -49,6 +47,5 @@ class OntAlbacore(Package):
     depends_on('py-pip',        type=('build'))
 
     def install(self, spec, prefix):
-        wheel = glob.glob('*.whl')[0]
         pip = which('pip')
-        pip('install', '--prefix={0}'.format(prefix), wheel)
+        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
