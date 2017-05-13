@@ -4,7 +4,7 @@
  if((NOT HAVE_LIBXML2) OR (NOT HAVE_LIBXSLT))
    find_package_version(LibXml2 ${BCL2FASTQ_LIBXML2_VERSION})
    find_package_version(LibXslt ${BCL2FASTQ_LIBXSLT_VERSION})
-+  # macro isn't ONLY for redist, see it's definition...
++  # macro isn't ONLY for redist, see its definition...
 +  string(REGEX REPLACE "/include$" "" LIBEXSLT_HINT ${LIBXSLT_INCLUDE_DIR})
 +  find_library_redist(LIBEXSLT ${LIBEXSLT_HINT} libexslt/exslt.h exslt)
  endif((NOT HAVE_LIBXML2) OR (NOT HAVE_LIBXSLT))
