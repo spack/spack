@@ -94,7 +94,7 @@ class Python(AutotoolsPackage):
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
-    patch('cray-rpath-3.1.patch', when="@3.1: platform=cray")
+    patch('cray-rpath-3.1.patch', when="@3.1:4.0   platform=cray")
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
