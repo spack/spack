@@ -93,8 +93,8 @@ class Python(AutotoolsPackage):
     patch('ncurses.patch', when='@:2.8,3.2:')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
-    patch('is_gcc.patch', when="%gcc platform=cray")
-    patch('is_gcc.patch', when="%intel platform=cray")
+    patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
+    patch('cray-rpath-3.1.patch', when="@3.1: platform=cray")
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
