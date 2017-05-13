@@ -75,15 +75,15 @@ class Bcl2fastq2(Package):
         def wrap():
             f()                 # call the original expand_archive()
             if os.path.isdir('bcl2fastq'):
-                tty.msg("The tarball has already been unpacked.")
+                tty.msg("The tarball has already been unpacked")
             else:
-                tty.msg("Unpacking bcl2fastq2 tarball.")
+                tty.msg("Unpacking bcl2fastq2 tarball")
                 tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
                 shutil.move(join_path('spack-expanded-archive', tarball), '.')
                 os.rmdir('spack-expanded-archive')
                 tar = which('tar')
                 tar('-xf', tarball)
-                tty.msg("Finished unpacking bcl2fastq2 tarball.")
+                tty.msg("Finished unpacking bcl2fastq2 tarball")
         return wrap
 
     def install(self, spec, prefix):
