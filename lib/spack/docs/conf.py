@@ -103,7 +103,6 @@ with open('command_index.rst', 'a') as index:
 # Without this, the API Docs will never actually update
 #
 apidoc_args = [
-    'sphinx_apidoc',   # The first arugment is ignored
     '--force',         # Overwrite existing files
     '--no-toc',        # Don't create a table of contents file
     '--output-dir=.',  # Directory to place all output
