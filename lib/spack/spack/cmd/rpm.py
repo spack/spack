@@ -41,6 +41,8 @@ from spack.util.executable import Executable
 import spack.config
 
 description = "Create RPM specs and sources for RPM installs"
+section = "admin"
+level = "long"
 
 
 def setup_parser(subparser):
