@@ -41,10 +41,11 @@ class Libusb(AutotoolsPackage):
     """
 
     homepage = "http://libusb.info/"
-    url      = "https://github.com/libusb/libusb/releases/download/v1.0.21/libusb-1.0.21.tar.bz2"
+    url      = "https://downloads.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.21/libusb-1.0.21.tar.bz2"
 
     version('1.0.21', '1da9ea3c27b3858fa85c5f4466003e44')
-    version('1.0.20', '1d4eb194eaaa2bcfbba28102768c7dbf')
+
+    depends_on("m4", type="build")
 
     # NOTE: this package probably works on all Linux, likely OSX
     #       *as-is*.  There are far too many options for me to understand.
