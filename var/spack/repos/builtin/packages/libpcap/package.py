@@ -36,11 +36,11 @@ class Libpcap(AutotoolsPackage):
     system, the "packet" protocol must be supported by your kernel.  If it
     is not, you may get error messages such as
 
-        modprobe: can't locate module net-pf-17
+    ``modprobe: can't locate module net-pf-17``
 
     in "/var/adm/messages", or may get messages such as
 
-        socket: Address family not supported by protocol
+    ``socket: Address family not supported by protocol``
 
     from applications using libpcap.
 
