@@ -22,30 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class OntAlbacore(Package):
-    """Albacore is a software project that provides an entry point to the Oxford
-    Nanopore basecalling algorithms. It can be run from the command line on
-    Windows and multiple Linux platforms. A selection of configuration files
-    allow basecalling DNA libraries made with our current range of sequencing
-    kits and Flow Cells."""
+class MesaGlu(AutotoolsPackage):
+    """This package provides the Mesa OpenGL Utility library."""
 
-    homepage = "https://nanoporetech.com"
-    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.1.0-cp35-cp35m-manylinux1_x86_64.whl"
+    homepage = "https://www.mesa3d.org"
+    url      = "ftp://ftp.freedesktop.org/pub/mesa/glu/glu-9.0.0.tar.gz"
 
-    version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
-    extends('python')
+    version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
 
-    depends_on('python@3.5.0:3.5.999',     type=('build', 'run'))
-    depends_on('py-setuptools',     type=('build', 'run'))
-    depends_on('py-numpy',        type=('build', 'run'))
-    depends_on('py-dateutil',        type=('build', 'run'))
-    depends_on('py-h5py',        type=('build', 'run'))
-    depends_on('py-ont-fast5-api',        type=('build', 'run'))
-    depends_on('py-pip',        type=('build'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+    depends_on('mesa')
