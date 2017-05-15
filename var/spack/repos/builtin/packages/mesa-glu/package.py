@@ -22,23 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class Harfbuzz(AutotoolsPackage):
-    """The Harfbuzz package contains an OpenType text shaping engine."""
-    homepage = "http://www.freedesktop.org/wiki/Software/HarfBuzz/"
-    url      = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
+class MesaGlu(AutotoolsPackage):
+    """This package provides the Mesa OpenGL Utility library."""
 
-    version('1.4.6', '21a78b81cd20cbffdb04b59ac7edfb410e42141869f637ae1d6778e74928d293')
-    version('0.9.37', 'bfe733250e34629a188d82e3b971bc1e')
+    homepage = "https://www.mesa3d.org"
+    url      = "ftp://ftp.freedesktop.org/pub/mesa/glu/glu-9.0.0.tar.gz"
 
-    depends_on("pkg-config", type="build")
-    depends_on("glib")
-    depends_on("icu4c")
-    depends_on("freetype")
-    depends_on("cairo")
-    depends_on("zlib")
+    version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
 
-    def patch(self):
-        change_sed_delimiter('@', ';', 'src/Makefile.in')
+    depends_on('mesa')
