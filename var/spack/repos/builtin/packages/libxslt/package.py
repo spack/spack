@@ -52,4 +52,6 @@ class Libxslt(AutotoolsPackage):
         args = []
         if self.spec.satisfies('~crypto'):
             args.append('--without-crypto')
+        else:
+            args.append('--with-crypto')
         return args
