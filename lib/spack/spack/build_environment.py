@@ -67,7 +67,8 @@ import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
-from spack.util.executable import Executable, which
+from spack.util.executable import Executable
+from spack.modulecmd import get_modulecmd
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -126,8 +127,7 @@ def load_module(mod):
     modulecmd implementation of modules used in cray and lmod.
     """
     # Create an executable of the module command that will output python code
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
+    modulecmd = get_modulecmd()
 
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
@@ -148,8 +148,7 @@ def get_path_from_module(mod):
     at which the library supported by said module can be found.
     """
     # Create a modulecmd executable
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
+    modulecmd = get_modulecmd()
 
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')

@@ -30,6 +30,7 @@ from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
+from spack.modulecmd import get_modulecmd
 from llnl.util.filesystem import join_path
 
 
@@ -142,8 +143,7 @@ class Cray(Platform):
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
         if getattr(self, '_craype_targets', None) is None:
-            module = which('modulecmd', required=True)
-            module.add_default_arg('python')
+            module = get_modulecmd()
             output = module('avail', '-t', 'craype-', output=str, error=str)
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []
