@@ -40,11 +40,14 @@ class Glib(AutotoolsPackage):
     version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
+    variant('libmount', default=False, description='Build with libmount support')
+
     depends_on('pkg-config@0.16:+internal_glib', type='build')
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')
     depends_on('pcre+utf', when='@2.48:')
+    depends_on('util-linux', when='+libmount')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
@@ -56,3 +59,14 @@ class Glib(AutotoolsPackage):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+
+        if '+libmount' in spec:
+            args.append('--enable-libmount')
+        else:
+            args.append('--disable-libmount')
+
+        return args
