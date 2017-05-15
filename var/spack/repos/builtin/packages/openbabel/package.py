@@ -61,3 +61,9 @@ class Openbabel(CMakePackage):
             args.append('-DPYTHON_BINDINGS=OFF')
 
         return args
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        obabel = Executable(join_path(self.prefix.bin, 'obabel'))
+        obabel('-:"C1=CC=CC=C1Br"', '-omol')
