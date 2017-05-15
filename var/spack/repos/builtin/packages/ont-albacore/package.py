@@ -38,13 +38,13 @@ class OntAlbacore(Package):
     version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
     extends('python')
 
-    depends_on('python@3.5.0:3.5.999',     type=('build', 'run'))
-    depends_on('py-setuptools',     type=('build'))
-    depends_on('py-numpy',        type=('build', 'run'))
-    depends_on('py-dateutil',        type=('build', 'run'))
-    depends_on('py-h5py',        type=('build', 'run'))
-    depends_on('py-ont-fast5-api',        type=('build', 'run'))
-    depends_on('py-pip',        type=('build'))
+    depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
+    depends_on('py-setuptools',        type=('build', 'run'))
+    depends_on('py-numpy',             type=('build', 'run'))
+    depends_on('py-dateutil',          type=('build', 'run'))
+    depends_on('py-h5py',              type=('build', 'run'))
+    depends_on('py-ont-fast5-api',     type=('build', 'run'))
+    depends_on('py-pip',               type=('build'))
 
     def install(self, spec, prefix):
         pip = which('pip')
