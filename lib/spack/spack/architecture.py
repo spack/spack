@@ -254,7 +254,7 @@ class OperatingSystem(object):
 
     def find_compilers(self, *paths):
         """
-        Return a list of compilers found in the suppied paths.
+        Return a list of compilers found in the supplied paths.
         This invokes the find() method for each Compiler class,
         and appends the compilers detected to a list.
         """
