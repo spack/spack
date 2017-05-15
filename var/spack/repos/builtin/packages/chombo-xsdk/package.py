@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-import glob,os,numbers,shutil
+import glob,os,numbers,shutil,sys
 
 def isIntegral(x):
     """True for any integer value"""
@@ -92,7 +92,7 @@ class ChomboXsdk(Package):
         else:
           options.append('RUN=./')
 
-        if '+use_hdf' in spec:
+        if spec.variants['use_hdf']:
           options.append('HDFINCFLAGS=-I%s/include' % spec['hdf5'].prefix)
           options.append('HDFLIBFLAGS=-L%s/lib -lhdf5 -lz' % spec['hdf5'].prefix)
           options.append('HDFMPIINCFLAGS=-I%s/include' % spec['hdf5'].prefix)
@@ -113,15 +113,29 @@ class ChomboXsdk(Package):
         make_defs_local_filename = join_path(self.prefix.lib, 'mk', 'Make.defs.local')
         make_defs_local = open(make_defs_local_filename,'w')
 
-        make_defs_local.write('makefiles+=Make.defs.local\n\n')
+        make_defs_local.write('makefiles+=Make.defs.local\n')
+        make_defs_local.write('\n')
 
-        make_defs_local.write('#begin  -- dont change this line\n\n')
+        make_defs_local.write('#begin  -- dont change this line\n')
+        make_defs_local.write('\n')
+
+        make_defs_local.write('CC=%s\n'  % self.compiler.cc)
+        make_defs_local.write('CXX=%s\n' % self.compiler.cxx)
+        make_defs_local.write('FC=%s\n'  % self.compiler.fc)
+
+        if spec.variants['mpi']:
+          make_defs_local.write('MPICXX=%s\n' % os.environ['MPICXX'])
+
+        if spec.variants['use_petsc']:
+          make_defs_local.write('PETSC_DIR=%s\n' % os.environ['PETSC_DIR'])
+
+        make_defs_local.write('\n')
 
         for option in options:
           make_defs_local.write('%s\n' % option)
         make_defs_local.write('\n')
 
-        make_defs_local.write('#end  -- dont change this line\n\n')
+        make_defs_local.write('#end  -- dont change this line\n')
 
         make_defs_local.close()
 
@@ -149,10 +163,11 @@ class ChomboXsdk(Package):
         for l in lib_files:
           install(l, lib_dest)
 
-        # TODO - Build and run examples
-
-        # Build the examples
+        # Build the examples (in situ)
         make('--directory=%s' % example_dest,'example-only',*options)
 
         # Run the examples
         make('--directory=%s' % example_dest,'run',*options)
+
+        # Cleanup the examples
+        make('--directory=%s' % example_dest,'realclean',*options)
