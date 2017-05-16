@@ -37,7 +37,7 @@ class RdmaCore(CMakePackage):
 
     depends_on('libnl')
 
-    @run_before('cmake_args')
+    @run_before('cmake')
     def check_platform(self):
         if not (sys.platform.startswith('freebsd') or
                 sys.platform.startswith('linux')):
