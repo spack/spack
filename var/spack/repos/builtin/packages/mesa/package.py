@@ -68,7 +68,10 @@ class Mesa(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = []
-        if spec.satisfies('~dri'):
-            args = ['--disable-dri', '--disable-egl',
-                    '--without-gallium-drivers']
+        if '+dri' in spec and \
+           '~link_dylib' in spec['llvm']:
+            args.extend(['--disable-llvm-shared-libs'])
+        else:
+            args.extend(['--disable-dri', '--disable-egl',
+                         '--without-gallium-drivers'])
         return args
