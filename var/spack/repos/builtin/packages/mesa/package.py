@@ -34,7 +34,7 @@ class Mesa(AutotoolsPackage):
 
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
 
-    variant('dri', default=True,
+    variant('dri', default=False,
             description="Use DRI drivers for accelerated OpenGL rendering")
 
     # General dependencies
