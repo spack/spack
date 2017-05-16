@@ -44,7 +44,7 @@ class Meme(AutotoolsPackage):
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     # openmpi support
-    depends_on('openmpi@2:', when='+mpi', type=('build', 'run'))
+    depends_on('openmpi@2:', when='+mpi', type=('link'))
 
     def configure_args(self):
         spec = self.spec
