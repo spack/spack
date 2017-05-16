@@ -88,13 +88,13 @@ class Openmpi(AutotoolsPackage):
     patch('configure.patch', when="@1.10.0:1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
-    variant('rdma', default=False, description='Build with rdma-core; also need to manually set "fabrics" to include "verbs"')
-
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
-        description='List of fabrics that are enabled',
-        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm'),
+        description=("List of fabrics that are enabled ('rdma' enables "
+                     "'verbs', but implemented via the 'rdma-core' Spack "
+                     "package)"),
+        values=('psm', 'psm2', 'pmi', 'rdma', 'verbs', 'mxm'),
         multi=True
     )
 
@@ -120,7 +120,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc')
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('jdk', when='+java')
-    depends_on('rdma-core', when='+rdma')
+    depends_on('rdma-core', when='fabrics=rdma')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
     def url_for_version(self, version):
@@ -172,7 +172,7 @@ class Openmpi(AutotoolsPackage):
         if not activated:
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
-        if "+rdma" in self.spec:
+        if 'fabrics=rdma' in self.spec:
             path = self.spec['rdma-core'].prefix
         else:
             path = _verbs_dir()
@@ -200,9 +200,12 @@ class Openmpi(AutotoolsPackage):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
 
-        if '+rdma' in spec and 'fabrics=verbs' not in spec:
+        if 'fabrics=rdma' in spec and 'fabrics=verbs' in spec:
             raise InstallError(
-                "variant '+rdma' requires variant 'fabrics=verbs'")
+                "variants 'fabrics=rdma' and 'fabrics=verbs' conflict since "
+                "both ultimately enable ibverbs: 'rdma' via the 'rdma-core' "
+                "Spack package, 'verbs' via software expected to be "
+                "pre-installed on the system")
 
         # Fabrics and schedulers
         config_args.extend(self.with_or_without('fabrics'))
