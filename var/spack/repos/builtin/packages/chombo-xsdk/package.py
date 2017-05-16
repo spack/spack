@@ -69,11 +69,11 @@ class ChomboXsdk(Package):
     depends_on('hdf5~mpi', when='+use_hdf~mpi')
     depends_on('hdf5+mpi', when='+use_hdf+mpi')
 
-    depends_on('petsc@xsdk-0.2.0~mpi~hypre~superlu-dist~hdf5+int64', when='@xsdk-0.2.0+use_petsc~mpi')
-    depends_on('petsc@xsdk-0.2.0+mpi+int64', when='@xsdk-0.2.0+use_petsc+mpi')
+    depends_on('petsc@xsdk-0.2.0~mpi~hypre~superlu-dist~hdf5', when='@xsdk-0.2.0+use_petsc~mpi')
+    depends_on('petsc@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+use_petsc+mpi')
 
-    depends_on('petsc@develop~mpi~hypre~superlu-dist~hdf5+int64', when='@develop+use_petsc~mpi')
-    depends_on('petsc@develop+mpi+int64', when='@develop+use_petsc+mpi')
+    depends_on('petsc@develop~mpi~hypre~superlu-dist~hdf5', when='@develop+use_petsc~mpi')
+    depends_on('petsc@develop+mpi', when='@develop+use_petsc+mpi')
 
     # Convert Python boolean False/True to strings "FALSE"/"TRUE"
     def boolToChombo(self, value):
