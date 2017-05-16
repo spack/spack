@@ -36,6 +36,8 @@ class Mesa(AutotoolsPackage):
 
     variant('dri', default=False,
             description="Use DRI drivers for accelerated OpenGL rendering")
+    variant('libsysfs', default=False,
+            description="Allow libsysfs for DRI drivers (libudev preferred)")
 
     # General dependencies
     depends_on('python@2.6.4:')
@@ -68,9 +70,12 @@ class Mesa(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = []
-        if '+dri' in spec and \
-           '~link_dylib' in spec['llvm']:
-            args.extend(['--disable-llvm-shared-libs'])
+        if '+dri' in spec:
+            if '~link_dylib' in spec['llvm']:
+                args.extend(['--disable-llvm-shared-libs'])
+            if '+libsysfs' in spec:
+                # libudev is preferred but may not work on some systems:
+                args.extend(['--enable-sysfs'])
         else:
             args.extend(['--disable-dri', '--disable-egl',
                          '--without-gallium-drivers'])
