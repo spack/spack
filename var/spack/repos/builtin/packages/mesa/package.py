@@ -44,6 +44,7 @@ class Mesa(AutotoolsPackage):
     depends_on('py-mako@0.3.4:', type=('build', 'run'))
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
+    depends_on('binutils', type='build')
 
     # For DRI and hardware acceleration
     depends_on('libpthread-stubs')
