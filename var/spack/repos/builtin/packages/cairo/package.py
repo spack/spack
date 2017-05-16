@@ -51,7 +51,7 @@ class Cairo(AutotoolsPackage):
     def configure_args(self):
         args = ["--disable-trace",  # can cause problems with libiberty
                 "--enable-tee"]
-        if self.spec.satisfies("+X"):
+        if '+X' in self.spec:
             args.extend(["--enable-xlib", "--enable-xcb"])
         else:
             args.extend(["--disable-xlib", "--disable-xcb"])
