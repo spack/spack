@@ -56,7 +56,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxfixes')
 
     depends_on('glproto@1.4.14:', type='build')
-    depends_on('libdrm',when='+dri')
+    depends_on('libdrm', when='+dri')
     depends_on('dri2proto@2.6:', type='build', when='+dri')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
     depends_on('expat', when='+dri')
