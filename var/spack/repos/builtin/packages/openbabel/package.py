@@ -48,6 +48,9 @@ class Openbabel(CMakePackage):
     depends_on('libxml2')     # required to read/write CML files, XML formats
     depends_on('zlib')        # required to support reading gzipped files
 
+    # Needed for Python 3.6 support
+    patch('0001-Fix-bug-368-Python3.6-openbabel-No-module-named-DLFC.patch', when='@:2.4.1')
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -66,4 +69,9 @@ class Openbabel(CMakePackage):
     @on_package_attributes(run_tests=True)
     def check_install(self):
         obabel = Executable(join_path(self.prefix.bin, 'obabel'))
-        obabel('-:"C1=CC=CC=C1Br"', '-omol')
+        obabel('-:C1=CC=CC=C1Br', '-omol')
+
+        if '+python' in self.spec:
+            # Attempt to import the Python modules
+            for module in ['openbabel', 'pybel']:
+                python('-c', 'import {0}'.format(module))

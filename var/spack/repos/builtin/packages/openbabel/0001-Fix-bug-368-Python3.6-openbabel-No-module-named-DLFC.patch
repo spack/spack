@@ -1,0 +1,33 @@
+From 92f4646d5cbf8d3291c66f9bff7ae61b6d535763 Mon Sep 17 00:00:00 2001
+From: Hector Mtz-Seara <hseara@gmail.com>
+Date: Thu, 2 Feb 2017 17:00:58 +0100
+Subject: [PATCH] Fix bug #368: Python3.6 openbabel: No module named 'DLFCN'
+
+The DLFCN module has been removed from python 3.6, as it is not
+documented. Same funtionality can be achive with the os module
+that makes available the os.RTLD_GLOBAL variable for dlopen()
+---
+ scripts/CMakeLists.txt | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/scripts/CMakeLists.txt b/scripts/CMakeLists.txt
+index e98eb16..6c096d0 100644
+--- a/scripts/CMakeLists.txt
++++ b/scripts/CMakeLists.txt
+@@ -81,11 +81,8 @@ if (DO_PYTHON_BINDINGS)
+             COMMAND ${SWIG_EXECUTABLE} -python -c++ -small -O -templatereduce -naturalvar -I${openbabel_SOURCE_DIR}/include -I${openbabel_BINARY_DIR}/include -o ${openbabel_SOURCE_DIR}/scripts/python/openbabel-python.cpp ${eigen_define} -outdir ${openbabel_SOURCE_DIR}/scripts/python ${openbabel_SOURCE_DIR}/scripts/openbabel-python.i
+               COMMAND ${CMAKE_COMMAND} -E echo "import sys" > ob.py
+               COMMAND ${CMAKE_COMMAND} -E echo "if sys.platform.find('linux'\) != -1:" >> ob.py
+-              COMMAND ${CMAKE_COMMAND} -E echo "  try:" >> ob.py
+-              COMMAND ${CMAKE_COMMAND} -E echo "    import dl" >> ob.py
+-              COMMAND ${CMAKE_COMMAND} -E echo "  except ImportError:" >> ob.py
+-              COMMAND ${CMAKE_COMMAND} -E echo "    import DLFCN as dl" >> ob.py
+-              COMMAND ${CMAKE_COMMAND} -E echo "  sys.setdlopenflags(sys.getdlopenflags() | dl.RTLD_GLOBAL)" >> ob.py
++              COMMAND ${CMAKE_COMMAND} -E echo "  import os" >> ob.py
++              COMMAND ${CMAKE_COMMAND} -E echo "  sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL)" >> ob.py
+               COMMAND cat ${openbabel_SOURCE_DIR}/scripts/python/openbabel.py >> ob.py
+               COMMAND ${CMAKE_COMMAND} -E copy ob.py ${openbabel_SOURCE_DIR}/scripts/python/openbabel.py
+               COMMAND ${CMAKE_COMMAND} -E remove ob.py
+-- 
+2.5.0
+
