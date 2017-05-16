@@ -42,6 +42,18 @@ class IntelMpi(IntelInstaller):
 
     provides('mpi')
 
+    @property
+    def mpi_libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpifort', 'libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix.lib64, shared=True, recurse=True
+        )
+
     def install(self, spec, prefix):
         self.intel_prefix = prefix
         IntelInstaller.install(self, spec, prefix)

@@ -49,6 +49,8 @@ class A(AutotoolsPackage):
         multi=False
     )
 
+    depends_on('b', when='foobar=bar')
+
     def with_or_without_fee(self, activated):
         if not activated:
             return '--no-fee'

@@ -50,13 +50,21 @@ class Cosmomc(Package):
     variant('mpi', default=True, description='Enable MPI support')
     variant('planck', default=False,
             description='Enable Planck Likelihood code and baseline data')
+    variant('python', default=True, description='Enable Python bindings')
 
-    patch('Makefile.patch')
-    patch('errorstop.patch')
+    extends('python', when='+python')
 
     depends_on('mpi', when='+mpi')
     depends_on('planck-likelihood', when='+planck')
-    depends_on('python@2.7:2.8,3.4:')
+    depends_on('py-matplotlib', type=('build', 'run'), when='+python')
+    depends_on('py-numpy', type=('build', 'run'), when='+python')
+    depends_on('py-pandas', type=('build', 'run'), when='+python')
+    depends_on('py-scipy', type=('build', 'run'), when='+python')
+    depends_on('py-six', type=('build', 'run'), when='+python')
+    depends_on('python @2.7:2.999,3.4:', type=('build', 'run'), when='+python')
+
+    patch('Makefile.patch')
+    patch('errorstop.patch')
 
     parallel = False
 
@@ -141,7 +149,6 @@ class Cosmomc(Package):
             'paramnames',
             'params_generic.ini',
             'planck_covmats',
-            'python',
             'scripts',
             # don't copy 'source'
             'test.ini',
@@ -149,6 +156,8 @@ class Cosmomc(Package):
             'test_planck.ini',
             'tests',
         ]
+        if '+python' in spec:
+            entries += ['python']
         for entry in entries:
             if os.path.isfile(entry):
                 install(entry, root)
