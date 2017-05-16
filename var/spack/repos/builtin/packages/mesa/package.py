@@ -57,6 +57,8 @@ class Mesa(AutotoolsPackage):
     depends_on('libdrm',when='+dri')
     depends_on('dri2proto@2.6:', type='build', when='+dri')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
+    depends_on('expat', when='+dri')
+    depends_on('llvm', when='+dri')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
 
