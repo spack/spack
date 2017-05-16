@@ -35,11 +35,19 @@ class Mummer(Package):
 
     depends_on('gnuplot')
 
+    patch('Makefile.patch')
+    patch('scripts-Makefile.patch')
+
     def install(self, spec, prefix):
         if self.run_tests:
             make('check')
-        make('install')
-        mkdirp(prefix.bin)
+        make('INSTALL_TOP_DIR={0}'.format(prefix))
+        bd = prefix.bin
+        abd = join_path(prefix, 'aux_bin')
+        sd = join_path(prefix, 'scripts')
+        mkdirp(bd)
+        mkdirp(abd)
+        mkdirp(sd)
 
         bins = ["show-tiling", "show-snps", "show-coords", "show-aligns",
                 "show-diff", "delta-filter", "combineMUMs", "mummer",
@@ -48,8 +56,11 @@ class Mummer(Package):
                 "run-mummer1", "nucmer", "mapview", "exact-tandems"]
         aux_bins = ["aux_bin/postnuc", "aux_bin/postpro",
                     "aux_bin/prenuc", "aux_bin/prepro"]
+        scripts = ["scripts/Foundation.pm"]
 
-        for b in bins:
-            install(b, join_path(prefix.bin, b))
-        for b in aux_bins:
-            install(b, join_path(prefix.bin, b[8:]))
+        for f in bins:
+            install(f, join_path(bd, f))
+        for f in aux_bins:
+            install(f, join_path(abd, f[8:]))
+        for f in scripts:
+            install(f, join_path(sd, f[8:]))
