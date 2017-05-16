@@ -50,7 +50,7 @@ class Libxslt(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if self.spec.satisfies('~crypto'):
+        if '~crypto' in self.spec:
             args.append('--without-crypto')
         else:
             args.append('--with-crypto')
