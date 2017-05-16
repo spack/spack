@@ -41,14 +41,14 @@ class Mummer(Package):
         make('install')
         mkdirp(prefix.bin)
 
-        bins = ["show-tiling", "show-snps", "show-coords", "show-aligns", 
-                "show-diff", "delta-filter", "combineMUMs", "mummer", 
-                "repeat-match", "annotate", "mgaps", "gaps", "dnadiff", 
-                "nucmer2xfig", "run-mummer3", "mummerplot", "promer", 
+        bins = ["show-tiling", "show-snps", "show-coords", "show-aligns",
+                "show-diff", "delta-filter", "combineMUMs", "mummer",
+                "repeat-match", "annotate", "mgaps", "gaps", "dnadiff",
+                "nucmer2xfig", "run-mummer3", "mummerplot", "promer",
                 "run-mummer1", "nucmer", "mapview", "exact-tandems"]
         aux_bins = ["aux_bin/postnuc", "aux_bin/postpro",
                     "aux_bin/prenuc", "aux_bin/prepro"]
-                  
+
         for b in bins:
             install(b, join_path(prefix.bin, b))
         for b in aux_bins:
