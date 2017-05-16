@@ -40,9 +40,8 @@ class Libnl(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('m4', type='build')
 
-    def configure_args(self):
-        if not sys.platform.startswith('linux'):
-            raise InstallError("libnl requires Linux")
-
-        args = []
-        return args
+    @run_before('autoreconf')
+    def check_platform(self):
+        if not (sys.platform.startswith('freebsd') or
+                sys.platform.startswith('linux')):
+            raise InstallError("libnl requires FreeBSD or Linux")
