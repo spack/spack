@@ -46,8 +46,15 @@ class Mpifileutils(Package):
     depends_on('dtcmp')
     depends_on('libarchive')
 
+    variant('lustre', default=False)
+
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,
                   "--with-lwgrp=" + spec['lwgrp'].prefix)
-        make()
+
+        make_args = []
+        if '+lustre' in spec:
+            make_args.append('CFLAGS=-DDCOPY_USE_XATTRS')
+
+        make(", ".join(make_args))
         make("install")
