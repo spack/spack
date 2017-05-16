@@ -30,7 +30,15 @@ class PySphinx(PythonPackage):
     homepage = "http://sphinx-doc.org"
     url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-1.6.1.tar.gz"
 
-    import_modules = ['sphinx', 'sphinx.testing', 'sphinx.ext', 'sphinx.pycode', 'sphinx.search', 'sphinx.transforms', 'sphinx.builders', 'sphinx.directives', 'sphinx.util', 'sphinx.environment', 'sphinx.writers', 'sphinx.domains', 'sphinx.locale', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary', 'sphinx.pycode.pgen2', 'sphinx.transforms.post_transforms', 'sphinx.util.stemmer', 'sphinx.environment.collectors', 'sphinx.environment.adapters']
+    import_modules = [
+        'sphinx', 'sphinx.testing', 'sphinx.ext', 'sphinx.pycode',
+        'sphinx.search', 'sphinx.transforms', 'sphinx.builders',
+        'sphinx.directives', 'sphinx.util', 'sphinx.environment',
+        'sphinx.writers', 'sphinx.domains', 'sphinx.locale',
+        'sphinx.ext.napoleon', 'sphinx.ext.autosummary', 'sphinx.pycode.pgen2',
+        'sphinx.transforms.post_transforms', 'sphinx.util.stemmer',
+        'sphinx.environment.collectors', 'sphinx.environment.adapters'
+    ]
 
     version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
     version('1.5.5', 'f9581b3556df9722143c47290273bcf8')
