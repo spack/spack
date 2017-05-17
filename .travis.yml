@@ -87,7 +87,7 @@ install:
   - pip install --upgrade codecov
   - pip install --upgrade flake8
   - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade sphinx; fi
-  - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade sphinxcontrib-programoutput; fi
+  - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt; fi
 
 before_script:
   # Need this for the git tests to succeed.
