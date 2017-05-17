@@ -69,8 +69,8 @@ def install_tarball(parser, args):
                 package)
             if tarball_available:
                 spack.binary_distribution.prepare()
-                spack.binary_distribution.extract_tarball(spec)
-                spack.binary_distribution.relocate_package(spec)
+                spack.binary_distribution.extract_tarball(package)
+                spack.binary_distribution.relocate_package(package)
                 spack.store.db.reindex(spack.store.layout)
             else:
                 tty.die("Download of binary cache tarball for spec %s failed." % spec)

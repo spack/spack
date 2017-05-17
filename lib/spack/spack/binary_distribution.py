@@ -191,6 +191,7 @@ def extract_tarball(package):
     tarball = tarball_name(package.spec)
     tar = which("tar")
     local_tarball = package.stage.path + "/" + tarball
+    mkdirp('%s' % package.prefix)
     tar("--strip-components=1",
         "-C%s" % package.prefix,
         "-xf",
