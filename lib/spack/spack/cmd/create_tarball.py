@@ -31,7 +31,7 @@ import spack.cmd
 from spack.binary_distribution import build_tarball
 
 
-description = "Create tarballs for given packages"
+description = "Create binary cache tarballs for given packages"
 section = "build"
 level = "short"
 
@@ -51,7 +51,7 @@ def setup_parser(subparser):
 
 def create_tarball(parser, args):
     if not args.packages:
-        tty.die("tarball creation requires at least one package argument")
+        tty.die("binary cache tarball creation requires at least one package argument")
 
     pkgs = set(args.packages)
     specs = set()
@@ -64,5 +64,5 @@ def create_tarball(parser, args):
                     tty.msg('adding dependency %s' % node)
                     specs.add(node)
     for spec in specs:
-        tty.msg('creating tarball for package %s ' % spec)
+        tty.msg('creating binary cache tarball for package %s ' % spec)
         build_tarball(spec, args.directory, args.force)

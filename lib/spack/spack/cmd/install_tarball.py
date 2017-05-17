@@ -33,7 +33,7 @@ import spack.binary_distribution
 import spack.relocate
 
 
-description = "Download and extract tarballs for given packages"
+description = "Download and extract binary cache tarballs for given packages"
 section = "build"
 level = "short"
 
@@ -48,7 +48,7 @@ def setup_parser(subparser):
 
 def install_tarball(parser, args):
     if not args.packages:
-        tty.die("tarball extraction requires at least one package argument")
+        tty.die("binary cache tarball extraction requires at least one package argument")
 
     pkgs = set(args.packages)
     specs = set()
@@ -73,4 +73,4 @@ def install_tarball(parser, args):
                 spack.binary_distribution.relocate_package(spec)
                 spack.store.db.reindex(spack.store.layout)
             else:
-                tty.die("Download of binary package for spec %s failed." % spec)
+                tty.die("Download of binary cache tarball for spec %s failed." % spec)
