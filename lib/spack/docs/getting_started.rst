@@ -62,7 +62,7 @@ For a richer experience, use Spack's shell support:
 
 
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to used to execute spack :ref:`commands <shell-support>` and
+command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
 
 If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
