@@ -30,7 +30,7 @@ class Libassuan(AutotoolsPackage):
        protocol."""
 
     homepage = "https://gnupg.org/software/libassuan/index.html"
-    url      = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.3.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.3.tar.bz2"
 
     version('2.4.3', '8e01a7c72d3e5d154481230668e6eb5a')
 

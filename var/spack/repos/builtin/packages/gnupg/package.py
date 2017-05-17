@@ -26,11 +26,11 @@ from spack import *
 
 
 class Gnupg(AutotoolsPackage):
-    """GnuPG is a complete and free implementation of the OpenPGP 
+    """GnuPG is a complete and free implementation of the OpenPGP
        standard as defined by RFC4880 """
 
     homepage = "https://gnupg.org/index.html"
-    url      = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.1.21.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.1.21.tar.bz2"
 
     version('2.1.21', '685ebf4c3a7134ba0209c96b18b2f064')
 
@@ -42,10 +42,10 @@ class Gnupg(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-              '--with-npth-prefix=%s'%self.spec['npth'].prefix],
-              '--with-libgcrypt-prefix=%s'%self.spec['libgcrypt'].prefix,
-              '--with-libksba-prefixx=%s'%self.spec['libksba'].prefix,
-              '--with-libassuan-prefix=%s'%self.spec['libassuan'].prefix,
-              '--with-libpgp-error-prefix=%s'%self.spec['libgpg-error'].prefix
+              '--with-npth-prefix=%s' % self.spec['npth'].prefix],
+              '--with-libgcrypt-prefix=%s' % self.spec['libgcrypt'].prefix,
+              '--with-libksba-prefixx=%s' % self.spec['libksba'].prefix,
+              '--with-libassuan-prefix=%s' % self.spec['libassuan'].prefix,
+              '--with-libpgp-error-prefix=%s' % self.spec['libgpg-error'].prefix
                 ]
         return args

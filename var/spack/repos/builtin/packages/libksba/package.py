@@ -30,7 +30,7 @@ class Libksba(AutotoolsPackage):
        certificates, CMS data and related objects more easy. """
 
     homepage = "https://gnupg.org/software/libksba/index.html"
-    url      = "https://gnupg.org/ftp/gcrypt/libksba/libksba-1.3.5.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/libksba/libksba-1.3.5.tar.bz2"
 
     version('1.3.5', '8302a3e263a7c630aa7dea7d341f07a2')
 
