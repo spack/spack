@@ -32,8 +32,11 @@ class PyMarkupsafe(PythonPackage):
     Mako templating engine, the Pylons web framework and many more."""
 
     homepage = "http://www.pocoo.org/projects/markupsafe/"
-    url      = "https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz"
+    url      = "https://pypi.io/packages/source/M/MarkupSafe/MarkupSafe-1.0.tar.gz"
 
+    import_modules = ['markupsafe']
+
+    version('1.0',  '2fcedc9284d50e577b5192e8e3578355')
     version('0.23', 'f5ab3deee4c37cd6a922fb81e730da6e')
     version('0.22', 'cb3ec29fd5361add24cfd0c6e2953b3e')
     version('0.21', 'fde838d9337fa51744283f46a1db2e74')
