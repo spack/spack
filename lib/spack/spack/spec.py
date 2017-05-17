@@ -1673,7 +1673,8 @@ class Spec(object):
                 if spec.virtual:
                     spec._replace_with(replacement)
                     changed = True
-                if spec._dup(replacement, deps=False, cleardeps=False, soft_dup=True):
+                if spec._dup(replacement, deps=False, cleardeps=False,
+                             soft_dup=True):
                     changed = True
 
                 self_index.update(spec)
@@ -2417,7 +2418,7 @@ class Spec(object):
         self.name = other.name
         if soft_dup:
             if not (self.versions.concrete and (not other.versions.concrete)):
-                 self.versions = other.versions.copy()
+                self.versions = other.versions.copy()
         else:
             self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture \
@@ -2425,10 +2426,12 @@ class Spec(object):
         if soft_dup:
             if self.compiler:
                 if other.compiler:
-                    if not (self.compiler.versions.concrete and (not other.compiler.versions.concrete)):
+                    if not (self.compiler.versions.concrete and
+                            (not other.compiler.versions.concrete)):
                         self.compiler = other.compiler.copy()
             else:
-                self.compiler = other.compiler.copy() if other.compiler else None
+                self.compiler = other.compiler.copy() if other.compiler \
+                    else None
         else:
             self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
