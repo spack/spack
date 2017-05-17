@@ -27,7 +27,7 @@ from spack import *
 
 class PyPyparsing(PythonPackage):
     """A Python Parsing Module."""
-    homepage = "https://pypi.python.org/pypi/pyparsing"
+    homepage = "http://pyparsing.wikispaces.com/"
     url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.2.0.tar.gz"
 
     import_modules = ['pyparsing']
