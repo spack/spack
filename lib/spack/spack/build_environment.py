@@ -126,7 +126,7 @@ def load_module(mod):
     modulecmd implementation of modules used in cray and lmod.
     """
     # Create an executable of the module command that will output python code
-    modulecmd = which('modulecmd')
+    modulecmd = which('modulecmd', required=True)
     modulecmd.add_default_arg('python')
 
     # Read the module and remove any conflicting modules
