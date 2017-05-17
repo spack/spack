@@ -33,6 +33,8 @@ from spack.util.executable import ProcessError, which
 _SPACK_UPSTREAM = 'https://github.com/llnl/spack'
 
 description = "create a new installation of spack in another prefix"
+section = "admin"
+level = "long"
 
 
 def setup_parser(subparser):

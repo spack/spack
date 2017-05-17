@@ -34,7 +34,7 @@ class EnvironmentModules(Package):
     url = "http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz"
 
     version('3.2.10', '8b097fdcb90c514d7540bb55a3cb90fb')
-    
+
     variant('X', default=True, description='Build with X functionality')
 
     # Dependencies:
@@ -76,7 +76,7 @@ class EnvironmentModules(Package):
             '--datarootdir=' + prefix.share,
             'CPPFLAGS=' + ' '.join(cpp_flags)
         ]
-        
+
         if '~X' in spec:
             config_args = ['--without-x'] + config_args
 
