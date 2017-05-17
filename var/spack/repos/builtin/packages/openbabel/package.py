@@ -49,7 +49,7 @@ class Openbabel(CMakePackage):
     depends_on('zlib')        # required to support reading gzipped files
 
     # Needed for Python 3.6 support
-    patch('0001-Fix-bug-368-Python3.6-openbabel-No-module-named-DLFC.patch', when='@:2.4.1')
+    patch('python-3.6-rtld-global.patch', when='@:2.4.1+python')
 
     def cmake_args(self):
         spec = self.spec
