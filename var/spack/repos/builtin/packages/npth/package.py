@@ -25,16 +25,16 @@
 from spack import *
 
 
-class Libgcrypt(AutotoolsPackage):
-    """Libgcrypt is a general purpose cryptographic library based on
-       the code from GnuPG. It provides functions for all cryptographic
-       building blocks: symmetric ciphers, hash algorithms, MACs, public
-       key algorithms, large integer functions, random numbers and a lot
-       of supporting functions. """
-    homepage = "http://www.gnu.org/software/libgcrypt/"
-    url      = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.7.6.tar.bz2"
+class Npth(AutotoolsPackage):
+    """nPth is a library to provide the GNU Pth API and thus a 
+       non-preemptive threads implementation."""
 
-    version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
-    version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
+    homepage = "https://gnupg.org/software/npth/index.html"
+    url      = "https://gnupg.org/ftp/gcrypt/npth/npth-1.4.tar.bz2"
 
-    depends_on("libgpg-error")
+    version('1.4', '76cef5542e0db6a339cf960641ed86f8')
+
+
+    def configure_args(self):
+        args = []
+        return args

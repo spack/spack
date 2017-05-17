@@ -32,7 +32,6 @@ class LibgpgError(AutotoolsPackage):
        SmartCard Daemon and possibly more in the future. """
 
     homepage = "https://www.gnupg.org/related_software/libgpg-error"
-    url      = "http://gd.tuwien.ac.at/pub/gnupg/libgpg-error/libgpg-error-1.18.tar.bz2"
+    url      = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"
 
-    version('1.21', 'ab0b5aba6d0a185b41d07bda804fd8b2')
-    version('1.18', '12312802d2065774b787cbfc22cc04e9')
+    version('1.27', '5217ef3e76a7275a2a3b569a12ddc989')
