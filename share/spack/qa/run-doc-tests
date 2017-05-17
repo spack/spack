@@ -17,4 +17,4 @@ cd "$SPACK_ROOT/lib/spack/docs"
 
 # Treat warnings as fatal errors
 make clean --silent
-make SPHINXOPTS=-W JOBS=1
+make SPHINXOPTS=-W

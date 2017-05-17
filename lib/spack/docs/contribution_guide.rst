@@ -189,6 +189,7 @@ Building the documentation requires several dependencies, all of which can be
 installed with Spack:
 
 * sphinx
+* sphinxcontrib-programoutput
 * graphviz
 * git
 * mercurial
@@ -227,7 +228,7 @@ your PR is accepted.
    There is also a ``run-doc-tests`` script in the Quality Assurance directory.
    The only difference between running this script and running ``make`` by hand
    is that the script will exit immediately if it encounters an error or warning.
-   This is necessary for Travis CI. If you made a lot of documentation tests, it
+   This is necessary for Travis CI. If you made a lot of documentation changes, it
    is much quicker to run ``make`` by hand so that you can see all of the warnings
    at once.
 
