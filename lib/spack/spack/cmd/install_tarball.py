@@ -55,11 +55,10 @@ def install_tarball(parser, args):
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             specs.add(spec)
-            if args.recurse:
-                tty.msg('recursing dependencies')
-                for d, node in spec.traverse(order='pre', depth=True):
-                    tty.msg('adding dependency %s' % node)
-                    specs.add(node)
+            tty.msg('recursing dependencies')
+            for d, node in spec.traverse(order='pre', depth=True):
+                tty.msg('adding dependency %s' % node)
+                specs.add(node)
 
     for spec in specs:
         package = spack.repo.get(spec)
@@ -67,7 +66,7 @@ def install_tarball(parser, args):
             tty.warn("Package for spec %s already installed." % spec)
         else:
             tarball_available = spack.binary_distribution.download_tarball(
-                self)
+                package)
             if tarball_available:
                 spack.binary_distribution.prepare()
                 spack.binary_distribution.extract_tarball(spec)
