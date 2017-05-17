@@ -34,6 +34,17 @@ class Gnupg(AutotoolsPackage):
 
     version('2.1.21', '685ebf4c3a7134ba0209c96b18b2f064')
 
+    depends_on('libgcrypt')
+    depends_on('libassuan')
+    depends_on('libksba')
+    depends_on('libgpg-error')
+    depends_on('npth')
+
     def configure_args(self):
         args = []
+        args += ['--with-npth-prefix=%s'%self.spec['npth'].prefix]
+        args += ['--with-libgcrypt-prefix=%s'%self.spec['libgcrypt'].prefix]
+        args += ['--with-libksba-prefixx=%s'%self.spec['libksba'].prefix]
+        args += ['--with-libassuan-prefix=%s'%self.spec['libassuan'].prefix]
+        args += ['--with-libpgp-error-prefix=%s'%self.spec['libgpg-error'].prefix]
         return args
