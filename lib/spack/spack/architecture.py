@@ -288,7 +288,8 @@ class OperatingSystem(object):
         # on the environment for things such as locations of license files
         compiler_lists = []
         for single_type in types:
-            compiler_lists.append(self.find_compiler(single_type, *filtered_path))
+            compiler_lists.append(self.find_compiler(single_type,
+                                                     *filtered_path))
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
@@ -362,10 +363,12 @@ class OperatingSystem(object):
                     # check for conflicts and load required module
                     # This allows the compiler to find license files
                     # if need be.
-                    text = modulecmd('show', mod_name, output=str, error=str).split()
+                    text = modulecmd('show', mod_name,
+                                     output=str, error=str).split()
                     for i, word in enumerate(text):
                         if word == 'conflict':
-                            modulecmd('unload', text[i + 1], output=str, error=str)
+                            modulecmd('unload', text[i + 1],
+                                      output=str, error=str)
                             tty.debug("Removed module %s" % mod_name)
                     modulecmd('load', mod_name, output=str, error=str)
                     tty.debug("Loaded module %s" % mod_name)
@@ -378,17 +381,21 @@ class OperatingSystem(object):
                         output=str, error=str).split()
                     for i, word in enumerate(text):
                         if len(re.findall('path', word)) != 0:
-                            paths.append(text[i+2])
+                            paths.append(text[i + 2])
 
                     # get compilers from paths
                     # we can use parmap here because the appropriate module
                     # has already been loaded.
                     dicts = parmap(
                         lambda t: cmp_cls._find_matches_in_path(*t),
-                        [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(paths),
-                         (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(paths),
-                         (cmp_cls.f77_names, cmp_cls.f77_version) + tuple(paths),
-                         (cmp_cls.fc_names,  cmp_cls.fc_version)  + tuple(paths)])
+                        [((cmp_cls.cc_names,  cmp_cls.cc_version) +
+                            tuple(paths)),
+                         ((cmp_cls.cxx_names, cmp_cls.cxx_version) +
+                             tuple(paths)),
+                         ((cmp_cls.f77_names, cmp_cls.f77_version) +
+                             tuple(paths)),
+                         ((cmp_cls.fc_names,  cmp_cls.fc_version) +
+                             tuple(paths))])
                     all_keys = set()
                     for d in dicts:
                         all_keys.update(d)
@@ -399,7 +406,8 @@ class OperatingSystem(object):
                         if ver == 'unknown':
                             continue
 
-                        paths = tuple(pn[k] if k in pn else None for pn in dicts)
+                        paths = tuple(
+                            pn[k] if k in pn else None for pn in dicts)
                         spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
 
                         if ver in compilers:
@@ -408,10 +416,12 @@ class OperatingSystem(object):
                             # prefer the one with more compilers.
                             prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
                             newcount = len([p for p in paths if p is not None])
-                            prevcount = len([p for p in prev_paths if p is not None])
+                            prevcount = len(
+                                [p for p in prev_paths if p is not None])
 
-                            # Don't add if it's not an improvement over prev compiler.
-                            # but only if the previous compiler was module based
+                            # Don't add if it's not an improvement over
+                            # prev compiler. but only if the previous
+                            # compiler was module based
                             if len(prev.modules) > 0 and newcount <= prevcount:
                                 continue
 
