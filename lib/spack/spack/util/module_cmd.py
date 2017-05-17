@@ -40,9 +40,7 @@ def get_module_cmd():
 
 
 def get_module_cmd_from_which():
-    module_cmd = which('modulecmd')
-    if not module_cmd:
-        raise ModuleError('`which` did not find any modulecmd executable.')
+    module_cmd = which('modulecmd', required=True)
     module_cmd.add_default_arg('python')
 
     # Check that the executable works
