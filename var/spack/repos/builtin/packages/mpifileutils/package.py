@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,7 +24,7 @@
 ##############################################################################
 from spack import *
 
-
+#class Mpifileutils(AutotoolsPackage):
 class Mpifileutils(Package):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
@@ -46,15 +46,38 @@ class Mpifileutils(Package):
     depends_on('dtcmp')
     depends_on('libarchive')
 
-    variant('lustre', default=False)
+    # enable optimizations / features for Lustre
+    variant('xattr', default=True, description="Enable code for extended attributes")
+
+    # enable optimizations / features for Lustre
+    variant('lustre', default=False, description="Enable optimizations and features for Lustre")
+
+    # install experimental tools
+    # (supported starting with v0.7)
+#    variant('experimental', default=False, description="Install experimental tools")
+
+#    def configure_args(self):
+#        args = [
+#            "--prefix=" + prefix
+#        ]
+#
+#        if '+lustre' in spec:
+#            args.append('--enable-lustre')
+#
+#        if '+experimental' in spec:
+#            args.append('--enable-experimental')
+#
+#        return args
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--with-lwgrp=" + spec['lwgrp'].prefix)
-
-        make_args = []
         if '+lustre' in spec:
-            make_args.append('CFLAGS=-DDCOPY_USE_XATTRS')
+            configure("--prefix=" + prefix, "--enable-lustre")
+        else:
+            configure("--prefix=" + prefix)
 
-        make(", ".join(make_args))
+        if '+xattr' in spec:
+            make('CFLAGS=-DDCOPY_USE_XATTRS')
+        else:
+            make()
+
         make("install")
