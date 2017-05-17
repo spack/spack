@@ -34,7 +34,3 @@ class Npth(AutotoolsPackage):
 
     version('1.4', '76cef5542e0db6a339cf960641ed86f8')
 
-
-    def configure_args(self):
-        args = []
-        return args
