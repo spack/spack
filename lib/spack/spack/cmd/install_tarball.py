@@ -34,8 +34,8 @@ import spack.relocate
 
 
 description = "Download and extract binary cache tarballs for given packages"
-section = "build"
-level = "short"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):

@@ -32,8 +32,8 @@ from spack.binary_distribution import build_tarball
 
 
 description = "Create binary cache tarballs for given packages"
-section = "build"
-level = "short"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):
