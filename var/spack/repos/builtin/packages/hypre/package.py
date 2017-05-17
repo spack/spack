@@ -74,6 +74,12 @@ class Hypre(Package):
             '--with-blas-libs=%s' % ' '.join(blas.names),
             '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
+        
+        if spec.satisfies('^netlib-lapack'):
+            # netlib-lapack puts the libs in lib64
+            configure_args.extend([
+                "--with-lapack-lib-dirs=%s/lib64".join(lapack.directories),
+                "--with-blas-lib-dirs=%s/lib64".join(blas.directories)])
 
         if '+int64' in self.spec:
             configure_args.append('--enable-bigint')
