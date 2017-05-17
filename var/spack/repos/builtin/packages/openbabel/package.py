@@ -51,6 +51,9 @@ class Openbabel(CMakePackage):
     # Needed for Python 3.6 support
     patch('python-3.6-rtld-global.patch', when='@:2.4.1+python')
 
+    # Convert tabs to spaces. Allows unit tests to pass
+    patch('testpdbformat-tabs-to-spaces.patch', when='@:2.4.1')
+
     def cmake_args(self):
         spec = self.spec
         args = []
