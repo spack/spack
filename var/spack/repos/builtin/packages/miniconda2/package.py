@@ -33,6 +33,7 @@ class Miniconda2(Package):
     homepage = "https://conda.io/miniconda.html"
     url      = "https://repo.continuum.io/miniconda/Miniconda2-4.3.11-Linux-x86_64.sh"
 
+    version('4.3.14', '8cb075cf5462480980ef2373ad9fad38', expand=False)
     version('4.3.11', 'd573980fe3b5cdf80485add2466463f5', expand=False)
 
     def install(self, spec, prefix):
