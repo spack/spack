@@ -25,16 +25,17 @@
 from spack import *
 
 
-class Libgcrypt(AutotoolsPackage):
-    """Libgcrypt is a general purpose cryptographic library based on
-       the code from GnuPG. It provides functions for all cryptographic
-       building blocks: symmetric ciphers, hash algorithms, MACs, public
-       key algorithms, large integer functions, random numbers and a lot
-       of supporting functions. """
-    homepage = "http://www.gnu.org/software/libgcrypt/"
-    url = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.7.6.tar.bz2"
+class Libksba(AutotoolsPackage):
+    """Libksba is a library to make the tasks of working with X.509
+       certificates, CMS data and related objects more easy. """
 
-    version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
-    version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
+    homepage = "https://gnupg.org/software/libksba/index.html"
+    url = "https://gnupg.org/ftp/gcrypt/libksba/libksba-1.3.5.tar.bz2"
 
-    depends_on("libgpg-error")
+    version('1.3.5', '8302a3e263a7c630aa7dea7d341f07a2')
+
+    depends_on('libgpg-error')
+
+    def configure_args(self):
+        args = ['--with-libgpp-error=%s' % self.spec['libgpg-error'].prefix]
+        return args
