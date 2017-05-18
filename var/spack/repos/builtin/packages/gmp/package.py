@@ -40,10 +40,16 @@ class Gmp(AutotoolsPackage):
 
     depends_on('m4', type='build')
 
+    variant('generic',
+            default=False,
+            description='Build with -mtune=generic for portability of gcc')
+
     def configure_args(self):
         args = ['--enable-cxx']
         # This flag is necessary for the Intel build to pass `make check`
         if self.spec.compiler.name == 'intel':
             args.append('CXXFLAGS=-no-ftz')
-
+        if '+generic' in self.spec:
+            args.append('CFLAGS=-mtune=generic')
+            args.append('CXXFLAGS=-mtune=generic')
         return args
