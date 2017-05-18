@@ -25,33 +25,14 @@
 from spack import *
 
 
-class Libxslt(AutotoolsPackage):
-    """Libxslt is the XSLT C library developed for the GNOME
-       project. XSLT itself is a an XML language to define
-       transformation for XML. Libxslt is based on libxml2 the XML C
-       library developed for the GNOME project. It also implements
-       most of the EXSLT set of processor-portable extensions
-       functions and some of Saxon's evaluate and expressions
-       extensions."""
-    homepage = "http://www.xmlsoft.org/XSLT/index.html"
-    url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
+class RSnow(RPackage):
+    """Support for simple parallel computing in R."""
 
-    version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
-    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+    homepage = "https://cran.r-project.org/web/packages/snow/index.html"
+    url      = "https://cran.r-project.org/src/contrib/snow_0.4-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/snow"
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
+    version('0.4-2', 'afc7b0dfd4518aedb6fc81712fd2ac70')
 
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
-
-    def configure_args(self):
-        args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
-        else:
-            args.append('--with-crypto')
-        return args
+    depends_on('r-rmpi', type='run')
+    depends_on('r@2.13.1:', type=('build', 'run'))

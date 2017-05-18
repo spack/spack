@@ -22,36 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Libxslt(AutotoolsPackage):
-    """Libxslt is the XSLT C library developed for the GNOME
-       project. XSLT itself is a an XML language to define
-       transformation for XML. Libxslt is based on libxml2 the XML C
-       library developed for the GNOME project. It also implements
-       most of the EXSLT set of processor-portable extensions
-       functions and some of Saxon's evaluate and expressions
-       extensions."""
-    homepage = "http://www.xmlsoft.org/XSLT/index.html"
-    url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
+class Benchmark(CMakePackage):
+    """A microbenchmark support library"""
 
-    version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
-    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+    homepage = "https://github.com/google/benchmark"
+    url      = "https://github.com/google/benchmark/archive/v1.1.0.tar.gz"
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
-
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
-
-    def configure_args(self):
-        args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
-        else:
-            args.append('--with-crypto')
-        return args
+    version('1.1.0', '66b2a23076cf70739525be0092fc3ae3')
+    version('1.0.0', '1474ff826f8cd68067258db75a0835b8')

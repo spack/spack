@@ -25,33 +25,26 @@
 from spack import *
 
 
-class Libxslt(AutotoolsPackage):
-    """Libxslt is the XSLT C library developed for the GNOME
-       project. XSLT itself is a an XML language to define
-       transformation for XML. Libxslt is based on libxml2 the XML C
-       library developed for the GNOME project. It also implements
-       most of the EXSLT set of processor-portable extensions
-       functions and some of Saxon's evaluate and expressions
-       extensions."""
-    homepage = "http://www.xmlsoft.org/XSLT/index.html"
-    url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
+class Gnupg(AutotoolsPackage):
+    """GnuPG is a complete and free implementation of the OpenPGP
+       standard as defined by RFC4880 """
 
-    version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
-    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+    homepage = "https://gnupg.org/index.html"
+    url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.1.21.tar.bz2"
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
+    version('2.1.21', '685ebf4c3a7134ba0209c96b18b2f064')
 
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
+    depends_on('libgcrypt')
+    depends_on('libassuan')
+    depends_on('libksba')
+    depends_on('libgpg-error')
+    depends_on('npth')
 
     def configure_args(self):
-        args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
-        else:
-            args.append('--with-crypto')
+        args = ['--with-npth-prefix=%s' % self.spec['npth'].prefix,
+                '--with-libgcrypt-prefix=%s' % self.spec['libgcrypt'].prefix,
+                '--with-libksba-prefixx=%s' % self.spec['libksba'].prefix,
+                '--with-libassuan-prefix=%s' % self.spec['libassuan'].prefix,
+                '--with-libpgp-error-prefix=%s' %
+                self.spec['libgpg-error'].prefix]
         return args
