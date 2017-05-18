@@ -25,16 +25,26 @@
 from spack import *
 
 
-class Libgcrypt(AutotoolsPackage):
-    """Libgcrypt is a general purpose cryptographic library based on
-       the code from GnuPG. It provides functions for all cryptographic
-       building blocks: symmetric ciphers, hash algorithms, MACs, public
-       key algorithms, large integer functions, random numbers and a lot
-       of supporting functions. """
-    homepage = "http://www.gnu.org/software/libgcrypt/"
-    url = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.7.6.tar.bz2"
+class Gnupg(AutotoolsPackage):
+    """GnuPG is a complete and free implementation of the OpenPGP
+       standard as defined by RFC4880 """
 
-    version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
-    version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
+    homepage = "https://gnupg.org/index.html"
+    url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.1.21.tar.bz2"
 
-    depends_on("libgpg-error")
+    version('2.1.21', '685ebf4c3a7134ba0209c96b18b2f064')
+
+    depends_on('libgcrypt')
+    depends_on('libassuan')
+    depends_on('libksba')
+    depends_on('libgpg-error')
+    depends_on('npth')
+
+    def configure_args(self):
+        args = ['--with-npth-prefix=%s' % self.spec['npth'].prefix,
+                '--with-libgcrypt-prefix=%s' % self.spec['libgcrypt'].prefix,
+                '--with-libksba-prefixx=%s' % self.spec['libksba'].prefix,
+                '--with-libassuan-prefix=%s' % self.spec['libassuan'].prefix,
+                '--with-libpgp-error-prefix=%s' %
+                self.spec['libgpg-error'].prefix]
+        return args

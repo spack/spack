@@ -25,16 +25,17 @@
 from spack import *
 
 
-class Libgcrypt(AutotoolsPackage):
-    """Libgcrypt is a general purpose cryptographic library based on
-       the code from GnuPG. It provides functions for all cryptographic
-       building blocks: symmetric ciphers, hash algorithms, MACs, public
-       key algorithms, large integer functions, random numbers and a lot
-       of supporting functions. """
-    homepage = "http://www.gnu.org/software/libgcrypt/"
-    url = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.7.6.tar.bz2"
+class Libassuan(AutotoolsPackage):
+    """Libassuan is a small library implementing the so-called Assuan
+       protocol."""
 
-    version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
-    version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
+    homepage = "https://gnupg.org/software/libassuan/index.html"
+    url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.3.tar.bz2"
 
-    depends_on("libgpg-error")
+    version('2.4.3', '8e01a7c72d3e5d154481230668e6eb5a')
+
+    depends_on('libgpg-error')
+
+    def configure_args(self):
+        args = ['--with-libgpp-error=%s' % self.spec['libgpg-error'].prefix]
+        return args
