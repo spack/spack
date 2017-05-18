@@ -2966,6 +2966,14 @@ class SpecParser(spack.parse.Parser):
                                 # Trying to add k-v pair to spec from hash
                                 raise RedundantSpecError(specs[-1],
                                                          'key-value pair')
+                            # We should never end up here.
+                            # This requires starting a new spec with ID, EQ
+                            # After another spec that is not concrete
+                            # If the previous spec is not concrete, this is
+                            # handled in the spec parsing loop
+                            # If it is concrete, see the if statement above
+                            # If there is no previous spec, we don't land in
+                            # this else case.
                             self.unexpected_token()
                     else:
                         # We're parsing a new spec by name
