@@ -30,8 +30,9 @@ from spack.package import PackageBase, run_after
 
 
 class RPackage(PackageBase):
-    """Specialized class for packages that are built using R. For more
-    information on the R build system, see:
+    """Specialized class for packages that are built using R.
+
+    For more information on the R build system, see:
     https://stat.ethz.ch/R-manual/R-devel/library/utils/html/INSTALL.html
 
     This class provides a single phase that can be overridden:
