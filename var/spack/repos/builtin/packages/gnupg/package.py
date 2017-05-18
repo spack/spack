@@ -41,11 +41,10 @@ class Gnupg(AutotoolsPackage):
     depends_on('npth')
 
     def configure_args(self):
-        args = [
-              '--with-npth-prefix=%s' % self.spec['npth'].prefix],
-              '--with-libgcrypt-prefix=%s' % self.spec['libgcrypt'].prefix,
-              '--with-libksba-prefixx=%s' % self.spec['libksba'].prefix,
-              '--with-libassuan-prefix=%s' % self.spec['libassuan'].prefix,
-              '--with-libpgp-error-prefix=%s' % self.spec['libgpg-error'].prefix
-                ]
+        args = ['--with-npth-prefix=%s' % self.spec['npth'].prefix,
+                '--with-libgcrypt-prefix=%s' % self.spec['libgcrypt'].prefix,
+                '--with-libksba-prefixx=%s' % self.spec['libksba'].prefix,
+                '--with-libassuan-prefix=%s' % self.spec['libassuan'].prefix,
+                '--with-libpgp-error-prefix=%s' %
+                self.spec['libgpg-error'].prefix]
         return args
