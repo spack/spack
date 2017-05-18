@@ -34,6 +34,7 @@ class Mummer(Package):
     version('3.23', 'f2422b3d2638dba4baedb71b1acdffa2')
 
     depends_on('gnuplot')
+    depends_on('perl')
 
     patch('Makefile.patch')
     patch('scripts-Makefile.patch')
