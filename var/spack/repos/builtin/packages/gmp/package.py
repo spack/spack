@@ -49,7 +49,7 @@ class Gmp(AutotoolsPackage):
         # This flag is necessary for the Intel build to pass `make check`
         if self.spec.compiler.name == 'intel':
             args.append('CXXFLAGS=-no-ftz')
-        if '+generic' in self.spec:
+        if self.spec.compiler.name == 'gcc' and '+generic' in self.spec:
             args.append('CFLAGS=-mtune=generic')
             args.append('CXXFLAGS=-mtune=generic')
         return args
