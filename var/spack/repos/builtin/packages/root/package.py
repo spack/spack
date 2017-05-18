@@ -44,6 +44,7 @@ class Root(CMakePackage):
     version('6.06.06', '4308449892210c8d36e36924261fea26')
     version('6.06.04', '55a2f98dd4cea79c9c4e32407c2d6d17')
     version('6.06.02', 'e9b8b86838f65b0a78d8d02c66c2ec55')
+    version('5.34.36', '6a1ad549b3b79b10bbb1f116b49067ee')
 
     if sys.platform == 'darwin':
         patch('math_uint.patch', when='@6.06.02')
