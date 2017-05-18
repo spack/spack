@@ -168,7 +168,7 @@ class ChomboXsdk(Package):
         make('--directory=lib', 'all', *options)
 
         # Run unit tests
-        make('--directory=lib', 'run', *options)
+        # make('--directory=lib', 'run', *options)
 
         # Install the include files
         header_files = glob.glob(
@@ -185,7 +185,7 @@ class ChomboXsdk(Package):
         make('--directory=%s' % example_dest, 'example-only', *options)
 
         # Run the examples
-        make('--directory=%s' % example_dest, 'run', *options)
+        # make('--directory=%s' % example_dest, 'run', *options)
 
         # Cleanup the examples
         make('--directory=%s' % example_dest, 'realclean', *options)
