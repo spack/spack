@@ -32,8 +32,9 @@ class Libgcrypt(AutotoolsPackage):
        key algorithms, large integer functions, random numbers and a lot
        of supporting functions. """
     homepage = "http://www.gnu.org/software/libgcrypt/"
-    url      = "http://gd.tuwien.ac.at/pub/gnupg/libgcrypt/libgcrypt-1.6.2.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.7.6.tar.bz2"
 
+    version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
     version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
 
     depends_on("libgpg-error")

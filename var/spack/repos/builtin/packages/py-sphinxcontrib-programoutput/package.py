@@ -25,33 +25,17 @@
 from spack import *
 
 
-class Libxslt(AutotoolsPackage):
-    """Libxslt is the XSLT C library developed for the GNOME
-       project. XSLT itself is a an XML language to define
-       transformation for XML. Libxslt is based on libxml2 the XML C
-       library developed for the GNOME project. It also implements
-       most of the EXSLT set of processor-portable extensions
-       functions and some of Saxon's evaluate and expressions
-       extensions."""
-    homepage = "http://www.xmlsoft.org/XSLT/index.html"
-    url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
+class PySphinxcontribProgramoutput(PythonPackage):
+    """A Sphinx extension to literally insert the output of arbitrary commands
+    into documents, helping you to keep your command examples up to date."""
 
-    version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
-    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+    homepage = "https://sphinxcontrib-programoutput.readthedocs.org/"
+    url      = "https://pypi.io/packages/source/s/sphinxcontrib-programoutput/sphinxcontrib-programoutput-0.10.tar.gz"
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
+    # FIXME: These import tests don't work for some reason
+    # import_modules = ['sphinxcontrib', 'sphinxcontrib.programoutput']
 
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
+    version('0.10', '8e511e476c67696c7ae2c08b15644eb4')
 
-    def configure_args(self):
-        args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
-        else:
-            args.append('--with-crypto')
-        return args
+    depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx@1.3.5:', type=('build', 'run'))

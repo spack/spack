@@ -25,33 +25,31 @@
 from spack import *
 
 
-class Libxslt(AutotoolsPackage):
-    """Libxslt is the XSLT C library developed for the GNOME
-       project. XSLT itself is a an XML language to define
-       transformation for XML. Libxslt is based on libxml2 the XML C
-       library developed for the GNOME project. It also implements
-       most of the EXSLT set of processor-portable extensions
-       functions and some of Saxon's evaluate and expressions
-       extensions."""
-    homepage = "http://www.xmlsoft.org/XSLT/index.html"
-    url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
+class RRmpi(RPackage):
+    """An interface (wrapper) to MPI APIs. It also provides interactive R
+       manager and worker environment."""
 
-    version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
-    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+    homepage = "http://www.stats.uwo.ca/faculty/yu/Rmpi"
+    url      = "https://cran.r-project.org/src/contrib/Rmpi_0.6-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpi"
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
+    version('0.6-6', '59ae8ce62ff0ff99342d53942c745779')
 
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
+    depends_on('mpi')
+    depends_on('r@2.15.1:')
 
-    def configure_args(self):
-        args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
+    def install(self, spec, prefix):
+        if 'mpich' in spec:
+            Rmpi_type = 'MPICH'
+        elif 'mvapich' in spec:
+            Rmpi_type = 'MVAPICH'
         else:
-            args.append('--with-crypto')
-        return args
+            Rmpi_type = 'OPENMPI'
+
+        my_mpi = spec['mpi']
+
+        R('CMD', 'INSTALL',
+          '--configure-args=--with-Rmpi-type=%s' % Rmpi_type +
+          ' --with-mpi=%s' % my_mpi.prefix,
+          '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

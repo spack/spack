@@ -49,7 +49,6 @@ from sphinx.apidoc import main as sphinx_apidoc
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
 if sys.version_info[0] < 3:
     sys.path.insert(0, os.path.abspath('../external/yaml/lib'))
@@ -103,7 +102,7 @@ with open('command_index.rst', 'a') as index:
 # Without this, the API Docs will never actually update
 #
 apidoc_args = [
-    'sphinx_apidoc',   # The first arugment is ignored
+    '--force',         # Older versions of Sphinx ignore the first argument
     '--force',         # Overwrite existing files
     '--no-toc',        # Don't create a table of contents file
     '--output-dir=.',  # Directory to place all output

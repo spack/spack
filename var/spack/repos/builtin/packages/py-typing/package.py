@@ -25,33 +25,16 @@
 from spack import *
 
 
-class Libxslt(AutotoolsPackage):
-    """Libxslt is the XSLT C library developed for the GNOME
-       project. XSLT itself is a an XML language to define
-       transformation for XML. Libxslt is based on libxml2 the XML C
-       library developed for the GNOME project. It also implements
-       most of the EXSLT set of processor-portable extensions
-       functions and some of Saxon's evaluate and expressions
-       extensions."""
-    homepage = "http://www.xmlsoft.org/XSLT/index.html"
-    url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
+class PyTyping(PythonPackage):
+    """This is a backport of the standard library typing module to Python
+    versions older than 3.6."""
 
-    version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
-    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+    homepage = "https://docs.python.org/3/library/typing.html"
+    url      = "https://pypi.io/packages/source/t/typing/typing-3.6.1.tar.gz"
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
+    import_modules = ['typing']
 
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
+    version('3.6.1', '3fec97415bae6f742fb3c3013dedeb89')
 
-    def configure_args(self):
-        args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
-        else:
-            args.append('--with-crypto')
-        return args
+    # You need Python 2.7 or 3.3+ to install the typing package
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
