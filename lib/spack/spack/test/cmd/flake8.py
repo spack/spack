@@ -87,10 +87,10 @@ def test_flake8(parser, flake8_package):
     # Otherwise, the unit tests would fail every time
     # the flake8 tests fail
     args = parser.parse_args([flake8_package])
-
-    flake8(parser, args)
-
+    try:
+        flake8(parser, args)
     # Get even more coverage
-    args = parser.parse_args(['--output', '--root-relative', flake8_package])
-
-    flake8(parser, args)
+        args = parser.parse_args(['--output', '--root-relative', flake8_package])
+        flake8(parser, args)
+    except SystemExit:
+        pytest.skip("no flake8 found in path")
