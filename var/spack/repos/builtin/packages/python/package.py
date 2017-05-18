@@ -531,6 +531,8 @@ class Python(AutotoolsPackage):
         module.site_packages_dir = join_path(dependent_spec.prefix,
                                              self.site_packages_dir)
 
+        self.spec.home = self.home
+
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
             mkdirp(module.site_packages_dir)
