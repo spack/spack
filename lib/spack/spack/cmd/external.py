@@ -113,34 +113,9 @@ def external_add(args):
 def external_rm(args):
     """Removes an external package from packages.yaml"""
     package_spec = spack.spec.Spec(args.package_spec)
-    packages_config = ext_package.PackagesConfig(args.scope)
-    package = packages_config.get_package(package_spec.name)
-    if package.is_empty():
-        tty.die("Could not find package for {0}".format(package_spec))
-
-    matches = []
-    specs = package.specs_section()
-    for spec in specs.keys():  # follows {spec: path_or_mod}
-        if spack.spec.Spec(spec).satisfies(package_spec):
-            matches.append(spec)
-
-    if not args.all and len(matches) > 1:
-        tty.error(
-            "Multiple packages match spec {0}. Choose one:".format(
-                package_spec))
-        colify(sorted(matches), indent=4)
-        tty.msg("Or, use 'spack external rm -a' to remove all fo them.")
-        sys.exit(1)
-
-    for spec in matches:
-        package.remove_spec(spec)
+    removed_entries = ext_package.remove_external_package(package_spec, scope)
+    for spec in removed_entries:
         tty.msg("Removed package: {0}".format(spec))
-
-    if not package.contains_specs():
-        packages_config.remove_entire_entry_from_config(package_spec.name)
-    else:
-        packages_config.update_package_config(package.config_entry())
-
 
 def external_list(args):
     tty.msg("Available external packages")

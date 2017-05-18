@@ -6,6 +6,7 @@ import llnl.util.filesystem
 from llnl.util.lang import key_ordering
 import llnl.util.tty as tty
 import spack.architecture
+from spack.package_prefs import VirtualInPackagesYAMLError
 from spack.util.spack_yaml import syaml_dict
 import spack.util.executable
 import spack.spec
@@ -18,7 +19,7 @@ class PackageConfigEntry(object):
         {buildable: T or F,
          paths|modules:
              { spec1: path or module name,
-               spec2: path or module name}}
+               spec2: path or module name }
 
     Attributes:
         package_name: string name of the package
@@ -118,7 +119,15 @@ class PackagesConfig(object):
         Scope is a string that can be either site/user/defaults.
         """
         self.scope = scope
-        self.packages_config = spack.config.get_config("packages", scope)
+        config = spack.config.get_config("packages", scope)
+        virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
+                    if spack.repo.is_virtual(pkg_name)]
+        if virtuals:
+            errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
+            raise VirtualInPackagesYAMLError(
+                    "packages.yaml entries cannot be virtual packages:",
+                    '\n'.join(errors))
+        self.packages_config = config
 
     def get_package(self, package_name):
         """Given a package name, return a PackageConfigEntry object.
@@ -555,6 +564,35 @@ def add_external_package(external_package, scope):
     else:
         tty.msg("Added no new external packages")
 
+def remove_external_package(package_spec, scope):
+    """Remove the external package specified by the external package spec"""
+    packages_config = ext_package.PackagesConfig(scope)
+    package = packages_config.get_package(package_spec.name)
+    if package.is_empty():
+        tty.die("Could not find package for {0}".format(package_spec))
+
+    matches = []
+    specs = package.specs_section()
+    for s in spec.keys(): # follows {spec: path/modules}
+        if spack.spec.Spec(s).satisfies(package_spec):
+            matches.append(s)
+    if not args.all and len(matches) > 1:
+        tty.error(
+                "Multiple packages match spec {0}. Choose one:".format(
+                    package_spec))
+        collify(sorted(matches), indent=4)
+        tty.msg("Or, use spack external rm -a to remove all of them.")
+        sys.exit(1)
+
+    for spec in matches:
+        package.remove_spec(spec)
+
+    if not package.contain_specs():
+        packages_config.remove_entry_entry_from_config(package_spec.name)
+    else:
+        packages_config.update_package_config(package.config_entry())
+
+    return matches
 
 class PackageSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, package_spec):
