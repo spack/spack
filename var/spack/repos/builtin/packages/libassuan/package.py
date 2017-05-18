@@ -26,7 +26,7 @@ from spack import *
 
 
 class Libassuan(AutotoolsPackage):
-    """Libassuan is a small library implementing the so-called Assuan 
+    """Libassuan is a small library implementing the so-called Assuan
        protocol."""
 
     homepage = "https://gnupg.org/software/libassuan/index.html"

@@ -26,7 +26,7 @@ from spack import *
 
 
 class Npth(AutotoolsPackage):
-    """nPth is a library to provide the GNU Pth API and thus a 
+    """nPth is a library to provide the GNU Pth API and thus a
        non-preemptive threads implementation."""
 
     homepage = "https://gnupg.org/software/npth/index.html"

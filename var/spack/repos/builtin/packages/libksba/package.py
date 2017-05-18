@@ -26,7 +26,7 @@ from spack import *
 
 
 class Libksba(AutotoolsPackage):
-    """Libksba is a library to make the tasks of working with X.509 
+    """Libksba is a library to make the tasks of working with X.509
        certificates, CMS data and related objects more easy. """
 
     homepage = "https://gnupg.org/software/libksba/index.html"
