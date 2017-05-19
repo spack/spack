@@ -46,11 +46,9 @@ class Mpifileutils(AutotoolsPackage):
     depends_on('dtcmp')
     depends_on('libarchive')
 
-    # enable optimizations / features for Lustre
     variant('xattr', default=True,
         description="Enable code for extended attributes")
 
-    # enable optimizations / features for Lustre
     variant('lustre', default=False,
         description="Enable optimizations and features for Lustre")
 
