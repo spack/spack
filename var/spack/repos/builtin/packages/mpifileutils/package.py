@@ -24,8 +24,8 @@
 ##############################################################################
 from spack import *
 
-#class Mpifileutils(AutotoolsPackage):
-class Mpifileutils(Package):
+
+class Mpifileutils(AutotoolsPackage):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
        High-performance computing users often generate large datasets with
@@ -47,34 +47,33 @@ class Mpifileutils(Package):
     depends_on('libarchive')
 
     # enable optimizations / features for Lustre
-    variant('xattr', default=True, description="Enable code for extended attributes")
+    variant('xattr', default=True,
+        description="Enable code for extended attributes")
 
     # enable optimizations / features for Lustre
-    variant('lustre', default=False, description="Enable optimizations and features for Lustre")
+    variant('lustre', default=False,
+        description="Enable optimizations and features for Lustre")
 
     # install experimental tools
-    # (supported starting with v0.7)
-#    variant('experimental', default=False, description="Install experimental tools")
+    # (coming with v0.7)
+    #variant('experimental', default=False,
+    #   description="Install experimental tools")
 
-#    def configure_args(self):
-#        args = [
-#            "--prefix=" + prefix
-#        ]
-#
-#        if '+lustre' in spec:
-#            args.append('--enable-lustre')
-#
-#        if '+experimental' in spec:
-#            args.append('--enable-experimental')
-#
-#        return args
+    def configure_args(self):
+        args = [
+            "--prefix=" + prefix
+        ]
+
+        if '+lustre' in self.spec:
+            args.append('--enable-lustre')
+
+        # coming with v0.7
+        #if '+experimental' in self.spec:
+        #    args.append('--enable-experimental')
+
+        return args
 
     def install(self, spec, prefix):
-        if '+lustre' in spec:
-            configure("--prefix=" + prefix, "--enable-lustre")
-        else:
-            configure("--prefix=" + prefix)
-
         if '+xattr' in spec:
             make('CFLAGS=-DDCOPY_USE_XATTRS')
         else:
