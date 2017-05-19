@@ -85,12 +85,13 @@ import spack.repository
 import spack.error
 import spack.config
 import spack.fetch_strategy
+import spack.defaults
+
 from spack.file_cache import FileCache
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
-
 
 #-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
@@ -101,7 +102,7 @@ spack_version = Version("0.10.0")
 
 # Set up the default packages database.
 try:
-    repo = spack.repository.RepoPath()
+    repo = spack.defaults.make_repo_path_from_config()
     sys.meta_path.append(repo)
 except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)

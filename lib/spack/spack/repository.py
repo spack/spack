@@ -46,19 +46,21 @@ from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
 from spack.util.naming import *
 
-#
-# Super-namespace for all packages.
-# Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
-#
-repo_namespace     = 'spack.pkg'
+
+#: Super-namespace for all packages.
+#: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
+repo_namespace = 'spack.pkg'
 
 #
 # These names describe how repos should be laid out in the filesystem.
 #
-repo_config_name   = 'repo.yaml'   # Top-level filename for repo config.
-repo_index_name    = 'index.yaml'  # Top-level filename for repository index.
-packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
-package_file_name  = 'package.py'  # Filename for packages in a repository.
+
+#: Top-level filename for repo config.
+repo_config_name = 'repo.yaml'
+#: Top-level repo directory containing pkgs.
+packages_dir_name = 'packages'
+#: Filename for packages in a repository.
+package_file_name = 'package.py'
 
 # Guaranteed unused default value for some functions.
 NOT_PROVIDED = object()
@@ -96,14 +98,16 @@ class SpackNamespace(ModuleType):
 class RepoPath(object):
     """A RepoPath is a list of repos that function as one.
 
-       It functions exactly like a Repo, but it operates on the
-       combined results of the Repos in its list instead of on a
-       single package repository.
+    It functions exactly like a Repo, but it operates on the
+    combined results of the Repos in its list instead of on a
+    single package repository.
     """
 
-    def __init__(self, *repo_dirs, **kwargs):
-        # super-namespace for all packages in the RepoPath
-        self.super_namespace = kwargs.get('namespace', repo_namespace)
+    def __init__(self, *repo_dirs):
+
+        # This attribute defines the super-namespace for all packages
+        # in the RepoPath ('spack.pkg')
+        self.super_namespace = repo_namespace
 
         self.repos = []
         self.by_namespace = NamespaceTrie()
@@ -112,24 +116,25 @@ class RepoPath(object):
         self._all_package_names = None
         self._provider_index = None
 
-        # If repo_dirs is empty, just use the configuration
-        if not repo_dirs:
-            import spack.config
-            repo_dirs = spack.config.get_config('repos')
-            if not repo_dirs:
-                raise NoRepoConfiguredError(
-                    "Spack configuration contains no package repositories.")
-
         # Add each repo to this path.
         for root in repo_dirs:
-            try:
-                repo = Repo(root, self.super_namespace)
-                self.put_last(repo)
-            except RepoError as e:
-                tty.warn("Failed to initialize repository at '%s'." % root,
-                         e.message,
-                         "To remove the bad repository, run this command:",
-                         "    spack repo rm %s" % root)
+            self.add_repo_from_path(root)
+
+    def add_repo_from_path(self, root):
+        """Append a repository to the list of managed ones. Takes a path
+        as argument.
+
+        Args:
+            root: path to the repository
+        """
+        try:
+            repo = Repo(root, self.super_namespace)
+            self.put_last(repo)
+        except RepoError as e:
+            tty.warn("Failed to initialize repository at '%s'." % root,
+                     e.message,
+                     "To remove the bad repository, run this command:",
+                     "    spack repo rm %s" % root)
 
     def swap(self, other):
         """Convenience function to make swapping repositories easier.
@@ -314,6 +319,7 @@ class RepoPath(object):
 
            Raises UnknownPackageError if not found.
         """
+        # FIXME: the keyword new is never used
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
@@ -453,7 +459,7 @@ class Repo(object):
                 module.__loader__ = self
                 sys.modules[ns] = module
 
-                # Ensure the namespace is an atrribute of its parent,
+                # Ensure the namespace is an attribute of its parent,
                 # if it has not been set by something else already.
                 #
                 # This ensures that we can do things like:
