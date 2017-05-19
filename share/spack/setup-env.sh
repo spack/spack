@@ -56,6 +56,22 @@
 # spack dotfiles.
 ########################################################################
 
+#
+# Figure out where this file is.  Below code needs to be portable to
+# bash and zsh.
+#
+_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
+if [ -z "$_sp_source_file" ]; then
+    _sp_source_file="$0:A"           # zsh way to do it
+    if [[ "$_sp_source_file" == *":A" ]]; then
+        # Not zsh either... bail out with plain old $0,
+        # which WILL NOT work if this is sourced indirectly.
+        _sp_source_file="$0"
+    fi
+fi
+_sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
+_sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
+
 function spack {
     # Zsh does not do word splitting by default, this enables it for this function only
     if [ -n "${ZSH_VERSION:-}" ]; then
@@ -64,6 +80,17 @@ function spack {
 
     # save raw arguments into an array before butchering them
     args=( "$@" )
+
+    local spack=spack
+    # ignore error and keep to spack=spack
+    local py_ver=$(env python --version 2>/dev/null)
+    if [[ ${py_ver} = *3.[0-9].* ]]; then
+	local i py
+        for i in python2 python2.7 python2.6; do
+	    type -p $i &> /dev/null && py=$i && break
+	done
+	[[ ${py} ]] && spack="$py ${_sp_prefix%/}/bin/spack" 
+    fi
 
     # accumulate initial flags for main spack command
     _sp_flags=""
@@ -74,7 +101,7 @@ function spack {
 
     # h and V flags don't require further output parsing.
     if [[ (! -z "$_sp_flags") && ("$_sp_flags" =~ '.*h.*' || "$_sp_flags" =~ '.*V.*') ]]; then
-        command spack $_sp_flags "$@"
+        command $spack $_sp_flags "$@"
         return
     fi
 
@@ -87,9 +114,9 @@ function spack {
         "cd")
             _sp_arg="$1"; shift
             if [ "$_sp_arg" = "-h" ]; then
-                command spack cd -h
+                command $spack cd -h
             else
-                LOC="$(spack location $_sp_arg "$@")"
+                LOC="$($spack location $_sp_arg "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
                 fi
@@ -117,25 +144,25 @@ function spack {
             # If spack module command comes back with an error, do nothing.
             case $_sp_subcommand in
                 "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command $spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
                         use $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command $spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type dotkit $_sp_spec); then
                         unuse $_sp_module_args $_sp_full_spec
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
+                    if _sp_full_spec=$(command $spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
                         module load $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
+                    if _sp_full_spec=$(command $spack $_sp_flags module loads --input-only $_sp_subcommand_args --module-type tcl $_sp_spec); then
                         module unload $_sp_module_args $_sp_full_spec
                     fi ;;
             esac
             ;;
         *)
-            command spack "${args[@]}"
+            command $spack "${args[@]}"
             ;;
     esac
 }
@@ -173,24 +200,8 @@ if [ -n "${BASH_VERSION:-}" ]; then
 fi
 
 #
-# Figure out where this file is.  Below code needs to be portable to
-# bash and zsh.
-#
-_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
-if [ -z "$_sp_source_file" ]; then
-    _sp_source_file="$0:A"           # zsh way to do it
-    if [[ "$_sp_source_file" == *":A" ]]; then
-        # Not zsh either... bail out with plain old $0,
-        # which WILL NOT work if this is sourced indirectly.
-        _sp_source_file="$0"
-    fi
-fi
-
-#
 # Set up modules and dotkit search paths in the user environment
 #
-_sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
-_sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
 _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 
 _sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
