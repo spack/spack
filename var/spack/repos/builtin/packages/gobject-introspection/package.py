@@ -44,6 +44,7 @@ class GobjectIntrospection(Package):
     depends_on("cairo")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
+    depends_on("pkg-config@0.9.0:", type="build")
 
     # This package creates several scripts from
     # toosl/g-ir-tool-template.in.  In their original form these
