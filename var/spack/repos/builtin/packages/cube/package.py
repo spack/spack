@@ -50,7 +50,11 @@ class Cube(Package):
 
     def install(self, spec, prefix):
         configure_args = ["--prefix=%s" % prefix,
-                          "--without-paraver"]
+                          "--without-paraver",
+                          "CC=%s" % self.compiler.cc,
+                          "CXX=%s" % self.compiler.cxx,
+                          "FC=%s" % self.compiler.fc,
+                          "F77=%s" % self.compiler.f77]
 
         # TODO : need to handle cross compiling build
         if '+gui' not in spec:
