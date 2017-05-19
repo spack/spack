@@ -23,12 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-
-from spack.pkg.builtin.intel import IntelInstaller
 
 
-class IntelMpi(IntelInstaller):
+class IntelMpi(IntelPackage):
     """Intel MPI"""
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
@@ -43,6 +40,16 @@ class IntelMpi(IntelInstaller):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9278/l_mpi_p_5.1.3.223.tgz')
 
     provides('mpi')
+
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
 
     @property
     def mpi_libs(self):

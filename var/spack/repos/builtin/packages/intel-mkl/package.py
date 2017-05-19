@@ -23,12 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-
-from spack.pkg.builtin.intel import IntelInstaller
 
 
-class IntelMkl(IntelInstaller):
+class IntelMkl(IntelPackage):
     """Intel Math Kernel Library."""
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
@@ -50,11 +47,20 @@ class IntelMkl(IntelInstaller):
     variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description='OpenMP multithreading layer')
 
-    # virtual dependency
     provides('blas')
     provides('lapack')
     provides('scalapack')
     provides('mkl')
+
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
 
     @property
     def blas_libs(self):
@@ -130,14 +136,6 @@ class IntelMkl(IntelInstaller):
             shared=shared
         )
         return libs
-
-    def install(self, spec, prefix):
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
-
-        mkl_dir = os.path.join(self.intel_prefix, "mkl")
-        for f in os.listdir(mkl_dir):
-            os.symlink(os.path.join(mkl_dir, f), os.path.join(self.prefix, f))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package

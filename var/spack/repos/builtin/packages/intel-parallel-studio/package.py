@@ -26,11 +26,8 @@ from spack import *
 import os
 import re
 
-from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
-    get_all_components
 
-
-class IntelParallelStudio(IntelInstaller):
+class IntelParallelStudio(IntelPackage):
     """Intel Parallel Studio."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"

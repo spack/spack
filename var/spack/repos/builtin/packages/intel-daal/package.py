@@ -23,17 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-
-from spack.pkg.builtin.intel import IntelInstaller
 
 
-class IntelDaal(IntelInstaller):
-    """Intel Data Analytics Acceleration Library.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+class IntelDaal(IntelPackage):
+    """Intel Data Analytics Acceleration Library."""
 
     homepage = "https://software.intel.com/en-us/daal"
 
@@ -52,11 +45,12 @@ class IntelDaal(IntelInstaller):
 
     provides('daal')
 
-    def install(self, spec, prefix):
-
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
-
-        daal_dir = os.path.join(self.intel_prefix, "daal")
-        for f in os.listdir(daal_dir):
-            os.symlink(os.path.join(daal_dir, f), os.path.join(self.prefix, f))
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
