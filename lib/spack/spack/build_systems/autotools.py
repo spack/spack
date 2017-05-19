@@ -176,6 +176,14 @@ class AutotoolsPackage(PackageBase):
         """Override to provide another place to build the package"""
         return self.configure_directory
 
+    def default_flag_handler(self, spack_env, flag_val):
+        # Relies on being the first thing that can affect the spack_env
+        # EnvironmentModification after it is instantiated or no other
+        # method trying to affect these variables. Currently both are true
+        spack_env.set(flag_val.keys()[0].upper(),
+                      ' '.join(flag_val.values()[0]))
+        return []
+
     def patch(self):
         """Patches config.guess if
         :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
