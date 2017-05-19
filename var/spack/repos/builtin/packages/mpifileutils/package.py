@@ -54,29 +54,30 @@ class Mpifileutils(AutotoolsPackage):
     variant('lustre', default=False,
         description="Enable optimizations and features for Lustre")
 
-    # install experimental tools
-    # (coming with v0.7)
-    #variant('experimental', default=False,
-    #   description="Install experimental tools")
+    #  install experimental tools
+    #  (coming with v0.7)
+    # variant('experimental', default=False,
+    #    description="Install experimental tools")
 
     def configure_args(self):
-        args = [
-            "--prefix=" + prefix
-        ]
+        args = []
 
         if '+lustre' in self.spec:
             args.append('--enable-lustre')
+        else:
+            args.append('--disable-lustre')
 
-        # coming with v0.7
-        #if '+experimental' in self.spec:
-        #    args.append('--enable-experimental')
+        #  coming with v0.7
+        # if '+experimental' in self.spec:
+        #     args.append('--enable-experimental')
+        # else:
+        #     args.append('--disable-experimental')
 
         return args
 
-    def install(self, spec, prefix):
-        if '+xattr' in spec:
-            make('CFLAGS=-DDCOPY_USE_XATTRS')
-        else:
-            make()
-
-        make("install")
+    @property
+    def build_targets(self):
+        targets = []
+        if '+xattr' in self.spec:
+            targets.append('CFLAGS=-DDCOPY_USE_XATTRS')
+        return targets
