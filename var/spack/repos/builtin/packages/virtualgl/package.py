@@ -26,13 +26,23 @@
 from spack import *
 
 
-class MesaGlu(AutotoolsPackage):
-    """This package provides the Mesa OpenGL Utility library."""
+class Virtualgl(CMakePackage):
+    """VirtualGL redirects 3D commands from a Unix/Linux OpenGL application
+       onto a server-side GPU and converts the rendered 3D images into a video
+       stream with which remote clients can interact to view and control the
+       3D application in real time."""
 
-    homepage = "https://www.mesa3d.org"
-    url      = "ftp://ftp.freedesktop.org/pub/mesa/glu/glu-9.0.0.tar.gz"
+    homepage = "http://www.virtualgl.org/Main/HomePage"
+    url      = "http://downloads.sourceforge.net/project/virtualgl/2.5.2/VirtualGL-2.5.2.tar.gz"
 
-    version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
+    version('2.5.2', '1a9f404f4a35afa9f56381cb33ed210c')
 
-    variant('mesa', default=True,  description='Depends on mesa')
-    depends_on('mesa', when='+mesa')
+    depends_on("libjpeg-turbo")
+    depends_on("mesa-glu~mesa")
+
+    def cmake_args(self):
+        # FIXME: Add arguments other than
+        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+        # FIXME: If not needed delete this function
+        args = []
+        return args
