@@ -148,6 +148,8 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
+    patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
+
     def url_for_version(self, version):
         url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
         return url.format(version.dotted, version.underscored)
