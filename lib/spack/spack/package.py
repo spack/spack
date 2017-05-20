@@ -1188,11 +1188,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
+        partial = self.repair_partial(keep_prefix)
+
         # Ensure package is not already installed
         layout = spack.store.layout
         with spack.store.db.prefix_read_lock(self.spec):
-            if (keep_prefix and os.path.isdir(self.prefix) and
-                    (not self.installed)):
+            if partial:
                 tty.msg(
                     "Continuing from partial install of %s" % self.name)
             elif layout.check_installed(self.spec):
@@ -1319,7 +1320,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         try:
             # Create the install prefix and fork the build process.
-            spack.store.layout.create_install_directory(self.spec)
+            if not partial:
+                spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
             # If we installed then we should keep the prefix
@@ -1345,6 +1347,38 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Remove the install prefix if anything went wrong during install.
             if not keep_prefix:
                 self.remove_prefix()
+
+    def repair_partial(self, continue_with_partial=False):
+        """If continue_with_partial is not set, this ensures that the package
+           is either fully-installed or that the prefix is removed. This
+           function considers a package fully-installed if there is a DB
+           entry for it (in that way, it is more strict than Package.installed)
+        """
+        if self.spec.external:
+            raise ExternalPackageError("Attempted to repair external spec %s" %
+                                       self.spec.name)
+
+        with spack.store.db.prefix_write_lock(self.spec):
+            try:
+                record = spack.store.db.get_record(self.spec)
+                installed_in_db = record.installed if record else False
+            except KeyError:
+                installed_in_db = False
+
+            partial = False
+            if not installed_in_db and os.path.isdir(self.prefix):
+                if not continue_with_partial:
+                    self.remove_prefix()
+                else:
+                    partial = True
+
+        stage_is_managed_in_spack = self.stage.path.startswith(
+            spack.stage_path)
+        if (not continue_with_partial) and stage_is_managed_in_spack:
+            self.stage.destroy()
+            self.stage.create()
+
+        return partial
 
     def _do_install_pop_kwargs(self, kwargs):
         """Pops kwargs from do_install before starting the installation

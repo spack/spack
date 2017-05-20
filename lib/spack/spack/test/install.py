@@ -30,6 +30,8 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 
+import os
+
 
 @pytest.fixture()
 def install_mockery(tmpdir, config, builtin_mock):
@@ -77,6 +79,75 @@ def test_install_and_uninstall(mock_archive):
         raise
 
 
+def mock_remove_prefix(*args):
+    raise MockInstallError(
+        "Intentional error",
+        "Mock remove_prefix method intentionally fails")
+
+
+class RemovePrefixChecker(object):
+    def __init__(self, wrapped_rm_prefix):
+        self.removed = False
+        self.wrapped_rm_prefix = wrapped_rm_prefix
+
+    def remove_prefix(self):
+        self.removed = True
+        self.wrapped_rm_prefix()
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    instance_rm_prefix = pkg.remove_prefix
+
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        with pytest.raises(MockInstallError):
+            pkg.do_install()
+        assert os.path.isdir(pkg.prefix)
+        rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
+        spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+        setattr(pkg, 'succeed', True)
+        pkg.do_install()
+        assert rm_prefix_checker.removed
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install_keep_prefix(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    pkg._stage = None
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        # If remove_prefix is called at any point in this test, that is an
+        # error
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        with pytest.raises(spack.build_environment.ChildError):
+            pkg.do_install(keep_prefix=True)
+        setattr(pkg, 'succeed', True)
+        pkg.do_install(keep_prefix=True)
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
 @pytest.mark.usefixtures('install_mockery')
 def test_store(mock_archive):
     spec = Spec('cmake-client').concretized()
@@ -102,3 +173,7 @@ def test_failing_build(mock_archive):
     pkg = spec.package
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
+
+
+class MockInstallError(spack.error.SpackError):
+    pass
