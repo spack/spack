@@ -87,14 +87,22 @@ class Trilinos(CMakePackage):
             description='Enables the build of shared libraries')
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
-    variant('boost',        default=True, description='Compile with Boost')
-    variant('tpetra',       default=True, description='Compile with Tpetra')
-    variant('exodus', default=False, description='Compile with Exodus from SEACAS')
+    variant('boost',        default=True,  description='Compile with Boost')
+    variant('tpetra',       default=True,  description='Compile with Tpetra')
+    variant('exodus',       default=False, description='Compile with Exodus from SEACAS')
+
+    variant('dtk',          default=False, description='Enable DataTransferKit')
+    resource(name='dtk',
+             git='https://github.com/ornl-cees/DataTransferKit',
+             tag='master',
+             placement='DataTransferKit',
+             when='+dtk')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
+    depends_on('boost', when='+dtk')
     depends_on('matio')
     depends_on('glm')
     depends_on('metis@5:', when='+metis')
@@ -385,6 +393,17 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
+
+        if '+dtk' in spec:
+            # The Tpetra flag here will overwrite whatever Tpetra flag was set
+            # to previously. Thus, even if you have ~tpetra, it would still
+            # enable it if DTK is enabled.
+            options.extend([
+                '-DTrilinos_EXTRA_REPOSITORIES:STRING=DataTransferKit',
+                '-DTrilinos_ENABLE_Tpetra:BOOL=ON',
+                '-DTpetra_INST_INT_UNSIGNED_LONG:BOOL=ON',
+                '-DTrilinos_ENABLE_DataTransferKit:BOOL=ON'
+            ])
 
         # exodus
         if '+exodus' in spec:
