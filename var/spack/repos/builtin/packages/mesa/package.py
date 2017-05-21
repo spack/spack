@@ -42,30 +42,34 @@ class Mesa(AutotoolsPackage):
             description="Build Gallium DRI drivers")
 
     # General dependencies
+    depends_on('pkg-config@0.9.0:', type='build')
     depends_on('python@2.6.4:')
     depends_on('py-mako@0.3.4:', type=('build', 'run'))
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
     depends_on('binutils', type='build')
-
-    # For DRI and hardware acceleration
+    depends_on('gettext')
+    depends_on('icu4c')
+    depends_on('expat')
     depends_on('libpthread-stubs')
     depends_on('openssl')
+    depends_on('xproto', type='build')
+    depends_on('glproto@1.4.14:', type='build')
+    depends_on('presentproto@1.0:', type='build')
     depends_on('libxcb@1.9.3:')
-    depends_on('libxshmfence@1.1:')
     depends_on('libx11')
     depends_on('libxext')
+    depends_on('libxshmfence@1.1:')
     depends_on('libxdamage')
     depends_on('libxfixes')
+    depends_on('libxv')
+    depends_on('libxvmc')
 
-    depends_on('glproto@1.4.14:', type='build')
+    # For DRI and hardware acceleration
     depends_on('libdrm', when='+dri')
     depends_on('dri2proto@2.6:', type='build', when='+dri')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
-    depends_on('expat', when='+dri')
     depends_on('llvm@3:3.99', when='+dri+gallium')
-    depends_on('presentproto@1.0:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
 
     # TODO: Add package for systemd, provides libudev
     # Using the system package manager to install systemd didn't work for me
