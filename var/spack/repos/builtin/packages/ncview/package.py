@@ -36,3 +36,13 @@ class Ncview(AutotoolsPackage):
     depends_on('udunits2')
     depends_on('libpng')
     depends_on('libxaw')
+
+    def configure_args(self):
+        spec = self.spec
+
+        config_args = []
+
+        if spec.satisfies('^netcdf+mpi'):
+            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
+
+        return config_args
