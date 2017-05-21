@@ -73,6 +73,9 @@ class Qt(Package):
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
 
+    # https://github.com/LLNL/spack/issues/1517
+    patch('qt5-pcre.patch', when='@5:')
+
     patch('qt4-corewlan-new-osx.patch', when='@4')
     patch('qt4-pcre-include-conflict.patch', when='@4')
     patch('qt4-el-capitan.patch', when='@4')
