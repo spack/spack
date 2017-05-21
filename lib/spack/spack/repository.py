@@ -31,6 +31,14 @@ import inspect
 import imp
 import re
 import traceback
+
+# MutableSequence can be found in the collections module in python 2
+# and in collections.abc in python 3
+try:
+    from collections import MutableSequence
+except ImportError:
+    from collections.abc import MutableSequence
+
 from bisect import bisect_left
 from types import ModuleType
 
@@ -95,12 +103,16 @@ class SpackNamespace(ModuleType):
         return getattr(self, name)
 
 
-class RepoPath(object):
+class RepoPath(MutableSequence):
     """A RepoPath is a list of repos that function as one.
 
     It functions exactly like a Repo, but it operates on the
     combined results of the Repos in its list instead of on a
     single package repository.
+
+    It also behaves like a list of Repo instances, except for the
+    __contains__ semantics that is used to check if a particular package
+    is present.
     """
 
     def __init__(self, *repo_dirs):
@@ -118,9 +130,9 @@ class RepoPath(object):
 
         # Add each repo to this path.
         for root in repo_dirs:
-            self.add_repo_from_path(root)
+            self.append_from_path(root)
 
-    def add_repo_from_path(self, root):
+    def append_from_path(self, root):
         """Append a repository to the list of managed ones. Takes a path
         as argument.
 
@@ -129,12 +141,112 @@ class RepoPath(object):
         """
         try:
             repo = Repo(root, self.super_namespace)
-            self.put_last(repo)
+            self.append(repo)
         except RepoError as e:
-            tty.warn("Failed to initialize repository at '%s'." % root,
-                     e.message,
-                     "To remove the bad repository, run this command:",
-                     "    spack repo rm %s" % root)
+            msg = "Failed to initialize repository at '{0}'  ".format(root)
+            msg += '[' + e.message + ']\n\n'
+            msg += '  To remove the bad repository, run this command:\n\n'
+            msg += '  $ spack repo rm {0}\n'.format(root)
+            e.message = msg
+            raise
+
+    def __eq__(self, other):
+        # Exit early if other is of another type of if
+        # the lists of repos are of different lengths
+
+        if not isinstance(other, RepoPath):
+            return False
+
+        if len(self.repos) != len(other.repos):
+            return False
+
+        # Two RepoPath instances are considered equal if the list of Repo
+        # they contain points to the same repositories in the same order.
+
+        for r1, r2 in zip(self.repos, other.repos):
+            if r1.root != r2.root:
+                return False
+
+        # TODO: it would me more defensive to also check the by_path
+        # TODO: and the by_namespace caches
+
+        return True
+
+    def __getitem__(self, item):
+        # Behave like a list if 'item' is a slice, i.e.
+        # copy RepoPath with just the elements in the slice
+
+        if isinstance(item, slice):
+            sl = self.repos[item]
+            args = [x.root for x in sl]
+            return RepoPath(*args)
+
+        # Else return the element requested
+
+        return self.repos[item]
+
+    def __setitem__(self, key, value):
+        if isinstance(key, slice):
+
+            # Remove entries from index caches
+            repos_to_be_substituted = self.repos[key]
+            for r in repos_to_be_substituted:
+                self._remove_from_index_caches(r)
+
+            # Add the new entries to the indx caches
+            for r in value:
+                self._add_to_index_caches(r)
+
+            # Add the new values
+            self.repos[key] = value.repos
+
+        else:
+
+            # Get the repo associated with the key
+            repo = self.repos[key]
+
+            # Remove the current repository from caches
+            self._remove_from_index_caches(repo)
+
+            # Add the new value
+            self._add_to_index_caches(value)
+            self.repos[key] = value
+
+    def _remove_from_index_caches(self, repo):
+        """Removes the repository from the 'by_path' and 'by_namespace'
+        caches.
+
+        Args:
+            repo: repository to be removed from caches
+        """
+        # We need to get 'repo.root' and remove it from 'by_path'
+        root_key = repo.root
+        del self.by_path[root_key]
+
+        # Same for 'repo.namespace' and 'by_namespace'
+        namespace_key = repo.full_namespace
+        del self.by_namespace[namespace_key]
+
+    def __delitem__(self, key):
+
+        # Delete entries from index caches
+        if isinstance(key, slice):
+            repos_to_be_deleted = self.repos[key]
+            for r in repos_to_be_deleted:
+                self._remove_from_index_caches(r)
+        else:
+            repo = self[key]
+            self._remove_from_index_caches(repo)
+
+        # Delete them also from the list of repos
+        del self.repos[key]
+
+    def __len__(self):
+        return len(self.repos)
+
+    def insert(self, index, value):
+        self._add_to_index_caches(value)
+        self.repos.insert(index, value)
 
     def swap(self, other):
         """Convenience function to make swapping repositories easier.
@@ -153,12 +265,11 @@ class RepoPath(object):
             setattr(self, attr, getattr(other, attr))
             setattr(other, attr, tmp)
 
-    def _add(self, repo):
+    def _add_to_index_caches(self, repo):
         """Add a repository to the namespace and path indexes.
 
         Checks for duplicates -- two repos can't have the same root
         directory, and they provide have the same namespace.
-
         """
         if repo.root in self.by_path:
             raise DuplicateRepoError("Duplicate repository: '%s'" % repo.root)
@@ -172,21 +283,6 @@ class RepoPath(object):
         # Add repo to the pkg indexes
         self.by_namespace[repo.full_namespace] = repo
         self.by_path[repo.root] = repo
-
-    def put_first(self, repo):
-        """Add repo first in the search path."""
-        self._add(repo)
-        self.repos.insert(0, repo)
-
-    def put_last(self, repo):
-        """Add repo last in the search path."""
-        self._add(repo)
-        self.repos.append(repo)
-
-    def remove(self, repo):
-        """Remove a repo from the search path."""
-        if repo in self.repos:
-            self.repos.remove(repo)
 
     def get_repo(self, namespace, default=NOT_PROVIDED):
         """Get a repository by namespace.
@@ -319,7 +415,8 @@ class RepoPath(object):
 
            Raises UnknownPackageError if not found.
         """
-        # FIXME: the keyword new is never used
+        # FIXME: the keyword new is never used here, but seems to be
+        # FIXME: art of the required interface
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
