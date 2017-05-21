@@ -38,6 +38,8 @@ class Mesa(AutotoolsPackage):
             description="Use DRI drivers for accelerated OpenGL rendering")
     variant('libsysfs', default=False,
             description="Allow libsysfs for DRI drivers (libudev preferred)")
+    variant('gallium', default=False,
+            description="Build Gallium DRI drivers")
 
     # General dependencies
     depends_on('python@2.6.4:')
@@ -61,7 +63,7 @@ class Mesa(AutotoolsPackage):
     depends_on('dri2proto@2.6:', type='build', when='+dri')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
     depends_on('expat', when='+dri')
-    depends_on('llvm@3:3.99', when='+dri')
+    depends_on('llvm@3:3.99', when='+dri+gallium')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
 
@@ -72,8 +74,10 @@ class Mesa(AutotoolsPackage):
         spec = self.spec
         args = []
         if '+dri' in spec:
-            if '~link_dylib' in spec['llvm']:
+            if 'llvm' in spec and '~link_dylib' in spec['llvm']:
                 args.extend(['--disable-llvm-shared-libs'])
+            if '~gallium' in spec:
+                args.extend(['--without-gallium-drivers'])
             if '+libsysfs' in spec:
                 # libudev is preferred but may not work on some systems:
                 args.extend(['--enable-sysfs'])
