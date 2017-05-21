@@ -71,6 +71,11 @@ class Mesa(AutotoolsPackage):
     depends_on('dri3proto@1.0:', type='build', when='+dri')
     depends_on('llvm@3:3.99', when='+dri+gallium')
 
+    # For optional features, possible new variants:
+    #depends_on('libgcrypt')
+    #depends_on('nettle')
+    #depends_on('libelf')
+
     # TODO: Add package for systemd, provides libudev
     # Using the system package manager to install systemd didn't work for me
 
