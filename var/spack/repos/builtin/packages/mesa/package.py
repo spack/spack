@@ -72,7 +72,8 @@ class Mesa(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+        args = ['--enable-texture-float', '--enable-osmesa',
+                '--enable-xa', '--enable-glx-tls']
         if '+dri' in spec:
             if 'llvm' in spec and '~link_dylib' in spec['llvm']:
                 args.extend(['--disable-llvm-shared-libs'])
