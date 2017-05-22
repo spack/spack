@@ -23,12 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import inspect
-import platform
-
-import spack.build_environment
-from llnl.util.filesystem import working_dir, join_path
-from spack.directives import depends_on
+from llnl.util.filesystem import join_path
 from spack.package import PackageBase, run_after
 
 
