@@ -31,6 +31,8 @@ import platform as py_platform
 import spack
 import spack.architecture
 from spack.spec import Spec
+from spack.operating_systems.cnl import Cnl
+from spack.operating_systems.linux_distro import LinuxDistro
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
@@ -68,6 +70,18 @@ def test_platform():
             my_platform_class = Darwin()
 
         assert str(output_platform_class) == str(my_platform_class)
+
+
+def test_crayos_version():
+    cray_platform = spack.architecture.real_platform()
+    detected_back_end = Cnl()
+    detected_front_end = LinuxDistro()
+    if (cray_platform.name != "cray"):
+        pytest.skip("test only for cray systems")
+    real_oss = [name for name, o in cray_platform.operating_sys.items()]
+
+    assert str(detected_back_end) in real_oss
+    assert str(detected_front_end) in real_oss
 
 
 def test_boolness():
