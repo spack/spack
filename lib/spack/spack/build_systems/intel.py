@@ -25,6 +25,7 @@
 
 from llnl.util.filesystem import join_path
 from spack.package import PackageBase, run_after
+from spack.util.executable import Executable
 
 
 def filter_pick(input_list, regex_filter):
@@ -64,7 +65,7 @@ class IntelPackage(PackageBase):
     to set the appropriate environment variables.
     """
     #: Phases of an Intel package
-    phases = ['install']
+    phases = ['configure', 'install']
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
@@ -102,34 +103,71 @@ class IntelPackage(PackageBase):
 
         See https://software.intel.com/en-us/articles/configuration-file-format
         """
-        silent_config_filename = 'silent.cfg'
+        # Patterns used to check silent configuration file
+        #
+        # anythingpat - any string
+        # filepat     - the file location pattern (/path/to/license.lic)
+        # lspat       - the license server address pattern (0123@hostname)
+        # snpat       - the serial number pattern (ABCD-01234567)
+        config = {
+            # Accept EULA, valid values are: {accept, decline}
+            'ACCEPT_EULA': 'accept',
 
-        with open(silent_config_filename, 'w') as f:
-            f.write("""
-ACCEPT_EULA=accept
-PSET_MODE=install
-CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
-PSET_INSTALL_DIR={0}
-NONRPM_DB_DIR={0}
-CONTINUE_WITH_OPTIONAL_ERROR=yes
-COMPONENTS={1}
-""".format(prefix, self.intel_components))
+            # Optional error behavior, valid values are: {yes, no}
+            'CONTINUE_WITH_OPTIONAL_ERROR': 'yes',
+
+            # Install location, valid values are: {/opt/intel, filepat}
+            'PSET_INSTALL_DIR': prefix,
+
+            # Continue with overwrite of existing installation directory,
+            # valid values are: {yes, no}
+            'CONTINUE_WITH_INSTALLDIR_OVERWRITE': 'yes',
+
+            # List of components to install,
+            # valid values are: {ALL, DEFAULTS, anythingpat}
+            'COMPONENTS': self.intel_components,
+
+            # Installation mode, valid values are: {install, repair, uninstall}
+            'PSET_MODE': 'install',
+
+            # Directory for non-RPM database, valid values are: {filepat}
+            'NONRPM_DB_DIR': prefix,
+
+            # Perform validation of digital signatures of RPM files,
+            # valid values are: {yes, no}
+            'SIGNING_ENABLED': 'no',
+
+            # Select target architecture of your applications,
+            # valid values are: {IA32, INTEL64, ALL}
+            'ARCH_SELECTED': 'INTEL64',
+        }
 
         # Not all Intel software requires a license. Trying to specify
         # one anyway will cause the installation to fail.
         if self.license_required:
-            with open(silent_config_filename, 'a') as f:
-                f.write("""
-ACTIVATION_LICENSE_FILE={0}
-ACTIVATION_TYPE=license_file
-PHONEHOME_SEND_USAGE_DATA=no
-""".format(self.global_license_file))
+            config.update({
+                # License file or license server,
+                # valid values are: {lspat, filepat}
+                'ACTIVATION_LICENSE_FILE': self.global_license_file,
+
+                # Activation type, valid values are: {exist_lic,
+                # license_server, license_file, trial_lic, serial_number}
+                'ACTIVATION_TYPE': 'license_file',
+
+                # Intel(R) Software Improvement Program opt-in,
+                # valid values are: {yes, no}
+                'PHONEHOME_SEND_USAGE_DATA': 'no',
+            })
+
+        with open('silent.cfg', 'w') as cfg:
+            for key in config:
+                cfg.write('{0}={1}\n'.format(key, config[key]))
 
     def install(self, spec, prefix):
         """Runs the ``install.sh`` installation script."""
 
         install_script = Executable('./install.sh')
-        install_script('--silent', silent_config_filename)
+        install_script('--silent', 'silent.cfg')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
