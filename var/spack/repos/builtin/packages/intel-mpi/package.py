@@ -30,13 +30,13 @@ class IntelMpi(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
-    version('2017.3', '721ecd5f6afa385e038777e5b5361dfb',
+    version('2017.3.196', '721ecd5f6afa385e038777e5b5361dfb',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11595/l_mpi_2017.3.196.tgz')
-    version('2017.2', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
+    version('2017.2.174', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11334/l_mpi_2017.2.174.tgz')
-    version('2017.1', 'd5e941ac2bcf7c5576f85f6bcfee4c18',
+    version('2017.1.132', 'd5e941ac2bcf7c5576f85f6bcfee4c18',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11014/l_mpi_2017.1.132.tgz')
-    version('5.1.3', '4316e78533a932081b1a86368e890800',
+    version('5.1.3.223',  '4316e78533a932081b1a86368e890800',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9278/l_mpi_p_5.1.3.223.tgz')
 
     provides('mpi')
