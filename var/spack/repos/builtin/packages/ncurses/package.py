@@ -62,7 +62,8 @@ class Ncurses(AutotoolsPackage):
             '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
         ]
 
-        nwide_opts = ['--without-manpages',
+        nwide_opts = ['--disable-widec',
+                      '--without-manpages',
                       '--without-tests']
 
         wide_opts = ['--enable-widec']

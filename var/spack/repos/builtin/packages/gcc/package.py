@@ -170,6 +170,15 @@ class Gcc(AutotoolsPackage):
                             'typedef void* dispatch_block_t',
                             new_header)
 
+        # Use installed libz
+        if self.version >= Version('6'):
+            filter_file('@zlibdir@',
+                        '-L{0}'.format(spec['zlib'].prefix.lib),
+                        'gcc/Makefile.in')
+            filter_file('@zlibinc@',
+                        '-I{0}'.format(spec['zlib'].prefix.include),
+                        'gcc/Makefile.in')
+
     def configure_args(self):
         spec = self.spec
 
