@@ -38,11 +38,6 @@ class Virtualgl(CMakePackage):
     version('2.5.2', '1a9f404f4a35afa9f56381cb33ed210c')
 
     depends_on("libjpeg-turbo")
+    # virtualgl require OpenGL but also glu, on systems without development,
+    # use mesa-glu, but we do not want Mesa OpenGL sw emulation
     depends_on("mesa-glu~mesa")
-
-    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
-        return args
