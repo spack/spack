@@ -34,6 +34,8 @@ class Mesa(AutotoolsPackage):
 
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
 
+    variant('nodri', default=False, description='Disable DRI and EGL support')
+
     # General dependencies
     depends_on('python@2.6.4:')
     depends_on('py-mako@0.3.4:', type=('build', 'run'))
@@ -52,10 +54,28 @@ class Mesa(AutotoolsPackage):
     depends_on('libxfixes')
 
     depends_on('glproto@1.4.14:', type='build')
-    depends_on('dri2proto@2.6:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
+    depends_on('dri2proto@2.6:', when='~nodri', type='build')
+    depends_on('dri3proto@1.0:', when='~nodri', type='build')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
 
     # TODO: Add package for systemd, provides libudev
     # Using the system package manager to install systemd didn't work for me
+    
+    # Added: 
+    # Disable dri support on older Centos /RHEL6 servers
+    # You must also yum install libsysfs-devel
+    # See
+    # https://www.mesa3d.org/osmesa.html
+    # https://www.mesa3d.org/autoconf.html
+    # 
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if '+nodri' in spec:
+            args += ['--disable-dri']
+            args += ['--disable-egl']
+            args += ['--enable-sysfs']
+            args += ['--disable-driglx-direct']
+            args += ['--with-gallium-drivers=swrast']
+        return args
