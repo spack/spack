@@ -90,7 +90,8 @@ def test_flake8(parser, flake8_package):
     try:
         flake8(parser, args)
     # Get even more coverage
-        args = parser.parse_args(['--output', '--root-relative', flake8_package])
+        args = parser.parse_args(['--output', '--root-relative',
+                                 flake8_package])
         flake8(parser, args)
     except SystemExit:
         pytest.skip("no flake8 found in path")
