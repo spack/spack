@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Magics(Package):
@@ -42,7 +43,7 @@ class Magics(Package):
 
     # The patch changes the hardcoded path to python in shebang to enable the
     # usage of the first python installation that appears in $PATH
-    patch('no_hardcoded_python.patch')
+    patch('no_hardcoded_python.patch', when='@:2.29.6')
 
     # The patch reorders includes and adds namespaces where necessary to
     # resolve ambiguity of invocations of isnan and isinf functions. The
@@ -63,7 +64,8 @@ class Magics(Package):
     depends_on('python', type='build')
     depends_on('perl', type='build')
     depends_on('perl-xml-parser', type='build')
-    depends_on('grib-api')
+    depends_on('eccodes', when='@2.30.0:')
+    depends_on('grib-api', when='@:2.29.6')
     depends_on('proj')
     depends_on('boost')
     depends_on('expat')
@@ -73,8 +75,8 @@ class Magics(Package):
     depends_on('qt', when='+metview+qt')
 
     def patch(self):
-        filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl',
-                    'tools/xml2cc_new.pl')
+        for plfile in glob.glob('*/*.pl'):
+            filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', plfile)
 
     def install(self, spec, prefix):
         options = []
@@ -83,8 +85,12 @@ class Magics(Package):
         options.append('-DENABLE_PYTHON=OFF')
         options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
         options.append('-DPROJ4_PATH=%s' % spec['proj'].prefix)
-        options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
         options.append('-DENABLE_TESTS=OFF')
+
+        if self.version >= Version('2.30.0'):
+            options.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
+        else:
+            options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
 
         if '+bufr' in spec:
             options.append('-DENABLE_BUFR=ON')
