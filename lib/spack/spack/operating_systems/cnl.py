@@ -39,9 +39,18 @@ class Cnl(OperatingSystem):
     updated to indicate that OS has been upgraded (or downgraded)
     """
 
+    def _detect_crayos_version(self):
+        modulecmd = which("modulecmd", required=True)
+        modulecmd.add_default_arg("python")
+        output = modulecmd("avail", "PrgEnv-gnu", output=str, error=str)
+        matches = re.findall(r'PrgEnv-gnu/(\d+).\d+.\d+', output)
+        version_set = set(matches)
+        recent_version = max(version_set)
+        return recent_version
+
     def __init__(self):
-        name = 'CNL'
-        version = '10'
+        name = 'cnl'
+        version = self._detect_crayos_version()
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
