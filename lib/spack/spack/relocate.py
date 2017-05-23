@@ -16,7 +16,8 @@ def get_existing_elf_rpaths(path_name, patchelf_executable):
     """
     if platform.system() == 'Linux':
         command = which(patchelf_executable)
-        output=command('--print-rpath' ,'%s' % path_name, output=str, err=str)
+        output = command('--print-rpath', '%s' %
+                         path_name, output=str, err=str)
         if command.returncode != 0:
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
@@ -92,7 +93,7 @@ def modify_macho_object(path_name, old_dir, new_dir):
     if not wmode:
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
 
-    install_name_tool=which('install_name_tool')
+    install_name_tool = which('install_name_tool')
     if id:
         output = install_name_tool('-id', id, path_name, output=str, err=str)
         if install_name_tool.returncode != 0:
@@ -119,8 +120,8 @@ def get_filetype(path_name):
     """
     Check the output of the file command for given string.
     """
-    bash=which('bash')
-    output = bash('-c','LC_ALL=C && file -b -h %s' % path_name,
+    bash = which('bash')
+    output = bash('-c', 'LC_ALL=C && file -b -h %s' % path_name,
                   output=str, err=str)
     if bash.returncode != 0:
         tty.warn('getting filetype of "%s" failed' % path_name)
@@ -139,8 +140,8 @@ def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         command = which(patchelf_executable)
-        output=command('--force-rpath', '--set-rpath', '%s' % new_joined,
-                        '%s' % path_name, output=str, cmd=str)
+        output = command('--force-rpath', '--set-rpath', '%s' % new_joined,
+                         '%s' % path_name, output=str, cmd=str)
         if command.returncode != 0:
             tty.warn('failed writing rpath for %s.' % path_name)
     else:
@@ -190,7 +191,7 @@ def relocate_text(path_name, old_dir, new_dir):
     """
     Replace old path with new path in text files
     """
-    filter_file("r'%s'"%old_dir, "r'%s'" % new_dir, path_name)
+    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
