@@ -6,7 +6,7 @@ import stat
 import platform
 import re
 from spack.util.executable import which
-
+from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
 
@@ -20,7 +20,7 @@ def get_existing_elf_rpaths(path_name, patchelf_executable):
         if command.returncode != 0:
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
-        return output.split(':')
+        return output.rstrip('\n').split(':')
     else:
         tty.die('relocation not supported for this platform')
     return retval
@@ -139,7 +139,7 @@ def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         command = which(patchelf_executable)
-        output=command('--force-rpath', '--set-rpath %s' % new_joined,
+        output=command('--force-rpath', '--set-rpath', '%s' % new_joined,
                         '%s' % path_name, output=str, cmd=str)
         if command.returncode != 0:
             tty.warn('failed writing rpath for %s.' % path_name)
