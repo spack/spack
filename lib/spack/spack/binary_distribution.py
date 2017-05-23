@@ -6,9 +6,8 @@ import tarfile
 import yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp,join_path
+from llnl.util.filesystem import mkdirp, join_path
 
-from spack.util.executable import which
 import spack.cmd
 import spack
 from spack.stage import Stage
@@ -116,10 +115,10 @@ def tarball_name(spec, ext):
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
     return "%s-%s-%s-%s%s" % (get_full_system_from_platform(),
-                            spec.name,
-                            spec.version,
-                            spec.dag_hash(),
-                            ext)
+                              spec.name,
+                              spec.version,
+                              spec.dag_hash(),
+                              ext)
 
 
 def tarball_path_name(spec, ext):
@@ -138,7 +137,7 @@ def build_tarball(spec, outdir, force=False, key=None):
     """
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_dir = join_path(outdir, tarball_directory_name(spec))
-    tarfile_path = join_path(tarfile_dir,tarfile_name)
+    tarfile_path = join_path(tarfile_dir, tarfile_name)
     mkdirp(tarfile_dir)
     if os.path.exists(tarfile_path):
         if force:
@@ -152,26 +151,25 @@ def build_tarball(spec, outdir, force=False, key=None):
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
     with tarfile.open(tarfile_path, 'w:gz') as tar:
-        tar.add(name = '%s' % spec.prefix 
-               , arcname = '%s' % os.path.basename(spec.prefix))
+        tar.add(name='%s' % spec.prefix, arcname='%s' %
+                os.path.basename(spec.prefix))
 
     # Sign the packages.
-    #spack gpg sign [--key key] tarfile_path
-    #spack gpg sign [--key key] tarfile_path + '/spec.yaml'
-    path1='%s.asc' % tarfile_path
-    with open(path1,'a'):
-        os.utime(path1, None)       
-    path2='%s.asc' % spec_file
-    with open(path2,'a'):
-        os.utime(path2, None)       
-           
+    # spack gpg sign [--key key] tarfile_path
+    # spack gpg sign [--key key] tarfile_path + '/spec.yaml'
+    path1 = '%s.asc' % tarfile_path
+    with open(path1, 'a'):
+        os.utime(path1, None)
+    path2 = '%s.asc' % spec_file
+    with open(path2, 'a'):
+        os.utime(path2, None)
 
     spackfile_path = os.path.join(outdir, tarball_path_name(spec, '.spack'))
     with tarfile.open(spackfile_path, 'w') as tar:
-        tar.add(name = '%s' % tarfile_path, arcname = '%s' % tarfile_name)
-        tar.add(name = '%s' % spec_file, arcname = 'spec.yaml')
-        tar.add(name = '%s.asc' % tarfile_path , arcname = '%s.asc' % tarfile_name )
-        tar.add(name = '%s.asc' % spec_file, arcname = 'spec.yaml.asc' ) 
+        tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
+        tar.add(name='%s' % spec_file, arcname='spec.yaml')
+        tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' % tarfile_name)
+        tar.add(name='%s.asc' % spec_file, arcname='spec.yaml.asc')
         os.remove(tarfile_path)
         os.remove(path1)
         os.remove(path2)
@@ -205,7 +203,7 @@ def extract_tarball(package):
     """
     extract binary tarball for given package into install area
     """
-    tarball = tarball_name(package.spec,'.spack')
+    tarball = tarball_name(package.spec, '.spack')
     local_tarball = package.stage.path + "/" + tarball
     mkdirp(package.prefix)
     tarfile_name = tarball_name(package.spec, '.tar.gz')
@@ -222,10 +220,10 @@ def extract_tarball(package):
         # spack gpg verify tarfile_path
 
     with tarfile.open(tarfile_path, 'r') as tar:
-        tar.extractall(path = os.path.dirname(package.prefix))
+        tar.extractall(path=os.path.dirname(package.prefix))
 
-    #os.remove(tarfile_path)
-    #os.remove(tarfile_path + '.asc')
+#    os.remove(tarfile_path)
+#    os.remove(tarfile_path + '.asc')
 
 
 def relocate_package(package):
@@ -255,6 +253,7 @@ def relocate_package(package):
                                        old_path,
                                        new_path,
                                        patchelf_executable)
+
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(package.prefix, filename)
         spack.relocate.relocate_text(path_name, old_path, new_path)

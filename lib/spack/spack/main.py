@@ -66,6 +66,7 @@ section_descriptions = {
     'admin':       'administration',
     'basic':       'query packages',
     'build':       'build packages',
+    'caching':     'build caching',
     'config':      'configuration',
     'developer':   'developer',
     'environment': 'environment',
