@@ -76,8 +76,7 @@ def test_yaml_directory_layout_parameters(
     assert(package7 == path_package7)
 
     # Test separation of architecture
-    platform, os, target = arch.split("-")
-    arch_scheme_package = "${TARGET}/${OS}/${PACKAGE}/${VERSION}/${HASH:7}"
+    arch_scheme_package = "${PLATFORM}/${TARGET}/${OS}/${PACKAGE}/${VERSION}/${HASH:7}"   #NOQA: ignore=E501
     layout_arch_package = YamlDirectoryLayout(str(tmpdir),
                                                path_scheme=arch_scheme_package)
     arch_path_package = layout_arch_package.relative_path_for_spec(spec)
