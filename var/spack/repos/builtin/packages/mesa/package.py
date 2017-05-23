@@ -81,7 +81,7 @@ class Mesa(AutotoolsPackage):
                 '--disable-driglx-direct',
                 '--with-gallium-drivers=swrast'
             ])
-        if '+dri' in spec:
+        else:
             args.extend([
                 '--enable-dri',
                 '--enable-egl'
