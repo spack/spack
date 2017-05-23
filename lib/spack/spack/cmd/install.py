@@ -81,7 +81,8 @@ the dependencies"""
     )
     subparser.add_argument(
         '--log-format',
-        default='cdash-simple',
+        default=None,
+        # default='cdash-simple',
         choices=test_suites.keys(),
         help="Format to be used for log files. Default is CDash."
 
@@ -141,8 +142,12 @@ def install(parser, args, **kwargs):
             args.path = os.getcwd()
         # Create the test suite in which to log results
         if "cdash" in args.log_format:
-            test_suite = test_suites[args.log_format](
-                spec, args.log_file, args.site, args.path)
+            if "simple" in args.log_format:
+                test_suite = test_suites[args.log_format](
+                    spec, args.log_file, args.site, args.path, False)
+            else:
+                test_suite = test_suites[args.log_format](
+                    spec, args.log_file, args.site, args.path, True)
         else:
             test_suite = test_suites[args.log_format](
                 spec, args.log_file)
