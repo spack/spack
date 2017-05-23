@@ -193,7 +193,7 @@ class RepoPath(MutableSequence):
             for r in repos_to_be_substituted:
                 self._remove_from_index_caches(r)
 
-            # Add the new entries to the indx caches
+            # Add the new entries to the index caches
             for r in value:
                 self._add_to_index_caches(r)
 
@@ -307,10 +307,6 @@ class RepoPath(MutableSequence):
             return default
         return self.by_namespace[fullspace]
 
-    def first_repo(self):
-        """Get the first repo in precedence order."""
-        return self.repos[0] if self.repos else None
-
     def all_package_names(self):
         """Return all unique package names in all repositories."""
         if self._all_package_names is None:
@@ -407,7 +403,7 @@ class RepoPath(MutableSequence):
         # If the package isn't in any repo, return the one with
         # highest precedence.  This is for commands like `spack edit`
         # that can operate on packages that don't exist yet.
-        return self.first_repo()
+        return self[0]
 
     @_autospec
     def get(self, spec, new=False):
