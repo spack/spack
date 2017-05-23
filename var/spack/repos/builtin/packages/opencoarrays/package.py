@@ -36,6 +36,7 @@ class Opencoarrays(CMakePackage):
     homepage = "http://www.opencoarrays.org/"
     url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
 
+    version('1.8.10', '9ba1670647db4d986634abf743abfd6a')
     version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
     version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
     version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
