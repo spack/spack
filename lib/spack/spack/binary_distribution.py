@@ -205,24 +205,24 @@ def extract_tarball(package):
     """
     extract binary tarball for given package into install area
     """
-    tarball = tarball_name(package.spec)
+    tarball = tarball_name(package.spec,'.spack')
     local_tarball = package.stage.path + "/" + tarball
     mkdirp(package.prefix)
-    tarfile_name = tarball_path_name(spec, '.tar.gz')
-    tarfile_path = os.path.join(package.prefix, tarfile_name)
+    tarfile_name = tarball_name(package.spec, '.tar.gz')
+    tarfile_path = os.path.join(package.stage.path, tarfile_name)
     with tarfile.open(local_tarball, 'r') as tar:
-        tar.extract('spec.yaml', package.prefix)
-        tar.extract('spec.yaml.asc', package.prefix)
+        tar.extract('spec.yaml', package.stage.path)
+        tar.extract('spec.yaml.asc', package.stage.path)
 
         # spack gpg verify os.path.join(package.prefix, 'spec.yaml')
 
-        tar.extract(tarfile_name, package.prefix)
-        tar.extract(tarfile_name + '.asc', package.prefix)
+        tar.extract(tarfile_name, package.stage.path)
+        tar.extract(tarfile_name + '.asc', package.stage.path)
 
         # spack gpg verify tarfile_path
 
     with tarfile.open(tarfile_path, 'r') as tar:
-        tar.extractall(path=package.prefix)
+        tar.extractall(path = os.path.dirname(package.prefix))
 
     #os.remove(tarfile_path)
     #os.remove(tarfile_path + '.asc')
