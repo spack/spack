@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import distro
 
 
 class Mesa(AutotoolsPackage):
@@ -60,6 +61,7 @@ class Mesa(AutotoolsPackage):
     depends_on('dri3proto@1.0:', when='+dri', type='build')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('llvm', when='+osmesa', type='build')
 
     # adamjstewart
     # TODO: Add package for systemd, provides libudev
@@ -73,12 +75,17 @@ class Mesa(AutotoolsPackage):
     # https://www.mesa3d.org/autoconf.html
     def configure_args(self):
         spec = self.spec
-        args = []
+        version = distro.linux_distribution()[1]
+        # centos / rhel 6
+        if version.find('6.0:6.9') == -1:
+            args = ['--enable-sysfs']
+        else:
+            args = []
+
         if '~dri' in spec:
             args.extend([
                 '--disable-dri',
                 '--disable-egl',
-                '--enable-sysfs',
                 '--disable-driglx-direct',
                 '--with-gallium-drivers=swrast'
             ])
