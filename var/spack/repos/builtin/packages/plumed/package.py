@@ -113,6 +113,8 @@ class Plumed(AutotoolsPackage):
 
     force_autoreconf = True
 
+    parallel = False
+
     def apply_patch(self, other):
         plumed = subprocess.Popen(
             [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
