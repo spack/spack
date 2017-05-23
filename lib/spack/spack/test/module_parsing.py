@@ -35,6 +35,7 @@ typeset_func.wait()
 typeset = typeset_func.stderr.read()
 MODULE_DEFINED = False if 'not found' in typeset else True
 
+
 def test_get_argument_from_module_line():
     lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
              'prepend-path  LD_LIBRARY_PATH  /lib/path',
@@ -49,6 +50,7 @@ def test_get_argument_from_module_line():
     for bl in bad_lines:
         with pytest.raises(ValueError):
             get_argument_from_module_line(bl)
+
 
 @pytest.mark.skipif(not MODULE_DEFINED, reason='Depends on defined module cmd')
 def test_get_module_cmd_from_bash_using_modules():
@@ -67,6 +69,7 @@ def test_get_module_cmd_from_bash_using_modules():
     # Test containment to avoid false failures on lmod systems.
     assert module_list in module_cmd_list
 
+
 @pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_ticks():
     module_func = os.environ.get('BASH_FUNC_module()', None)
@@ -78,6 +81,7 @@ def test_get_module_cmd_from_bash_ticks():
 
     if module_func:
         os.environ['BASH_FUNC_module()'] = module_func
+
 
 @pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_parens():

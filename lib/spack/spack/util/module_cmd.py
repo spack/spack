@@ -63,14 +63,14 @@ def get_module_cmd_from_bash():
 
     # Find the portion of the module function that is evaluated
     try:
-        find_exec_line = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
-        exec_line = find_exec_line.group(1)
+        find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
+        exec_line = find_exec.group(1)
     except:
         try:
             # This will fail with nested parentheses. TODO: expand regex.
-            find_exec_line = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
+            find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
                                        module_func)
-            exec_line = find_exec_line.group(1)
+            exec_line = find_exec.group(1)
         except:
             raise ModuleError('get_module_cmd cannot '
                               'determine the module command')
