@@ -59,7 +59,7 @@ class IntelMpi(IntelInstaller):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         return find_headers(
-            'mpi', root='{0}64'.format(self.prefix.include), recurse=False)
+            'mpi', root=self.prefix.include64, recurse=False)
 
     def install(self, spec, prefix):
         self.intel_prefix = prefix
