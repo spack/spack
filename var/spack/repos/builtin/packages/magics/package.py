@@ -41,10 +41,6 @@ class Magics(Package):
     version('2.29.4', '91c561f413316fb665b3bb563f3878d1')
     version('2.29.0', 'db20a4d3c51a2da5657c31ae3de59709', preferred=True)
 
-    # The patch changes the hardcoded path to python in shebang to enable the
-    # usage of the first python installation that appears in $PATH
-    patch('no_hardcoded_python.patch', when='@:2.29.6')
-
     # The patch reorders includes and adds namespaces where necessary to
     # resolve ambiguity of invocations of isnan and isinf functions. The
     # patch is not needed since the version 2.29.1
@@ -77,9 +73,12 @@ class Magics(Package):
 
     conflicts('+eccodes', when='@:2.29.0')
 
+    # Replace system python and perl by spack versions:
     def patch(self):
         for plfile in glob.glob('*/*.pl'):
             filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', plfile)
+        for pyfile in glob.glob('*/*.py'):
+            filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
 
     def install(self, spec, prefix):
         options = []
