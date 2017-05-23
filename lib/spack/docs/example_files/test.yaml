@@ -2,7 +2,9 @@
 test-suite:
     include: [ ape, atompaw, transset]
     exclude: [binutils,tk]
-    packages:
+   
+    matrix:
+    - packages:
         ape:
             versions: [2.2.1]
         atompaw:
@@ -13,10 +15,10 @@ test-suite:
             versions: [8.6.5, 8.6.3]
         transset:
             versions: [1.0.1]
-    compilers:
+    - compilers:
         gcc:
             versions: [4.9, 4.8, 4.7]
         clang:
             versions: [3.5, 3.6]
 
-    dashboard: ["https://spack.io/cdash/submit.php?project=spack"]
+    cdash: ["https://spack.io/cdash/submit.php?project=spack"]

@@ -87,6 +87,10 @@ the dependencies"""
 
     )
     subparser.add_argument(
+        '--redundant', action='store_true', dest='redundant',
+        help="Redundant package list for test-suite"
+    )
+    subparser.add_argument(
         '--log-file',
         default=None,
         help="filename for the log file. if not passed a default will be used"
@@ -122,7 +126,8 @@ def install(parser, args, **kwargs):
         'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'redundant': args.redundant
     })
     # Spec from cli
     specs = spack.cmd.parse_specs(args.package, concretize=True)

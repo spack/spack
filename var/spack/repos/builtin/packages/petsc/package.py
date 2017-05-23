@@ -273,3 +273,4 @@ class Petsc(Package):
         # Set up PETSC_DIR for everyone using PETSc package
         spack_env.set('PETSC_DIR', self.prefix)
         spack_env.unset('PETSC_ARCH')
+

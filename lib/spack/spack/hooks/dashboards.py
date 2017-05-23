@@ -131,6 +131,7 @@ class CDashTestCase(object):
 
     def set_result(self, result_type,
                    message=None, error_type=None, text=None):
+        # put error somewhere in here
         self.result_type = result_type
         self.element.set('Status', CDashTestCase.results[result_type])
         # Completion Status
@@ -220,9 +221,6 @@ class CDashSimpleTestSuite(object):
 
     def prepare_build_report(self):
         report = self.create_template()
-        for item in self.tests:
-            if item.result_type != TestResult.SKIPPED:
-                report.append(item.element)
         build = ET.SubElement(report, 'Build')
         start_element = ET.SubElement(build, 'StartDateTime')
         start_element.text = self.now()
@@ -230,8 +228,17 @@ class CDashSimpleTestSuite(object):
         startBuild_element.text = self.epoch()
         command_element = ET.SubElement(build, 'BuildCommand')
         command_element.text = 'spack install'
-        log_element = ET.SubElement(build, 'Log')
-        log_element.set('Encoding', 'base64')
+        # test list
+        testlist = ET.SubElement(build, 'TestList')
+        for item in self.tests:
+            test_element = ET.SubElement(testlist, "Test")
+            test_element.text = item.name
+            build.append(item.element)
+        # log_element = ET.SubElement(build, 'Log')
+        # log_element.set('Encoding', 'base64')
+        for item in self.tests:
+            if item.result_type != TestResult.SKIPPED:
+                build.append(item.element)
         end_element = ET.SubElement(build, 'EndDateTime')
         end_element.text = self.now()
         endBuild_element = ET.SubElement(build, 'EndBuildTime')
@@ -380,6 +387,7 @@ class CDashCompleteTestSuite(object):
         else:
             template.set('Hostname', platform.system())
             template.set('OSName', platform.system())
+
         return template
 
     def create_testcase(self, name, spec, site):
