@@ -25,6 +25,7 @@
 import platform
 import shutil
 import sys
+import os
 from spack import *
 
 
@@ -33,7 +34,7 @@ class Namd(MakefilePackage):
     high-performance simulation of large biomolecular systems."""
 
     homepage = "http://www.ks.uiuc.edu/Research/namd/"
-    url      = "file://NAMD_2.12_Source.tar.gz"
+    url      = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
 
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')
 
@@ -48,7 +49,6 @@ class Namd(MakefilePackage):
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
 
-#    depends_on('fftw@3:', when="fftw=mkl")
     depends_on('intel-mkl', when="fftw=mkl")
 
     depends_on('tcl', when='interface=tcl')
@@ -74,21 +74,26 @@ class Namd(MakefilePackage):
             '--{0}-prefix'.format(lib), spec[lib].prefix
         ])
 
-    def edit(self, spec, prefix):
+    @property
+    def arch(self):
         plat = sys.platform
         if plat.startswith("linux"):
             plat = "linux"
         march = platform.machine()
+        return '{0}-{1}'.format(plat, march)
 
-        self.arch = '{0}-{1}'.format(plat, march)
+    @property
+    def build_directory(self):
+        return '{0}-spack'.format(self.arch)
 
+    def edit(self, spec, prefix):
         with working_dir('arch'):
-            with open('{0}-spack.arch'.format(self.arch), 'w') as fh:
+            with open('{0}.arch'.format(self.build_directory), 'w') as fh:
                 # this options are take from the default provided
                 # configuration files
                 optims_opts = {
                     'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math',
-                    'intel': '-O2 -ip -no-vec'
+                    'intel': '-O2 -ip'
                 }
 
                 optim_opts = optims_opts[self.compiler.name] \
@@ -134,15 +139,15 @@ class Namd(MakefilePackage):
 
         config = Executable('./config')
 
-        config('{0}-spack'.format(self.arch), *opts)
+        config(self.build_directory, *opts)
 
     def build(self, spec, prefix):
-        with working_dir('{0}-spack'.format(self.arch)):
+        with working_dir(self.build_directory):
             make()
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir('{0}-spack'.format(self.arch)):
+        with working_dir(self.build_directory):
+            mkdirp(prefix.bin)
             install('namd2', prefix.bin)
 
             # I'm not sure this is a good idea or if an autoload of the charm
