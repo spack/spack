@@ -44,11 +44,11 @@ class Rgl(RPackage):
 
     # ~dri required on older centos / rhel 6 servers - see mesa package
     depends_on('r@3.2:3.9')
-    depends_on('zlib', type=('build', 'run'))
-    depends_on('libpng', type=('build', 'run'))
-    depends_on('freetype', type=('build', 'run'))
-    depends_on('mesa+dri', when='+dri', type=('build', 'run'))
-    depends_on('mesa~dri', when='~dri', type=('build', 'run'))
+    depends_on('zlib', type=('link'))
+    depends_on('libpng', type=('link'))
+    depends_on('freetype', type=('link'))
+    depends_on('mesa+dri', when='+dri', type=('link'))
+    depends_on('mesa~dri', when='~dri', type=('link'))
     depends_on('mesa-glu', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
