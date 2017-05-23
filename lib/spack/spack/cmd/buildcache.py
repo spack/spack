@@ -44,10 +44,10 @@ def setup_parser(subparser):
 
     create = subparsers.add_parser('create')
     create.add_argument('-f', '--force', action='store_true',
-                           help="overwrite tarball if it exists.")
-    create.add_argument('-d', '--directory', metavar='directory', 
-                           type=str, default='.',
-                           help="directory in which to save the tarballs.")
+                        help="overwrite tarball if it exists.")
+    create.add_argument('-d', '--directory', metavar='directory',
+                        type=str, default='.',
+                        help="directory in which to save the tarballs.")
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to package")
@@ -55,14 +55,15 @@ def setup_parser(subparser):
 
     install = subparsers.add_parser('install')
     install.add_argument('-f', '--force', action='store_true',
-                           help="overwrite install directory if it exists.")
+                         help="overwrite install directory if it exists.")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to package")
     install.set_defaults(func=installtarball)
 
+
 def createtarball(args):
-    if not args.packages :
+    if not args.packages:
         tty.die("build cache file creation requires at least one" +
                 " installed package argument")
     pkgs = set(args.packages)
@@ -81,8 +82,9 @@ def createtarball(args):
         tty.msg('creating binary cache file for package %s ' % spec)
         build_tarball(spec, outdir, args.force)
 
+
 def installtarball(args):
-    if not args.packages :
+    if not args.packages:
         tty.die("build cache file installation requires at least one" +
                 " package argument")
     pkgs = set(args.packages)
@@ -109,6 +111,7 @@ def installtarball(args):
                 spack.store.db.reindex(spack.store.layout)
         else:
             tty.die("Download of binary cache file for spec %s failed." % spec)
+
 
 def buildcache(parser, args):
     if args.func:

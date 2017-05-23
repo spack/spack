@@ -144,7 +144,8 @@ def build_tarball(spec, outdir, force=False, key=None):
         if force:
             os.remove(spackfile_path)
         else:
-            tty.warn("file exists, use -f to force overwrite: %s" % spackfile_path)
+            tty.warn("file exists, use -f to force overwrite: %s" %
+                     spackfile_path)
             return
 
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
@@ -240,7 +241,7 @@ def relocate_package(package):
         return True  # No need to relocate
 
     tty.msg("Relocating package from",
-             "%s to %s." % (old_path, new_path))
+            "%s to %s." % (old_path, new_path))
 
     # as we may need patchelf, find out where it is
     patchelf_executable = ''
