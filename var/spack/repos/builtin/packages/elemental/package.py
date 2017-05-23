@@ -62,12 +62,12 @@ class Elemental(CMakePackage):
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
 
-    depends_on('cmake', type='build')
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='~openmp_blas')
     depends_on('metis')
@@ -79,7 +79,7 @@ class Elemental(CMakePackage):
     depends_on('python@:2.8', when='+python')
 
     @property
-    def elemental_libs(self):
+    def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
             'libEl', root=self.prefix, shared=shared, recurse=True

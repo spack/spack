@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import os
 import re
 import subprocess
+from six import string_types
 
 import llnl.util.tty as tty
 import spack
@@ -53,7 +53,30 @@ class Executable(object):
 
     @property
     def command(self):
+        """The command-line string.
+
+        Returns:
+            str: The executable and default arguments
+        """
         return ' '.join(self.exe)
+
+    @property
+    def name(self):
+        """The executable name.
+
+        Returns:
+            str: The basename of the executable
+        """
+        return os.path.basename(self.path)
+
+    @property
+    def path(self):
+        """The path to the executable.
+
+        Returns:
+            str: The path to the executable
+        """
+        return self.exe[0]
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
@@ -68,7 +91,7 @@ class Executable(object):
 
             Raise an exception if the subprocess returns an
             error. Default is True.  When not set, the return code is
-            avaiale as `exe.returncode`.
+            available as `exe.returncode`.
 
           ignore_errors
 
@@ -107,12 +130,13 @@ class Executable(object):
         ignore_errors = kwargs.pop("ignore_errors", ())
 
         # environment
-        env = kwargs.get('env', None)
-        if env is None:
+        env_arg = kwargs.get('env', None)
+        if env_arg is None:
             env = os.environ.copy()
             env.update(self.default_env)
         else:
-            env = self.default_env.copy().update(env)
+            env = self.default_env.copy()
+            env.update(env_arg)
 
         # TODO: This is deprecated.  Remove in a future version.
         return_output = kwargs.pop("return_output", False)
@@ -129,7 +153,7 @@ class Executable(object):
             raise ValueError("Cannot use `str` as input stream.")
 
         def streamify(arg, mode):
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 return open(arg, mode), True
             elif arg is str:
                 return subprocess.PIPE, False
@@ -178,9 +202,9 @@ class Executable(object):
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += out
+                    result += out.decode('utf-8')
                 if error is str:
-                    result += err
+                    result += err.decode('utf-8')
                 return result
 
         except OSError as e:

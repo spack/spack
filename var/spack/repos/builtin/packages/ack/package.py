@@ -35,6 +35,7 @@ class Ack(Package):
     homepage = "http://beyondgrep.com/"
     url      = "http://beyondgrep.com/ack-2.14-single-file"
 
+    version('2.16', '7085b5a5c76fda43ff049410870c8535', expand=False)
     version('2.14', 'e74150a1609d28a70b450ef9cc2ed56b', expand=False)
 
     depends_on('perl')
@@ -44,7 +45,7 @@ class Ack(Package):
         ack = 'ack-{0}-single-file'.format(self.version)
 
         # rewrite the script's #! line to call the perl dependency
-        shbang = '#!' + join_path(spec['perl'].prefix.bin, 'perl')
+        shbang = '#!' + spec['perl'].command.path
         filter_file(r'^#!/usr/bin/env perl', shbang, ack)
 
         install(ack, join_path(prefix.bin, "ack"))

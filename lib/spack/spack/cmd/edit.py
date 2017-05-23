@@ -33,14 +33,17 @@ from spack.spec import Spec
 from spack.repository import Repo
 
 description = "open package files in $EDITOR"
+section = "packaging"
+level = "short"
 
 
 def edit_package(name, repo_path, namespace):
     """Opens the requested package file in your favorite $EDITOR.
 
-    :param str name: The name of the package
-    :param str repo_path: The path to the repository containing this package
-    :param str namespace: A valid namespace registered with Spack
+    Args:
+        name (str): The name of the package
+        repo_path (str): The path to the repository containing this package
+        namespace (str): A valid namespace registered with Spack
     """
     # Find the location of the package
     if repo_path:

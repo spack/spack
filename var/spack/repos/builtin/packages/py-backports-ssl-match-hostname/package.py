@@ -32,5 +32,3 @@ class PyBackportsSslMatchHostname(PythonPackage):
     url      = "https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
 
     version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
-
-    depends_on('py-setuptools', type='build')

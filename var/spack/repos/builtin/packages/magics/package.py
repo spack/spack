@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Magics(Package):
@@ -36,12 +37,13 @@ class Magics(Package):
     # Maintainers of Magics do not keep tarballs of minor releases. Once the
     # next minor released is published the previous one becomes unavailable.
     # That is why the preferred version is the latest stable one.
+    version('2.32.0', 'e17956fffce9ea826cf994f8d275e0f5')
     version('2.29.4', '91c561f413316fb665b3bb563f3878d1')
     version('2.29.0', 'db20a4d3c51a2da5657c31ae3de59709', preferred=True)
 
     # The patch changes the hardcoded path to python in shebang to enable the
     # usage of the first python installation that appears in $PATH
-    patch('no_hardcoded_python.patch')
+    patch('no_hardcoded_python.patch', when='@:2.29.6')
 
     # The patch reorders includes and adds namespaces where necessary to
     # resolve ambiguity of invocations of isnan and isinf functions. The
@@ -60,7 +62,10 @@ class Magics(Package):
     # Currently python is only necessary to run
     # building preprocessing scripts.
     depends_on('python', type='build')
-    depends_on('grib-api')
+    depends_on('perl', type='build')
+    depends_on('perl-xml-parser', type='build')
+    depends_on('eccodes', when='@2.30.0:')
+    depends_on('grib-api', when='@:2.29.6')
     depends_on('proj')
     depends_on('boost')
     depends_on('expat')
@@ -69,6 +74,10 @@ class Magics(Package):
     depends_on('libemos', when='+bufr')
     depends_on('qt', when='+metview+qt')
 
+    def patch(self):
+        for plfile in glob.glob('*/*.pl'):
+            filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', plfile)
+
     def install(self, spec, prefix):
         options = []
         options.extend(std_cmake_args)
@@ -76,8 +85,12 @@ class Magics(Package):
         options.append('-DENABLE_PYTHON=OFF')
         options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
         options.append('-DPROJ4_PATH=%s' % spec['proj'].prefix)
-        options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
         options.append('-DENABLE_TESTS=OFF')
+
+        if self.version >= Version('2.30.0'):
+            options.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
+        else:
+            options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
 
         if '+bufr' in spec:
             options.append('-DENABLE_BUFR=ON')

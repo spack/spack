@@ -68,7 +68,7 @@ class Nwchem(Package):
         ]
     }
     # Iterate over patches
-    for condition, urls in urls_for_patches.iteritems():
+    for condition, urls in urls_for_patches.items():
         for url, md5 in urls:
             patch(url, when=condition, level=0, md5=md5)
 
@@ -88,7 +88,7 @@ class Nwchem(Package):
             'MPI_LOC=%s' % spec['mpi'].prefix,
             'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
-            'PYTHONHOME=%s' % spec['python'].prefix,
+            'PYTHONHOME=%s' % spec['python'].home,
             'BLASOPT=%s' % ((lapack + blas).ld_flags),
             'BLAS_LIB=%s' % blas.ld_flags,
             'LAPACK_LIB=%s' % lapack.ld_flags,

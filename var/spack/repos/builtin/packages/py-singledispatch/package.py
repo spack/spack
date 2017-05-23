@@ -34,8 +34,8 @@ class PySingledispatch(PythonPackage):
     version('3.4.0.3', 'af2fc6a3d6cc5a02d0bf54d909785fcb')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-six')
+    depends_on('py-six', type=('build', 'run'))
 
     # This dependency breaks concretization
     # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when="^python@:2.6.999", type=('build', 'run'))  # noqa
+    # depends_on('py-ordereddict', when="^python@:2.6", type=('build', 'run'))

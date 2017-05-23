@@ -31,6 +31,8 @@ import spack.store
 import spack.cmd
 
 description = "show installed packages that depend on another"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -50,4 +52,4 @@ def dependents(parser, args):
     if deps:
         spack.cmd.display_specs(deps)
     else:
-        print "No dependents"
+        print("No dependents")

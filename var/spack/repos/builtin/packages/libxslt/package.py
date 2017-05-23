@@ -36,10 +36,22 @@ class Libxslt(AutotoolsPackage):
     homepage = "http://www.xmlsoft.org/XSLT/index.html"
     url      = "http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz"
 
-    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
     version('1.1.29', 'a129d3c44c022de3b9dcf6d6f288d72e')
+    version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
+    version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
+
+    variant('crypto',  default=True,
+            description='Build libexslt with crypto support')
 
     depends_on("libxml2")
     depends_on("xz")
     depends_on("zlib")
-    depends_on("libgcrypt")
+    depends_on("libgcrypt", when="+crypto")
+
+    def configure_args(self):
+        args = []
+        if '~crypto' in self.spec:
+            args.append('--without-crypto')
+        else:
+            args.append('--with-crypto')
+        return args

@@ -36,6 +36,7 @@ class Dealii(CMakePackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
     version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
@@ -143,6 +144,9 @@ class Dealii(CMakePackage):
         self.variants_check()
         spec = self.spec
         options = []
+        # release flags
+        cxx_flags_release = []
+        # debug and release flags
         cxx_flags = []
 
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -167,11 +171,14 @@ class Dealii(CMakePackage):
         # Set recommended flags for maximum (matrix-free) performance, see
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
-            cxx_flags.extend(['-O3', '-march=native'])
+            cxx_flags_release.extend(['-O3'])
+            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%intel'):
-            cxx_flags.extend(['-O3', '-march=native'])
+            cxx_flags_release.extend(['-O3'])
+            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%clang'):
-            cxx_flags.extend(['-O3', '-march=native', '-ffp-contract=fast'])
+            cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
+            cxx_flags.extend(['-march=native'])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
@@ -280,12 +287,15 @@ class Dealii(CMakePackage):
         ])
 
         # collect CXX flags:
-        if len(cxx_flags) > 0 and '+optflags' in spec:
+        if len(cxx_flags_release) > 0 and '+optflags' in spec:
             options.extend([
-                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (' '.join(cxx_flags))
+                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (
+                    ' '.join(cxx_flags_release)),
+                '-DCMAKE_CXX_FLAGS:STRING=%s' % (
+                    ' '.join(cxx_flags))
             ])
 
         return options
 
-    def setup_environment(self, spack_env, env):
-        env.set('DEAL_II_DIR', self.prefix)
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('DEAL_II_DIR', self.prefix)

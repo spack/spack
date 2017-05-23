@@ -22,9 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
-
+import re
 import shutil
+
+from spack import *
 
 
 class Spark(Package):
@@ -69,8 +70,11 @@ class Spark(Package):
         env['JAVA_HOME'] = self.spec['jdk'].prefix
         # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
-        hadoop_bin_path = join_path(self.spec['hadoop'].prefix.bin, 'hadoop')
-        hadoop_bin = Executable(hadoop_bin_path)
-        hadoop_classpath = hadoop_bin('classpath', return_output=True)
+        hadoop = self.spec['hadoop'].command
+        hadoop_classpath = hadoop('classpath', return_output=True)
+
+        # Remove whitespaces, as they can compromise syntax in
+        # module files
+        hadoop_classpath = re.sub('[\s+]', '', hadoop_classpath)
 
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

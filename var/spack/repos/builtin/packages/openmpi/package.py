@@ -22,13 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+
 import os
+
+from spack import *
 
 
 def _verbs_dir():
     """Try to find the directory where the OpenFabrics verbs package is
-    installed. Return None if not found."""
+    installed. Return None if not found.
+    """
     try:
         # Try to locate Verbs by looking for a utility in the path
         ibv_devices = which("ibv_devices")
@@ -43,7 +46,9 @@ def _verbs_dir():
         if path == "/":
             path = "/usr"
         return path
-    except:
+    except TypeError:
+        return None
+    except ProcessError:
         return None
 
 
@@ -59,13 +64,18 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.1.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
-    list_depth = 3
+    list_depth = 2
 
+    version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')
+    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')
+    version('1.10.6', '2e65008c1867b1f47c32f9f814d41706')
+    version('1.10.5', 'd32ba9530a869d9c1eae930882ea1834')
+    version('1.10.4', '9d2375835c5bc5c184ecdeb76c7c78ac')
     version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
@@ -78,22 +88,20 @@ class Openmpi(AutotoolsPackage):
     patch('configure.patch', when="@1.10.0:1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
-    # Fabrics
-    variant('psm', default=False, description='Build support for the PSM library')
-    variant('psm2', default=False,
-            description='Build support for the Intel PSM2 library')
-    variant('pmi', default=False,
-            description='Build support for PMI-based launchers')
-    variant('verbs', default=_verbs_dir() is not None,
-            description='Build support for OpenFabrics verbs')
-    variant('mxm', default=False, description='Build Mellanox Messaging support')
+    variant(
+        'fabrics',
+        default=None if _verbs_dir() is None else 'verbs',
+        description='List of fabrics that are enabled',
+        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm'),
+        multi=True
+    )
 
-    # Schedulers
-    # TODO: support for alps and loadleveler is missing
-    variant('tm', default=False,
-            description='Build TM (Torque, PBSPro, and compatible) support')
-    variant('slurm', default=False,
-            description='Build SLURM scheduler component')
+    variant(
+        'schedulers',
+        description='List of schedulers for which support is enabled',
+        values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
+        multi=True
+    )
 
     # Additional support options
     variant('java', default=False, description='Build Java support')
@@ -101,16 +109,16 @@ class Openmpi(AutotoolsPackage):
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
-
-    # TODO: support for CUDA is missing
+    variant('cuda', default=False, description='Enable CUDA support')
 
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
+    depends_on('hwloc +cuda', when='+cuda')
     depends_on('jdk', when='+java')
-    depends_on('sqlite', when='+sqlite3')
+    depends_on('sqlite', when='+sqlite3@:1.11')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (
@@ -139,7 +147,7 @@ class Openmpi(AutotoolsPackage):
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
 
-    def setup_dependent_package(self, module, dep_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
@@ -149,15 +157,22 @@ class Openmpi(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-    @property
-    def verbs(self):
+    def with_or_without_verbs(self, activated):
         # Up through version 1.6, this option was previously named
         # --with-openib
-        if self.spec.satisfies('@:1.6'):
-            return 'openib'
+        opt = 'openib'
         # In version 1.7, it was renamed to be --with-verbs
-        elif self.spec.satisfies('@1.7:'):
-            return 'verbs'
+        if self.spec.satisfies('@1.7:'):
+            opt = 'verbs'
+        # If the option has not been activated return
+        # --without-openib or --without-verbs
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _verbs_dir()
+        if (path is not None) and (path not in ('/usr', '/usr/local')):
+            line += '={0}'.format(path)
+        return line
 
     @run_before('autoreconf')
     def die_without_fortran(self):
@@ -171,48 +186,17 @@ class Openmpi(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-
         config_args = [
             '--enable-shared',
-            '--enable-static',
-            '--enable-mpi-cxx',
-            # Schedulers
-            '--with-tm' if '+tm' in spec else '--without-tm',
-            '--with-slurm' if '+slurm' in spec else '--without-slurm',
-            # Fabrics
-            '--with-psm' if '+psm' in spec else '--without-psm',
+            '--enable-static'
         ]
+        if self.spec.satisfies('@2.0:'):
+            # for Open-MPI 2.0:, C++ bindings are disabled by default.
+            config_args.extend(['--enable-mpi-cxx'])
 
-        # Intel PSM2 support
-        if spec.satisfies('@1.10:'):
-            if '+psm2' in spec:
-                config_args.append('--with-psm2')
-            else:
-                config_args.append('--without-psm2')
-
-        # PMI support
-        if spec.satisfies('@1.5.5:'):
-            if '+pmi' in spec:
-                config_args.append('--with-pmi')
-            else:
-                config_args.append('--without-pmi')
-
-        # Mellanox Messaging support
-        if spec.satisfies('@1.5.4:'):
-            if '+mxm' in spec:
-                config_args.append('--with-mxm')
-            else:
-                config_args.append('--without-mxm')
-
-        # OpenFabrics verbs support
-        if '+verbs' in spec:
-            path = _verbs_dir()
-            if path is not None and path not in ('/usr', '/usr/local'):
-                config_args.append('--with-{0}={1}'.format(self.verbs, path))
-            else:
-                config_args.append('--with-{0}'.format(self.verbs))
-        else:
-            config_args.append('--without-{0}'.format(self.verbs))
+        # Fabrics and schedulers
+        config_args.extend(self.with_or_without('fabrics'))
+        config_args.extend(self.with_or_without('schedulers'))
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
@@ -251,16 +235,26 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--disable-mpi-thread-multiple')
 
+        # CUDA support
+        if spec.satisfies('@1.6:'):
+            if '+cuda' in spec:
+                config_args.append('--with-cuda={0}'.format(
+                    spec['cuda'].prefix))
+                config_args.append('--with-cuda-libdir={0}'.format(
+                    spec['cuda'].libs.directories))
+            else:
+                config_args.append('--without-cuda')
+
         return config_args
 
     @run_after('install')
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
-           compilers that Spack built the package with.
+        compilers that Spack built the package with.
 
-           If this isn't done, they'll have CC, CXX and FC set
-           to Spack's generic cc, c++ and f90.  We want them to
-           be bound to whatever compiler they were built with.
+        If this isn't done, they'll have CC, CXX and FC set
+        to Spack's generic cc, c++ and f90.  We want them to
+        be bound to whatever compiler they were built with.
         """
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
         wrapper_basepath = join_path(self.prefix, 'share', 'openmpi')

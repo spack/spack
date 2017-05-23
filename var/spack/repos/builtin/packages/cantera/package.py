@@ -62,8 +62,8 @@ class Cantera(Package):
     depends_on('py-cython', when='+python', type=('build', 'run'))
     depends_on('py-3to2',   when='+python', type=('build', 'run'))
     # TODO: these "when" specs don't actually work
-    # depends_on('py-unittest2',     when='+python^python@2.6')
-    # depends_on('py-unittest2py3k', when='+python^python@3.1')
+    # depends_on('py-unittest2',     when='+python^python@2.6', type=('build', 'run'))  # noqa
+    # depends_on('py-unittest2py3k', when='+python^python@3.1', type=('build', 'run'))  # noqa
 
     # Matlab toolbox dependencies
     # TODO: add Matlab package
@@ -117,15 +117,13 @@ class Cantera(Package):
         if '+python' in spec:
             options.extend([
                 'python_package=full',
-                'python_cmd={0}'.format(
-                    join_path(spec['python'].prefix.bin, 'python')),
+                'python_cmd={0}'.format(spec['python'].command.path),
                 'python_array_home={0}'.format(spec['py-numpy'].prefix)
             ])
             if spec['python'].satisfies('@3'):
                 options.extend([
                     'python3_package=y',
-                    'python3_cmd={0}'.format(
-                        join_path(spec['python'].prefix.bin, 'python')),
+                    'python3_cmd={0}'.format(spec['python'].command.path),
                     'python3_array_home={0}'.format(spec['py-numpy'].prefix)
                 ])
             else:

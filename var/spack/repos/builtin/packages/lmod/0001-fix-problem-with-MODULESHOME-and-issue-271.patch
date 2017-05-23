@@ -1,0 +1,25 @@
+From 6dea3d8c6d1ec9dc279e0f1fbd9965e7cc774678 Mon Sep 17 00:00:00 2001
+From: Robert McLay <mclay@zaniahgroup.com>
+Date: Thu, 11 May 2017 12:42:08 -0500
+Subject: [PATCH] fix problem with MODULESHOME and issue #271
+
+---
+ init/profile.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/init/profile.in b/init/profile.in
+index 0a7f7be..fdcbfcc 100644
+--- a/init/profile.in
++++ b/init/profile.in
+@@ -15,7 +15,7 @@ if [ -z "${USER_IS_ROOT:-}" ]; then
+     export MODULEPATH_ROOT="@modulepath_root@"
+     export MODULEPATH=$(@PKG@/libexec/addto --append MODULEPATH $MODULEPATH_ROOT/$LMOD_sys $MODULEPATH_ROOT/Core)
+     export MODULEPATH=$(@PKG@/libexec/addto --append MODULEPATH @PKG@/modulefiles/Core)
+-    export BASH_ENV=$MODULESHOME/init/bash
++    export BASH_ENV=@PKG@/init/bash
+ 
+     #
+     # If MANPATH is empty, Lmod is adding a trailing ":" so that
+-- 
+2.9.3
+
