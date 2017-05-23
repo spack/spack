@@ -17,14 +17,15 @@ your spack mirror and then downloaded and installed by others.
 Creating binary tarballs
 -----------------------------
 
-Tarballs of sofware built can be created via ``spack create-tarball``.
-It allows either to tar up a single package or a package including all
-its dependencies (``-r``, ``--recurse``). The location for the tarballs
+Tarballs of sofware built can be created via 
+``spack create-tarball``.
+It allows either to tar up a a package including all
+its dependencies. The location for the tarballs
 can be given via the ``--directory`` option:
 
 .. code-block:: sh
 
-   $ spack create-tarball -d ~/caches -r bison
+   $ spack create-tarball -d ~/caches
    ==> recursing dependencies
    ==> adding dependency bison@3.0.4%gcc@5.3.1=linux-x86_64^libsigsegv@2.10%gcc@5.3.1=linux-x86_64^m4@1.4.17%gcc@5.3.1+sigsegv=linux-x86_64
    ==> adding dependency m4@1.4.17%gcc@5.3.1+sigsegv=linux-x86_64^libsigsegv@2.10%gcc@5.3.1=linux-x86_64
