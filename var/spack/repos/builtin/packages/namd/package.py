@@ -48,7 +48,7 @@ class Namd(MakefilePackage):
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
 
-    depends_on('fftw@3:', when="fftw=mkl")
+#    depends_on('fftw@3:', when="fftw=mkl")
     depends_on('intel-mkl', when="fftw=mkl")
 
     depends_on('tcl', when='interface=tcl')
@@ -84,14 +84,24 @@ class Namd(MakefilePackage):
 
         with working_dir('arch'):
             with open('{0}-spack.arch'.format(self.arch), 'w') as fh:
+                # this options are take from the default provided
+                # configuration files
+                optims_opts = {
+                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math',
+                    'intel': '-O2 -ip -no-vec'
+                }
+
+                optim_opts = optims_opts[self.compiler.name] \
+                    if self.compiler.name in optims_opts else ''
+
                 fh.write('\n'.join([
                     'NAMD_ARCH = {0}'.format(self.arch),
                     'CHARMARCH = ',
-                    'CXX = {0.cxx} -m64 {0.cxx11_flag} -O3'.format(
+                    'CXX = {0.cxx} {0.cxx11_flag}'.format(
                         self.compiler),
-                    'CXXOPTS = -fexpensive-optimizations -ffast-math',
-                    'CC = {0} -m64 -O3'.format(self.compiler.cc),
-                    'COPTS = -fexpensive-optimizations -ffast-math',
+                    'CXXOPTS = {0}'.format(optim_opts),
+                    'CC = {0}'.format(self.compiler.cc),
+                    'COPTS = {0}'.format(optim_opts),
                     ''
                 ]))
 
@@ -99,17 +109,16 @@ class Namd(MakefilePackage):
 
         opts = ['--charm-base', spec['charm'].prefix]
         fftw_version = spec.variants['fftw'].value
-        if fftw_version != 'none':
+        if fftw_version == 'none':
+            opts.append('--without-fftw')
+        elif fftw_version == 'mkl':
+            self._append_option(opts, 'mkl')
+        else:
             _fftw = 'fftw{0}'.format('' if fftw_version == '2' else '3')
 
             self._copy_arch_file(_fftw)
             opts.extend(['--with-{0}'.format(_fftw),
                          '--fftw-prefix', spec['fftw'].prefix])
-
-            if fftw_version == 'mkl':
-                self._append_option(opts, 'mkl')
-        else:
-            opts.append('--without-fftw')
 
         interface_type = spec.variants['interface'].value
         if interface_type != 'none':
