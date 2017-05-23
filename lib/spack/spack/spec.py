@@ -3041,6 +3041,13 @@ class Spec(object):
                             fmt % token_transform(str(self.architecture)),
                             '='
                         )
+                        write(fmt % str(self.architecture), ' arch=')
+                elif named_str == "TARGET":
+                    if self.architecture and str(self.architecture):
+                        write(fmt % str(self.architecture.target), 'target=')
+                elif named_str == "OS":
+                    if self.architecture and str(self.architecture):
+                        write(fmt % str(self.architecture.platform_os), 'os=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % token_transform(str(self.dag_hash(7))))
