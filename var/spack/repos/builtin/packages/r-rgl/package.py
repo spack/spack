@@ -31,7 +31,7 @@ class RRgl(RPackage):
     functions for constructing representations of geometric objects (cube3d(),
     etc.). Output may be on screen using OpenGL, or to various standard
     3D file formats including WebGL, PLY, OBJ, STL as well as 2D image formats,
-    including PNG, Postscript, SVG, PGF.."""
+    including PNG, Postscript, SVG, PGF."""
 
     homepage = "https://r-forge.r-project.org/projects/rgl"
     url      = "https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz"
