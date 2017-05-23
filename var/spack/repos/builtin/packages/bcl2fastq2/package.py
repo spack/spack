@@ -39,7 +39,11 @@ class Bcl2fastq2(Package):
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html"
     url      = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v2-18-0-12-tar.zip"
 
-    version('2-18-0-12', 'fbe06492117f65609c41be0c27e3215c')
+    version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
+    # 2.17.1.14 is no longer distributed.  If you have a copy of the
+    # source tarball, you can drop it into a local mirror w/ the name
+    # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
+    version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
 
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
