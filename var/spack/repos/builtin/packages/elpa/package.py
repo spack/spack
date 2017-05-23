@@ -67,6 +67,8 @@ class Elpa(AutotoolsPackage):
 
         spack_env.set('CC', spec['mpi'].mpicc)
         spack_env.set('FC', spec['mpi'].mpifc)
+        spack_env.set('F90', spec['mpi'].mpifc)
+        spack_env.set('F77', spec['mpi'].mpifc)
         spack_env.set('CXX', spec['mpi'].mpicxx)
 
         spack_env.set('LDFLAGS', spec['lapack'].libs.search_flags)
