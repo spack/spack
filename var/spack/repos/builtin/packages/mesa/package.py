@@ -34,7 +34,8 @@ class Mesa(AutotoolsPackage):
 
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
 
-    variant('dri', default=True, description='Disable DRI and EGL support')
+    variant('dri', default=True, description='Enable DRI and EGL support')
+    variant('osmesa', default=False, description='Enable OSMesa support')
 
     # General dependencies
     depends_on('python@2.6.4:')
@@ -73,9 +74,24 @@ class Mesa(AutotoolsPackage):
         spec = self.spec
         args = []
         if '~dri' in spec:
-            args += ['--disable-dri']
-            args += ['--disable-egl']
-            args += ['--enable-sysfs']
-            args += ['--disable-driglx-direct']
-            args += ['--with-gallium-drivers=swrast']
+            args.extend([
+                '--disable-dri',
+                '--disable-egl',
+                '--enable-sysfs',
+                '--disable-driglx-direct',
+                '--with-gallium-drivers=swrast'
+            ])
+        if '+dri' in spec:
+            args.extend([
+                '--enable-dri',
+                '--enable-egl'
+            ])
+
+        if '+osmesa' in spec:
+            args.extend([
+                '--enable-osmesa',
+                '--disable-driglx-direct',
+                '--disable-dri',
+                '--with-gallium-drivers=llvmpipe'
+            ])
         return args
