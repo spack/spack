@@ -45,7 +45,7 @@ class RRgl(RPackage):
     depends_on('libpng', type=('link'))
     depends_on('freetype', type=('link'))
     depends_on('mesa', type=('link'))
-    depends_on('mesa-glu', type=('build', 'run'))
+    depends_on('mesa-glu', type=('link'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
