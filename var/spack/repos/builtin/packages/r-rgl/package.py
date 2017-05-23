@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Rgl(RPackage):
+class RRgl(RPackage):
     """Provides medium to high level functions for 3D interactive graphics,
     including functions modelled on base graphics (plot3d(), etc.) as well as
     functions for constructing representations of geometric objects (cube3d(),
