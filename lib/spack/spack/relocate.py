@@ -5,7 +5,6 @@ import os
 import stat
 import platform
 import re
-from commands import getstatusoutput
 from spack.util.executable import which
 
 import llnl.util.tty as tty
@@ -16,9 +15,9 @@ def get_existing_elf_rpaths(path_name, patchelf_executable):
     Return the RPATHS in given elf file as a list of strings.
     """
     if platform.system() == 'Linux':
-        command = '%s --print-rpath %s ' % (patchelf_executable, path_name)
-        status, output = getstatusoutput(command)
-        if status != 0:
+        command = which(patchelf_executable)
+        output=command('--print-rpath' ,'%s' % path_name, output=str, err=str)
+        if command.returncode != 0:
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
         return output.split(':')
@@ -53,9 +52,9 @@ def modify_macho_object(path_name, old_dir, new_dir):
     the old install dir in LC_RPATH is replaced with the new install dir using
     install_name_tool  -rpath old new binary
     """
-    command = which('otool')
-    output = command("-l", path_name, output=str, err=str)
-    if command.returncode != 0:
+    otool = which('otool')
+    output = otool("-l", path_name, output=str, err=str)
+    if otool.returncode != 0:
         tty.warn('failed reading rpath for %s.' % path_name)
         return False
     last_cmd = None
@@ -93,26 +92,22 @@ def modify_macho_object(path_name, old_dir, new_dir):
     if not wmode:
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
 
+    install_name_tool=which('install_name_tool')
     if id:
-        command = ("install_name_tool -id  %s  %s" % (id, path_name))
-        status, output = getstatusoutput(command)
-        if status != 0:
+        output = install_name_tool('-id', id, path_name, output=str, err=str)
+        if install_name_tool.returncode != 0:
             tty.warn('failed writing id for %s.' % path_name)
             tty.warn(output)
 
     for orig, new in zip(deps, ndeps):
-        command = ("install_name_tool -change  %s %s %s" %
-                   (orig, new, path_name))
-        status, output = getstatusoutput(command)
-        if status != 0:
+        output = install_name_tool('-change', orig, new, path_name)
+        if install_name_tool.returncode != 0:
             tty.warn('failed writing dep for %s.' % path_name)
             tty.warn(output)
 
     for orig, new in zip(rpaths, nrpaths):
-        command = ("install_name_tool -rpath %s %s %s" %
-                   (orig, new, path_name))
-        status, output = getstatusoutput(command)
-        if status != 0:
+        output = install_name_tool('-rpath', orig, new, path_name)
+        if install_name_tool.returncode != 0:
             tty.warn('failed writing id for %s.' % path_name)
             tty.warn(output)
 
@@ -124,9 +119,10 @@ def get_filetype(path_name):
     """
     Check the output of the file command for given string.
     """
-    file_command = "LC_ALL=C file -b -h \"%s\"" % path_name
-    status, output = getstatusoutput(file_command)
-    if status != 0:
+    bash=which('bash')
+    output = bash('-c','LC_ALL=C && file -b -h %s' % path_name,
+                  output=str, err=str)
+    if bash.returncode != 0:
         tty.warn('getting filetype of "%s" failed' % path_name)
         return None
     return output.strip()
@@ -142,10 +138,10 @@ def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
-        command = "%s --force-rpath --set-rpath '%s' '%s'" % \
-            (patchelf_executable, new_joined, path_name)
-        status, output = getstatusoutput(command)
-        if status != 0:
+        command = which(patchelf_executable)
+        output=command('--force-rpath', '--set-rpath %s' % new_joined,
+                        '%s' % path_name, output=str, cmd=str)
+        if command.returncode != 0:
             tty.warn('failed writing rpath for %s.' % path_name)
     else:
         tty.die('relocation not supported for this platform')
