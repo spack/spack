@@ -24,6 +24,8 @@
 ##############################################################################
 import argparse
 
+import os
+
 import llnl.util.tty as tty
 
 import spack
@@ -37,8 +39,6 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('-r', '--recurse', action='store_true',
-                           help="also make tarballs for dependencies.")
     subparser.add_argument('-f', '--force', action='store_true',
                            help="overwrite tarball if it exists.")
     subparser.add_argument('-d', '--directory', default=".",
@@ -55,14 +55,16 @@ def create_tarball(parser, args):
 
     pkgs = set(args.packages)
     specs = set()
+    outdir = os.getcwd()
+    if args.directory :
+        outdir = args.directory
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             specs.add(spec)
-            if args.recurse:
-                tty.msg('recursing dependencies')
-                for d, node in spec.traverse(order='pre', depth=True):
-                    tty.msg('adding dependency %s' % node)
-                    specs.add(node)
+            tty.msg('recursing dependencies')
+            for d, node in spec.traverse(order='pre', depth=True):
+                tty.msg('adding dependency %s' % node)
+                specs.add(node)
     for spec in specs:
         tty.msg('creating binary cache tarball for package %s ' % spec)
-        build_tarball(spec, args.directory, args.force)
+        build_tarball(spec, outdir, args.force)

@@ -6,7 +6,7 @@ import tarfile
 import yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp,join_path
 
 from spack.util.executable import which
 import spack.cmd
@@ -113,7 +113,7 @@ def tarball_directory_name(spec):
 def tarball_name(spec, ext):
     """
     Return the name of the tarfile according to the convention
-    <os>-<architecture>-<package>-<dag_hash>.tar.gz
+    <os>-<architecture>-<package>-<dag_hash><ext>
     """
     return "%s-%s-%s-%s%s" % (get_full_system_from_platform(),
                             spec.name,
@@ -136,43 +136,45 @@ def build_tarball(spec, outdir, force=False, key=None):
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
     """
-    tarfile_dir = os.path.join(outdir, tarball_directory_name(spec))
-    tarfile_path = os.path.join(outdir, tarball_path_name(spec, '.tar.gz'))
-    if force:
-        os.remove(tarfile)
-    else:
-        tty.warn("file exists, use -f to force overwrite: %s" % tarfile)
-        return
-    if not os.path.exists(tarfile_dir):
-        mkdirp(tarfile_dir)
+    tarfile_name = tarball_name(spec, '.tar.gz')
+    tarfile_dir = join_path(outdir, tarball_directory_name(spec))
+    tarfile_path = join_path(tarfile_dir,tarfile_name)
+    mkdirp(tarfile_dir)
+    if os.path.exists(tarfile_path):
+        if force:
+            os.remove(tarfile_path)
+        else:
+            tty.warn("file exists, use -f to force overwrite: %s" % tarfile)
+            return
 
-    dirname = os.path.dirname(spec.prefix)
-    basename = os.path.basename(spec.prefix)
-    spec_file = os.path.join(spec.prefix, ".spack", "spec.yaml")
+    spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
 
     # create info for later relocation and create tar
+    write_buildinfo_file(spec)
     with tarfile.open(tarfile_path, 'w:gz') as tar:
-        write_buildinfo_file(spec)
-
-        tar.add(basename)
-
-        spec_info = tar.gettarinfo(spec_file, arcname='.spack/spec.yaml')
-        tar.addfile(spec_info)
+        tar.add(name = '%s' % spec.prefix 
+               , arcname = '%s' % os.path.basename(spec.prefix))
 
     # Sign the packages.
     #spack gpg sign [--key key] tarfile_path
-    #spack gpg sign [--key key] spec_file
+    #spack gpg sign [--key key] tarfile_path + '/spec.yaml'
+    path1='%s.asc' % tarfile_path
+    with open(path1,'a'):
+        os.utime(path1, None)       
+    path2='%s.asc' % spec_file
+    with open(path2,'a'):
+        os.utime(path2, None)       
+           
 
     spackfile_path = os.path.join(outdir, tarball_path_name(spec, '.spack'))
     with tarfile.open(spackfile_path, 'w') as tar:
-        tar.add(tarfile_path)
-        #tar.add(tarfile_path + '.asc')
-
-        spec_info = tar.gettarinfo(spec_file, arcname='spec.yaml')
-        tar.addfile(spec_info)
-
-        #tar.add(spec_file + '.asc')
-
+        tar.add(name = '%s' % tarfile_path, arcname = '%s' % tarfile_name)
+        tar.add(name = '%s' % spec_file, arcname = 'spec.yaml')
+        tar.add(name = '%s.asc' % tarfile_path , arcname = '%s.asc' % tarfile_name )
+        tar.add(name = '%s.asc' % spec_file, arcname = 'spec.yaml.asc' ) 
+        os.remove(tarfile_path)
+        os.remove(path1)
+        os.remove(path2)
     tty.msg(tarfile_path)
 
 
