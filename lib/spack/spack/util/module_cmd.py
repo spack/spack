@@ -62,7 +62,9 @@ def get_module_cmd_from_bash():
     module_func = module_func_proc.stdout.read()
     print module_func
     print "-----------------------"
+    import os
     print os.environ['BASH_FUNC_module()']
+    print "-----------"
 
     # Find the portion of the module function that is evaluated
     try:
