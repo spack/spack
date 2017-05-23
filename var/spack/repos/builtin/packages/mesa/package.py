@@ -36,6 +36,7 @@ class Mesa(AutotoolsPackage):
 
     variant('dri', default=True, description='Enable DRI and EGL support')
     variant('osmesa', default=False, description='Enable OSMesa support')
+    conflicts('+dri', '+osmesa')
 
     # General dependencies
     depends_on('python@2.6.4:')
