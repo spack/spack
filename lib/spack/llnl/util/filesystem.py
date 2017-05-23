@@ -551,26 +551,41 @@ def find(root, files, recurse=True):
 
 
 def _find_recursive(root, search_files):
-    found_files = []
+
+    # The variable here is **on purpose** a defaultdict. The idea is that
+    # we want to poke the filesystem as little as possible, but still maintain
+    # stability in the order of the answer. Thus we are recording each library
+    # found in a key, and reconstructing the stable order later.
+    found_files = collections.defaultdict(list)
 
     for path, _, list_files in os.walk(root):
         for search_file in search_files:
             for list_file in list_files:
                 if fnmatch.fnmatch(list_file, search_file):
-                    found_files.append(join_path(path, list_file))
+                    found_files[search_file].append(join_path(path, list_file))
 
-    return found_files
+    answer = []
+    for search_file in search_files:
+        answer.extend(found_files[search_file])
+
+    return answer
 
 
 def _find_non_recursive(root, search_files):
-    found_files = []
+    # The variable here is **on purpose** a defaultdict as os.list_dir
+    # can return files in any order (does not preserve stability)
+    found_files = collections.defaultdict(list)
 
     for list_file in os.listdir(root):
         for search_file in search_files:
             if fnmatch.fnmatch(list_file, search_file):
-                found_files.append(join_path(root, list_file))
+                found_files[search_file].append(join_path(root, list_file))
 
-    return found_files
+    answer = []
+    for search_file in search_files:
+        answer.extend(found_files[search_file])
+
+    return answer
 
 
 # Utilities for libraries and headers

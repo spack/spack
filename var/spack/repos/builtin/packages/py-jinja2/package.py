@@ -31,8 +31,11 @@ class PyJinja2(PythonPackage):
     and an optional sandboxed environment."""
 
     homepage = "http://jinja.pocoo.org/"
-    url      = "https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.8.tar.gz"
+    url      = "https://pypi.io/packages/source/J/Jinja2/Jinja2-2.9.6.tar.gz"
 
+    import_modules = ['jinja2']
+
+    version('2.9.6', '6411537324b4dba0956aaa8109f3c77b')
     version('2.8',   'edb51693fe22c53cee5403775c71a99e')
     version('2.7.3', 'b9dffd2f3b43d673802fe857c8445b1a')
     version('2.7.2', 'df1581455564e97010e38bc792012aa5')
