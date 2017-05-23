@@ -2822,6 +2822,10 @@ class Spec(object):
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
                         write(fmt % str(self.architecture), ' arch=')
+                elif named_str == "PLATFORM":
+                    if self.architecture and str(self.architecture):
+                        write(fmt % str(self.architecture.platform),
+                              'platform=')
                 elif named_str == "TARGET":
                     if self.architecture and str(self.architecture):
                         write(fmt % str(self.architecture.target), 'target=')
