@@ -23,33 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+import os
+import xml.etree.ElementTree as ET
+
 from llnl.util.filesystem import join_path
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
 
 
-def filter_pick(input_list, regex_filter):
-    """Returns the items in input_list that are found in the regex_filter"""
-    return [l for l in input_list for m in (regex_filter(l),) if m]
+def _valid_components():
+    """A generator that yields valid components."""
 
+    tree = ET.parse('pset/mediaconfig.xml')
+    root = tree.getroot()
 
-def unfilter_pick(input_list, regex_filter):
-    """Returns the items in input_list that are not found in the
-       regex_filter"""
-    return [l for l in input_list for m in (regex_filter(l),) if not m]
-
-
-def get_all_components():
-    """Returns a list of all the components associated with the downloaded
-       Intel package"""
-    all_components = []
-    with open("pset/mediaconfig.xml", "r") as f:
-        lines = f.readlines()
-        for line in lines:
-            if line.find('<Abbr>') != -1:
-                component = line[line.find('<Abbr>') + 6:line.find('</Abbr>')]
-                all_components.append(component)
-    return all_components
+    components = root.findall('//Abbr')
+    for component in components:
+        yield component.text
 
 
 class IntelPackage(PackageBase):
@@ -71,8 +61,6 @@ class IntelPackage(PackageBase):
     #: system base class
     build_system_class = 'IntelPackage'
 
-    homepage = 'https://software.intel.com/en-us'
-
     #: By default, we assume that all Intel software requires a license.
     #: This can be overridden for packages that do not require a license.
     license_required = True
@@ -89,12 +77,42 @@ class IntelPackage(PackageBase):
     #: URL providing information on how to acquire a license key
     license_url = 'https://software.intel.com/en-us/articles/intel-license-manager-faq'
 
-    #: Components to build. Defaults to 'ALL'
-    intel_components = 'ALL'
+    #: By default, install 'ALL' components
+    _components = ['ALL']
+
+    @property
+    def components(self):
+        """Components of the package to install."""
+        return self._components
+
+    @components.setter
+    def components(self, requested_components):
+        """Packages like ``intel-parallel-studio`` contain dozens of
+        components, and some users may want to install a subset of these.
+        This setter allows you to customize which components get installed.
+
+        By default, installs 'ALL' components. To install only MKL and DAAL,
+        for example, you would use:
+
+        .. code-block:: python
+
+           components = ['mkl', 'daal']
+        """
+        matches = []
+
+        for valid in _valid_components():
+            for requested in requested_components:
+                if requested in valid:
+                    matches.append(valid)
+
+        self._components = matches
 
     @property
     def global_license_file(self):
-        """Returns the path where a global license file should be stored."""
+        """Returns the path where a global license file should be stored.
+
+        All Intel software shares the same license, so we store it in a
+        common 'intel' directory."""
         return join_path(self.global_license_dir, 'intel',
                          os.path.basename(self.license_files[0]))
 
@@ -125,7 +143,7 @@ class IntelPackage(PackageBase):
 
             # List of components to install,
             # valid values are: {ALL, DEFAULTS, anythingpat}
-            'COMPONENTS': self.intel_components,
+            'COMPONENTS': ';'.join(self.components),
 
             # Installation mode, valid values are: {install, repair, uninstall}
             'PSET_MODE': 'install',

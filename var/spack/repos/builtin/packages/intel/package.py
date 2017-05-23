@@ -49,17 +49,13 @@ class Intel(IntelPackage):
     version('16.0.2',     '1133fb831312eb519f7da897fec223fa',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
 
-    variant('rpath', default=True, description="Add rpath to .cfg files")
+    variant('rpath', default=True, description='Add rpath to .cfg files')
+
+    components = [
+        'comp', 'openmp', 'intel-tbb', 'icc', 'ifort', 'psxe', 'icsxe-pset'
+    ]
 
     def install(self, spec, prefix):
-        components = []
-        all_components = get_all_components()
-        regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
-        components = filter_pick(all_components, re.compile(regex).search)
-
-        self.intel_components = ';'.join(components)
-        IntelInstaller.install(self, spec, prefix)
-
         absbindir = os.path.split(os.path.realpath(os.path.join(
             self.prefix.bin, "icc")))[0]
         abslibdir = os.path.split(os.path.realpath(os.path.join(
