@@ -43,7 +43,6 @@ def layout_and_dir(tmpdir):
     """Returns a directory layout and the corresponding directory."""
     yield YamlDirectoryLayout(str(tmpdir)), str(tmpdir)
 
-
 def test_yaml_directory_layout_parameters(
         tmpdir, config
 ):
@@ -70,19 +69,27 @@ def test_yaml_directory_layout_parameters(
     # Test path_scheme
     arch, compiler, package7 = path_7.split('/')
     scheme_package7 = "${PACKAGE}-${VERSION}-${HASH:7}"
-
     layout_package7 = YamlDirectoryLayout(str(tmpdir),
                                           path_scheme=scheme_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
     assert(package7 == path_package7)
 
+    # Test separation of architecture
+    platform, os, target = arch.split("-")
+    arch_scheme_package = "${TARGET}/${OS}/${PACKAGE}/${VERSION}/${HASH:7}"
+    layout_arch_package = YamlDirectoryLayout(str(tmpdir),
+                                               path_scheme=arch_scheme_package)
+    arch_path_package = layout_arch_package.relative_path_for_spec(spec)
+    assert(arch_path_package ==
+            spec.format(arch_scheme_package))
+
+
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
         YamlDirectoryLayout(str(tmpdir),
                             hash_len=20,
                             path_scheme=scheme_package7)
-
 
 def test_read_and_write_spec(
         layout_and_dir, config, builtin_mock
