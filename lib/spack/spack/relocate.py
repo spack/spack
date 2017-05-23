@@ -190,8 +190,7 @@ def relocate_text(path_name, old_dir, new_dir):
     """
     Replace old path with new path in text files
     """
-    os.system("LC_ALL=C sed -i -e \"s#%s#%s#g\" \"%s\""
-              % (old_dir, new_dir, path_name))
+    filter_file("r'%s'"%old_dir, "r'%s'" % new_dir, path_name)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
