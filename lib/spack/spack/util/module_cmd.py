@@ -60,6 +60,7 @@ def get_module_cmd_from_bash():
                                         shell=True)
     module_func_proc.wait()
     module_func = module_func_proc.stdout.read()
+    print module_func
 
     # Find the portion of the module function that is evaluated
     try:
@@ -69,7 +70,7 @@ def get_module_cmd_from_bash():
         try:
             # This will fail with nested parentheses. TODO: expand regex.
             find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
-                                       module_func)
+                                  module_func)
             exec_line = find_exec.group(1)
         except:
             raise ModuleError('get_module_cmd cannot '
