@@ -24,33 +24,67 @@
 ##############################################################################
 import argparse
 
+import os
+
 import llnl.util.tty as tty
 
 import spack
-import spack.store
 import spack.cmd
-import spack.binary_distribution
-import spack.relocate
+from spack.binary_distribution import build_tarball
 
 
-description = "Download and extract binary cache files for given packages"
+description = "Create, download and unpack build cache files."
 section = "caching"
 level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('-f', '--force', action='store_true',
-                           help="overwrite install directory if it exists.")
-    subparser.add_argument(
+    setup_parser.parser = subparser
+    subparsers = subparser.add_subparsers(help='GPG sub-commands')
+
+    create = subparsers.add_parser('create')
+    create.add_argument('-f', '--force', action='store_true',
+                           help="overwrite tarball if it exists.")
+    create.add_argument('-d', '--directory', metavar='directory', 
+                           type=str, default='.',
+                           help="directory in which to save the tarballs.")
+    create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to package")
+    create.set_defaults(func=createtarball)
 
+    install = subparsers.add_parser('install')
+    install.add_argument('-f', '--force', action='store_true',
+                           help="overwrite install directory if it exists.")
+    install.add_argument(
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to package")
+    install.set_defaults(func=installtarball)
 
-def installtarball(parser, args):
-    if not args.packages:
-        tty.die("binary cache file extraction requires at least one" +
+def createtarball(args):
+    if not args.packages :
+        tty.die("build cache file creation requires at least one" +
+                " installed package argument")
+    pkgs = set(args.packages)
+    specs = set()
+    outdir = os.getcwd()
+    if args.directory:
+        outdir = args.directory
+    for pkg in pkgs:
+        for spec in spack.cmd.parse_specs(pkg, concretize=True):
+            specs.add(spec)
+            tty.msg('recursing dependencies')
+            for d, node in spec.traverse(order='pre', depth=True):
+                tty.msg('adding dependency %s' % node)
+                specs.add(node)
+    for spec in specs:
+        tty.msg('creating binary cache file for package %s ' % spec)
+        build_tarball(spec, outdir, args.force)
+
+def installtarball(args):
+    if not args.packages :
+        tty.die("build cache file installation requires at least one" +
                 " package argument")
-
     pkgs = set(args.packages)
     specs = set()
     for pkg in pkgs:
@@ -75,3 +109,7 @@ def installtarball(parser, args):
                 spack.store.db.reindex(spack.store.layout)
         else:
             tty.die("Download of binary cache file for spec %s failed." % spec)
+
+def buildcache(parser, args):
+    if args.func:
+        args.func(args)

@@ -1,10 +1,9 @@
 .. _binary_caches:
 
-Binary caches
+Build caches
 ============================
 
-.. warning:: The feature of binary caches is still experimental
-             and chosen conventions still may evolve over time.
+.. warning:: The feature of build caches is still evolving over time.
 
 Some sites may encourage users to set up their own test environments
 before carrying out central installations, or some users prefer to set
@@ -14,18 +13,18 @@ created build artifacts can be put into binary tarballs, uploaded onto
 your spack mirror and then downloaded and installed by others.
 
 
-Creating binary tarballs
+Creating build cache tarballs
 -----------------------------
 
 Tarballs of sofware built can be created via 
-``spack createtarball``.
+``spack buildcache create ``.
 It allows either to tar up a a package including all
 its dependencies. The location for the tarballs
 can be given via the ``--directory`` option:
 
 .. code-block:: sh
 
-   $ spack createtarball -d ~/caches
+   $ spack buildcache create -d ~/caches bison
    ==> recursing dependencies
    ==> adding dependency bison@3.0.4%gcc@5.3.1=linux-x86_64^libsigsegv@2.10%gcc@5.3.1=linux-x86_64^m4@1.4.17%gcc@5.3.1+sigsegv=linux-x86_64
    ==> adding dependency m4@1.4.17%gcc@5.3.1+sigsegv=linux-x86_64^libsigsegv@2.10%gcc@5.3.1=linux-x86_64
@@ -42,7 +41,7 @@ The created tarballs are put into the directory structure expected for the
 spack mirror.
 
 
-Installing binary tarballs
+Installing build cache tarballs
 --------------------------------
 
 To install binary tarballs, one has to add the corresponding spack mirror
@@ -51,7 +50,7 @@ via:
 
 .. code-block:: sh
 
-   $ spack installtarball bison
+   $ spack buildcache install bison
    
 The package bison and all its dependencies will be downloaded from the 
 specified mirror(s). It fails if a package cannot be downloaded.

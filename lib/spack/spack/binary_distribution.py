@@ -139,11 +139,12 @@ def build_tarball(spec, outdir, force=False, key=None):
     tarfile_dir = join_path(outdir, tarball_directory_name(spec))
     tarfile_path = join_path(tarfile_dir, tarfile_name)
     mkdirp(tarfile_dir)
-    if os.path.exists(tarfile_path):
+    spackfile_path = os.path.join(outdir, tarball_path_name(spec, '.spack'))
+    if os.path.exists(spackfile_path):
         if force:
-            os.remove(tarfile_path)
+            os.remove(spackfile_path)
         else:
-            tty.warn("file exists, use -f to force overwrite: %s" % tarfile)
+            tty.warn("file exists, use -f to force overwrite: %s" % spackfile_path)
             return
 
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
@@ -157,14 +158,16 @@ def build_tarball(spec, outdir, force=False, key=None):
     # Sign the packages.
     # spack gpg sign [--key key] tarfile_path
     # spack gpg sign [--key key] tarfile_path + '/spec.yaml'
+
+    # temporary to test adding and extracting .asc files
     path1 = '%s.asc' % tarfile_path
     with open(path1, 'a'):
         os.utime(path1, None)
     path2 = '%s.asc' % spec_file
     with open(path2, 'a'):
         os.utime(path2, None)
+    # temporary to test adding and extracting .asc files
 
-    spackfile_path = os.path.join(outdir, tarball_path_name(spec, '.spack'))
     with tarfile.open(spackfile_path, 'w') as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % spec_file, arcname='spec.yaml')
@@ -236,7 +239,7 @@ def relocate_package(package):
     if old_path == new_path:
         return True  # No need to relocate
 
-    tty.warn("Using experimental feature for relocating package from",
+    tty.msg("Relocating package from",
              "%s to %s." % (old_path, new_path))
 
     # as we may need patchelf, find out where it is

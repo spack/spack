@@ -144,6 +144,7 @@ def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
                          '%s' % path_name, output=str, cmd=str)
         if command.returncode != 0:
             tty.warn('failed writing rpath for %s.' % path_name)
+            tty.warn(output)
     else:
         tty.die('relocation not supported for this platform')
     os.chmod(path_name, st.st_mode)
