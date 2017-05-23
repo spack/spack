@@ -87,10 +87,15 @@ the dependencies"""
     )
     subparser.add_argument(
         '--log-format',
-        default='cdash-simple',
+        default=None,
+        # default='cdash-simple',
         choices=test_suites.keys(),
         help="Format to be used for log files. Default is CDash."
 
+    )
+    subparser.add_argument(
+        '--redundant', action='store_true', dest='redundant',
+        help="Redundant package list for test-suite"
     )
     subparser.add_argument(
         '--log-file',
@@ -129,7 +134,8 @@ def install(parser, args, **kwargs):
         'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'redundant': args.redundant
     })
 
     # Spec from cli
@@ -146,18 +152,19 @@ def install(parser, args, **kwargs):
     for spec in specs:
         # Check if we were asked to produce some log for dashboards
         if args.log_format or args.log_file:
-            if not args.log_format:
-                args.log_format = 'cdash-simple'
             if not args.path:
                 args.path = os.getcwd()
             # Create the test suite in which to log results
             if "cdash" in args.log_format:
-                test_suite = test_suites[args.log_format](
-                    spec, args.log_file, args.site, args.path)
+                if "simple" in args.log_format:
+                    test_suite = test_suites[args.log_format](
+                        spec, args.log_file, args.site, args.path, False)
+                else:
+                    test_suite = test_suites[args.log_format](
+                        spec, args.log_file, args.site, args.path, True)
             else:
                 test_suite = test_suites[args.log_format](
                     spec, args.log_file)
-
             # Decorate PackageBase.do_install to get installation status
             PackageBase.do_install = dashboard_output(
                 spec, test_suite

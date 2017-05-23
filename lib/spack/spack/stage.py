@@ -514,7 +514,13 @@ class Stage(object):
         if self._need_to_create_path():
             tmp_root = get_tmp_root()
             if tmp_root is not None:
-                tmp_dir = tempfile.mkdtemp('', _stage_prefix, tmp_root)
+                try:
+                    tmp_dir = tempfile.mkdtemp('', _stage_prefix, tmp_root)
+                except OSError as err:
+                    if err.errno == errno.EEXIST and os.path.isdir(tmp_dir):
+                        pass
+                    else:
+                        raise OutofSpaceError("Out of disk space:", str(err))
                 tty.debug('link %s -> %s' % (self.path, tmp_dir))
                 os.symlink(tmp_dir, self.path)
             else:
@@ -686,6 +692,10 @@ class StageError(spack.error.SpackError):
 
 class RestageError(StageError):
     """"Error encountered during restaging."""
+
+
+class OutofSpaceError(StageError):
+    """Raised when no more disk space is available."""
 
 
 class ChdirError(StageError):

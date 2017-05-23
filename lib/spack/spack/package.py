@@ -69,6 +69,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.version import *
 
+
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
@@ -1153,6 +1154,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    fake=False,
                    explicit=False,
                    dirty=None,
+                   redundant=False,
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1209,6 +1211,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self._do_install_pop_kwargs(kwargs)
 
+        if redundant:
+            spack.cmd.test_suite.update_dict(
+                str(self.name) + "@" + str(self.version) +
+                "%" + str(self.spec.compiler))
         # First, install dependencies recursively.
         if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
@@ -1223,6 +1229,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     make_jobs=make_jobs,
                     run_tests=run_tests,
                     dirty=dirty,
+                    redundant=redundant,
                     **kwargs
                 )
 

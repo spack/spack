@@ -231,18 +231,19 @@ test suite was run.  For example, consider this ``test.yaml`` file:
 
 .. code-block:: yaml
 
-   test-suite:
-     packages:
-       libelf:
-         versions: [0.8.12]
-       libdwarf:
-         versions: [0.8.12]
+  test-suite:
+  matrix:
+    - packages:
+      libelf:
+        versions: [0.8.12]
+      libdwarf:
+        versions: [0.8.12]
 
-     compilers:
-       clang:
-         versions: [7.0.2-apple]
-       gcc:
-         versions: [6.2.0]
+    - compilers:
+      clang:
+        versions: [7.0.2-apple]
+      gcc:
+        versions: [6.2.0]
 
 Running spack test-suite with this file would produce an output directory
 called, e.g., ``spack-test-2017-03-28``:

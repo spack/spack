@@ -120,8 +120,9 @@ class CombinatorialSpecSet:
         if self.ignore_invalid:
             missing = [c for c in cspecs if not any(
                 c.compiler.satisfies(comp) for comp in available_compilers)]
-            tty.warn("The following compilers were unavailable:")
-            colify(sorted(m.compiler for m in missing))
+            if missing:
+                tty.warn("The following compilers were unavailable:")
+                colify(sorted(m.compiler for m in missing))
             cspecs -= set(missing)
 
         return cspecs
