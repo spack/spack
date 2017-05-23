@@ -24,35 +24,41 @@
 ##############################################################################
 import argparse
 
+import os
+
 import llnl.util.tty as tty
 
 import spack
-import spack.store
 import spack.cmd
-import spack.binary_distribution
-import spack.relocate
+from spack.binary_distribution import build_tarball
 
 
-description = "Download and extract binary cache files for given packages"
+description = "Create binary cache files for given installed packages"
 section = "caching"
 level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument('-f', '--force', action='store_true',
-                           help="overwrite install directory if it exists.")
+                           help="overwrite tarball if it exists.")
+    subparser.add_argument('-d', '--directory', dest='directory',
+                           help="directory in which to save the tarballs.")
+
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to package")
 
 
-def install_tarball(parser, args):
+def createtarball(parser, args):
     if not args.packages:
-        tty.die("binary cache file extraction requires at least one" +
-                " package argument")
+        tty.die("binary cache file creation requires at" +
+                " least one package argument")
 
     pkgs = set(args.packages)
     specs = set()
+    outdir = os.getcwd()
+    if args.directory:
+        outdir = args.directory
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             specs.add(spec)
@@ -60,18 +66,6 @@ def install_tarball(parser, args):
             for d, node in spec.traverse(order='pre', depth=True):
                 tty.msg('adding dependency %s' % node)
                 specs.add(node)
-
     for spec in specs:
-        package = spack.repo.get(spec)
-        tarball_available = spack.binary_distribution.download_tarball(
-            package)
-        if tarball_available:
-            spack.binary_distribution.prepare()
-            if package.installed and not force:
-                tty.warn("Package for spec %s already installed." % spec)
-            else:
-                spack.binary_distribution.extract_tarball(package)
-                spack.binary_distribution.relocate_package(package)
-                spack.store.db.reindex(spack.store.layout)
-        else:
-            tty.die("Download of binary cache file for spec %s failed." % spec)
+        tty.msg('creating binary cache file for package %s ' % spec)
+        build_tarball(spec, outdir, args.force)
