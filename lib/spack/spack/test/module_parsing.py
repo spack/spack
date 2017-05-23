@@ -33,7 +33,7 @@ typeset_func = subprocess.Popen('module avail',
                                 shell=True)
 typeset_func.wait()
 typeset = typeset_func.stderr.read()
-MODULE_DEFINED = False if 'not found' in typeset else True
+MODULE_DEFINED = False if b'not found' in typeset else True
 
 
 def test_get_argument_from_module_line():
