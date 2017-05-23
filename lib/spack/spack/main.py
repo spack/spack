@@ -320,8 +320,8 @@ def setup_main_options(args):
         debug.register_interrupt_handler()
 
     if args.mock:
-        from spack.repository import RepoPath
-        spack.repo.swap(RepoPath(spack.mock_packages_path))
+        spack.repo.clear()
+        spack.repo.append_from_path(spack.mock_packages_path)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

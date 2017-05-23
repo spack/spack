@@ -32,7 +32,7 @@ import spack
 from spack.directory_layout import (YamlDirectoryLayout,
                                     InvalidDirectoryLayoutParametersError)
 from spack.repository import RepoPath
-from spack.spec import Spec
+from spack.spec import Spec, ConflictsInSpecError
 
 # number of packages to test (to reduce test time)
 max_packages = 10
@@ -196,7 +196,10 @@ def test_handle_unknown_package(
         layout.create_install_directory(spec)
         installed_specs[spec] = layout.path_for_spec(spec)
 
-    spack.repo.swap(mock_db)
+    # Plug-in the mock repository
+    cache_real_repo = spack.repo[:]
+    spack.repo.clear()
+    spack.repo.append_from_path(spack.mock_packages_path)
 
     # Now check that even without the package files, we know
     # enough to read a spec from the spec file.
@@ -211,7 +214,10 @@ def test_handle_unknown_package(
         assert spec.eq_dag(spec_from_file)
         assert spec.dag_hash() == spec_from_file.dag_hash()
 
-    spack.repo.swap(mock_db)
+    # Restore the initial repository
+    spack.repo.clear()
+    for x in cache_real_repo:
+        spack.repo.append(x)
 
 
 def test_find(layout_and_dir, config, builtin_mock):
@@ -225,7 +231,10 @@ def test_find(layout_and_dir, config, builtin_mock):
         if pkg.name.startswith('external'):
             # External package tests cannot be installed
             continue
-        spec = pkg.spec.concretized()
+        try:
+            spec = pkg.spec.concretized()
+        except ConflictsInSpecError:
+            continue
         installed_specs[spec.name] = spec
         layout.create_install_directory(spec)
 

@@ -23,16 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import collections
-import copy
 import os
 import re
 import shutil
-from six import StringIO
 
 import llnl.util.filesystem
 import llnl.util.lang
 import ordereddict_backport
-
 import py
 import pytest
 
@@ -47,6 +44,7 @@ import spack.util.executable
 import spack.util.pattern
 from spack.package import PackageBase
 from spack.fetch_strategy import *
+from six import StringIO
 
 
 ##########
@@ -99,29 +97,32 @@ spack.architecture.platform = lambda: spack.platforms.test.Test()
 ##########
 
 
-@pytest.fixture(scope='session')
-def repo_path():
-    """Session scoped RepoPath object pointing to the mock repository"""
-    return spack.repository.RepoPath(spack.mock_packages_path)
-
-
 @pytest.fixture(scope='module')
-def builtin_mock(repo_path):
+def builtin_mock():
     """Uses the 'builtin.mock' repository instead of 'builtin'"""
-    mock_repo = copy.deepcopy(repo_path)
-    spack.repo.swap(mock_repo)
+
+    # Cache the real repository
+    cache_real_repo = spack.repo[:]
+
+    # Plug-in the mock repository
+    spack.repo.clear()
+    spack.repo.append_from_path(spack.mock_packages_path)
+
     BuiltinMock = collections.namedtuple('BuiltinMock', ['real', 'mock'])
-    # Confusing, but we swapped above
-    yield BuiltinMock(real=mock_repo, mock=spack.repo)
-    spack.repo.swap(mock_repo)
+    yield BuiltinMock(real=cache_real_repo, mock=spack.repo)
+
+    # Restore the real one from the cache
+    spack.repo.clear()
+    for x in cache_real_repo:
+        spack.repo.append(x)
 
 
 @pytest.fixture()
-def refresh_builtin_mock(builtin_mock, repo_path):
+def refresh_builtin_mock(builtin_mock):
     """Refreshes the state of spack.repo"""
     # Get back the real repository
-    mock_repo = copy.deepcopy(repo_path)
-    spack.repo.swap(mock_repo)
+    spack.repo.clear()
+    spack.repo.append_from_path(spack.mock_packages_path)
     return builtin_mock
 
 

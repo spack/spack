@@ -27,7 +27,6 @@
 import re
 
 import spack
-from spack.repository import RepoPath
 
 
 def check_db():
@@ -43,10 +42,18 @@ def test_get_all_packages():
 
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
-    db = RepoPath(spack.mock_packages_path)
-    spack.repo.swap(db)
+
+    # Plugin the mock repository
+    cache = spack.repo[:]
+    spack.repo.clear()
+    spack.repo.append_from_path(spack.mock_packages_path)
+
     check_db()
-    spack.repo.swap(db)
+
+    # Restore the real one
+    spack.repo.clear()
+    for x in cache:
+        spack.repo.append(x)
 
 
 def test_all_versions_are_lowercase():

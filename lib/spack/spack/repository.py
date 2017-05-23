@@ -150,6 +150,13 @@ class RepoPath(MutableSequence):
             e.message = msg
             raise
 
+    def clear(self):
+        self.repos = []
+        self.by_namespace = NamespaceTrie()
+        self.by_path = {}
+        self._all_package_names = None
+        self._provider_index = None
+
     def __eq__(self, other):
         # Exit early if other is of another type of if
         # the lists of repos are of different lengths
@@ -247,23 +254,6 @@ class RepoPath(MutableSequence):
     def insert(self, index, value):
         self._add_to_index_caches(value)
         self.repos.insert(index, value)
-
-    def swap(self, other):
-        """Convenience function to make swapping repositories easier.
-
-        This is currently used by mock tests.
-        TODO: Maybe there is a cleaner way.
-
-        """
-        attrs = ['repos',
-                 'by_namespace',
-                 'by_path',
-                 '_all_package_names',
-                 '_provider_index']
-        for attr in attrs:
-            tmp = getattr(self, attr)
-            setattr(self, attr, getattr(other, attr))
-            setattr(other, attr, tmp)
 
     def _add_to_index_caches(self, repo):
         """Add a repository to the namespace and path indexes.
