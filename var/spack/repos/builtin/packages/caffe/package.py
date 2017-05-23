@@ -73,7 +73,8 @@ class Caffe(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DBLAS={0}'.format(spec['blas'].name),
+        args = ['-DBLAS={0}'.format('open' if spec['blas'].name == 'openblas'
+                else spec['blas'].name),
                 '-DCPU_ONLY=%s' % ('~gpu' in spec),
                 '-DUSE_CUDNN=%s' % ('+gpu' in spec),
                 '-DBUILD_python=%s' % ('+python' in spec),
