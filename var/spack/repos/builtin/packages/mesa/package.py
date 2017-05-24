@@ -77,17 +77,18 @@ class Mesa(AutotoolsPackage):
         spec = self.spec
         version = distro.linux_distribution()[1]
         distname = distro.linux_distribution()[0]
+        strversion = version.encode('utf-8')
         # centos / rhel 6
-        if distname is 'RedHatEnterpriseServer':
-            if version.find('6.0:6.9') == -1:
-                args = ['--enable-sysfs']
-            else:
+        if distname == "RedHatEnterpriseServer":
+            if strversion.find('6.0:6.9') == -1:
                 args = []
-        elif distname is 'CentOS':
-            if version.find('6.0:6.9') == -1:
-                args = ['--enable-sysfs']
             else:
+                args = ['--enable-sysfs']
+        elif distname == "CentOS":
+            if strversion.find('6.0:6.9') == -1:
                 args = []
+            else:
+                args = ['--enable-sysfs']
         else:
             args = []
 
