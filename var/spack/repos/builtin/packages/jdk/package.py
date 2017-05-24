@@ -45,7 +45,11 @@ class Jdk(Package):
         '-H',  # specify required License Agreement cookie
         'Cookie: oraclelicense=accept-securebackup-cookie']
 
-    version('8u131-b11', '81ee08846975d4b8d46acf3b6eddf103', curl_options=curl_options)
+    # For instructions on how to find the magic URL, see:
+    # https://gist.github.com/P7h/9741922
+    # https://linuxconfig.org/how-to-install-java-se-development-kit-on-debian-linux
+    version('8u131-b11', '75b2cb2249710d822a60f83e28860053', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
     version('8u92-b14',  '65a1cc17ea362453a6e0eb4f13be76e4', curl_options=curl_options)
     version('8u73-b02',  '1b0120970aa8bc182606a16bf848a686', curl_options=curl_options)
     version('8u66-b17',  '88f31f3d642c3287134297b8c10e61bf', curl_options=curl_options)
