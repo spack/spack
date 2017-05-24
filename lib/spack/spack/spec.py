@@ -3384,7 +3384,8 @@ class InvalidHashError(SpecError):
 class NoSuchHashError(SpecError):
     def __init__(self, hash):
         super(NoSuchHashError, self).__init__(
-            "No installed spec matches the hash: '%s'")
+            "No installed spec matches the hash: '%s'"
+        % hash)
 
 
 class RedundantSpecError(SpecError):
