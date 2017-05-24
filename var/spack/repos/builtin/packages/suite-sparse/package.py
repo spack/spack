@@ -53,6 +53,9 @@ class SuiteSparse(Package):
 
     patch('tbb_453.patch', when='@4.5.3:+tbb')
 
+    # This patch removes unsupported flags for pgi compiler 
+    patch('pgi.patch', when='%pgi')
+
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header

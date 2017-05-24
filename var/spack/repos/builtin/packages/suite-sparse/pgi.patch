@@ -1,0 +1,21 @@
+--- a/SuiteSparse_config/SuiteSparse_config.mk
++++ b/SuiteSparse_config/SuiteSparse_config.mk
+@@ -89,7 +89,8 @@
+ 
+     # The CF macro is used by SuiteSparse Makefiles as a combination of
+     # CFLAGS, CPPFLAGS, TARGET_ARCH, and system-dependent settings.
+-    CF ?= $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) $(OPTIMIZATION) -fexceptions -fPIC
++    #CF ?= $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) $(OPTIMIZATION) -fexceptions -fPIC
++    CF ?= $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) $(OPTIMIZATION) -fPIC
+ 
+     #---------------------------------------------------------------------------
+     # OpenMP is used in CHOLMOD
+@@ -97,7 +98,7 @@
+ 
+     # with gcc, enable OpenMP directives via -fopenmp
+     # This is not supported on Darwin, so this string is cleared, below.
+-    CFOPENMP ?= -fopenmp
++    #CFOPENMP ?= -fopenmp
+ 
+     #---------------------------------------------------------------------------
+     # compiler
