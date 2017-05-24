@@ -37,9 +37,11 @@ def _valid_components():
     tree = ET.parse('pset/mediaconfig.xml')
     root = tree.getroot()
 
-    components = root.findall('//Abbr')
+    components = root.findall('.//Abbr')
     for component in components:
-        yield component.text
+        # For some reason, mediaconfig.xml contains an invalid component:
+        if component.text != 'intel-tbb-psxe__noarch':
+            yield component.text
 
 
 class IntelPackage(PackageBase):
@@ -77,35 +79,27 @@ class IntelPackage(PackageBase):
     #: URL providing information on how to acquire a license key
     license_url = 'https://software.intel.com/en-us/articles/intel-license-manager-faq'
 
-    #: By default, install 'ALL' components
-    _components = ['ALL']
+    #: Components of the package to install.
+    #: By default, install 'ALL' components.
+    components = ['ALL']
 
     @property
-    def components(self):
-        """Components of the package to install."""
-        return self._components
+    def _filtered_components(self):
+        """Returns a list of valid components that match the requested
+        components from ``components``."""
 
-    @components.setter
-    def components(self, requested_components):
-        """Packages like ``intel-parallel-studio`` contain dozens of
-        components, and some users may want to install a subset of these.
-        This setter allows you to customize which components get installed.
+        # Don't filter 'ALL'
+        if self.components == ['ALL']:
+            return self.components
 
-        By default, installs 'ALL' components. To install only MKL and DAAL,
-        for example, you would use:
-
-        .. code-block:: python
-
-           components = ['mkl', 'daal']
-        """
         matches = []
 
         for valid in _valid_components():
-            for requested in requested_components:
+            for requested in self.components:
                 if requested in valid:
                     matches.append(valid)
 
-        self._components = matches
+        return matches
 
     @property
     def global_license_file(self):
@@ -143,7 +137,7 @@ class IntelPackage(PackageBase):
 
             # List of components to install,
             # valid values are: {ALL, DEFAULTS, anythingpat}
-            'COMPONENTS': ';'.join(self.components),
+            'COMPONENTS': ';'.join(self._filtered_components),
 
             # Installation mode, valid values are: {install, repair, uninstall}
             'PSET_MODE': 'install',

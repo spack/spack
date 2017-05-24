@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import re
 
 
 class Intel(IntelPackage):
@@ -55,25 +54,40 @@ class Intel(IntelPackage):
         'comp', 'openmp', 'intel-tbb', 'icc', 'ifort', 'psxe', 'icsxe-pset'
     ]
 
-    def install(self, spec, prefix):
-        absbindir = os.path.split(os.path.realpath(os.path.join(
-            self.prefix.bin, "icc")))[0]
-        abslibdir = os.path.split(os.path.realpath(os.path.join(
-            self.prefix.lib, "intel64", "libimf.a")))[0]
+    @property
+    def bin_dir(self):
+        """The relative path to the bin directory with symlinks resolved."""
 
-        # symlink or copy?
-        os.symlink(self.global_license_file,
-                   os.path.join(absbindir, "license.lic"))
+        bin_path = os.path.join(self.prefix.bin, 'icc')
+        absolute_path = os.path.realpath(bin_path)  # resolve symlinks
+        relative_path = os.path.relpath(absolute_path, self.prefix)
+        return os.path.dirname(relative_path)
 
-        if spec.satisfies('+rpath'):
-            for compiler_command in ["icc", "icpc", "ifort"]:
-                cfgfilename = os.path.join(absbindir, "%s.cfg" %
-                                           compiler_command)
-                with open(cfgfilename, "w") as f:
-                    f.write('-Xlinker -rpath -Xlinker %s\n' % abslibdir)
+    @property
+    def lib_dir(self):
+        """The relative path to the lib directory with symlinks resolved."""
 
-        os.symlink(os.path.join(self.prefix.man, "common", "man1"),
-                   os.path.join(self.prefix.man, "man1"))
+        lib_path = os.path.join(self.prefix.lib, 'intel64', 'libimf.a')
+        absolute_path = os.path.realpath(lib_path)  # resolve symlinks
+        relative_path = os.path.relpath(absolute_path, self.prefix)
+        return os.path.dirname(relative_path)
+
+    @property
+    def license_files(self):
+        return [
+            'Licenses/license.lic',
+            join_path(self.bin_dir, 'license.lic')
+        ]
+
+    @run_after('install')
+    def rpath_configuration(self):
+        if '+rpath' in self.spec:
+            lib_dir = os.path.join(self.prefix, self.lib_dir)
+            for compiler in ['icc', 'icpc', 'ifort']:
+                cfgfilename = os.path.join(
+                    self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                with open(cfgfilename, 'w') as f:
+                    f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     def setup_environment(self, spack_env, run_env):
 
