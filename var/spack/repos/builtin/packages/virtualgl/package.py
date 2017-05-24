@@ -22,30 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an
-    application binary interface (ABI) supporting coarray Fortran (CAF)
-    compilers, an application programming interface (API) that supports users
-    of non-CAF compilers, and an associated compiler wrapper and program
-    launcher.
-    """
+class Virtualgl(CMakePackage):
+    """VirtualGL redirects 3D commands from a Unix/Linux OpenGL application
+       onto a server-side GPU and converts the rendered 3D images into a video
+       stream with which remote clients can interact to view and control the
+       3D application in real time."""
 
-    homepage = "http://www.opencoarrays.org/"
-    url      = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/1.8.4/OpenCoarrays-1.8.4.tar.gz"
+    homepage = "http://www.virtualgl.org/Main/HomePage"
+    url      = "http://downloads.sourceforge.net/project/virtualgl/2.5.2/VirtualGL-2.5.2.tar.gz"
 
-    version('1.8.10', '9ba1670647db4d986634abf743abfd6a')
-    version('1.8.4', '7c9eaffc3a0b5748d0d840e52ec9d4ad')
-    version('1.8.0', 'ca78d1507b2a118c75128c6c2e093e27')
-    version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
-    version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
+    version('2.5.2', '1a9f404f4a35afa9f56381cb33ed210c')
 
-    depends_on('mpi')
-
-    def cmake_args(self):
-        args = []
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
-        return args
+    depends_on("libjpeg-turbo")
+    # virtualgl require OpenGL but also wants to link libglu
+    # on systems without development packages, provide with spack and depends
+    # on mesa-glu, but we do not want Mesa OpenGL sw emulation, so added
+    # variant on mesa-glu to disable dependencies on sw emulated OpenGL
+    depends_on("mesa-glu~mesa")
