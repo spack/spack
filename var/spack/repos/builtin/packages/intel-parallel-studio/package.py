@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import re
 
 
 class IntelParallelStudio(IntelPackage):
@@ -184,98 +183,104 @@ class IntelParallelStudio(IntelPackage):
         )
         return libs
 
-    def install(self, spec, prefix):
-        base_components = "ALL"  # when in doubt, install everything
-        mpi_components = ""
-        mkl_components = ""
-        daal_components = ""
-        ipp_components = ""
+    @property
+    def components(self):
+        spec = self.spec
 
-        if not spec.satisfies('+all'):
-            all_components = get_all_components()
-            regex = '(comp|openmp|intel-tbb|icc|ifort|psxe)'
-            base_components = \
-                filter_pick(all_components, re.compile(regex).search)
-            regex = '(icsxe|imb|mpi|itac|intel-ta|intel-tc|clck)'
-            mpi_components = \
-                filter_pick(all_components, re.compile(regex).search)
-            mkl_components = \
-                filter_pick(all_components, re.compile('(mkl)').search)
-            daal_components = \
-                filter_pick(all_components, re.compile('(daal)').search)
-            ipp_components = \
-                filter_pick(all_components, re.compile('(ipp)').search)
-            regex = '(gdb|vtune|inspector|advisor)'
-            tool_components = \
-                filter_pick(all_components, re.compile(regex).search)
-            components = base_components
+        if '+all' in spec:
+            return ['ALL']
 
-        if not spec.satisfies('+all'):
-            if spec.satisfies('+mpi'):
-                components += mpi_components
-            if spec.satisfies('+mkl'):
-                components += mkl_components
-            if spec.satisfies('+daal'):
-                components += daal_components
-            if spec.satisfies('+ipp'):
-                components += ipp_components
-            if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
-                                             spec.satisfies('@professional')):
-                components += tool_components
+        # Base components
+        components = [
+            'comp', 'openmp', 'intel-tbb', 'icc', 'ifort', 'psxe', 'icsxe-pset'
+        ]
 
-        if spec.satisfies('+all'):
-            self.intel_components = 'ALL'
-        else:
-            self.intel_components = ';'.join(components)
-        IntelInstaller.install(self, spec, prefix)
+        if '+mpi' in spec:
+            components.extend([
+                'icsxe', 'imb', 'mpi', 'itac', 'intel-ta', 'intel-tc', 'clck'
+            ])
 
-        absbindir = os.path.dirname(
-            os.path.realpath(os.path.join(self.prefix.bin, "icc")))
-        abslibdir = os.path.dirname(
-            os.path.realpath(os.path.join(
-                self.prefix.lib, "intel64", "libimf.a")))
+        if '+mkl' in spec:
+            components.append('mkl')
 
-        os.symlink(self.global_license_file, os.path.join(absbindir,
-                                                          "license.lic"))
-        if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
-                                         spec.satisfies('@professional')):
-            inspector_dir = "inspector_xe/licenses"
-            advisor_dir = "advisor_xe/licenses"
-            vtune_amplifier_dir = "vtune_amplifier_xe/licenses"
+        if '+daal' in spec:
+            components.append('daal')
+
+        if '+ipp' in spec:
+            components.append('ipp')
+
+        if '+tools' in spec and (spec.satisfies('@cluster') or
+                                 spec.satisfies('@professional')):
+            components.extend(['gdb', 'vtune', 'inspector', 'advisor'])
+
+        return components
+
+    @property
+    def bin_dir(self):
+        """The relative path to the bin directory with symlinks resolved."""
+
+        bin_path = os.path.join(self.prefix.bin, 'icc')
+        absolute_path = os.path.realpath(bin_path)  # resolve symlinks
+        relative_path = os.path.relpath(absolute_path, self.prefix)
+        return os.path.dirname(relative_path)
+
+    @property
+    def lib_dir(self):
+        """The relative path to the lib directory with symlinks resolved."""
+
+        lib_path = os.path.join(self.prefix.lib, 'intel64', 'libimf.a')
+        absolute_path = os.path.realpath(lib_path)  # resolve symlinks
+        relative_path = os.path.relpath(absolute_path, self.prefix)
+        return os.path.dirname(relative_path)
+
+    @property
+    def license_files(self):
+        spec = self.spec
+
+        directories = [
+            'Licenses',
+            self.bin_dir
+        ]
+
+        if '+tools' in spec and (spec.satisfies('@cluster') or
+                                 spec.satisfies('@professional')):
+            advisor_dir = 'advisor_xe/licenses'
+            inspector_dir = 'inspector_xe/licenses'
+            vtune_amplifier_dir = 'vtune_amplifier_xe/licenses'
 
             year = int(str(self.version).split('.')[1])
             if year >= 2017:
-                inspector_dir = "inspector/licenses"
-                advisor_dir = "advisor/licenses"
+                advisor_dir = 'advisor/licenses'
+                inspector_dir = 'inspector/licenses'
 
-            os.mkdir(os.path.join(self.prefix, inspector_dir))
-            os.symlink(self.global_license_file, os.path.join(
-                self.prefix, inspector_dir, "license.lic"))
-            os.mkdir(os.path.join(self.prefix, advisor_dir))
-            os.symlink(self.global_license_file, os.path.join(
-                self.prefix, advisor_dir, "license.lic"))
-            os.mkdir(os.path.join(self.prefix, vtune_amplifier_dir))
-            os.symlink(self.global_license_file, os.path.join(
-                self.prefix, vtune_amplifier_dir, "license.lic"))
+            directories.extend([
+                advisor_dir,
+                inspector_dir,
+                vtune_amplifier_dir
+            ])
 
-        if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
-                spec.satisfies('@cluster'):
-            for ifile in os.listdir(os.path.join(self.prefix, "itac")):
-                if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
-                    os.symlink(self.global_license_file,
-                               os.path.join(self.prefix, "itac", ifile,
-                                            "license.lic"))
-                if os.path.isdir(os.path.join(self.prefix, "itac",
-                                              ifile, "intel64")):
-                    os.symlink(self.global_license_file,
-                               os.path.join(self.prefix, "itac",
-                                            ifile, "intel64",
-                                            "license.lic"))
-            if spec.satisfies('~newdtags'):
-                wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
-                            "mpigcc", "mpigcc", "mpigxx", "mpigxx",
-                            "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
-                            "mpiifort", "mpiifort"]
+        if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
+            for ifile in os.listdir(os.path.join(self.prefix, 'itac')):
+                if os.path.isdir(os.path.join(self.prefix, 'itac', ifile)):
+                    directories.append(os.path.join(
+                        self.prefix, 'itac', ifile))
+                if os.path.isdir(os.path.join(self.prefix, 'itac',
+                                              ifile, 'intel64')):
+                    directories.append(os.path.join(self.prefix, 'itac',
+                                       ifile, 'intel64'))
+
+        return [os.path.join(dir, 'license.lic') for dir in directories]
+
+    @run_after('install')
+    def filter_compiler_wrappers(self):
+        spec = self.spec
+
+        if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
+            if '~newdtags' in spec:
+                wrappers = [
+                    'mpif77', 'mpif90', 'mpigcc', 'mpigxx',
+                    'mpiicc', 'mpiicpc', 'mpiifort'
+                ]
                 wrapper_paths = []
                 for root, dirs, files in os.walk(spec.prefix):
                     for name in files:
@@ -283,18 +288,20 @@ class IntelParallelStudio(IntelPackage):
                             wrapper_paths.append(os.path.join(spec.prefix,
                                                               root, name))
                 for wrapper in wrapper_paths:
-                    filter_file(r'-Xlinker --enable-new-dtags', r' ',
-                                wrapper)
+                    filter_file('-Xlinker --enable-new-dtags', ' ',
+                                wrapper, string=True)
 
-        if spec.satisfies('+rpath'):
-            for compiler_command in ["icc", "icpc", "ifort"]:
-                cfgfilename = os.path.join(absbindir, "%s.cfg" %
-                                           compiler_command)
-                with open(cfgfilename, "w") as f:
-                    f.write('-Xlinker -rpath -Xlinker %s\n' % abslibdir)
+    @run_after('install')
+    def rpath_configuration(self):
+        spec = self.spec
 
-        os.symlink(os.path.join(self.prefix.man, "common", "man1"),
-                   os.path.join(self.prefix.man, "man1"))
+        if '+rpath' in spec:
+            lib_dir = os.path.join(self.prefix, self.lib_dir)
+            for compiler in ['icc', 'icpc', 'ifort']:
+                cfgfilename = os.path.join(
+                    self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                with open(cfgfilename, 'w') as f:
+                    f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     def setup_environment(self, spack_env, run_env):
         # TODO: Determine variables needed for the professional edition.
