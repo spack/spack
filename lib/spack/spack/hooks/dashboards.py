@@ -21,8 +21,9 @@ from spack.fetch_strategy import FetchError
 import llnl.util.filesystem as fs
 import xml.etree.ElementTree as ET
 
-
 # Needed for test cases
+
+
 class TestResult(object):
     PASSED = 0
     FAILED = 1
@@ -161,6 +162,20 @@ class CDashTestSuite(object):
         self.spec = spec
         self.slot = slot
         self.tests = []
+        if "linux" in platform.system().lower():
+            linuxInfo = str(platform.linux_distribution()[
+                            0]) + "." + str(platform.linux_distribution()[1])
+            self.host_name = self.OS_name = linuxInfo
+        elif "darwin" in platform.system().lower():
+            macInfo = "OS X " + platform.mac_ver()[0]
+            self.host_name = self.OS_name = macInfo
+        else:
+            self.host_name = self.OS_name = platform.system()
+        # site set
+        if not site:
+            self.site = self.host_name
+        else:
+            self.site = site
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
         self.filename = filename
@@ -179,10 +194,15 @@ class CDashTestSuite(object):
 
     def create_template(self):
         template = ET.Element('Site')
-        template.set('BuildName', str(self.spec.short_spec))
-        template.set('Name', platform.node())
-        template.set('Type', self.slot)
+        buildName = str(self.spec.short_spec)
+        buildName = buildName.split('=')
+        template.set('BuildName', str(buildName[0]) + " " + str(buildName[1]))
         template.set('BuildStamp', self.buildstamp)
+        template.set('CompilerName', str(self.spec.compiler.name))
+        template.set('CompilerVersion', str(self.spec.compiler.version))
+        template.set('Name', self.site)
+        template.set('Hostname', self.host_name)
+        template.set('OSName', self.OS_name)
         return template
 
     def create_testcase(self, name, spec):
