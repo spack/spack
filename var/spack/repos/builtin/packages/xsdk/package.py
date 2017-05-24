@@ -64,6 +64,9 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')
 
+    depends_on('chombo-xsdk@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('chombo-xsdk@develop', when='@develop')
+
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
     # depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
