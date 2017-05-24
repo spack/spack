@@ -160,3 +160,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # if it does not exist already.
         if dependent_spec.package.is_extension:
             mkdirp(module.perl_lib_dir)
+
+    @run_after('install')
+    def filter_config_dot_pm(self):
+        """Run after install so that Config.pm records the compiler that Spack
+        built the package with.  If this isn't done, $Config{cc} will
+        be set to Spack's cc wrapper script.
+        """
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
+
+        # Find the actual path to the installed Config.pm file.
+        perl = Executable(join_path(prefix.bin, 'perl'))
+        config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
+                             'print is_loaded(Config)', output=str)
+
+        match = 'cc *=>.*'
+        substitute = 'cc => \'{cc}\','.format(cc=self.compiler.cc)
+        filter_file(match, substitute, config_dot_pm, **kwargs)
