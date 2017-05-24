@@ -71,7 +71,8 @@ class SuperluDist(Package):
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = -fPIC -std=c99 -O2 %s %s %s' % (
+            'CFLAGS       = -fPIC %s -O2 %s %s %s' % (
+                '' if '%pgi' in spec else '-std=c99',
                 spec['parmetis'].headers.cpp_flags,
                 spec['metis'].headers.cpp_flags,
                 '-D_LONGINT' if '+int64' in spec else ''),
