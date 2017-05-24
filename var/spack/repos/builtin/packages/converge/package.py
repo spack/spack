@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from distutils.dir_util import copy_tree
-import os
 
 
 class Converge(Package):
