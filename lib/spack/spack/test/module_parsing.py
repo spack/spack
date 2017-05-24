@@ -73,7 +73,13 @@ def test_get_module_cmd_from_bash_using_modules():
 @pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_ticks():
     module_func = os.environ.get('BASH_FUNC_module()', None)
-    os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*` \n}'
+    os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*`\n}'
+
+    p = subprocess.Popen(['export -f module'],
+                         executable='/bin/bash',
+                         shell=True)
+    p.wait()
+
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
 
@@ -83,10 +89,11 @@ def test_get_module_cmd_from_bash_ticks():
         os.environ['BASH_FUNC_module()'] = module_func
     assert False
 
+
 @pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_parens():
     module_func = os.environ.get('BASH_FUNC_module()', None)
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo filler bash $*) \n}'
+    os.environ['BASH_FUNC_module()'] = '() { eval $(echo filler bash $*)\n}'
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
 
