@@ -77,4 +77,4 @@ class Pgi(Compiler):
         on PowerPC.
         """
         return get_compiler_version(
-            comp, '-V', r'pg[^ ]* ([0-9.-]+) [^ ]+ target on ')
+            comp, '-V', r'pg[^ ]* ([0-9.]+)-[0-9]+ [^ ]+ target on ')
