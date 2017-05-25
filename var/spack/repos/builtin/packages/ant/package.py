@@ -39,6 +39,7 @@ class Ant(Package):
     version('1.9.9',  '22c9d40dabafbec348aaada226581239')
     version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
     version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
+    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
 
     depends_on('jdk')
 
