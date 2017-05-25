@@ -31,6 +31,7 @@
 # Date: September 6, 2015
 #
 from spack import *
+import os
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -175,6 +176,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
-        match = 'cc *=>.*'
+        match = '^cc *=>.*'
         substitute = 'cc => \'{cc}\','.format(cc=self.compiler.cc)
         filter_file(match, substitute, config_dot_pm, **kwargs)
+
+        # And the path Config_heavy.pl
+        d = os.path.dirname(config_dot_pm)
+        config_heavy = join_path(d, 'Config_heavy.pl')
+
+        match = '^cc=.*'
+        substitute = 'cc=\'{cc}\''.format(cc=self.compiler.cc)
+        filter_file(match, substitute, config_heavy, **kwargs)
+
+        match = '^ld=.*'
+        substitute = 'ld=\'{ld}\''.format(ld=self.compiler.cc)
+        filter_file(match, substitute, config_heavy, **kwargs)
