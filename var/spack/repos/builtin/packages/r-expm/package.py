@@ -25,18 +25,12 @@
 from spack import *
 
 
-class RRmpfr(RPackage):
-    """Arithmetic (via S4 classes and methods) for arbitrary precision
-       floating point numbers, including transcendental ("special")
-       functions. To this end, Rmpfr interfaces to the LGPL'ed MPFR
-       (Multiple Precision Floating-Point Reliable) Library which itself
-       is based on the GMP (GNU Multiple Precision) Library."""
+class RExpm(RPackage):
+    """Computation of the matrix exponential, logarithm, sqrt, and related
+    quantities."""
 
-    homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    homepage = "http://R-Forge.R-project.org/projects/expm"
+    url      = "https://cran.r-project.org/src/contrib/expm_0.999-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/expm"
 
-    version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
-
-    depends_on('r-gmp@0.5-8:', type=('build', 'run'))
-    depends_on('mpfr@3.0.0:')
+    version('0.999-2', 'e05fa3f995754af92bd03227625da984')

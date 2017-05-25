@@ -25,18 +25,15 @@
 from spack import *
 
 
-class RRmpfr(RPackage):
-    """Arithmetic (via S4 classes and methods) for arbitrary precision
-       floating point numbers, including transcendental ("special")
-       functions. To this end, Rmpfr interfaces to the LGPL'ed MPFR
-       (Multiple Precision Floating-Point Reliable) Library which itself
-       is based on the GMP (GNU Multiple Precision) Library."""
+class RVegan(RPackage):
+    """Ordination methods, diversity analysis and other functions for
+    community and vegetation ecologists."""
 
-    homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    homepage = "https://github.com/vegandevs/vegan"
+    url      = "https://cran.r-project.org/src/contrib/vegan_2.4-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/vegan"
 
-    version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
+    version('2.4-3', 'db17d4c4b9a4d421246abd5b36b00fec')
 
-    depends_on('r-gmp@0.5-8:', type=('build', 'run'))
-    depends_on('mpfr@3.0.0:')
+    depends_on('r@3.0:')
+    depends_on('r-permute@0.9-0:', type=('build', 'run'))
