@@ -268,14 +268,12 @@ class CDashTestSuite(object):
         # test list
         testlist = ET.SubElement(build, 'TestList')
         for item in self.tests:
-            test_element = ET.SubElement(testlist, "Test")
-            test_element.text = item.name
-            build.append(item.element)
+            if item.result_type != TestResult.SKIPPED:
+                test_element = ET.SubElement(testlist, "Test")
+                test_element.text = item.name
+                build.append(item.element)
         log_element = ET.SubElement(build, 'Log')
         log_element.set('Encoding', 'base64')
-        for item in self.tests:
-            if item.result_type != TestResult.SKIPPED:
-                build.append(item.element)
         end_element = ET.SubElement(build, 'EndDateTime')
         end_element.text = self.now()
         endBuild_element = ET.SubElement(build, 'EndBuildTime')
