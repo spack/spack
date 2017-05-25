@@ -53,10 +53,10 @@ def get_module_cmd_from_which():
 
 def get_module_cmd_from_bash():
     # Find how the module function is defined in the environment
-    module_func_proc = subprocess.Popen(['bash', '-c', 'typeset -f module | envsubst'],
+    module_func_proc = subprocess.Popen(['typeset -f module | envsubst'],
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT,
-                                        executable='/bin/bash',
+                                        executable='/bin/bash -c',
                                         shell=True)
     module_func_proc.wait()
     module_func = module_func_proc.stdout.read()
