@@ -56,7 +56,7 @@ def get_module_cmd_from_bash():
     module_func_proc = subprocess.Popen(['typeset -f module | envsubst'],
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT,
-                                        executable='/bin/bash -c',
+                                        executable='/bin/bash',
                                         shell=True)
     module_func_proc.wait()
     module_func = module_func_proc.stdout.read()
