@@ -34,6 +34,9 @@ class Libdrm(Package):
     homepage = "http://dri.freedesktop.org/libdrm/"
     url      = "http://dri.freedesktop.org/libdrm/libdrm-2.4.59.tar.gz"
 
+    list_url = "https://dri.freedesktop.org/libdrm"
+
+    version('2.4.75', '743c16109d91a2539dfc9cc56130d695')
     version('2.4.70', 'a8c275bce5f3d71a5ca25e8fb60df084')
     version('2.4.59', '105ac7af1afcd742d402ca7b4eb168b6')
     version('2.4.33', '86e4e3debe7087d5404461e0032231c8')
