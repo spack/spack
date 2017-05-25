@@ -41,7 +41,6 @@ class RPkgmaker(RPackage):
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
 
     depends_on('r-registry', type=('build', 'run'))
-    depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-xtable', type=('build', 'run'))

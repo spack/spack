@@ -39,8 +39,6 @@ class RErgm(RPackage):
     depends_on('r-robustbase@0.9-10:', type=('build', 'run'))
     depends_on('r-coda@0.18-1:', type=('build', 'run'))
     depends_on('r-trust', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-lpsolve', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
     depends_on('r-statnet-common@3.3:', type=('build', 'run'))
     depends_on('r-network@1.13:', type=('build', 'run'))
