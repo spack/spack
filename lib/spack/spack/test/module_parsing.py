@@ -75,11 +75,6 @@ def test_get_module_cmd_from_bash_ticks():
     module_func = os.environ.get('BASH_FUNC_module()', None)
     os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*`\n}'
 
-    p = subprocess.Popen(['export -f module'],
-                         executable='/bin/bash',
-                         shell=True)
-    p.wait()
-
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
 
@@ -102,3 +97,20 @@ def test_get_module_cmd_from_bash_parens():
     if module_func:
         os.environ['BASH_FUNC_module()'] = module_func
     assert False
+
+
+def test_get_module_cmd_from_modulecmd(tmpdir):
+    f = tmpdir.mkdir('bin').join('modulecmd')
+    f.write('#!/bin/bash\n'
+            'echo $*')
+    f.chmod(0o770)
+
+    old_PATH = os.environ['PATH']
+    os.environ['PATH'] = str(tmpdir.join('bin')) + ':' + old_PATH
+
+    module_cmd = get_module_cmd_from_which()
+    module_cmd_list = module_cmd('list', output=str, error=str)
+
+    assert module_cmd_list == 'python list\n'
+
+    os.environ['PATH'] = old_PATH
