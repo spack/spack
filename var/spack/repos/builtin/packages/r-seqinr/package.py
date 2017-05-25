@@ -25,30 +25,18 @@
 from spack import *
 
 
-class Bwa(Package):
-    """Burrow-Wheeler Aligner for pairwise alignment between DNA sequences."""
+class RSeqinr(RPackage):
+    """Exploratory data analysis and data visualization for biological
+    sequence (DNA and protein) data. Includes also utilities for sequence
+    data management under the ACNUC system."""
 
-    homepage = "http://github.com/lh3/bwa"
-    url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
+    homepage = "http://seqinr.r-forge.r-project.org"
+    url      = "https://cran.r-project.org/src/contrib/seqinr_3.3-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/seqinr"
 
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
-    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
-            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
+    version('3.3-6', '73023d627e72021b723245665e1ad055')
 
+    depends_on('r@2.10:')
+    depends_on('r-ade4', type=('build', 'run'))
+    depends_on('r-segmented', type=('build', 'run'))
     depends_on('zlib')
-
-    def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
-        filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
-                    'Makefile')
-        make()
-
-        mkdirp(prefix.bin)
-        install('bwa', join_path(prefix.bin, 'bwa'))
-        set_executable(join_path(prefix.bin, 'bwa'))
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)

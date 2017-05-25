@@ -25,30 +25,12 @@
 from spack import *
 
 
-class Bwa(Package):
-    """Burrow-Wheeler Aligner for pairwise alignment between DNA sequences."""
+class RExpm(RPackage):
+    """Computation of the matrix exponential, logarithm, sqrt, and related
+    quantities."""
 
-    homepage = "http://github.com/lh3/bwa"
-    url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
+    homepage = "http://R-Forge.R-project.org/projects/expm"
+    url      = "https://cran.r-project.org/src/contrib/expm_0.999-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/expm"
 
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
-    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
-            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
-
-    depends_on('zlib')
-
-    def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
-        filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
-                    'Makefile')
-        make()
-
-        mkdirp(prefix.bin)
-        install('bwa', join_path(prefix.bin, 'bwa'))
-        set_executable(join_path(prefix.bin, 'bwa'))
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)
+    version('0.999-2', 'e05fa3f995754af92bd03227625da984')

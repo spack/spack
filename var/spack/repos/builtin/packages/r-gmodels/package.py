@@ -25,30 +25,14 @@
 from spack import *
 
 
-class Bwa(Package):
-    """Burrow-Wheeler Aligner for pairwise alignment between DNA sequences."""
+class RGmodels(RPackage):
+    """Various R programming tools for model fitting."""
 
-    homepage = "http://github.com/lh3/bwa"
-    url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
+    homepage = "http://www.sf.net/projects/r-gregmisc"
+    url      = "https://cran.r-project.org/src/contrib/gmodels_2.16.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gmodels"
 
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
-    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
-            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
+    version('2.16.2', 'f13e5feb2a8b9f0cd47fdf25ddc74228')
 
-    depends_on('zlib')
-
-    def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
-        filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
-                    'Makefile')
-        make()
-
-        mkdirp(prefix.bin)
-        install('bwa', join_path(prefix.bin, 'bwa'))
-        set_executable(join_path(prefix.bin, 'bwa'))
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)
+    depends_on('r@1.9:')
+    depends_on('r-gdata', type=('build', 'run'))

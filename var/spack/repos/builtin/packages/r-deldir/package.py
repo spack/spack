@@ -25,30 +25,17 @@
 from spack import *
 
 
-class Bwa(Package):
-    """Burrow-Wheeler Aligner for pairwise alignment between DNA sequences."""
+class RDeldir(RPackage):
+    """Calculates the Delaunay triangulation and the Dirichlet or Voronoi
+    tessellation (with respect to the entire plane) of a planar point set.
+    Plots triangulations and tessellations in various ways. Clips
+    tessellations to sub-windows. Calculates perimeters of tessellations.
+    Summarises information about the tiles of the tessellation."""
 
-    homepage = "http://github.com/lh3/bwa"
-    url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
+    homepage = "https://CRAN.R-project.org/package=deldir"
+    url      = "https://cran.r-project.org/src/contrib/deldir_0.1-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/deldir"
 
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
-    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
-            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
+    version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
 
-    depends_on('zlib')
-
-    def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
-        filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
-                    'Makefile')
-        make()
-
-        mkdirp(prefix.bin)
-        install('bwa', join_path(prefix.bin, 'bwa'))
-        set_executable(join_path(prefix.bin, 'bwa'))
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)
+    depends_on('r@0.99:')
