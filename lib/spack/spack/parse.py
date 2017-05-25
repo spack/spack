@@ -80,6 +80,7 @@ class Lexer(object):
         if self.mode == 1:
             scanner = self.scanner1
             mode_switches = self.mode_switches_10
+
         tokens, remainder = scanner.scan(word)
         remainder_used = 0
 
