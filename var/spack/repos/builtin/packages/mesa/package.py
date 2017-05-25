@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.version import *
 import distro
 
 
@@ -31,13 +32,17 @@ class Mesa(AutotoolsPackage):
     specification - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    url      = "https://mesa.freedesktop.org/archive/12.0.3/mesa-12.0.3.tar.xz"
 
-    version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
+    list_url = "https://mesa.freedesktop.org/archive"
 
-    variant('dri', default=True, description='Enable DRI and EGL support')
-    variant('osmesa', default=False, description='Enable OSMesa support')
+    version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
+    version('17.1.1', 'a4844bc6052578574f9629458bcbb749')
+
+    variant('dri', default=True, description='Enable Hardware Acceleration')
+    variant('osmesa', default=False, description='Enable Off Screen Rendering')
     conflicts('+dri', '+osmesa')
+    conflicts('~dri', '+osmesa')
 
     # General dependencies
     depends_on('python@2.6.4:')
@@ -61,37 +66,35 @@ class Mesa(AutotoolsPackage):
     depends_on('dri3proto@1.0:', when='+dri', type='build')
     depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('llvm', when='+osmesa', type='build')
+    depends_on('llvm@3.0', when='+dri', type='build')
+    depends_on('libdrm', when='+dri', type='build')
 
-    # adamjstewart
-    # TODO: Add package for systemd, provides libudev
-    # Using the system package manager to install systemd didn't work for me
-    # justiceformikebrown
-    # Added:
-    # ~dri will disable dri on older Centos /RHEL6 servers
-    # which lack newer udev
-    # You must also yum install libsysfs-devel
-    # https://www.mesa3d.org/osmesa.html
-    # https://www.mesa3d.org/autoconf.html
+    # TODO:
+    # *** DRI broken with 12.0.3 and 17.1.1 ***
+    # 12.0.3: "llvm@3:3.99" with 3.9.1 per #4258 does not pass cmake
+    # llvm also requires gcc >= 4.8
+    # 17.1.1: Add newer libdrm to Spack as >= 2.4.75 needed for 17.1.1
+    # 17.1.1: ~dri does not work - config error 'gbm requires --enable-dri'
     def configure_args(self):
         spec = self.spec
-        version = distro.linux_distribution()[1]
+        v = distro.linux_distribution()[1]
         distname = distro.linux_distribution()[0]
-        strversion = version.encode('utf-8')
-        # centos / rhel 6
+
+        # libudev too old on centos / rhel 6 so do sysfs
         if distname == "RedHatEnterpriseServer":
-            if strversion.find('6.0:6.9') == -1:
-                args = []
-            else:
+            if Version('6.0') <= Version(v) <= Version('6.999'):
                 args = ['--enable-sysfs']
-        elif distname == "CentOS":
-            if strversion.find('6.0:6.9') == -1:
+            else:
                 args = []
+        elif distname == "CentOS":
+            if Version('6.0') <= Version(v) <= Version('6.999'):
+                args = ['--enable-sysfs']
             else:
                 args = ['--enable-sysfs']
         else:
             args = []
 
+        # software rendering
         if '~dri' in spec:
             args.extend([
                 '--disable-dri',
@@ -99,17 +102,23 @@ class Mesa(AutotoolsPackage):
                 '--disable-driglx-direct',
                 '--with-gallium-drivers=swrast'
             ])
-        else:
+
+        # hardware rendering
+        elif '+dri' in spec:
             args.extend([
                 '--enable-dri',
                 '--enable-egl'
+                '--enable-gles1',
+                '--enable-gles2',
+                '--enable-glx-tls',
+                '--with-gallium-drivers=swrast'
             ])
-
+        # off screen software rendering
         if '+osmesa' in spec:
             args.extend([
                 '--enable-osmesa',
                 '--disable-driglx-direct',
                 '--disable-dri',
-                '--with-gallium-drivers=llvmpipe'
+                '--with-gallium-drivers=swrast'
             ])
         return args
