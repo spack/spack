@@ -32,6 +32,8 @@ class Bwa(Package):
     url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
 
     version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
+    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
+            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
 
     depends_on('zlib')
 
