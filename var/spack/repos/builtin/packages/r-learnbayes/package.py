@@ -25,18 +25,17 @@
 from spack import *
 
 
-class RRmpfr(RPackage):
-    """Arithmetic (via S4 classes and methods) for arbitrary precision
-       floating point numbers, including transcendental ("special")
-       functions. To this end, Rmpfr interfaces to the LGPL'ed MPFR
-       (Multiple Precision Floating-Point Reliable) Library which itself
-       is based on the GMP (GNU Multiple Precision) Library."""
+class RLearnbayes(RPackage):
+    """LearnBayes contains a collection of functions helpful in learning the
+    basic tenets of Bayesian statistical inference. It contains functions for
+    summarizing basic one and two parameter posterior distributions and
+    predictive distributions. It contains MCMC algorithms for summarizing
+    posterior distributions defined by the user. It also contains functions
+    for regression models, hierarchical models, Bayesian tests, and
+    illustrations of Gibbs sampling."""
 
-    homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    homepage = "https://CRAN.R-project.org/package=LearnBayes"
+    url      = "https://cran.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/LearnBayes"
 
-    version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
-
-    depends_on('r-gmp@0.5-8:', type=('build', 'run'))
-    depends_on('mpfr@3.0.0:')
+    version('2.15', '213713664707bc79fd6d3a109555ef76')
