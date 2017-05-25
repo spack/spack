@@ -1,10 +1,12 @@
 import itertools
 import os
 import re
+import sys
 
 import llnl.util.filesystem
 from llnl.util.lang import key_ordering
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
 import spack.architecture
 from spack.package_prefs import VirtualInPackagesYAMLError
 from spack.util.spack_yaml import syaml_dict
@@ -380,7 +382,7 @@ class ExternalPackage(object):
         # Filter packages based off of valid packages in spack's database
 
         # Create a spec string for each package name, appends version.
-        compilers = spack.compilers.all_compilers()
+        compilers = spack.compilers.all_compiler_specs()
         arch = spack.architecture.sys_type()
 
         valid_packages = {}
@@ -400,28 +402,9 @@ class ExternalPackage(object):
 
         external_packages = []
         for full_spec, module in new_specs.items():
-            package = cls.create_external_package(full_spec, module)
+            package = cls(full_spec, False, "modules", module)
             external_packages.append(package)
         return external_packages
-
-
-    @classmethod
-    def find_external_pacakges(cls, package_spec=None):
-        """Attempts to find system packages.
-
-        Currently, uses the modulecmd and parses for all packages. If
-        a package_spec is given, the name will be used to search for packages.
-        If no args are given it will attempt to find packages depending on
-        the platform it is located.
-
-        Args:
-            package_spec: an optional spec object
-        Returns:
-            a list of ExternalPackage objects
-        """
-        # Packages should probably tell us how to find themselves given a 
-        # System. At the moment I will only support cray packages.
-        return []
 
 
     @classmethod
@@ -564,31 +547,31 @@ def add_external_package(external_package, scope):
     else:
         tty.msg("Added no new external packages")
 
-def remove_external_package(package_spec, scope):
+def remove_external_package(package_spec, scope, remove_all=False):
     """Remove the external package specified by the external package spec"""
-    packages_config = ext_package.PackagesConfig(scope)
+    packages_config = PackagesConfig(scope)
     package = packages_config.get_package(package_spec.name)
     if package.is_empty():
         tty.die("Could not find package for {0}".format(package_spec))
 
     matches = []
     specs = package.specs_section()
-    for s in spec.keys(): # follows {spec: path/modules}
+    for s in specs.keys(): # follows {spec: path/modules}
         if spack.spec.Spec(s).satisfies(package_spec):
             matches.append(s)
-    if not args.all and len(matches) > 1:
+    if not remove_all and len(matches) > 1:
         tty.error(
                 "Multiple packages match spec {0}. Choose one:".format(
                     package_spec))
-        collify(sorted(matches), indent=4)
+        colify(sorted(matches), indent=4)
         tty.msg("Or, use spack external rm -a to remove all of them.")
         sys.exit(1)
 
     for spec in matches:
         package.remove_spec(spec)
 
-    if not package.contain_specs():
-        packages_config.remove_entry_entry_from_config(package_spec.name)
+    if not package.contains_specs():
+        packages_config.remove_entire_entry_from_config(package_spec.name)
     else:
         packages_config.update_package_config(package.config_entry())
 

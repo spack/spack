@@ -27,7 +27,6 @@ import sys
 
 from llnl.util.lang import index_by
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 import spack
 import spack.cmd
 import spack.compilers
@@ -113,7 +112,9 @@ def external_add(args):
 def external_rm(args):
     """Removes an external package from packages.yaml"""
     package_spec = spack.spec.Spec(args.package_spec)
-    removed_entries = ext_package.remove_external_package(package_spec, scope)
+    removed_entries = ext_package.remove_external_package(package_spec,
+                                                          args.scope,
+                                                          args.all)
     for spec in removed_entries:
         tty.msg("Removed package: {0}".format(spec))
 
