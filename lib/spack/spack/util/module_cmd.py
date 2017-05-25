@@ -28,6 +28,7 @@ parsing environment modules.
 """
 import subprocess
 import re
+import os
 from spack.util.executable import which
 
 
@@ -53,16 +54,17 @@ def get_module_cmd_from_which():
 
 def get_module_cmd_from_bash():
     # Find how the module function is defined in the environment
-    module_func_proc = subprocess.Popen(['typeset -f module | envsubst'],
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        executable='/bin/bash',
-                                        shell=True)
-    module_func_proc.wait()
-    module_func = module_func_proc.stdout.read()
+    module_func = os.environ.get('BASH_FUNC_module()', None)
+    if not module_func:
+        module_func_proc = subprocess.Popen(['typeset -f module | envsubst'],
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.STDOUT,
+                                            executable='/bin/bash',
+                                            shell=True)
+        module_func_proc.wait()
+        module_func = module_func_proc.stdout.read()
     print module_func
     print "-----------------------"
-    import os
     print os.environ['BASH_FUNC_module()']
     print "-----------"
 
