@@ -48,7 +48,9 @@ class Mummer(Package):
         if not self.spec.satisfies('^perl@5.20:'):
             return
 
-        filter_file(r'defined \(%', '(%', 'scripts/mummerplot.pl')
+        kwargs = {'string': True}
+        filter_file('defined (%', '(%', 'scripts/mummerplot.pl',
+                    **kwargs)
 
     def install(self, spec, prefix):
         if self.run_tests:
