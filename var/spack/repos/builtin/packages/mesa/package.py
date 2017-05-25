@@ -100,7 +100,8 @@ class Mesa(AutotoolsPackage):
                 '--disable-dri',
                 '--disable-egl',
                 '--disable-driglx-direct',
-                '--with-gallium-drivers=swrast'
+                '--with-gallium-drivers=swrast',
+                '--disable-gbm'
             ])
 
         # hardware rendering
