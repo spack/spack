@@ -25,18 +25,19 @@
 from spack import *
 
 
-class RRmpfr(RPackage):
-    """Arithmetic (via S4 classes and methods) for arbitrary precision
-       floating point numbers, including transcendental ("special")
-       functions. To this end, Rmpfr interfaces to the LGPL'ed MPFR
-       (Multiple Precision Floating-Point Reliable) Library which itself
-       is based on the GMP (GNU Multiple Precision) Library."""
+class RPermute(RPackage):
+    """A set of restricted permutation designs for freely exchangeable, line
+    transects (time series), and spatial grid designs plus permutation of
+    blocks (groups of samples) is provided. 'permute' also allows split-plot
+    designs, in which the whole-plots or split-plots or both can be
+    freely-exchangeable or one of the restricted designs. The 'permute'
+    package is modelled after the permutation schemes of 'Canoco 3.1'
+    (and later) by Cajo ter Braak."""
 
-    homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    homepage = "https://github.com/gavinsimpson/permute"
+    url      = "https://cran.r-project.org/src/contrib/permute_0.9-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/permute"
 
-    version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
+    version('0.9-4', '569fc2442d72a1e3b7e2d456019674c9')
 
-    depends_on('r-gmp@0.5-8:', type=('build', 'run'))
-    depends_on('mpfr@3.0.0:')
+    depends_on('r@2.14:')

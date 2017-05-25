@@ -25,18 +25,14 @@
 from spack import *
 
 
-class RRmpfr(RPackage):
-    """Arithmetic (via S4 classes and methods) for arbitrary precision
-       floating point numbers, including transcendental ("special")
-       functions. To this end, Rmpfr interfaces to the LGPL'ed MPFR
-       (Multiple Precision Floating-Point Reliable) Library which itself
-       is based on the GMP (GNU Multiple Precision) Library."""
+class RGmodels(RPackage):
+    """Various R programming tools for model fitting."""
 
-    homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    homepage = "http://www.sf.net/projects/r-gregmisc"
+    url      = "https://cran.r-project.org/src/contrib/gmodels_2.16.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gmodels"
 
-    version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
+    version('2.16.2', 'f13e5feb2a8b9f0cd47fdf25ddc74228')
 
-    depends_on('r-gmp@0.5-8:', type=('build', 'run'))
-    depends_on('mpfr@3.0.0:')
+    depends_on('r@1.9:')
+    depends_on('r-gdata', type=('build', 'run'))
