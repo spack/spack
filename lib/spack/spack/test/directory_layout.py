@@ -81,8 +81,7 @@ def test_yaml_directory_layout_parameters(
     layout_arch_package = YamlDirectoryLayout(str(tmpdir),
                                               path_scheme=arch_scheme_package)
     arch_path_package = layout_arch_package.relative_path_for_spec(spec)
-    assert(arch_path_package ==
-            spec.format(arch_scheme_package))
+    assert(arch_path_package == spec.format(arch_scheme_package))
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
