@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import inspect
 
 
 class Mesa(AutotoolsPackage):
@@ -36,8 +37,6 @@ class Mesa(AutotoolsPackage):
 
     variant('dri', default=False,
             description="Use DRI drivers for accelerated OpenGL rendering")
-    variant('libsysfs', default=False,
-            description="Allow libsysfs for DRI drivers (libudev preferred)")
     variant('gallium', default=False,
             description="Build Gallium DRI drivers")
 
@@ -88,10 +87,27 @@ class Mesa(AutotoolsPackage):
                 args.extend(['--disable-llvm-shared-libs'])
             if '~gallium' in spec:
                 args.extend(['--without-gallium-drivers'])
-            if '+libsysfs' in spec:
-                # libudev is preferred but may not work on some systems:
-                args.extend(['--enable-sysfs'])
         else:
             args.extend(['--disable-dri', '--disable-egl',
                          '--without-gallium-drivers'])
         return args
+
+    def configure(self, spec, prefix):
+        """Configure mesa, detecting if libsysfs is required
+        for DRI support on the build host.
+        """
+        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        configure = inspect.getmodule(self).configure
+
+        with working_dir(self.build_directory, create=True):
+            try:
+                # First attempt uses libudev:
+                configure(*options)
+            except:
+                if '+dri' in spec:
+                    print('Configuring with libudev failed ... '
+                          + ' trying libsysfs ...')
+                    options.extend(['--enable-sysfs'])
+                    configure(*options)
+            else:
+                raise
