@@ -62,7 +62,6 @@ matrix:
 # Environment
 #=============================================================================
 # Use new Travis infrastructure (Docker can't sudo yet)
-dist: trusty
 sudo: false
 
 # Docs need graphviz to build
