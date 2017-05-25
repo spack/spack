@@ -177,7 +177,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                              'print is_loaded(Config)', output=str)
 
         match = '^cc *=>.*'
-        substitute = 'cc => \'{cc}\','.format(cc=self.compiler.cc)
+        substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
         filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
@@ -185,9 +185,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         config_heavy = join_path(d, 'Config_heavy.pl')
 
         match = '^cc=.*'
-        substitute = 'cc=\'{cc}\''.format(cc=self.compiler.cc)
+        substitute = "cc='{cc}'".format(cc=self.compiler.cc)
         filter_file(match, substitute, config_heavy, **kwargs)
 
         match = '^ld=.*'
-        substitute = 'ld=\'{ld}\''.format(ld=self.compiler.cc)
+        substitute = "ld='{ld}'".format(ld=self.compiler.cc)
         filter_file(match, substitute, config_heavy, **kwargs)
