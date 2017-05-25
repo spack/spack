@@ -25,30 +25,17 @@
 from spack import *
 
 
-class Bwa(Package):
-    """Burrow-Wheeler Aligner for pairwise alignment between DNA sequences."""
+class RLearnbayes(RPackage):
+    """LearnBayes contains a collection of functions helpful in learning the
+    basic tenets of Bayesian statistical inference. It contains functions for
+    summarizing basic one and two parameter posterior distributions and
+    predictive distributions. It contains MCMC algorithms for summarizing
+    posterior distributions defined by the user. It also contains functions
+    for regression models, hierarchical models, Bayesian tests, and
+    illustrations of Gibbs sampling."""
 
-    homepage = "http://github.com/lh3/bwa"
-    url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
+    homepage = "https://CRAN.R-project.org/package=LearnBayes"
+    url      = "https://cran.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/LearnBayes"
 
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
-    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
-            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
-
-    depends_on('zlib')
-
-    def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
-        filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
-                    'Makefile')
-        make()
-
-        mkdirp(prefix.bin)
-        install('bwa', join_path(prefix.bin, 'bwa'))
-        set_executable(join_path(prefix.bin, 'bwa'))
-        mkdirp(prefix.doc)
-        install('README.md', prefix.doc)
-        install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)
+    version('2.15', '213713664707bc79fd6d3a109555ef76')
