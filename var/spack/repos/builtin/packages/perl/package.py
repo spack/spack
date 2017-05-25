@@ -176,7 +176,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
-        match = '^cc *=>.*'
+        match = 'cc *=>.*'
         substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
         filter_file(match, substitute, config_dot_pm, **kwargs)
 
