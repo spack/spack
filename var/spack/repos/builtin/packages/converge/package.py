@@ -46,6 +46,8 @@ class Converge(Package):
 
     version('2.4.10', '53f5bd4bfb39005bebae46b8d6ee3ce6')
     version('2.3.16', '8b80f1e73a63181c427c7732ad279986')
+    version('2.1.0',  '327a917d46aa3bc8dee9511375ce112c',
+            url="https://download.convergecfd.com/download/CONVERGE_2.1/Full_Solver_Packages/converge_install_2.1.0_111615.tar.gz")
 
     variant('mpi', default=True, description='Build with MPI support')
 
