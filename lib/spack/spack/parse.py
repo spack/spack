@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import shlex
+import sys
 import itertools
 from six import string_types
 
@@ -79,7 +80,6 @@ class Lexer(object):
         if self.mode == 1:
             scanner = self.scanner1
             mode_switches = self.mode_switches_10
-
         tokens, remainder = scanner.scan(word)
         remainder_used = 0
 
@@ -161,7 +161,10 @@ class Parser(object):
 
     def setup(self, text):
         if isinstance(text, string_types):
-            text = shlex.split(text)
+            if sys.version_info >= (2, 7, 9):
+                text = shlex.split(text)
+            else:
+                text = shlex.split(text.encode('utf-8'))
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 
