@@ -25,15 +25,22 @@
 from spack import *
 
 
-class PyEntrypoints(Package):
+class PyEntrypoints(PythonPackage):
     """Discover and load entry points from installed packages."""
 
     homepage = "https://pypi.python.org/pypi/entrypoints"
-    url      = "https://files.pythonhosted.org/packages/f8/ad/0e77a853c745a15981ab51fa9a0cb4eca7a7a007b4c1970106ee6ba01e0c/entrypoints-0.2.2-py2.py3-none-any.whl"
+    url      = "https://pypi.python.org/packages/f8/ad/0e77a853c745a15981ab51fa9a0cb4eca7a7a007b4c1970106ee6ba01e0c/entrypoints-0.2.2-py2.py3-none-any.whl"
+
+    import_modules = ['entrypoints']
 
     version('0.2.2', '73bd7ce92c19b25dc5a20aff41be996a', expand=False)
 
+    depends_on('python@2.7:', type=('build', 'run'))
+
     depends_on('py-pip', type='build')
+    depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))
+
+    phases = ['install']
 
     def install(self, spec, prefix):
         pip = which('pip')
