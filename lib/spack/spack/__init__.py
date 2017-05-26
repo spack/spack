@@ -68,6 +68,13 @@ opt_path       = join_path(prefix, "opt")
 etc_path       = join_path(prefix, "etc")
 
 
+# GPG paths.
+gpg_keys_path      = join_path(var_path, "gpg")
+mock_gpg_data_path = join_path(var_path, "gpg.mock", "data")
+mock_gpg_keys_path = join_path(var_path, "gpg.mock", "keys")
+gpg_path           = join_path(opt_path, "spack", "gpg")
+
+
 #-----------------------------------------------------------------------------
 # Initial imports (only for use in this file -- see __all__ below.)
 #-----------------------------------------------------------------------------
