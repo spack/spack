@@ -49,6 +49,17 @@ def save_env():
         os.environ['BASH_FUNC_module()'] = old_bash_func
 
 
+def test_fail():
+    proc = subprocess.Popen(['shopt restricted_shell'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            executable='/bin/bash',
+                            shell=True)
+    proc.wait()
+    print proc.stdout.read()
+    assert 0
+
+
 def test_get_argument_from_module_line():
     lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
              'prepend-path  LD_LIBRARY_PATH  /lib/path',
