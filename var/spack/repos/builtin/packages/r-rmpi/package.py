@@ -38,18 +38,25 @@ class RRmpi(RPackage):
     depends_on('mpi')
     depends_on('r@2.15.1:')
 
-    def install(self, spec, prefix):
-        if 'mpich' in spec:
-            Rmpi_type = 'MPICH'
-        elif 'mvapich' in spec:
-            Rmpi_type = 'MVAPICH'
-        else:
+    # The following MPI types are not supported
+    conflicts('^intel-mpi')
+    conflicts('^intel-parallel-studio')
+    conflicts('^mvapich2')
+    conflicts('^spectrum-mpi')
+
+    def configure_args(self, spec, prefix):
+        mpi_name = spec['mpi'].name
+
+        # The type of MPI. Supported values are:
+        # OPENMPI, LAM, MPICH, MPICH2, or CRAY
+        if mpi_name == 'openmpi':
             Rmpi_type = 'OPENMPI'
+        elif mpi_name == 'mpich':
+            Rmpi_type = 'MPICH2'
+        else:
+            raise InstallError('Unsupported MPI type')
 
-        my_mpi = spec['mpi']
-
-        R('CMD', 'INSTALL',
-          '--configure-args=--with-Rmpi-type=%s' % Rmpi_type +
-          ' --with-mpi=%s' % my_mpi.prefix,
-          '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+        return [
+            '--with-Rmpi-type={0}'.format(Rmpi_type),
+            '--with-mpi={0}'.format(spec['mpi'].prefix),
+        ]
