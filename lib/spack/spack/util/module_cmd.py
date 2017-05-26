@@ -43,8 +43,10 @@ def get_module_cmd(bashopts=''):
             return get_module_cmd_from_which()
         except ModuleError as e:
             raise ModuleError('Spack requires modulecmd or a defined module'
-                    ' fucntion. Make sure modulecmd is in your path or the'
-                    ' function "module" is defined in your bash environment.')
+                              ' fucntion. Make sure modulecmd is in your path'
+                              ' or the function "module" is defined in your'
+                              ' bash environment.')
+
 
 def get_module_cmd_from_which():
     module_cmd = which('modulecmd')

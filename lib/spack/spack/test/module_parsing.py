@@ -90,7 +90,7 @@ def test_get_module_cmd_from_bash_parens():
     old_bash_func = os.environ.get('BASH_FUNC_module()', None)
 
     try:
-        os.environ['BASH_FUNC_module()'] = '() { eval $(echo filler bash $*)\n}'
+        os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
 
         module_cmd = get_module_cmd()
         module_cmd_list = module_cmd('list', output=str, error=str)
