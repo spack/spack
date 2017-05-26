@@ -33,7 +33,7 @@ typeset_func = subprocess.Popen('module avail',
                                 shell=True)
 typeset_func.wait()
 typeset = typeset_func.stderr.read()
-MODULE_DEFINED = b'not found' not in typeset
+MODULE_NOT_DEFINED = b'not found' in typeset
 
 
 def test_get_argument_from_module_line():
@@ -52,7 +52,7 @@ def test_get_argument_from_module_line():
             get_argument_from_module_line(bl)
 
 
-@pytest.mark.skipif(not MODULE_DEFINED, reason='Depends on defined module cmd')
+@pytest.mark.skipif(MODULE_NOT_DEFINED, reason='Depends on defined module fn')
 def test_get_module_cmd_from_bash_using_modules():
     module_list_proc = subprocess.Popen(['module list'],
                                         stdout=subprocess.PIPE,
@@ -70,41 +70,58 @@ def test_get_module_cmd_from_bash_using_modules():
     assert module_list in module_cmd_list
 
 
-@pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_ticks():
-    module_func = os.environ.get('BASH_FUNC_module()', None)
+    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
+
     try:
         os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*`\n}'
 
-        module_cmd = get_module_cmd_from_bash()
+        module_cmd = get_module_cmd()
         module_cmd_list = module_cmd('list', output=str, error=str)
 
         assert module_cmd_list == 'python list\n'
 
     finally:
-        if module_func:
-            os.environ['BASH_FUNC_module()'] = module_func
-    assert False
+        if old_bash_func:
+            os.environ['BASH_FUNC_module()'] = old_bash_func
 
 
-@pytest.mark.skipif(MODULE_DEFINED, reason='Depends on redefining module cmd')
 def test_get_module_cmd_from_bash_parens():
-    module_func = os.environ.get('BASH_FUNC_module()', None)
+    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
+
     try:
         os.environ['BASH_FUNC_module()'] = '() { eval $(echo filler bash $*)\n}'
-        module_cmd = get_module_cmd_from_bash()
+
+        module_cmd = get_module_cmd()
         module_cmd_list = module_cmd('list', output=str, error=str)
 
         assert module_cmd_list == 'filler python list\n'
 
     finally:
-        if module_func:
-            os.environ['BASH_FUNC_module()'] = module_func
-    assert False
+        if old_bash_func:
+            os.environ['BASH_FUNC_module()'] = old_bash_func
 
 
-def test_get_module_cmd_from_modulecmd(tmpdir):
-    old_PATH = os.environ['PATH']
+def test_get_module_cmd_fails():
+    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
+    old_PATH = os.environ.get('PATH', None)
+    try:
+        os.environ.pop('BASH_FUNC_module()')
+        os.environ.pop('PATH')
+        with pytest.raises(ModuleError):
+            module_cmd = get_module_cmd('--norc')
+            print module_cmd
+
+    finally:
+        if old_PATH:
+            os.environ['PATH'] = old_PATH
+        if old_bash_func:
+            os.environ['BASH_FUNC_module()'] = old_bash_func
+
+
+def test_get_module_cmd_from_which(tmpdir):
+    old_PATH = os.environ.get('PATH', None)
+    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
 
     f = tmpdir.mkdir('bin').join('modulecmd')
     f.write('#!/bin/bash\n'
@@ -113,11 +130,15 @@ def test_get_module_cmd_from_modulecmd(tmpdir):
 
     try:
         os.environ['PATH'] = str(tmpdir.join('bin')) + ':' + old_PATH
+        os.environ.pop('BASH_FUNC_module()')
 
-        module_cmd = get_module_cmd_from_which()
+        module_cmd = get_module_cmd('--norc')
         module_cmd_list = module_cmd('list', output=str, error=str)
 
         assert module_cmd_list == 'python list\n'
 
     finally:
-        os.environ['PATH'] = old_PATH
+        if old_PATH:
+            os.environ['PATH'] = old_PATH
+        if old_bash_func:
+            os.environ['BASH_FUNC_module()'] = old_bash_func

@@ -29,19 +29,27 @@ parsing environment modules.
 import subprocess
 import re
 import os
+import llnl.util.tty as tty
 from spack.util.executable import which
 
 
-def get_module_cmd():
+def get_module_cmd(bashopts=''):
     try:
-        return get_module_cmd_from_bash()
-    except ModuleError:
+        return get_module_cmd_from_bash(bashopts)
+    except ModuleError as e:
         # Don't catch the exception this time; we have no other way to do it.
-        return get_module_cmd_from_which()
-
+        tty.warn(e.message + "trying to detect modulecmd from `which`")
+        try:
+            return get_module_cmd_from_which()
+        except ModuleError as e:
+            raise ModuleError('Spack requires modulecmd or a defined module'
+                    ' fucntion. Make sure modulecmd is in your path or the'
+                    ' function "module" is defined in your bash environment.')
 
 def get_module_cmd_from_which():
-    module_cmd = which('modulecmd', required=True)
+    module_cmd = which('modulecmd')
+    if not module_cmd:
+        raise ModuleError('`which` did not find any modulecmd executable')
     module_cmd.add_default_arg('python')
 
     # Check that the executable works
@@ -52,21 +60,20 @@ def get_module_cmd_from_which():
     return module_cmd
 
 
-def get_module_cmd_from_bash():
+def get_module_cmd_from_bash(bashopts=''):
     # Find how the module function is defined in the environment
     module_func = os.environ.get('BASH_FUNC_module()', None)
-    if not module_func:
-        module_func_proc = subprocess.Popen(['typeset -f module | envsubst'],
+    if module_func:
+        module_func = os.path.expandvars(module_func)
+    else:
+        module_func_proc = subprocess.Popen(['{0} typeset -f module | '
+                                             'envsubst'.format(bashopts)],
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT,
                                             executable='/bin/bash',
                                             shell=True)
         module_func_proc.wait()
         module_func = module_func_proc.stdout.read()
-    print module_func
-    print "-----------------------"
-    print os.environ['BASH_FUNC_module()']
-    print "-----------"
 
     # Find the portion of the module function that is evaluated
     try:
@@ -80,22 +87,28 @@ def get_module_cmd_from_bash():
             exec_line = find_exec.group(1)
         except:
             raise ModuleError('get_module_cmd cannot '
-                              'determine the module command')
+                              'determine the module command from bash')
 
     # Create an executable
     args = exec_line.split()
     module_cmd = which(args[0])
-    for arg in args[1:]:
-        if arg == 'bash':
-            module_cmd.add_default_arg('python')
-            break
-        else:
-            module_cmd.add_default_arg(arg)
+    if module_cmd:
+        for arg in args[1:]:
+            if arg == 'bash':
+                module_cmd.add_default_arg('python')
+                break
+            else:
+                module_cmd.add_default_arg(arg)
+    else:
+        print args, "GAGGAGAGA"
+        raise ModuleError('Could not create executable based on module'
+                          ' function.')
 
     # Check that the executable works
     module_cmd('list', output=str, error=str, fail_on_error=False)
     if module_cmd.returncode != 0:
-        raise ModuleError('get_module_cmd cannot determine the module command')
+        raise ModuleError('get_module_cmd cannot determine the module command'
+                          'from bash.')
 
     return module_cmd
 
