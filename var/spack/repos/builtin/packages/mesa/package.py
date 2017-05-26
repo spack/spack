@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.version import *
 import distro
 
 
@@ -36,8 +35,8 @@ class Mesa(AutotoolsPackage):
 
     list_url = "https://mesa.freedesktop.org/archive"
 
-    version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
     version('17.1.1', 'a4844bc6052578574f9629458bcbb749')
+    version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
 
     variant('dri', default=True, description='Enable Hardware Acceleration')
     variant('osmesa', default=False, description='Enable Off Screen Rendering')
@@ -74,27 +73,21 @@ class Mesa(AutotoolsPackage):
     # 12.0.3: "llvm@3:3.99" with 3.9.1 per #4258 does not pass cmake
     # llvm also requires gcc >= 4.8
     # 17.1.1: Add newer libdrm to Spack as >= 2.4.75 needed for 17.1.1
-    # 17.1.1: ~dri does not work - config error 'gbm requires --enable-dri'
     def configure_args(self):
         spec = self.spec
         v = distro.linux_distribution()[1]
         distname = distro.linux_distribution()[0]
 
         # libudev too old on centos / rhel 6 so do sysfs
-        if distname == "RedHatEnterpriseServer":
+        if distname == "RedHatEnterpriseServer" or distname == "CentOS":
             if Version('6.0') <= Version(v) <= Version('6.999'):
                 args = ['--enable-sysfs']
             else:
                 args = []
-        elif distname == "CentOS":
-            if Version('6.0') <= Version(v) <= Version('6.999'):
-                args = ['--enable-sysfs']
-            else:
-                args = ['--enable-sysfs']
         else:
             args = []
 
-        # software rendering
+        # software rendering - works both v12 and v17
         if '~dri' in spec:
             args.extend([
                 '--disable-dri',
