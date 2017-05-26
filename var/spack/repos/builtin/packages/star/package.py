@@ -34,6 +34,9 @@ class Star(Package):
 
     version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
 
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', join_path(self.prefix))
+
     def install(self, spec, prefix):
         source_directory = join_path(self.stage.source_path, 'source')
 
