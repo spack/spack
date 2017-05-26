@@ -95,7 +95,7 @@ def test_get_module_cmd_from_bash_parens():
         module_cmd = get_module_cmd()
         module_cmd_list = module_cmd('list', output=str, error=str)
 
-        assert module_cmd_list == 'filler python list\n'
+        assert module_cmd_list == 'fill python list\n'
 
     finally:
         if old_bash_func:
