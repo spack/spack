@@ -100,7 +100,6 @@ def get_module_cmd_from_bash(bashopts=''):
             else:
                 module_cmd.add_default_arg(arg)
     else:
-        print args, "GAGGAGAGA"
         raise ModuleError('Could not create executable based on module'
                           ' function.')
 
