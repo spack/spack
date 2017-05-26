@@ -41,12 +41,7 @@ class Mummer(Package):
 
     def patch(self):
         """Fix mummerplot's use of defined on hashes (deprecated
-           since perl@5.6 made illegal in perl@5.20."""
-
-        # only fix this for versions where it is actually
-        # an error, not just deprecated.
-        if not self.spec.satisfies('^perl@5.20:'):
-            return
+           since perl@5.10, made illegal in perl@5.20."""
 
         kwargs = {'string': True}
         filter_file('defined (%', '(%', 'scripts/mummerplot.pl',
