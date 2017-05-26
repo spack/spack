@@ -60,19 +60,14 @@ class Mesa(AutotoolsPackage):
     depends_on('libxdamage')
     depends_on('libxfixes')
 
-    depends_on('glproto@1.4.14:', type='build')
-    depends_on('dri2proto@2.6:', when='+dri', type='build')
-    depends_on('dri3proto@1.0:', when='+dri', type='build')
-    depends_on('presentproto@1.0:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('llvm@3.0', when='+dri', type='build')
-    depends_on('libdrm', when='+dri', type='build')
+    depends_on('glproto@1.4.14:')
+    depends_on('dri2proto@2.6:', when='+dri')
+    depends_on('dri3proto@1.0:', when='+dri')
+    depends_on('presentproto@1.0:')
+    depends_on('pkg-config@0.9.0:')
+    depends_on('llvm+link_dylib', when='+dri')
+    depends_on('libdrm', when='+dri')
 
-    # TODO:
-    # *** DRI broken with 12.0.3 and 17.1.1 ***
-    # 12.0.3: "llvm@3:3.99" with 3.9.1 per #4258 does not pass cmake
-    # llvm also requires gcc >= 4.8
-    # 17.1.1: Add newer libdrm to Spack as >= 2.4.75 needed for 17.1.1
     def configure_args(self):
         spec = self.spec
         v = distro.linux_distribution()[1]
@@ -97,11 +92,11 @@ class Mesa(AutotoolsPackage):
                 '--disable-gbm'
             ])
 
-        # hardware rendering
+        # hardware rendering - works v17
         elif '+dri' in spec:
             args.extend([
                 '--enable-dri',
-                '--enable-egl'
+                '--enable-egl',
                 '--enable-gles1',
                 '--enable-gles2',
                 '--enable-glx-tls',
