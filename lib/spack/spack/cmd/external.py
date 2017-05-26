@@ -37,6 +37,8 @@ import spack.spec
 
 
 description = "Add an external package entry to packages.yaml"
+section = "system"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -118,6 +120,7 @@ def external_rm(args):
     for spec in removed_entries:
         tty.msg("Removed package: {0}".format(spec))
 
+
 def external_list(args):
     tty.msg("Available external packages")
     scope = args.scope
@@ -126,7 +129,7 @@ def external_list(args):
     index = index_by(all_packages, lambda p: p.package_name)
     for i, (name, package) in enumerate(index.iteritems()):
         if i >= 1:
-            print
+            print()
         tty.hline(name, char="-")
         display_package_specs(package)
 
@@ -140,9 +143,9 @@ def display_package_specs(package_object):
     ext_location = specs_to_display.values()
     max_width = max([len(s) for s in colorized_specs])
     max_width += 3
-    output = "{spec: <{width}}{external}"
+    output = "{spec: {width}}{external}"
     for spec, external in zip(colorized_specs, ext_location):
-        print output.format(spec=spec, width=max_width, external=external)
+        print(output.format(spec=spec, width=max_width, external=external))
 
 
 def external(parser, args):
