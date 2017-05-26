@@ -33,12 +33,12 @@ class Star(Package):
     url      = "https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz"
 
     version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
-    
+
     def install(self, spec, prefix):
         source_directory = join_path(self.stage.source_path, 'source')
 
         with working_dir(source_directory):
             make('STAR', 'STARlong')
-            make('install','STAR', 'STARlong') 
+            make('install', 'STAR', 'STARlong')
             shutil.move("../bin/STAR", prefix)
             shutil.move("../bin/STARlong", prefix)
