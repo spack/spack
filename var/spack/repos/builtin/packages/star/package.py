@@ -33,12 +33,7 @@ class Star(Package):
 
     version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix.bin))
-
     def install(self, spec, prefix):
-        join_path(self.stage.source_path, 'source')
-
         with working_dir('source'):
             make('STAR', 'STARlong')
             mkdirp(prefix.bin)
