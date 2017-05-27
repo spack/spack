@@ -70,7 +70,9 @@ class Parmetis(Package):
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,
             '-DCMAKE_C_COMPILER:STRING=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx
+            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_C_FLAGS:STRING=%s' % (
+                '-c11' if '%pgi' in spec else ''),
         ])
 
         if '+shared' in spec:
