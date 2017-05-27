@@ -25,14 +25,15 @@
 from spack import *
 
 
-class PerlIntervaltree(PerlPackage):
-    """Set::IntervalTree uses Interval Trees to store and efficiently look up
-    ranges using a range-based lookup."""
+class PerlUriEscape(PerlPackage):
+    """This module provides functions to percent-encode and percent-decode URI
+    strings as defined by RFC 3986. Percent-encoding URI's is informally called
+    "URI escaping". This is the terminology used by this module, which predates
+    the formalization of the terms by the RFC by several years."""
 
-    homepage = "https://metacpan.org/release/Set-IntervalTree"
-    url      = "https://cpan.metacpan.org/authors/id/B/BE/BENBOOTH/Set-IntervalTree-0.10.tar.gz"
+    homepage = "https://metacpan.org/pod/URI::Escape"
+    url      = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/URI-1.71.tar.gz"
 
-    version('0.10', '42efe9369f1b30e7fd04e10c07226b06')
+    version('1.71', '247c3da29a794f72730e01aa5a715daf')
 
-    # depends_on('perl')
     depends_on('perl-extutils-makemaker')

@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
 
 
-class PerlStarFusion(PerlPackage):
+class PerlStarFusion(Package):
     """STAR-Fusion is a component of the Trinity Cancer Transcriptome Analysis
     Toolkit (CTAT). STAR-Fusion uses the STAR aligner to identify candidate
     fusion transcripts supported by Illumina reads. STAR-Fusion further
@@ -37,11 +38,27 @@ class PerlStarFusion(PerlPackage):
 
     version('master', '0d8b79e9fb11a131098870278e84859d')
 
-    depends_on('STAR', type=('build', 'run'))
-    depends_on('perl-intervaltreee', type=('build', 'run'))
+    depends_on('star', type=('build', 'run'))
+    depends_on('perl-intervaltree', type=('build', 'run'))
+    depends_on('perl-dbi', type=('build', 'run'))
+    depends_on('perl-dbfile', type=('build', 'run'))
+    depends_on('perl-uri-escape', type=('build', 'run'))
 
-    def configure_args(self):
-        # FIXME: Add non-standard arguments
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', join_path(self.prefix, 'util'))
+        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'lib'))
+
+    def install(self, spec, prefix):
+        util = join_path(prefix, 'util')
+        lib = join_path(prefix, 'lib')
+
+        mkdirp(prefix.bin)
+        install('STAR-Fusion', prefix.bin)
+        mkdir(lib)
+        with working_dir('PerlLib'):
+            for pm in glob("*.pm"):
+                install(pm, lib)
+        mkdir(util)
+        with working_dir('util'):
+            for files in glob("*"):
+                install(files, util)
