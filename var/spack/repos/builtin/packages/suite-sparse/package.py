@@ -53,6 +53,9 @@ class SuiteSparse(Package):
 
     patch('tbb_453.patch', when='@4.5.3:+tbb')
 
+    # This patch removes unsupported flags for pgi compiler
+    patch('pgi.patch', when='%pgi')
+
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header
@@ -74,7 +77,8 @@ class SuiteSparse(Package):
             'CUDA=no',
             'CUDA_PATH={0}'.format(
                 spec['cuda'].prefix if '+cuda' in spec else ''
-            )
+            ),
+            'CFOPENMP={0}'.format(self.compiler.openmp_flag)
         ])
 
         if '+pic' in spec:
