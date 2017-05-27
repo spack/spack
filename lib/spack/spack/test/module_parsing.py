@@ -50,12 +50,17 @@ def save_env():
 
 
 def test_fail():
-    proc = subprocess.Popen(['shopt restricted_shell'],
+    proc = subprocess.Popen(['shopt restricted_shell',
+                             'echo ++++++++',
+                             'whoami'],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT,
                             executable='/bin/bash',
                             shell=True)
     proc.wait()
+    print '+++++++++'
+    import getpass
+    print(getpass.getuser())
     print proc.stdout.read()
     assert 0
 
