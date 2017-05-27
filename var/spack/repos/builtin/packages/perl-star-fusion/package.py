@@ -34,9 +34,9 @@ class PerlStarFusion(Package):
     and spanning reads to a reference annotation set."""
 
     homepage = "https://github.com/STAR-Fusion/STAR-Fusion"
-    url      = "https://github.com/STAR-Fusion/STAR-Fusion/archive/master.zip"
+    url      = "https://github.com/STAR-Fusion/STAR-Fusion.git"
 
-    version('master', '0d8b79e9fb11a131098870278e84859d')
+    version('master', git='https://github.com/STAR-Fusion/STAR-Fusion.git', commit='a16a0a8')
 
     depends_on('star', type=('build', 'run'))
     depends_on('perl-intervaltree', type=('build', 'run'))
@@ -45,20 +45,17 @@ class PerlStarFusion(Package):
     depends_on('perl-uri-escape', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'util'))
-        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'lib'))
+        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'perl5'))
 
     def install(self, spec, prefix):
-        util = join_path(prefix, 'util')
-        lib = join_path(prefix, 'lib')
+        perl5 = join_path(prefix, 'perl5')
 
         mkdirp(prefix.bin)
         install('STAR-Fusion', prefix.bin)
-        mkdir(lib)
+        mkdir(perl5)
         with working_dir('PerlLib'):
             for pm in glob("*.pm"):
-                install(pm, lib)
-        mkdir(util)
+                install(pm, perl5)
         with working_dir('util'):
             for files in glob("*"):
-                install(files, util)
+                install(files, prefix.bin)
