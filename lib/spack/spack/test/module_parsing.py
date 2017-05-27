@@ -58,9 +58,9 @@ def test_fail():
                             executable='/bin/bash',
                             shell=True)
     proc.wait()
-    print '+++++++++'
     import getpass
-    print(getpass.getuser())
+    print getpass.getuser()
+    print '+++++++++'
     print proc.stdout.read()
     assert 0
 
