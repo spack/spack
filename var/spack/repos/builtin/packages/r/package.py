@@ -74,6 +74,8 @@ class R(AutotoolsPackage):
     depends_on('cairo+X', when='+X')
     depends_on('cairo~X', when='~X')
     depends_on('pango')
+    depends_on('pango+X', when='+X')
+    depends_on('pango~X', when='~X')
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')
