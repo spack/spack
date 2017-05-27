@@ -40,6 +40,7 @@ class Mesa(AutotoolsPackage):
 
     variant('dri', default=True, description='Enable Hardware Acceleration')
     variant('osmesa', default=False, description='Enable Off Screen Rendering')
+    variant('gdm', default=False, description='Enable GNOME Support')
     conflicts('+dri', '+osmesa')
     conflicts('~dri', '+osmesa')
 
@@ -89,7 +90,6 @@ class Mesa(AutotoolsPackage):
                 '--disable-egl',
                 '--disable-driglx-direct',
                 '--with-gallium-drivers=swrast',
-                '--disable-gbm'
             ])
 
         # hardware rendering - works v17
@@ -109,5 +109,13 @@ class Mesa(AutotoolsPackage):
                 '--disable-driglx-direct',
                 '--disable-dri',
                 '--with-gallium-drivers=swrast'
+            ])
+        if '+gdm' in spec:
+            args.extend([
+                '--enable-gdm'
+            ])
+        else:
+            args.extend([
+                '--disable-gdm'
             ])
         return args
