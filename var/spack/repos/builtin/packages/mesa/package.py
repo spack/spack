@@ -43,6 +43,8 @@ class Mesa(AutotoolsPackage):
             description="Use DRI drivers for accelerated OpenGL rendering")
     variant('llvm', default=False,
             description="Build DRI drivers that depend on llvm")
+    variant('cxx', default='98', values=('98','11','14'),
+            description="Build features designed for the given C++ standard")
 
     # NOTE: mesa@12+dri may not build on older platforms,
     #       due to dependency on libudev or libsysfs.
@@ -85,8 +87,18 @@ class Mesa(AutotoolsPackage):
     #depends_on('libgcrypt')
     #depends_on('nettle')
 
+    def has_cxx(self, spec, yy):
+        """Test spec for variant cxx=yy or newer."""
+        for testyy in ['14','11','98']:
+            if 'cxx=%s' % testyy in spec:
+                return True
+            if testyy == yy:
+                break
+        return False
+
     def configure_args(self):
         spec = self.spec
+        has_cxx = self.has_cxx
         args = ['--enable-texture-float', '--enable-xa', '--enable-glx-tls']
         if '+dri' in spec:
             # Build gallium drivers for platforms supported by spack;
@@ -99,7 +111,12 @@ class Mesa(AutotoolsPackage):
                 # ilo driver removed in @17:
                 gallium += ',ilo'
             if '+llvm' in spec:
-                gallium += ',r300,radeonsi,swr'
+                gallium += ',r300,radeonsi'
+                if (spec.satisfies('@:12.99') or
+                    (spec.satisfies('@13:16.99') and has_cxx(spec, '11')) or
+                    (spec.satisfies('@17:') and has_cxx(spec,'14'))):
+                    # Newer 'swr' drivers require later c++ standards:
+                    gallium += ',swr'
             args.extend(['--with-gallium-drivers=' + gallium])
         else:
             args.extend(['--disable-dri', '--disable-egl',
