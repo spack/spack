@@ -120,5 +120,6 @@ class Mesa(AutotoolsPackage):
             args.extend(['--with-gallium-drivers=' + gallium])
         else:
             args.extend(['--disable-dri', '--disable-egl',
-                         '--without-gallium-drivers', '--enable-osmesa'])
+                         '--without-gallium-drivers', '--enable-osmesa',
+                         '--disable-gbm'])
         return args
