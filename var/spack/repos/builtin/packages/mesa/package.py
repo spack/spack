@@ -41,8 +41,8 @@ class Mesa(AutotoolsPackage):
 
     variant('dri', default=False,
             description="Use DRI drivers for accelerated OpenGL rendering")
-    variant('gallium', default=False,
-            description="Build Gallium DRI drivers")
+    variant('llvm', default=False,
+            description="Build DRI drivers that depend on llvm")
 
     # NOTE: mesa@12+dri may not build on older platforms,
     #       due to dependency on libudev or libsysfs.
@@ -76,22 +76,31 @@ class Mesa(AutotoolsPackage):
     depends_on('libdrm', when='+dri')
     depends_on('dri2proto@2.6:', type='build', when='+dri')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
-    depends_on('llvm@3:3.99', when='+dri+gallium')
+    depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+dri+llvm')
+    depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+dri+llvm')
+    depends_on('llvm+link_dylib', when='@14:17.99+dri+llvm')
+    depends_on('libelf', when='+dri+llvm')
 
     # For optional features, possible new variants:
     #depends_on('libgcrypt')
     #depends_on('nettle')
-    #depends_on('libelf')
 
     def configure_args(self):
         spec = self.spec
         args = ['--enable-texture-float', '--enable-osmesa',
                 '--enable-xa', '--enable-glx-tls']
         if '+dri' in spec:
-            if 'llvm' in spec and '~link_dylib' in spec['llvm']:
-                args.extend(['--disable-llvm-shared-libs'])
-            if '~gallium' in spec:
-                args.extend(['--without-gallium-drivers'])
+            # Build gallium drivers for platforms supported by spack;
+            # exclude drivers for embedded systems:
+            #   vc4, freedreno, etnaviv, imx
+            args.extend(['--with-egl-platforms=x11,drm'])
+            gallium = 'svga,i915,r600,nouveau,swrast,virgl'
+            if spec.satisfies('@:16.99'):
+                # ilo driver removed in @17:
+                gallium += ',ilo'
+            if '+llvm' in spec:
+                gallium += ',r300,radeonsi,swr'
+            args.extend(['--with-gallium-drivers=' + gallium])
         else:
             args.extend(['--disable-dri', '--disable-egl',
                          '--without-gallium-drivers'])
