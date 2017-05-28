@@ -87,13 +87,13 @@ class Mesa(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = ['--enable-texture-float', '--enable-osmesa',
-                '--enable-xa', '--enable-glx-tls']
+        args = ['--enable-texture-float', '--enable-xa', '--enable-glx-tls']
         if '+dri' in spec:
             # Build gallium drivers for platforms supported by spack;
             # exclude drivers for embedded systems:
             #   vc4, freedreno, etnaviv, imx
-            args.extend(['--with-egl-platforms=x11,drm'])
+            args.extend(['--with-egl-platforms=x11,drm',
+                         '--disable-osmesa', '--enable-gallium-osmesa'])
             gallium = 'svga,i915,r600,nouveau,swrast,virgl'
             if spec.satisfies('@:16.99'):
                 # ilo driver removed in @17:
@@ -103,5 +103,5 @@ class Mesa(AutotoolsPackage):
             args.extend(['--with-gallium-drivers=' + gallium])
         else:
             args.extend(['--disable-dri', '--disable-egl',
-                         '--without-gallium-drivers'])
+                         '--without-gallium-drivers', '--enable-osmesa'])
         return args
