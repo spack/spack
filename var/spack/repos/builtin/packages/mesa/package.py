@@ -43,8 +43,6 @@ class Mesa(AutotoolsPackage):
             description="Use DRI drivers for accelerated OpenGL rendering")
     variant('llvm', default=False,
             description="Build DRI drivers that depend on llvm")
-    variant('cxx', default='98', values=('98','11','14'),
-            description="Build features designed for the given C++ standard")
 
     # NOTE: mesa@12+dri may not build on older platforms,
     #       due to dependency on libudev or libsysfs.
@@ -87,14 +85,14 @@ class Mesa(AutotoolsPackage):
     #depends_on('libgcrypt')
     #depends_on('nettle')
 
-    def has_cxx(self, spec, yy):
-        """Test spec for variant cxx=yy or newer."""
-        for testyy in ['14','11','98']:
-            if 'cxx=%s' % testyy in spec:
-                return True
-            if testyy == yy:
-                break
-        return False
+    def has_cxx(self, spec, std):
+        """Test spec for a compiler meeting the given language standard."""
+        if std == 'c++11':
+            return spec.satisfies('%gcc@4.8.1:')
+        elif std == 'c++14':
+            return spec.satisfies('%gcc@6.1:')
+        else:
+            raise ValueError("Unknown language standard")
 
     def configure_args(self):
         spec = self.spec
@@ -113,8 +111,8 @@ class Mesa(AutotoolsPackage):
             if '+llvm' in spec:
                 gallium += ',r300,radeonsi'
                 if (spec.satisfies('@:12.99') or
-                    (spec.satisfies('@13:16.99') and has_cxx(spec, '11')) or
-                    (spec.satisfies('@17:') and has_cxx(spec,'14'))):
+                    (spec.satisfies('@13:16.99') and has_cxx(spec, 'c++11')) or
+                    (spec.satisfies('@17:') and has_cxx(spec,'c++14'))):
                     # Newer 'swr' drivers require later c++ standards:
                     gallium += ',swr'
             args.extend(['--with-gallium-drivers=' + gallium])
