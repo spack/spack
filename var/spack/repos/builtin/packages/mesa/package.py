@@ -93,7 +93,7 @@ class Mesa(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         has_cxx = self.has_cxx
-        args = ['--enable-texture-float', '--enable-xa', '--enable-glx-tls']
+        args = ['--enable-xa', '--enable-glx-tls']
         if '+dri' in spec:
             # Build gallium drivers for platforms supported by spack;
             # exclude drivers for embedded systems:
