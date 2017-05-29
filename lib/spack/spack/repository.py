@@ -419,6 +419,8 @@ class RepoPath(MutableSequence):
         return self.repo_for_pkg(spec).dump_provenance(spec, path)
 
     def dirname_for_package_name(self, pkg_name):
+        # TODO: this function may return the wrong result if there's more
+        # TODO: than one repo that contains 'pkg_name'.
         return self.repo_for_pkg(pkg_name).dirname_for_package_name(pkg_name)
 
     def filename_for_package_name(self, pkg_name):
