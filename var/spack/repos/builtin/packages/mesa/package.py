@@ -44,10 +44,6 @@ class Mesa(AutotoolsPackage):
     variant('llvm', default=False,
             description="Build DRI drivers that depend on llvm")
 
-    # NOTE: mesa@12+dri may not build on older platforms,
-    #       due to dependency on libudev or libsysfs.
-    #       The dependency has been removed from mesa@13 onwards.
-
     # General dependencies
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('flex@2.5.35:', type='build')
@@ -94,6 +90,9 @@ class Mesa(AutotoolsPackage):
         else:
             raise ValueError("Unknown language standard")
 
+    # TODO: Add package for systemd, provides libudev
+    # Using the system package manager to install systemd didn't work for me
+
     def configure_args(self):
         spec = self.spec
         has_cxx = self.has_cxx
@@ -121,3 +120,23 @@ class Mesa(AutotoolsPackage):
                          '--without-gallium-drivers', '--enable-osmesa',
                          '--disable-gbm'])
         return args
+
+    def configure(self, spec, prefix):
+        """Configure mesa, detecting if libsysfs is required
+        for DRI support on the build host.
+        """
+        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        configure = inspect.getmodule(self).configure
+
+        with working_dir(self.build_directory, create=True):
+            try:
+                # First attempt uses libudev:
+                configure(*options)
+            except:
+                if '+dri' in spec:
+                    print('Configuring with libudev failed ... '
+                          + ' trying libsysfs ...')
+                    options.extend(['--enable-sysfs'])
+                    configure(*options)
+            else:
+                raise
