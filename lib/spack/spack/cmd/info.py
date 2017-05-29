@@ -25,10 +25,10 @@
 from __future__ import print_function
 
 import textwrap
-import itertools
 from llnl.util.tty.colify import *
 import spack
 import spack.fetch_strategy as fs
+import spack.util.compat as compat
 
 description = "get detailed information on a particular package"
 section = "basic"
@@ -119,7 +119,7 @@ class VariantFormatter(object):
                     v.description,
                     width=self.column_widths[2]
                 )
-                for t in itertools.izip_longest(
+                for t in compat.zip_longest(
                         name, allowed, description, fillvalue=''
                 ):
                     yield "    " + self.fmt % t
