@@ -90,9 +90,6 @@ class Mesa(AutotoolsPackage):
         else:
             raise ValueError("Unknown language standard")
 
-    # TODO: Add package for systemd, provides libudev
-    # Using the system package manager to install systemd didn't work for me
-
     def configure_args(self):
         spec = self.spec
         has_cxx = self.has_cxx
@@ -133,10 +130,10 @@ class Mesa(AutotoolsPackage):
                 # First attempt uses libudev:
                 configure(*options)
             except:
-                if '+dri' in spec:
+                if '+dri' in spec and not spec.satisfies('@13:'):
                     print('Configuring with libudev failed ... '
-                          + ' trying libsysfs ...')
+                          ' trying libsysfs ...')
                     options.extend(['--enable-sysfs'])
                     configure(*options)
-            else:
-                raise
+                else:
+                    raise
