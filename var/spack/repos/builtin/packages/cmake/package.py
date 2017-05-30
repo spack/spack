@@ -72,6 +72,8 @@ class Cmake(Package):
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
+    patch('ibm-xl.patch', when='%xl')
+    patch('ibm-xl.patch', when='%xl_r')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""

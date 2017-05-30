@@ -1,0 +1,56 @@
+diff -Naur cmake-3.5.2/Modules/FortranCInterface/call_mod.f90 cmake-3.5.2-patched/Modules/FortranCInterface/call_mod.f90
+--- cmake-3.5.2/Modules/FortranCInterface/call_mod.f90	2016-04-15 09:41:21.000000000 -0400
++++ cmake-3.5.2-patched/Modules/FortranCInterface/call_mod.f90	2016-07-05 16:58:46.165087149 -0400
+@@ -1,6 +1,6 @@
+-subroutine call_mod
+-  use mymodule
+-  use my_module
+-  call mysub()
+-  call my_sub()
+-end subroutine call_mod
++      subroutine call_mod
++        use mymodule
++        use my_module
++        call mysub()
++        call my_sub()
++      end subroutine call_mod
+diff -Naur cmake-3.5.2/Modules/FortranCInterface/my_module.f90 cmake-3.5.2-patched/Modules/FortranCInterface/my_module.f90
+--- cmake-3.5.2/Modules/FortranCInterface/my_module.f90	2016-04-15 09:41:21.000000000 -0400
++++ cmake-3.5.2-patched/Modules/FortranCInterface/my_module.f90	2016-07-05 16:59:06.241523596 -0400
+@@ -1,8 +1,8 @@
+-module my_module
+-  interface my_interface
+-     module procedure my_sub
+-  end interface
+-contains
+-  subroutine my_sub
+-  end subroutine my_sub
+-end module my_module
++      module my_module
++        interface my_interface
++           module procedure my_sub
++        end interface
++      contains
++        subroutine my_sub
++        end subroutine my_sub
++      end module my_module
+diff -Naur cmake-3.5.2/Modules/FortranCInterface/mymodule.f90 cmake-3.5.2-patched/Modules/FortranCInterface/mymodule.f90
+--- cmake-3.5.2/Modules/FortranCInterface/mymodule.f90	2016-04-15 09:41:21.000000000 -0400
++++ cmake-3.5.2-patched/Modules/FortranCInterface/mymodule.f90	2016-07-05 16:59:44.344167637 -0400
+@@ -1,8 +1,8 @@
+-module mymodule
+-  interface myinterface
+-     module procedure mysub
+-  end interface
+-contains
+-  subroutine mysub
+-  end subroutine mysub
+-end module mymodule
++      module mymodule
++        interface myinterface
++           module procedure mysub
++        end interface
++      contains
++        subroutine mysub
++        end subroutine mysub
++      end module mymodule
