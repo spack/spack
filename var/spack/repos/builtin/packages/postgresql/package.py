@@ -40,8 +40,14 @@ class Postgresql(Package):
     depends_on('openssl')
     depends_on('readline')
 
+    variant('threadsafe', default=False, description='Build with thread safe.')
+
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
+        config_args = ["--prefix=%s" % prefix,
+                       "--with-openssl"]
+        if '+threadsafe' not in spec:
+            config_args.append("--disable-thread-safety")
+        configure(*config_args)
+
         make()
         make("install")
