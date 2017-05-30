@@ -314,8 +314,6 @@ class Openmpi(AutotoolsPackage):
             if '+cuda' in spec:
                 config_args.append('--with-cuda={0}'.format(
                     spec['cuda'].prefix))
-                config_args.append('--with-cuda-libdir={0}'.format(
-                    spec['cuda'].libs.directories[0]))
             else:
                 config_args.append('--without-cuda')
 
