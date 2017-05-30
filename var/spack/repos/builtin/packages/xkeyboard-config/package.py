@@ -32,10 +32,10 @@ class XkeyboardConfig(AutotoolsPackage):
     @run_after('install')
     def symlink_xorg(self):
         if '+xorg' in self.spec:
-            tty.warn('linking xorg->base in '+
-                os.path.join( self.prefix,'share','X11','xkb','rules'))
+            tty.warn('linking xorg->base in ' +
+                     os.path.join(self.prefix, 'share', 'X11', 'xkb', 'rules'))
             with working_dir(os.path.join(
-                self.prefix,'share','X11','xkb','rules')):
+                             self.prefix, 'share', 'X11', 'xkb', 'rules')):
                 for suffix in ('', '.lst', '.xml'):
                     symlink('base{0}'.format(suffix), 'xorg{0}'.format(suffix))
 
