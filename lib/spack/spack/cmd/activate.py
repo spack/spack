@@ -28,6 +28,8 @@ import spack
 import spack.cmd
 
 description = "activate a package extension"
+section = "extensions"
+level = "long"
 
 
 def setup_parser(subparser):

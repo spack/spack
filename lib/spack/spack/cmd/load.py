@@ -25,7 +25,9 @@
 import argparse
 import spack.modules
 
-description = "add package to environment using modules"
+description = "add package to environment using `module load`"
+section = "environment"
+level = "short"
 
 
 def setup_parser(subparser):

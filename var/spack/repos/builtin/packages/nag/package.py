@@ -30,7 +30,7 @@ class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
 
-    version('6.1', 'f49bd548e0d5e2458b2dabb3ee01341a')
+    version('6.1', '0040d2254258223c78a6a4ab4829d7e0')
     version('6.0', '3fa1e7f7b51ef8a23e6c687cdcad9f96')
 
     # Licensing
@@ -54,3 +54,7 @@ class Nag(Package):
 
         # Run install script
         os.system('./INSTALLU.sh')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('F77', join_path(self.prefix.bin, 'nagfor'))
+        run_env.set('FC',  join_path(self.prefix.bin, 'nagfor'))

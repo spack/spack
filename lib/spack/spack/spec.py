@@ -968,15 +968,12 @@ class Spec(object):
         # Spec(a, b) will copy a but just add b as a dep.
         deptypes = ()
         for dep in dep_like:
-            if isinstance(dep, Spec):
-                spec = dep
-            elif isinstance(dep, (list, tuple)):
+
+            if isinstance(dep, (list, tuple)):
                 # Literals can be deptypes -- if there are tuples in the
                 # list, they will be used as deptypes for the following Spec.
                 deptypes = tuple(dep)
                 continue
-            else:
-                spec = Spec(dep)
 
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec, deptypes)

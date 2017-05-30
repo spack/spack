@@ -34,6 +34,8 @@ class PySetuptools(PythonPackage):
 
     import_modules = ['pkg_resources', 'setuptools', 'setuptools.command']
 
+    version('35.0.2', 'c368b4970d3ad3eab5afe4ef4dbe2437',
+            url="https://pypi.io/packages/source/s/setuptools/setuptools-35.0.2.zip")
     version('34.4.1', '5f9b07aeaafd29eac2548fc0b89a4934',
             url="https://pypi.io/packages/source/s/setuptools/setuptools-34.4.1.zip")
     version('34.2.0', '41b630da4ea6cfa5894d9eb3142922be',
@@ -55,11 +57,3 @@ class PySetuptools(PythonPackage):
     depends_on('py-packaging@16.8:', when='@34.0.0:', type=('build', 'run'))
     depends_on('py-six@1.6.0:',      when='@34.0.0:', type=('build', 'run'))
     depends_on('py-appdirs@1.4.0:',  when='@34.0.0:', type=('build', 'run'))
-
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # FIXME: All of these depend on setuptools, creating a dependency loop
-    # FIXME: Is there any way around this problem?
-    # depends_on('py-pytest-flake8', type='test')
-    # depends_on('pytest@2.8:', type='test')
-    # depends_on('py-mock', when='^python@:3.2', type='test')
