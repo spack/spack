@@ -38,4 +38,4 @@ class PyMistune(PythonPackage):
     version('0.5.1', '1c6cfce28a4aa90cf125217cd6c6fe6c')
     version('0.5', '997736554f1f95eea78c66ae339b5722')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

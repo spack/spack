@@ -1812,7 +1812,7 @@ class Spec(object):
             if transitive_build[name] != transitive_build_only[name]:
                 raise SpecError(
                     "Separate concretization of {0}".format(name) +
-                    " produced build-time conflict")
+                    " produced build-time conflict for {0}".format(self.name))
         required_for_build = set(itervalues(transitive_build))
         required_for_build.update(s for s in itervalues(transitive_build_only)
                                   if s.name not in common)

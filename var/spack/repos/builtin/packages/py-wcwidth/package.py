@@ -33,4 +33,4 @@ class PyWcwidth(PythonPackage):
 
     version('0.1.7', 'b3b6a0a08f0c8a34d1de8cf44150a4ad')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

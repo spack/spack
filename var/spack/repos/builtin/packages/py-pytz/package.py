@@ -41,4 +41,4 @@ class PyPytz(PythonPackage):
     version('2015.4',   '417a47b1c432d90333e42084a605d3d8')
     version('2016.3',   'abae92c3301b27bd8a9f56b14f52cb29')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

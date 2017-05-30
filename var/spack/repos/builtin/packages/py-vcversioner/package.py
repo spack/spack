@@ -33,4 +33,4 @@ class PyVcversioner(PythonPackage):
 
     version('2.16.0.0', 'aab6ef5e0cf8614a1b1140ed5b7f107d')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

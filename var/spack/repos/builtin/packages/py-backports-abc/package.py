@@ -33,4 +33,4 @@ class PyBackportsAbc(PythonPackage):
 
     version('0.4', 'e4246ae689221c9cbe84369fdb59e8c74d02b298')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

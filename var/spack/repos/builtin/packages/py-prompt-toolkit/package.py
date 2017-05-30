@@ -33,6 +33,6 @@ class PyPromptToolkit(PythonPackage):
 
     version('1.0.9', 'a39f91a54308fb7446b1a421c11f227c')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-wcwidth', type=('build', 'run'))

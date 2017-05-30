@@ -37,4 +37,4 @@ class PyCertifi(PythonPackage):
     version('2017.1.23',  'b72521a8badff5e89a8eabea586d79ab')
     version('2016.02.28', '5ccfc23bd5e931863f0b01ef3e9d2dbd3bef0e1b')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

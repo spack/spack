@@ -33,7 +33,7 @@ class PyTornado(PythonPackage):
 
     version('4.4.0', 'c28675e944f364ee96dda3a8d2527a87ed28cfa3')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))
 
     # requirements from setup.py
     # These dependencies breaks concretization

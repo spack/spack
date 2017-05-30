@@ -43,4 +43,4 @@ class PyMarkupsafe(PythonPackage):
     version('0.20', '7da066d9cb191a70aa85d0a3d43565d1')
     version('0.19', 'ccb3f746c807c5500850987006854a6d')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

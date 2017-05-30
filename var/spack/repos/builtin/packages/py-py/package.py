@@ -38,4 +38,4 @@ class PyPy(PythonPackage):
     version('1.4.33', '15d7107cbb8b86593bf9afa16e56da65')
     version('1.4.31', '5d2c63c56dc3f2115ec35c066ecd582b')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

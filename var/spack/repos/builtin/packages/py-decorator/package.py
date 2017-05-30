@@ -34,4 +34,4 @@ class PyDecorator(PythonPackage):
 
     version('4.0.9', 'f12c5651ccd707e12a0abaa4f76cd69a')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

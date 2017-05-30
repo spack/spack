@@ -33,7 +33,7 @@ class PyJsonschema(PythonPackage):
 
     version('2.5.1', '374e848fdb69a3ce8b7e778b47c30640')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))
     depends_on('py-vcversioner', type=('build', 'run'))
 
     # This dependency breaks concretization

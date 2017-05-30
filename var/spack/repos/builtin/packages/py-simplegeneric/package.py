@@ -35,4 +35,4 @@ class PySimplegeneric(PythonPackage):
     version('0.8.1', 'f9c1fab00fd981be588fc32759f474e3')
     version('0.8', 'eaa358a5f9517a8b475d03fbee3ec90f')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))

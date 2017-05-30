@@ -42,6 +42,6 @@ class PyJinja2(PythonPackage):
     version('2.7.1', '282aed153e69f970d6e76f78ed9d027a')
     version('2.7',   'c2fb12cbbb523c57d3d15bfe4dc0e8fe')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))
     depends_on('py-markupsafe', type=('build', 'run'))
     depends_on('py-babel@0.8:', type=('build', 'run'))  # optional, required for i18n

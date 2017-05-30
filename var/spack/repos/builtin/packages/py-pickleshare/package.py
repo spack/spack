@@ -33,4 +33,4 @@ class PyPickleshare(PythonPackage):
 
     version('0.7.4', '6a9e5dd8dfc023031f6b7b3f824cab12')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'link'))
