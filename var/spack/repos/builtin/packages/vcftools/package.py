@@ -39,7 +39,7 @@ class Vcftools(AutotoolsPackage):
     # version('0.1.15', '61045197848dea20a0158d2faf02e5be')
     version('0.1.14', 'a110662535651caa6cc8c876216a9f77')
 
-    depends_on('perl')
+    depends_on('perl', type=('build', 'run'))
     depends_on('zlib')
 
     # this needs to be in sync with what setup_environment adds to
