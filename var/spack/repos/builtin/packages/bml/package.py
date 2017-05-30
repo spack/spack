@@ -25,7 +25,7 @@
 from spack import *
 
 
-class LanlBml(CMakePackage):
+class Bml(CMakePackage):
     """The basic matrix library (bml) is a collection of various matrix data
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
