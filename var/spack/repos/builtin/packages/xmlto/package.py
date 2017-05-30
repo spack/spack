@@ -31,8 +31,8 @@ class Xmlto(AutotoolsPackage):
     without remembering many long options and searching for the syntax of the
     backends."""
 
-    homepage = "http://cyberelk.net/tim/software/xmlto/"
-    url      = "https://fedorahosted.org/releases/x/m/xmlto/xmlto-0.0.28.tar.gz"
+    homepage = "https://pagure.io/xmlto"
+    url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
 
     version('0.0.28', 'a1fefad9d83499a15576768f60f847c6')
 
