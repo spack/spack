@@ -54,6 +54,10 @@ class Jdk(Package):
     version('8u66', '88f31f3d642c3287134297b8c10e61bf',
             url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz",
             curl_options=curl_options)
+    # The 7u80 tarball is not readily available from Oracle.  If you have
+    # the tarball, add it to your mirror as mirror/jdk/jdk-7u80.tar.gz and
+    # away you go.
+    version('7u80', '6152f8a7561acf795ca4701daa10a965')
 
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)

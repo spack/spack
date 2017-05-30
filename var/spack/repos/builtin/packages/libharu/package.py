@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,18 +23,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
-class Xmlto(AutotoolsPackage):
-    """Utility xmlto is a simple shell script for converting XML files to various
-    formats. It serves as easy to use command line frontend to make fine output
-    without remembering many long options and searching for the syntax of the
-    backends."""
+class Libharu(AutotoolsPackage):
+    """libharu - free PDF library.
 
-    homepage = "https://pagure.io/xmlto"
-    url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
+    Haru is a free, cross platform, open-sourced software library for
+    generating PDF."""
 
-    version('0.0.28', 'a1fefad9d83499a15576768f60f847c6')
+    homepage = "http://libharu.org"
+    url      = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
 
-    # FIXME: missing a lot of dependencies
-    depends_on('libxslt')
+    version('2.3.0', '4f916aa49c3069b3a10850013c507460')
+    version('2.2.0', 'b65a6fc33a0bdad89bec6b7def101f01')
+    version('master', branch='master',
+            git='https://github.com/libharu/libharu.git')
+
+    def autoreconf(self, spec, prefix):
+        """execute their autotools wrapper script"""
+        if os.path.exists('./buildconf.sh'):
+            bash = which('bash')
+            bash('./buildconf.sh', '--force')
+
+    def url_for_version(self, version):
+        url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'
+        return url.format(version.underscored)

@@ -25,16 +25,21 @@
 from spack import *
 
 
-class Xmlto(AutotoolsPackage):
-    """Utility xmlto is a simple shell script for converting XML files to various
-    formats. It serves as easy to use command line frontend to make fine output
-    without remembering many long options and searching for the syntax of the
-    backends."""
+class Bamutil(MakefilePackage):
+    """bamUtil is a repository that contains several programs
+       that perform operations on SAM/BAM files. All of these programs
+       are built into a single executable, bam.
+    """
 
-    homepage = "https://pagure.io/xmlto"
-    url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
+    homepage = "http://genome.sph.umich.edu/wiki/BamUtil"
+    url      = "http://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
 
-    version('0.0.28', 'a1fefad9d83499a15576768f60f847c6')
+    version('1.0.13', '08b7d0bb1d60be104a11f0e54ddf4a79')
 
-    # FIXME: missing a lot of dependencies
-    depends_on('libxslt')
+    # Looks like this will be fixed in 1.0.14.
+    # https://github.com/statgen/libStatGen/issues/9
+    patch('libstatgen-issue-9.patch', when='@1.0.13:')
+
+    @property
+    def install_targets(self):
+        return ['install', 'INSTALLDIR={0}'.format(self.prefix.bin)]

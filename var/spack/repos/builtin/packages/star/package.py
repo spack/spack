@@ -25,16 +25,20 @@
 from spack import *
 
 
-class Xmlto(AutotoolsPackage):
-    """Utility xmlto is a simple shell script for converting XML files to various
-    formats. It serves as easy to use command line frontend to make fine output
-    without remembering many long options and searching for the syntax of the
-    backends."""
+class Star(Package):
+    """STAR is an ultrafast universal RNA-seq aligner."""
 
-    homepage = "https://pagure.io/xmlto"
-    url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
+    homepage = "https://github.com/alexdobin/STAR"
+    url      = "https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz"
 
-    version('0.0.28', 'a1fefad9d83499a15576768f60f847c6')
+    version('2.5.3a', 'baf8d1b62a50482cfa13acb7652dc391',
+            url='https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz')
+    version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506',
+            url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
 
-    # FIXME: missing a lot of dependencies
-    depends_on('libxslt')
+    def install(self, spec, prefix):
+        with working_dir('source'):
+            make('STAR', 'STARlong')
+            mkdirp(prefix.bin)
+            install('STAR', prefix.bin)
+            install('STARlong', prefix.bin)
