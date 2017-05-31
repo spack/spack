@@ -28,10 +28,15 @@ from spack import *
 class Spot(AutotoolsPackage):
     """Spot is a C++11 library for omega-automata manipulation and model
        checking."""
-    homepage = "https://spot.lrde.epita.fr/index.html"
+    homepage = "https://spot.lrde.epita.fr/"
     url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
 
     version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
+    version('1.2.6', '799bf59ccdee646d12e00f0fe6c23902')
 
-    # depends_on("gcc@4.8:", type='build')
-    depends_on("python@3.2:")
+    variant('python', default=True)
+
+    depends_on("python@3.3:", when='@1.99.5: +python')
+    depends_on("python@3.2:", when='@1.99: +python')
+    depends_on("python@2:", when='+python')
+    depends_on('boost', when='@:1.2.6')
