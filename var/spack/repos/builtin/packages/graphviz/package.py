@@ -77,7 +77,7 @@ class Graphviz(AutotoolsPackage):
     parallel = False
 
     # These language bindings have been tested, we know they work.
-    tested_bindings = ('+java')
+    tested_bindings = ('+java', )
 
     # These language bindings have not yet been tested.  They
     # likely need additional dependencies to get working.
