@@ -1,4 +1,4 @@
-from graphterm import (
+from .graphterm import (
     TermDAG
 )
 

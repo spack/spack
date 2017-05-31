@@ -72,7 +72,7 @@ from graphterm import TermDAG
 from spack.spec import *
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot',
-    'graph_interactive']
+           'graph_interactive']
 
 
 def topological_sort(spec, reverse=False, deptype=None):
@@ -594,9 +594,9 @@ def graph_dot(specs, deptype=None, static=False, out=None):
 def graph_interactive(spec, interactive=True):
     """Generate an ASCII graph of the given spec.
 
-       @param spec: single spec object to be depicted
-       @param interactive: True if graph is interactive with curses, False if
-                           graph is to be printed to stdout instead.
+    @param spec: single spec object to be depicted
+    @param interactive: True if graph is interactive with curses, False if
+                        graph is to be printed to stdout instead.
     """
     myspec = spec.copy()
     nodes = myspec.index()

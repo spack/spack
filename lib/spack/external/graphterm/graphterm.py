@@ -16,6 +16,7 @@
 # File: Kate Isaacs
 # License: LGPL v.3
 
+from __future__ import print_function
 import heapq
 from heapq import *
 import curses
@@ -249,10 +250,10 @@ class TermDAG(object):
             self.select_node(None, selected, self.offset)
 
             for i in range(self.gridsize[0]):
-                print self.print_color_row(i, 0, self.gridsize[1] + 1)
+                print(self.print_color_row(i, 0, self.gridsize[1] + 1))
         else:
             for row in self.grid:
-                print ''.join(row)
+                print(''.join(row))
 
 
     def report(self):
@@ -863,14 +864,14 @@ class TermDAG(object):
         if not with_colors or not self.grid_colors:
             for row in self.grid:
                 if self.width == 0 or self.width > self.gridsize[1]:
-                    print ''.join(row)
+                    print(''.join(row))
                 else:
                     window = row[rowbegin:rowend]
-                    print ''.join(window)
+                    print(''.join(window))
             return
 
         for i in range(self.gridsize[0]):
-            print self.print_color_row(i, row_begin, row_end)
+            print(self.print_color_row(i, row_begin, row_end))
 
 
     def print_color_row(self, i, start, end):
@@ -2983,14 +2984,14 @@ class TermLayout(object):
 
 
     def printNodeCoords(self):
-        print "Current node coordinates:"
+        print("Current node coordinates:")
         for name, node in self._nodes.items():
-            print name, self.get_node_coord(name)
+            print(name, self.get_node_coord(name))
 
     def printEdgeCoords(self):
-        print "Current edge coordinates:"
+        print("Current edge coordinates:")
         for link in self._original_links:
-            print link.source, link.sink, link.segments
+            print(link.source, link.sink, link.segments)
 
 
     def create_unique_node_name(self, stub):
