@@ -77,11 +77,12 @@ class Graphviz(AutotoolsPackage):
     parallel = False
 
     # These language bindings have been tested, we know they work.
-    tested_bindings = ('+java', '+perl')
+    tested_bindings = ('+java')
 
     # These language bindings have not yet been tested.  They
     # likely need additional dependencies to get working.
     untested_bindings = (
+        '+perl',
         '+sharp', '+go', '+guile', '+io',
         '+lua', '+ocaml', '+php',
         '+python', '+r', '+ruby', '+tcl')
