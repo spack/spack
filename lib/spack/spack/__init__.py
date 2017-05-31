@@ -34,7 +34,6 @@ import llnl.util.tty as tty
 from spack.util.chroot import build_chroot_enviroment,  \
                               remove_chroot_enviroment, \
                               isolate_enviroment
-from spack.util.path_variables import PathVariables
 
 #-----------------------------------------------------------------------------
 # Variables describing how Spack is laid out in its prefix.
