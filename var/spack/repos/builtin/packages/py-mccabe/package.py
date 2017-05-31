@@ -31,6 +31,7 @@ class PyMccabe(PythonPackage):
     homepage = "https://github.com/PyCQA/mccabe"
     url      = "https://github.com/PyCQA/mccabe/archive/0.5.2.tar.gz"
 
+    version('0.6.1', '0360af86f0bce7a839bd3cba517edf9c')
     version('0.5.2', '3cdf2d7faa1464b18905fe9a7063a632')
     version('0.5.1', '864b364829156701bec797712be8ece0')
     version('0.5.0', '71c0ce5e5c4676753525154f6c5d3af8')

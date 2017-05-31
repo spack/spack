@@ -37,8 +37,9 @@ __all__ = ['Executable', 'which', 'ProcessError']
 class Executable(object):
     """Class representing a program that can be run on the command line."""
 
-    def __init__(self, name):
+    def __init__(self, name, *args):
         self.exe = name.split(' ')
+        self.exe.extend(args)
         self.default_env = {}
         self.returncode = None
 
