@@ -592,11 +592,15 @@ def graph_dot(specs, deptype=None, static=False, out=None):
 
 
 def graph_interactive(spec, interactive=True):
-    """Generate an ASCII graph of the given spec.
+    """Generate a graphterm ASCII graph of the given spec object.
 
-    @param spec: single spec object to be depicted
-    @param interactive: True if graph is interactive with curses, False if
-                        graph is to be printed to stdout instead.
+        Arguments:
+        spec -- spec to graph.  This only handles one spec at a time.
+
+        Optional arguments:
+
+        interactive -- True for interactive highlighting with curses
+                       False to print static graph to stdout.
     """
     myspec = spec.copy()
     nodes = myspec.index()
