@@ -25,6 +25,7 @@
 import llnl.util.tty as tty
 
 from spack import *
+import spack.architecture
 
 
 class Openssl(Package):
@@ -85,6 +86,10 @@ class Openssl(Package):
         options = ['zlib', 'shared']
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
+        # clang does not support the .arch directive in assembly files.
+        if 'clang' in self.compiler.cc and \
+           'aarch64' in spack.architecture.sys_type():
+            options.append('no-asm')
 
         config = Executable('./config')
         config('--prefix=%s' % prefix,
