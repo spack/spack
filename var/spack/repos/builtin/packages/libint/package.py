@@ -72,8 +72,8 @@ class Libint(AutotoolsPackage):
             if which('xiar'):
                 env['AR'] = 'xiar'
 
-        env['CFLAGS']   = optflags
-        env['CXXFLAGS'] = optflags
+        env['CFLAGS']   = env['CFLAGS'] + ' ' + optflags if 'CFLAGS' in env else optflags
+        env ['CXXFLAGS'] = env['CXXFLAGS'] + ' ' + optflags if 'CXXFLAGS' in env else optflags
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
