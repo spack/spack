@@ -38,8 +38,7 @@ class Graphviz(AutotoolsPackage):
     # Swig can be enabled on it's own, though it doesn't do much.  It
     # will also be enabled if any of the languages are enabled.
     variant('swig', default=False,
-            description='Enable swig language binding tools'
-            ' (not yet functional)')
+            description='Enable swig language binding tools')
 
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
