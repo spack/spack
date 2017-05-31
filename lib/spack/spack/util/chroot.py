@@ -25,361 +25,211 @@
 import re
 import os
 import sys
+import copy
 import spack
+import subprocess
 import llnl.util.tty as tty
 from itertools import product
 from spack.util.executable import which
+from llnl.util.filesystem import join_path
 
-EXECUTABLES = [
-    # unix tools
-    'env',
-    'git',
-    'tar',
+# Packages to include into the chroot enviroment
+PACKAGES = [
     'bash',
     'curl',
-    'make',
-    'uniq',
-    'tr',
-    'cat',
-    'expr',
-    'awk',
-    'find',
-    'diff',
-    'base32',
-    'base64',
-    'printf',
-    'cmp',
-    'msgfmt',
-    'xgettext',
-    'msgmerge',
-    'unzip',
-    'zip',
-    'id',
-    'xz',
-    'file',
-    'patch',
-    'dirname',
-    'sh',
-    'cut',
-    'head',
-    'wc',
-    'seq',
-    'sort',
-    'comm',
-    'man',
-    'md5sum',
-    'basename',
-    'test',
-    'install',
-    'grep',
-
-    # lsb_release (for os detection)
-    'lsb_release',
-    'apt-cache', #for lsb_release
-    'dpkg-query', #for lsb_release
-
-    #gcc
     'gcc',
     'g++',
-    'cpp',
+    'lsb-release',
 
-    #fortran
-    ('gfortran', False), #not required
-
-    #python
-    'python',
-    'python3',
-
-    #perl
-    'perl',
-
-    #binutils
-    'addr2line',
-    'ar',
-    'as',
-    'c++filt',
-    'dwp',
-    'elfedit',
-    'gold',
-    'gprof',
-    'ld',
-    'ld.bfd',
-    'ld.gold',
-    'nm',
-    'objcopy',
-    'objdump',
-    'ranlib',
-    'readelf',
-    'size',
-    'strings',
-    'strip',
-
-    #debug
-    'ls',
-    'tail',
-    'mkdir',
+    # only exact matches
+    ('apt-cache', True),
+    ('coreutils', True),
+    ('diffutils', True),
+    ('findutils', True),
+    ('gawk', True),
+    ('libc5', True),
+    ('libc5-dev', True),
+    ('libc6', True),
+    ('libc6-dev', True),
+    ('linux-libc-dev', True),
+    ('make', True),
+    ('mawk', True),
+    ('patch', True),
+    ('perl', True),
+    ('python', True),
+    ('python3', True),
 ]
 
+# Paths which are always needed
 DEFAULT_PATHS = [
-    '/bin',
+    '/usr/bin/awk',
+
+    #'/bin',
     '/dev',
     '/etc',
-    '/lib/init',
-    '/lib/lsb',
-    '/lib/systemd',
-    '/lib/terminfo',
-    '/lib/udev',
-    '/lib/x86_64-linux-gnu',
+    '/lib',
     '/lib64',
     '/proc',
     '/run',
     '/sys',
-
-    #gcc and ld specific
-    '/usr/lib/gcc/x86_64-linux-gnu',
-    '/usr/lib/x86_64-linux-gnu/libisl.so.15',
-    '/usr/lib/x86_64-linux-gnu/libmpc.so.3',
-    '/usr/lib/x86_64-linux-gnu/libmpfr.so.4',
-    '/usr/lib/x86_64-linux-gnu/crt1.o',
-    '/usr/lib/x86_64-linux-gnu/crti.o',
-    '/usr/lib/x86_64-linux-gnu/crtn.o',
-    '/usr/lib/x86_64-linux-gnu/libquadmath.so.0',
-    '/usr/lib/x86_64-linux-gnu/libgfortran.so.3',
-    '/usr/lib/x86_64-linux-gnu/libgfortran.so.3.0.0',
-
-    # lib c libraries
-    '/usr/lib/x86_64-linux-gnu/libc.a',
-    '/usr/lib/x86_64-linux-gnu/libc.so',
-    '/usr/lib/x86_64-linux-gnu/libc_nonshared.a',
-
-    # lib g libraries
-    '/usr/lib/x86_64-linux-gnu/libg.a',
-
-    # lib util libraries
-    '/usr/lib/x86_64-linux-gnu/libutil.a',
-    '/usr/lib/x86_64-linux-gnu/libutil.so',
-
-    # lib m libraries
-    '/usr/lib/x86_64-linux-gnu/libm.a',
-    '/usr/lib/x86_64-linux-gnu/libm.so',
-    '/usr/lib/x86_64-linux-gnu/libmvec_nonshared.a',
-
-    # pthread libraries
-    '/usr/lib/x86_64-linux-gnu/libpthread.a',
-    '/usr/lib/x86_64-linux-gnu/libpthread.so',
-    '/usr/lib/x86_64-linux-gnu/libpthread_nonshared.a',
-
-    # rt libraries
-    '/usr/lib/x86_64-linux-gnu/librt.a',
-    '/usr/lib/x86_64-linux-gnu/librt.so',
-
-    # dl libraries
-    '/usr/lib/x86_64-linux-gnu/libdl.a',
-    '/usr/lib/x86_64-linux-gnu/libdl.so',
-
-    # libresolve libraries
-    '/usr/lib/x86_64-linux-gnu/libresolv.a',
-    '/usr/lib/x86_64-linux-gnu/libresolv.so',
-
-    #lib rpc libraries
-    '/usr/lib/x86_64-linux-gnu/librpcsvc.a',
-
-    #lib crypt libraries
-    '/usr/lib/x86_64-linux-gnu/libcrypt.a',
-    '/usr/lib/x86_64-linux-gnu/libcrypt.so',
-
-    # linux headers
-    '/usr/include/linux',
-    '/usr/include/net',
-    '/usr/include/arpa',
-    '/usr/include/netinet',
-    '/usr/include/drm',
-    '/usr/include/X11',
-    '/usr/include/nfs',
-    '/usr/include/netash',
-    '/usr/include/netatalk',
-    '/usr/include/sound',
-    '/usr/include/video',
-    '/usr/include/xorg',
-    '/usr/include/rpc',
-    '/usr/include/netpacket',
-    '/usr/include/asm-generic',
-    '/usr/include/x86_64-linux-gnu',
-    #'/usr/include/x86_64-linux-gnu/sys',
-    #'/usr/include/x86_64-linux-gnu/asm',
-    #'/usr/include/x86_64-linux-gnu/bits',
-    #'/usr/include/x86_64-linux-gnu/gnu',
-    #'/usr/include/x86_64-linux-gnu/c++',
-
-    # std headers
-    '/usr/include/c++',
-
-    # libc headers
-    '/usr/include/aio.h',
-    '/usr/include/aliases.h',
-    '/usr/include/alloca.h',
-    '/usr/include/ar.h',
-    '/usr/include/argp.h',
-    '/usr/include/argz.h',
-    '/usr/include/assert.h',
-    '/usr/include/autosprintf.h',
-    '/usr/include/byteswap.h',
-    '/usr/include/complex.h',
-    '/usr/include/cpio.h',
-    '/usr/include/crypt.h', # for crypt
-    '/usr/include/ctype.h',
-    '/usr/include/dirent.h',
-    '/usr/include/dlfcn.h',
-    '/usr/include/elf.h',
-    '/usr/include/endian.h',
-    '/usr/include/envz.h',
-    '/usr/include/err.h',
-    '/usr/include/errno.h',
-    '/usr/include/error.h',
-    '/usr/include/execinfo.h',
-    '/usr/include/fcntl.h',
-    '/usr/include/features.h',
-    '/usr/include/fenv.h',
-    '/usr/include/fmtmsg.h',
-    '/usr/include/fnmatch.h',
-    '/usr/include/fts.h',
-    '/usr/include/ftw.h',
-    '/usr/include/_G_config.h',
-    '/usr/include/gconv.h',
-    '/usr/include/getopt.h',
-    '/usr/include/glob.h',
-    '/usr/include/gnu-versions.h',
-    '/usr/include/grp.h',
-    '/usr/include/gshadow.h',
-    '/usr/include/iconv.h',
-    '/usr/include/ifaddrs.h',
-    '/usr/include/inttypes.h',
-    '/usr/include/langinfo.h',
-    '/usr/include/lastlog.h',
-    '/usr/include/libgen.h',
-    #'/usr/include/libintl.h', # part of gettext but many packages crashes without
-    '/usr/include/libio.h',
-    '/usr/include/limits.h',
-    '/usr/include/link.h',
-    '/usr/include/locale.h',
-    '/usr/include/malloc.h',
-    '/usr/include/math.h',
-    '/usr/include/mcheck.h',
-    '/usr/include/memory.h',
-    '/usr/include/mntent.h',
-    '/usr/include/monetary.h',
-    '/usr/include/mqueue.h',
-    '/usr/include/netdb.h',
-    '/usr/include/nl_types.h',
-    '/usr/include/nss.h',
-    '/usr/include/obstack.h',
-    '/usr/include/paths.h',
-    '/usr/include/poll.h',
-    '/usr/include/printf.h',
-    '/usr/include/pthread.h',
-    '/usr/include/pty.h',
-    '/usr/include/pwd.h',
-    '/usr/include/re_comp.h',
-    '/usr/include/regex.h',
-    '/usr/include/regexp.h',
-    '/usr/include/resolv.h',
-    '/usr/include/sched.h',
-    '/usr/include/search.h',
-    '/usr/include/semaphore.h',
-    '/usr/include/setjmp.h',
-    '/usr/include/sgtty.h',
-    '/usr/include/shadow.h',
-    '/usr/include/spawn.h',
-    '/usr/include/signal.h',
-    '/usr/include/stab.h',
-    '/usr/include/stdc-predef.h',
-    '/usr/include/stdint.h',
-    '/usr/include/stdio.h',
-    '/usr/include/stdio_ext.h',
-    '/usr/include/stdlib.h',
-    '/usr/include/string.h',
-    '/usr/include/strings.h',
-    '/usr/include/stropts.h',
-    '/usr/include/sudo_plugin.h',
-    '/usr/include/syscall.h',
-    '/usr/include/sysexits.h',
-    '/usr/include/syslog.h',
-    '/usr/include/tar.h',
-    '/usr/include/termio.h',
-    '/usr/include/termios.h',
-    '/usr/include/tgmath.h',
-    '/usr/include/thread_db.h',
-    '/usr/include/time.h',
-    '/usr/include/ttyent.h',
-    '/usr/include/uchar.h',
-    '/usr/include/ucontext.h',
-    '/usr/include/ulimit.h',
-    '/usr/include/unistd.h',
-    '/usr/include/ustat.h',
-    '/usr/include/utime.h',
-    '/usr/include/utmp.h',
-    '/usr/include/utmpx.h',
-    '/usr/include/values.h',
-    '/usr/include/wait.h',
-    '/usr/include/wchar.h',
-    '/usr/include/wctype.h',
-    '/usr/include/wordexp.h',
-    '/usr/include/xlocale.h',
-
-    #git
-    '/usr/share/git-core',
-
-    #distinfo
-    '/usr/share/distro-info',
-
-    #man files
-    '/usr/share/man',
-
-    #perl
-    '/etc/perl',
-    '/usr/lib/perl5',
-    '/usr/lib/x86_64-linux-gnu/perl5',
-    '/usr/lib/x86_64-linux-gnu/perl',
-    '/usr/lib/x86_64-linux-gnu/perl-base',
-    '/usr/share/perl5',
-    '/usr/share/perl',
-
-    #python
-    #todo find a better way
-    '/usr/lib/python2.7',
-    '/usr/lib/python3',
-    '/usr/lib/python3.5',
-    '/usr/share/pyshared' # for lsb_release
 ]
 
-def get_all_library_directories():
-    libraries = set(DEFAULT_PATHS)
-    for exe in EXECUTABLES:
-        if type(exe) is tuple:
-            executable = spack.util.executable.which(exe[0], required=exe[1])
-        else:
-            executable = spack.util.executable.which(exe, required=True)
+# Package which are unnecessary and shouldn't be included
+EXCLUDE_PACKAGES = [
+    # unnecessary packages
+    'base-files',
+    'libpcre3',
+]
 
-        files = executable.get_shared_libraries()
-        files.extend(executable.exe)
-        for lib in files:
-            libraries.add(os.path.normpath(lib))
+# Paths which shouldn't be included into the chroot enviroment
+EXCLUDE_PATHS = [
+    '/tmp',
+    '/sbin',
+    '/home',
+    '/boot',
+    '/root',
+    '/lost+found',
+    '/cdrom',
+]
 
-    duplicates = list()
-    for lib in libraries:
-        path = os.path.dirname(lib)
+def find_dependencies(package_name, package_cache):
+    apt_cache = spack.util.executable.which("apt-cache", requred=True)
+    cmd = '%s depends %s' % (apt_cache.exe[0], package_name)
+    dependencies = os.popen(cmd).read()
+
+    results = set()
+    reg = re.compile(r'(\s+)?(PreDepends|Depends):\s*([^\s]+)')
+    for dependency in dependencies.split('\n'):
+        found = reg.match(dependency)
+        if found:
+            name = found.group(3)
+            if name not in EXCLUDE_PACKAGES:
+                results.add(name)
+                if name not in package_cache:
+                    package_cache.add(name)
+                    results.update(find_dependencies(name, package_cache))
+
+    return results
+
+
+def find_packages(name, exact, package_cache):
+    dpkg = spack.util.executable.which("dpkg", requred=True)
+    installedPackages = dpkg('-l',output=str)
+    name = name.replace('\n', '').replace('+', r'\+')
+
+    result = set()
+    if not exact:
+        regStr = r'ii\s+(([^\s]*' + name + \
+                 r'[^\s|:]*)(:[^\s]+)?)\s+[^\s]+\s+[^\s]+\s+[^\n]+'
+    else:
+        regStr = r'ii\s+((' + name + r')(:[^\s]+)?)\s+[^\s]+\s+[^\s]+\s+[^\n]+'
+
+    regex = re.compile(regStr)
+    for package in installedPackages.split('\n'):
+        found = regex.match(package)
+        if found:
+            package_name = found.group(2)
+            dependencies = find_dependencies(package_name, package_cache)
+
+            result.add(name)
+            result.update(dependencies)
+    return result
+
+
+def find_package_files(package_name, file_cache):
+    if package_name in file_cache:
+        return file_cache[package_name]
+
+    dpkg = spack.util.executable.which("dpkg", requred=True)
+
+    package_name = package_name.replace('\n', '')
+    # TODO: Only works with popen and produces an invalid command without?
+    results = os.popen("%s -L %s" % (dpkg.exe[0], package_name)).read()
+
+    toRemove = set(['/.'])
+    results = set(results.split('\n'))
+    for file in results:
+        path = os.path.dirname(file)
         while path != '/':
-            if path in libraries:
-                duplicates.append(lib)
+            if path in results:
+                toRemove.add(path)
                 break
             path = os.path.dirname(path)
 
-    for dub in duplicates:
-        libraries.remove(dub)
+    for dub in toRemove:
+        if dub in results:
+            results.remove(dub)
 
-    return list(libraries)
+    for result in results:
+        if result == "/usr/bin":
+            print "USER:", package_name
+
+    file_cache[package_name] = list(results)
+    return file_cache[package_name]
+
+
+def merge_files(files, libraries):
+    merged = 0
+    final = set()
+    for file in files:
+        if not os.path.exists(file):
+            continue
+
+        dirname = os.path.dirname(file)
+        if dirname in final:
+            continue
+
+        files = [join_path(dirname, x) for x in os.listdir(dirname)]
+        count = sum([(1 if x in libraries else 0) for x in files])
+        if count == len(files):
+            merged += 1
+            final.add(dirname)
+        else:
+            final.add(file)
+
+    if merged != 0:
+        return merge_files(final, libraries)
+    return final
+
+def get_all_library_directories():
+    libraries = set(DEFAULT_PATHS)
+
+    package_cache = set()
+    file_cache = dict()
+    for package in PACKAGES:
+        if type(package) is tuple:
+            name, exact = package[0], package[1]
+        else:
+            name, exact = package, False
+
+        tty.msg("Search for %s " % (name))
+        package_names = find_packages(name, exact, package_cache)
+        for package_name in package_names:
+            for file in find_package_files(package_name, file_cache):
+                if file and file not in EXCLUDE_PATHS:
+                    libraries.add(file)
+
+    tty.msg("Compute amount of required files: %d" % (len(libraries)))
+
+    final = merge_files(libraries, libraries)
+    for lib in copy.deepcopy(final):
+        path = os.path.dirname(lib)
+        # Don't mount documentation files
+        if 'doc' in path or 'man' in path or '.mo' in path or '.po' in path:
+            final.remove(lib)
+        else:
+            while path and path != '/':
+                if path in final:
+                    final.remove(lib)
+                    break
+                path = os.path.dirname(path)
+
+    tty.msg("Compressed required files to: %d" % (len(final)))
+    return final
+
 
 def mount_bind_path(realpath, chrootpath):
+    mount = True
     if os.path.isfile(realpath):
         if not os.path.exists(os.path.dirname(chrootpath)):
             os.makedirs(os.path.dirname(chrootpath))
@@ -388,13 +238,20 @@ def mount_bind_path(realpath, chrootpath):
             with open(chrootpath, "w") as out:
                 pass
     else:
-        if not os.path.exists(chrootpath):
-            os.makedirs(chrootpath)
+        # Don't include empty directories
+        if os.listdir(realpath):
+            if not os.path.exists(chrootpath):
+                os.makedirs(chrootpath)
+        else:
+            mount = False
 
-    os.system("sudo mount --bind %s %s" % (realpath, chrootpath))
+    if mount:
+        os.system ("sudo mount --bind %s %s" % (realpath, chrootpath))
 
 def umount_bind_path(chrootpath):
-    os.system("sudo umount -l %s" % (chrootpath))
+    # Don't unmount no existing directories
+    if os.path.exists(chrootpath):
+        os.system ("sudo umount -l %s" % (chrootpath))
 
 def build_chroot_enviroment(dir):
     if os.path.ismount(dir):
@@ -422,11 +279,12 @@ def isolate_enviroment():
     whoami = which("whoami", required=True)
     username = whoami(output=str).replace('\n', '')
     groups = which("groups", required=True)
+
     # just use the first group
     group = groups(username, output=str).split(':')[1].strip().split(' ')[0]
 
     #restart the command in the chroot jail
-    os.system("sudo chroot --userspec=%s:%s %s /home/spack/bin/spack %s"
+    os.system ("sudo chroot --userspec=%s:%s %s /home/spack/bin/spack %s"
         % (username, group, spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
 
     if not existed:
