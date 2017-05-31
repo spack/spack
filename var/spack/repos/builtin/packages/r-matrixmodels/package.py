@@ -35,4 +35,4 @@ class RMatrixmodels(RPackage):
 
     version('0.4-1', '65b3ab56650c62bf1046a3eb1f1e19a0')
 
-    depends_on('r-matrix', type=('build', 'run'))
+    # depends_on('r-matrix', type=('build', 'run'))

@@ -42,5 +42,5 @@ class RPbkrtest(RPackage):
     depends_on('r@3.2.3:')
 
     depends_on('r-lme4@1.1.10:', type=('build', 'run'))
-    depends_on('r-matrix@1.2.3:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
+    # depends_on('r-matrix@1.2.3:', type=('build', 'run'))
+    # depends_on('r-mass', type=('build', 'run'))

@@ -25,14 +25,13 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RFlashclust(RPackage):
+    """flashClust: Implementation of optimal hierarchical clustering"""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://CRAN.R-project.org/package=flashClust"
+    url      = "https://cran.r-project.org/src/contrib/flashClust_1.01-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/flashClust"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.01-2', '23409aeeef98bf35d0b3d5dd755fdeff')
 
-    # depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.3.0:')

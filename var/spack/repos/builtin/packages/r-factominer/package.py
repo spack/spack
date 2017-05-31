@@ -25,14 +25,22 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RFactominer(RPackage):
+    """FactoMineR: Multivariate Exploratory Data Analysis and Data Mining"""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "http://factominer.free.fr"
+    url      = "https://cran.r-project.org/src/contrib/FactoMineR_1.35.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/FactoMineR"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('1.35', 'bef076181ce942016114dd7a6f5c2348')
 
+    depends_on('r@3.3.0:')
+    depends_on('r-car', type=('build', 'run'))
+    # depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-ellipse', type=('build', 'run'))
+    depends_on('r-flashclust', type=('build', 'run'))
     # depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-leaps', type=('build', 'run'))
+    # depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-scatterplot3d', type=('build', 'run'))
+    depends_on('r-knitr', type=('build', 'run'))

@@ -25,14 +25,13 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RScatterplot3d(RPackage):
+    """scatterplot3d: 3D Scatter Plot"""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://CRAN.R-project.org/package=scatterplot3d"
+    url      = "https://cran.r-project.org/src/contrib/scatterplot3d_0.3-40.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/scatterplot3d"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('0.3-40', '67b9ab6131d244d7fc1db39dcc911dfe')
 
-    # depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.7.0:')

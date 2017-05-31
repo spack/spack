@@ -25,14 +25,16 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RPrabclus(RPackage):
+    """prabclus: Functions for Clustering of Presence-Absence, Abundance and
+    Multilocus Genetic Data"""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "http://www.homepages.ucl.ac.uk/~ucakche"
+    url      = "https://cran.r-project.org/src/contrib/prabclus_2.2-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/prabclus"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('2.2-6', '7f835dcc113243e1db74aad28ce93d11')
 
-    # depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.1.0:')
+    # depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-mclust', type=('build', 'run'))

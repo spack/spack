@@ -25,14 +25,16 @@
 from spack import *
 
 
-class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RViridis(RPackage):
+    """viridis: Default Color Maps from 'matplotlib'"""
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    homepage = "https://github.com/sjmgarnier/viridis"
+    url      = "https://cran.r-project.org/src/contrib/viridis_0.4.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/viridis"
 
-    version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    version('0.4.0', 'f874384cbedf459f6c309ddb40b354ea')
 
-    # depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.1.0:')
+    depends_on('r-viridislite@0.2.0:', type=('build', 'run'))
+    depends_on('r-ggplot2@1.0.1:', type=('build', 'run'))
+    depends_on('r-gridextra', type=('build', 'run'))

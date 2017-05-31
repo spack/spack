@@ -41,5 +41,5 @@ class RQuantreg(RPackage):
     version('5.26', '1d89ed932fb4d67ae2d5da0eb8c2989f')
 
     depends_on('r-sparsem', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    # depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-matrixmodels', type=('build', 'run'))
