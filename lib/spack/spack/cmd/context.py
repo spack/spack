@@ -81,26 +81,53 @@ class Context(object):
         return fs.join_path(_db_dirname, self.name)
 
 def write(context):
-    tmp_new = fs.join_path(_db_dirname, "_" + context.name)
-    final_dir = context.path()
-    tmp_old = fs.join_path(_db_dirname, "." + context.name)
+    tmp_new, dest, tmp_old = write_paths(context)
 
-    if not os.path.exists(tmp_old):
-        if os.path.exists(tmp_new):
-            shutil.rmtree(tmp_new)
-        fs.mkdirp(tmp_new)
-        #create one file for the full specs in json format
-        with open(fs.join_path(tmp_new, 'full_specs.json'), 'w') as F:
-            store_specs_by_hash(context.specs_by_hash, F)
-        #create one file for the rest of the data in yaml format
-        with open(fs.join_path(tmp_new, 'context.yaml'), 'w') as F:
-            syaml.dump(context.to_dict(), stream=F, default_flow_style=False)
+    if os.path.exists(tmp_new) or os.path.exists(tmp_old):
+        tty.die("Partial write state, run 'spack context repair'")
 
-    if os.path.exists(final_dir):
-        shutil.move(final_dir, tmp_old)
-    shutil.move(tmp_new, final_dir)
+    fs.mkdirp(tmp_new)
+    #create one file for the full specs in json format
+    with open(fs.join_path(tmp_new, 'full_specs.json'), 'w') as F:
+        store_specs_by_hash(context.specs_by_hash, F)
+    #create one file for the rest of the data in yaml format
+    with open(fs.join_path(tmp_new, 'context.yaml'), 'w') as F:
+        syaml.dump(context.to_dict(), stream=F, default_flow_style=False)
+
+    if os.path.exists(dest):
+        shutil.move(dest, tmp_old)
+    shutil.move(tmp_new, dest)
     if os.path.exists(tmp_old):
         shutil.rmtree(tmp_old) 
+
+def write_paths(context):
+    tmp_new = fs.join_path(_db_dirname, "_" + context.name)
+    dest = context.path()
+    tmp_old = fs.join_path(_db_dirname, "." + context.name)
+    return tmp_new, dest, tmp_old
+
+def repair(context_name):
+    """
+    Possibilities:
+        tmp_new, dest
+        tmp_new, tmp_old
+        tmp_old, dest
+    """
+    c = Context(context_name)
+    tmp_new, dest, tmp_old = write_paths(context)
+    if os.path.exists(tmp_old):
+        if not os.path.exists(dest):
+            shutil.move(tmp_new, dest)
+        else:
+            shutil.rmtree(tmp_old)
+        tty.info("Previous update completed")
+    elif os.path.exists(tmp_new):
+        tty.info("Previous update did not complete")
+    else:
+        tty.info("Previous update may have completed")
+
+    if os.path.exists(tmp_new):
+        shutil.rmtree(tmp_new)
 
 def store_specs_by_hash(specs_by_hash, stream):
     installs = dict((k, v.to_dict()) for k, v in specs_by_hash.items())
@@ -112,16 +139,16 @@ def store_specs_by_hash(specs_by_hash, stream):
             "Error writing context full specs:", str(e))
 
 def read(context_name):
-    context_dir = fs.join_path(_db_dirname, context_name)
+    tmp_new, context_dir, tmp_old = write_paths(Context(context_name))
+
+    if os.path.exists(tmp_new) or os.path.exists(tmp_old):
+        tty.die("Partial write state, run 'spack context repair'")
 
     with open(fs.join_path(context_dir, 'context.yaml'), 'r') as F:
         context_dict = syaml.load(F)
-
     context = Context.from_dict(context_name, context_dict)
-
     with open(fs.join_path(context_dir, 'full_specs.json'), 'r') as F:
         install_dict = sjson.load(F)
-
     installs = dict((x, Spec.from_dict(y)) for x, y in install_dict.items())
     context.specs_by_hash = installs
 
