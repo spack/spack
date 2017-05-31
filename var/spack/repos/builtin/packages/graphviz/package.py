@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.error import SpackError
 import sys
 import shutil
 
@@ -34,11 +35,14 @@ class Graphviz(AutotoolsPackage):
 
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
+    # Swig can be enabled on it's own, though it doesn't do much.  It
+    # will also be enabled if any of the languages are enabled.
+    variant('swig', default=False,
+            description='Enable swig language binding tools'
+            ' (not yet functional)')
+
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
-    variant('swig', default=False,
-            description='Enable for optional swig language bindings'
-            ' (not yet functional)')
     variant('sharp', default=False,
             description='Enable for optional sharp language bindings'
             ' (not yet functional)')
@@ -99,13 +103,13 @@ class Graphviz(AutotoolsPackage):
         # These language bindings have not yet been tested.  They
         # likely need additional dependencies to get working.
         untested_bindings = (
-            '+swig', '+sharp', '+go', '+guile', '+io',
+            '+sharp', '+go', '+guile', '+io',
             '+lua', '+ocaml', '+php',
             '+python', '+r', '+ruby', '+tcl')
 
         for var in untested_bindings:
             if var in spec:
-                raise SpackException(
+                raise SpackError(
                     "The variant {0} for language bindings has not been "
                     "tested.  It might or might not work.  To try it "
                     "out, run `spack edit graphviz`, and then move '{0}' "
@@ -113,11 +117,23 @@ class Graphviz(AutotoolsPackage):
                     "`tested_bindings` list.  Be prepared to add "
                     "required dependencies.  "
                     "Please then submit a pull request to "
-                    "http://github.com/llnl/spack")
+                    "http://github.com/llnl/spack".format(var))
+
+        need_swig = True if ("+swig" in spec) else False
 
         for var in tested_bindings:
+            if (var in spec):
+                need_swig = True
             enable = 'enable' if (var in spec) else 'disable'
             options.append('--%s-%s' % (enable, var[1:]))
+
+        for var in untested_bindings:
+            options.append('--disable-%s' % var[1:])
+
+        if need_swig:
+            options.append('--enable-swig=yes')
+        else:
+            options.append('--enable-swig=no')
 
         # On OSX fix the compiler error:
         # In file included from tkStubLib.c:15:
