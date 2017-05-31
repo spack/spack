@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.error import SpackError
 import sys
 import shutil
 
@@ -108,7 +107,7 @@ class Graphviz(AutotoolsPackage):
 
         for var in untested_bindings:
             if var in spec:
-                raise SpackError(
+                raise InstallError(
                     "The variant {0} for language bindings has not been "
                     "tested.  It might or might not work.  To try it "
                     "out, run `spack edit graphviz`, and then move '{0}' "
