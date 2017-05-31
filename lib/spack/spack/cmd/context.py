@@ -1,10 +1,11 @@
+import llnl.util.tty as tty
 import spack
 import llnl.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-
 from spack.spec import Spec
 
+import argparse
 import os
 import shutil
 
@@ -76,9 +77,12 @@ class Context(object):
         # Copy this context, replace the given spec (what if it appears multiple times?)
         pass
 
+    def path(self):
+        return fs.join_path(_db_dirname, self.name)
+
 def write(context):
     tmp_new = fs.join_path(_db_dirname, "_" + context.name)
-    final_dir = fs.join_path(_db_dirname, context.name)
+    final_dir = context.path()
     tmp_old = fs.join_path(_db_dirname, "." + context.name)
 
     if not os.path.exists(tmp_old):
@@ -124,34 +128,50 @@ def read(context_name):
     return context
 
 def context_create(args):
-    print args.context
-    
-    c = Context(args.context)
-    c.add('openmpi@1.10.1')
-    c.concretize()
-    c.add('netlib-lapack')
-    print c.to_dict()
+    context = Context(args.context)
+    if os.path.exists(context.path()):
+        raise tty.die("Context already exists: " + args.context)
+    write(context)
 
-    write(c)
+def context_add(args):
+    context = read(args.context)
+    for spec in spack.cmd.parse_specs(args.package):
+        context.add(spec.format())
+    write(context)
 
-    c2 = read(c.name)
-    for x, y in c2.specs_by_hash.items():
-        z = c.specs_by_hash[x]
-        if y != z:
-            print y.to_dict()
-            print z.to_dict()
-            break
+def context_concretize(args):
+    context = read(args.context)
+    context.concretize()
+    write(context)
 
-def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='context_command')
-
-    create_parser = sp.add_parser('create', help='make a context')
-
-    create_parser.add_argument(
+def add_common_args(parser):
+    parser.add_argument(
         'context',
         help="The context you are working with"
     )
 
+def setup_parser(subparser):
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='context_command')
+
+    create_parser = sp.add_parser('create', help='Make a context')
+    add_common_args(create_parser)
+
+    add_parser = sp.add_parser('add', help='Add a spec to a context')
+    add_common_args(add_parser)
+    add_parser.add_argument(
+        'package',
+        nargs=argparse.REMAINDER,
+        help="spec of the package to install"
+    )
+
+    concretize_parser = sp.add_parser(
+        'concretize', help='Concretize user specs')
+    add_common_args(concretize_parser)
+
 def context(parser, args, **kwargs):
-    action = {'create': context_create}
+    action = {
+        'create': context_create,
+        'add': context_add,
+        'concretize': context_concretize,
+        }
     action[args.context_command](args)
