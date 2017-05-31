@@ -34,11 +34,6 @@ class Graphviz(AutotoolsPackage):
 
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
-    # Swig can be enabled on it's own, though it doesn't do much.  It
-    # will also be enabled if any of the languages are enabled.
-    variant('swig', default=False,
-            description='Enable swig language binding tools')
-
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
     variant('sharp', default=False,
@@ -81,7 +76,19 @@ class Graphviz(AutotoolsPackage):
 
     parallel = False
 
-    depends_on('swig', when='+swig')
+    # These language bindings have been tested, we know they work.
+    tested_bindings = ('+java', '+perl')
+
+    # These language bindings have not yet been tested.  They
+    # likely need additional dependencies to get working.
+    untested_bindings = (
+        '+sharp', '+go', '+guile', '+io',
+        '+lua', '+ocaml', '+php',
+        '+python', '+r', '+ruby', '+tcl')
+
+    for b in tested_bindings+untested_bindings:
+        depends_on('swig', when='%s' % b)
+
     depends_on('ghostscript')
     depends_on('freetype')
     depends_on('expat')
@@ -95,17 +102,9 @@ class Graphviz(AutotoolsPackage):
         spec = self.spec
         options = []
 
-        # These language bindings have been tested, we know they work.
-        tested_bindings = ('+java', '+perl')
+        need_swig = False
 
-        # These language bindings have not yet been tested.  They
-        # likely need additional dependencies to get working.
-        untested_bindings = (
-            '+sharp', '+go', '+guile', '+io',
-            '+lua', '+ocaml', '+php',
-            '+python', '+r', '+ruby', '+tcl')
-
-        for var in untested_bindings:
+        for var in self.untested_bindings:
             if var in spec:
                 raise InstallError(
                     "The variant {0} for language bindings has not been "
@@ -116,19 +115,15 @@ class Graphviz(AutotoolsPackage):
                     "required dependencies.  "
                     "Please then submit a pull request to "
                     "http://github.com/llnl/spack".format(var))
+            options.append('--disable-%s' % var[1:])
 
-        need_swig = True if ("+swig" in spec) else False
-
-        for var in tested_bindings:
+        for var in self.tested_bindings:
             if (var in spec):
                 need_swig = True
                 enable = 'enable'
             else:
                 enable = 'disable'
             options.append('--%s-%s' % (enable, var[1:]))
-
-        for var in untested_bindings:
-            options.append('--disable-%s' % var[1:])
 
         if need_swig:
             options.append('--enable-swig=yes')
