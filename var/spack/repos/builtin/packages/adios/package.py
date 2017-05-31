@@ -50,12 +50,13 @@ class Adios(AutotoolsPackage):
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mxml', default=True, description='Build using external (static) MXML library')
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
     variant('bzip2', default=False, description='Enable bzip2 transform support')
     variant('szip', default=False, description='Enable szip transform support')
-    variant('zfp', default=False, description='Enable ZFP transform support')
+    variant('zfp', default=True, description='Use external ZFP library')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
 
@@ -70,12 +71,13 @@ class Adios(AutotoolsPackage):
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('mxml@2.9:')
+    depends_on('mxml@2.9:', when='+mxml', type='build')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
     depends_on('zfp@:0.5.0', when='+zfp')
+
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
 
@@ -108,9 +110,6 @@ class Adios(AutotoolsPackage):
         # required, otherwise building its python bindings on ADIOS will fail
         extra_args.append("CFLAGS=-fPIC")
 
-        # always build external MXML, even in ADIOS 1.10.0+
-        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
-
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
@@ -126,6 +125,8 @@ class Adios(AutotoolsPackage):
         else:
             extra_args.append('--disable-fortran')
 
+        if '+mxml' in spec:
+            extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
         if '+zlib' in spec:
             extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
         if '+bzip2' in spec:
