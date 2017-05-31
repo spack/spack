@@ -33,15 +33,15 @@ class IntelParallelStudio(IntelPackage):
 
     version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
-    version('cluster.2017.4', '27398416078e1e4005afced3e9a6df7e',
+    version('cluster.2017.4',      '27398416078e1e4005afced3e9a6df7e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
-    version('composer.2017.4', 'd03d351809e182c481dc65e07376d9a2',
+    version('composer.2017.4',     'd03d351809e182c481dc65e07376d9a2',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('professional.2017.3', '691874735458d3e88fe0bcca4438b2a9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
-    version('cluster.2017.3', '691874735458d3e88fe0bcca4438b2a9',
+    version('cluster.2017.3',      '691874735458d3e88fe0bcca4438b2a9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
-    version('composer.2017.3', '52344df122c17ddff3687f84ceb21623',
+    version('composer.2017.3',     '52344df122c17ddff3687f84ceb21623',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('professional.2017.2', '70e54b33d940a1609ff1d35d3c56e3b3',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
