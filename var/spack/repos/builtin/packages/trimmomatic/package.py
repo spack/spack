@@ -43,7 +43,7 @@ class Trimmomatic(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'trimmomatic-{}.jar'.format(self.version.dotted)
+        jar_file = 'trimmomatic-{v}.jar'.format(v=self.version.dotted)
         install(jar_file, prefix.bin)
 
         # Put the adapter files someplace sensible
