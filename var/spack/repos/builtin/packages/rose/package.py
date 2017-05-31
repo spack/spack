@@ -48,26 +48,24 @@ class Rose(Package):
     depends_on("libtool@2.4", type='build')
     depends_on("boost@1.47.0:")
 
-    variant('tests', default=False, description='enable the tests directory')
+    variant('tests', default=False, description='Build the tests directory')
 
-    variant('binanalysis', default=False, description='enable binary analysis tooling')
-    depends_on('libgcrypt', when='+binanalysis')
-    depends_on('py-binwalk', when='+binanalysis')
+    variant('binanalysis', default=False, description='Enable binary analysis tooling')
+    depends_on('libgcrypt', when='+binanalysis', type='build')
+    depends_on('py-binwalk', when='+binanalysis', type='run')
 
-    variant('c', default=True)
-    variant('cxx', default=True)
+    variant('c', default=True, description='Enable c language support')
+    variant('cxx', default=True, description='Enable c++ language support')
 
-    variant('fortran', default=False, description='enable fortran')
+    variant('fortran', default=False, description='Enable fortran language support')
 
-    variant('java', default=False, description='enable java')
+    variant('java', default=False, description='Enable java language support')
     depends_on('jdk', when='+java')
 
-    variant('z3', default=False, description='enable z3')
+    variant('z3', default=False, description='Enable z3 theorem prover')
     depends_on('z3', when='+z3')
 
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'build_tree')
+    build_directory = 'spack-build'
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

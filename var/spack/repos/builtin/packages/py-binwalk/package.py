@@ -27,10 +27,13 @@ from spack import *
 
 
 class PyBinwalk(PythonPackage):
-    """Binwalk is a fast, easy to use tool for analyzing, reverse engineering, and extracting firmware images."""
+    """Binwalk is a fast, easy to use tool for analyzing, reverse engineering,
+       and extracting firmware images."""
 
     homepage = "https://github.com/devttys0/binwalk"
-    url      = "https://github.com/devttys0/binwalk/archive/v2.1.1.tar.gz"
+    url      = "https://pypi.io/packages/source/b/binwalk/binwalk-2.1.0.tar.gz"
+
+    version('2.1.0', '054867d9abe6a05f43200cf2591051e6')
 
     depends_on('python@3:')
-    version('2.1.1', 'e5015a8d0eff287eda8c4afeeca89ed6')
+    depends_on('py-setuptools', type='build')

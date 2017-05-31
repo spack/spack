@@ -38,17 +38,17 @@ class Z3(MakefilePackage):
 
     phases = ['bootstrap', 'build', 'install']
 
-    variant('python', default=False)
+    variant('python', default=False, description='Enable python support')
     depends_on('python', when='+python')
 
+    build_directory = 'build'
+
     def configure_args(self):
-        return []
+        spec = self.spec
+        return [
+            '--python' if '+python' in spec else ''
+        ]
 
     def bootstrap(self, spec, prefix):
-        python = which('python')
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-        python('scripts/mk_make.py', *options)
-
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'build')
+        spec['python'].command('scripts/mk_make.py', *options)

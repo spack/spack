@@ -34,7 +34,7 @@ class Spot(AutotoolsPackage):
     version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
     version('1.2.6', '799bf59ccdee646d12e00f0fe6c23902')
 
-    variant('python', default=True)
+    variant('python', default=True, description='Enable python API')
 
     depends_on("python@3.3:", when='@1.99.5: +python')
     depends_on("python@3.2:", when='@1.99: +python')
