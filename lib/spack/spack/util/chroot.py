@@ -24,11 +24,13 @@
 ##############################################################################
 import os
 import sys
+import copy
 import spack
 import cPickle as pickle
 import llnl.util.tty as tty
 from socket import *
 from spack.util.executable import which
+from llnl.util.filesystem import join_path
 
 from fstab import Fstab
 from daemon import Daemon
@@ -240,6 +242,7 @@ def remove_chroot_environment(dir, permanent):
 
 def get_group(username):
     groups = which("groups", required=True)
+
     # just use the first group
     group = groups(username, output=str).split(':')[1].strip().split(' ')[0]
     return group
