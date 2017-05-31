@@ -46,20 +46,56 @@ class Rose(Package):
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
-    depends_on("boost@1.54.0")
-    depends_on("jdk@8u25")
+    depends_on("boost@1.47.0:")
 
-    def install(self, spec, prefix):
-        # Bootstrap with autotools
+    variant('tests', default=False, description='enable the tests directory')
+
+    variant('binanalysis', default=False, description='enable binary analysis tooling')
+    depends_on('libgcrypt', when='+binanalysis')
+    depends_on('py-binwalk', when='+binanalysis')
+
+    variant('c', default=True)
+    variant('cxx', default=True)
+
+    variant('fortran', default=False, description='enable fortran')
+
+    variant('java', default=False, description='enable java')
+    depends_on('jdk', when='+java')
+
+    variant('z3', default=False, description='enable z3')
+    depends_on('z3', when='+z3')
+
+    @property
+    def build_directory(self):
+        return join_path(self.stage.source_path, 'build_tree')
+
+    def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('build')
 
-        # Configure, compile & install
-        with working_dir('rose-build', create=True):
-            boost = spec['boost']
+    @property
+    def languages(self):
+        spec = self.spec
+        langs = [
+            'binaries' if '+binanalysis' in spec else '',
+            'c' if '+c' in spec else '',
+            'c++' if '+cxx' in spec else '',
+            'java' if '+java' in spec else '',
+            'fortran' if '+fortran' in spec else ''
+        ]
+        return list(filter(None, langs))
 
-            configure = Executable('../configure')
-            configure("--prefix=" + prefix,
-                      "--with-boost=" + boost.prefix,
-                      "--disable-boost-version-check")
-            make("install-core")
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--disable-boost-version-check',
+            "--with-alternate_backend_C_compiler={}".format(self.compiler.cc),
+            "--with-alternate_backend_Cxx_compiler={}".format(self.compiler.cxx),
+            "--with-boost={}".format(spec['boost'].prefix),
+            "--enable-languages={}".format(",".join(self.languages)),
+            "--with-z3={}".format(spec['z3'].prefix) if '+z3' in spec else '',
+            '--enable-tests-directory' if '+tests' in spec else '--disable-tests-directory',
+            '--enable-tutorial-directory={}'.format('no'),
+        ]
+
+    install_targets = [ "install-core" ]
