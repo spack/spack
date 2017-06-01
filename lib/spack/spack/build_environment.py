@@ -540,7 +540,7 @@ def setup_package(pkg, dirty=False):
                                     lambda x, y : y[flag]))
         flag_val = pkg.spec.compiler_flags[flag]
         print flag_val, spack_env.group_by_name(), trap_func
-        pkg.spec.compiler_flags[flag] = trap_func(spack_env, {flag: flag_val})
+        pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
         print pkg.spec.compiler_flags[flag], spack_env.group_by_name(), flag
 
     set_compiler_environment_variables(pkg, spack_env)

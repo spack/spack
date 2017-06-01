@@ -132,8 +132,9 @@ class CMakePackage(PackageBase):
         # Relies on being the first thing that can affect the spack_env
         # EnvironmentModification after it is instantiated or no other
         # method trying to affect these variables. Currently both are true
-        spack_env.set(flag_val.keys()[0].upper(),
-                      ' '.join(flag_val.values()[0]))
+        # flag_val is a tuple (flag, value_list)
+        spack_env.set(flag_val[0].upper(),
+                      ' '.join(flag_val[1]))
         return []
 
 
