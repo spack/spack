@@ -70,7 +70,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             description='Optionally install cpanm with the core packages.')
 
     variant('shared', default=True,
-            description='Build a shared libperl.so library' )
+            description='Build a shared libperl.so library')
 
     resource(
         name="cpanm",
