@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.util.prefix import Prefix
 from spack import *
 
 
@@ -94,3 +95,25 @@ class IntelMpi(IntelPackage):
         self.spec.mpicxx = join_path(bindir, 'mpicxx')
         self.spec.mpifc = join_path(bindir, 'mpif90')
         self.spec.mpif77 = join_path(bindir, 'mpif77')
+
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
+        """
+        mpi_root = Prefix(join_path(self.prefix, 'compilers_and_libraries',
+                                    'linux', 'mpi'))
+
+        run_env.prepend_path('CLASSPATH',
+                             join_path(mpi_root, 'intel64', 'lib', 'mpi.jar'))
+        run_env.set('I_MPI_ROOT', mpi_root)
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(mpi_root, 'mic', 'lib'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(mpi_root, 'intel64', 'lib'))
+        run_env.prepend_path('MANPATH', mpi_root.man)
+        run_env.prepend_path('PATH', join_path(mpi_root, 'intel64', 'bin'))

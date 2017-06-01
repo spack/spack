@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.util.prefix import Prefix
 from spack import *
 
 
@@ -52,3 +53,23 @@ class IntelIpp(IntelPackage):
             return False
         else:
             return True
+
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source ipp/bin/ippvars.sh intel64
+        """
+        ipp_root = Prefix(join_path(self.prefix, 'ipp'))
+
+        run_env.prepend_path('CPATH', ipp_root.include)
+        run_env.prepend_path('IPPROOT', ipp_root)
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(ipp_root.lib, 'intel64'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(ipp_root.lib, 'intel64'))
+        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                             join_path(ipp_root.lib, 'mic'))

@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.util.prefix import Prefix
 from spack import *
 
 
@@ -54,3 +55,27 @@ class IntelDaal(IntelPackage):
             return False
         else:
             return True
+
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source daal/bin/daalvars.sh intel64
+        """
+        daal_root = Prefix(join_path(self.prefix, 'daal'))
+        tbb_root  = Prefix(join_path(self.prefix, 'tbb'))
+
+        run_env.prepend_path('CLASSPATH', join_path(daal_root.lib, 'daal.jar'))
+        run_env.prepend_path('CPATH', daal_root.include)
+        run_env.set('DAALROOT', daal_root)
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(tbb_root.lib, 'intel64_lin', 'gcc4.4'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(daal_root.lib, 'intel64_lin'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(tbb_root.lib, 'intel64_lin', 'gcc4.4'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(daal_root.lib, 'intel64_lin'))
