@@ -88,7 +88,7 @@ class Graphviz(AutotoolsPackage):
         '+python', '+r', '+ruby', '+tcl')
 
     for b in tested_bindings + untested_bindings:
-        depends_on('swig', when='%s' % b)
+        depends_on('swig', when=b)
 
     depends_on('ghostscript')
     depends_on('freetype')
