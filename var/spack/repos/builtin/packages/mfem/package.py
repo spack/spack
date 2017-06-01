@@ -50,6 +50,10 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
+    version('3.3',
+            'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
+            url='http://goo.gl/Vrpsns', extension='.tar.gz')
+
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
             url='http://goo.gl/Y9T75B', extension='.tar.gz')
@@ -173,9 +177,7 @@ class Mfem(Package):
             ss_lib += (' -lumfpack -lcholmod -lcolamd' +
                        ' -lamd -lcamd -lccolamd -lsuitesparseconfig')
 
-            no_librt_archs = ['darwin-i686', 'darwin-x86_64']
-            no_rt = any(map(lambda a: spec.satisfies('=' + a),
-                            no_librt_archs))
+            no_rt = spec.satisfies('platform=darwin')
             if not no_rt:
                 ss_lib += ' -lrt'
             ss_lib += (' ' + metis_lib + ' ' + lapack_lib)

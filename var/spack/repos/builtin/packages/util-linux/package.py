@@ -29,10 +29,11 @@ class UtilLinux(AutotoolsPackage):
     """Util-linux is a suite of essential utilities for any Linux system."""
 
     homepage = "http://freecode.com/projects/util-linux"
-    url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.1.tar.gz"
+    url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.2.tar.gz"
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    version('2.29.2', '24e0c67aac6f5c2535208866a42aeea2')
     version('2.29.1', 'c7d5c111ef6bc5df65659e0b523ac9d9')
     version('2.25',   'f6d7fc6952ec69c4dc62c8d7c59c1d57')
 

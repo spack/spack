@@ -83,6 +83,7 @@ class Gcc(AutotoolsPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
+    depends_on('zip', type='build', when='@:6 languages=all')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -97,17 +98,14 @@ class Gcc(AutotoolsPackage):
     # depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    provides('golang', when='languages=go')
-    # 'when' does not currently support multiple parts of a spec.
-    # See https://github.com/LLNL/spack/pull/4151
-    # provides('golang',        when='languages=go @4.6:')
-    # provides('golang@:1',     when='languages=go @4.7.1:')
-    # provides('golang@:1.1',   when='languages=go @4.8:')
-    # provides('golang@:1.1.2', when='languages=go @4.8.2:')
-    # provides('golang@:1.2',   when='languages=go @4.9:')
-    # provides('golang@:1.4',   when='languages=go @5:')
-    # provides('golang@:1.6.1', when='languages=go @6:')
-    # provides('golang@:1.8',   when='languages=go @7:')
+    provides('golang',        when='languages=go @4.6:')
+    provides('golang@:1',     when='languages=go @4.7.1:')
+    provides('golang@:1.1',   when='languages=go @4.8:')
+    provides('golang@:1.1.2', when='languages=go @4.8.2:')
+    provides('golang@:1.2',   when='languages=go @4.9:')
+    provides('golang@:1.4',   when='languages=go @5:')
+    provides('golang@:1.6.1', when='languages=go @6:')
+    provides('golang@:1.8',   when='languages=go @7:')
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -169,6 +167,15 @@ class Gcc(AutotoolsPackage):
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t',
                             new_header)
+
+        # Use installed libz
+        if self.version >= Version('6'):
+            filter_file('@zlibdir@',
+                        '-L{0}'.format(spec['zlib'].prefix.lib),
+                        'gcc/Makefile.in')
+            filter_file('@zlibinc@',
+                        '-I{0}'.format(spec['zlib'].prefix.include),
+                        'gcc/Makefile.in')
 
     def configure_args(self):
         spec = self.spec

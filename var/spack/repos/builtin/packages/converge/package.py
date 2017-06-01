@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from distutils.dir_util import copy_tree
-import os
 
 
 class Converge(Package):
@@ -37,25 +36,32 @@ class Converge(Package):
     parameters. This grid generation method completely eliminates the need to
     manually generate a grid. In addition, CONVERGE offers many other features
     to expedite the setup process and to ensure that your simulations are as
-    computationally efficient as possible.
-
-    Note: CONVERGE is licensed software. You will need to create an account on
-    the CONVERGE homepage and download CONVERGE yourself. Spack will search
-    your current directory for the download file. Alternatively, add this file
-    to a mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    computationally efficient as possible."""
 
     homepage = "https://www.convergecfd.com/"
-    url = "file://%s/converge_install_2.3.16.tar.gz" % os.getcwd()
+    url      = "https://download.convergecfd.com/download/CONVERGE_2.4/Full_Solver_Packages/converge_install_2.4.10.tar.gz"
 
+    # In order to view available versions, you need to register for an account:
+    # https://download.convergecfd.com/wp-login.php?action=register
+
+    version('2.4.10', '53f5bd4bfb39005bebae46b8d6ee3ce6')
     version('2.3.16', '8b80f1e73a63181c427c7732ad279986')
+    version('2.1.0',  '327a917d46aa3bc8dee9511375ce112c',
+            url="https://download.convergecfd.com/download/CONVERGE_2.1/Full_Solver_Packages/converge_install_2.1.0_111615.tar.gz")
 
     variant('mpi', default=True, description='Build with MPI support')
 
-    # The Converge Getting Started Guide recommends:
-    # MPICH: 3.1.4
-    # HP-MPI: 2.0.3+
-    # OpenMPI: 1.6.*
+    # The CONVERGE Getting Started Guide recommends:
+    #
+    # +--------------+--------+---------+---------+
+    # | MPI Packages |  v2.2  |  v2.3   |  v2.4   |
+    # +--------------+--------+---------+---------+
+    # | MPICH        | 1.2.1  | 3.1.4   |         |
+    # | HP-MPI       | 2.0.3+ | 2.0.3+  |         |
+    # | Platform MPI |        | 9.1.2   | 9.1.2   |
+    # | Open MPI     | 1.6+   | 1.6+    | 1.10.1+ |
+    # | Intel MPI    |        | 17.0.98 | 17.0.98 |
+    # +--------------+--------+---------+---------+
     depends_on('mpi', when='+mpi')
 
     # Licensing
@@ -67,3 +73,7 @@ class Converge(Package):
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('CONVERGE_ROOT', self.prefix)
+        run_env.prepend_path('PATH', join_path(self.prefix, 'l_x86_64', 'bin'))

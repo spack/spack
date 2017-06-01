@@ -41,4 +41,8 @@ class Zeromq(AutotoolsPackage):
     depends_on("libsodium@:1.0.3", when='@:4.1.2')
 
     def configure_args(self):
-        return ['--with-libsodium']
+        config_args = ['--with-libsodium']
+        if 'clang' in self.compiler.cc:
+            config_args.append("CFLAGS=-Wno-gnu")
+            config_args.append("CXXFLAGS=-Wno-gnu")
+        return config_args
