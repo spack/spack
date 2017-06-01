@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
+
 
 class Cctools(AutotoolsPackage):
     """The Cooperative Computing Tools (cctools) enable large scale
