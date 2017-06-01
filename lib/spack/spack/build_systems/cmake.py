@@ -83,12 +83,19 @@ class CMakePackage(PackageBase):
         return 'RelWithDebInfo'
 
     @property
-    def root_cmakelists_dir(self):
-        """Returns the location of the root CMakeLists.txt
+    def cmakelists_directory(self):
+        """The relative path to the directory containing CMakeLists.txt
 
-        :return: directory containing the root CMakeLists.txt
+        Defaults to the root of the extracted tarball.
+
+        :return: directory containing CMakeLists.txt
         """
         return self.stage.source_path
+
+    @property
+    def cmakelists_abs_path(self):
+        """Absolute path to the directory containing CMakeLists.txt."""
+        return os.path.abspath(self.cmakelists_directory)
 
     @property
     def std_cmake_args(self):
@@ -143,7 +150,7 @@ class CMakePackage(PackageBase):
 
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
-        options = [self.root_cmakelists_dir] + self.std_cmake_args + \
+        options = [self.cmakelists_abs_path] + self.std_cmake_args + \
             self.cmake_args()
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)

@@ -38,4 +38,4 @@ class Cpprestsdk(CMakePackage):
 
     depends_on('boost')
 
-    root_cmakelists_dir = '../Release'
+    cmakelists_directory = 'Release'
