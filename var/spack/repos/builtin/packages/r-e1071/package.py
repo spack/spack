@@ -36,4 +36,4 @@ class RE1071(RPackage):
 
     version('1.6-7', 'd109a7e3dd0c905d420e327a9a921f5a')
 
-    # depends_on('r-class', type=('build', 'run'))
+    depends_on('r-class', type=('build', 'run'))

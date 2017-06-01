@@ -37,10 +37,10 @@ class RLme4(RPackage):
 
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 
-    # depends_on('r-matrix', type=('build', 'run'))
-    # depends_on('r-mass', type=('build', 'run'))
-    # depends_on('r-lattice', type=('build', 'run'))
-    # depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-minqa', type=('build', 'run'))
     depends_on('r-nloptr', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))

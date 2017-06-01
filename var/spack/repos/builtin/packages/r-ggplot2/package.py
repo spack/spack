@@ -45,7 +45,7 @@ class RGgplot2(RPackage):
 
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-gtable@0.1.1:', type=('build', 'run'))
-    # depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
     depends_on('r-plyr@1.7.1:', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-scales@0.4.1', type=('build', 'run'))
