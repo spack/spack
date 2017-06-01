@@ -37,8 +37,8 @@ class Cctools(AutotoolsPackage):
     version('6.1.1', '9b43cdb3aceebddc1608c77184590619')
 
     depends_on('openssl')
-    depends_on('perl+shared', type=('build','run'))
-    depends_on('python@:3', type=('build','run'))
+    depends_on('perl+shared', type=('build', 'run'))
+    depends_on('python@:3', type=('build', 'run'))
     depends_on('readline')
     depends_on('swig')
     # depends_on('xrootd')
