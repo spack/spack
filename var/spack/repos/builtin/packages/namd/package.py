@@ -141,10 +141,6 @@ class Namd(MakefilePackage):
 
         config(self.build_directory, *opts)
 
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make()
-
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
