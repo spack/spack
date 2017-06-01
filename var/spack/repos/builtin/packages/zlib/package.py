@@ -50,7 +50,12 @@ class Zlib(Package):
 
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:
-            spack_env.set('CFLAGS', self.compiler.pic_flag)
+            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
+
+    def cflags_handler(self, spack_env, flag_val):
+        spack_env.append_flags(flag_val.keys()[0].upper(),
+                      ' '.join(flag_val.values()[0]))
+        return []
 
     def install(self, spec, prefix):
         config_args = []
