@@ -105,7 +105,7 @@ def test_get_module_cmd_fails(save_env):
     os.environ.pop('BASH_FUNC_module()')
     os.environ.pop('PATH')
     with pytest.raises(ModuleError):
-        module_cmd = get_module_cmd('--norc')
+        module_cmd = get_module_cmd(b'--norc')
 
 
 def test_get_module_cmd_from_which(tmpdir, save_env):
@@ -117,7 +117,7 @@ def test_get_module_cmd_from_which(tmpdir, save_env):
     os.environ['PATH'] = str(tmpdir.join('bin')) + ':' + os.environ['PATH']
     os.environ.pop('BASH_FUNC_module()')
 
-    module_cmd = get_module_cmd('--norc')
+    module_cmd = get_module_cmd(b'--norc')
     module_cmd_list = module_cmd('list', output=str, error=str)
 
     assert module_cmd_list == 'python list\n'

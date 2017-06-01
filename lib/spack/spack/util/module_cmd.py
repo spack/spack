@@ -38,7 +38,8 @@ def get_module_cmd(bashopts=''):
         return get_module_cmd_from_bash(bashopts)
     except ModuleError as e:
         # Don't catch the exception this time; we have no other way to do it.
-        tty.warn(e.message + "trying to detect modulecmd from `which`")
+        tty.warn("Could not detect module function from bash."
+                 " Trying to detect modulecmd from `which`")
         try:
             return get_module_cmd_from_which()
         except ModuleError as e:
