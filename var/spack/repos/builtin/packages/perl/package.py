@@ -93,6 +93,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
+        # Discussion of -fPIC for Intel at:
+        # https://github.com/LLNL/spack/pull/3081 and
+        # https://github.com/LLNL/spack/pull/4416
+        if spec.satisfies('%intel'):
+            config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+
         if '+shared' in spec:
             config_args.append('-Duseshrplib')
 
