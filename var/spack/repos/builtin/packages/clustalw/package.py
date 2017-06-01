@@ -28,7 +28,6 @@ from spack import *
 class Clustalw(AutotoolsPackage):
     """Multiple alignment of nucleic acid and protein sequences."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.clustal.org/clustal2/"
     url      = "http://www.clustal.org/download/2.1/clustalw-2.1.tar.gz"
 
