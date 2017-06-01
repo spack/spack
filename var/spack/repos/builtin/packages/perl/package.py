@@ -93,7 +93,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
-        if '+useshrplib' in spec:
+        if '+shared' in spec:
             config_args.append('-Duseshrplib')
 
         return config_args
