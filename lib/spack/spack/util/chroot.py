@@ -47,6 +47,8 @@ PACKAGES = [
     ('diffutils', True),
     ('findutils', True),
     ('gawk', True),
+    ('grep', True),
+    ('gzip', True),
     ('libc5', True),
     ('libc5-dev', True),
     ('libc6', True),
@@ -58,11 +60,18 @@ PACKAGES = [
     ('perl', True),
     ('python', True),
     ('python3', True),
+    ('sed', True),
+
+    ('strace', True),
 ]
 
 # Paths which are always needed
 DEFAULT_PATHS = [
     '/usr/bin/awk',
+
+    # certificaes for Ubuntu 14.x
+    '/usr/lib/ssl',
+    '/usr/share/ca-certificates',
 
     #'/bin',
     '/dev',
@@ -94,7 +103,7 @@ EXCLUDE_PATHS = [
 
 def find_dependencies(package_name, package_cache):
     apt_cache = spack.util.executable.which("apt-cache", requred=True)
-    cmd = '%s depends %s' % (apt_cache.exe[0], package_name)
+    cmd = 'LANG=C %s depends %s' % (apt_cache.exe[0], package_name)
     dependencies = os.popen(cmd).read()
 
     results = set()
@@ -263,6 +272,7 @@ def build_chroot_enviroment(dir):
 
 def remove_chroot_enviroment(dir):
     libraries = get_all_library_directories()
+
     for lib in libraries:
         umount_bind_path(os.path.join(dir, lib[1:]))
 
