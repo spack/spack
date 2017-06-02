@@ -106,6 +106,7 @@ def test_get_module_cmd_fails(save_env):
     os.environ.pop('PATH')
     with pytest.raises(ModuleError):
         module_cmd = get_module_cmd(b'--norc')
+        module_cmd() # Here to avoid Flake F841 on previous line
 
 
 def test_get_module_cmd_from_which(tmpdir, save_env):
