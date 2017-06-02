@@ -34,6 +34,7 @@ class Fastqc(Package):
     url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
     version('0.11.5', '3524f101c0ab0bae77c7595983170a76')
+    version('0.11.4', '104ff2e0e9aebf5bee1f6b068a059b0d')
 
     depends_on('jdk', type='run')
     depends_on('perl')          # for fastqc "script", any perl will do
