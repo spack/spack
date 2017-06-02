@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
 
 
@@ -45,4 +46,17 @@ class Pdt(AutotoolsPackage):
     version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
 
     def configure(self, spec, prefix):
-        configure('-prefix=%s' % prefix)
+        configure('-prefix={0}'.format(prefix))
+
+    @run_after('install')
+    def link_arch_dirs(self):
+        # Link arch-specific directories into prefix
+        for dir in os.listdir(self.prefix):
+            path = join_path(self.prefix, dir)
+            if not os.path.isdir(path) or os.path.islink(path):
+                continue
+            for d in ('bin', 'lib'):
+                src = join_path(path, d)
+                dst = join_path(self.prefix, d)
+                if os.path.isdir(src) and not os.path.exists(dst):
+                    os.symlink(join_path(dir, d), dst)

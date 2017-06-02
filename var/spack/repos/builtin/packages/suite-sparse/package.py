@@ -37,8 +37,9 @@ class SuiteSparse(Package):
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    variant('tbb', default=False, description='Build with Intel TBB')
-    variant('pic', default=True, description='Build position independent code (required to link with shared libraries)')
+    variant('tbb',  default=False, description='Build with Intel TBB')
+    variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
+    variant('cuda', default=False, description='Build with CUDA')
 
     depends_on('blas')
     depends_on('lapack')
@@ -48,7 +49,12 @@ class SuiteSparse(Package):
     # flags does not seem to be used, which leads to linking errors on Linux.
     depends_on('tbb', when='@4.5.3:+tbb')
 
+    depends_on('cuda', when='+cuda')
+
     patch('tbb_453.patch', when='@4.5.3:+tbb')
+
+    # This patch removes unsupported flags for pgi compiler
+    patch('pgi.patch', when='%pgi')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -59,25 +65,22 @@ class SuiteSparse(Package):
 
         make_args = ['INSTALL=%s' % prefix]
 
-        # inject Spack compiler wrappers
         make_args.extend([
+            # By default, the Makefile uses the Intel compilers if
+            # they are found. This flag disables this behavior,
+            # forcing it to use Spack's compiler wrappers.
             'AUTOCC=no',
-            'CC=%s' % self.compiler.cc,
-            'CXX=%s' % self.compiler.cxx,
-            'F77=%s' % self.compiler.f77,
-            'CUDA_ROOT     =',
-            'GPU_BLAS_PATH =',
-            'GPU_CONFIG    =',
-            'CUDA_PATH     =',
-            'CUDART_LIB    =',
-            'CUBLAS_LIB    =',
-            'CUDA_INC_PATH =',
-            'NV20          =',
-            'NV30          =',
-            'NV35          =',
-            'NVCC          = echo',
-            'NVCCFLAGS     =',
+            # CUDA=no does NOT disable cuda, it only disables internal search
+            # for CUDA_PATH. If in addition the latter is empty, then CUDA is
+            # completely disabled. See
+            # [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
+            'CUDA=no',
+            'CUDA_PATH={0}'.format(
+                spec['cuda'].prefix if '+cuda' in spec else ''
+            ),
+            'CFOPENMP={0}'.format(self.compiler.openmp_flag)
         ])
+
         if '+pic' in spec:
             make_args.extend([
                 'CFLAGS={0}'.format(self.compiler.pic_flag),

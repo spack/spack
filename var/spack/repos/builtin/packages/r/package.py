@@ -36,10 +36,11 @@ class R(AutotoolsPackage):
     Please consult the R project homepage for further information."""
 
     homepage = "https://www.r-project.org"
-    url = "https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz"
+    url = "https://cloud.r-project.org/src/base/R-3/R-3.4.0.tar.gz"
 
     extendable = True
 
+    version('3.4.0', '75083c23d507b9c16d5c6afbd7a827e7')
     version('3.3.3', '0ac211ec15e813a24f8f4a5a634029a4')
     version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
     version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
@@ -73,6 +74,8 @@ class R(AutotoolsPackage):
     depends_on('cairo+X', when='+X')
     depends_on('cairo~X', when='~X')
     depends_on('pango')
+    depends_on('pango+X', when='+X')
+    depends_on('pango~X', when='~X')
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')

@@ -178,8 +178,8 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if self.compiler.name == 'intel':
-            # Intel Fortran compiler provides the main() function so
+        if self.compiler.name == 'intel' or self.compiler.name == 'pgi':
+            # Intel & PGI Fortran compiler provides the main() function so
             # C examples linked with the Fortran compiler require a
             # hack defined by _DMAIN_COMP (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")

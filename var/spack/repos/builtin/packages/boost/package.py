@@ -148,6 +148,8 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
+    patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
+
     # Patch fix for PGI compiler
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
