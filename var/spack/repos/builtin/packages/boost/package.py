@@ -150,6 +150,10 @@ class Boost(Package):
 
     patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
 
+    # Patch fix for PGI compiler
+    patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
+    patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
     def url_for_version(self, version):
         url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
         return url.format(version.dotted, version.underscored)
@@ -162,7 +166,8 @@ class Boost(Package):
                     'icpc': 'intel',
                     'clang++': 'clang',
                     'xlc++': 'xlcpp',
-                    'xlc++_r': 'xlcpp'}
+                    'xlc++_r': 'xlcpp',
+                    'pgc++': 'pgi'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
