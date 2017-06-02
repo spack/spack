@@ -110,6 +110,19 @@ def test_set(env):
     assert str(3) == os.environ['B']
 
 
+def test_append_flags(env):
+    """Tests appending to a value in the environment."""
+
+    # Store a couple of commands
+    env.append_flags('APPEND_TO_ME', 'flag1')
+    env.append_flags('APPEND_TO_ME', 'flag2')
+
+    # ... execute the commands
+    env.apply_modifications()
+
+    assert 'flag1 flag2' == os.environ['APPEND_TO_ME']
+
+
 def test_unset(env):
     """Tests unsetting values in the environment."""
 
