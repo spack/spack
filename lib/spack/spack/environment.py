@@ -71,6 +71,7 @@ class AppendFlagsEnv(NameValueModifier):
         else:
             os.environ[self.name] = str(self.value)
 
+
 class UnsetEnv(NameModifier):
 
     def execute(self):

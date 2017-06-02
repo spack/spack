@@ -137,7 +137,6 @@ class CMakePackage(PackageBase):
                       ' '.join(flag_val[1]))
         return []
 
-
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to
         cmake, except:

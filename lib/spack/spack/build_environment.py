@@ -537,7 +537,7 @@ def setup_package(pkg, dirty=False):
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         trap_func = getattr(pkg, flag + '_handler',
                             getattr(pkg, 'default_flag_handler',
-                                    lambda x, y : y[1]))
+                                    lambda x, y: y[1]))
         flag_val = pkg.spec.compiler_flags[flag]
         pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
 

@@ -71,8 +71,15 @@ class Libxc(Package):
             if which('xiar'):
                 env['AR'] = 'xiar'
 
-        env['CFLAGS']  = env['CFLAGS'] + ' ' + optflags if 'CFLAGS' in env else optflags
-        env['FCFLAGS'] = env['FCFLAGS'] + ' ' + optflags if 'FCFLAGS' in env else optflags
+        if 'CFLAGS' in env and env['CFLAGS']:
+            env['CFLAGS'] += ' ' + optflags
+        else:
+            env['CFLAGS'] = optflags
+
+        if 'FCFLAGS' in env and env['FCFLAGS']:
+            env['FCFLAGS'] += ' ' + optflags
+        else:
+            env['FCFLAGS'] = optflags
 
         configure('--prefix={0}'.format(prefix),
                   '--enable-shared')
