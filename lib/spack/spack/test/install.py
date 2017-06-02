@@ -137,9 +137,35 @@ def test_partial_install_keep_prefix(mock_archive):
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(spack.build_environment.ChildError):
             pkg.do_install(keep_prefix=True)
+        assert os.path.exists(pkg.prefix)
         setattr(pkg, 'succeed', True)
         pkg.do_install(keep_prefix=True)
         assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_second_install_no_overwrite_first(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    pkg._stage = None
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        # If remove_prefix is called at any point in this test, that is an
+        # error
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        setattr(pkg, 'succeed', True)
+        pkg.do_install()
+        assert pkg.installed
+        delattr(pkg, 'succeed')
+        pkg.do_install()
     finally:
         spack.package.Package.remove_prefix = remove_prefix
         try:

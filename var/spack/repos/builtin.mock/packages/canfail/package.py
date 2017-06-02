@@ -35,7 +35,9 @@ class Canfail(Package):
 
     def install(self, spec, prefix):
         try:
-            getattr(self, 'succeed')
+            succeed = getattr(self, 'succeed')
+            if not succeed:
+                raise InstallError("'succeed' was false")
             touch(join_path(prefix, 'an_installation_file'))
         except AttributeError:
             raise InstallError("'succeed' attribute was not set")
