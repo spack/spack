@@ -1188,7 +1188,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
-        partial = self.repair_partial(keep_prefix)
+        partial = self.repair_partial(keep_prefix, keep_stage)
 
         # Ensure package is not already installed
         layout = spack.store.layout
@@ -1348,7 +1348,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             if not keep_prefix:
                 self.remove_prefix()
 
-    def repair_partial(self, continue_with_partial=False):
+    def repair_partial(self, reuse_prefix=False, reuse_stage=False):
         """If continue_with_partial is not set, this ensures that the package
            is either fully-installed or that the prefix is removed. This
            function considers a package fully-installed if there is a DB
@@ -1367,14 +1367,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
             partial = False
             if not installed_in_db and os.path.isdir(self.prefix):
-                if not continue_with_partial:
+                if not reuse_prefix:
                     self.remove_prefix()
                 else:
                     partial = True
 
         stage_is_managed_in_spack = self.stage.path.startswith(
             spack.stage_path)
-        if (not continue_with_partial) and stage_is_managed_in_spack:
+        if (not reuse_stage) and stage_is_managed_in_spack:
             self.stage.destroy()
             self.stage.create()
 

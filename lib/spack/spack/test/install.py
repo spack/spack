@@ -128,6 +128,7 @@ def test_partial_install_keep_prefix(mock_archive):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
+    # Normally the stage should start unset, but other tests set it
     pkg._stage = None
     fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
@@ -136,10 +137,10 @@ def test_partial_install_keep_prefix(mock_archive):
         # error
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(spack.build_environment.ChildError):
-            pkg.do_install(keep_prefix=True)
+            pkg.do_install(keep_prefix=True, keep_stage=True)
         assert os.path.exists(pkg.prefix)
         setattr(pkg, 'succeed', True)
-        pkg.do_install(keep_prefix=True)
+        pkg.do_install(keep_prefix=True, keep_stage=True)
         assert pkg.installed
     finally:
         spack.package.Package.remove_prefix = remove_prefix
@@ -154,7 +155,6 @@ def test_second_install_no_overwrite_first(mock_archive):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg._stage = None
     fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     try:
