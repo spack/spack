@@ -36,7 +36,7 @@ from spack.util.executable import which
 def get_module_cmd(bashopts=''):
     try:
         return get_module_cmd_from_bash(bashopts)
-    except ModuleError as e:
+    except ModuleError:
         # Don't catch the exception this time; we have no other way to do it.
         tty.warn("Could not detect module function from bash."
                  " Trying to detect modulecmd from `which`")
