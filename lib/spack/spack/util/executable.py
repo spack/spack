@@ -245,14 +245,14 @@ def which(*args, **kwargs):
     if isinstance(path, string_types):
         path = path.split(os.pathsep)
 
-    for command in args:
+    for name in args:
         for directory in path:
-            exe = os.path.join(directory, command)
+            exe = os.path.join(directory, name)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return Executable(exe)
 
     if required:
-        tty.die("spack requires '%s'. Make sure it is in your path." % name)
+        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
 
     return None
 

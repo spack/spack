@@ -214,17 +214,20 @@ __all__ += spack.util.executable.__all__
 
 # User's editor from the environment
 
+# Default editors to use:
+_default_editors = ['vim', 'vi', 'emacs', 'nano']
+
 # The EDITOR environment variable has the highest precedence
-# If unset, default to vim
-editor = which(os.environ.get('EDITOR', 'vim'))
+if os.environ.get('EDITOR'):
+    _default_editors.insert(0, os.environ.get('EDITOR'))
+
+editor = which(*_default_editors)
 
 if not editor:
-    # On Fedora, there is no vim command
-    editor = which('vi')
-
-if not editor:
-    msg  = 'Default text editor not found, '
-    msg += 'please set the EDITOR environment variable.'
+    default = default_editors[0]
+    msg  = 'Default text editor, {0}, not found.\n'.format(default)
+    msg += 'Please set the EDITOR environment variable to your preferred '
+    msg += 'text editor, or install {0}.'.format(default)
     raise EnvironmentError(msg)
 
 from spack.package import \
