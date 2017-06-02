@@ -65,7 +65,8 @@ class Trilinos(CMakePackage):
     version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
     version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
 
-    variant('allpkgs', default=True, description='Build maximal set of packages')
+    variant('allpkgs', default=True,
+            description='Build maximal set of packages')
     variant('xsdkflags',        default=False,
             description='Compile using the default xSDK configuration')
     variant('metis',        default=True,
@@ -91,8 +92,10 @@ class Trilinos(CMakePackage):
     variant('boost',        default=True,  description='Compile with Boost')
     variant('tpetra',       default=True,  description='Compile with Tpetra')
     variant('epetra',       default=True,  description='Compile with Epetra')
-    variant('exodus',       default=False, description='Compile with Exodus from SEACAS')
-    variant('pnetcdf',      default=False, description='Compile with parallel-netcdf')
+    variant('exodus',       default=False,
+            description='Compile with Exodus from SEACAS')
+    variant('pnetcdf',      default=False,
+            description='Compile with parallel-netcdf')
     variant('zlib',         default=True,  description='Compile with zlib')
     variant('stk',          default=False, description='Compile with STK')
     variant('belos',        default=False, description='Compile with Belos')
@@ -100,12 +103,14 @@ class Trilinos(CMakePackage):
     variant('amesos',       default=False, description='Compile with Amesos')
     variant('ifpack',       default=False, description='Compile with Ifpack')
     variant('muelu',        default=False, description='Compile with Muelu')
-    variant('fortran',      default=True,  description='Compile with Fortran support')
+    variant('fortran',      default=True,
+            description='Compile with Fortran support')
     variant('ml',           default=True,  description='Compile with ML')
     variant('gtest',        default=False, description='Compile with Gtest')
     variant('aztec',        default=True,  description='Compile with Aztec')
     variant('x11',          default=False, description='Compile with X11')
-    variant('dtk',          default=False, description='Enable DataTransferKit')
+    variant('dtk',          default=False,
+            description='Enable DataTransferKit')
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
              tag='master',
@@ -219,8 +224,8 @@ class Trilinos(CMakePackage):
         if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
-        #else:
-        #    options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+        # else:
+        # options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Force Trilinos to use the MPI wrappers instead of raw compilers
         # this is needed on Apple systems that require full resolution of
@@ -527,7 +532,7 @@ class Trilinos(CMakePackage):
         # exodus
         if '+exodus' in spec:
             options.extend([
-                #'-DTrilinos_ENABLE_SEACAS:BOOL=ON'
+                # '-DTrilinos_ENABLE_SEACAS:BOOL=ON'
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASEpu:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodiff:BOOL=ON',
@@ -536,7 +541,7 @@ class Trilinos(CMakePackage):
             ])
         else:
             options.extend([
-                #'-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
+                # '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
             ])
 
