@@ -127,12 +127,12 @@ class Trilinos(CMakePackage):
     depends_on('glm')
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('zlib', when="+zlib")
 
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi')
     depends_on('parallel-netcdf', when="+pnetcdf@master")
-    depends_on('zlib', when="+zlib")
     depends_on('parmetis', when='+metis')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -218,7 +218,15 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
                 'ON' if '+epetra' in spec else 'OFF'),
             '-DTrilinos_ENABLE_EpetraEx:BOOL=%s' % (
-                'ON' if '+epetra' in spec else 'OFF')
+                'ON' if '+epetra' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ML:BOOL=%s' % (
+                'ON' if '+ml' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_AztecOO:BOOL=%s' % (
+                'ON' if '+aztec' in spec else 'OFF'),
+            '-DTPL_ENABLE_X11:BOOL=%s' % (
+                'ON' if '+x11' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_PyTrilinos:BOOL=%s' % (
+                'ON' if '+python' in spec else 'OFF')
         ])
 
         if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
@@ -449,33 +457,6 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_Ifpack:BOOL=OFF'
             ])
 
-        if '+ml' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_ML:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTrilinos_ENABLE_ML:BOOL=OFF'
-            ])
-
-        if '+aztec' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_AztecOO:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTrilinos_ENABLE_AztecOO:BOOL=OFF'
-            ])
-
-        if '+x11' in spec:
-            options.extend([
-                '-DTPL_ENABLE_X11=ON'
-            ])
-        else:
-            options.extend([
-                '-DTPL_ENABLE_X11=OFF'
-            ])
-
         if '+tpetra' in spec:
             options.extend([
                 '-DTrilinos_ENABLE_Tpetra:BOOL=ON',
@@ -487,16 +468,6 @@ class Trilinos(CMakePackage):
         if '+gtest' in spec:
             options.extend([
                 '-DTrilinos_ENABLE_Gtest:BOOL=ON'
-            ])
-
-        # python
-        if '+python' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_PyTrilinos:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTrilinos_ENABLE_PyTrilinos:BOOL=OFF'
             ])
 
         # collect CXX flags:
@@ -541,7 +512,7 @@ class Trilinos(CMakePackage):
             ])
         else:
             options.extend([
-                # '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
+                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
             ])
 
@@ -556,6 +527,7 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
+
         return options
 
     @run_after('install')
