@@ -24,17 +24,19 @@
 ##############################################################################
 from spack import *
 
+
 class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code 
-       designed to support a variety of energy applications of interest (most 
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver 
+    """Nalu: a generalized unstructured massively parallel low Mach flow code
+       designed to support a variety of energy applications of interest (most
+       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
        Tpetra/Epetra stack
     """
 
     homepage = "https://github.com/NaluCFD/Nalu"
     url      = "https://github.com/NaluCFD/Nalu.git"
 
-    version('master', git='https://github.com/NaluCFD/Nalu.git', branch='master')
+    version('master',
+            git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
     variant('debug', default=False,
             description='Builds a RelWithDebInfo version')
@@ -50,8 +52,9 @@ class Nalu(CMakePackage):
             '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
             '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
             '-DENABLE_INSTALL:BOOL=ON',
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % 
-                ('RelWithDebInfo' if '+debug' in spec else 'RELEASE'),
+            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
+                'RelWithDebInfo' if '+debug' in spec else 'RELEASE'
+            )
         ])
 
         return options
