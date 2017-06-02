@@ -95,6 +95,25 @@ class RemovePrefixChecker(object):
         self.wrapped_rm_prefix()
 
 
+class MockStage(object):
+    def __init__(self, wrapped_stage):
+        self.wrapped_stage = wrapped_stage
+        self.test_destroyed = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return True
+
+    def destroy(self):
+        self.test_destroyed = True
+        self.wrapped_stage.destroy()
+
+    def __getattr__(self, attr):
+        return getattr(self.wrapped_stage, attr)
+
+
 @pytest.mark.usefixtures('install_mockery')
 def test_partial_install(mock_archive):
     spec = Spec('canfail')
@@ -112,11 +131,14 @@ def test_partial_install(mock_archive):
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
         setattr(pkg, 'succeed', True)
+        pkg.stage = MockStage(pkg.stage)
         pkg.do_install()
         assert rm_prefix_checker.removed
+        assert pkg.stage.test_destroyed
         assert pkg.installed
     finally:
         spack.package.Package.remove_prefix = remove_prefix
+        pkg._stage = None
         try:
             delattr(pkg, 'succeed')
         except AttributeError:
@@ -140,10 +162,13 @@ def test_partial_install_keep_prefix(mock_archive):
             pkg.do_install(keep_prefix=True, keep_stage=True)
         assert os.path.exists(pkg.prefix)
         setattr(pkg, 'succeed', True)
+        pkg.stage = MockStage(pkg.stage)
         pkg.do_install(keep_prefix=True, keep_stage=True)
         assert pkg.installed
+        assert not pkg.stage.test_destroyed
     finally:
         spack.package.Package.remove_prefix = remove_prefix
+        pkg._stage = None
         try:
             delattr(pkg, 'succeed')
         except AttributeError:
