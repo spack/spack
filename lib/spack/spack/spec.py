@@ -1525,29 +1525,46 @@ class Spec(object):
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
-    def _concretize_helper(self, presets=None, visited=None):
+    def _concretize_helper(self, dep_contexts=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
-        if presets is None:
-            presets = {}
-        if visited is None:
-            visited = set()
-
-        if self.name in visited:
-            return False
+        # TODO: If you have already ran concretize_helper on a package, dont do
+        # it a second time
 
         changed = False
 
+        if not dep_contexts:
+            dep_contexts = [{}]
+
+        if any((self.name in x) for x in dep_contexts):
+            return False
+
+        build_only = set()
+        pkg = self.package
+        for dep_name in pkg.dependencies:
+            deptypes = pkg.dependency_types[dep_name]
+            if set(deptypes) == set(['build']):
+                build_only.add(dep_name)
+        if build_only:
+            dep_contexts = list(dep_contexts)
+            build_context = {}
+            dep_contexts.append(build_context)
+
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
-            changed |= self._dependencies[
-                name].spec._concretize_helper(presets, visited)
+            if name in build_only:
+                child_contexts = [build_context]
+            else:
+                child_contexts = dep_contexts
 
-        if self.name in presets:
-            changed |= self.constrain(presets[self.name])
+            changed |= self._dependencies[
+                name].spec._concretize_helper(child_contexts)
+
+        if any((self.name in x) for x in dep_contexts):
+            raise ValueError("Circular dependency for " + self.name)
         else:
             # Concretize virtual dependencies last.  Because they're added
             # to presets below, their constraints will all be merged, but we'll
@@ -1560,9 +1577,9 @@ class Spec(object):
                     spack.concretizer.concretize_version(self),
                     spack.concretizer.concretize_variants(self))
                 changed |= any(updated)
-            presets[self.name] = self
+            for dep_context in dep_contexts:
+                dep_context[self.name] = self
 
-        visited.add(self.name)
         return changed
 
     def _replace_with(self, concrete):
@@ -1899,9 +1916,6 @@ class Spec(object):
         # comes from a vdep, it's a defensive copy from _find_provider.
         pre_existing = [x for x in dep_contexts if dep.name in x]
 
-        # TODO: need to also pull in children: all link/run deps and all direct
-        # build deps
-
         children = list(self.traverse(deptype=('link', 'run')))
         children.extend(self.dependencies(deptype='build'))
         child_matches = list(x for x in children if dep.name == x.name)
@@ -1956,10 +1970,9 @@ class Spec(object):
 
         build_only = set()
         for dep_name in pkg.dependencies:
-            for dep_name in pkg.dependencies:
-                deptypes = pkg.dependency_types[dep_name]
-                if set(deptypes) == set(['build']):
-                    build_only.add(dep_name)
+            deptypes = pkg.dependency_types[dep_name]
+            if set(deptypes) == set(['build']):
+                build_only.add(dep_name)
         if build_only:
             dep_contexts = list(dep_contexts)
             build_context = {}
