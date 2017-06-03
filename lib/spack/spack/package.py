@@ -852,7 +852,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def installed(self):
-        return os.path.isdir(self.prefix)
+        return spack.store.layout.completed_install(self.spec)
+
+    def _mark_installed(self):
+        spack.store.layout.mark_complete(self.spec)
 
     @property
     def prefix(self):
@@ -1188,6 +1191,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
+        self.repair_partial(keep_prefix)
+
         # Ensure package is not already installed
         layout = spack.store.layout
         with spack.store.db.prefix_read_lock(self.spec):
@@ -1319,9 +1324,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         try:
             # Create the install prefix and fork the build process.
-            spack.store.layout.create_install_directory(self.spec)
+            if (not keep_prefix) or (not os.path.isdir(self.prefix)):
+                spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
+            self._mark_installed()
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
             # note: PARENT of the build process adds the new package to
@@ -1345,6 +1352,67 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Remove the install prefix if anything went wrong during install.
             if not keep_prefix:
                 self.remove_prefix()
+
+    def repair_partial(self, continue_with_partial=False):
+        """If continue_with_partial is not set, this ensures that the package
+           is either fully-installed or that the prefix is removed. If the
+           package is installed but there is no DB entry then this adds a
+           record. If continue_with_partial is not set this also clears the
+           stage directory to start an installation from scratch.
+        """
+        if self.spec.external:
+            raise ExternalPackageError("Attempted to repair external spec %s" %
+                                       self.spec.name)
+
+        layout = spack.store.layout
+        with spack.store.db.prefix_write_lock(self.spec):
+            try:
+                record = spack.store.db.get_record(self.spec)
+                installed_in_db = record.installed if record else False
+            except KeyError:
+                installed_in_db = False
+
+            if not self.installed and installed_in_db:
+                # Packages check whether they are installed by looking for a
+                # completion file, but to avoid overwriting packages that were
+                # installed before this check, also check the DB for a record
+                # of installation; if the DB thinks it's installed, then the
+                # package should consider itself installed.
+                try:
+                    self._mark_installed()
+                    layout.check_installed(self.spec)
+                except directory_layout.DirectoryLayoutError:
+                    tty.msg("Cleaning spec that is out of sync with DB: %s" %
+                            self.spec.short_spec)
+                    spack.store.db.remove(self.spec)
+                    self.remove_prefix()
+            elif (os.path.isdir(self.prefix) and
+                    not self.installed and
+                    not continue_with_partial):
+                spack.hooks.pre_uninstall(self.spec)
+                self.remove_prefix()
+                try:
+                    spack.store.db.remove(self.spec)
+                except KeyError:
+                    pass
+                spack.hooks.post_uninstall(self.spec)
+                tty.msg("Removed partial install for %s" %
+                        self.spec.short_spec)
+            elif not self.installed and continue_with_partial:
+                try:
+                    layout.check_metadata_consistency(self.spec)
+                except directory_layout.DirectoryLayoutError:
+                    self.remove_prefix()
+            elif self.installed and not installed_in_db:
+                layout.check_installed(self.spec)
+                tty.msg("Repairing db for %s" % self.name)
+                spack.store.db.add(self.spec)
+
+        stage_is_managed_in_spack = self.stage.path.startswith(
+            spack.stage_path)
+        if (not continue_with_partial) and stage_is_managed_in_spack:
+            self.stage.destroy()
+            self.stage.create()
 
     def _do_install_pop_kwargs(self, kwargs):
         """Pops kwargs from do_install before starting the installation

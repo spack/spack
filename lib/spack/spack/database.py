@@ -259,7 +259,8 @@ class Database(object):
             raise syaml.SpackYAMLError(
                 "error writing YAML database:", str(e))
 
-    def _read_spec_from_dict(self, hash_key, installs):
+    @staticmethod
+    def _read_spec_from_dict(hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -275,7 +276,8 @@ class Database(object):
         spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
-    def _assign_dependencies(self, hash_key, installs, data):
+    @staticmethod
+    def _assign_dependencies(hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -341,15 +343,18 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.store.layout)
+            try:
+                old_records = Database._create_install_records(installs)
+            except CorruptDatabaseError:
+                tty.warn("Cannot use old DB records")
+                old_records = {}
+            self.reindex(spack.store.layout, old_records)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
-        def invalid_record(hash_key, error):
-            msg = ("Invalid record in Spack database: "
-                   "hash: %s, cause: %s: %s")
-            msg %= (hash_key, type(e).__name__, str(e))
-            raise CorruptDatabaseError(msg, self._index_path)
+        self._data = Database._create_install_records(installs)
 
+    @staticmethod
+    def _create_install_records(installs):
         # Build up the database in three passes:
         #
         #   1. Read in all specs without dependencies.
@@ -359,12 +364,18 @@ class Database(object):
         # The database is built up so that ALL specs in it share nodes
         # (i.e., its specs are a true Merkle DAG, unlike most specs.)
 
+        def invalid_record(hash_key, error):
+            msg = ("Invalid record in Spack database: "
+                   "hash: %s, cause: %s: %s")
+            msg %= (hash_key, type(e).__name__, str(e))
+            raise CorruptDatabaseError(msg, self._index_path)
+
         # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
-                spec = self._read_spec_from_dict(hash_key, installs)
+                spec = Database._read_spec_from_dict(hash_key, installs)
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -378,7 +389,7 @@ class Database(object):
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
-                self._assign_dependencies(hash_key, installs, data)
+                Database._assign_dependencies(hash_key, installs, data)
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -390,9 +401,9 @@ class Database(object):
         for hash_key, rec in data.items():
             rec.spec._mark_concrete()
 
-        self._data = data
+        return data
 
-    def reindex(self, directory_layout):
+    def reindex(self, directory_layout, old_records=None):
         """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
@@ -419,6 +430,16 @@ class Database(object):
                     str(self._error)
                 )
                 self._error = None
+            else:
+                records = old_records or self._data
+                for key, entry in records.items():
+                    if entry.installed and not entry.spec.external:
+                        try:
+                            if directory_layout.check_installed(
+                                    entry.spec, legacy=True):
+                                entry.spec.package._mark_installed()
+                        except spack.directory_layout.DirectoryLayoutError:
+                            pass
 
             # Read first the `spec.yaml` files in the prefixes. They should be
             # considered authoritative with respect to DB reindexing, as

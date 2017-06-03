@@ -30,6 +30,8 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 
+import os
+
 
 @pytest.fixture()
 def install_mockery(tmpdir, config, builtin_mock):
@@ -77,6 +79,223 @@ def test_install_and_uninstall(mock_archive):
         raise
 
 
+def mock_remove_prefix(*args):
+    raise MockInstallError(
+        "Intentional error",
+        "Mock remove_prefix method intentionally fails")
+
+
+class RemovePrefixChecker(object):
+    def __init__(self, wrapped_rm_prefix):
+        self.removed = False
+        self.wrapped_rm_prefix = wrapped_rm_prefix
+
+    def remove_prefix(self):
+        self.removed = True
+        self.wrapped_rm_prefix()
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    instance_rm_prefix = pkg.remove_prefix
+
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        assert os.path.isdir(pkg.prefix)
+        assert not pkg.installed
+        rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
+        spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+        setattr(pkg, 'succeed', True)
+        pkg.do_install()
+        assert rm_prefix_checker.removed
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install_keep_prefix(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        # Don't repair remove_prefix at this point, set keep_prefix so that
+        # Spack continues with a partial install
+        setattr(pkg, 'succeed', True)
+        pkg.do_install(keep_prefix=True)
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_partial_install_keep_prefix_check_metadata(mock_archive):
+    spec = Spec('canfail')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        os.remove(spack.store.layout.spec_file_path(spec))
+        spack.package.Package.remove_prefix = remove_prefix
+        setattr(pkg, 'succeed', True)
+        pkg.do_install(keep_prefix=True)
+        assert pkg.installed
+        spack.store.layout.check_metadata_consistency(spec)
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        try:
+            delattr(pkg, 'succeed')
+        except AttributeError:
+            pass
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_manual_removal_after_install_cleans_db(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+
+    assert spack.store.db.get_record(spec).installed
+    pkg.remove_prefix()
+    pkg.repair_partial()
+    with pytest.raises(KeyError):
+        spack.store.db.get_record(spec)
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_install_succeeds_but_db_add_fails(mock_archive):
+    """If an installation succeeds but the database is not updated, make sure
+       that the database is updated for a future install."""
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    remove_prefix = spack.package.Package.remove_prefix
+    db_add = spack.store.db.add
+
+    def mock_db_add(*args, **kwargs):
+        raise MockInstallError(
+            "Intentional error", "Mock db add method intentionally fails")
+
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        spack.store.db.add = mock_db_add
+        try:
+            pkg.do_install()
+        except MockInstallError:
+            pass
+        assert pkg.installed
+
+        spack.package.Package.remove_prefix = remove_prefix
+        spack.store.db.add = db_add
+        pkg.do_install()
+        assert spack.store.db.get_record(spec)
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+        spack.store.db.add = db_add
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_installed_in_db_does_not_trigger_reinstall(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+    assert pkg.installed
+
+    os.remove(spack.store.layout._completion_marker_file(spec))
+    assert not pkg.installed
+
+    remove_prefix = spack.package.Package.remove_prefix
+    try:
+        spack.package.Package.remove_prefix = mock_remove_prefix
+        pkg.do_install()
+        assert pkg.installed
+    finally:
+        spack.package.Package.remove_prefix = remove_prefix
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_reindex_no_completion_file_new_db_version_is_repaired(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+
+    os.remove(spack.store.layout._completion_marker_file(spec))
+    old_version = spack.database._db_version
+    try:
+        new_version = '.'.join(
+            str(x) for x in (list(old_version[:-1]) + [old_version[-1] + 1]))
+        spack.database._db_version = spack.Version(new_version)
+        new_db = spack.database.Database(spack.store.db.root)
+        new_db._read_from_file(open(spack.store.db._index_path))
+        assert pkg.installed
+    finally:
+        spack.database._db_version = old_version
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_external_repair_triggers_exception():
+    spec = Spec('externaltool')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    with pytest.raises(spack.package.ExternalPackageError):
+        pkg.repair_partial()
+
+    pkg.do_install()
+
+    with pytest.raises(spack.package.ExternalPackageError):
+        pkg.repair_partial()
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_reindex_without_completion_file_is_repaired(mock_archive):
+    spec = Spec('cmake')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
+
+    os.remove(spack.store.layout._completion_marker_file(spec))
+    spack.store.db.reindex(spack.store.layout)
+    assert pkg.installed
+
+
 @pytest.mark.usefixtures('install_mockery')
 def test_store(mock_archive):
     spec = Spec('cmake-client').concretized()
@@ -102,3 +321,7 @@ def test_failing_build(mock_archive):
     pkg = spec.package
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
+
+
+class MockInstallError(spack.error.SpackError):
+    pass
