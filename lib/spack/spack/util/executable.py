@@ -233,7 +233,7 @@ def which(*args, **kwargs):
         *args (str): One or more executables to search for
 
     Keyword Arguments:
-        path (list or str): The path to search. Defaults to ``PATH``
+        path (:func:`list` or str): The path to search. Defaults to ``PATH``
         required (bool): If set to True, raise an error if executable not found
 
     Returns:
