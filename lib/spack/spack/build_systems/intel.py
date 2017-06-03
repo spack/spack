@@ -26,7 +26,7 @@
 import os
 import xml.etree.ElementTree as ET
 
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import install, join_path
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
 
@@ -96,7 +96,7 @@ class IntelPackage(PackageBase):
 
         for valid in _valid_components():
             for requested in self.components:
-                if requested in valid:
+                if valid.startswith(requested):
                     matches.append(valid)
 
         return matches
@@ -180,6 +180,11 @@ class IntelPackage(PackageBase):
 
         install_script = Executable('./install.sh')
         install_script('--silent', 'silent.cfg')
+
+    @run_after('install')
+    def save_silent_cfg(self):
+        """Copies the silent.cfg configuration file to ``<prefix>/.spack``."""
+        install('silent.cfg', join_path(self.prefix, '.spack'))
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

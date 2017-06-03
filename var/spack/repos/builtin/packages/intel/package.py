@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.util.prefix import Prefix
 from spack import *
-import os
 
 
 class Intel(IntelPackage):
@@ -51,72 +51,62 @@ class Intel(IntelPackage):
     variant('rpath', default=True, description='Add rpath to .cfg files')
 
     components = [
-        'comp', 'openmp', 'intel-tbb', 'icc', 'ifort', 'psxe', 'icsxe-pset'
+        # Common files
+        'intel-comp-',
+        'intel-openmp-',
+
+        # C/C++
+        'intel-icc-',
+
+        # Fortran
+        'intel-ifort-',
     ]
-
-    @property
-    def bin_dir(self):
-        """The relative path to the bin directory with symlinks resolved."""
-
-        bin_path = os.path.join(self.prefix.bin, 'icc')
-        absolute_path = os.path.realpath(bin_path)  # resolve symlinks
-        relative_path = os.path.relpath(absolute_path, self.prefix)
-        return os.path.dirname(relative_path)
-
-    @property
-    def lib_dir(self):
-        """The relative path to the lib directory with symlinks resolved."""
-
-        lib_path = os.path.join(self.prefix.lib, 'intel64', 'libimf.a')
-        absolute_path = os.path.realpath(lib_path)  # resolve symlinks
-        relative_path = os.path.relpath(absolute_path, self.prefix)
-        return os.path.dirname(relative_path)
 
     @property
     def license_files(self):
         return [
             'Licenses/license.lic',
-            join_path(self.bin_dir, 'license.lic')
+            join_path('compilers_and_libraries', 'linux', 'bin',
+                      'intel64', 'license.lic')
         ]
 
     @run_after('install')
     def rpath_configuration(self):
         if '+rpath' in self.spec:
-            lib_dir = os.path.join(self.prefix, self.lib_dir)
+            bin_dir = join_path(self.prefix, 'compilers_and_libraries',
+                                'linux', 'bin', 'intel64')
+            lib_dir = join_path(self.prefix, 'compilers_and_libraries',
+                                'linux', 'compiler', 'lib', 'intel64_lin')
             for compiler in ['icc', 'icpc', 'ifort']:
-                cfgfilename = os.path.join(
-                    self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                cfgfilename = join_path(bin_dir, '{0}.cfg'.format(compiler))
                 with open(cfgfilename, 'w') as f:
                     f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
 
-        # Remove paths that were guessed but are incorrect for this package.
-        run_env.remove_path('LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('LD_LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('CPATH',
-                            join_path(self.prefix, 'include'))
+        These environment variables come from running:
 
-        # Add the default set of variables
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
+        .. code-block:: console
+
+           $ source bin/compilervars.sh intel64
+        """
+        compiler_root = Prefix(join_path(
+            self.prefix, 'compilers_and_libraries', 'linux', 'compiler'))
+
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
+                             join_path(compiler_root.lib, 'intel64_lin'))
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'tbb', 'include'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
+                             join_path(compiler_root.lib, 'intel64'))
+        run_env.prepend_path('MANPATH',
+                             join_path(self.prefix.man, 'common'))
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
+                             join_path(compiler_root.lib, 'mic'))
         run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
+                             join_path(compiler_root.lib, 'mic'))
+        run_env.prepend_path('NLSPATH',
+                             join_path(compiler_root.lib, 'intel64', 'locale',
+                                       '%l_%t', '%N'))
+        run_env.prepend_path('PATH',
+                             join_path(self.prefix, 'compilers_and_libraries',
+                                       'linux', 'bin', 'intel64'))
