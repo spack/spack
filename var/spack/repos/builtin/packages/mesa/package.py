@@ -39,10 +39,10 @@ class Mesa(AutotoolsPackage):
     version('13.0.6', '1e5a769bc6cfd839cf3febcb179c27cc')
     version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
 
+    variant('gallium', default=False,
+            description="Build Gallium drivers")
     variant('dri', default=False,
-            description="Use DRI drivers for accelerated OpenGL rendering")
-    variant('llvm', default=False,
-            description="Build DRI drivers that depend on llvm")
+            description="Enable DRI support for hardware acceleration")
 
     # General dependencies
     depends_on('pkg-config@0.9.0:', type='build')
@@ -69,53 +69,43 @@ class Mesa(AutotoolsPackage):
     depends_on('libxvmc')
 
     # For DRI and hardware acceleration
-    depends_on('libdrm', when='+dri')
     depends_on('dri2proto@2.6:', type='build', when='+dri')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
-    depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+dri+llvm')
-    depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+dri+llvm')
-    depends_on('llvm+link_dylib', when='@14:17.99+dri+llvm')
-    depends_on('libelf', when='+dri+llvm')
-
-    # For optional features, possible new variants:
-    #depends_on('libgcrypt')
-    #depends_on('nettle')
-
-    def has_cxx(self, spec, std):
-        """Test spec for a compiler meeting the given language standard."""
-        if std == 'c++11':
-            return spec.satisfies('%gcc@4.8.1:')
-        elif std == 'c++14':
-            return spec.satisfies('%gcc@6.1:')
-        else:
-            raise ValueError("Unknown language standard")
+    depends_on('libdrm', when='+dri')
+    depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+gallium')
+    depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+gallium')
+    depends_on('llvm+link_dylib', when='@14:17.99+gallium')
+    depends_on('libelf', when='+dri+gallium')
 
     def configure_args(self):
+        """Build drivers for platforms supported by spack;
+        exclude drivers for embedded systems.
+        """
         spec = self.spec
-        has_cxx = self.has_cxx
-        args = ['--enable-xa', '--enable-glx-tls']
-        if '+dri' in spec:
-            # Build gallium drivers for platforms supported by spack;
-            # exclude drivers for embedded systems:
-            #   vc4, freedreno, etnaviv, imx
-            args.extend(['--with-egl-platforms=x11,drm',
-                         '--disable-osmesa', '--enable-gallium-osmesa'])
-            gallium = 'svga,i915,r600,nouveau,swrast,virgl'
-            if spec.satisfies('@:16.99'):
-                # ilo driver removed in @17:
-                gallium += ',ilo'
-            if '+llvm' in spec:
-                gallium += ',r300,radeonsi'
-                if (spec.satisfies('@:12.99') or
-                    (spec.satisfies('@13:16.99') and has_cxx(spec, 'c++11')) or
-                    (spec.satisfies('@17:') and has_cxx(spec,'c++14'))):
-                    # Newer 'swr' drivers require later c++ standards:
-                    gallium += ',swr'
-            args.extend(['--with-gallium-drivers=' + gallium])
+
+        args = ['--enable-glx-tls']
+        gallium = []
+
+        if '+gallium' in spec:
+            args.extend(['--disable-osmesa', '--enable-gallium-osmesa'])
+            gallium.extend(['swrast', 'swr'])
         else:
-            args.extend(['--disable-dri', '--disable-egl',
-                         '--without-gallium-drivers', '--enable-osmesa',
-                         '--disable-gbm'])
+            args.extend(['--enable-osmesa', '--disable-gallium-osmesa'])
+
+        if '+dri' in spec:
+            args.extend(['--enable-xa',
+                         '--with-egl-platforms=x11,drm'])
+            if '+gallium' in spec:
+                gallium.extend(['svga', 'i915', 'r300', 'r600', 'radeonsi',
+                                'nouveau', 'virgl'])
+                if spec.satisfies('@:16.99'):
+                    # ilo driver removed in @17:
+                    gallium.extend(['ilo'])
+        else:
+            args.extend(['--disable-dri', '--disable-egl', '--disable-gbm'])
+
+        args.extend(['--with-gallium-drivers=' + ','.join(gallium)])
+
         return args
 
     def configure(self, spec, prefix):
