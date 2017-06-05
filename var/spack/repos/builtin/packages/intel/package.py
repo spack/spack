@@ -53,13 +53,13 @@ class Intel(IntelPackage):
     components = [
         # Common files
         'intel-comp-',
-        'intel-openmp-',
+        'intel-openmp',
 
         # C/C++
-        'intel-icc-',
+        'intel-icc',
 
         # Fortran
-        'intel-ifort-',
+        'intel-ifort',
     ]
 
     @property

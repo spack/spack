@@ -33,3 +33,4 @@ packages:
       pil: [py-pillow]
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
+      tbb: [intel-tbb]

@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.util.prefix import Prefix
 from spack import *
 import os
 
@@ -86,33 +87,73 @@ class IntelParallelStudio(IntelPackage):
     version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
 
-    variant('rpath', default=True, description="Add rpath to .cfg files")
+    # Generic Variants
+    variant('rpath',    default=True,
+            description='Add rpath to .cfg files')
     variant('newdtags', default=False,
-            description="Allow use of --enable-new-dtags in MPI wrappers")
-    variant('all', default=False,
-            description="Install all files with the requested edition")
-    variant('mpi', default=True,
-            description="Install the Intel MPI library and ITAC tool")
-    variant('mkl', default=True, description="Install the Intel MKL library")
-    variant('daal',
-            default=True, description="Install the Intel DAAL libraries")
-    variant('ipp', default=True, description="Install the Intel IPP libraries")
-    variant('tools', default=True, description="Install the Intel Advisor, "
-            "VTune Amplifier, and Inspector tools")
+            description='Allow use of --enable-new-dtags in MPI wrappers')
+    variant('shared',   default=True,
+            description='Builds shared library')
+    variant('ilp64',    default=False,
+            description='64 bit integers')
+    variant('openmp',   default=False,
+            description='OpenMP multithreading layer')
+    variant('all',      default=False,
+            description='Install all components of the requested edition')
 
-    variant('shared', default=True, description='Builds shared library')
-    variant('ilp64', default=False, description='64 bit integers')
-    variant('openmp', default=False, description='OpenMP multithreading layer')
+    # Components available in all editions
+    variant('daal', default=True,
+            description='Install the Intel DAAL libraries')
+    variant('ipp',  default=True,
+            description='Install the Intel IPP libraries')
+    variant('gdb',  default=False,
+            description='Install the Intel Debugger for Heterogeneous Compute')
+    variant('mkl',  default=True,
+            description='Install the Intel MKL library')
+    variant('mpi',  default=True,
+            description='Install the Intel MPI library')
+    variant('tbb',  default=True,
+            description='Install the Intel TBB libraries')
 
-    provides('mpi', when='@cluster.0:cluster.9999+mpi')
-    provides('mkl', when='+mkl')
+    # Components only available in the Professional and Cluster Editions
+    variant('advisor',   default=False,
+            description='Install the Intel Advisor')
+    variant('clck',      default=False,
+            description='Install the Intel Cluster Checker')
+    variant('inspector', default=False,
+            description='Install the Intel Inspector')
+    variant('itac',      default=False,
+            description='Install the Intel Trace Analyzer and Collector')
+    variant('vtune',     default=False,
+            description='Install the Intel VTune Amplifier XE')
+
     provides('daal', when='+daal')
-    provides('ipp', when='+ipp')
+    provides('daal', when='+all')
 
-    # virtual dependency
-    provides('blas', when='+mkl')
-    provides('lapack', when='+mkl')
+    provides('ipp', when='+ipp')
+    provides('ipp', when='+all')
+
+    provides('mkl',       when='+mkl')
+    provides('mkl',       when='+all')
+    provides('blas',      when='+mkl')
+    provides('blas',      when='+all')
+    provides('lapack',    when='+mkl')
+    provides('lapack',    when='+all')
     provides('scalapack', when='+mkl')
+    provides('scalapack', when='+all')
+
+    provides('mpi', when='+mpi')
+    provides('mpi', when='+all')
+
+    provides('tbb', when='+tbb')
+    provides('tbb', when='+all')
+
+    # The following components are not available in the Composer Edition
+    conflicts('+advisor',   when='@composer.0:composer.9999')
+    conflicts('+clck',      when='@composer.0:composer.9999')
+    conflicts('+inspector', when='@composer.0:composer.9999')
+    conflicts('+itac',      when='@composer.0:composer.9999')
+    conflicts('+vtune',     when='@composer.0:composer.9999')
 
     @property
     def blas_libs(self):
@@ -186,32 +227,80 @@ class IntelParallelStudio(IntelPackage):
     @property
     def components(self):
         spec = self.spec
+        edition = self.version[0]
 
         if '+all' in spec:
             return ['ALL']
 
-        # Base components
+        # Intel(R) Compilers
         components = [
-            'comp', 'openmp', 'intel-tbb', 'icc', 'ifort', 'psxe', 'icsxe-pset'
+            # Common files
+            'intel-comp-',
+            'intel-openmp',
+
+            # C/C++
+            'intel-icc',
+
+            # Fortran
+            'intel-ifort',
+
+            # Parallel Studio Documentation and Licensing Files
+            'intel-psxe',
         ]
 
-        if '+mpi' in spec:
+        # Intel(R) Parallel Studio XE Suite Files and Documentation
+        if edition == 'cluster':
+            components.append('intel-icsxe')
+        elif edition == 'professional':
+            components.extend(['intel-ips', 'intel-ipsc', 'intel-ipsf'])
+        elif edition == 'composer':
             components.extend([
-                'icsxe', 'imb', 'mpi', 'itac', 'intel-ta', 'intel-tc', 'clck'
+                'intel-compxe', 'intel-ccompxe', 'intel-fcompxe'
             ])
 
+        # Intel(R) MPI Library
+        if '+mpi' in spec:
+            components.extend(['intel-mpi', 'intel-mpirt', 'intel-imb'])
+
+        # Intel(R) Math Kernel Library
         if '+mkl' in spec:
-            components.append('mkl')
+            components.append('intel-mkl')
 
+        # Intel(R) Data Analytics Acceleration Library
         if '+daal' in spec:
-            components.append('daal')
+            components.append('intel-daal')
 
+        # Intel(R) Integrated Performance Primitives
         if '+ipp' in spec:
-            components.append('ipp')
+            components.extend(['intel-ipp', 'intel-crypto-ipp'])
 
-        if '+tools' in spec and (spec.satisfies('@cluster') or
-                                 spec.satisfies('@professional')):
-            components.extend(['gdb', 'vtune', 'inspector', 'advisor'])
+        # Intel(R) Threading Building Blocks
+        if '+tbb' in spec:
+            components.append('intel-tbb')
+
+        # Intel(R) Debugger for Heterogeneous Compute
+        if '+gdb' in spec:
+            components.append('intel-gdb')
+
+        # Intel(R) Advisor
+        if '+advisor' in spec:
+            components.append('intel-advisor')
+
+        # Intel(R) Cluster Checker
+        if '+clck' in spec:
+            components.append('intel_clck')
+
+        # Intel(R) Inspector
+        if '+inspector' in spec:
+            components.append('intel-inspector')
+
+        # Intel(R) Trace Analyzer and Collector
+        if '+itac' in spec:
+            components.extend(['intel-itac', 'intel-ta', 'intel-tc'])
+
+        # Intel(R) VTune(TM) Amplifier XE
+        if '+vtune' in spec:
+            components.append('intel-vtune-amplifier-xe')
 
         return components
 
@@ -248,7 +337,7 @@ class IntelParallelStudio(IntelPackage):
             inspector_dir = 'inspector_xe/licenses'
             vtune_amplifier_dir = 'vtune_amplifier_xe/licenses'
 
-            year = int(str(self.version).split('.')[1])
+            year = self.version[1]
             if year >= 2017:
                 advisor_dir = 'advisor/licenses'
                 inspector_dir = 'inspector/licenses'
@@ -259,15 +348,18 @@ class IntelParallelStudio(IntelPackage):
                 vtune_amplifier_dir
             ])
 
-        if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
-            for ifile in os.listdir(os.path.join(self.prefix, 'itac')):
-                if os.path.isdir(os.path.join(self.prefix, 'itac', ifile)):
-                    directories.append(os.path.join(
-                        self.prefix, 'itac', ifile))
-                if os.path.isdir(os.path.join(self.prefix, 'itac',
-                                              ifile, 'intel64')):
-                    directories.append(os.path.join(self.prefix, 'itac',
-                                       ifile, 'intel64'))
+        #if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
+        #    for ifile in os.listdir(os.path.join(self.prefix, 'itac')):
+        #        if os.path.isdir(os.path.join(self.prefix, 'itac', ifile)):
+        #            directories.append(os.path.join(
+        #                self.prefix, 'itac', ifile))
+        #        if os.path.isdir(os.path.join(self.prefix, 'itac',
+        #                                      ifile, 'intel64')):
+        #            directories.append(os.path.join(self.prefix, 'itac',
+        #                               ifile, 'intel64'))
+        #
+        # This is the same as itac/2017.3.030/intel64/
+        # Allow glob characters in license_files?
 
         return [os.path.join(dir, 'license.lic') for dir in directories]
 
@@ -304,8 +396,14 @@ class IntelParallelStudio(IntelPackage):
                     f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     def setup_environment(self, spack_env, run_env):
-        # TODO: Determine variables needed for the professional edition.
+        """Adds environment variables to the generated module file.
 
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
+        """
         major_ver = self.version[1]
 
         # Remove paths that were guessed but are incorrect for this package.
