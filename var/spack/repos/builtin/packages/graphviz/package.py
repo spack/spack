@@ -25,7 +25,6 @@
 from spack import *
 import sys
 import shutil
-import llnl.util.tty as tty
 
 
 class Graphviz(AutotoolsPackage):
