@@ -58,38 +58,38 @@
 
 function spack {
     # Zsh does not do word splitting by default, this enables it for this function only
-    if [ -n "${ZSH_VERSION:-}" ]; then
+    if [[ "${ZSH_VERSION:-}" ]]; then
         emulate -L sh
     fi
 
     # save raw arguments into an array before butchering them
-    args=( "$@" )
+    args=("$@")
 
     # accumulate initial flags for main spack command
     _sp_flags=""
-    while [[ "$1" =~ ^- ]]; do
+    while [[ "${1:-}" =~ ^- ]]; do
         _sp_flags="$_sp_flags $1"
         shift
     done
 
     # h and V flags don't require further output parsing.
-    if [[ (! -z "$_sp_flags") && ("$_sp_flags" =~ '.*h.*' || "$_sp_flags" =~ '.*V.*') ]]; then
-        command spack $_sp_flags "$@"
+    if [[ "$_sp_flags" =~ 'h' || "$_sp_flags" =~ 'V' ]]; then
+        command spack "${args[@]:-}"
         return
     fi
 
-    _sp_subcommand=$1; shift
+    _sp_subcommand="${1:-}"; shift
     _sp_spec="$@"
 
     # Filter out use and unuse.  For any other commands, just run the
     # command.
-    case $_sp_subcommand in
+    case "$_sp_subcommand" in
         "cd")
-            _sp_arg="$1"; shift
-            if [ "$_sp_arg" = "-h" ]; then
+            _sp_arg="${1:-}"; shift
+            if [[ "$_sp_arg" == "-h" ]]; then
                 command spack cd -h
             else
-                LOC="$(spack location $_sp_arg "$@")"
+                LOC="$(spack location "$_sp_arg" "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
                 fi
@@ -100,8 +100,8 @@ function spack {
             # Shift any other args for use off before parsing spec.
             _sp_subcommand_args=""
             _sp_module_args=""
-            while [[ "$1" =~ ^- ]]; do
-                if [ "$1" = "-r" -o "$1" = "--dependencies" ]; then
+            while [[ "${1:-}" =~ ^- ]]; do
+                if [[ "$1" = "-r" || "$1" == "--dependencies" ]]; then
                     _sp_subcommand_args="$_sp_subcommand_args $1"
                 else
                     _sp_module_args="$_sp_module_args $1"
@@ -135,7 +135,7 @@ function spack {
             esac
             ;;
         *)
-            command spack "${args[@]}"
+            command spack ${args[@]:-}
             ;;
     esac
 }
@@ -149,8 +149,8 @@ function _spack_pathadd {
     # If no variable name is supplied, just append to PATH
     # otherwise append to that variable.
     _pa_varname=PATH
-    _pa_new_path="$1"
-    if [ -n "$2" ]; then
+    _pa_new_path="${1:-}"
+    if [[ "${2:-}" ]]; then
         _pa_varname="$1"
         _pa_new_path="$2"
     fi
@@ -158,8 +158,8 @@ function _spack_pathadd {
     # Do the actual prepending here.
     eval "_pa_oldvalue=\${${_pa_varname}:-}"
 
-    if [ -d "$_pa_new_path" ] && [[ ":$_pa_oldvalue:" != *":$_pa_new_path:"* ]]; then
-        if [ -n "$_pa_oldvalue" ]; then
+    if [[ -d "$_pa_new_path" && ":$_pa_oldvalue:" != *":$_pa_new_path:"* ]]; then
+        if [[ "$_pa_oldvalue" ]]; then
             eval "export $_pa_varname=\"$_pa_new_path:$_pa_oldvalue\""
         else
             export $_pa_varname="$_pa_new_path"
@@ -168,40 +168,40 @@ function _spack_pathadd {
 }
 
 # Export spack function so it is available in subshells (only works with bash)
-if [ -n "${BASH_VERSION:-}" ]; then
-	export -f spack
+if [[ "${BASH_VERSION:-}" ]]; then
+    export -f spack
 fi
 
 #
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.
 #
-_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
-if [ -z "$_sp_source_file" ]; then
-    _sp_source_file="$0:A"           # zsh way to do it
+_sp_source_file="${BASH_SOURCE[0]:-}"  # Bash's location of last sourced file.
+if [[ -z "$_sp_source_file" ]]; then
+    _sp_source_file="${0:-}:A"           # zsh way to do it
     if [[ "$_sp_source_file" == *":A" ]]; then
         # Not zsh either... bail out with plain old $0,
         # which WILL NOT work if this is sourced indirectly.
-        _sp_source_file="$0"
+        _sp_source_file="${0:-}"
     fi
 fi
 
 #
 # Set up modules and dotkit search paths in the user environment
 #
-_sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
-_sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
-_spack_pathadd PATH       "${_sp_prefix%/}/bin"
+_sp_share_dir="$(cd "$(dirname "$_sp_source_file")" && pwd)"
+_sp_prefix="$(cd "$(dirname "$(dirname "$_sp_share_dir")")" && pwd)"
+_spack_pathadd PATH "${_sp_prefix%/}/bin"
 
-_sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
-_sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")
-_sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
+_sp_sys_type="$(spack-python -c 'print(spack.architecture.sys_type())')"
+_sp_dotkit_root="$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")"
+_sp_tcl_root="$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")"
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 
 #
 # Add programmable tab completion for Bash
 #
-if [ -n "${BASH_VERSION:-}" ]; then
-    source $_sp_share_dir/spack-completion.bash
+if [[ "${BASH_VERSION:-}" ]]; then
+    source "$_sp_share_dir/spack-completion.bash"
 fi
