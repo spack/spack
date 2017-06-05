@@ -1952,10 +1952,6 @@ class Spec(object):
 
     def _normalize_helper(self, visited, dep_contexts, provider_index):
         """Recursive helper function for _normalize."""
-        if self.name in visited:
-            return False
-        visited.add(self.name)
-
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
         if self.virtual or self.external:
@@ -1981,6 +1977,9 @@ class Spec(object):
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
+                if any((dep_name in x) for x in dep_contexts):
+                    continue
+            
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
@@ -2461,19 +2460,9 @@ class Spec(object):
         return changed
 
     def _dup_deps(self, other, deptypes):
-        new_specs = {self.name: self}
-        for dspec in other.traverse_edges(cover='edges', root=False):
-            if (dspec.deptypes and
-                not any(d in deptypes for d in dspec.deptypes)):
-                continue
-
-            if dspec.parent.name not in new_specs:
-                new_specs[dspec.parent.name] = dspec.parent.copy(deps=False)
-            if dspec.spec.name not in new_specs:
-                new_specs[dspec.spec.name] = dspec.spec.copy(deps=False)
-
-            new_specs[dspec.parent.name]._add_dependency(
-                new_specs[dspec.spec.name], dspec.deptypes)
+        for spec_dep in other._dependencies.values():
+            dep_copy = spec_dep.spec.copy()
+            self._add_dependency(dep_copy, spec_dep.deptypes)
 
     def copy(self, deps=True):
         """Return a copy of this spec.
@@ -2551,7 +2540,7 @@ class Spec(object):
 
     def sorted_deps(self):
         """Return a list of all dependencies sorted by name."""
-        deps = self.flat_dependencies()
+        deps = dict((x.name, x) for x in self.traverse(root=False))
         return tuple(deps[name] for name in sorted(deps))
 
     def _eq_dag(self, other, vs, vo, deptypes):
