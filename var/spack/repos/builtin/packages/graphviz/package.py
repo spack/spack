@@ -25,6 +25,7 @@
 from spack import *
 import sys
 import shutil
+import llnl.util.tty as tty
 
 
 class Graphviz(AutotoolsPackage):
@@ -95,8 +96,8 @@ class Graphviz(AutotoolsPackage):
     for b in tested_bindings + untested_bindings:
         depends_on('swig', when=b)
 
-    depends_on('cairo~X', when='+pangocairo')
-    depends_on('pango~X', when='+pangocairo')
+    depends_on('cairo', when='+pangocairo')
+    depends_on('pango', when='+pangocairo')
     depends_on('libgd', when='+libgd')
     depends_on('ghostscript')
     depends_on('freetype')
@@ -106,6 +107,14 @@ class Graphviz(AutotoolsPackage):
 
     depends_on('jdk', when='+java')
     depends_on('python@2:2.8', when='+python')
+
+    def patch(self):
+        # Fix a few variable names, gs after 9.18 renamed them
+        # See http://lists.linuxfromscratch.org/pipermail/blfs-book/2015-October/056960.html
+        if self.spec.satisfies('^ghostscript@9.18:'):
+            kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
+            filter_file(' e_', ' gs_error_', 'plugin/gs/gvloadimage_gs.c',
+                        **kwargs)
 
     def configure_args(self):
         spec = self.spec
