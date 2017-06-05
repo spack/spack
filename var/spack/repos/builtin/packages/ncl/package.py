@@ -56,7 +56,7 @@ class Ncl(Package):
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
     depends_on('netcdf')
-    depends_on('cairo')
+    depends_on('cairo+X')
 
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')
