@@ -40,6 +40,8 @@ class Bamutil(MakefilePackage):
     # https://github.com/statgen/libStatGen/issues/9
     patch('libstatgen-issue-9.patch', when='@1.0.13:')
 
+    parallel = False
+
     @property
     def install_targets(self):
         return ['install', 'INSTALLDIR={0}'.format(self.prefix.bin)]
