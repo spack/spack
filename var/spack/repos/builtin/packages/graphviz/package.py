@@ -74,6 +74,11 @@ class Graphviz(AutotoolsPackage):
             description='Enable for optional tcl language bindings'
             ' (not yet functional)')
 
+    variant('pangocairo', default=False,
+            description='Build with pango+cairo support (more output formats)')
+    variant('libgd', default=False,
+            description='Build with libgd support (more output formats)')
+
     parallel = False
 
     # These language bindings have been tested, we know they work.
@@ -90,6 +95,9 @@ class Graphviz(AutotoolsPackage):
     for b in tested_bindings + untested_bindings:
         depends_on('swig', when=b)
 
+    depends_on('cairo~X', when='+pangocairo')
+    depends_on('pango~X', when='+pangocairo')
+    depends_on('libgd', when='+libgd')
     depends_on('ghostscript')
     depends_on('freetype')
     depends_on('expat')
@@ -129,6 +137,12 @@ class Graphviz(AutotoolsPackage):
             options.append('--enable-swig=yes')
         else:
             options.append('--enable-swig=no')
+
+        for var in ('+pangocairo', '+libgd'):
+            if var in spec:
+                options.append('--with-{0}'.format(var[1:]))
+            else:
+                options.append('--without-{0}'.format(var[1:]))
 
         # On OSX fix the compiler error:
         # In file included from tkStubLib.c:15:
