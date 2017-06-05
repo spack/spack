@@ -35,3 +35,13 @@ class PerlXmlParser(PerlPackage):
     version('2.44', 'af4813fe3952362451201ced6fbce379')
 
     depends_on('expat')
+
+    def configure_args(self):
+        args = []
+
+        p = self.spec['expat'].prefix.lib
+        args.append('EXPATLIBPATH={0}'.format(p))
+        p = self.spec['expat'].prefix.include
+        args.append('EXPATINCPATH={0}'.format(p))
+
+        return args
