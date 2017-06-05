@@ -121,10 +121,9 @@ class Graphviz(AutotoolsPackage):
         for var in self.tested_bindings:
             if var in spec:
                 need_swig = True
-                enable = 'yes'
+                options.append('--enable-{0}'.format(var[1:]))
             else:
-                enable = 'no'
-            options.append('--enable-%s=%s' % (var[1:], enable))
+                options.append('--disable-{0}'.format(var[1:]))
 
         if need_swig:
             options.append('--enable-swig=yes')
