@@ -966,15 +966,12 @@ class Spec(object):
         # Spec(a, b) will copy a but just add b as a dep.
         deptypes = ()
         for dep in dep_like:
-            if isinstance(dep, Spec):
-                spec = dep
-            elif isinstance(dep, (list, tuple)):
+
+            if isinstance(dep, (list, tuple)):
                 # Literals can be deptypes -- if there are tuples in the
                 # list, they will be used as deptypes for the following Spec.
                 deptypes = tuple(dep)
                 continue
-            else:
-                spec = Spec(dep)
 
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec, deptypes)
@@ -1828,6 +1825,18 @@ class Spec(object):
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dep_spec in conditions.items():
+            # If self was concrete it would have changed the variants in
+            # when_spec automatically. As here we are for sure during the
+            # concretization process, self is not concrete and we must change
+            # the variants in when_spec on our own to avoid using a
+            # MultiValuedVariant whe it is instead a SingleValuedVariant
+            try:
+                substitute_single_valued_variants(when_spec)
+            except SpecError as e:
+                msg = 'evaluating a `when=` statement gives ' + e.message
+                e.message = msg
+                raise
+
             sat = self.satisfies(when_spec, strict=True)
             if sat:
                 if dep is None:
@@ -2064,18 +2073,7 @@ class Spec(object):
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 
-                for name, v in [(x, y) for (x, y) in spec.variants.items()]:
-                    # When parsing a spec every variant of the form
-                    # 'foo=value' will be interpreted by default as a
-                    # multi-valued variant. During validation of the
-                    # variants we use the information in the package
-                    # to turn any variant that needs it to a single-valued
-                    # variant.
-                    pkg_variant = pkg_variants[name]
-                    pkg_variant.validate_or_raise(v, pkg_cls)
-                    spec.variants.substitute(
-                        pkg_variant.make_variant(v._original_value)
-                    )
+                substitute_single_valued_variants(spec)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -2290,25 +2288,19 @@ class Spec(object):
         # to substitute every multi-valued variant that needs it with a
         # single-valued variant.
         if self.concrete:
-            for name, v in [(x, y) for (x, y) in other.variants.items()]:
+            try:
                 # When parsing a spec every variant of the form
                 # 'foo=value' will be interpreted by default as a
                 # multi-valued variant. During validation of the
                 # variants we use the information in the package
                 # to turn any variant that needs it to a single-valued
                 # variant.
-                pkg_cls = type(other.package)
-                try:
-                    pkg_variant = other.package.variants[name]
-                    pkg_variant.validate_or_raise(v, pkg_cls)
-                except (SpecError, KeyError):
-                    # Catch the two things that could go wrong above:
-                    # 1. name is not a valid variant (KeyError)
-                    # 2. the variant is not validated (SpecError)
-                    return False
-                other.variants.substitute(
-                    pkg_variant.make_variant(v._original_value)
-                )
+                substitute_single_valued_variants(other)
+            except (SpecError, KeyError):
+                # Catch the two things that could go wrong above:
+                # 1. name is not a valid variant (KeyError)
+                # 2. the variant is not validated (SpecError)
+                return False
 
         var_strict = strict
         if (not self.name) or (not other.name):
@@ -2966,16 +2958,23 @@ class SpecParser(spack.parse.Parser):
                         # We're parsing an anonymous spec beginning with a
                         # key-value pair.
                         if not specs:
+                            self.push_tokens([self.previous, self.token])
+                            self.previous = None
                             specs.append(self.spec(None))
-                        self.expect(VAL)
-                        # Raise an error if the previous spec is already
-                        # concrete (assigned by hash)
-                        if specs[-1]._hash:
-                            raise RedundantSpecError(specs[-1],
-                                                     'key-value pair')
-                        specs[-1]._add_flag(
-                            self.previous.value, self.token.value)
-                        self.previous = None
+                        else:
+                            if specs[-1].concrete:
+                                # Trying to add k-v pair to spec from hash
+                                raise RedundantSpecError(specs[-1],
+                                                         'key-value pair')
+                            # We should never end up here.
+                            # This requires starting a new spec with ID, EQ
+                            # After another spec that is not concrete
+                            # If the previous spec is not concrete, this is
+                            # handled in the spec parsing loop
+                            # If it is concrete, see the if statement above
+                            # If there is no previous spec, we don't land in
+                            # this else case.
+                            self.unexpected_token()
                     else:
                         # We're parsing a new spec by name
                         self.previous = None
@@ -3159,7 +3158,11 @@ class SpecParser(spack.parse.Parser):
 
         if self.accept(COLON):
             if self.accept(ID):
-                end = self.token.value
+                if self.next and self.next.type is EQ:
+                    # This is a start: range followed by a key=value pair
+                    self.push_tokens([self.token])
+                else:
+                    end = self.token.value
         elif start:
             # No colon, but there was a version.
             return Version(start)
@@ -3392,7 +3395,8 @@ class InvalidHashError(SpecError):
 class NoSuchHashError(SpecError):
     def __init__(self, hash):
         super(NoSuchHashError, self).__init__(
-            "No installed spec matches the hash: '%s'")
+            "No installed spec matches the hash: '%s'"
+            % hash)
 
 
 class RedundantSpecError(SpecError):

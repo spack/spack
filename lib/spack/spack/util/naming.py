@@ -57,7 +57,7 @@ def mod_to_class(mod_name):
           * Class names use the CapWords convention.
 
        Regular source code follows these convetions.  Spack is a bit
-       more liberal with its Package names nad Compiler names:
+       more liberal with its Package names and Compiler names:
 
           * They can contain '-' as well as '_', but cannot start with '-'.
           * They can start with numbers, e.g. "3proxy".

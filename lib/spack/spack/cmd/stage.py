@@ -29,6 +29,8 @@ import spack
 import spack.cmd
 
 description = "expand downloaded archive in preparation for install"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):

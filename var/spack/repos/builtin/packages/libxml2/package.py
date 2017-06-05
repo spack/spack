@@ -34,6 +34,7 @@ class Libxml2(AutotoolsPackage):
 
     version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
+    version('2.7.8', '8127a65e8c3b08856093099b52599c86')
 
     variant('python', default=False, description='Enable Python support')
 
