@@ -39,9 +39,9 @@ class PerlXmlParser(PerlPackage):
     def configure_args(self):
         args = []
 
-        el = join_path(self.spec['expat'].prefix, 'lib')
-        ei = join_path(self.spec['expat'].prefix, 'include')
-        args.append('EXPATLIBPATH={p}'.format(p=el))
-        args.append('EXPATINCPATH={p}'.format(p=ei))
+        p = self.spec['expat'].prefix.lib
+        args.append('EXPATLIBPATH={0}'.format(p))
+        p = self.spec['expat'].prefix.include
+        args.append('EXPATINCPATH={0}'.format(p))
 
         return args
