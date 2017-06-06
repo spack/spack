@@ -1864,7 +1864,7 @@ class Spec(object):
             elif required:
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
-    def _merge_dependency(self, dep, deptypes, visited, dep_contexts,
+    def _merge_dependency(self, dep, deptypes, dep_contexts,
                           provider_index):
         """Merge the dependency into this spec.
 
@@ -1891,7 +1891,6 @@ class Spec(object):
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
         if dep.virtual:
-            visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
@@ -1947,10 +1946,10 @@ class Spec(object):
             self._add_dependency(resolved, deptypes)
 
         changed |= resolved._normalize_helper(
-            visited, dep_contexts, provider_index)
+            dep_contexts, provider_index)
         return changed
 
-    def _normalize_helper(self, visited, dep_contexts, provider_index):
+    def _normalize_helper(self, dep_contexts, provider_index):
         """Recursive helper function for _normalize."""
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
@@ -1992,7 +1991,7 @@ class Spec(object):
                 # If pkg_dep is a dependency, merge it.
                 if pkg_dep:
                     changed |= self._merge_dependency(
-                        pkg_dep, deptypes, visited, child_contexts,
+                        pkg_dep, deptypes, child_contexts,
                         provider_index)
             any_change |= changed
 
@@ -2038,9 +2037,7 @@ class Spec(object):
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
-        visited = set()
-
-        any_change = self._normalize_helper(visited, dep_contexts, provider_index)
+        any_change = self._normalize_helper(dep_contexts, provider_index)
 
         # Mark the spec as normal once done.
         self._normal = True
