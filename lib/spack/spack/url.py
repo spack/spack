@@ -72,9 +72,9 @@ def find_list_url(url):
 
     =========  =======================================================
     GitHub     https://github.com/<repo>/<name>/releases
-    GitLab     https://gitlab.*/<repo>/<name>/tags
+    GitLab     https://gitlab.\*/<repo>/<name>/tags
     BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
-    CRAN       https://*.r-project.org/src/contrib/Archive/<name>
+    CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
     =========  =======================================================
 
     Parameters:
