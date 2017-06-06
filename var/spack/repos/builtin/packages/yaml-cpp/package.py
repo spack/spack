@@ -35,7 +35,7 @@ class YamlCpp(CMakePackage):
 
     variant('shared', default=True,
             description='Enable build of shared libraries')
-    variant('fpic',    default=False,
+    variant('fpic',    default=True,
             description='Build with position independent code')
 
     depends_on('boost', when='@:0.5.3')

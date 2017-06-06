@@ -46,6 +46,8 @@ class Trilinos(CMakePackage):
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
+    # ###################### Versions ##########################
+
     version('xsdk-0.2.0',
             git='https://github.com/trilinos/Trilinos.git', tag='xsdk-0.2.0')
     version('develop',
@@ -65,9 +67,11 @@ class Trilinos(CMakePackage):
     version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
     version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
 
-    variant('allpkgs', default=True,
-            description='Build maximal set of packages')
-    variant('xsdkflags',        default=False,
+    # ###################### Variants ##########################
+
+    variant('alloptpkgs',   default=False,
+            description='Compile with all optional packages')
+    variant('xsdkflags',    default=False,
             description='Compile using the default xSDK configuration')
     variant('metis',        default=True,
             description='Compile with METIS and ParMETIS')
@@ -75,40 +79,66 @@ class Trilinos(CMakePackage):
             description='Compile with support for MUMPS solvers')
     variant('superlu-dist', default=True,
             description='Compile with SuperluDist solvers')
-    variant('superlu', default=False,
+    variant('superlu',      default=False,
             description='Compile with SuperLU solvers')
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')
-    variant('hdf5',         default=True,  description='Compile with HDF5')
+    variant('hdf5',         default=True, 
+            description='Compile with HDF5')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
     # not everyone has py-numpy activated, keep it disabled by default to avoid
     # configure errors
-    variant('python',       default=False, description='Build python wrappers')
+    variant('python',       default=False,
+            description='Build python wrappers')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
     variant('debug',        default=False,
             description='Builds a debug version of the libraries')
-    variant('boost',        default=True,  description='Compile with Boost')
-    variant('tpetra',       default=True,  description='Compile with Tpetra')
-    variant('epetra',       default=True,  description='Compile with Epetra')
-    variant('exodus',       default=False,
+    variant('boost',        default=True,
+            description='Compile with Boost')
+    variant('tpetra',       default=True,
+            description='Compile with Tpetra')
+    variant('epetra',       default=True,
+            description='Compile with Epetra')
+    variant('exodus',       default=True,
             description='Compile with Exodus from SEACAS')
     variant('pnetcdf',      default=False,
             description='Compile with parallel-netcdf')
-    variant('zlib',         default=True,  description='Compile with zlib')
-    variant('stk',          default=False, description='Compile with STK')
-    variant('belos',        default=False, description='Compile with Belos')
-    variant('zoltan',       default=False, description='Compile with Zoltan')
-    variant('amesos',       default=False, description='Compile with Amesos')
-    variant('ifpack',       default=False, description='Compile with Ifpack')
-    variant('muelu',        default=False, description='Compile with Muelu')
+    variant('zlib',         default=False,
+            description='Compile with zlib')
+    variant('stk',          default=False,
+            description='Compile with STK')
+    variant('belos',        default=True,
+            description='Compile with Belos')
+    variant('zoltan',       default=True,
+            description='Compile with Zoltan')
+    variant('zoltan2',      default=True,
+            description='Compile with Zoltan2')
+    variant('amesos',       default=True,
+            description='Compile with Amesos')
+    variant('amesos2',      default=True,
+            description='Compile with Amesos2')
+    variant('ifpack',       default=True,
+            description='Compile with Ifpack')
+    variant('ifpack2',      default=True,
+            description='Compile with Ifpack2')
+    variant('muelu',        default=True,
+            description='Compile with Muelu')
     variant('fortran',      default=True,
             description='Compile with Fortran support')
-    variant('ml',           default=True,  description='Compile with ML')
-    variant('gtest',        default=False, description='Compile with Gtest')
-    variant('aztec',        default=True,  description='Compile with Aztec')
-    variant('x11',          default=False, description='Compile with X11')
+    variant('ml',           default=True,
+            description='Compile with ML')
+    variant('gtest',        default=True,
+            description='Compile with Gtest')
+    variant('aztec',        default=True,
+            description='Compile with Aztec')
+    variant('x11',          default=False,
+            description='Compile with X11')
+    variant('eti',          default=True,
+            description='Compile with explicit instantiation')
+    variant('eticmplx',     default=False,
+            description='Compile with explicit instantiation for complex')
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
     resource(name='dtk',
@@ -117,6 +147,8 @@ class Trilinos(CMakePackage):
              placement='DataTransferKit',
              when='+dtk')
     conflicts('+dtk', when='~tpetra')
+
+    # ###################### Dependencies ##########################
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -147,7 +179,7 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
-    depends_on('superlu+fpic@4.3', when='+superlu')
+    depends_on('superlu@4.3', when='+superlu')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
@@ -184,37 +216,43 @@ class Trilinos(CMakePackage):
         cxx_flags = []
         options = []
 
+        # #################### Base Settings #######################
+
         mpi_bin = spec['mpi'].prefix.bin
-        # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
-        blas = spec['blas'].libs
-        lapack = spec['lapack'].libs
         options.extend([
             '-DTrilinos_VERBOSE_CONFIGURE:BOOL=OFF',
             '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
             '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
+            '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DCMAKE_BUILD_TYPE:STRING=%s' % (
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
             # The following can cause problems on systems that don't have
-            # static libraries available for things like pthreads for example
-            # even if you want to built trilinos as static
+            # static libraries available for things like dl and pthreads
+            # for example when trying to build static libs
             # '-DTPL_FIND_SHARED_LIBS:BOOL=%s' % (
             #     'ON' if '+shared' in spec else 'OFF'),
             # '-DTrilinos_LINK_SEARCH_START_STATIC:BOOL=%s' % (
             #     'OFF' if '+shared' in spec else 'ON'),
+            # Force Trilinos to use the MPI wrappers instead of raw compilers
+            # this is needed on Apple systems that require full resolution of
+            # all symbols when linking shared libraries
             '-DTPL_ENABLE_MPI:BOOL=ON',
-            '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
-            '-DTPL_ENABLE_BLAS=ON',
-            '-DBLAS_LIBRARY_NAMES=%s' % ';'.join(blas.names),
-            '-DBLAS_LIBRARY_DIRS=%s' % ';'.join(blas.directories),
-            '-DTPL_ENABLE_LAPACK=ON',
-            '-DLAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
-            '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
-            '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
-            '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
+            '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+            '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix
+        ])
+
+
+        # ################## Trilinos Packages #####################
+
+        options.extend([
+            '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=%s' % (
+                'ON' if '+alloptpkgs' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
+                'ON' if '+tpetra' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
                 'ON' if '+epetra' in spec else 'OFF'),
             '-DTrilinos_ENABLE_EpetraEx:BOOL=%s' % (
@@ -223,32 +261,84 @@ class Trilinos(CMakePackage):
                 'ON' if '+ml' in spec else 'OFF'),
             '-DTrilinos_ENABLE_AztecOO:BOOL=%s' % (
                 'ON' if '+aztec' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Belos:BOOL=%s' % (
+                'ON' if '+belos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Zoltan:BOOL=%s' % (
+                'ON' if '+zoltan' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Zoltan2:BOOL=%s' % (
+                'ON' if '+zoltan2' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Amesos:BOOL=%s' % (
+                'ON' if '+amesos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Amesos2:BOOL=%s' % (
+                'ON' if '+amesos2' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_MueLu:BOOL=%s' % (
+                'ON' if '+muelu' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Ifpack:BOOL=%s' % (
+                'ON' if '+ifpack' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Ifpack2:BOOL=%s' % (
+                'ON' if '+ifpack2' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Gtest:BOOL=%s' % (
+                'ON' if '+gtest' in spec else 'OFF'),
+        ])
+
+        if '+xsdkflags' in spec:
+            options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
+
+        if '+stk' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
+                '-DTrilinos_ENABLE_STKIO:BOOL=ON',
+                '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
+                '-DTrilinos_ENABLE_STKSearch:BOOL=ON',
+                '-DTrilinos_ENABLE_STKUtil:BOOL=ON',
+                '-DTrilinos_ENABLE_STKTopology:BOOL=ON',
+                '-DTrilinos_ENABLE_STKUnit_tests:BOOL=ON',
+                '-DTrilinos_ENABLE_STKUnit_test_utils:BOOL=ON',
+                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF'
+            ])
+
+        if '+dtk' in spec:
+            options.extend([
+                '-DTrilinos_EXTRA_REPOSITORIES:STRING=DataTransferKit',
+                '-DTpetra_INST_INT_UNSIGNED_LONG:BOOL=ON',
+                '-DTrilinos_ENABLE_DataTransferKit:BOOL=ON'
+            ])
+
+        if '+exodus' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASExodus:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASEpu:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASExodiff:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASNemspread:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
+                '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
+            ])
+
+
+        # ######################### TPLs #############################
+
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
+        # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
+        options.extend([
+            '-DTPL_ENABLE_BLAS=ON',
+            '-DBLAS_LIBRARY_NAMES=%s' % ';'.join(blas.names),
+            '-DBLAS_LIBRARY_DIRS=%s' % ';'.join(blas.directories),
+            '-DTPL_ENABLE_LAPACK=ON',
+            '-DLAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
+            '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
+            '-DTPL_ENABLE_Netcdf:BOOL=ON',
+            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
             '-DTPL_ENABLE_X11:BOOL=%s' % (
                 'ON' if '+x11' in spec else 'OFF'),
             '-DTrilinos_ENABLE_PyTrilinos:BOOL=%s' % (
-                'ON' if '+python' in spec else 'OFF')
+                'ON' if '+python' in spec else 'OFF'),
         ])
-
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
-            # use @rpath on Sierra due to limit of dynamic loader
-            options.append('-DCMAKE_MACOSX_RPATH=ON')
-        # else:
-        # options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
-
-        # Force Trilinos to use the MPI wrappers instead of raw compilers
-        # this is needed on Apple systems that require full resolution of
-        # all symbols when linking shared libraries
-        options.extend([
-            '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
-        ])
-
-        if '+allpkgs' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
-                '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON'
-            ])
 
         if '+hypre' in spec:
             options.extend([
@@ -256,17 +346,6 @@ class Trilinos(CMakePackage):
                 '-DHYPRE_INCLUDE_DIRS:PATH=%s' % spec['hypre'].prefix.include,
                 '-DHYPRE_LIBRARY_DIRS:PATH=%s' % spec['hypre'].prefix.lib
             ])
-
-        if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
-            # Panzer uses some std:chrono that is not recognized by Intel
-            # Don't know which (maybe all) Trilinos versions this applies to
-            # Don't know which (maybe all) Intel versions this applies to
-            options.extend([
-                '-DTrilinos_ENABLE_Panzer:BOOL=OFF'
-            ])
-
-        if '+xsdkflags' in spec:
-            options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
 
         if '+boost' in spec:
             options.extend([
@@ -286,19 +365,6 @@ class Trilinos(CMakePackage):
         else:
             options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
-        # Fortran lib
-        if '+fortran' in spec:
-            if spec.satisfies('%gcc') or spec.satisfies('%clang'):
-                libgfortran = os.path.dirname(os.popen(
-                    '%s --print-file-name libgfortran.a' %
-                    join_path(mpi_bin, 'mpif90')).read())
-                options.extend([
-                    '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
-                        libgfortran),
-                    '-DTrilinos_ENABLE_Fortran=ON'
-                ])
-
-        # suite-sparse related
         if '+suite-sparse' in spec:
             options.extend([
                 # FIXME: Trilinos seems to be looking for static libs only,
@@ -323,7 +389,6 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_UMFPACK:BOOL=OFF',
             ])
 
-        # metis / parmetis
         if '+metis' in spec:
             options.extend([
                 '-DTPL_ENABLE_METIS:BOOL=ON',
@@ -343,7 +408,6 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_ParMETIS:BOOL=OFF',
             ])
 
-        # mumps / scalapack
         if '+mumps' in spec:
             scalapack = spec['scalapack'].libs
             options.extend([
@@ -366,7 +430,6 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_SCALAPACK:BOOL=OFF',
             ])
 
-        # superlu-dist:
         if '+superlu-dist' in spec:
             # Amesos, conflicting types of double and complex SLU_D
             # see
@@ -393,7 +456,6 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_SuperLUDist:BOOL=OFF',
             ])
 
-        # superlu:
         if '+superlu' in spec:
             options.extend([
                 '-DTPL_ENABLE_SuperLU:BOOL=ON',
@@ -429,92 +491,33 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_Zlib:BOOL=OFF'
             ])
 
-        if '+belos' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_Belos:BOOL=ON'
-            ])
 
-        if '+zoltan' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_Zoltan:BOOL=ON',
-                '-DTrilinos_ENABLE_Zoltan2:BOOL=ON'
-            ])
+        # ################# Miscellaneous Stuff ######################
 
-        if '+amesos' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_Amesos2:BOOL=ON',
-                '-DTrilinos_ENABLE_Amesos:BOOL=OFF'
-            ])
+        # Fortran lib
+        if '+fortran' in spec:
+            if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+                libgfortran = os.path.dirname(os.popen(
+                    '%s --print-file-name libgfortran.a' %
+                    join_path(mpi_bin, 'mpif90')).read())
+                options.extend([
+                    '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
+                        libgfortran),
+                    '-DTrilinos_ENABLE_Fortran=ON'
+                ])
 
-        if '+muelu' in spec:
+        # Explicit instantiation
+        if '+eti' in spec:
             options.extend([
-                '-DTrilinos_ENABLE_MueLu:BOOL=ON'
+                '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON'
             ])
-
-        if '+ifpack' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_Ifpack2:BOOL=ON',
-                '-DTrilinos_ENABLE_Ifpack:BOOL=OFF'
-            ])
-
-        if '+tpetra' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_Tpetra:BOOL=ON',
-                '-DTpetra_INST_DOUBLE:BOOL=ON',
-                '-DTpetra_INST_INT_LONG:BOOL=ON',
-                '-DTpetra_INST_COMPLEX_DOUBLE=OFF'
-            ])
-
-        if '+gtest' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_Gtest:BOOL=ON'
-            ])
-
-        # collect CXX flags:
-        options.extend([
-            '-DCMAKE_CXX_FLAGS:STRING=%s' % (' '.join(cxx_flags)),
-        ])
-
-        # disable due to compiler / config errors:
-        options.extend([
-            '-DTrilinos_ENABLE_Pike=OFF'
-        ])
-
-        if '+stk' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
-                '-DTrilinos_ENABLE_STKIO:BOOL=ON',
-                '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
-                '-DTrilinos_ENABLE_STKSearch:BOOL=ON',
-                '-DTrilinos_ENABLE_STKUtil:BOOL=ON',
-                '-DTrilinos_ENABLE_STKTopology:BOOL=ON',
-                '-DTrilinos_ENABLE_STKUnit_tests:BOOL=ON',
-                '-DTrilinos_ENABLE_STKUnit_test_utils:BOOL=ON',
-                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF'
-            ])
-
-        if '+dtk' in spec:
-            options.extend([
-                '-DTrilinos_EXTRA_REPOSITORIES:STRING=DataTransferKit',
-                '-DTpetra_INST_INT_UNSIGNED_LONG:BOOL=ON',
-                '-DTrilinos_ENABLE_DataTransferKit:BOOL=ON'
-            ])
-
-        # exodus
-        if '+exodus' in spec:
-            options.extend([
-                # '-DTrilinos_ENABLE_SEACAS:BOOL=ON'
-                '-DTrilinos_ENABLE_SEACASExodus:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASEpu:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASExodiff:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASNemspread:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
-                '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
-            ])
+            if '+tpetra' in spec:
+                options.extend([
+                    '-DTpetra_INST_DOUBLE:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON'
+                    '-DTpetra_INST_COMPLEX_DOUBLE=%s' % (
+                      'ON' if '+eticmplx' in spec else 'OFF')
+                ])
 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
@@ -527,6 +530,30 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
+
+        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+            # use @rpath on Sierra due to limit of dynamic loader
+            options.append('-DCMAKE_MACOSX_RPATH=ON')
+        else:
+            options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+
+        if spec.satisfies('%intel') and spec.satisfies('@12.6.2'):
+            # Panzer uses some std:chrono that is not recognized by Intel
+            # Don't know which (maybe all) Trilinos versions this applies to
+            # Don't know which (maybe all) Intel versions this applies to
+            options.extend([
+                '-DTrilinos_ENABLE_Panzer:BOOL=OFF'
+            ])
+
+        # collect CXX flags:
+        options.extend([
+            '-DCMAKE_CXX_FLAGS:STRING=%s' % (' '.join(cxx_flags)),
+        ])
+
+        # disable due to compiler / config errors:
+        options.extend([
+            '-DTrilinos_ENABLE_Pike=OFF'
+        ])
 
         return options
 

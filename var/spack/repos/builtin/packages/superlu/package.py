@@ -38,7 +38,7 @@ class Superlu(Package):
     version('5.2.1', '3a1a9bff20cb06b7d97c46d337504447')
     version('4.3', 'b72c6309f25e9660133007b82621ba7c')
 
-    variant('fpic',    default=False,
+    variant('fpic',    default=True,
             description='Build with position independent code') 
 
     depends_on('cmake', when='@5.2.1:', type='build')

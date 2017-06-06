@@ -41,8 +41,8 @@ class Nalu(CMakePackage):
     variant('debug', default=False,
             description='Builds a RelWithDebInfo version')
 
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~allpkgs~xsdkflags~metis~mumps~superlu-dist+superlu~hypre+hdf5~suite-sparse~python~debug+boost+tpetra~epetra+exodus+pnetcdf+zlib+stk+belos+zoltan+amesos+ifpack+muelu~dtk~shared~fortran+gtest~ml~aztec~x11@master')
+    depends_on('yaml-cpp~shared')
+    depends_on('trilinos~alloptpkgs~xsdkflags~metis~mumps~superlu-dist+superlu~hypre+hdf5~suite-sparse~python~debug+boost+tpetra~epetra+exodus+pnetcdf+zlib+stk+belos+zoltan+zoltan2~amesos+amesos2~ifpack+ifpack2+muelu~dtk~shared~fortran+gtest~ml~aztec~x11+eti~eticmplx@master')
 
     def cmake_args(self):
         spec = self.spec
