@@ -44,6 +44,12 @@ class Nalu(CMakePackage):
     depends_on('yaml-cpp+fpic~shared')
     depends_on('trilinos~alloptpkgs~xsdkflags~metis~mumps~superlu-dist+superlu~hypre+hdf5~suite-sparse~python~debug+boost+tpetra~epetra+exodus+pnetcdf+zlib+stk+belos+zoltan+zoltan2~amesos+amesos2~ifpack+ifpack2+muelu~dtk~shared~fortran+gtest~ml~aztec~x11+eti~eticmplx@master')
 
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -51,10 +57,7 @@ class Nalu(CMakePackage):
         options.extend([
             '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
             '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON',
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'RelWithDebInfo' if '+debug' in spec else 'RELEASE'
-            )
+            '-DENABLE_INSTALL:BOOL=ON'
         ])
 
         return options
