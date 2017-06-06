@@ -30,7 +30,6 @@ class RGgrepel(RPackage):
 
     homepage = "http://github.com/slowkow/ggrepel"
     url      = "https://cran.r-project.org/src/contrib/ggrepel_0.6.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggrepel"
 
     version('0.6.5', '7e2732cd4840efe2dc9e4bc689cf1ee5')
 

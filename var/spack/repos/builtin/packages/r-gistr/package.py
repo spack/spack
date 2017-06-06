@@ -36,7 +36,6 @@ class RGistr(RPackage):
 
     homepage = "https://github.com/ropensci/gistr"
     url      = "https://cran.r-project.org/src/contrib/gistr_0.3.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gistr"
 
     version('0.3.6', '49d548cb3eca0e66711aece37757a2c0')
 
