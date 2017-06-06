@@ -54,5 +54,6 @@ class Libgd(AutotoolsPackage):
 
     depends_on('libiconv')
     depends_on('libpng')
+    depends_on('jpeg')
     depends_on('libtiff')
     depends_on('fontconfig')
