@@ -2112,6 +2112,9 @@ class Spec(object):
                     self.variants[v], other.variants[v]
                 )
 
+        if self.name is None and other.name is not None:
+            self.name = other.name
+
         # TODO: Check out the logic here
         sarch, oarch = self.architecture, other.architecture
         if sarch is not None and oarch is not None:
@@ -2730,7 +2733,7 @@ class Spec(object):
                         a_str = ' arch' + c + str(self.architecture) + ' '
                         write(fmt % (a_str), c)
                 elif c == '/':
-                    out.write('/' + fmt % (self.dag_hash(7)))
+                    out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")

@@ -202,12 +202,17 @@ class Trilinos(CMakePackage):
         else:
             options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
+        if '+tpetra' in spec:
+            options.append('-DTrilinos_ENABLE_Tpetra:BOOL=ON')
+        else:
+            options.append('-DTrilinos_ENABLE_Tpetra:BOOL=OFF')
+
         # Force Trilinos to use the MPI wrappers instead of raw compilers
         # this is needed on Apple systems that require full resolution of
         # all symbols when linking shared libraries
         options.extend([
-            '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
         ])
         if '+hypre' in spec:
