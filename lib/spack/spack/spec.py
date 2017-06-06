@@ -1925,10 +1925,15 @@ class Spec(object):
                     dep_context[dep.name] = child_matches[0]
             else:
                 dep_context = pre_existing[0]
+            if dep.name == 'python':
+                print "existing", self.name, id(dep_context[dep.name])
             # merge package/vdep information into spec
             try:
                 changed |= dep_context[dep.name].constrain(dep)
                 resolved = dep_context[dep.name]
+                for C in dep_contexts:
+                    if dep.name not in C:
+                        C[dep.name] = resolved
             except UnsatisfiableSpecError as e:
                 e.message = "Invalid spec: '%s'. "
                 e.message += "Package %s requires %s %s, but spec asked for %s"
@@ -1936,6 +1941,8 @@ class Spec(object):
                               e.constraint_type, e.required, e.provided)
                 raise e
         else:
+            if dep.name == 'python':
+                print "new", self.name, id(dep)
             for dep_context in dep_contexts:
                 dep_context[dep.name] = dep
             resolved = dep
@@ -1971,14 +1978,20 @@ class Spec(object):
         if build_only:
             dep_contexts = list(dep_contexts)
             build_context = {}
+            for dep in self.traverse(root=False, deptype='run'):
+                build_context[dep.name] = dep
+            for dep in self.dependencies(deptype='build'):
+                build_context[dep.name] = dep
             dep_contexts.append(build_context)
+
+        #if self.name == 'py-numpy':
+        #    import pdb; pdb.set_trace()
 
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
-                if any((dep_name in x) for x in dep_contexts):
+                if dep_name in self._dependencies:
                     continue
-            
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
