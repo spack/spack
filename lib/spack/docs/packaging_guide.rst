@@ -2418,6 +2418,7 @@ behavior the package requires.
 ``AutotoolsPackage`` or ``CmakePackage``.
 
 .. code-block:: python
+
     def default_flag_handler(self, env, flag_val):
         env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
         return []
@@ -2425,6 +2426,7 @@ behavior the package requires.
 2. The default behavior for other packages
 
 .. code-block:: python
+
     def default_flag_handler(self, env, flag_val):
         return flag_val[1]
 
@@ -2433,6 +2435,7 @@ behavior the package requires.
 can be added to either idiom above. For example:
 
 .. code-block:: python
+
     def default_flag_handler(self, env, flag_val):
         flags = flag_val[1]
         flags.append('-flag')
@@ -2441,6 +2444,7 @@ can be added to either idiom above. For example:
 or
 
 .. code-block:: python
+
     def default_flag_handler(self, env, flag_val):
         env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
         env.append_flags(flag_val[0].upper(), '-flag')
@@ -2450,6 +2454,7 @@ Packages may also opt for methods that include aspects of any of the
 idioms above. E.g.
 
 .. code-block:: python
+
     def default_flag_handler(self, env, flag_val):
         flags = []
         if len(flag_val[1]) > 3:
