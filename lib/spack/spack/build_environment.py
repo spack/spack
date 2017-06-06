@@ -52,6 +52,7 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
+import itertools
 import multiprocessing
 import os
 import shutil
@@ -250,10 +251,10 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Gather information about various types of dependencies
     build_deps      = pkg.spec.dependencies(deptype='build')
     link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    build_link_deps = set(itertools.chain(build_deps, link_deps))
     rpath_deps      = get_rpath_deps(pkg)
 
-    build_prefixes      = [dep.prefix for dep in build_deps]
+    build_run_prefixes  = [dep.prefix for dep in build_deps]
     link_prefixes       = [dep.prefix for dep in link_deps]
     build_link_prefixes = [dep.prefix for dep in build_link_deps]
     rpath_prefixes      = [dep.prefix for dep in rpath_deps]
@@ -261,14 +262,14 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # add run-time dependencies of direct build-time dependencies:
     for build_dep in build_deps:
         for run_dep in build_dep.traverse(deptype='run'):
-            build_prefixes.append(run_dep.prefix)
+            build_run_prefixes.append(run_dep.prefix)
 
     # Filter out system paths: ['/', '/usr', '/usr/local']
     # These paths can be introduced into the build when an external package
     # is added as a dependency. The problem with these paths is that they often
     # contain hundreds of other packages installed in the same directory.
     # If these paths come first, they can overshadow Spack installations.
-    build_prefixes      = filter_system_paths(build_prefixes)
+    build_run_prefixes  = filter_system_paths(build_run_prefixes)
     link_prefixes       = filter_system_paths(link_prefixes)
     build_link_prefixes = filter_system_paths(build_link_prefixes)
     rpath_prefixes      = filter_system_paths(rpath_prefixes)
@@ -328,7 +329,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add bin directories from dependencies to the PATH for the build.
-    for prefix in build_prefixes:
+    for prefix in build_run_prefixes:
         for dirname in ['bin', 'bin64']:
             bin_dir = os.path.join(prefix, dirname)
             if os.path.isdir(bin_dir):
