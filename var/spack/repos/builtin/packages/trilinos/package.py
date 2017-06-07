@@ -83,7 +83,7 @@ class Trilinos(CMakePackage):
             description='Compile with SuperLU solvers')
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')
-    variant('hdf5',         default=True, 
+    variant('hdf5',         default=True,
             description='Compile with HDF5')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
@@ -245,7 +245,6 @@ class Trilinos(CMakePackage):
             '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix
         ])
 
-
         # ################## Trilinos Packages #####################
 
         options.extend([
@@ -318,7 +317,6 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
             ])
-
 
         # ######################### TPLs #############################
 
@@ -491,7 +489,6 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_Zlib:BOOL=OFF'
             ])
 
-
         # ################# Miscellaneous Stuff ######################
 
         # Fortran lib
@@ -516,7 +513,8 @@ class Trilinos(CMakePackage):
                     '-DTpetra_INST_DOUBLE:BOOL=ON',
                     '-DTpetra_INST_INT_LONG:BOOL=ON'
                     '-DTpetra_INST_COMPLEX_DOUBLE=%s' % (
-                      'ON' if '+eticmplx' in spec else 'OFF')
+                        'ON' if '+eticmplx' in spec else 'OFF'
+                    )
                 ])
 
         # disable due to compiler / config errors:

@@ -39,7 +39,7 @@ class Nalu(CMakePackage):
             git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
     variant('debug', default=False,
-            description='Builds a RelWithDebInfo version')
+            description='Builds a debug version')
 
     depends_on('yaml-cpp+fpic~shared')
     depends_on('trilinos~alloptpkgs~xsdkflags~metis~mumps~superlu-dist+superlu~hypre+hdf5~suite-sparse~python~debug+boost+tpetra~epetra+exodus+pnetcdf+zlib+stk+belos+zoltan+zoltan2~amesos+amesos2~ifpack+ifpack2+muelu~dtk~shared~fortran+gtest~ml~aztec~x11+eti~eticmplx@master')
