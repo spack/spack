@@ -41,8 +41,9 @@ class Nalu(CMakePackage):
     variant('debug', default=False,
             description='Builds a debug version')
 
+    # Currently Nalu only builds static libraries; To be fixed soon
     depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~alloptpkgs~xsdkflags~metis~mumps~superlu-dist+superlu~hypre+hdf5~suite-sparse~python~debug+boost+tpetra~epetra+exodus+pnetcdf+zlib+stk+belos+zoltan+zoltan2~amesos+amesos2~ifpack+ifpack2+muelu~dtk~shared~fortran+gtest~ml~aztec~x11+eti~eticmplx@master')
+    depends_on('trilinos~shared+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master:')
 
     def build_type(self):
         if '+debug' in self.spec:

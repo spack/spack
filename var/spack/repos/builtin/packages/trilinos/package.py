@@ -101,6 +101,8 @@ class Trilinos(CMakePackage):
             description='Compile with Tpetra')
     variant('epetra',       default=True,
             description='Compile with Epetra')
+    variant('epetraext',    default=True,
+            description='Compile with EpetraExt')
     variant('exodus',       default=True,
             description='Compile with Exodus from SEACAS')
     variant('pnetcdf',      default=False,
@@ -133,11 +135,13 @@ class Trilinos(CMakePackage):
             description='Compile with Gtest')
     variant('aztec',        default=True,
             description='Compile with Aztec')
+    variant('sacado',       default=True,
+            description='Compile with Sacado')
     variant('x11',          default=False,
             description='Compile with X11')
-    variant('eti',          default=True,
+    variant('instantiate',  default=True,
             description='Compile with explicit instantiation')
-    variant('eticmplx',     default=False,
+    variant('instantiate_cmplx', default=False,
             description='Compile with explicit instantiation for complex')
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
@@ -164,7 +168,7 @@ class Trilinos(CMakePackage):
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi')
-    depends_on('parallel-netcdf', when="+pnetcdf@master")
+    depends_on('parallel-netcdf', when="+pnetcdf@master:")
     depends_on('parmetis', when='+metis')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -228,6 +232,7 @@ class Trilinos(CMakePackage):
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
             # for example when trying to build static libs
@@ -235,6 +240,7 @@ class Trilinos(CMakePackage):
             #     'ON' if '+shared' in spec else 'OFF'),
             # '-DTrilinos_LINK_SEARCH_START_STATIC:BOOL=%s' % (
             #     'OFF' if '+shared' in spec else 'ON'),
+
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
@@ -254,12 +260,14 @@ class Trilinos(CMakePackage):
                 'ON' if '+tpetra' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
                 'ON' if '+epetra' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_EpetraEx:BOOL=%s' % (
-                'ON' if '+epetra' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_EpetraExt:BOOL=%s' % (
+                'ON' if '+epetraext' in spec else 'OFF'),
             '-DTrilinos_ENABLE_ML:BOOL=%s' % (
                 'ON' if '+ml' in spec else 'OFF'),
             '-DTrilinos_ENABLE_AztecOO:BOOL=%s' % (
                 'ON' if '+aztec' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Sacado:BOOL=%s' % (
+                'ON' if '+sacado' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Belos:BOOL=%s' % (
                 'ON' if '+belos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Zoltan:BOOL=%s' % (
@@ -284,8 +292,11 @@ class Trilinos(CMakePackage):
             options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
 
         if '+stk' in spec:
+            # Currently these are fairly specific to the Nalu package
+            # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
+                '-DTrilinos_ENABLE_STKSimd:BOOL=ON',
                 '-DTrilinos_ENABLE_STKIO:BOOL=ON',
                 '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
                 '-DTrilinos_ENABLE_STKSearch:BOOL=ON',
@@ -304,6 +315,8 @@ class Trilinos(CMakePackage):
             ])
 
         if '+exodus' in spec:
+            # Currently these are fairly specific to the Nalu package
+            # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_SEACAS:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=ON',
@@ -504,7 +517,7 @@ class Trilinos(CMakePackage):
                 ])
 
         # Explicit instantiation
-        if '+eti' in spec:
+        if '+instantiate' in spec:
             options.extend([
                 '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON'
             ])
@@ -513,7 +526,7 @@ class Trilinos(CMakePackage):
                     '-DTpetra_INST_DOUBLE:BOOL=ON',
                     '-DTpetra_INST_INT_LONG:BOOL=ON'
                     '-DTpetra_INST_COMPLEX_DOUBLE=%s' % (
-                        'ON' if '+eticmplx' in spec else 'OFF'
+                        'ON' if '+instantiate_cmplx' in spec else 'OFF'
                     )
                 ])
 
