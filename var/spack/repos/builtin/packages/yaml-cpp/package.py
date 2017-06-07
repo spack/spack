@@ -44,13 +44,11 @@ class YamlCpp(CMakePackage):
         spec = self.spec
         options = []
 
-        if '+fpic' in spec:
-            options.extend([
-                '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true'
-            ])
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS=OFF')
+        options.extend([
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
+                'ON' if '+fpic' in spec else 'OFF'),
+        ])
 
         return options
