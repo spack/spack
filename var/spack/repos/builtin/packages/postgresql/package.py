@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Postgresql(Package):
+class Postgresql(AutotoolsPackage):
     """PostgreSQL is a powerful, open source object-relational database system.
     It has more than 15 years of active development and a proven architecture
     that has earned it a strong reputation for reliability, data integrity, and
@@ -42,12 +42,11 @@ class Postgresql(Package):
 
     variant('threadsafe', default=False, description='Build with thread safe.')
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix=%s" % prefix,
-                       "--with-openssl"]
-        if '+threadsafe' not in spec:
+    def configure_arg(self):
+        config_args = ["--with-openssl"]
+        if '+threadsafe' in self.spec:
+            config_args.append("--enable-thread-safety")
+        else:
             config_args.append("--disable-thread-safety")
-        configure(*config_args)
 
-        make()
-        make("install")
+        return config_args
