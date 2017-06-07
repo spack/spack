@@ -72,6 +72,7 @@ class Openmpi(AutotoolsPackage):
     version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
 
     # Still supported
+    version('2.0.3', '6c09e56ac2230c4f9abd8ba029f03edd')  # libmpi.so.20.0.3
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')  # libmpi.so.20.0.2
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')  # libmpi.so.20.0.1
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')  # libmpi.so.20.0.0
