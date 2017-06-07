@@ -1354,7 +1354,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
            prepare for a new install attempt. Options control whether these
            files are reused (vs. destroyed). This function considers a package
            fully-installed if there is a DB entry for it (in that way, it is
-           more strict than Package.installed).
+           more strict than Package.installed). The return value is used to
+           indicate when the prefix exists but the install is not complete.
         """
         if self.spec.external:
             raise ExternalPackageError("Attempted to repair external spec %s" %
