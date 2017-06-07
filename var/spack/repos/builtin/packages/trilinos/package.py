@@ -168,7 +168,8 @@ class Trilinos(CMakePackage):
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi')
-    depends_on('parallel-netcdf', when="+pnetcdf@master:")
+    depends_on('parallel-netcdf', when="+pnetcdf@master")
+    depends_on('parallel-netcdf', when="+pnetcdf@12.10.2:")
     depends_on('parmetis', when='+metis')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
