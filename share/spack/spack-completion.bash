@@ -843,7 +843,7 @@ function _spack_view_symlink {
 # Helper functions for subcommands
 
 function _subcommands {
-    spack help | grep "^    [a-z]" | awk '{print $1}'
+    spack help --all | grep "^  [a-z]" | awk '{print $1}' | grep -v spack
 }
 
 function _all_packages {
