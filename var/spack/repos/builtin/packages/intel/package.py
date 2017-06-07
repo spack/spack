@@ -69,6 +69,7 @@ class IntelInstaller(Package):
         # https://software.intel.com/en-us/articles/free-mkl
         if (self.spec.satisfies("intel-mkl@2017.2:") or
             self.spec.satisfies("intel-daal@2017.2:") or
+            self.spec.satisfies("intel-mpi@2017.2:") or
             self.spec.satisfies("intel-ipp@2017.2:")):
             return False
         return True
@@ -103,6 +104,7 @@ COMPONENTS=%s
         # https://software.intel.com/en-us/articles/free-mkl
         if not (spec.satisfies("intel-mkl@2017.2:") or
                 spec.satisfies("intel-daal@2017.2:") or
+                spec.satisfies("intel-mpi@2017.2:") or
                 spec.satisfies("intel-ipp@2017.2:")):
             with open(silent_config_filename, 'a') as f:
                 f.write("""
