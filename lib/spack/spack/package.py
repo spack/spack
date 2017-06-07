@@ -1188,7 +1188,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
-        partial = self.repair_partial(keep_prefix, keep_stage)
+        reuse_stage = not kwargs.get('restage', False)
+        partial = self.repair_partial(keep_prefix, reuse_stage)
 
         # Ensure package is not already installed
         layout = spack.store.layout
@@ -1320,7 +1321,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         try:
             # Create the install prefix and fork the build process.
-            if not partial:
+            if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
             # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
@@ -1348,11 +1349,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             if not keep_prefix:
                 self.remove_prefix()
 
-    def repair_partial(self, reuse_prefix=False, reuse_stage=False):
-        """If continue_with_partial is not set, this ensures that the package
-           is either fully-installed or that the prefix is removed. This
-           function considers a package fully-installed if there is a DB
-           entry for it (in that way, it is more strict than Package.installed)
+    def repair_partial(self, reuse_prefix=False, reuse_stage=True):
+        """Remove leftover files from partially-completed prior install to
+           prepare for a new install attempt. Options control whether these
+           files are reused (vs. destroyed). This function considers a package
+           fully-installed if there is a DB entry for it (in that way, it is
+           more strict than Package.installed).
         """
         if self.spec.external:
             raise ExternalPackageError("Attempted to repair external spec %s" %

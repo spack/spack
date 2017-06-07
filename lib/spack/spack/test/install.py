@@ -132,7 +132,7 @@ def test_partial_install(mock_archive):
         spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
         setattr(pkg, 'succeed', True)
         pkg.stage = MockStage(pkg.stage)
-        pkg.do_install()
+        pkg.do_install(restage=True)
         assert rm_prefix_checker.removed
         assert pkg.stage.test_destroyed
         assert pkg.installed
@@ -163,7 +163,7 @@ def test_partial_install_keep_prefix(mock_archive):
         assert os.path.exists(pkg.prefix)
         setattr(pkg, 'succeed', True)
         pkg.stage = MockStage(pkg.stage)
-        pkg.do_install(keep_prefix=True, keep_stage=True)
+        pkg.do_install(keep_prefix=True)
         assert pkg.installed
         assert not pkg.stage.test_destroyed
     finally:
