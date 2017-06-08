@@ -1349,7 +1349,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             if not keep_prefix:
                 self.remove_prefix()
 
-
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
         """Check for leftover files from partially-completed prior install to
