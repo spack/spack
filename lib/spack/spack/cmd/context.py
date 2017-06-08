@@ -18,7 +18,6 @@ class Context(object):
         self.concretized_index = 0
         self.concretized_order = list()
         self.specs_by_hash = dict()
-        self.explicit = set()
         # Libs in this set must always appear as the dependency traced from any
         # root of link deps
         self.common_libs = dict() # name -> hash
@@ -33,30 +32,22 @@ class Context(object):
         for user_spec in self.user_specs[self.concretized_index:]:
             spec = Spec(user_spec)
             spec.concretize()
-            self.explicit.add(spec.dag_hash())
-            install_group = set()
-            for node in spec.traverse(): # deptype = (build, link)?
-                self.specs_by_hash[node.dag_hash()] = node
-                install_group.add(node.dag_hash())
-            self.concretized_order.append(install_group)
+            self.specs_by_hash[spec.dag_hash()] = spec
+            self.concretized_order.append(spec.dag_hash())
             self.concretized_index += 1
 
     def install(self):
         for dag_hash, spec in self.specs_by_hash.items():
-            # Existing logic in Package will avoid installing if this already
-            # exists
-            spec.package.do_install(explicit=dag_hash in self.explicit)
+            spec.package.do_install(explicit=True)
 
     def to_dict(self):
-        concretized_order = list(list(x) for x in self.concretized_order)
-        explicit = list(self.explicit)
+        concretized_order = list(self.concretized_order)
         common_libs = syaml.syaml_dict(self.common_libs.items())
         common_bins = syaml.syaml_dict(self.common_bins.items())
         format = {
             'user_specs': self.user_specs,
             'concretized_index': self.concretized_index,
             'concretized_order': concretized_order,
-            'explicit': explicit,
             'common_libs': common_libs,
             'common_bins': common_bins
         }
@@ -67,8 +58,7 @@ class Context(object):
         c = Context(name)
         c.user_specs = list(d['user_specs'])
         c.concretized_index = int(d['concretized_index'])
-        c.concretized_order = list(set(x) for x in d['concretized_order'])
-        c.explicit = set(d['explicit'])
+        c.concretized_order = list(d['concretized_order'])
         c.common_libs = dict(d['common_libs'])
         c.common_bins = dict(d['common_bins'])
         return c
