@@ -96,6 +96,8 @@ class Mfem(Package):
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
 
+    patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
+
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
