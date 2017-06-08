@@ -1328,7 +1328,7 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return base32_prefix_bits(self.dag_hash(), bits)
 
-    def to_node_dict(self):
+    def to_node_dict(self, all_deps=False):
         d = syaml_dict()
 
         if self.versions:
@@ -1360,7 +1360,11 @@ class Spec(object):
 
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
-        deps = self.dependencies_dict(deptype=('link', 'run'))
+        if all_deps:
+            deptypes = ('link', 'run', 'build')
+        else:
+            deptypes = ('link', 'run')
+        deps = self.dependencies_dict(deptype=deptypes)
         if deps:
             d['dependencies'] = syaml_dict([
                 (name,
@@ -1372,10 +1376,14 @@ class Spec(object):
 
         return syaml_dict([(self.name, d)])
 
-    def to_dict(self):
+    def to_dict(self, all_deps=False):
+        if all_deps:
+            deptypes = ('link', 'run', 'build')
+        else:
+            deptypes = ('link', 'run')
         node_list = []
-        for s in self.traverse(order='pre', deptype=('link', 'run')):
-            node = s.to_node_dict()
+        for s in self.traverse(order='pre', deptype=deptypes):
+            node = s.to_node_dict(all_deps=all_deps)
             node[s.name]['hash'] = s.dag_hash()
             node_list.append(node)
 

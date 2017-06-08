@@ -120,7 +120,8 @@ def repair(context_name):
         shutil.rmtree(tmp_new)
 
 def store_specs_by_hash(specs_by_hash, stream):
-    installs = dict((k, v.to_dict()) for k, v in specs_by_hash.items())
+    installs = dict((k, v.to_dict(all_deps=True))
+                    for k, v in specs_by_hash.items())
 
     try:
         sjson.dump(installs, stream)
