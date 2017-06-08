@@ -38,8 +38,8 @@ class Superlu(Package):
     version('5.2.1', '3a1a9bff20cb06b7d97c46d337504447')
     version('4.3', 'b72c6309f25e9660133007b82621ba7c')
 
-    variant('fpic',    default=False,
-            description='Build with position independent code') 
+    variant('fpic',    default=True,
+            description='Build with position independent code')
 
     depends_on('cmake', when='@5.2.1:', type='build')
     depends_on('blas')
@@ -117,4 +117,4 @@ class Superlu(Package):
         headers = glob.glob(join_path('SRC', '*.h'))
         mkdir(prefix.include)
         for h in headers:
-            install(h, prefix.include) 
+            install(h, prefix.include)

@@ -25,31 +25,40 @@
 from spack import *
 
 
-class YamlCpp(CMakePackage):
-    """A YAML parser and emitter in C++"""
+class Nalu(CMakePackage):
+    """Nalu: a generalized unstructured massively parallel low Mach flow code
+       designed to support a variety of energy applications of interest (most
+       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
+       Tpetra/Epetra stack
+    """
 
-    homepage = "https://github.com/jbeder/yaml-cpp"
-    url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
+    homepage = "https://github.com/NaluCFD/Nalu"
+    url      = "https://github.com/NaluCFD/Nalu.git"
 
-    version('0.5.3', '4e47733d98266e46a1a73ae0a72954eb')
-    version('develop', git='https://github.com/jbeder/yaml-cpp', branch='master')
+    version('master',
+            git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
-    variant('shared', default=True,
-            description='Enable build of shared libraries')
-    variant('fpic',   default=True,
-            description='Build with position independent code')
+    variant('debug', default=False,
+            description='Builds a debug version')
 
-    depends_on('boost', when='@:0.5.3')
+    # Currently Nalu only builds static libraries; To be fixed soon
+    depends_on('yaml-cpp+fpic~shared')
+    depends_on('trilinos~shared+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
 
     def cmake_args(self):
         spec = self.spec
         options = []
 
         options.extend([
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+fpic' in spec else 'OFF'),
+            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
+            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
+            '-DENABLE_INSTALL:BOOL=ON'
         ])
 
         return options
