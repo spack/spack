@@ -51,7 +51,7 @@ class Metis(Package):
     variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
     variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
 
-    depends_on('cmake@2.8:', when='@5:', type='build')
+    depends_on('cmake', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
 
