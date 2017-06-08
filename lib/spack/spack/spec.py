@@ -1984,9 +1984,6 @@ class Spec(object):
                 build_context[dep.name] = dep
             dep_contexts.append(build_context)
 
-        #if self.name == 'py-numpy':
-        #    import pdb; pdb.set_trace()
-
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
