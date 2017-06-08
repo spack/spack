@@ -1351,7 +1351,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
 
     def check_for_unfinished_installation(
-            self, reuse_prefix=False, restage=False):
+            self, keep_prefix=False, restage=False):
         """Check for leftover files from partially-completed prior install to
            prepare for a new install attempt. Options control whether these
            files are reused (vs. destroyed). This function considers a package
@@ -1372,7 +1372,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
             partial = False
             if not installed_in_db and os.path.isdir(self.prefix):
-                if not reuse_prefix:
+                if not keep_prefix:
                     self.remove_prefix()
                 else:
                     partial = True
