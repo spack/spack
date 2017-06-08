@@ -115,7 +115,7 @@ class MockStage(object):
 
 
 @pytest.mark.usefixtures('install_mockery')
-def test_partial_install(mock_archive):
+def test_partial_install_delete_prefix_and_stage(mock_archive):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
@@ -159,7 +159,7 @@ def test_partial_install_keep_prefix(mock_archive):
         # error
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(spack.build_environment.ChildError):
-            pkg.do_install(keep_prefix=True, keep_stage=True)
+            pkg.do_install(keep_prefix=True)
         assert os.path.exists(pkg.prefix)
         setattr(pkg, 'succeed', True)
         pkg.stage = MockStage(pkg.stage)
@@ -183,12 +183,11 @@ def test_second_install_no_overwrite_first(mock_archive):
     fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     try:
-        # If remove_prefix is called at any point in this test, that is an
-        # error
         spack.package.Package.remove_prefix = mock_remove_prefix
         setattr(pkg, 'succeed', True)
         pkg.do_install()
         assert pkg.installed
+        # If Package.install is called after this point, it will fail
         delattr(pkg, 'succeed')
         pkg.do_install()
     finally:

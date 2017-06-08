@@ -1188,8 +1188,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
-        reuse_stage = not kwargs.get('restage', False)
-        partial = self.repair_partial(keep_prefix, reuse_stage)
+        restage = kwargs.get('restage', False)
+        partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
         # Ensure package is not already installed
         layout = spack.store.layout
@@ -1349,8 +1349,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             if not keep_prefix:
                 self.remove_prefix()
 
-    def repair_partial(self, reuse_prefix=False, reuse_stage=True):
-        """Remove leftover files from partially-completed prior install to
+
+    def check_for_unfinished_installation(
+            self, reuse_prefix=False, restage=False):
+        """Check for leftover files from partially-completed prior install to
            prepare for a new install attempt. Options control whether these
            files are reused (vs. destroyed). This function considers a package
            fully-installed if there is a DB entry for it (in that way, it is
@@ -1377,7 +1379,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         stage_is_managed_in_spack = self.stage.path.startswith(
             spack.stage_path)
-        if (not reuse_stage) and stage_is_managed_in_spack:
+        if restage and stage_is_managed_in_spack:
             self.stage.destroy()
             self.stage.create()
 
