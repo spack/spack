@@ -45,3 +45,6 @@ class DoubleConversion(CMakePackage):
     version('1.1.5', 'ddf782373e2630c07b2691c31cee0b24')
     version('1.1.4', '5df72704406d93cd54c73d73f02e2744')
     version('1.1.3', 'b312152c8c66c80449d5e0325b94502e')
+
+    def cmake_args(self):
+        return ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']

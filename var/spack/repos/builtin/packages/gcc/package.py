@@ -83,6 +83,7 @@ class Gcc(AutotoolsPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
+    depends_on('zip', type='build', when='@:6 languages=all')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
