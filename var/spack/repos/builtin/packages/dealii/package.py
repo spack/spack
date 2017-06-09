@@ -126,22 +126,21 @@ class Dealii(CMakePackage):
     depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
-    depends_on("trilinos",         when='+trilinos+mpi~int64')
-    depends_on("trilinos~hypre",   when="+trilinos+mpi+int64")
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
 
     # check that the combination of variants makes sense
-    def variants_check(self):
-        for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
-                  '+slepc', '+trilinos']:
-            if p in self.spec and '+mpi' not in self.spec:
-                raise RuntimeError('The ' + p + ' variant requires +mpi')
+    conflicts('+gsl',    when='@:8.4.2')
+    conflicts('+python', when='@:8.4.2')
+    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+              '+slepc', '+trilinos']:
+        conflicts(p, when='~mpi')
 
     def build_type(self):
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         return 'DebugRelease'
 
     def cmake_args(self):
-        self.variants_check()
         spec = self.spec
         options = []
         # release flags
