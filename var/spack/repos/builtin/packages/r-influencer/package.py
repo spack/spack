@@ -41,4 +41,3 @@ class RInfluencer(RPackage):
     version('0.1.0', '6c8b6decd78c341364b5811fb3050ba5')
 
     depends_on('r-igraph', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))

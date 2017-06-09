@@ -38,7 +38,6 @@ class RCoin(RPackage):
 
     depends_on('r@2.14.0:')
 
-    depends_on('r-survival', type=('build', 'run'))
     depends_on('r-modeltools@0.2-9:', type=('build', 'run'))
     depends_on('r-mvtnorm@1.0-5:', type=('build', 'run'))
     depends_on('r-multcomp', type=('build', 'run'))

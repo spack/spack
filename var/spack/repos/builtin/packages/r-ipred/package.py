@@ -38,9 +38,4 @@ class RIpred(RPackage):
 
     depends_on('r@2.10:')
 
-    depends_on('r-rpart@3.1-8:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-nnet', type=('build', 'run'))
-    depends_on('r-class', type=('build', 'run'))
     depends_on('r-prodlim', type=('build', 'run'))

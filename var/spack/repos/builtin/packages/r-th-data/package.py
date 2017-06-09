@@ -34,6 +34,3 @@ class RThData(RPackage):
 
     version('1.0-8', '2cc20acc8b470dff1202749b4bea55c4')
     version('1.0-7', '3e8b6b1a4699544f175215aed7039a94')
-
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))

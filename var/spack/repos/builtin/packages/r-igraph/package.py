@@ -36,7 +36,6 @@ class RIgraph(RPackage):
 
     version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
 
-    depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-nmf', type=('build', 'run'))
     depends_on('r-irlba', type=('build', 'run'))

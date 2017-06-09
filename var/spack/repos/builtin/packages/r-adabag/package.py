@@ -34,6 +34,5 @@ class RAdabag(RPackage):
 
     version('4.1', '2e019f053d49f62ebb3b1697bbb50afa')
 
-    depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-mlbench', type=('build', 'run'))
     depends_on('r-caret', type=('build', 'run'))

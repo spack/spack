@@ -39,6 +39,4 @@ class RProdlim(RPackage):
     depends_on('r@2.9.0:')
 
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-kernsmooth', type=('build', 'run'))
     depends_on('r-lava', type=('build', 'run'))

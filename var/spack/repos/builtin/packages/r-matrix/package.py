@@ -35,5 +35,3 @@ class RMatrix(RPackage):
 
     version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
-
-    depends_on('r-lattice', type=('build', 'run'))

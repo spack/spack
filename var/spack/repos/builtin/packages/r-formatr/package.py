@@ -39,7 +39,6 @@ class RFormatr(RPackage):
 
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 
-    depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-testit', type=('build', 'run'))
     # depends_on('r-knitr', type=('build', 'run')) - mutual dependency
