@@ -6,6 +6,7 @@ import spack.util.spack_yaml as syaml
 from spack.spec import Spec
 
 import argparse
+import itertools
 import os
 import shutil
 
@@ -39,6 +40,19 @@ class Context(object):
     def install(self):
         for dag_hash, spec in self.specs_by_hash.items():
             spec.package.do_install(explicit=True)
+
+    def list(self, stream, include_deps=False):
+        for user_spec, concretized_hash in itertools.izip_longest(
+            self.user_specs, self.concretized_order):
+
+            stream.write('{0}\n'.format(user_spec))
+
+            if concretized_hash:
+                concretized_spec = self.specs_by_hash[concretized_hash]
+                if include_deps:
+                    stream.write(concretized_spec.tree())
+                else:
+                    stream.write(concretized_spec.format())
 
     def to_dict(self):
         concretized_order = list(self.concretized_order)
@@ -162,6 +176,12 @@ def context_concretize(args):
     context.concretize()
     write(context)
 
+def context_list(args):
+    # TODO? option to list packages w/ multiple instances?
+    context = read(args.context)
+    import sys
+    context.list(sys.stdout, args.include_deps)
+
 def add_common_args(parser):
     parser.add_argument(
         'context',
@@ -186,10 +206,17 @@ def setup_parser(subparser):
         'concretize', help='Concretize user specs')
     add_common_args(concretize_parser)
 
+    list_parser = sp.add_parser('list', help='List specs in a context')
+    list_parser.add_argument(
+        '--include-deps', action='store_true',
+        dest='include_deps', help='Show dependencies of requested packages')
+    add_common_args(list_parser)
+
 def context(parser, args, **kwargs):
     action = {
         'create': context_create,
         'add': context_add,
         'concretize': context_concretize,
+        'list': context_list,
         }
     action[args.context_command](args)
