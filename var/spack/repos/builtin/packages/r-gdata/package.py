@@ -46,7 +46,6 @@ class RGdata(RPackage):
 
     homepage = "https://cran.r-project.org/package=gdata"
     url      = "https://cran.r-project.org/src/contrib/gdata_2.17.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gdata"
 
     version('2.17.0', 'c716b663b9dc16ad8cafe6acc781a75f')
 

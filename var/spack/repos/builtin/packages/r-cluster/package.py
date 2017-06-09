@@ -32,7 +32,6 @@ class RCluster(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
     url      = "https://cran.r-project.org/src/contrib/cluster_2.0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
 
     version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
     version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')

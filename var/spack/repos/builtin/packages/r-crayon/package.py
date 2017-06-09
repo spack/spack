@@ -34,6 +34,5 @@ class RCrayon(RPackage):
 
     homepage = "https://github.com/gaborcsardi/crayon"
     url      = "https://cran.r-project.org/src/contrib/crayon_1.3.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/crayon"
 
     version('1.3.2', 'fe29c6204d2d6ff4c2f9d107a03d0cb9')

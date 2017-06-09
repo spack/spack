@@ -43,6 +43,5 @@ class RBh(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/BH/index.html"
     url      = "https://cran.r-project.org/src/contrib/BH_1.60.0-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
 
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')

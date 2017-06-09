@@ -30,7 +30,6 @@ class RParty(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/party/index.html"
     url      = "https://cran.r-project.org/src/contrib/party_1.1-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/party"
 
     version('1.1-2', '40a00336cf8418042d2ab616675c8ddf')
 

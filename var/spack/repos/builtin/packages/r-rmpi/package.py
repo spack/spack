@@ -31,7 +31,6 @@ class RRmpi(RPackage):
 
     homepage = "http://www.stats.uwo.ca/faculty/yu/Rmpi"
     url      = "https://cran.r-project.org/src/contrib/Rmpi_0.6-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpi"
 
     version('0.6-6', '59ae8ce62ff0ff99342d53942c745779')
 

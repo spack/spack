@@ -31,6 +31,5 @@ class RMass(RPackage):
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
     url      = "https://cran.r-project.org/src/contrib/MASS_7.3-45.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/MASS"
 
     version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')

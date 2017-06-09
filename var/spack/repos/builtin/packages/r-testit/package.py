@@ -32,6 +32,5 @@ class RTestit(RPackage):
 
     homepage = "https://github.com/yihui/testit"
     url      = "https://cran.r-project.org/src/contrib/testit_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/testit"
 
     version('0.5', 'f206d3cbdc5174e353d2d05ba6a12e59')

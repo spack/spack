@@ -35,6 +35,5 @@ class RLpsolve(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/lpSolve/index.html"
     url      = "https://cran.r-project.org/src/contrib/lpSolve_5.6.13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lpSolve"
 
     version('5.6.13', '8471654d9ae76e0f85ff3449433d4bc1')

@@ -32,7 +32,6 @@ class RE1071(RPackage):
 
     homepage = "https://cran.r-project.org/package=e1071"
     url      = "https://cran.r-project.org/src/contrib/e1071_1.6-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/e1071"
 
     version('1.6-7', 'd109a7e3dd0c905d420e327a9a921f5a')
 

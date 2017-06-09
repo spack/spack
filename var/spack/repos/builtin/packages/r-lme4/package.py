@@ -33,7 +33,6 @@ class RLme4(RPackage):
 
     homepage = "https://github.com/lme4/lme4/"
     url      = "https://cran.r-project.org/src/contrib/lme4_1.1-12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lme4"
 
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 

@@ -30,7 +30,6 @@ class RFlashclust(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=flashClust"
     url      = "https://cran.r-project.org/src/contrib/flashClust_1.01-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/flashClust"
 
     version('1.01-2', '23409aeeef98bf35d0b3d5dd755fdeff')
 

@@ -32,7 +32,6 @@ class RHtmlwidgets(RPackage):
 
     homepage = "https://github.com/ramnathv/htmlwidgets"
     url      = "https://cran.r-project.org/src/contrib/htmlwidgets_0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/htmlwidgets"
 
     version('0.6', '7fa522d2eda97593978021bda9670c0e')
 

@@ -33,7 +33,6 @@ class RGgmap(RPackage):
 
     homepage = "https://github.com/dkahle/ggmap"
     url      = "https://cran.r-project.org/src/contrib/ggmap_2.6.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggmap"
 
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
 

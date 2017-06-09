@@ -32,7 +32,6 @@ class RGgvis(RPackage):
 
     homepage = "http://ggvis.rstudio.com/"
     url      = "https://cran.r-project.org/src/contrib/ggvis_0.4.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggvis"
 
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 

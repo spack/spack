@@ -31,6 +31,5 @@ class RMaps(RPackage):
 
     homepage = "https://cran.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/maps_3.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/maps"
 
     version('3.1.1', 'ff045eccb6d5a658db5a539116ddf764')

@@ -31,7 +31,6 @@ class RRpart(RPackage):
 
     homepage = "https://cran.r-project.org/package=rpart"
     url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
 
     version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
 

@@ -31,7 +31,6 @@ class RXlsx(RPackage):
 
     homepage = "http://code.google.com/p/rexcel/"
     url      = "https://cran.rstudio.com/src/contrib/xlsx_0.5.7.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/xlsx"
 
     version('0.5.7', '36b1b16f29c54b6089b1dae923180dd5')
 

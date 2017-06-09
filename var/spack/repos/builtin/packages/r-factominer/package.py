@@ -30,7 +30,6 @@ class RFactominer(RPackage):
 
     homepage = "http://factominer.free.fr"
     url      = "https://cran.r-project.org/src/contrib/FactoMineR_1.35.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/FactoMineR"
 
     version('1.35', 'bef076181ce942016114dd7a6f5c2348')
 

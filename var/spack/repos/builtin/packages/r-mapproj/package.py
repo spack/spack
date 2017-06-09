@@ -30,7 +30,6 @@ class RMapproj(RPackage):
 
     homepage = "https://cran.r-project.org/package=mapproj"
     url      = "https://cran.r-project.org/src/contrib/mapproj_1.2-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mapproj"
 
     version('1.2-4', '10e22bde1c790e1540672f15ddcaee71')
 

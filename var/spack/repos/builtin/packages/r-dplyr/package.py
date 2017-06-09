@@ -31,7 +31,6 @@ class RDplyr(RPackage):
 
     homepage = "https://github.com/hadley/dplyr"
     url      = "https://cran.r-project.org/src/contrib/dplyr_0.5.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 

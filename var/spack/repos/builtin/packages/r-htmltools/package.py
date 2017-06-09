@@ -30,7 +30,6 @@ class RHtmltools(RPackage):
 
     homepage = "https://github.com/rstudio/htmltools"
     url      = "https://cran.r-project.org/src/contrib/htmltools_0.3.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/htmltools"
 
     version('0.3.5', '5f001aff4a39e329f7342dcec5139724')
 

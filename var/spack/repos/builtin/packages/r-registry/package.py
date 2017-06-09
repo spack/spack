@@ -30,6 +30,5 @@ class RRegistry(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/registry/index.html"
     url      = "https://cran.r-project.org/src/contrib/registry_0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/registry"
 
     version('0.3', '85345b334ec81eb3da6edcbb27c5f421')

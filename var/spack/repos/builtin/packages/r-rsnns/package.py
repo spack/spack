@@ -37,7 +37,6 @@ class RRsnns(RPackage):
 
     homepage = "http://sci2s.ugr.es/dicits/software/RSNNS"
     url      = "https://cran.r-project.org/src/contrib/RSNNS_0.4-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RSNNS"
 
     version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
 

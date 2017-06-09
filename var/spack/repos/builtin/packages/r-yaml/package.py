@@ -31,6 +31,5 @@ class RYaml(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/yaml/index.html"
     url      = "https://cran.r-project.org/src/contrib/yaml_2.1.13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/yaml"
 
     version('2.1.13', 'f2203ea395adaff6bd09134666191d9a')

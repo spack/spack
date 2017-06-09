@@ -32,7 +32,6 @@ class RPryr(RPackage):
 
     homepage = "https://github.com/hadley/pryr"
     url      = "https://cran.r-project.org/src/contrib/pryr_0.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pryr"
 
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 

@@ -30,6 +30,5 @@ class RGtable(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/gtable/index.html"
     url      = "https://cran.r-project.org/src/contrib/gtable_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gtable"
 
     version('0.2.0', '124090ae40b2dd3170ae11180e0d4cab')
