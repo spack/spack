@@ -49,6 +49,7 @@ class Amrex(CMakePackage):
         multi=False,
         description='Floating point precision')
 
+    variant('fortran', default=True, description='Enable Fortran support')
     variant('debug', default=False, description='Enable debugging features')
     variant('particles', default=False, description='Include particle classes in build')
 
