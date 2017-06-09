@@ -987,6 +987,73 @@ written in C/C++/Fortran would need it.  A potential workaround is to
 load a recent ``binutils`` into your environment and use the ``--dirty``
 flag.
 
+-----------
+GPG Signing
+-----------
+
+.. _cmd-spack-gpg:
+
+^^^^^^^^^^^^^
+``spack gpg``
+^^^^^^^^^^^^^
+
+Spack has support for signing and verifying packages using GPG keys. A
+separate keyring is used for Spack, so any keys available in the user's home
+directory are not used.
+
+^^^^^^^^^^^^^^^^^^
+``spack gpg init``
+^^^^^^^^^^^^^^^^^^
+
+When Spack is first installed, its keyring is empty. Keys stored in
+:file:`var/spack/gpg` are the default keys for a Spack installation. These
+keys may be imported by running ``spack gpg init``. This will import the
+default keys into the keyring as trusted keys.
+
+^^^^^^^^^^^^^
+Trusting keys
+^^^^^^^^^^^^^
+
+Additional keys may be added to the keyring using
+``spack gpg trust <keyfile>``. Once a key is trusted, packages signed by the
+owner of they key may be installed.
+
+^^^^^^^^^^^^^
+Creating keys
+^^^^^^^^^^^^^
+
+You may also create your own key so that you may sign your own packages using
+``spack gpg create <name> <email>``. By default, the key has no expiration,
+but it may be set with the ``--expires <date>`` flag (see the ``gnupg2``
+documentation for accepted date formats). It is also recommended to add a
+comment as to the use of the key using the ``--comment <comment>`` flag. The
+public half of the key can also be exported for sharing with others so that
+they may use packages you have signed using the ``--export <keyfile>`` flag.
+Secret keys may also be later exported using the
+``spack gpg export <location> [<key>...]`` command.
+
+^^^^^^^^^^^^
+Listing keys
+^^^^^^^^^^^^
+
+In order to list the keys available in the keyring, the
+``spack gpg list`` command will list trusted keys with the ``--trusted`` flag
+and keys available for signing using ``--signing``. If you would like to
+remove keys from your keyring, ``spack gpg untrust <keyid>``. Key IDs can be
+email addresses, names, or (best) fingerprints.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Signing and Verifying Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to sign a package, ``spack gpg sign <file>`` should be used. By
+default, the signature will be written to ``<file>.asc``, but that may be
+changed by using the ``--output <file>`` flag. If there is only one signing
+key available, it will be used, but if there is more than one, the key to use
+must be specified using the ``--key <keyid>`` flag. The ``--clearsign`` flag
+may also be used to create a signed file which contains the contents, but it
+is not recommended. Signed packages may be verified by using
+``spack gpg verify <file>``.
 
 .. _cray-support:
 
