@@ -160,6 +160,8 @@ def test_url_strip_name_suffixes(url, version, expected):
     ('sionlib', 30, '1.7.1', 59, 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
     # Regex in name
     ('voro++', 40, '0.4.6', 47, 'http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz'),
+    # SourceForge download
+    ('glew', 55, '2.0.0', 60, 'https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download'),
 ])
 def test_url_parse_offset(name, noffset, ver, voffset, path):
     """Tests that the name, version and offsets are computed correctly.

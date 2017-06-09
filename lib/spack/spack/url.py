@@ -301,7 +301,8 @@ def split_url_extension(path):
     prefix, ext, suffix = path, '', ''
 
     # Strip off sourceforge download suffix.
-    match = re.search(r'((?:sourceforge\.net|sf\.net)/.*)(/download)$', path)
+    # e.g. https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download
+    match = re.search(r'(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$', path)
     if match:
         prefix, suffix = match.groups()
 
