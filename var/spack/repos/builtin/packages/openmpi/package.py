@@ -64,7 +64,7 @@ def _mxm_dir():
         return None
 
 
-class Openmpi(AutotoolsPackage):
+class Openmpi(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
     """The Open MPI Project is an open source Message Passing Interface
        implementation that is developed and maintained by a consortium
        of academic, research, and industry partners. Open MPI is
@@ -375,43 +375,28 @@ class Openmpi(AutotoolsPackage):
 
         return config_args
 
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-        compilers that Spack built the package with.
+    @property
+    def compiler_wrappers(self):
 
-        If this isn't done, they'll have CC, CXX and FC set
-        to Spack's generic cc, c++ and f90.  We want them to
-        be bound to whatever compiler they were built with.
-        """
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
-        wrapper_basepath = join_path(self.prefix, 'share', 'openmpi')
+        basepath = join_path(self.prefix, 'share', 'openmpi')
 
         wrappers = [
-            ('mpicc-vt-wrapper-data.txt', self.compiler.cc),
-            ('mpicc-wrapper-data.txt', self.compiler.cc),
-            ('ortecc-wrapper-data.txt', self.compiler.cc),
-            ('shmemcc-wrapper-data.txt', self.compiler.cc),
-            ('mpic++-vt-wrapper-data.txt', self.compiler.cxx),
-            ('mpic++-wrapper-data.txt', self.compiler.cxx),
-            ('ortec++-wrapper-data.txt', self.compiler.cxx),
-            ('mpifort-vt-wrapper-data.txt', self.compiler.fc),
-            ('mpifort-wrapper-data.txt', self.compiler.fc),
-            ('shmemfort-wrapper-data.txt', self.compiler.fc),
-            ('mpif90-vt-wrapper-data.txt', self.compiler.fc),
-            ('mpif90-wrapper-data.txt', self.compiler.fc),
-            ('mpif77-vt-wrapper-data.txt',  self.compiler.f77),
-            ('mpif77-wrapper-data.txt',  self.compiler.f77)
+            'mpicc-vt-wrapper-data.txt',
+            'mpicc-wrapper-data.txt',
+            'ortecc-wrapper-data.txt',
+            'shmemcc-wrapper-data.txt',
+            'mpic++-vt-wrapper-data.txt',
+            'mpic++-wrapper-data.txt',
+            'ortec++-wrapper-data.txt',
+            'mpifort-vt-wrapper-data.txt',
+            'mpifort-wrapper-data.txt',
+            'shmemfort-wrapper-data.txt',
+            'mpif90-vt-wrapper-data.txt',
+            'mpif90-wrapper-data.txt',
+            'mpif77-vt-wrapper-data.txt',
+            'mpif77-wrapper-data.txt'
         ]
 
-        for wrapper_name, compiler in wrappers:
-            wrapper = join_path(wrapper_basepath, wrapper_name)
-            if not os.path.islink(wrapper):
-                # Substitute Spack compile wrappers for the real
-                # underlying compiler
-                match = 'compiler=.*'
-                substitute = 'compiler={compiler}'.format(compiler=compiler)
-                filter_file(match, substitute, wrapper, **kwargs)
-                # Remove this linking flag if present
-                # (it turns RPATH into RUNPATH)
-                filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)
+        abs_wrappers = [join_path(basepath, x) for x in wrappers]
+
+        return [x for x in abs_wrappers if not os.path.islink(x)]

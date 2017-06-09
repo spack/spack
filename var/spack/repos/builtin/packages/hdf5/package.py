@@ -22,12 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import shutil
 import sys
 
+from spack import *
 
-class Hdf5(AutotoolsPackage):
+
+class Hdf5(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
     """HDF5 is a data model, library, and file format for storing and managing
     data. It supports an unlimited variety of datatypes, and is designed for
     flexible and efficient I/O and for high volume and complex data.
@@ -294,3 +295,11 @@ HDF5 version {version} {version}
                 print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
+
+    @property
+    def compiler_wrappers(self):
+        return [
+            join_path(self.prefix.bin, 'h5c++'),
+            join_path(self.prefix.bin, 'h5cc'),
+            join_path(self.prefix.bin, 'h5fc'),
+        ]
