@@ -70,8 +70,11 @@ class Mesa(AutotoolsPackage):
 
     # For DRI and hardware acceleration
     depends_on('dri2proto@2.6:', type='build', when='+dri')
+    depends_on('dri2proto@2.6:', type='build', when='+gallium')
     depends_on('dri3proto@1.0:', type='build', when='+dri')
+    depends_on('dri3proto@1.0:', type='build', when='+gallium')
     depends_on('libdrm', when='+dri')
+    depends_on('libdrm', when='+gallium')
     depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+gallium')
     depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+gallium')
     depends_on('llvm+link_dylib', when='@14:17.99+gallium')
