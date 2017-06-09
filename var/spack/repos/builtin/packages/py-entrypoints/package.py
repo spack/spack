@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.package import PackageBase
 
 
 class PyEntrypoints(PythonPackage):
@@ -45,3 +46,8 @@ class PyEntrypoints(PythonPackage):
     def install(self, spec, prefix):
         pip = which('pip')
         pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+
+    # Check that self.prefix is there after installation
+    run_after('install')(PackageBase.sanity_check_prefix)
