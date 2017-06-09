@@ -29,10 +29,10 @@ class PyColormath(PythonPackage):
     """Color math and conversion library."""
 
     homepage = "https://pypi.python.org/pypi/colormath/2.1.1"
-    url      = "https://pypi.python.org/pypi/colormath/colormath-2.1.1.tar.gz"
+    url      = "https://pypi.io/packages/source/c/colormath/colormath-2.1.1.tar.gz"
 
     version('2.1.1', '10a0fb17e3c24363d0e1a3f2dccaa33b')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type='run')
-    depends_on('py-networkx', type='run')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-networkx', type=('build', 'run'))

@@ -31,14 +31,14 @@ class PyMultiqc(PythonPackage):
     for a large number of common bioinformatics tools."""
 
     homepage = "https://multiqc.info"
-    url      = "https://github.com/ewels/MultiQC/tarball/v1.0"
+    url      = "https://pypi.io/packages/source/m/multiqc/multiqc-1.0.tar.gz"
 
-    version('1.0', '27afc19327105818e39b385211b27694')
+    version('1.0', '0b7310b3f75595e5be8099fbed2d2515')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-click', type='run')
-    depends_on('py-jinja2', type='run')
-    depends_on('py-lzstring', type='run')
-    depends_on('py-future', type='run')
-    depends_on('py-spectra', type='run')
-    depends_on('py-colormath', type='run')
+    depends_on('py-click', type=('build', 'run'))
+    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-lzstring', type=('build', 'run'))
+    depends_on('py-future', type=('build', 'run'))
+    depends_on('py-spectra', type=('build', 'run'))
+    depends_on('py-colormath', type=('build', 'run'))

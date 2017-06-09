@@ -28,9 +28,10 @@ from spack import *
 class PyLzstring(PythonPackage):
     """lz-string for python."""
 
-    homepage = "http://www.example.com"
-    url      = "https://github.com/gkovacs/lz-string-python/lzstring-1.0.3.tar.gz"
+    homepage = "https://github.com/gkovacs/lz-string-python"
+    url      = "https://pypi.io/packages/source/l/lzstring/lzstring-1.0.3.tar.gz"
 
     version('1.0.3', '1c636543484629020a26432740f81443')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-future', type=('build', 'run'))
