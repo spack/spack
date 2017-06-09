@@ -34,7 +34,7 @@ class Spark(Package):
     """
 
     homepage = "http://spark.apache.org"
-    url      = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
+    url = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
 
     variant('hadoop', default=False,
             description='Build with Hadoop')
@@ -47,6 +47,7 @@ class Spark(Package):
     version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
     version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
     version('1.6.1', 'fcf4961649f15af1fea78c882e65b001')
+    version('1.6.0', '2c28edc89ca0067e63e525c04f7b1d89')
 
     def install(self, spec, prefix):
 
