@@ -54,6 +54,11 @@ class Context(object):
                 else:
                     stream.write(concretized_spec.format())
 
+    def upgrade(self, spec, new):
+        # TODO: Copy this context, replace the given spec (what if it appears
+        # multiple times?)
+        pass
+
     def to_dict(self):
         concretized_order = list(self.concretized_order)
         common_libs = syaml.syaml_dict(self.common_libs.items())
@@ -76,10 +81,6 @@ class Context(object):
         c.common_libs = dict(d['common_libs'])
         c.common_bins = dict(d['common_bins'])
         return c
-
-    def upgrade(self, spec, new):
-        # Copy this context, replace the given spec (what if it appears multiple times?)
-        pass
 
     def path(self):
         return fs.join_path(_db_dirname, self.name)
