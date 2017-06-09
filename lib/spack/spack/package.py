@@ -182,6 +182,9 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                                 PackageMeta.phase_fmt.format(phase_name),
                                 None
                             )
+                            if phase is not None:
+                                break
+
                         attr_dict[PackageMeta.phase_fmt.format(
                             phase_name)] = phase.copy()
                         phase = attr_dict[
@@ -617,6 +620,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
         self.extra_args = {}
+
+        super(PackageBase, self).__init__()
 
     def possible_dependencies(self, transitive=True, visited=None):
         """Return set of possible transitive dependencies of this package.

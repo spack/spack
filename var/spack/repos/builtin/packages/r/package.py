@@ -26,7 +26,7 @@ import shutil
 from spack import *
 
 
-class R(AutotoolsPackage):
+class R(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
     """R is 'GNU S', a freely available language and environment for
     statistical computing and graphics which provides a wide variety of
     statistical and graphical techniques: linear and nonlinear modelling,
@@ -129,25 +129,9 @@ class R(AutotoolsPackage):
         dst_makeconf = join_path(self.etcdir, 'Makeconf.spack')
         shutil.copy(src_makeconf, dst_makeconf)
 
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to tell the configuration files and Makefiles
-        to use the compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC and CXX set to Spack's generic
-        cc and c++. We want them to be bound to whatever compiler
-        they were built with."""
-
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
-
-        filter_file(env['CC'], self.compiler.cc,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
-        filter_file(env['F77'], self.compiler.f77,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
-        filter_file(env['FC'], self.compiler.fc,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
+    @property
+    def compiler_wrappers(self):
+        return [join_path(self.etcdir, 'Makeconf')]
 
     # ========================================================================
     # Set up environment to make install easy for R extensions.
