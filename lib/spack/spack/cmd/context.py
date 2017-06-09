@@ -54,6 +54,17 @@ class Context(object):
                 else:
                     stream.write(concretized_spec.format())
 
+    def reconcretize(self):
+        new_order = list()
+        new_specs_by_hash = {}
+        for spec_hash in self.concretized_order:
+            spec = self.specs_by_hash[spec_hash]
+            new_spec = reconcretize(spec)
+            new_order.append(new_spec.dag_hash())
+            new_specs_by_hash[new_spec.dag_hash()] = new_spec
+        self.concretized_order = new_order
+        self.specs_by_hash = new_specs_by_hash
+
     def upgrade(self, spec, new):
         # TODO: Copy this context, replace the given spec (what if it appears
         # multiple times?)
@@ -84,6 +95,17 @@ class Context(object):
 
     def path(self):
         return fs.join_path(_db_dirname, self.name)
+
+def reconcretize(spec):
+    spec = spec.copy()
+    for x in spec.traverse():
+        x.compiler = None
+        x.architecture = None
+        x.compiler_flags = FlagMap(x)
+        x._concrete = False
+        x._hash = None
+    spec.concretize()
+    return spec
 
 def write(context):
     tmp_new, dest, tmp_old = write_paths(context)
