@@ -30,7 +30,6 @@ class RGmodels(RPackage):
 
     homepage = "http://www.sf.net/projects/r-gregmisc"
     url      = "https://cran.r-project.org/src/contrib/gmodels_2.16.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gmodels"
 
     version('2.16.2', 'f13e5feb2a8b9f0cd47fdf25ddc74228')
 

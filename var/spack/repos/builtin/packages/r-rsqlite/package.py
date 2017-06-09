@@ -32,7 +32,6 @@ class RRsqlite(RPackage):
 
     homepage = "https://github.com/rstats-db/RSQLite"
     url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
 
     version('1.0.0', 'e6cbe2709612b687c13a10d30c7bad45')
 
