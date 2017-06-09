@@ -36,4 +36,4 @@ class PerlUriEscape(PerlPackage):
 
     version('1.71', '247c3da29a794f72730e01aa5a715daf')
 
-    depends_on('perl-extutils-makemaker')
+    depends_on('perl-extutils-makemaker', type=('build', 'run'))
