@@ -34,3 +34,4 @@ class PySpectra(PythonPackage):
     version('0.0.8', '83020b29e584389f24c7720f38f0136c')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-colormath', type=('build', 'run'))
