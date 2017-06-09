@@ -111,6 +111,8 @@ class Trilinos(CMakePackage):
             description='Compile with zlib')
     variant('stk',          default=False,
             description='Compile with STK')
+    variant('teuchos',      default=True,
+            description='Compile with Teuchos')
     variant('belos',        default=True,
             description='Compile with Belos')
     variant('zoltan',       default=True,
@@ -287,6 +289,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+ifpack2' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Gtest:BOOL=%s' % (
                 'ON' if '+gtest' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
+                'ON' if '+teuchos' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
